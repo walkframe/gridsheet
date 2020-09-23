@@ -60,31 +60,31 @@ const GridTableLayout = styled.div`
 export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
   const [pointsStart, setPointsStart] = React.useState<[number, number]>([0, 0]); // Y, X
   const [pointsEnd, setPointsEnd] = React.useState<[number, number]>([-1, -1]); // Y, X
-  const [pointStartY, pointEndY] = pointsStart[0] < pointsEnd[0] ? [pointsStart[0], pointsEnd[0]] : [pointsEnd[0], pointsStart[0]];
-  const [pointStartX, pointEndX] = pointsStart[1] < pointsEnd[1] ? [pointsStart[1], pointsEnd[1]] : [pointsEnd[1], pointsStart[1]];
-  const between = (y: number, x: number) => pointStartY <= y && y <= pointEndY && pointStartX <= x && x <= pointEndX;
+  const [top, bottom] = pointsStart[0] < pointsEnd[0] ? [pointsStart[0], pointsEnd[0]] : [pointsEnd[0], pointsStart[0]];
+  const [left, right] = pointsStart[1] < pointsEnd[1] ? [pointsStart[1], pointsEnd[1]] : [pointsEnd[1], pointsStart[1]];
+  const between = (y: number, x: number) => top !== -1 && (top <= y && y <= bottom && left <= x && x <= right);
 
   return (<GridTableLayout>
     <table className="grid-table">
       <thead>
         <tr>
           <th></th>
-          {widths.map((width, i) => (<th key={i} className="col-number" style={{ width }}>
-          {i}
+          {widths.map((width, x) => (<th key={x} className="col-number" style={{ width }}>
+          {x}
           </th>))
           }
         </tr>
       </thead>
-      <tbody>{heights.map((height, i) => (<tr key={i}>
-        <th className="row-number" style={{ height }}>{i + 1}</th>  
-        {widths.map((width, j) => {
-          const value = data[i][j];
+      <tbody>{heights.map((height, y) => (<tr key={y}>
+        <th className="row-number" style={{ height }}>{y + 1}</th>  
+        {widths.map((width, x) => {
+          const value = data[y][x];
           return (<td
-            key={j}
-            className={between(i, j) ? "selected": ""}
+            key={x}
+            className={between(y, x) ? "selected": ""}
             draggable
             onClick={(e) => {
-              setPointsStart([-1, -1]);
+              setPointsStart([y, x]);
               setPointsEnd([-1, -1]);
             }}
             onDragStart={(e) => {
@@ -93,14 +93,15 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
               img.src = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
               e.dataTransfer.setDragImage(img, 0, 0);
               setPointsEnd([-1, -1]);
-              setPointsStart([i, j]);
+              setPointsStart([y, x]);
               
             }}
             onDragEnter={(e) => {
-              setPointsEnd([i, j]);
+              setPointsEnd([y, x]);
             }}
           ><Cell
             value={value}
+            selecting={pointsStart[0] === y && pointsStart[1] === x}
           /></td>);
         })}
       </tr>))

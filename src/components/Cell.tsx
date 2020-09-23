@@ -9,9 +9,12 @@ import {
 
 interface Props {
   value: string;
+  selecting: boolean;
 };
 
 const CellLayout = styled.div`
+  overflow: hidden;
+  font-size: 13px;
   textarea {
     width: 100%;
     height: 100%;
@@ -23,21 +26,41 @@ const CellLayout = styled.div`
     resize: none;
     box-sizing: border-box;
     overflow: hidden;
+    caret-color: transparent;
 
     &:read-only {
       cursor: auto;
     }
+    &.editing {
+      caret-color: #000000;
+    }
   }
 `;
 
-export const Cell: React.FC<Props> = ({value}) => {
-  return (<CellLayout className="cell">
-    <textarea
-      readOnly
-      defaultValue={value}
-      onDoubleClick={(e) => e.currentTarget.removeAttribute("readOnly")}
-      onBlur={(e) => e.currentTarget.setAttribute("readOnly", "readOnly")}
-    ></textarea>
+export const Cell: React.FC<Props> = ({ value, selecting }) => {
+  const [editing, setEditing] = React.useState(false);
+  return (<CellLayout 
+    className="cell"
+    onDoubleClick={(e) => setEditing(true)}
+    onClick={(e) => {
+      setEditing(true);
+    }}
+  >
+    {!selecting ? value : (<textarea
+      autoFocus
+      onFocus={(e) => {
+        e.currentTarget.value = "";
+        e.currentTarget.value = value;
+      }}
+      onKeyUp={(e) => {
+        if (e.keyCode === 27) { // escape
+          setEditing(false);
+          return;
+        }
+        e.currentTarget.classList.add("editing")
+      }}
+      onBlur={(e) => setEditing(false)}
+    >{value}</textarea>)}
   </CellLayout>);
 };
 
