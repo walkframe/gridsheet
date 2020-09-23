@@ -89,6 +89,9 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
             }}
             onDragStart={(e) => {
               e.currentTarget.classList.add("dragging");
+              const img = document.createElement("img");
+              img.src = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+              e.dataTransfer.setDragImage(img, 0, 0);
               setPointsEnd([-1, -1]);
               setPointsStart([i, j]);
               
