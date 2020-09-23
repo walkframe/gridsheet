@@ -14,9 +14,30 @@ const Layout = styled.div`
 
 `;
 
-export const Index: React.FC<Props> = ({data}) => {
+export const Index: React.FC<Props> = ({data, options}) => {
+  if (typeof options === "undefined") {
+    options = {};
+  }
+  let {widths: w, heights: h} = options;
+  if (typeof w === "undefined") {
+    if (typeof data[0] === "undefined") {
+      w = [];
+    } else {
+      w = data[0].map((_) => "150px");
+    }
+  }
+  if (typeof h === "undefined") {
+    h = data.map((_) => "20px");
+  }
+  const [widths, setWidths] = React.useState(w);
+  const [heights, setHeights] = React.useState(h);
+
   return (<Layout>
     <GridTable
+      widths={widths}
+      heights={heights}
+      setWidths={setWidths}
+      setHeights={setHeights}
       data={data}
     />
   </Layout>);
