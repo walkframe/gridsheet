@@ -11,7 +11,12 @@ import {
 } from "./components/GridTable";
 
 const Layout = styled.div`
-
+  font-family: "Helvetica Neue",
+    Arial,
+    "Hiragino Kaku Gothic ProN",
+    "Hiragino Sans",
+    Meiryo,
+    sans-serif;
 `;
 
 export const Index: React.FC<Props> = ({data, options}) => {
