@@ -59,13 +59,15 @@ const GridTableLayout = styled.div`
   }
 `;
 
+const Y_START = 0, X_START = 1, Y_END = 2, X_END = 3;
+
 export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
   const [rows, setRows] = React.useState(data);
+  const [selecting, select] = React.useState<[number, number]>([0, 0]);
+  const [dragging, drag] = React.useState<[number, number, number, number]>([-1, -1, -1, -1]); // (y, x) -> (y, x)
+  const [top, bottom] = dragging[Y_START] < dragging[Y_END] ? [dragging[Y_START], dragging[Y_END]] : [dragging[Y_END], dragging[Y_START]];
+  const [left, right] = dragging[X_START] < dragging[X_END] ? [dragging[X_START], dragging[X_END]] : [dragging[X_END], dragging[X_START]];
 
-  const [pointsStart, setPointsStart] = React.useState<[number, number]>([0, 0]); // Y, X
-  const [pointsEnd, setPointsEnd] = React.useState<[number, number]>([-1, -1]); // Y, X
-  const [top, bottom] = pointsStart[0] < pointsEnd[0] ? [pointsStart[0], pointsEnd[0]] : [pointsEnd[0], pointsStart[0]];
-  const [left, right] = pointsStart[1] < pointsEnd[1] ? [pointsStart[1], pointsEnd[1]] : [pointsEnd[1], pointsStart[1]];
   const between = (y: number, x: number) => top !== -1 && (top <= y && y <= bottom && left <= x && x <= right);
 
   return (<GridTableLayout>
@@ -88,8 +90,7 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
             className={between(y, x) ? "selected": ""}
             draggable
             onClick={(e) => {
-              setPointsStart([y, x]);
-              setPointsEnd([-1, -1]);
+              select([y, x]);
             }}
             onDragStart={(e) => {
               e.currentTarget.classList.add("dragging");
@@ -97,20 +98,22 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
               const img = document.createElement("img");
               img.src = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
               e.dataTransfer.setDragImage(img, 0, 0);
-              setPointsEnd([-1, -1]);
-              setPointsStart([y, x]);
-              
+              select([y, x]);
+              drag([y, x, -1, -1]);
             }}
             onDragEnter={(e) => {
-              setPointsEnd([y, x]);
+              drag([dragging[0], dragging[1], y, x])
             }}
           ><Cell
             value={value}
             setValue={(value: string) => {
               rows[y][x] = value;
               setRows([...rows]);
+            }}  
+            select={(deltaY: number, deltaX: number) => {
+              select([y + deltaY, x + deltaX]);
             }}
-            selecting={pointsStart[0] === y && pointsStart[1] === x}
+            selecting={selecting[0] === y && selecting[1] === x}
           /></td>);
         })}
       </tr>))

@@ -4,6 +4,7 @@ import styled from "styled-components";
 interface Props {
   value: string;
   setValue: (value: string) => void;
+  select: (deltaY: number, deltaX: number) => void;
   selecting: boolean;
 };
 
@@ -44,14 +45,9 @@ const CellLayout = styled.div`
   }
 `;
 
-export const Cell: React.FC<Props> = ({ value, setValue, selecting }) => {
-  const [editing, setEditing] = React.useState(false);
+export const Cell: React.FC<Props> = ({ value, setValue, select, selecting }) => {
   return (<CellLayout 
     className="cell"
-    onDoubleClick={(e) => setEditing(true)}
-    onClick={(e) => {
-      setEditing(true);
-    }}
   ><div className="unselected">{value}</div>
     {!selecting ? null : (<textarea
       autoFocus
@@ -64,13 +60,21 @@ export const Cell: React.FC<Props> = ({ value, setValue, selecting }) => {
       }}
       onKeyDown={(e) => {
         switch (e.keyCode) {
-          case 13: // ENTER
-            setEditing(false);
-            setValue(e.currentTarget.value);
+          case 9: // TAB
+            if (e.currentTarget.classList.contains("editing")) {
+              setValue(e.currentTarget.value);
+            }
             e.currentTarget.blur();
+            select(0, 1);
+            return;
+          case 13: // ENTER
+            if (e.currentTarget.classList.contains("editing")) {
+              setValue(e.currentTarget.value);
+            }
+            e.currentTarget.blur();
+            select(1, 0);
             return;
           case 27: // ESCAPE
-            setEditing(false);
             e.currentTarget.value = value;
             e.currentTarget.blur();
             return;
@@ -81,7 +85,6 @@ export const Cell: React.FC<Props> = ({ value, setValue, selecting }) => {
         if (e.currentTarget.classList.contains("editing")) {
           setValue(e.target.value);
         }
-        setEditing(false);
       }}
     ></textarea>)}
   </CellLayout>);
