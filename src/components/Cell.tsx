@@ -3,6 +3,7 @@ import styled from "styled-components";
 
 interface Props {
   value: string;
+  setValue: (value: string) => void;
   selecting: boolean;
 };
 
@@ -10,6 +11,8 @@ const CellLayout = styled.div`
   overflow: hidden;
   font-size: 13px;
   text-indent: 3px;
+  letter-spacing: 1px;
+  cursor: cell;
 
   .unselected {
     padding: 2px;
@@ -20,6 +23,7 @@ const CellLayout = styled.div`
     height: 100%;
     position: absolute;
     font-size: 13px;
+    letter-spacing: 1px;
     top: 0;
     left: 0;
     border: none;
@@ -30,10 +34,6 @@ const CellLayout = styled.div`
     caret-color: transparent;
     text-indent: 3px;
     z-index: 1;
-
-    &:read-only {
-      cursor: auto;
-    }
     &.editing {
       caret-color: #000000;
       background-color: #ffffff;
@@ -44,7 +44,7 @@ const CellLayout = styled.div`
   }
 `;
 
-export const Cell: React.FC<Props> = ({ value, selecting }) => {
+export const Cell: React.FC<Props> = ({ value, setValue, selecting }) => {
   const [editing, setEditing] = React.useState(false);
   return (<CellLayout 
     className="cell"
@@ -63,18 +63,26 @@ export const Cell: React.FC<Props> = ({ value, selecting }) => {
         }
       }}
       onKeyDown={(e) => {
-        if (e.keyCode === 13) { //enter
-          setEditing(false);
-          return;
-        }
-        if (e.keyCode === 27) { // escape
-          setEditing(false);
-          e.currentTarget.focus()
-          return;
-        }
+        switch (e.keyCode) {
+          case 13: // ENTER
+            setEditing(false);
+            setValue(e.currentTarget.value);
+            e.currentTarget.blur();
+            return;
+          case 27: // ESCAPE
+            setEditing(false);
+            e.currentTarget.value = value;
+            e.currentTarget.blur();
+            return;
+        };
         e.currentTarget.classList.add("editing")
       }}
-      onBlur={(e) => setEditing(false)}
+      onBlur={(e) => {
+        if (e.currentTarget.classList.contains("editing")) {
+          setValue(e.target.value);
+        }
+        setEditing(false);
+      }}
     ></textarea>)}
   </CellLayout>);
 };

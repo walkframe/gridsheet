@@ -51,13 +51,17 @@ const GridTableLayout = styled.div`
         background-color: rgba(0, 128, 255, 0.2);
       }
       &.dragging {
-        transform: translate(0, 0);
+        &:active {
+          cursor: cell;
+        }
       }
     }
   }
 `;
 
 export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
+  const [rows, setRows] = React.useState(data);
+
   const [pointsStart, setPointsStart] = React.useState<[number, number]>([0, 0]); // Y, X
   const [pointsEnd, setPointsEnd] = React.useState<[number, number]>([-1, -1]); // Y, X
   const [top, bottom] = pointsStart[0] < pointsEnd[0] ? [pointsStart[0], pointsEnd[0]] : [pointsEnd[0], pointsStart[0]];
@@ -78,7 +82,7 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
       <tbody>{heights.map((height, y) => (<tr key={y}>
         <th className="row-number" style={{ height }}>{y + 1}</th>  
         {widths.map((width, x) => {
-          const value = data[y][x];
+          const value = rows[y][x];
           return (<td
             key={x}
             className={between(y, x) ? "selected": ""}
@@ -89,6 +93,7 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
             }}
             onDragStart={(e) => {
               e.currentTarget.classList.add("dragging");
+              e.currentTarget.style.cursor = "cell";
               const img = document.createElement("img");
               img.src = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
               e.dataTransfer.setDragImage(img, 0, 0);
@@ -101,6 +106,10 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
             }}
           ><Cell
             value={value}
+            setValue={(value: string) => {
+              rows[y][x] = value;
+              setRows([...rows]);
+            }}
             selecting={pointsStart[0] === y && pointsStart[1] === x}
           /></td>);
         })}
