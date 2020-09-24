@@ -107,27 +107,18 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
             setValue={(value: string) => {
               rows[y][x] = value;
               setRows([...rows]);
-            }}  
+            }}
             select={(deltaY: number, deltaX: number) => {
               let nextY = y + deltaY;
               let nextX = x + deltaX;
               if (nextY > bottom && bottom !== -1) {
                 nextY = top;
-                if (nextX < right) {
-                  nextX++;
-                } else {
-                  nextX = left;
-                }
+                nextX = nextX < right ? nextX + 1 : left;
               }
               if (nextX > right && right !== -1) {
                 nextX = left;
-                if (nextY < bottom) {
-                  nextY++;
-                } else {
-                  nextY = top;
-                }
+                nextY = nextY < bottom ? nextY + 1 : top;
               }
-
               select([nextY, nextX]);
             }}
             selecting={selecting[0] === y && selecting[1] === x}
