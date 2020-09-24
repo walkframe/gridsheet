@@ -6,6 +6,8 @@ import {
   WidthsType,
   HeightsType,
 } from "../types";
+import { Y_START, Y_END, X_START, X_END, DUMMY_IMG } from "../constants";
+
 import {
   Cell,
 } from "./Cell";
@@ -59,8 +61,6 @@ const GridTableLayout = styled.div`
   }
 `;
 
-const Y_START = 0, X_START = 1, Y_END = 2, X_END = 3;
-
 export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
   const [rows, setRows] = React.useState(data);
   const [selecting, select] = React.useState<[number, number]>([0, 0]);
@@ -91,13 +91,11 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
             draggable
             onClick={(e) => {
               select([y, x]);
+              drag([-1, -1, -1, -1]);
             }}
             onDragStart={(e) => {
               e.currentTarget.classList.add("dragging");
-              e.currentTarget.style.cursor = "cell";
-              const img = document.createElement("img");
-              img.src = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
-              e.dataTransfer.setDragImage(img, 0, 0);
+              e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
               select([y, x]);
               drag([y, x, -1, -1]);
             }}
@@ -111,7 +109,26 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
               setRows([...rows]);
             }}  
             select={(deltaY: number, deltaX: number) => {
-              select([y + deltaY, x + deltaX]);
+              let nextY = y + deltaY;
+              let nextX = x + deltaX;
+              if (nextY > bottom && bottom !== -1) {
+                nextY = top;
+                if (nextX < right) {
+                  nextX++;
+                } else {
+                  nextX = left;
+                }
+              }
+              if (nextX > right && right !== -1) {
+                nextX = left;
+                if (nextY < bottom) {
+                  nextY++;
+                } else {
+                  nextY = top;
+                }
+              }
+
+              select([nextY, nextX]);
             }}
             selecting={selecting[0] === y && selecting[1] === x}
           /></td>);

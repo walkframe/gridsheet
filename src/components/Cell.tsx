@@ -61,23 +61,24 @@ export const Cell: React.FC<Props> = ({ value, setValue, select, selecting }) =>
       onKeyDown={(e) => {
         switch (e.keyCode) {
           case 9: // TAB
+            e.preventDefault();
             if (e.currentTarget.classList.contains("editing")) {
               setValue(e.currentTarget.value);
             }
             e.currentTarget.blur();
             select(0, 1);
-            return;
+            return false;
           case 13: // ENTER
             if (e.currentTarget.classList.contains("editing")) {
               setValue(e.currentTarget.value);
             }
             e.currentTarget.blur();
             select(1, 0);
-            return;
+            return false;
           case 27: // ESCAPE
             e.currentTarget.value = value;
             e.currentTarget.blur();
-            return;
+            return false;
         };
         e.currentTarget.classList.add("editing")
       }}
