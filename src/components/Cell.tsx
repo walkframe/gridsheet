@@ -4,8 +4,9 @@ import styled from "styled-components";
 const CellLayout = styled.div`
   overflow: hidden;
   font-size: 13px;
-  text-indent: 3px;
   letter-spacing: 1px;
+  white-space: pre;
+  line-height: 20px;
   cursor: auto;
 
   .unselected {
@@ -17,6 +18,7 @@ const CellLayout = styled.div`
     height: 100%;
     position: absolute;
     font-size: 13px;
+    line-height: 20px;
     letter-spacing: 1px;
     top: 0;
     left: 0;
@@ -26,7 +28,6 @@ const CellLayout = styled.div`
     box-sizing: border-box;
     overflow: hidden;
     caret-color: transparent;
-    text-indent: 3px;
     z-index: 1;
     cursor: default;
     &.editing {
@@ -82,6 +83,7 @@ export const Cell: React.FC<Props> = (props) => {
 const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boolean) => void) => {
   const { value, setValue, select, drag, copy, paste, clear } = props;
   return (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const input = e.currentTarget;
     console.debug(e.key, "shift:", e.shiftKey, "ctrl:", e.ctrlKey, "alt:", e.altKey, "meta:", e.metaKey);
 
     switch (e.key) {
@@ -94,12 +96,17 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
         setEditing(false);
         return false;
       case "Enter": // ENTER
-        if (editing) {
-          setValue(e.currentTarget.value);
+        if (e.altKey) {
+          input.value = `${input.value}\n`;
+          input.style.height = `${input.clientHeight + 20}px`;
+        } else {
+          if (editing) {
+            setValue(e.currentTarget.value);
+          }
+          select(e.shiftKey ? -1 : 1, 0, false);
+          setEditing(false);
+          return false;
         }
-        select(e.shiftKey ? -1 : 1, 0, false);
-        setEditing(false);
-        return false;
       case "Backspace": // BACKSPACE
         if (!editing) {
           clear();
@@ -117,7 +124,7 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
       case "Escape": // ESCAPE
         copy(false, false);
         setEditing(false);
-        e.currentTarget.value = value;
+        input.value = value;
         // e.currentTarget.blur();
         return false;
       case "ArrowLeft": // LEFT
