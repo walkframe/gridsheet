@@ -6,7 +6,7 @@ const CellLayout = styled.div`
   font-size: 13px;
   text-indent: 3px;
   letter-spacing: 1px;
-  cursor: cell;
+  cursor: auto;
 
   .unselected {
     padding: 2px;
@@ -28,9 +28,11 @@ const CellLayout = styled.div`
     caret-color: transparent;
     text-indent: 3px;
     z-index: 1;
+    cursor: default;
     &.editing {
       caret-color: #000000;
       background-color: #ffffff;
+      cursor: text;
     }
     &:focus {
       outline: solid 2px #0077ff;
@@ -87,12 +89,14 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
           setValue(e.currentTarget.value);
         }
         select(0, e.shiftKey ? -1 : 1);
+        setEditing(false);
         return false;
       case "Enter": // ENTER
         if (editing) {
           setValue(e.currentTarget.value);
         }
         select(e.shiftKey ? -1 : 1, 0);
+        setEditing(false);
         return false;
       case "Backspace": // BACKSPACE
         if (!editing) {
@@ -114,35 +118,49 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
         // e.currentTarget.blur();
         return false;
       case "ArrowLeft": // LEFT
-        select(0, -1);
-        return false;
+        if (!editing) {
+          select(0, -1);
+          return false;
+        }
       case "ArrowUp": // UP
-        select(-1, 0);
-        return false;
+        if (!editing) {
+          select(-1, 0);
+          return false;
+        }
       case "ArrowRight": // RIGHT
-        select(0, 1);
-        return false;
+        if (!editing) {
+          select(0, 1);
+          return false;
+        }
       case "ArrowDown": // DOWN
-        select(1, 0);
-        return false;
+        if (!editing) {
+          select(1, 0);
+          return false;
+        }
 
       case "c": // C
         if (e.ctrlKey || e.metaKey) {
-          e.preventDefault();
-          copy(true, false);
-          return false;
+          if (!editing) {
+            e.preventDefault();
+            copy(true, false);
+            return false;
+          }
         }
       case "x": // X
         if (e.ctrlKey || e.metaKey) {
-          e.preventDefault();
-          copy(true, true);
-          return false;
+          if (!editing) {
+            e.preventDefault();
+            copy(true, true);
+            return false;
+          }
         }
       case "v": // V
         if (e.ctrlKey || e.metaKey) {
-          e.preventDefault();
-          paste();
-          return false;
+          if (!editing) {
+            e.preventDefault();
+            paste();
+            return false;
+          }
         }
     };
     if (e.ctrlKey || e.metaKey) {

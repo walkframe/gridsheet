@@ -161,7 +161,9 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
                       }
                     }
                   }
-                  drag([y, x, y + copyingHeight, x + copyingWidth]);
+                  if (copyingHeight > 0 || copyingWidth > 0) {
+                    drag([y, x, y + copyingHeight, x + copyingWidth]);
+                  }
                 }
               } else {
                 if (copying[0] === -1) {
