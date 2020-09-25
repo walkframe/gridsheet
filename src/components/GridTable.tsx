@@ -171,10 +171,10 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
               }
               setRows([... rows]);
             }}
-            paste={() => {
+            paste={(text: string) => {
               if (dragging[0] === -1) {
                 if (copying[0] === -1) {
-                  0;
+                  rows[y][x] = text;
                 } else {
                   const [copyingHeight, copyingWidth] = [copyingBottom - copyingTop, copyingRight - copyingLeft];
                   for (let _y = 0; _y <= copyingHeight; _y++) {
@@ -194,7 +194,11 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
                 }
               } else {
                 if (copying[0] === -1) {
-                  0;
+                  for (let y = draggingTop; y <= draggingBottom; y++) {
+                    for (let x = draggingLeft; x <= draggingRight; x++) {
+                      rows[y][x] = text;
+                    }
+                  }
                 } else {
                   const [draggingHeight, draggingWidth] = [draggingBottom - draggingTop, draggingRight - draggingLeft];
                   const [copyingHeight, copyingWidth] = [copyingBottom - copyingTop, copyingRight - copyingLeft];
@@ -224,7 +228,6 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
             blur={() => {
               select([-1, -1]);
               drag([-1, -1, -1, -1]);
-              copy([-1, -1, -1, -1]);
               setCutting(false);
             }}
             select={(nextY: number, nextX: number, breaking: boolean) => {

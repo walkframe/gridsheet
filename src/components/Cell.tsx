@@ -50,7 +50,7 @@ interface Props {
   drag: (deltaY: number, deltaX: number) => void;
   selecting: boolean;
   copy: (copying: boolean, cutting: boolean) => void;
-  paste: () => void;
+  paste: (text: string) => void;
   clear: () => void;
   blur: () => void;
 };
@@ -170,8 +170,10 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
       case "v": // V
         if (e.ctrlKey || e.metaKey) {
           if (!editing) {
-            e.preventDefault();
-            paste();
+            setTimeout(() => {
+              paste(input.value);
+              input.value = "";
+            }, 50);
             return false;
           }
         }
