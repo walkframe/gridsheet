@@ -43,10 +43,13 @@ interface Props {
   setValue: (value: string) => void;
   select: (deltaY: number, deltaX: number) => void;
   selecting: boolean;
+  copy: (copying: boolean) => void;
+  cut: (cutting: boolean) => void;
+  paste: () => void;
 };
 
 export const Cell: React.FC<Props> = (props) => {
-  const { value, setValue, select, selecting } = props;
+  const { value, setValue, select, selecting, copy } = props;
   return (<CellLayout 
     className="cell"
   ><div className="unselected">{value}</div>
@@ -59,7 +62,7 @@ export const Cell: React.FC<Props> = (props) => {
           input.classList.add("editing");
         }
       }}
-      onKeyDown={handleKeyDown({ value, setValue, select, selecting })}
+      onKeyDown={handleKeyDown(props)}
       onBlur={(e) => {
         if (e.currentTarget.classList.contains("editing")) {
           setValue(e.target.value);
@@ -70,7 +73,7 @@ export const Cell: React.FC<Props> = (props) => {
 };
 
 const handleKeyDown = (props: Props) => {
-  const { value, setValue, select } = props;
+  const { value, setValue, select, copy, paste } = props;
   return (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     console.debug(e.key, "shift:", e.shiftKey, "ctrl:", e.ctrlKey, "alt:", e.altKey, "meta:", e.metaKey);
 
@@ -99,6 +102,7 @@ const handleKeyDown = (props: Props) => {
       case "NumLock": // NUMLOCK
         return false;
       case "Escape": // ESCAPE
+        copy(false);
         e.currentTarget.value = value;
         // e.currentTarget.blur();
         return false;
@@ -114,7 +118,23 @@ const handleKeyDown = (props: Props) => {
       case "ArrowDown": // DOWN
         select(1, 0);
         return false;
+
+      case "c": // C
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          copy(true);
+          return false;
+        }
+      case "v": // V
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          paste();
+          return false;
+        }
     };
+    if (e.ctrlKey || e.metaKey) {
+      return false;
+    }
     e.currentTarget.classList.add("editing");
   }
 };

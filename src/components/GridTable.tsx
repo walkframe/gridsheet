@@ -49,13 +49,11 @@ const GridTableLayout = styled.div`
       width: 150px;
       background-color: #ffffff;
       
-      &.selected {
+      &.dragging {
         background-color: rgba(0, 128, 255, 0.2);
       }
-      &.dragging {
-        &:active {
-          cursor: cell;
-        }
+      &.copying {
+        border: dashed 2px #0077ff;
       }
     }
   }
@@ -65,10 +63,14 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
   const [rows, setRows] = React.useState(data);
   const [selecting, select] = React.useState<[number, number]>([0, 0]);
   const [dragging, drag] = React.useState<[number, number, number, number]>([-1, -1, -1, -1]); // (y, x) -> (y, x)
-  const [top, bottom] = dragging[Y_START] < dragging[Y_END] ? [dragging[Y_START], dragging[Y_END]] : [dragging[Y_END], dragging[Y_START]];
-  const [left, right] = dragging[X_START] < dragging[X_END] ? [dragging[X_START], dragging[X_END]] : [dragging[X_END], dragging[X_START]];
+  const [draggingTop, draggingBottom] = dragging[Y_START] < dragging[Y_END] ? [dragging[Y_START], dragging[Y_END]] : [dragging[Y_END], dragging[Y_START]];
+  const [draggingLeft, draggingRight] = dragging[X_START] < dragging[X_END] ? [dragging[X_START], dragging[X_END]] : [dragging[X_END], dragging[X_START]];
+  const [copying, copy] = React.useState<[number, number, number, number]>([-1, -1, -1, -1]); // (y, x) -> (y, x)
+  const [copyingTop, copyingBottom] = copying[Y_START] < copying[Y_END] ? [copying[Y_START], copying[Y_END]] : [copying[Y_END], copying[Y_START]];
+  const [copyingLeft, copyingRight] = copying[X_START] < copying[X_END] ? [copying[X_START], copying[X_END]] : [copying[X_END], copying[X_START]];
 
-  const between = (y: number, x: number) => top !== -1 && (top <= y && y <= bottom && left <= x && x <= right);
+  const isDragging = (y: number, x: number) => draggingTop !== -1 && (draggingTop <= y && y <= draggingBottom && draggingLeft <= x && x <= draggingRight);
+  const isCopying = (y: number, x: number) => (copyingTop <= y && y <= copyingBottom && copyingLeft <= x && x <= copyingRight);
 
   return (<GridTableLayout>
     <table className="grid-table">
@@ -82,19 +84,18 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
         </tr>
       </thead>
       <tbody>{heights.map((height, y) => (<tr key={y}>
-        <th className="row-number" style={{ height }}>{y + 1}</th>  
+        <th className="row-number" style={{ height }}>{y + 1}</th>
         {widths.map((width, x) => {
           const value = rows[y][x];
           return (<td
             key={x}
-            className={between(y, x) ? "selected": ""}
+            className={`${isDragging(y, x) ? "dragging": ""} ${isCopying(y, x) ? "copying" : ""}`}
             draggable
             onClick={(e) => {
               select([y, x]);
               drag([-1, -1, -1, -1]);
             }}
             onDragStart={(e) => {
-              e.currentTarget.classList.add("dragging");
               e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
               select([y, x]);
               drag([y, x, -1, -1]);
@@ -108,25 +109,57 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
               rows[y][x] = value;
               setRows([...rows]);
             }}
+            copy={(copying: boolean) => {
+              if (copying) {
+                (dragging[0] === -1) ? copy([y, x, y, x]) : copy(dragging);
+              } else {
+                copy([-1, -1, -1, -1]);
+              }
+            }}
+            cut={(cutting: boolean) => {
+              copy([-1, -1, -1, -1]);
+            }}
+            paste={() => {
+              if (dragging[0] === -1) {
+                if (copying[0] === -1) {
+                  0;
+                } else {
+                  const [diffY, diffX] = [copyingBottom - copyingTop, copyingRight - copyingLeft];
+                  for (let _y = 0; _y <= diffY; _y++) {
+                    for (let _x = 0; _x <= diffX; _x++) {
+                      const [dstY, dstX, srcY, srcX] = [y + _y, x + _x, copyingTop + _y, copyingLeft + _x];
+                      if (dstY < heights.length && dstX < widths.length) {
+                        rows[dstY][dstX] = rows[srcY][srcX];
+                      }
+                    }
+                  }
+                  drag([y, x, y + diffY, x + diffX]);
+                }
+              } else {
+
+              }
+              setRows([...rows]);
+              copy([-1, -1, -1, -1]);
+            }}
             select={(deltaY: number, deltaX: number) => {
               let nextY = y + deltaY;
               let nextX = x + deltaX;
 
-              if (nextY < top && top !== -1) {
-                nextY = bottom;
-                nextX = nextX > left ? nextX - 1 : right;
+              if (nextY < draggingTop && draggingTop !== -1) {
+                nextY = draggingBottom;
+                nextX = nextX > draggingLeft ? nextX - 1 : draggingRight;
               }
-              if (nextY > bottom && bottom !== -1) {
-                nextY = top;
-                nextX = nextX < right ? nextX + 1 : left;
+              if (nextY > draggingBottom && draggingBottom !== -1) {
+                nextY = draggingTop;
+                nextX = nextX < draggingRight ? nextX + 1 : draggingLeft;
               }
-              if (nextX < left && left !== -1) {
-                nextX = right;
-                nextY = nextY > top ? nextY - 1 : bottom;
+              if (nextX < draggingLeft && draggingLeft !== -1) {
+                nextX = draggingRight;
+                nextY = nextY > draggingTop ? nextY - 1 : draggingBottom;
               }
-              if (nextX > right && right !== -1) {
-                nextX = left;
-                nextY = nextY < bottom ? nextY + 1 : top;
+              if (nextX > draggingRight && draggingRight !== -1) {
+                nextX = draggingLeft;
+                nextY = nextY < draggingBottom ? nextY + 1 : draggingTop;
               }
               if (nextY < 0 || heights.length <= nextY || nextX < 0 || widths.length <= nextX) {
                 return;
