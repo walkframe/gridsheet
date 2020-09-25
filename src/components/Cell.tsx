@@ -73,6 +73,7 @@ export const Cell: React.FC<Props> = (props) => {
           setValue(e.target.value);
         }
         setEditing(false);
+        select(-1, -1, false);
       }}
     ></textarea>)}
   </CellLayout>);

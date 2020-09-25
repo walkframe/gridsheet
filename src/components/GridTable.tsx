@@ -111,7 +111,6 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
           onClick={(e) => {
             drag([y, 0, y, widths.length - 1]);
             select([y, 0]);
-            e.preventDefault();
             return false;
           }}
         >{y + 1}</th>
