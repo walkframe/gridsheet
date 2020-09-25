@@ -58,6 +58,8 @@ const GridTableLayout = styled.div`
 export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
   const [rows, setRows] = React.useState(data);
   const [selecting, select] = React.useState<[number, number]>([0, 0]);
+  const [cutting, setCutting] = React.useState(false);
+
   const [dragging, drag] = React.useState<[number, number, number, number]>([-1, -1, -1, -1]); // (y, x) -> (y, x)
   const [draggingTop, draggingBottom] = dragging[Y_START] < dragging[Y_END] ? [dragging[Y_START], dragging[Y_END]] : [dragging[Y_END], dragging[Y_START]];
   const [draggingLeft, draggingRight] = dragging[X_START] < dragging[X_END] ? [dragging[X_START], dragging[X_END]] : [dragging[X_END], dragging[X_START]];
@@ -122,23 +124,25 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
               rows[y][x] = value;
               setRows([...rows]);
             }}
-            copy={(copying: boolean) => {
+            copy={(copying: boolean, cutting=false) => {
               if (copying) {
                 (dragging[0] === -1) ? copy([y, x, y, x]) : copy(dragging);
               } else {
                 copy([-1, -1, -1, -1]);
               }
+              setCutting(cutting);
             }}
             clear={() => {
-              for (let y = draggingTop; y <= draggingBottom; y++) {
-                for (let x = draggingLeft; x <= draggingRight; x++) {
-                  rows[y][x] = "";
+              if (dragging[0] === -1) {
+                rows[y][x] = "";
+              } else {
+                for (let y = draggingTop; y <= draggingBottom; y++) {
+                  for (let x = draggingLeft; x <= draggingRight; x++) {
+                    rows[y][x] = "";
+                  }
                 }
               }
               setRows([... rows]);
-            }}
-            cut={(cutting: boolean) => {
-              copy([-1, -1, -1, -1]);
             }}
             paste={() => {
               if (dragging[0] === -1) {
@@ -151,6 +155,9 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
                       const [dstY, dstX, srcY, srcX] = [y + _y, x + _x, copyingTop + _y, copyingLeft + _x];
                       if (dstY < heights.length && dstX < widths.length) {
                         rows[dstY][dstX] = rows[srcY][srcX];
+                        if (cutting) {
+                          rows[srcY][srcX] = "";
+                        }
                       }
                     }
                   }

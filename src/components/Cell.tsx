@@ -43,37 +43,39 @@ interface Props {
   setValue: (value: string) => void;
   select: (deltaY: number, deltaX: number) => void;
   selecting: boolean;
-  copy: (copying: boolean) => void;
-  cut: (cutting: boolean) => void;
+  copy: (copying: boolean, cutting: boolean) => void;
   paste: () => void;
   clear: () => void;
 };
 
 export const Cell: React.FC<Props> = (props) => {
   const { value, setValue, select, selecting, copy } = props;
+  const [editing, setEditing] = React.useState(false);
   return (<CellLayout 
     className="cell"
   ><div className="unselected">{value}</div>
     {!selecting ? null : (<textarea
       autoFocus
+      className={editing ? "editing" : ""}
       onDoubleClick={(e) => {
         const input = e.currentTarget;
-        if (!input.classList.contains("editing")) {
+        if (!editing) {
           input.value = value;
-          input.classList.add("editing");
+          setEditing(true);
         }
       }}
-      onKeyDown={handleKeyDown(props)}
+      onKeyDown={handleKeyDown(props, editing, setEditing)}
       onBlur={(e) => {
-        if (e.currentTarget.classList.contains("editing")) {
+        if (editing) {
           setValue(e.target.value);
         }
+        setEditing(false);
       }}
     ></textarea>)}
   </CellLayout>);
 };
 
-const handleKeyDown = (props: Props) => {
+const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boolean) => void) => {
   const { value, setValue, select, copy, paste, clear } = props;
   return (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     console.debug(e.key, "shift:", e.shiftKey, "ctrl:", e.ctrlKey, "alt:", e.altKey, "meta:", e.metaKey);
@@ -81,19 +83,19 @@ const handleKeyDown = (props: Props) => {
     switch (e.key) {
       case "Tab": // TAB
         e.preventDefault();
-        if (e.currentTarget.classList.contains("editing")) {
+        if (editing) {
           setValue(e.currentTarget.value);
         }
         select(0, e.shiftKey ? -1 : 1);
         return false;
       case "Enter": // ENTER
-        if (e.currentTarget.classList.contains("editing")) {
+        if (editing) {
           setValue(e.currentTarget.value);
         }
         select(e.shiftKey ? -1 : 1, 0);
         return false;
       case "Backspace": // BACKSPACE
-        if (!e.currentTarget.classList.contains("editing")) {
+        if (!editing) {
           clear();
         }
       case "Shift": // SHIFT
@@ -107,7 +109,7 @@ const handleKeyDown = (props: Props) => {
       case "NumLock": // NUMLOCK
         return false;
       case "Escape": // ESCAPE
-        copy(false);
+        copy(false, false);
         e.currentTarget.value = value;
         // e.currentTarget.blur();
         return false;
@@ -127,7 +129,13 @@ const handleKeyDown = (props: Props) => {
       case "c": // C
         if (e.ctrlKey || e.metaKey) {
           e.preventDefault();
-          copy(true);
+          copy(true, false);
+          return false;
+        }
+      case "x": // X
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          copy(true, true);
           return false;
         }
       case "v": // V
@@ -140,6 +148,6 @@ const handleKeyDown = (props: Props) => {
     if (e.ctrlKey || e.metaKey) {
       return false;
     }
-    e.currentTarget.classList.add("editing");
+    setEditing(true);
   }
 };
