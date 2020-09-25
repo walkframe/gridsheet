@@ -3,7 +3,10 @@ import Component from "./index";
 
 const data = [
   ["a", "b", "c"],
-  ["e", "f", "g"],
+  ["d", "e", "f"],
+  ["g", "h", "i"],
+  ["j", "k", "l"],
+  ["m", "n", "o"],
 ];
 
 const props = {
