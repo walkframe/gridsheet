@@ -213,7 +213,7 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
               if (nextY < 0 || heights.length <= nextY || nextX < 0 || widths.length <= nextX) {
                 return;
               }
-              drag([dragging[0], dragging[1], nextY, nextX]);
+              y === nextY && x === nextX ? drag([-1, -1, -1, -1]) : drag([y, x, nextY, nextX]);
             }}
             select={(deltaY: number, deltaX: number, breaking: boolean) => {
               let [nextY, nextX] = [y + deltaY, x + deltaX];
