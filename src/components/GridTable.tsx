@@ -33,12 +33,8 @@ const GridTableLayout = styled.div`
       background-color: #eeeeee;
 
       &.col-number {
-        cursor: col-resize;
-        resize: horizontal;
       }
       &.row-number {
-        cursor: row-resize;
-        resize: vertical;
       }
 
     }
@@ -77,14 +73,31 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
       <thead>
         <tr>
           <th></th>
-          {widths.map((width, x) => (<th key={x} className="col-number" style={{ width }}>
+          {widths.map((width, x) => (<th 
+            key={x}
+            className="col-number"
+            style={{ width }}
+            onClick={(e) => {
+              drag([0, x, heights.length - 1, x]);
+              select([0, x]);
+            }}
+          >
           {x}
           </th>))
           }
         </tr>
       </thead>
       <tbody>{heights.map((height, y) => (<tr key={y}>
-        <th className="row-number" style={{ height }}>{y + 1}</th>
+        <th
+          className="row-number" 
+          style={{ height }}
+          onClick={(e) => {
+            drag([y, 0, y, widths.length - 1]);
+            select([y, 0]);
+            e.preventDefault();
+            return false;
+          }}
+        >{y + 1}</th>
         {widths.map((width, x) => {
           const value = rows[y][x];
           return (<td
@@ -124,19 +137,34 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
                 if (copying[0] === -1) {
                   0;
                 } else {
-                  const [diffY, diffX] = [copyingBottom - copyingTop, copyingRight - copyingLeft];
-                  for (let _y = 0; _y <= diffY; _y++) {
-                    for (let _x = 0; _x <= diffX; _x++) {
+                  const [copyingHeight, copyingWidth] = [copyingBottom - copyingTop, copyingRight - copyingLeft];
+                  for (let _y = 0; _y <= copyingHeight; _y++) {
+                    for (let _x = 0; _x <= copyingWidth; _x++) {
                       const [dstY, dstX, srcY, srcX] = [y + _y, x + _x, copyingTop + _y, copyingLeft + _x];
                       if (dstY < heights.length && dstX < widths.length) {
                         rows[dstY][dstX] = rows[srcY][srcX];
                       }
                     }
                   }
-                  drag([y, x, y + diffY, x + diffX]);
+                  drag([y, x, y + copyingHeight, x + copyingWidth]);
                 }
               } else {
-
+                if (copying[0] === -1) {
+                  0;
+                } else {
+                  const [draggingHeight, draggingWidth] = [draggingBottom - draggingTop, draggingRight - draggingLeft];
+                  const [copyingHeight, copyingWidth] = [copyingBottom - copyingTop, copyingRight - copyingLeft];
+                  const [biggerHeight, biggerWidth] = [draggingHeight > copyingHeight ? draggingHeight : copyingHeight, draggingWidth > copyingWidth ? draggingWidth : copyingWidth]
+                  for (let _y = 0; _y <= biggerHeight; _y++) {
+                    for (let _x = 0; _x <= biggerWidth; _x++) {
+                      const [dstY, dstX, srcY, srcX] = [y + _y, x + _x, copyingTop + (_y % (copyingHeight + 1)), copyingLeft + (_x % (copyingWidth + 1))];
+                      if (dstY < heights.length && dstX < widths.length) {
+                        rows[dstY][dstX] = rows[srcY][srcX];
+                      }
+                    }
+                  }
+                  drag([y, x, y + biggerHeight, x + biggerWidth]);
+                }
               }
               setRows([...rows]);
               copy([-1, -1, -1, -1]);
