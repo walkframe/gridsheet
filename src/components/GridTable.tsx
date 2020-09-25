@@ -11,6 +11,9 @@ import { Y_START, Y_END, X_START, X_END, DUMMY_IMG } from "../constants";
 import {
   Cell,
 } from "./Cell";
+import {
+  convertNtoA,
+} from "../utils/converters";
 
 interface Props {
   data: DataType;
@@ -28,6 +31,8 @@ const GridTableLayout = styled.div`
       border: solid 1px #bbbbbb;
     }
     th {
+      color: #777777;
+      font-size: 13px;
       font-weight: normal;
       width: 80px;
       background-color: #eeeeee;
@@ -94,7 +99,7 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
               select([0, x]);
             }}
           >
-          {x}
+          {convertNtoA(x + 1)}
           </th>))
           }
         </tr>
