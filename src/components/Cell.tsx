@@ -114,6 +114,7 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
         return false;
       case "Escape": // ESCAPE
         copy(false, false);
+        setEditing(false);
         e.currentTarget.value = value;
         // e.currentTarget.blur();
         return false;

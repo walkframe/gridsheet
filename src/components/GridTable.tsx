@@ -44,12 +44,22 @@ const GridTableLayout = styled.div`
       margin: 0;
       width: 150px;
       background-color: #ffffff;
+      border: solid 1px #dddddd;
       
       &.dragging {
         background-color: rgba(0, 128, 255, 0.2);
       }
+      &.cutting {
+        border: dotted 2px #0077ff;
+        textarea:focus {
+          outline: solid 1px #0077ff;
+        }
+      }
       &.copying {
         border: dashed 2px #0077ff;
+        textarea:focus {
+          outline: solid 1px #0077ff;
+        }
       }
     }
   }
@@ -104,7 +114,13 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
           const value = rows[y][x];
           return (<td
             key={x}
-            className={`${isDragging(y, x) ? "dragging": ""} ${isCopying(y, x) ? "copying" : ""}`}
+            className={`${isDragging(y, x) ? "dragging": ""} ${isCopying(y, x) ? cutting ? "cutting" : "copying" : ""}`}
+            style={{
+              borderTop: copyingTop < y && y <= copyingBottom ? "solid 1px #dddddd" : undefined,
+              borderBottom: copyingTop <= y && y < copyingBottom ? "solid 1px #dddddd" : undefined,
+              borderLeft: copyingLeft < x && x <= copyingRight ? "solid 1px #dddddd" : undefined,
+              borderRight: copyingLeft <= x && x < copyingRight ? "solid 1px #dddddd" : undefined,
+            }}
             draggable
             onClick={(e) => {
               select([y, x]);
@@ -114,6 +130,11 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
               e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
               select([y, x]);
               drag([y, x, -1, -1]);
+            }}
+            onDragEnd={() => {
+              if (dragging[0] === dragging[2] && dragging[1] === dragging[3]) {
+                drag([-1, -1, -1, -1]);
+              }
             }}
             onDragEnter={(e) => {
               drag([dragging[0], dragging[1], y, x])
