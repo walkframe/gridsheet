@@ -207,28 +207,38 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
               setRows([...rows]);
               copy([-1, -1, -1, -1]);
             }}
-            select={(deltaY: number, deltaX: number) => {
-              let nextY = y + deltaY;
-              let nextX = x + deltaX;
+            drag={(deltaY: number, deltaX: number) => {
+              let [dragEndY, dragEndX] = [dragging[2] === -1 ? y : dragging[2], dragging[3] === -1 ? x : dragging[3]];
+              let [nextY, nextX] = [dragEndY + deltaY, dragEndX + deltaX];
+              if (nextY < 0 || heights.length <= nextY || nextX < 0 || widths.length <= nextX) {
+                return;
+              }
+              drag([dragging[0], dragging[1], nextY, nextX]);
+            }}
+            select={(deltaY: number, deltaX: number, breaking: boolean) => {
+              let [nextY, nextX] = [y + deltaY, x + deltaX];
 
-              if (nextY < draggingTop && draggingTop !== -1) {
+              if (nextY < draggingTop && draggingTop !== -1 && !breaking) {
                 nextY = draggingBottom;
                 nextX = nextX > draggingLeft ? nextX - 1 : draggingRight;
               }
-              if (nextY > draggingBottom && draggingBottom !== -1) {
+              if (nextY > draggingBottom && draggingBottom !== -1 && !breaking) {
                 nextY = draggingTop;
                 nextX = nextX < draggingRight ? nextX + 1 : draggingLeft;
               }
-              if (nextX < draggingLeft && draggingLeft !== -1) {
+              if (nextX < draggingLeft && draggingLeft !== -1 && !breaking) {
                 nextX = draggingRight;
                 nextY = nextY > draggingTop ? nextY - 1 : draggingBottom;
               }
-              if (nextX > draggingRight && draggingRight !== -1) {
+              if (nextX > draggingRight && draggingRight !== -1 && !breaking) {
                 nextX = draggingLeft;
                 nextY = nextY < draggingBottom ? nextY + 1 : draggingTop;
               }
               if (nextY < 0 || heights.length <= nextY || nextX < 0 || widths.length <= nextX) {
                 return;
+              }
+              if (breaking) {
+                drag([-1, -1, -1, -1]);
               }
               select([nextY, nextX]);
             }}

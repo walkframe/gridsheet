@@ -43,7 +43,8 @@ const CellLayout = styled.div`
 interface Props {
   value: string;
   setValue: (value: string) => void;
-  select: (deltaY: number, deltaX: number) => void;
+  select: (deltaY: number, deltaX: number, breaking: boolean) => void;
+  drag: (deltaY: number, deltaX: number) => void;
   selecting: boolean;
   copy: (copying: boolean, cutting: boolean) => void;
   paste: () => void;
@@ -78,7 +79,7 @@ export const Cell: React.FC<Props> = (props) => {
 };
 
 const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boolean) => void) => {
-  const { value, setValue, select, copy, paste, clear } = props;
+  const { value, setValue, select, drag, copy, paste, clear } = props;
   return (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     console.debug(e.key, "shift:", e.shiftKey, "ctrl:", e.ctrlKey, "alt:", e.altKey, "meta:", e.metaKey);
 
@@ -88,14 +89,14 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
         if (editing) {
           setValue(e.currentTarget.value);
         }
-        select(0, e.shiftKey ? -1 : 1);
+        select(0, e.shiftKey ? -1 : 1, false);
         setEditing(false);
         return false;
       case "Enter": // ENTER
         if (editing) {
           setValue(e.currentTarget.value);
         }
-        select(e.shiftKey ? -1 : 1, 0);
+        select(e.shiftKey ? -1 : 1, 0, false);
         setEditing(false);
         return false;
       case "Backspace": // BACKSPACE
@@ -120,22 +121,22 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
         return false;
       case "ArrowLeft": // LEFT
         if (!editing) {
-          select(0, -1);
+          e.shiftKey ? drag(0, -1) : select(0, -1, true);
           return false;
         }
       case "ArrowUp": // UP
         if (!editing) {
-          select(-1, 0);
+          e.shiftKey ? drag(-1, 0) : select(-1, 0, true);
           return false;
         }
       case "ArrowRight": // RIGHT
         if (!editing) {
-          select(0, 1);
+          e.shiftKey ? drag(0, 1) : select(0, 1, true);
           return false;
         }
       case "ArrowDown": // DOWN
         if (!editing) {
-          select(1, 0);
+          e.shiftKey ? drag(1, 0) : select(1, 0, true);
           return false;
         }
 
