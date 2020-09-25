@@ -145,6 +145,8 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
             }}
           ><Cell
             value={value}
+            x={x}
+            y={y}
             setValue={(value: string) => {
               rows[y][x] = value;
               setRows([...rows]);
@@ -219,9 +221,13 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
               }
               y === nextY && x === nextX ? drag([-1, -1, -1, -1]) : drag([y, x, nextY, nextX]);
             }}
-            select={(deltaY: number, deltaX: number, breaking: boolean) => {
-              let [nextY, nextX] = [y + deltaY, x + deltaX];
-
+            blur={() => {
+              select([-1, -1]);
+              drag([-1, -1, -1, -1]);
+              copy([-1, -1, -1, -1]);
+              setCutting(false);
+            }}
+            select={(nextY: number, nextX: number, breaking: boolean) => {
               if (nextY < draggingTop && draggingTop !== -1 && !breaking) {
                 nextY = draggingBottom;
                 nextX = nextX > draggingLeft ? nextX - 1 : draggingRight;
@@ -238,11 +244,11 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
                 nextX = draggingLeft;
                 nextY = nextY < draggingBottom ? nextY + 1 : draggingTop;
               }
-              if (nextY < 0 || heights.length <= nextY || nextX < 0 || widths.length <= nextX) {
-                return;
-              }
               if (breaking) {
                 drag([-1, -1, -1, -1]);
+              }
+              if (nextY < 0 || heights.length <= nextY || nextX < 0 || widths.length <= nextX) {
+                return;
               }
               select([nextY, nextX]);
             }}

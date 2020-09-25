@@ -43,17 +43,20 @@ const CellLayout = styled.div`
 
 interface Props {
   value: string;
+  x: number;
+  y: number;
   setValue: (value: string) => void;
-  select: (deltaY: number, deltaX: number, breaking: boolean) => void;
+  select: (nextY: number, nextX: number, breaking: boolean) => void;
   drag: (deltaY: number, deltaX: number) => void;
   selecting: boolean;
   copy: (copying: boolean, cutting: boolean) => void;
   paste: () => void;
   clear: () => void;
+  blur: () => void;
 };
 
 export const Cell: React.FC<Props> = (props) => {
-  const { value, setValue, select, selecting, copy } = props;
+  const { value, setValue, select, selecting, blur } = props;
   const [editing, setEditing] = React.useState(false);
   return (<CellLayout 
     className="cell"
@@ -74,14 +77,14 @@ export const Cell: React.FC<Props> = (props) => {
           setValue(e.target.value);
         }
         setEditing(false);
-        select(-1, -1, false);
+        blur();
       }}
     ></textarea>)}
   </CellLayout>);
 };
 
 const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boolean) => void) => {
-  const { value, setValue, select, drag, copy, paste, clear } = props;
+  const { value, x, y, setValue, select, drag, copy, paste, clear } = props;
   return (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     const input = e.currentTarget;
     console.debug(e.key, "shift:", e.shiftKey, "ctrl:", e.ctrlKey, "alt:", e.altKey, "meta:", e.metaKey);
@@ -92,7 +95,7 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
         if (editing) {
           setValue(e.currentTarget.value);
         }
-        select(0, e.shiftKey ? -1 : 1, false);
+        select(y, e.shiftKey ? x - 1 : x + 1, false);
         setEditing(false);
         return false;
       case "Enter": // ENTER
@@ -103,7 +106,7 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
           if (editing) {
             setValue(e.currentTarget.value);
           }
-          select(e.shiftKey ? -1 : 1, 0, false);
+          select(e.shiftKey ? y - 1 : y + 1, x, true);
           setEditing(false);
           return false;
         }
@@ -129,22 +132,22 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
         return false;
       case "ArrowLeft": // LEFT
         if (!editing) {
-          e.shiftKey ? drag(0, -1) : select(0, -1, true);
+          e.shiftKey ? drag(0, -1) : select(y, x - 1, true);
           return false;
         }
       case "ArrowUp": // UP
         if (!editing) {
-          e.shiftKey ? drag(-1, 0) : select(-1, 0, true);
+          e.shiftKey ? drag(-1, 0) : select(y - 1, x, true);
           return false;
         }
       case "ArrowRight": // RIGHT
         if (!editing) {
-          e.shiftKey ? drag(0, 1) : select(0, 1, true);
+          e.shiftKey ? drag(0, 1) : select(y, x + 1, true);
           return false;
         }
       case "ArrowDown": // DOWN
         if (!editing) {
-          e.shiftKey ? drag(1, 0) : select(1, 0, true);
+          e.shiftKey ? drag(1, 0) : select(y + 1, x, true);
           return false;
         }
 
