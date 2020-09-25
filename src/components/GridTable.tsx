@@ -129,6 +129,14 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
                 copy([-1, -1, -1, -1]);
               }
             }}
+            clear={() => {
+              for (let y = draggingTop; y <= draggingBottom; y++) {
+                for (let x = draggingLeft; x <= draggingRight; x++) {
+                  rows[y][x] = "";
+                }
+              }
+              setRows([... rows]);
+            }}
             cut={(cutting: boolean) => {
               copy([-1, -1, -1, -1]);
             }}

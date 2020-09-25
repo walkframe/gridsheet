@@ -46,6 +46,7 @@ interface Props {
   copy: (copying: boolean) => void;
   cut: (cutting: boolean) => void;
   paste: () => void;
+  clear: () => void;
 };
 
 export const Cell: React.FC<Props> = (props) => {
@@ -73,7 +74,7 @@ export const Cell: React.FC<Props> = (props) => {
 };
 
 const handleKeyDown = (props: Props) => {
-  const { value, setValue, select, copy, paste } = props;
+  const { value, setValue, select, copy, paste, clear } = props;
   return (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     console.debug(e.key, "shift:", e.shiftKey, "ctrl:", e.ctrlKey, "alt:", e.altKey, "meta:", e.metaKey);
 
@@ -91,6 +92,10 @@ const handleKeyDown = (props: Props) => {
         }
         select(e.shiftKey ? -1 : 1, 0);
         return false;
+      case "Backspace": // BACKSPACE
+        if (!e.currentTarget.classList.contains("editing")) {
+          clear();
+        }
       case "Shift": // SHIFT
         return false;
       case "Control": // CTRL
