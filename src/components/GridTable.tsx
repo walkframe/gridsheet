@@ -176,9 +176,9 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
                       const [dstY, dstX, srcY, srcX] = [y + _y, x + _x, copyingTop + _y, copyingLeft + _x];
                       if (dstY < heights.length && dstX < widths.length) {
                         rows[dstY][dstX] = rows[srcY][srcX];
-                        if (cutting) {
-                          rows[srcY][srcX] = "";
-                        }
+                      }
+                      if (cutting) {
+                        rows[srcY][srcX] = "";
                       }
                     }
                   }
