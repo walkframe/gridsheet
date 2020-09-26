@@ -51,12 +51,13 @@ interface Props {
   value: string;
   x: number;
   y: number;
+  selecting: boolean;
   setValue: (value: string) => void;
   select: (nextY: number, nextX: number, breaking: boolean) => void;
   drag: (deltaY: number, deltaX: number) => void;
   dragAll: () => void;
-  selecting: boolean;
-  copy: (copying: boolean, cutting: boolean) => void;
+  copy: (cutting: boolean) => void;
+  escape: () => void;
   paste: (text: string) => void;
   clear: () => void;
   blur: () => void;
@@ -92,7 +93,7 @@ export const Cell: React.FC<Props> = (props) => {
 };
 
 const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boolean) => void) => {
-  const { value, x, y, setValue, select, drag, dragAll, copy, paste, clear } = props;
+  const { value, x, y, setValue, select, drag, dragAll, copy, paste, clear, escape } = props;
   return (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     const input = e.currentTarget;
     console.debug(e.key, "shift:", e.shiftKey, "ctrl:", e.ctrlKey, "alt:", e.altKey, "meta:", e.metaKey);
@@ -133,7 +134,7 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
       case "NumLock": // NUMLOCK
         return false;
       case "Escape": // ESCAPE
-        copy(false, false);
+        escape();
         setEditing(false);
         input.value = value;
         // e.currentTarget.blur();
@@ -170,7 +171,7 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
         if (e.ctrlKey || e.metaKey) {
           if (!editing) {
             e.preventDefault();
-            copy(true, false);
+            copy(false);
             return false;
           }
         }
@@ -178,7 +179,7 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
         if (e.ctrlKey || e.metaKey) {
           if (!editing) {
             e.preventDefault();
-            copy(true, true);
+            copy(true);
             return false;
           }
         }

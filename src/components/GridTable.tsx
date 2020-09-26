@@ -170,31 +170,31 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
               rows[y][x] = value;
               setRows([...rows]);
             }}
-            copy={(copying: boolean, cutting=false) => {
+            copy={(cutting=false) => {
               const input = clipboardRef.current;
               let tsv = "";
-              if (copying) {
-                if (dragging[0] === -1) {
-                  copy([y, x, y, x]);
-                  tsv = rows[y][x];
-                } else {
-                  copy(dragging);
-                  const copyingArea = rows.slice(draggingTop, draggingBottom + 1).map((cols) => cols.slice(draggingLeft, draggingRight + 1));
-                  tsv = convertArrayToTSV(copyingArea)
-                }
-                if (input != null) {
-                  input.value = tsv;
-                  input.focus();
-                  input.select();
-                  document.execCommand("copy");
-                  input.value = "";
-                  input.blur();
-                  setTimeout(() => select([y, x]), 100); // refocus
-                }
+              if (dragging[0] === -1) {
+                copy([y, x, y, x]);
+                tsv = rows[y][x];
               } else {
-                copy([-1, -1, -1, -1]);
+                copy(dragging);
+                const copyingArea = rows.slice(draggingTop, draggingBottom + 1).map((cols) => cols.slice(draggingLeft, draggingRight + 1));
+                tsv = convertArrayToTSV(copyingArea)
+              }
+              if (input != null) {
+                input.value = tsv;
+                input.focus();
+                input.select();
+                document.execCommand("copy");
+                input.value = "";
+                input.blur();
+                setTimeout(() => select([y, x]), 100); // refocus
               }
               setCutting(cutting);
+            }}
+            escape={() => {
+              copy([-1, -1, -1, -1]);
+              setCutting(false);
             }}
             clear={() => {
               if (dragging[0] === -1) {
@@ -226,6 +226,7 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
                       if (dstY < heights.length && dstX < widths.length) {
                         rows[dstY][dstX] = rows[srcY][srcX];
                       }
+                      console.log('deleting:', cutting);
                       if (cutting) {
                         rows[srcY][srcX] = "";
                       }
@@ -275,7 +276,6 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
             blur={() => {
               select([-1, -1]);
               drag([-1, -1, -1, -1]);
-              setCutting(false);
             }}
             select={(nextY: number, nextX: number, breaking: boolean) => {
               if (nextY < draggingTop && draggingTop !== -1 && !breaking) {
