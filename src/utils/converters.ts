@@ -31,5 +31,28 @@ export const convertArrayToTSV = (rows: string[][]): string => {
 };
 
 export const convertTSVToArray = (tsv: string): string[][] => {
-  return [[]];
+  const rows: string[][] = [];
+  let row: string[] = [];
+  tsv.split("\t").map((col) => {
+    if (col[0] === '"' && col[col.length-1] === '"') { // escaping
+      row.push(col.substring(1, col.length - 1).replace(/""/g, '"'));
+    } else {
+      const enterIndex = col.indexOf("\n");
+      if (enterIndex === -1) {
+        row.push(col);
+      } else {
+        row.push(col.substring(0, enterIndex));
+        rows.push(row);
+        row = [];
+        const nextCol = col.substring(enterIndex + 1, col.length)
+        if (nextCol) {
+          row.push(nextCol);
+        }
+      }
+    }
+  });
+  if (row.length > 0) {
+    rows.push(row);
+  }
+  return rows;
 };

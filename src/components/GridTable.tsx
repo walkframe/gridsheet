@@ -14,6 +14,7 @@ import {
 import {
   convertNtoA,
   convertArrayToTSV,
+  convertTSVToArray,
 } from "../utils/converters";
 
 interface Props {
@@ -210,7 +211,13 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
             paste={(text: string) => {
               if (dragging[0] === -1) {
                 if (copying[0] === -1) {
-                  rows[y][x] = text;
+                  const newRows = convertTSVToArray(text);
+                  for (let _y = 0; _y < newRows.length; _y++) {
+                    for (let _x = 0; _x < newRows[_y].length; _x++) {
+                      rows[y + _y][x + _x] = newRows[_y][_x];
+                    }
+                  }
+                  drag([y, x, y + newRows.length - 1, x + newRows[0].length - 1]);
                 } else {
                   const [copyingHeight, copyingWidth] = [copyingBottom - copyingTop, copyingRight - copyingLeft];
                   for (let _y = 0; _y <= copyingHeight; _y++) {
@@ -230,9 +237,10 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
                 }
               } else {
                 if (copying[0] === -1) {
+                  const newRows = convertTSVToArray(text);
                   for (let y = draggingTop; y <= draggingBottom; y++) {
                     for (let x = draggingLeft; x <= draggingRight; x++) {
-                      rows[y][x] = text;
+                      rows[y][x] = newRows[y % newRows.length][x % newRows[0].length];
                     }
                   }
                 } else {
