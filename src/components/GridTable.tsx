@@ -470,9 +470,9 @@ const handlePaste = ({
     } else {
       if (copyingTop === -1) {
         const tsvRows = convertTSVToArray(text);
-        for (let y = selectingTop; y <= selectingBottom; y++) {
-          for (let x = selectingLeft; x <= selectingRight; x++) {
-            rows[y][x] = tsvRows[y % tsvRows.length][x % tsvRows[0].length];
+        for (let y = 0; y <= selectingHeight; y++) {
+          for (let x = 0; x <= selectingHeight; x++) {
+            rows[selectingTop + y][selectingLeft + x] = tsvRows[y % tsvRows.length][x % tsvRows[0].length];
           }
         }
       } else {
