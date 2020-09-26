@@ -5,9 +5,11 @@ const CellLayout = styled.div`
   overflow: hidden;
   font-size: 13px;
   letter-spacing: 1px;
-  white-space: pre;
+  white-space: pre-wrap;
   line-height: 20px;
   cursor: auto;
+  word-wrap: break-word;
+  word-break: break-all;
 
   .unselected {
     padding: 2px;
@@ -26,6 +28,8 @@ const CellLayout = styled.div`
     background-color: transparent;
     resize: none;
     box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
     overflow: hidden;
     caret-color: transparent;
     z-index: 1;
@@ -34,6 +38,8 @@ const CellLayout = styled.div`
       caret-color: #000000;
       background-color: #ffffff;
       cursor: text;
+      min-width: 100%;
+      white-space: pre;
     }
     &:focus {
       outline: solid 2px #0077ff;
@@ -69,6 +75,7 @@ export const Cell: React.FC<Props> = (props) => {
         if (!editing) {
           input.value = value;
           setEditing(true);
+          setTimeout(() => input.style.width = `${input.scrollWidth}px`, 100);
         }
       }}
       onKeyDown={handleKeyDown(props, editing, setEditing)}
@@ -181,6 +188,7 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
     if (e.ctrlKey || e.metaKey) {
       return false;
     }
+    input.style.width = `${input.scrollWidth}px`;
     setEditing(true);
   }
 };
