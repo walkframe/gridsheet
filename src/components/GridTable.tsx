@@ -364,9 +364,9 @@ const handleCopy = ({
   choose,
   setCutting,
 }: handlePropsType) => {
-  let [top, left, bottom, right] = copyingArea;
+  let [top, left, bottom, right] = selectingArea;
   if (top === -1) {
-    [top, left, bottom, right] = selectingArea;
+    [top, left, bottom, right] = copyingArea;
   }
   return (cutting=false) => {
     const input = clipboardRef.current;
