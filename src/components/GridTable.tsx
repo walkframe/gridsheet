@@ -29,6 +29,9 @@ type Position = [number, number];
 type Range = [number, number, number, number];
 
 const GridTableLayout = styled.div`
+  height: auto;
+  overflow: auto;
+
   .grid-table {
     table-layout: fixed;
     border-collapse: collapse;
@@ -481,7 +484,7 @@ const handlePaste = ({
           for (let _x = 0; _x <= biggerWidth; _x++) {
             const [dstY, dstX] = [y + _y, x + _x];
             if (dstY < heights.length && dstX < widths.length) {
-              rows[dstY][dstX] = copyingRows[_y][_x];
+              rows[dstY][dstX] = copyingRows[_y % (copyingHeight + 1)][_x % (copyingWidth + 1)];
             }
           }
         }
