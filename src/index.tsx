@@ -11,6 +11,7 @@ import {
 } from "./components/GridTable";
 
 const Layout = styled.div`
+  background-color: #ffffff;
   font-family: "Helvetica Neue",
     Arial,
     "Hiragino Kaku Gothic ProN",

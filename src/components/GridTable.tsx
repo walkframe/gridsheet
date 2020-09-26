@@ -67,7 +67,6 @@ const GridTableLayout = styled.div`
       padding: 0;
       margin: 0;
       width: 150px;
-      background-color: #ffffff;
       border: solid 1px #cccccc;
       
       &.selecting {
