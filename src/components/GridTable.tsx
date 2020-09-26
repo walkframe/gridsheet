@@ -25,6 +25,9 @@ interface Props {
   setHeights: (heights: HeightsType) => void;
 };
 
+type Position = [number, number];
+type Range = [number, number, number, number];
+
 const GridTableLayout = styled.div`
   .grid-table {
     table-layout: fixed;
@@ -88,13 +91,13 @@ const GridTableLayout = styled.div`
 
 export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
   const [rows, setRows] = React.useState(data);
-  const [selecting, select] = React.useState<[number, number]>([0, 0]);
+  const [selecting, select] = React.useState<Position>([0, 0]);
   const [cutting, setCutting] = React.useState(false);
 
-  const [dragging, drag] = React.useState<[number, number, number, number]>([-1, -1, -1, -1]); // (y, x) -> (y, x)
+  const [dragging, drag] = React.useState<Range>([-1, -1, -1, -1]); // (y, x) -> (y, x)
   const [draggingTop, draggingBottom] = dragging[Y_START] < dragging[Y_END] ? [dragging[Y_START], dragging[Y_END]] : [dragging[Y_END], dragging[Y_START]];
   const [draggingLeft, draggingRight] = dragging[X_START] < dragging[X_END] ? [dragging[X_START], dragging[X_END]] : [dragging[X_END], dragging[X_START]];
-  const [copying, copy] = React.useState<[number, number, number, number]>([-1, -1, -1, -1]); // (y, x) -> (y, x)
+  const [copying, copy] = React.useState<Range>([-1, -1, -1, -1]); // (y, x) -> (y, x)
   const [copyingTop, copyingBottom] = copying[Y_START] < copying[Y_END] ? [copying[Y_START], copying[Y_END]] : [copying[Y_END], copying[Y_START]];
   const [copyingLeft, copyingRight] = copying[X_START] < copying[X_END] ? [copying[X_START], copying[X_END]] : [copying[X_END], copying[X_START]];
 
@@ -102,6 +105,15 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
   const isCopying = (y: number, x: number) => (copyingTop <= y && y <= copyingBottom && copyingLeft <= x && x <= copyingRight);
 
   const clipboardRef = React.createRef<HTMLTextAreaElement>();
+
+  const handleProps = {
+    rows, setRows,
+    selecting, select,
+    cutting, setCutting,
+    heights, widths,
+    drag, dragging, draggingTop, draggingBottom, draggingLeft, draggingRight,
+    copy, copying, copyingTop, copyingBottom, copyingLeft, copyingRight, clipboardRef,
+  };
 
   return (<GridTableLayout>
     <textarea className="clipboard" ref={clipboardRef}></textarea>
@@ -166,142 +178,15 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
             value={value}
             x={x}
             y={y}
-            setValue={(value: string) => {
-              rows[y][x] = value;
-              setRows([...rows]);
-            }}
-            copy={(cutting=false) => {
-              const input = clipboardRef.current;
-              let tsv = "";
-              if (dragging[0] === -1) {
-                copy([y, x, y, x]);
-                tsv = rows[y][x];
-              } else {
-                copy(dragging);
-                const copyingArea = rows.slice(draggingTop, draggingBottom + 1).map((cols) => cols.slice(draggingLeft, draggingRight + 1));
-                tsv = convertArrayToTSV(copyingArea)
-              }
-              if (input != null) {
-                input.value = tsv;
-                input.focus();
-                input.select();
-                document.execCommand("copy");
-                input.value = "";
-                input.blur();
-                setTimeout(() => select([y, x]), 100); // refocus
-              }
-              setCutting(cutting);
-            }}
-            escape={() => {
-              copy([-1, -1, -1, -1]);
-              setCutting(false);
-            }}
-            clear={() => {
-              if (dragging[0] === -1) {
-                rows[y][x] = "";
-              } else {
-                for (let y = draggingTop; y <= draggingBottom; y++) {
-                  for (let x = draggingLeft; x <= draggingRight; x++) {
-                    rows[y][x] = "";
-                  }
-                }
-              }
-              setRows([... rows]);
-            }}
-            paste={(text: string) => {
-              if (dragging[0] === -1) {
-                if (copying[0] === -1) {
-                  const newRows = convertTSVToArray(text);
-                  for (let _y = 0; _y < newRows.length; _y++) {
-                    for (let _x = 0; _x < newRows[_y].length; _x++) {
-                      rows[y + _y][x + _x] = newRows[_y][_x];
-                    }
-                  }
-                  drag([y, x, y + newRows.length - 1, x + newRows[0].length - 1]);
-                } else {
-                  const [copyingHeight, copyingWidth] = [copyingBottom - copyingTop, copyingRight - copyingLeft];
-                  for (let _y = 0; _y <= copyingHeight; _y++) {
-                    for (let _x = 0; _x <= copyingWidth; _x++) {
-                      const [dstY, dstX, srcY, srcX] = [y + _y, x + _x, copyingTop + _y, copyingLeft + _x];
-                      if (dstY < heights.length && dstX < widths.length) {
-                        rows[dstY][dstX] = rows[srcY][srcX];
-                      }
-                      console.log('deleting:', cutting);
-                      if (cutting) {
-                        rows[srcY][srcX] = "";
-                      }
-                    }
-                  }
-                  if (copyingHeight > 0 || copyingWidth > 0) {
-                    drag([y, x, y + copyingHeight, x + copyingWidth]);
-                  }
-                }
-              } else {
-                if (copying[0] === -1) {
-                  const newRows = convertTSVToArray(text);
-                  for (let y = draggingTop; y <= draggingBottom; y++) {
-                    for (let x = draggingLeft; x <= draggingRight; x++) {
-                      rows[y][x] = newRows[y % newRows.length][x % newRows[0].length];
-                    }
-                  }
-                } else {
-                  const [draggingHeight, draggingWidth] = [draggingBottom - draggingTop, draggingRight - draggingLeft];
-                  const [copyingHeight, copyingWidth] = [copyingBottom - copyingTop, copyingRight - copyingLeft];
-                  const [biggerHeight, biggerWidth] = [draggingHeight > copyingHeight ? draggingHeight : copyingHeight, draggingWidth > copyingWidth ? draggingWidth : copyingWidth]
-                  for (let _y = 0; _y <= biggerHeight; _y++) {
-                    for (let _x = 0; _x <= biggerWidth; _x++) {
-                      const [dstY, dstX, srcY, srcX] = [y + _y, x + _x, copyingTop + (_y % (copyingHeight + 1)), copyingLeft + (_x % (copyingWidth + 1))];
-                      if (dstY < heights.length && dstX < widths.length) {
-                        rows[dstY][dstX] = rows[srcY][srcX];
-                      }
-                    }
-                  }
-                  drag([y, x, y + biggerHeight, x + biggerWidth]);
-                }
-              }
-              setRows([...rows]);
-              copy([-1, -1, -1, -1]);
-            }}
-            drag={(deltaY: number, deltaX: number) => {
-              let [dragEndY, dragEndX] = [dragging[2] === -1 ? y : dragging[2], dragging[3] === -1 ? x : dragging[3]];
-              let [nextY, nextX] = [dragEndY + deltaY, dragEndX + deltaX];
-              if (nextY < 0 || heights.length <= nextY || nextX < 0 || widths.length <= nextX) {
-                return;
-              }
-              y === nextY && x === nextX ? drag([-1, -1, -1, -1]) : drag([y, x, nextY, nextX]);
-            }}
-            dragAll={() => {
-              drag([0, 0, heights.length - 1, widths.length - 1]);
-            }}
-            blur={() => {
-              select([-1, -1]);
-              drag([-1, -1, -1, -1]);
-            }}
-            select={(nextY: number, nextX: number, breaking: boolean) => {
-              if (nextY < draggingTop && draggingTop !== -1 && !breaking) {
-                nextY = draggingBottom;
-                nextX = nextX > draggingLeft ? nextX - 1 : draggingRight;
-              }
-              if (nextY > draggingBottom && draggingBottom !== -1 && !breaking) {
-                nextY = draggingTop;
-                nextX = nextX < draggingRight ? nextX + 1 : draggingLeft;
-              }
-              if (nextX < draggingLeft && draggingLeft !== -1 && !breaking) {
-                nextX = draggingRight;
-                nextY = nextY > draggingTop ? nextY - 1 : draggingBottom;
-              }
-              if (nextX > draggingRight && draggingRight !== -1 && !breaking) {
-                nextX = draggingLeft;
-                nextY = nextY < draggingBottom ? nextY + 1 : draggingTop;
-              }
-              if (breaking) {
-                drag([-1, -1, -1, -1]);
-              }
-              if (nextY < 0 || heights.length <= nextY || nextX < 0 || widths.length <= nextX) {
-                return;
-              }
-              select([nextY, nextX]);
-            }}
+            write={handleWrite({... handleProps, y, x})}
+            copy={handleCopy({... handleProps, y, x})}
+            escape={handleEscape({... handleProps, y, x})}
+            clear={handleClear({... handleProps, y, x})}
+            paste={handlePaste({... handleProps, y, x})}
+            drag={handleDrag({... handleProps, y, x})}
+            dragAll={handleDragAll({... handleProps, y, x})}
+            blur={handleBlur({... handleProps, y, x})}
+            select={handleSelect({... handleProps, y, x})}
             selecting={selecting[0] === y && selecting[1] === x}
           /></td>);
         })}
@@ -311,3 +196,238 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
   </GridTableLayout>);
 };
 
+type handlePropsType = {
+  y: number;
+  x: number;
+  rows: DataType;
+  clipboardRef: React.RefObject<HTMLTextAreaElement>;
+  dragging: Range;
+  draggingTop: number;
+  draggingBottom: number;
+  draggingLeft: number;
+  draggingRight: number;
+  copying: Range;
+  copyingTop: number;
+  copyingBottom: number;
+  copyingLeft: number;
+  copyingRight: number;
+  heights: string[];
+  widths: string[];
+  cutting: boolean,
+
+  copy: (range: Range) => void;
+  drag: (range: Range) => void;
+  select: (position: Position) => void;
+  setCutting: (cutting: boolean) => void;
+  setRows: (rows: DataType) => void;
+};
+
+const handleBlur = ({
+  drag,
+  select,
+}: handlePropsType) => {
+  return () => {
+    select([-1, -1]);
+    drag([-1, -1, -1, -1]);
+  };
+};
+
+const handleClear = ({
+  x, y,
+  rows, setRows,
+  dragging,
+  draggingTop, draggingBottom, draggingLeft, draggingRight,
+}: handlePropsType) => {
+  return () => {
+    if (dragging[0] === -1) {
+      rows[y][x] = "";
+    } else {
+      for (let y = draggingTop; y <= draggingBottom; y++) {
+        for (let x = draggingLeft; x <= draggingRight; x++) {
+          rows[y][x] = "";
+        }
+      }
+    }
+    setRows([... rows]);
+  };
+};
+
+const handleCopy = ({
+  x, y,
+  rows,
+  clipboardRef,
+  dragging,
+  draggingTop, draggingBottom, draggingLeft, draggingRight,
+  copy,
+  select,
+  setCutting,
+}: handlePropsType) => {
+  return (cutting=false) => {
+    const input = clipboardRef.current;
+    let tsv = "";
+    if (dragging[0] === -1) {
+      copy([y, x, y, x]);
+      tsv = rows[y][x];
+    } else {
+      copy(dragging);
+      const copyingArea = rows.slice(draggingTop, draggingBottom + 1).map((cols) => cols.slice(draggingLeft, draggingRight + 1));
+      tsv = convertArrayToTSV(copyingArea)
+    }
+    if (input != null) {
+      input.value = tsv;
+      input.focus();
+      input.select();
+      document.execCommand("copy");
+      input.value = "";
+      input.blur();
+      setTimeout(() => select([y, x]), 100); // refocus
+    }
+    setCutting(cutting);
+  };
+};
+
+const handleDrag = ({
+  x, y,
+  drag, dragging,
+  heights, widths,
+}: handlePropsType) => {
+  return (deltaY: number, deltaX: number) => {
+    let [dragEndY, dragEndX] = [dragging[2] === -1 ? y : dragging[2], dragging[3] === -1 ? x : dragging[3]];
+    let [nextY, nextX] = [dragEndY + deltaY, dragEndX + deltaX];
+    if (nextY < 0 || heights.length <= nextY || nextX < 0 || widths.length <= nextX) {
+      return;
+    }
+    y === nextY && x === nextX ? drag([-1, -1, -1, -1]) : drag([y, x, nextY, nextX]);
+  };
+}
+
+const handleDragAll = ({
+  drag, 
+  heights, widths,
+}: handlePropsType) => {
+  return () => {
+    drag([0, 0, heights.length - 1, widths.length - 1]);
+  };
+};
+
+const handleEscape = ({
+  copy,
+  setCutting,
+}: handlePropsType) => {
+  return () => {
+    copy([-1, -1, -1, -1]);
+    setCutting(false);
+  };
+};
+
+const handlePaste = ({
+  x, y,
+  rows,
+  dragging, draggingTop, draggingBottom, draggingLeft, draggingRight,
+  copying, copyingTop, copyingBottom, copyingLeft, copyingRight,
+  cutting,
+  drag,
+  copy,
+  heights, widths,
+  setRows,
+}: handlePropsType) => {
+  return (text: string) => {
+    if (dragging[0] === -1) {
+      if (copying[0] === -1) {
+        const newRows = convertTSVToArray(text);
+        for (let _y = 0; _y < newRows.length; _y++) {
+          for (let _x = 0; _x < newRows[_y].length; _x++) {
+            rows[y + _y][x + _x] = newRows[_y][_x];
+          }
+        }
+        drag([y, x, y + newRows.length - 1, x + newRows[0].length - 1]);
+      } else {
+        const [copyingHeight, copyingWidth] = [copyingBottom - copyingTop, copyingRight - copyingLeft];
+        for (let _y = 0; _y <= copyingHeight; _y++) {
+          for (let _x = 0; _x <= copyingWidth; _x++) {
+            const [dstY, dstX, srcY, srcX] = [y + _y, x + _x, copyingTop + _y, copyingLeft + _x];
+            if (dstY < heights.length && dstX < widths.length) {
+              rows[dstY][dstX] = rows[srcY][srcX];
+            }
+            console.log('deleting:', cutting);
+            if (cutting) {
+              rows[srcY][srcX] = "";
+            }
+          }
+        }
+        if (copyingHeight > 0 || copyingWidth > 0) {
+          drag([y, x, y + copyingHeight, x + copyingWidth]);
+        }
+      }
+    } else {
+      if (copying[0] === -1) {
+        const newRows = convertTSVToArray(text);
+        for (let y = draggingTop; y <= draggingBottom; y++) {
+          for (let x = draggingLeft; x <= draggingRight; x++) {
+            rows[y][x] = newRows[y % newRows.length][x % newRows[0].length];
+          }
+        }
+      } else {
+        const [draggingHeight, draggingWidth] = [draggingBottom - draggingTop, draggingRight - draggingLeft];
+        const [copyingHeight, copyingWidth] = [copyingBottom - copyingTop, copyingRight - copyingLeft];
+        const [biggerHeight, biggerWidth] = [draggingHeight > copyingHeight ? draggingHeight : copyingHeight, draggingWidth > copyingWidth ? draggingWidth : copyingWidth]
+        for (let _y = 0; _y <= biggerHeight; _y++) {
+          for (let _x = 0; _x <= biggerWidth; _x++) {
+            const [dstY, dstX, srcY, srcX] = [y + _y, x + _x, copyingTop + (_y % (copyingHeight + 1)), copyingLeft + (_x % (copyingWidth + 1))];
+            if (dstY < heights.length && dstX < widths.length) {
+              rows[dstY][dstX] = rows[srcY][srcX];
+            }
+          }
+        }
+        drag([y, x, y + biggerHeight, x + biggerWidth]);
+      }
+    }
+    setRows([...rows]);
+    copy([-1, -1, -1, -1]);
+  };
+
+};
+
+const handleSelect = ({
+  draggingTop, draggingBottom, draggingLeft, draggingRight,
+  drag,
+  select,
+  heights, widths,
+}: handlePropsType) => {
+  return (nextY: number, nextX: number, breaking: boolean) => {
+    if (nextY < draggingTop && draggingTop !== -1 && !breaking) {
+      nextY = draggingBottom;
+      nextX = nextX > draggingLeft ? nextX - 1 : draggingRight;
+    }
+    if (nextY > draggingBottom && draggingBottom !== -1 && !breaking) {
+      nextY = draggingTop;
+      nextX = nextX < draggingRight ? nextX + 1 : draggingLeft;
+    }
+    if (nextX < draggingLeft && draggingLeft !== -1 && !breaking) {
+      nextX = draggingRight;
+      nextY = nextY > draggingTop ? nextY - 1 : draggingBottom;
+    }
+    if (nextX > draggingRight && draggingRight !== -1 && !breaking) {
+      nextX = draggingLeft;
+      nextY = nextY < draggingBottom ? nextY + 1 : draggingTop;
+    }
+    if (breaking) {
+      drag([-1, -1, -1, -1]);
+    }
+    if (nextY < 0 || heights.length <= nextY || nextX < 0 || widths.length <= nextX) {
+      return;
+    }
+    select([nextY, nextX]);
+  };
+};
+
+const handleWrite = ({
+  y, x,
+  rows, setRows,
+  heights, widths,
+}: handlePropsType) => {
+  return (value: string) => {
+    rows[y][x] = value;
+    setRows([...rows]);
+  };
+};

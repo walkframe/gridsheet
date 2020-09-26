@@ -52,7 +52,7 @@ interface Props {
   x: number;
   y: number;
   selecting: boolean;
-  setValue: (value: string) => void;
+  write: (value: string) => void;
   select: (nextY: number, nextX: number, breaking: boolean) => void;
   drag: (deltaY: number, deltaX: number) => void;
   dragAll: () => void;
@@ -64,7 +64,7 @@ interface Props {
 };
 
 export const Cell: React.FC<Props> = (props) => {
-  const { value, setValue, select, selecting, blur } = props;
+  const { value, write, select, selecting, blur } = props;
   const [editing, setEditing] = React.useState(false);
   return (<CellLayout 
     className="cell"
@@ -83,7 +83,7 @@ export const Cell: React.FC<Props> = (props) => {
       onKeyDown={handleKeyDown(props, editing, setEditing)}
       onBlur={(e) => {
         if (editing) {
-          setValue(e.target.value);
+          write(e.target.value);
         }
         setEditing(false);
         blur();
@@ -93,7 +93,7 @@ export const Cell: React.FC<Props> = (props) => {
 };
 
 const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boolean) => void) => {
-  const { value, x, y, setValue, select, drag, dragAll, copy, paste, clear, escape } = props;
+  const { value, x, y, write, select, drag, dragAll, copy, paste, clear, escape } = props;
   return (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     const input = e.currentTarget;
     console.debug(e.key, "shift:", e.shiftKey, "ctrl:", e.ctrlKey, "alt:", e.altKey, "meta:", e.metaKey);
@@ -102,7 +102,7 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
       case "Tab": // TAB
         e.preventDefault();
         if (editing) {
-          setValue(e.currentTarget.value);
+          write(e.currentTarget.value);
         }
         select(y, e.shiftKey ? x - 1 : x + 1, false);
         setEditing(false);
@@ -113,7 +113,7 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
           input.style.height = `${input.clientHeight + 20}px`;
         } else {
           if (editing) {
-            setValue(e.currentTarget.value);
+            write(e.currentTarget.value);
           }
           select(e.shiftKey ? y - 1 : y + 1, x, true);
           setEditing(false);
