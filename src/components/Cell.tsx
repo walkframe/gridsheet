@@ -54,6 +54,7 @@ interface Props {
   setValue: (value: string) => void;
   select: (nextY: number, nextX: number, breaking: boolean) => void;
   drag: (deltaY: number, deltaX: number) => void;
+  dragAll: () => void;
   selecting: boolean;
   copy: (copying: boolean, cutting: boolean) => void;
   paste: (text: string) => void;
@@ -91,7 +92,7 @@ export const Cell: React.FC<Props> = (props) => {
 };
 
 const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boolean) => void) => {
-  const { value, x, y, setValue, select, drag, copy, paste, clear } = props;
+  const { value, x, y, setValue, select, drag, dragAll, copy, paste, clear } = props;
   return (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     const input = e.currentTarget;
     console.debug(e.key, "shift:", e.shiftKey, "ctrl:", e.ctrlKey, "alt:", e.altKey, "meta:", e.metaKey);
@@ -157,7 +158,14 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
           e.shiftKey ? drag(1, 0) : select(y + 1, x, true);
           return false;
         }
-
+      case "a": // A
+      if (e.ctrlKey || e.metaKey) {
+        if (!editing) {
+          e.preventDefault();
+          dragAll();
+          return false;
+        }
+      }
       case "c": // C
         if (e.ctrlKey || e.metaKey) {
           if (!editing) {

@@ -269,6 +269,9 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
               }
               y === nextY && x === nextX ? drag([-1, -1, -1, -1]) : drag([y, x, nextY, nextX]);
             }}
+            dragAll={() => {
+              drag([0, 0, heights.length - 1, widths.length - 1]);
+            }}
             blur={() => {
               select([-1, -1]);
               drag([-1, -1, -1, -1]);
