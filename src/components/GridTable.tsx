@@ -138,6 +138,16 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
               drag([0, x, heights.length - 1, x]);
               select([0, x]);
             }}
+            draggable
+            onDragStart={(e) => {
+              e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
+              drag([0, x, heights.length - 1, x]);
+              select([0, x]);
+            }}
+            onDragEnter={(e) => {
+              const [startY, startX, endY] = dragging;
+              drag([startY, startX, endY, x]);
+            }}
           >
           {convertNtoA(x + 1)}
           </th>))
@@ -152,6 +162,16 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
             drag([y, 0, y, widths.length - 1]);
             select([y, 0]);
             return false;
+          }}
+          draggable
+          onDragStart={(e) => {
+            e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
+            drag([y, 0, y, widths.length - 1]);
+            select([y, 0]);
+          }}
+          onDragEnter={(e) => {
+            const [startY, startX, endY, endX] = dragging;
+            drag([startY, startX, y, endX]);
           }}
         >{y + 1}</th>
         {widths.map((width, x) => {
