@@ -273,8 +273,8 @@ const handleCopy = ({
       tsv = rows[y][x];
     } else {
       copy([top, left, bottom, right]);
-      const copyingArea = rows.slice(top, bottom + 1).map((cols) => cols.slice(left, right + 1));
-      tsv = convertArrayToTSV(copyingArea)
+      const copyingRows = cropRows(rows, [top, left, bottom, right]);
+      tsv = convertArrayToTSV(copyingRows);
     }
     if (input != null) {
       input.value = tsv;
@@ -337,22 +337,32 @@ const handlePaste = ({
   const [copyingTop, copyingLeft, copyingBottom, copyingRight] = copyingArea;
   const [draggingHeight, draggingWidth] = [draggingBottom - draggingTop, draggingRight - draggingLeft];
   const [copyingHeight, copyingWidth] = [copyingBottom - copyingTop, copyingRight - copyingLeft];
+
+  const copyingRows = cropRows(rows, copyingArea);
   return (text: string) => {
+    if (cutting) {
+      for (let _y = 0; _y <= copyingHeight; _y++) {
+        for (let _x = 0; _x <= copyingWidth; _x++) {
+          const [srcY, srcX] = [copyingTop + _y, copyingLeft + _x];
+          rows[srcY][srcX] = "";
+        }
+      }
+    }
     if (draggingTop === -1) {
       if (copyingTop === -1) {
-        const newRows = convertTSVToArray(text);
-        for (let _y = 0; _y < newRows.length; _y++) {
-          for (let _x = 0; _x < newRows[_y].length; _x++) {
-            rows[y + _y][x + _x] = newRows[_y][_x];
+        const tsvRows = convertTSVToArray(text);
+        for (let _y = 0; _y < tsvRows.length; _y++) {
+          for (let _x = 0; _x < tsvRows[_y].length; _x++) {
+            rows[y + _y][x + _x] = tsvRows[_y][_x];
           }
         }
-        drag([y, x, y + newRows.length - 1, x + newRows[0].length - 1]);
+        drag([y, x, y + tsvRows.length - 1, x + tsvRows[0].length - 1]);
       } else {
         for (let _y = 0; _y <= copyingHeight; _y++) {
           for (let _x = 0; _x <= copyingWidth; _x++) {
-            const [dstY, dstX, srcY, srcX] = [y + _y, x + _x, copyingTop + _y, copyingLeft + _x];
+            const [dstY, dstX] = [y + _y, x + _x];
             if (dstY < heights.length && dstX < widths.length) {
-              rows[dstY][dstX] = rows[srcY][srcX];
+              rows[dstY][dstX] = copyingRows[_y][_x];
             }
           }
         }
@@ -362,31 +372,23 @@ const handlePaste = ({
       }
     } else {
       if (copyingTop === -1) {
-        const newRows = convertTSVToArray(text);
+        const tsvRows = convertTSVToArray(text);
         for (let y = draggingTop; y <= draggingBottom; y++) {
           for (let x = draggingLeft; x <= draggingRight; x++) {
-            rows[y][x] = newRows[y % newRows.length][x % newRows[0].length];
+            rows[y][x] = tsvRows[y % tsvRows.length][x % tsvRows[0].length];
           }
         }
       } else {
         const [biggerHeight, biggerWidth] = [draggingHeight > copyingHeight ? draggingHeight : copyingHeight, draggingWidth > copyingWidth ? draggingWidth : copyingWidth]
         for (let _y = 0; _y <= biggerHeight; _y++) {
           for (let _x = 0; _x <= biggerWidth; _x++) {
-            const [dstY, dstX, srcY, srcX] = [y + _y, x + _x, copyingTop + (_y % (copyingHeight + 1)), copyingLeft + (_x % (copyingWidth + 1))];
+            const [dstY, dstX] = [y + _y, x + _x];
             if (dstY < heights.length && dstX < widths.length) {
-              rows[dstY][dstX] = rows[srcY][srcX];
+              rows[dstY][dstX] = copyingRows[_y][_x];
             }
           }
         }
         drag([y, x, y + biggerHeight, x + biggerWidth]);
-      }
-    }
-    if (cutting) {
-      for (let _y = 0; _y <= copyingHeight; _y++) {
-        for (let _x = 0; _x <= copyingWidth; _x++) {
-          const [srcY, srcX] = [copyingTop + _y, copyingLeft + _x];
-          rows[srcY][srcX] = "";
-        }
       }
     }
     setRows([...rows]);
@@ -431,7 +433,6 @@ const handleSelect = ({
 const handleWrite = ({
   y, x,
   rows, setRows,
-  heights, widths,
 }: handlePropsType) => {
   return (value: string) => {
     rows[y][x] = value;
@@ -457,3 +458,8 @@ const getCellStyle = (y: number, x: number, copyingArea: Range): React.CSSProper
   }
   return style;
 };
+
+const cropRows = (rows: DataType, area: Range): DataType => {
+  const [top, left, bottom, right] = area;
+  return rows.slice(top, bottom + 1).map((cols) => cols.slice(left, right + 1));
+}
