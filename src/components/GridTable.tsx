@@ -246,7 +246,6 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
                 rowsSelect([-1, -1]);
               }}
               onDragStart={(e) => {
-                console.log(choosing);
                 e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
                 choose([y, x]);
                 select([y, x, -1, -1]);
@@ -354,31 +353,24 @@ const handleClear = ({
 };
 
 const handleCopy = ({
-  x, y,
+  y, x,
   rows,
   clipboardRef,
-  selecting,
-  selectingArea,
-  copyingArea,
+  select, selecting, selectingArea,
   copy,
   choose,
   setCutting,
 }: handlePropsType) => {
-  let [top, left, bottom, right] = selectingArea;
-  if (top === -1) {
-    [top, left, bottom, right] = copyingArea;
+  let area = selectingArea;
+  if (area[0] === -1) {
+    area = [y, x, y, x];
   }
   return (cutting=false) => {
     const input = clipboardRef.current;
-    let tsv = "";
-    if (top === -1) {
-      copy([y, x, y, x]);
-      tsv = rows[y][x];
-    } else {
-      copy([top, left, bottom, right]);
-      const copyingRows = cropRows(rows, [top, left, bottom, right]);
-      tsv = convertArrayToTSV(copyingRows);
-    }
+    copy(area);
+    const copyingRows = cropRows(rows, area);
+    const tsv = convertArrayToTSV(copyingRows);
+    const selectingLast = selecting;
     if (input != null) {
       input.value = tsv;
       input.focus();
@@ -386,7 +378,10 @@ const handleCopy = ({
       document.execCommand("copy");
       input.value = "";
       input.blur();
-      setTimeout(() => choose([y, x]), 100); // refocus
+      setTimeout(() => {
+        choose([y, x]);
+        select(selectingLast);
+      }, 100); // refocus
     }
     setCutting(cutting);
   };
