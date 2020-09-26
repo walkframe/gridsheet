@@ -106,6 +106,7 @@ const GridTableLayout = styled.div`
 export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
   const [rows, setRows] = React.useState(data);
   const [choosing, choose] = React.useState<Position>([0, 0]);
+  const [choosingLast, setChoosingLast] = React.useState<Position>([0, 0]);
   const [cutting, setCutting] = React.useState(false);
 
   const [rowsSelecting, rowsSelect] = React.useState<[number, number]>([-1, -1]);
@@ -134,7 +135,7 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
 
   const handleProps = {
     rows, setRows,
-    choosing, choose,
+    choosing, choose, setChoosingLast,
     cutting, setCutting,
     heights, widths,
     select, selecting, selectingArea,
@@ -155,9 +156,16 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
               className={`col-number ${choosing[1] === x ? "choosing" : ""} ${isSelectingCols ? "selecting" : ""}`}
               style={{ width }}
               onClick={(e) => {
-                select([0, x, heights.length - 1, x]);
-                choose([0, x]);
-                colsSelect([x, x]);
+                const [_, xLast] = choosingLast;
+                if (e.shiftKey) {
+                  select([0, xLast, heights.length - 1, x]);
+                  choose(choosingLast);
+                  colsSelect([xLast, x]);
+                } else {
+                  select([0, x, heights.length - 1, x]);
+                  choose([0, x]);
+                  colsSelect([x, x]);
+                }
                 rowsSelect([-1, -1]);
                 return false;
               }}
@@ -188,9 +196,16 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
             className={`row-number ${choosing[0] === y ? "choosing" : ""} ${isSelectingRows ? "selecting" : ""}`}
             style={{ height }}
             onClick={(e) => {
-              select([y, 0, y, widths.length - 1]);
-              choose([y, 0]);
-              rowsSelect([y, y]);
+              const [yLast, _] = choosingLast;
+              if (e.shiftKey) {
+                select([yLast, 0, y, widths.length - 1]);
+                choose(choosingLast);
+                rowsSelect([yLast, y]);
+              } else {
+                select([y, 0, y, widths.length - 1]);
+                choose([y, 0]);
+                rowsSelect([y, y]);
+              }
               colsSelect([-1, -1]);
               return false;
             }}
@@ -218,12 +233,20 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
               style={getCellStyle(y, x, copyingArea)}
               draggable
               onClick={(e) => {
-                choose([y, x]);
-                select([-1, -1, -1, -1]);
+                if (e.shiftKey) {
+                  choose(choosingLast);
+                  select([... choosingLast, y, x]);
+                  e.preventDefault();
+                  return false;
+                } else {
+                  choose([y, x]);
+                  select([-1, -1, -1, -1]);
+                }
                 colsSelect([-1, -1]);
                 rowsSelect([-1, -1]);
               }}
               onDragStart={(e) => {
+                console.log(choosing);
                 e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
                 choose([y, x]);
                 select([y, x, -1, -1]);
@@ -275,6 +298,7 @@ type handlePropsType = {
   x: number;
   rows: DataType;
   clipboardRef: React.RefObject<HTMLTextAreaElement>;
+  choosing: Position;
   selecting: Range;
   selectingArea: Range;
   copying: Range;
@@ -285,6 +309,7 @@ type handlePropsType = {
   copy: (range: Range) => void;
   select: (range: Range) => void;
   choose: (position: Position) => void;
+  setChoosingLast: (position: Position) => void;
   setCutting: (cutting: boolean) => void;
   setRows: (rows: DataType) => void;
   colsSelect: (cols: [number, number]) => void;
@@ -295,12 +320,13 @@ type handlePropsType = {
 
 const handleBlur = ({
   select,
-  choose,
+  choose, choosing, setChoosingLast,
   colsSelect, rowsSelect,
 }: handlePropsType) => {
   return () => {
-    choose([-1, -1]);
+    setChoosingLast(choosing);
     select([-1, -1, -1, -1]);
+    choose([-1, -1]);
     colsSelect([-1, -1]);
     rowsSelect([-1, -1]);
   };
@@ -477,11 +503,16 @@ const handleChoose = ({
   selectingArea,
   select,
   choose,
+  colsSelect, rowsSelect,
   heights, widths,
 }: handlePropsType) => {
   const [top, left, bottom, right] = selectingArea;
 
   return (nextY: number, nextX: number, breaking: boolean) => {
+    if (breaking) {
+      colsSelect([-1, -1]);
+      rowsSelect([-1, -1]);
+    }
     if (nextY < top && top !== -1 && !breaking) {
       nextY = bottom;
       nextX = nextX > left ? nextX - 1 : right;

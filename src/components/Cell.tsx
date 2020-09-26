@@ -115,7 +115,7 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
           if (editing) {
             write(e.currentTarget.value);
           }
-          choose(e.shiftKey ? y - 1 : y + 1, x, true);
+          choose(e.shiftKey ? y - 1 : y + 1, x, false);
           setEditing(false);
           return false;
         }
