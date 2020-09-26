@@ -43,19 +43,19 @@ const GridTableLayout = styled.div`
       background-color: #eeeeee;
 
       &.col-number {
-        &.selecting {
+        &.choosing {
           background-color: #dddddd;
         }
-        &.dragging {
+        &.selecting {
           background-color: #555555;
           color: #ffffff;
         }
       }
       &.row-number {
-        &.selecting {
+        &.choosing {
           background-color: #dddddd;
         }
-        &.dragging {
+        &.selecting {
           background-color: #555555;
           color: #ffffff;
         }
@@ -70,7 +70,7 @@ const GridTableLayout = styled.div`
       background-color: #ffffff;
       border: solid 1px #cccccc;
       
-      &.dragging {
+      &.selecting {
         background-color: rgba(0, 128, 255, 0.2);
       }
       &.cutting {
@@ -105,24 +105,24 @@ const GridTableLayout = styled.div`
 
 export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
   const [rows, setRows] = React.useState(data);
-  const [selecting, select] = React.useState<Position>([0, 0]);
+  const [choosing, choose] = React.useState<Position>([0, 0]);
   const [cutting, setCutting] = React.useState(false);
 
-  const [rowsDragging, rowsDrag] = React.useState<[number, number]>([-1, -1]);
-  const [colsDragging, colsDrag] = React.useState<[number, number]>([-1, -1]);
+  const [rowsSelecting, rowsSelect] = React.useState<[number, number]>([-1, -1]);
+  const [colsSelecting, colsSelect] = React.useState<[number, number]>([-1, -1]);
 
-  const [dragging, drag] = React.useState<Range>([-1, -1, -1, -1]); // (y-from, x-from) -> (y-to, x-to)
-  const draggingArea: Range = [-1, -1, -1, -1]; // (top, left) -> (bottom, right)
-  [draggingArea[0], draggingArea[2]] = dragging[Y_START] < dragging[Y_END] ? [dragging[Y_START], dragging[Y_END]] : [dragging[Y_END], dragging[Y_START]];
-  [draggingArea[1], draggingArea[3]] = dragging[X_START] < dragging[X_END] ? [dragging[X_START], dragging[X_END]] : [dragging[X_END], dragging[X_START]];
+  const [selecting, select] = React.useState<Range>([-1, -1, -1, -1]); // (y-from, x-from) -> (y-to, x-to)
+  const selectingArea: Range = [-1, -1, -1, -1]; // (top, left) -> (bottom, right)
+  [selectingArea[0], selectingArea[2]] = selecting[Y_START] < selecting[Y_END] ? [selecting[Y_START], selecting[Y_END]] : [selecting[Y_END], selecting[Y_START]];
+  [selectingArea[1], selectingArea[3]] = selecting[X_START] < selecting[X_END] ? [selecting[X_START], selecting[X_END]] : [selecting[X_END], selecting[X_START]];
 
   const [copying, copy] = React.useState<Range>([-1, -1, -1, -1]); // (y-from, x-from) -> (y-to, x-to)
   const copyingArea: Range = [-1, -1, -1, -1]; // (top, left) -> (bottom, right)
   [copyingArea[0], copyingArea[2]] = copying[Y_START] < copying[Y_END] ? [copying[Y_START], copying[Y_END]] : [copying[Y_END], copying[Y_START]];
   [copyingArea[1], copyingArea[3]] = copying[X_START] < copying[X_END] ? [copying[X_START], copying[X_END]] : [copying[X_END], copying[X_START]];
 
-  const isDragging = (y: number, x: number) => {
-    const [top, left, bottom, right] = draggingArea;
+  const isSelecting = (y: number, x: number) => {
+    const [top, left, bottom, right] = selectingArea;
     return top !== -1 && (top <= y && y <= bottom && left <= x && x <= right);
   };
   const isCopying = (y: number, x: number) => {
@@ -134,12 +134,12 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
 
   const handleProps = {
     rows, setRows,
-    selecting, select,
+    choosing, choose,
     cutting, setCutting,
     heights, widths,
-    drag, dragging, draggingArea,
+    select, selecting, selectingArea,
     copy, copying, copyingArea, clipboardRef,
-    colsDrag, rowsDrag, colsDragging, rowsDragging,
+    colsSelect, rowsSelect, colsSelecting, rowsSelecting,
   };
 
   return (<GridTableLayout>
@@ -149,31 +149,31 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
         <tr>
           <th></th>
           {widths.map((width, x) => {
-            const isDraggingCols = colsDragging[0] !== -1 && colsDragging[1] !== -1 && ((colsDragging[0] <= x && x <= colsDragging[1]) || (colsDragging[1] <= x && x <= colsDragging[0]));
+            const isSelectingCols = colsSelecting[0] !== -1 && colsSelecting[1] !== -1 && ((colsSelecting[0] <= x && x <= colsSelecting[1]) || (colsSelecting[1] <= x && x <= colsSelecting[0]));
             return (<th 
               key={x}
-              className={`col-number ${selecting[1] === x ? "selecting" : ""} ${isDraggingCols ? "dragging" : ""}`}
+              className={`col-number ${choosing[1] === x ? "choosing" : ""} ${isSelectingCols ? "selecting" : ""}`}
               style={{ width }}
               onClick={(e) => {
-                drag([0, x, heights.length - 1, x]);
-                select([0, x]);
-                colsDrag([x, x]);
-                rowsDrag([-1, -1]);
+                select([0, x, heights.length - 1, x]);
+                choose([0, x]);
+                colsSelect([x, x]);
+                rowsSelect([-1, -1]);
                 return false;
               }}
               draggable
               onDragStart={(e) => {
                 e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
-                drag([0, x, heights.length - 1, x]);
-                select([0, x]);
-                colsDrag([x, -1]);
-                rowsDrag([-1, -1]);
+                select([0, x, heights.length - 1, x]);
+                choose([0, x]);
+                colsSelect([x, -1]);
+                rowsSelect([-1, -1]);
                 return false;
               }}
               onDragEnter={(e) => {
-                const [startY, startX, endY] = dragging;
-                drag([startY, startX, endY, x]);
-                colsDrag([colsDragging[0], x]);
+                const [startY, startX, endY] = selecting;
+                select([startY, startX, endY, x]);
+                colsSelect([colsSelecting[0], x]);
                 return false;
               }}
             >{convertNtoA(x + 1)}</th>);
@@ -182,30 +182,31 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
         </tr>
       </thead>
       <tbody>{heights.map((height, y) => {
-        const isDraggingRows = rowsDragging[0] !== -1 && rowsDragging[1] !== -1 && ((rowsDragging[0] <= y && y <= rowsDragging[1]) || (rowsDragging[1] <= y && y <= rowsDragging[0]));
+        const isSelectingRows = rowsSelecting[0] !== -1 && rowsSelecting[1] !== -1 && ((rowsSelecting[0] <= y && y <= rowsSelecting[1]) || (rowsSelecting[1] <= y && y <= rowsSelecting[0]));
         return (<tr key={y}>
           <th
-            className={`row-number ${selecting[0] === y ? "selecting" : ""} ${isDraggingRows ? "dragging" : ""}`}
+            className={`row-number ${choosing[0] === y ? "choosing" : ""} ${isSelectingRows ? "selecting" : ""}`}
             style={{ height }}
             onClick={(e) => {
-              drag([y, 0, y, widths.length - 1]);
-              select([y, 0]);
-              colsDrag([-1, -1]);
+              select([y, 0, y, widths.length - 1]);
+              choose([y, 0]);
+              rowsSelect([y, y]);
+              colsSelect([-1, -1]);
               return false;
             }}
             draggable
             onDragStart={(e) => {
               e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
-              drag([y, 0, y, widths.length - 1]);
-              select([y, 0]);
-              colsDrag([-1, -1]);
-              rowsDrag([y, -1]);
+              select([y, 0, y, widths.length - 1]);
+              choose([y, 0]);
+              rowsSelect([y, -1]);
+              colsSelect([-1, -1]);
               return false;
             }}
             onDragEnter={(e) => {
-              const [startY, startX, endY, endX] = dragging;
-              drag([startY, startX, y, endX]);
-              rowsDrag([rowsDragging[0], y]);
+              const [startY, startX, endY, endX] = selecting;
+              select([startY, startX, y, endX]);
+              rowsSelect([rowsSelecting[0], y]);
               return false;
             }}
           >{y + 1}</th>
@@ -213,38 +214,38 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
             const value = rows[y][x];
             return (<td
               key={x}
-              className={`${isDragging(y, x) ? "dragging": ""} ${isCopying(y, x) ? cutting ? "cutting" : "copying" : ""}`}
+              className={`${isSelecting(y, x) ? "selecting": ""} ${isCopying(y, x) ? cutting ? "cutting" : "copying" : ""}`}
               style={getCellStyle(y, x, copyingArea)}
               draggable
               onClick={(e) => {
-                select([y, x]);
-                drag([-1, -1, -1, -1]);
-                colsDrag([-1, -1]);
-                rowsDrag([-1, -1]);
+                choose([y, x]);
+                select([-1, -1, -1, -1]);
+                colsSelect([-1, -1]);
+                rowsSelect([-1, -1]);
               }}
               onDragStart={(e) => {
                 e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
-                select([y, x]);
-                drag([y, x, -1, -1]);
+                choose([y, x]);
+                select([y, x, -1, -1]);
               }}
               onDragEnd={() => {
-                if (dragging[0] === dragging[2] && dragging[1] === dragging[3]) {
-                  drag([-1, -1, -1, -1]);
+                if (selecting[0] === selecting[2] && selecting[1] === selecting[3]) {
+                  select([-1, -1, -1, -1]);
                 }
               }}
               onDragEnter={(e) => {
-                const [startY, startX] = dragging;
-                if (colsDragging[0] !== -1) {
-                  colsDrag([colsDragging[0], x]);
-                  drag([startY, startX, heights.length - 1, x]);
+                const [startY, startX] = selecting;
+                if (colsSelecting[0] !== -1) {
+                  colsSelect([colsSelecting[0], x]);
+                  select([startY, startX, heights.length - 1, x]);
                   return false;
                 }
-                if (rowsDragging[0] !== -1) {
-                  rowsDrag([rowsDragging[0], y]);
-                  drag([startY, startX, y, widths.length - 1]);
+                if (rowsSelecting[0] !== -1) {
+                  rowsSelect([rowsSelecting[0], y]);
+                  select([startY, startX, y, widths.length - 1]);
                   return false;
                 }
-                drag([startY, startX, y, x])
+                select([startY, startX, y, x])
               }}
             ><Cell
               value={value}
@@ -255,11 +256,11 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
               escape={handleEscape({... handleProps, y, x})}
               clear={handleClear({... handleProps, y, x})}
               paste={handlePaste({... handleProps, y, x})}
-              drag={handleDrag({... handleProps, y, x})}
-              dragAll={handleDragAll({... handleProps, y, x})}
-              blur={handleBlur({... handleProps, y, x})}
               select={handleSelect({... handleProps, y, x})}
-              selecting={selecting[0] === y && selecting[1] === x}
+              selectAll={handleSelectAll({... handleProps, y, x})}
+              blur={handleBlur({... handleProps, y, x})}
+              choose={handleChoose({... handleProps, y, x})}
+              choosing={choosing[0] === y && choosing[1] === x}
             /></td>);
           })}
         </tr>);
@@ -274,46 +275,46 @@ type handlePropsType = {
   x: number;
   rows: DataType;
   clipboardRef: React.RefObject<HTMLTextAreaElement>;
-  dragging: Range;
-  draggingArea: Range;
+  selecting: Range;
+  selectingArea: Range;
   copying: Range;
   copyingArea: Range;
   heights: string[];
   widths: string[];
   cutting: boolean,
   copy: (range: Range) => void;
-  drag: (range: Range) => void;
-  select: (position: Position) => void;
+  select: (range: Range) => void;
+  choose: (position: Position) => void;
   setCutting: (cutting: boolean) => void;
   setRows: (rows: DataType) => void;
-  colsDrag: (cols: [number, number]) => void;
-  rowsDrag: (rows: [number, number]) => void;
-  colsDragging: [number, number];
-  rowsDragging: [number, number];
+  colsSelect: (cols: [number, number]) => void;
+  rowsSelect: (rows: [number, number]) => void;
+  colsSelecting: [number, number];
+  rowsSelecting: [number, number];
 };
 
 const handleBlur = ({
-  drag,
   select,
-  colsDrag, rowsDrag,
+  choose,
+  colsSelect, rowsSelect,
 }: handlePropsType) => {
   return () => {
-    select([-1, -1]);
-    drag([-1, -1, -1, -1]);
-    colsDrag([-1, -1]);
-    rowsDrag([-1, -1]);
+    choose([-1, -1]);
+    select([-1, -1, -1, -1]);
+    colsSelect([-1, -1]);
+    rowsSelect([-1, -1]);
   };
 };
 
 const handleClear = ({
   x, y,
   rows, setRows,
-  dragging,
-  draggingArea,
+  selecting,
+  selectingArea,
 }: handlePropsType) => {
-  const [top, left, bottom, right] = draggingArea;
+  const [top, left, bottom, right] = selectingArea;
   return () => {
-    if (dragging[0] === -1) {
+    if (selecting[0] === -1) {
       rows[y][x] = "";
     } else {
       for (let y = top; y <= bottom; y++) {
@@ -330,16 +331,16 @@ const handleCopy = ({
   x, y,
   rows,
   clipboardRef,
-  dragging,
-  draggingArea,
+  selecting,
+  selectingArea,
   copyingArea,
   copy,
-  select,
+  choose,
   setCutting,
 }: handlePropsType) => {
   let [top, left, bottom, right] = copyingArea;
   if (top === -1) {
-    [top, left, bottom, right] = draggingArea;
+    [top, left, bottom, right] = selectingArea;
   }
   return (cutting=false) => {
     const input = clipboardRef.current;
@@ -359,33 +360,33 @@ const handleCopy = ({
       document.execCommand("copy");
       input.value = "";
       input.blur();
-      setTimeout(() => select([y, x]), 100); // refocus
+      setTimeout(() => choose([y, x]), 100); // refocus
     }
     setCutting(cutting);
   };
 };
 
-const handleDrag = ({
+const handleSelect = ({
   x, y,
-  drag, dragging,
+  select, selecting,
   heights, widths,
 }: handlePropsType) => {
   return (deltaY: number, deltaX: number) => {
-    let [dragEndY, dragEndX] = [dragging[2] === -1 ? y : dragging[2], dragging[3] === -1 ? x : dragging[3]];
+    let [dragEndY, dragEndX] = [selecting[2] === -1 ? y : selecting[2], selecting[3] === -1 ? x : selecting[3]];
     let [nextY, nextX] = [dragEndY + deltaY, dragEndX + deltaX];
     if (nextY < 0 || heights.length <= nextY || nextX < 0 || widths.length <= nextX) {
       return;
     }
-    y === nextY && x === nextX ? drag([-1, -1, -1, -1]) : drag([y, x, nextY, nextX]);
+    y === nextY && x === nextX ? select([-1, -1, -1, -1]) : select([y, x, nextY, nextX]);
   };
 }
 
-const handleDragAll = ({
-  drag, 
+const handleSelectAll = ({
+  select, 
   heights, widths,
 }: handlePropsType) => {
   return () => {
-    drag([0, 0, heights.length - 1, widths.length - 1]);
+    select([0, 0, heights.length - 1, widths.length - 1]);
   };
 };
 
@@ -402,16 +403,16 @@ const handleEscape = ({
 const handlePaste = ({
   x, y,
   rows,
-  draggingArea, copyingArea,
+  selectingArea, copyingArea,
   cutting,
-  drag,
+  select,
   copy,
   heights, widths,
   setRows,
 }: handlePropsType) => {
-  const [draggingTop, draggingLeft, draggingBottom, draggingRight] = draggingArea;
+  const [selectingTop, selectingLeft, selectingBottom, selectingRight] = selectingArea;
   const [copyingTop, copyingLeft, copyingBottom, copyingRight] = copyingArea;
-  const [draggingHeight, draggingWidth] = [draggingBottom - draggingTop, draggingRight - draggingLeft];
+  const [selectingHeight, selectingWidth] = [selectingBottom - selectingTop, selectingRight - selectingLeft];
   const [copyingHeight, copyingWidth] = [copyingBottom - copyingTop, copyingRight - copyingLeft];
 
   const copyingRows = cropRows(rows, copyingArea);
@@ -424,7 +425,7 @@ const handlePaste = ({
         }
       }
     }
-    if (draggingTop === -1) {
+    if (selectingTop === -1) {
       if (copyingTop === -1) {
         const tsvRows = convertTSVToArray(text);
         for (let _y = 0; _y < tsvRows.length; _y++) {
@@ -432,7 +433,7 @@ const handlePaste = ({
             rows[y + _y][x + _x] = tsvRows[_y][_x];
           }
         }
-        drag([y, x, y + tsvRows.length - 1, x + tsvRows[0].length - 1]);
+        select([y, x, y + tsvRows.length - 1, x + tsvRows[0].length - 1]);
       } else {
         for (let _y = 0; _y <= copyingHeight; _y++) {
           for (let _x = 0; _x <= copyingWidth; _x++) {
@@ -443,19 +444,19 @@ const handlePaste = ({
           }
         }
         if (copyingHeight > 0 || copyingWidth > 0) {
-          drag([y, x, y + copyingHeight, x + copyingWidth]);
+          select([y, x, y + copyingHeight, x + copyingWidth]);
         }
       }
     } else {
       if (copyingTop === -1) {
         const tsvRows = convertTSVToArray(text);
-        for (let y = draggingTop; y <= draggingBottom; y++) {
-          for (let x = draggingLeft; x <= draggingRight; x++) {
+        for (let y = selectingTop; y <= selectingBottom; y++) {
+          for (let x = selectingLeft; x <= selectingRight; x++) {
             rows[y][x] = tsvRows[y % tsvRows.length][x % tsvRows[0].length];
           }
         }
       } else {
-        const [biggerHeight, biggerWidth] = [draggingHeight > copyingHeight ? draggingHeight : copyingHeight, draggingWidth > copyingWidth ? draggingWidth : copyingWidth]
+        const [biggerHeight, biggerWidth] = [selectingHeight > copyingHeight ? selectingHeight : copyingHeight, selectingWidth > copyingWidth ? selectingWidth : copyingWidth]
         for (let _y = 0; _y <= biggerHeight; _y++) {
           for (let _x = 0; _x <= biggerWidth; _x++) {
             const [dstY, dstX] = [y + _y, x + _x];
@@ -464,7 +465,7 @@ const handlePaste = ({
             }
           }
         }
-        drag([y, x, y + biggerHeight, x + biggerWidth]);
+        select([y, x, y + biggerHeight, x + biggerWidth]);
       }
     }
     setRows([...rows]);
@@ -472,13 +473,13 @@ const handlePaste = ({
   };
 };
 
-const handleSelect = ({
-  draggingArea,
-  drag,
+const handleChoose = ({
+  selectingArea,
   select,
+  choose,
   heights, widths,
 }: handlePropsType) => {
-  const [top, left, bottom, right] = draggingArea;
+  const [top, left, bottom, right] = selectingArea;
 
   return (nextY: number, nextX: number, breaking: boolean) => {
     if (nextY < top && top !== -1 && !breaking) {
@@ -498,12 +499,12 @@ const handleSelect = ({
       nextY = nextY < bottom ? nextY + 1 : top;
     }
     if (breaking) {
-      drag([-1, -1, -1, -1]);
+      select([-1, -1, -1, -1]);
     }
     if (nextY < 0 || heights.length <= nextY || nextX < 0 || widths.length <= nextX) {
       return;
     }
-    select([nextY, nextX]);
+    choose([nextY, nextX]);
   };
 };
 
@@ -539,4 +540,4 @@ const getCellStyle = (y: number, x: number, copyingArea: Range): React.CSSProper
 const cropRows = (rows: DataType, area: Range): DataType => {
   const [top, left, bottom, right] = area;
   return rows.slice(top, bottom + 1).map((cols) => cols.slice(left, right + 1));
-}
+};

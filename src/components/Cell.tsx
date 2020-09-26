@@ -11,7 +11,7 @@ const CellLayout = styled.div`
   word-wrap: break-word;
   word-break: break-all;
 
-  .unselected {
+  .unchooseed {
     padding: 2px;
   }
 
@@ -51,11 +51,11 @@ interface Props {
   value: string;
   x: number;
   y: number;
-  selecting: boolean;
+  choosing: boolean;
   write: (value: string) => void;
-  select: (nextY: number, nextX: number, breaking: boolean) => void;
-  drag: (deltaY: number, deltaX: number) => void;
-  dragAll: () => void;
+  choose: (nextY: number, nextX: number, breaking: boolean) => void;
+  select: (deltaY: number, deltaX: number) => void;
+  selectAll: () => void;
   copy: (cutting: boolean) => void;
   escape: () => void;
   paste: (text: string) => void;
@@ -64,12 +64,12 @@ interface Props {
 };
 
 export const Cell: React.FC<Props> = (props) => {
-  const { value, write, select, selecting, blur } = props;
+  const { value, write, choose, choosing, blur } = props;
   const [editing, setEditing] = React.useState(false);
   return (<CellLayout 
     className="cell"
-  ><div className="unselected">{value}</div>
-    {!selecting ? null : (<textarea
+  ><div className="unchooseed">{value}</div>
+    {!choosing ? null : (<textarea
       autoFocus
       className={editing ? "editing" : ""}
       onDoubleClick={(e) => {
@@ -93,7 +93,7 @@ export const Cell: React.FC<Props> = (props) => {
 };
 
 const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boolean) => void) => {
-  const { value, x, y, write, select, drag, dragAll, copy, paste, clear, escape } = props;
+  const { value, x, y, write, choose, select, selectAll, copy, paste, clear, escape } = props;
   return (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     const input = e.currentTarget;
     console.debug(e.key, "shift:", e.shiftKey, "ctrl:", e.ctrlKey, "alt:", e.altKey, "meta:", e.metaKey);
@@ -104,7 +104,7 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
         if (editing) {
           write(e.currentTarget.value);
         }
-        select(y, e.shiftKey ? x - 1 : x + 1, false);
+        choose(y, e.shiftKey ? x - 1 : x + 1, false);
         setEditing(false);
         return false;
       case "Enter": // ENTER
@@ -115,7 +115,7 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
           if (editing) {
             write(e.currentTarget.value);
           }
-          select(e.shiftKey ? y - 1 : y + 1, x, true);
+          choose(e.shiftKey ? y - 1 : y + 1, x, true);
           setEditing(false);
           return false;
         }
@@ -141,29 +141,29 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
         return false;
       case "ArrowLeft": // LEFT
         if (!editing) {
-          e.shiftKey ? drag(0, -1) : select(y, x - 1, true);
+          e.shiftKey ? select(0, -1) : choose(y, x - 1, true);
           return false;
         }
       case "ArrowUp": // UP
         if (!editing) {
-          e.shiftKey ? drag(-1, 0) : select(y - 1, x, true);
+          e.shiftKey ? select(-1, 0) : choose(y - 1, x, true);
           return false;
         }
       case "ArrowRight": // RIGHT
         if (!editing) {
-          e.shiftKey ? drag(0, 1) : select(y, x + 1, true);
+          e.shiftKey ? select(0, 1) : choose(y, x + 1, true);
           return false;
         }
       case "ArrowDown": // DOWN
         if (!editing) {
-          e.shiftKey ? drag(1, 0) : select(y + 1, x, true);
+          e.shiftKey ? select(1, 0) : choose(y + 1, x, true);
           return false;
         }
       case "a": // A
       if (e.ctrlKey || e.metaKey) {
         if (!editing) {
           e.preventDefault();
-          dragAll();
+          selectAll();
           return false;
         }
       }
