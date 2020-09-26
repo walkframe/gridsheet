@@ -102,7 +102,7 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
       case "Tab": // TAB
         e.preventDefault();
         if (editing) {
-          write(e.currentTarget.value);
+          write(input.value);
         }
         choose(y, e.shiftKey ? x - 1 : x + 1, false);
         setEditing(false);
@@ -113,10 +113,14 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
           input.style.height = `${input.clientHeight + 20}px`;
         } else {
           if (editing) {
-            write(e.currentTarget.value);
+            if (e.nativeEvent.isComposing) {
+              return false;
+            }
+            write(input.value);
+            setEditing(false);
           }
           choose(e.shiftKey ? y - 1 : y + 1, x, false);
-          setEditing(false);
+          e.preventDefault();
           return false;
         }
       case "Backspace": // BACKSPACE
@@ -137,7 +141,7 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
         escape();
         setEditing(false);
         input.value = value;
-        // e.currentTarget.blur();
+        // input.blur();
         return false;
       case "ArrowLeft": // LEFT
         if (!editing) {
