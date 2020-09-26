@@ -13,6 +13,7 @@ import {
 } from "./Cell";
 import {
   convertNtoA,
+  convertArrayToTSV,
 } from "../utils/converters";
 
 interface Props {
@@ -49,7 +50,7 @@ const GridTableLayout = styled.div`
       margin: 0;
       width: 150px;
       background-color: #ffffff;
-      border: solid 1px #dddddd;
+      border: solid 1px #cccccc;
       
       &.dragging {
         background-color: rgba(0, 128, 255, 0.2);
@@ -68,6 +69,20 @@ const GridTableLayout = styled.div`
       }
     }
   }
+  .clipboard {
+    width: 0;
+    height: 0;
+    padding: 0;
+    margin: 0;
+    color: transparent;
+    background-color: transparent;
+    position: absolute;
+    top: -999999px;
+    left: -999999px;
+    margin-left: -9999px;
+    margin-top: -9999px;
+    z-index: -9999;
+  }
 `;
 
 export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
@@ -85,7 +100,10 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
   const isDragging = (y: number, x: number) => draggingTop !== -1 && (draggingTop <= y && y <= draggingBottom && draggingLeft <= x && x <= draggingRight);
   const isCopying = (y: number, x: number) => (copyingTop <= y && y <= copyingBottom && copyingLeft <= x && x <= copyingRight);
 
+  const clipboardRef = React.createRef<HTMLTextAreaElement>();
+
   return (<GridTableLayout>
+    <textarea className="clipboard" ref={clipboardRef}></textarea>
     <table className="grid-table">
       <thead>
         <tr>
@@ -152,8 +170,26 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
               setRows([...rows]);
             }}
             copy={(copying: boolean, cutting=false) => {
+              const input = clipboardRef.current;
+              let tsv = "";
               if (copying) {
-                (dragging[0] === -1) ? copy([y, x, y, x]) : copy(dragging);
+                if (dragging[0] === -1) {
+                  copy([y, x, y, x]);
+                  tsv = rows[y][x];
+                } else {
+                  copy(dragging);
+                  const copyingArea = rows.slice(draggingTop, draggingBottom + 1).map((cols) => cols.slice(draggingLeft, draggingRight + 1));
+                  tsv = convertArrayToTSV(copyingArea)
+                }
+                if (input != null) {
+                  input.value = tsv;
+                  input.focus();
+                  input.select();
+                  document.execCommand("copy");
+                  input.value = "";
+                  input.blur();
+                  setTimeout(() => select([y, x]), 100); // refocus
+                }
               } else {
                 copy([-1, -1, -1, -1]);
               }

@@ -28,7 +28,7 @@ export const Index: React.FC<Props> = ({data, options}) => {
     if (typeof data[0] === "undefined") {
       w = [];
     } else {
-      w = data[0].map((_) => "150px");
+      w = data[0].map((_) => "100px");
     }
   }
   if (typeof h === "undefined") {
