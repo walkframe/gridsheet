@@ -94,15 +94,24 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
   const [selecting, select] = React.useState<Position>([0, 0]);
   const [cutting, setCutting] = React.useState(false);
 
-  const [dragging, drag] = React.useState<Range>([-1, -1, -1, -1]); // (y, x) -> (y, x)
-  const [draggingTop, draggingBottom] = dragging[Y_START] < dragging[Y_END] ? [dragging[Y_START], dragging[Y_END]] : [dragging[Y_END], dragging[Y_START]];
-  const [draggingLeft, draggingRight] = dragging[X_START] < dragging[X_END] ? [dragging[X_START], dragging[X_END]] : [dragging[X_END], dragging[X_START]];
-  const [copying, copy] = React.useState<Range>([-1, -1, -1, -1]); // (y, x) -> (y, x)
-  const [copyingTop, copyingBottom] = copying[Y_START] < copying[Y_END] ? [copying[Y_START], copying[Y_END]] : [copying[Y_END], copying[Y_START]];
-  const [copyingLeft, copyingRight] = copying[X_START] < copying[X_END] ? [copying[X_START], copying[X_END]] : [copying[X_END], copying[X_START]];
+  const [dragging, drag] = React.useState<Range>([-1, -1, -1, -1]); // (y-from, x-from) -> (y-to, x-to)
+  const draggingArea: Range = [-1, -1, -1, -1]; // (top, left) -> (bottom, right)
+  [draggingArea[0], draggingArea[2]] = dragging[Y_START] < dragging[Y_END] ? [dragging[Y_START], dragging[Y_END]] : [dragging[Y_END], dragging[Y_START]];
+  [draggingArea[1], draggingArea[3]] = dragging[X_START] < dragging[X_END] ? [dragging[X_START], dragging[X_END]] : [dragging[X_END], dragging[X_START]];
 
-  const isDragging = (y: number, x: number) => draggingTop !== -1 && (draggingTop <= y && y <= draggingBottom && draggingLeft <= x && x <= draggingRight);
-  const isCopying = (y: number, x: number) => (copyingTop <= y && y <= copyingBottom && copyingLeft <= x && x <= copyingRight);
+  const [copying, copy] = React.useState<Range>([-1, -1, -1, -1]); // (y-from, x-from) -> (y-to, x-to)
+  const copyingArea: Range = [-1, -1, -1, -1]; // (top, left) -> (bottom, right)
+  [copyingArea[0], copyingArea[2]] = copying[Y_START] < copying[Y_END] ? [copying[Y_START], copying[Y_END]] : [copying[Y_END], copying[Y_START]];
+  [copyingArea[1], copyingArea[3]] = copying[X_START] < copying[X_END] ? [copying[X_START], copying[X_END]] : [copying[X_END], copying[X_START]];
+
+  const isDragging = (y: number, x: number) => {
+    const [top, left, bottom, right] = draggingArea;
+    return top !== -1 && (top <= y && y <= bottom && left <= x && x <= right);
+  };
+  const isCopying = (y: number, x: number) => {
+    const [top, left, bottom, right] = copyingArea;
+    return (top <= y && y <= bottom && left <= x && x <= right);
+  };
 
   const clipboardRef = React.createRef<HTMLTextAreaElement>();
 
@@ -111,8 +120,8 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
     selecting, select,
     cutting, setCutting,
     heights, widths,
-    drag, dragging, draggingTop, draggingBottom, draggingLeft, draggingRight,
-    copy, copying, copyingTop, copyingBottom, copyingLeft, copyingRight, clipboardRef,
+    drag, dragging, draggingArea,
+    copy, copying, copyingArea, clipboardRef,
   };
 
   return (<GridTableLayout>
@@ -150,12 +159,7 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
           return (<td
             key={x}
             className={`${isDragging(y, x) ? "dragging": ""} ${isCopying(y, x) ? cutting ? "cutting" : "copying" : ""}`}
-            style={{
-              borderTop: copyingTop < y && y <= copyingBottom ? "solid 1px #dddddd" : undefined,
-              borderBottom: copyingTop <= y && y < copyingBottom ? "solid 1px #dddddd" : undefined,
-              borderLeft: copyingLeft < x && x <= copyingRight ? "solid 1px #dddddd" : undefined,
-              borderRight: copyingLeft <= x && x < copyingRight ? "solid 1px #dddddd" : undefined,
-            }}
+            style={getCellStyle(y, x, copyingArea)}
             draggable
             onClick={(e) => {
               select([y, x]);
@@ -202,19 +206,12 @@ type handlePropsType = {
   rows: DataType;
   clipboardRef: React.RefObject<HTMLTextAreaElement>;
   dragging: Range;
-  draggingTop: number;
-  draggingBottom: number;
-  draggingLeft: number;
-  draggingRight: number;
+  draggingArea: Range;
   copying: Range;
-  copyingTop: number;
-  copyingBottom: number;
-  copyingLeft: number;
-  copyingRight: number;
+  copyingArea: Range;
   heights: string[];
   widths: string[];
   cutting: boolean,
-
   copy: (range: Range) => void;
   drag: (range: Range) => void;
   select: (position: Position) => void;
@@ -236,14 +233,15 @@ const handleClear = ({
   x, y,
   rows, setRows,
   dragging,
-  draggingTop, draggingBottom, draggingLeft, draggingRight,
+  draggingArea,
 }: handlePropsType) => {
+  const [top, left, bottom, right] = draggingArea;
   return () => {
     if (dragging[0] === -1) {
       rows[y][x] = "";
     } else {
-      for (let y = draggingTop; y <= draggingBottom; y++) {
-        for (let x = draggingLeft; x <= draggingRight; x++) {
+      for (let y = top; y <= bottom; y++) {
+        for (let x = left; x <= right; x++) {
           rows[y][x] = "";
         }
       }
@@ -257,20 +255,25 @@ const handleCopy = ({
   rows,
   clipboardRef,
   dragging,
-  draggingTop, draggingBottom, draggingLeft, draggingRight,
+  draggingArea,
+  copyingArea,
   copy,
   select,
   setCutting,
 }: handlePropsType) => {
+  let [top, left, bottom, right] = copyingArea;
+  if (top === -1) {
+    [top, left, bottom, right] = draggingArea;
+  }
   return (cutting=false) => {
     const input = clipboardRef.current;
     let tsv = "";
-    if (dragging[0] === -1) {
+    if (top === -1) {
       copy([y, x, y, x]);
       tsv = rows[y][x];
     } else {
-      copy(dragging);
-      const copyingArea = rows.slice(draggingTop, draggingBottom + 1).map((cols) => cols.slice(draggingLeft, draggingRight + 1));
+      copy([top, left, bottom, right]);
+      const copyingArea = rows.slice(top, bottom + 1).map((cols) => cols.slice(left, right + 1));
       tsv = convertArrayToTSV(copyingArea)
     }
     if (input != null) {
@@ -323,17 +326,20 @@ const handleEscape = ({
 const handlePaste = ({
   x, y,
   rows,
-  dragging, draggingTop, draggingBottom, draggingLeft, draggingRight,
-  copying, copyingTop, copyingBottom, copyingLeft, copyingRight,
+  draggingArea, copyingArea,
   cutting,
   drag,
   copy,
   heights, widths,
   setRows,
 }: handlePropsType) => {
+  const [draggingTop, draggingLeft, draggingBottom, draggingRight] = draggingArea;
+  const [copyingTop, copyingLeft, copyingBottom, copyingRight] = copyingArea;
+  const [draggingHeight, draggingWidth] = [draggingBottom - draggingTop, draggingRight - draggingLeft];
+  const [copyingHeight, copyingWidth] = [copyingBottom - copyingTop, copyingRight - copyingLeft];
   return (text: string) => {
-    if (dragging[0] === -1) {
-      if (copying[0] === -1) {
+    if (draggingTop === -1) {
+      if (copyingTop === -1) {
         const newRows = convertTSVToArray(text);
         for (let _y = 0; _y < newRows.length; _y++) {
           for (let _x = 0; _x < newRows[_y].length; _x++) {
@@ -342,16 +348,11 @@ const handlePaste = ({
         }
         drag([y, x, y + newRows.length - 1, x + newRows[0].length - 1]);
       } else {
-        const [copyingHeight, copyingWidth] = [copyingBottom - copyingTop, copyingRight - copyingLeft];
         for (let _y = 0; _y <= copyingHeight; _y++) {
           for (let _x = 0; _x <= copyingWidth; _x++) {
             const [dstY, dstX, srcY, srcX] = [y + _y, x + _x, copyingTop + _y, copyingLeft + _x];
             if (dstY < heights.length && dstX < widths.length) {
               rows[dstY][dstX] = rows[srcY][srcX];
-            }
-            console.log('deleting:', cutting);
-            if (cutting) {
-              rows[srcY][srcX] = "";
             }
           }
         }
@@ -360,7 +361,7 @@ const handlePaste = ({
         }
       }
     } else {
-      if (copying[0] === -1) {
+      if (copyingTop === -1) {
         const newRows = convertTSVToArray(text);
         for (let y = draggingTop; y <= draggingBottom; y++) {
           for (let x = draggingLeft; x <= draggingRight; x++) {
@@ -368,8 +369,6 @@ const handlePaste = ({
           }
         }
       } else {
-        const [draggingHeight, draggingWidth] = [draggingBottom - draggingTop, draggingRight - draggingLeft];
-        const [copyingHeight, copyingWidth] = [copyingBottom - copyingTop, copyingRight - copyingLeft];
         const [biggerHeight, biggerWidth] = [draggingHeight > copyingHeight ? draggingHeight : copyingHeight, draggingWidth > copyingWidth ? draggingWidth : copyingWidth]
         for (let _y = 0; _y <= biggerHeight; _y++) {
           for (let _x = 0; _x <= biggerWidth; _x++) {
@@ -382,34 +381,42 @@ const handlePaste = ({
         drag([y, x, y + biggerHeight, x + biggerWidth]);
       }
     }
+    if (cutting) {
+      for (let _y = 0; _y <= copyingHeight; _y++) {
+        for (let _x = 0; _x <= copyingWidth; _x++) {
+          const [srcY, srcX] = [copyingTop + _y, copyingLeft + _x];
+          rows[srcY][srcX] = "";
+        }
+      }
+    }
     setRows([...rows]);
     copy([-1, -1, -1, -1]);
   };
-
 };
 
 const handleSelect = ({
-  draggingTop, draggingBottom, draggingLeft, draggingRight,
+  draggingArea,
   drag,
   select,
   heights, widths,
 }: handlePropsType) => {
+  const [top, left, bottom, right] = draggingArea;
   return (nextY: number, nextX: number, breaking: boolean) => {
-    if (nextY < draggingTop && draggingTop !== -1 && !breaking) {
-      nextY = draggingBottom;
-      nextX = nextX > draggingLeft ? nextX - 1 : draggingRight;
+    if (nextY < top && top !== -1 && !breaking) {
+      nextY = bottom;
+      nextX = nextX > left ? nextX - 1 : right;
     }
-    if (nextY > draggingBottom && draggingBottom !== -1 && !breaking) {
-      nextY = draggingTop;
-      nextX = nextX < draggingRight ? nextX + 1 : draggingLeft;
+    if (nextY > bottom && bottom !== -1 && !breaking) {
+      nextY = top;
+      nextX = nextX < right ? nextX + 1 : left;
     }
-    if (nextX < draggingLeft && draggingLeft !== -1 && !breaking) {
-      nextX = draggingRight;
-      nextY = nextY > draggingTop ? nextY - 1 : draggingBottom;
+    if (nextX < left && left !== -1 && !breaking) {
+      nextX = right;
+      nextY = nextY > top ? nextY - 1 : bottom;
     }
-    if (nextX > draggingRight && draggingRight !== -1 && !breaking) {
-      nextX = draggingLeft;
-      nextY = nextY < draggingBottom ? nextY + 1 : draggingTop;
+    if (nextX > right && right !== -1 && !breaking) {
+      nextX = left;
+      nextY = nextY < bottom ? nextY + 1 : top;
     }
     if (breaking) {
       drag([-1, -1, -1, -1]);
@@ -430,4 +437,23 @@ const handleWrite = ({
     rows[y][x] = value;
     setRows([...rows]);
   };
+};
+
+const getCellStyle = (y: number, x: number, copyingArea: Range): React.CSSProperties => {
+  let style: any = {};
+  const [top, left, bottom, right] = copyingArea;
+
+  if (top < y && y <= bottom) {
+    style.borderTop = "solid 1px #dddddd";
+  }
+  if (top <= y && y < bottom) {
+    style.borderBottom = "solid 1px #dddddd";
+  }
+  if (left < x && x <= right) {
+    style.borderLeft = "solid 1px #dddddd";
+  }
+  if (left <= x && x < right) {
+    style.borderRight = "solid 1px #dddddd";
+  }
+  return style;
 };
