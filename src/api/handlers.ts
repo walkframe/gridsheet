@@ -4,7 +4,7 @@ import {
 
 import { cropMatrix, writeMatrix } from "../api/matrix";
 import { convertArrayToTSV, convertTSVToArray} from "./converters";
-
+import { undo, redo } from "./histories";
 
 export const handleBlur = ({
   select,
@@ -199,10 +199,46 @@ export const handleChoose = ({
 
 export const handleWrite = ({
   y, x,
+  history,
   matrix, setMatrix,
 }: handlePropsType) => {
   return (value: string) => {
+    history.append({
+      command: "replace",
+      src: [-1, -1, -1, -1],
+      dst: [y, x, y, x],
+      before: [[matrix[y][x]]],
+      after: [[value]],
+    });
     writeMatrix([[value]], [0, 0, 0, 0], matrix, [y, x, y, x]);
     setMatrix([... matrix]);
+  };
+};
+
+export const handleUndo = ({
+  history,
+  matrix, setMatrix,
+}: handlePropsType) => {
+  return () => {
+    const operation = history.prev();
+    if (typeof operation === "undefined") {
+      return;
+    }
+    undo(operation, matrix);
+    setMatrix(matrix);
+  };
+};
+
+export const handleRedo = ({
+  history,
+  matrix, setMatrix,
+}: handlePropsType) => {
+  return () => {
+    const operation = history.next();
+    if (typeof operation === "undefined") {
+      return;
+    }
+    redo(operation, matrix);
+    setMatrix(matrix);
   };
 };

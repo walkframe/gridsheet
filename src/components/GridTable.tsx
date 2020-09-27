@@ -24,7 +24,10 @@ import {
   handleSelect,
   handleSelectAll,
   handleWrite,
+  handleUndo,
+  handleRedo,
 } from "../api/handlers";
+import { History } from "../api/histories";
 
 interface Props {
   data: DataType;
@@ -131,6 +134,8 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
   [copyingArea[0], copyingArea[2]] = copying[Y_START] < copying[Y_END] ? [copying[Y_START], copying[Y_END]] : [copying[Y_END], copying[Y_START]];
   [copyingArea[1], copyingArea[3]] = copying[X_START] < copying[X_END] ? [copying[X_START], copying[X_END]] : [copying[X_END], copying[X_START]];
 
+  const [history] = React.useState(new History(10));
+
   const isSelecting = (y: number, x: number) => {
     const [top, left, bottom, right] = selectingArea;
     return top !== -1 && (top <= y && y <= bottom && left <= x && x <= right);
@@ -143,6 +148,7 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
   const clipboardRef = React.createRef<HTMLTextAreaElement>();
 
   const handleProps = {
+    history,
     matrix, setMatrix,
     choosing, choose, setChoosingLast,
     cutting, setCutting,
@@ -291,6 +297,8 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
               selectAll={handleSelectAll({... handleProps, y, x})}
               blur={handleBlur({... handleProps, y, x})}
               choose={handleChoose({... handleProps, y, x})}
+              undo={handleUndo({... handleProps, y, x})}
+              redo={handleRedo({... handleProps, y, x})}
               choosing={choosing[0] === y && choosing[1] === x}
             /></td>);
           })}

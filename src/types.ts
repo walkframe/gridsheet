@@ -24,16 +24,20 @@ export interface Props {
 export type PositionType = [number, number];
 export type AreaType = [number, number, number, number];
 
-export type HistoriesType = {
+export type HistoryType = {
   index: number;
   operations: OperationType[];
   next: () => OperationType | undefined;
   prev: () => OperationType | undefined;
+  append: (operation: OperationType) => void;
 };
 
+export type OperationCommandType = "replace" | "cut" | "clear" | "addRows" | "delRows" | "addCols" | "delCols";
+
 export type OperationType = {
-  type: "replace" | "clear" | "delRows" | "del";
-  target: AreaType;
+  command: OperationCommandType;
+  src: AreaType;
+  dst: AreaType;
   before: DataType;
   after: DataType;
 };
@@ -42,6 +46,7 @@ export type handlePropsType = {
   y: number;
   x: number;
   matrix: DataType;
+  history: HistoryType;
   clipboardRef: React.RefObject<HTMLTextAreaElement>;
   choosing: PositionType;
   selecting: AreaType;

@@ -61,6 +61,8 @@ interface Props {
   paste: (text: string) => void;
   clear: () => void;
   blur: () => void;
+  undo: () => void;
+  redo: () => void;
 };
 
 export const Cell: React.FC<Props> = (props) => {
@@ -93,7 +95,7 @@ export const Cell: React.FC<Props> = (props) => {
 };
 
 const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boolean) => void) => {
-  const { value, x, y, write, choose, select, selectAll, copy, paste, clear, escape } = props;
+  const { value, x, y, write, choose, select, selectAll, copy, paste, clear, escape, undo, redo } = props;
   return (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     const input = e.currentTarget;
     console.debug(e.key, "shift:", e.shiftKey, "ctrl:", e.ctrlKey, "alt:", e.altKey, "meta:", e.metaKey);
@@ -179,11 +181,11 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
             return false;
           }
         }
-      case "x": // X
+
+      case "r": // R
         if (e.ctrlKey || e.metaKey) {
           if (!editing) {
-            e.preventDefault();
-            copy(true);
+            redo();
             return false;
           }
         }
@@ -194,6 +196,21 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
               paste(input.value);
               input.value = "";
             }, 50);
+            return false;
+          }
+        }
+      case "x": // X
+        if (e.ctrlKey || e.metaKey) {
+          if (!editing) {
+            e.preventDefault();
+            copy(true);
+            return false;
+          }
+        }
+      case "z": // Z
+        if (e.ctrlKey || e.metaKey) {
+          if (!editing) {
+            undo();
             return false;
           }
         }
