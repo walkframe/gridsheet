@@ -2,7 +2,6 @@ import {
   DataType,
   HistoryType,
   OperationType,
-  OperationCommandType,
 } from "../types";
 import { writeMatrix } from "./matrix";
 
@@ -16,8 +15,8 @@ export class History implements HistoryType {
   }
 
   public next() {
-    if (this.operations.length - 1 < this.index) {
-      return this.operations[this.index++];
+    if (this.operations.length > this.index + 1) {
+      return this.operations[++this.index];
     }
   }
   public prev() {
@@ -37,21 +36,22 @@ export class History implements HistoryType {
 };
 
 export const undo = (operation: OperationType, matrix: DataType): DataType => {
-  switch(operation.command) {
+  const { command, src, dst, before, after } = operation;
+  switch(command) {
     case "replace":
-      
+      matrix = writeMatrix(before, [0, 0, before.length, before[0].length], matrix, dst);
     case "cut":
-    case "clear":
   }
   return matrix;
 };
 
 export const redo = (operation: OperationType, matrix: DataType): DataType => {
-  switch(operation.command) {
+  const { command, src, dst, before, after } = operation;
+  switch(command) {
     case "replace":
-
+      console.log("after", after, dst);
+      matrix = writeMatrix(after, [0, 0, after.length, after[0].length], matrix, dst);
     case "cut":
-    case "clear":
   }
   return matrix;
 };

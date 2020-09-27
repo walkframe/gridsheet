@@ -32,7 +32,7 @@ export type HistoryType = {
   append: (operation: OperationType) => void;
 };
 
-export type OperationCommandType = "replace" | "cut" | "clear" | "addRows" | "delRows" | "addCols" | "delCols";
+export type OperationCommandType = "replace" | "cut" | "addRows" | "delRows" | "addCols" | "delCols";
 
 export type OperationType = {
   command: OperationCommandType;

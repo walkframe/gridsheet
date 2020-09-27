@@ -2,7 +2,7 @@ import {
   handlePropsType,
 } from "../types";
 
-import { cropMatrix, writeMatrix } from "../api/matrix";
+import { cropMatrix, makeMatrix, writeMatrix } from "../api/matrix";
 import { convertArrayToTSV, convertTSVToArray} from "./converters";
 import { undo, redo } from "./histories";
 
@@ -22,21 +22,23 @@ export const handleBlur = ({
 
 export const handleClear = ({
   x, y,
+  history,
   matrix, setMatrix,
-  selecting,
   selectingArea,
 }: handlePropsType) => {
-  const [top, left, bottom, right] = selectingArea;
   return () => {
-    if (selecting[0] === -1) {
-      matrix[y][x] = "";
-    } else {
-      for (let y = top; y <= bottom; y++) {
-        for (let x = left; x <= right; x++) {
-          matrix[y][x] = "";
-        }
-      }
+    const [top, left, bottom, right] = selectingArea;
+    if (top === -1) {
+      selectingArea = [y, x, y, x];
     }
+    history.append({
+      command: "replace",
+      src: [-1, -1, -1, -1],
+      dst: selectingArea,
+      before: cropMatrix(matrix, selectingArea),
+      after: makeMatrix("", bottom - top + 1, right - left + 1),
+    });
+    writeMatrix([[""]], [0, 0, 0, 0], matrix, selectingArea);
     setMatrix([... matrix]);
   };
 };
@@ -112,6 +114,7 @@ export const handleEscape = ({
 
 export const handlePaste = ({
   x, y,
+  history,
   matrix,
   selectingArea, copyingArea,
   cutting,
@@ -225,7 +228,7 @@ export const handleUndo = ({
       return;
     }
     undo(operation, matrix);
-    setMatrix(matrix);
+    setMatrix([... matrix]);
   };
 };
 
@@ -235,10 +238,11 @@ export const handleRedo = ({
 }: handlePropsType) => {
   return () => {
     const operation = history.next();
+    console.log("operation", operation);
     if (typeof operation === "undefined") {
       return;
     }
     redo(operation, matrix);
-    setMatrix(matrix);
+    setMatrix([... matrix]);
   };
 };

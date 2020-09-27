@@ -3,11 +3,23 @@ import {
   AreaType,
 } from "../types";
 
-
 export const cropMatrix = (matrix: DataType, area: AreaType): DataType => {
   const [top, left, bottom, right] = area;
   return matrix.slice(top, bottom + 1).map((cols) => cols.slice(left, right + 1));
 };
+
+export const makeMatrix = (initial: string, height: number, width: number) => {
+  const matrix: DataType = [];
+  for (let y = 0; y < height; y++) {
+    const row: string[] = [];
+    for (let x = 0; x < width; x++) {
+      row.push(initial);
+    }
+    matrix.push(row);
+  }
+  return matrix;
+}
+
 
 export const writeMatrix = (src: DataType, srcArea: AreaType, dst: DataType, dstArea: AreaType): DataType => {
   const [srcTop, srcLeft, srcBottom, srcRight] = srcArea;
