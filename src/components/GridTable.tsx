@@ -113,7 +113,7 @@ const GridTableLayout = styled.div`
 `;
 
 export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
-  const [rows, setRows] = React.useState(data);
+  const [matrix, setMatrix] = React.useState(data);
   const [choosing, choose] = React.useState<PositionType>([0, 0]);
   const [choosingLast, setChoosingLast] = React.useState<PositionType>([0, 0]);
   const [cutting, setCutting] = React.useState(false);
@@ -143,7 +143,7 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
   const clipboardRef = React.createRef<HTMLTextAreaElement>();
 
   const handleProps = {
-    rows, setRows,
+    matrix, setMatrix,
     choosing, choose, setChoosingLast,
     cutting, setCutting,
     heights, widths,
@@ -235,7 +235,7 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
             }}
           >{y + 1}</th>
           {widths.map((width, x) => {
-            const value = rows[y][x];
+            const value = matrix[y][x];
             return (<td
               key={x}
               className={`${isSelecting(y, x) ? "selecting": ""} ${isCopying(y, x) ? cutting ? "cutting" : "copying" : ""}`}

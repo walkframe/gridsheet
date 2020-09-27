@@ -41,7 +41,7 @@ export type OperationType = {
 export type handlePropsType = {
   y: number;
   x: number;
-  rows: DataType;
+  matrix: DataType;
   clipboardRef: React.RefObject<HTMLTextAreaElement>;
   choosing: PositionType;
   selecting: AreaType;
@@ -56,7 +56,7 @@ export type handlePropsType = {
   choose: (position: PositionType) => void;
   setChoosingLast: (position: PositionType) => void;
   setCutting: (cutting: boolean) => void;
-  setRows: (rows: DataType) => void;
+  setMatrix: (matrix: DataType) => void;
   colsSelect: (cols: [number, number]) => void;
   rowsSelect: (rows: [number, number]) => void;
   colsSelecting: [number, number];

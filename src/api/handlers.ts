@@ -22,28 +22,28 @@ export const handleBlur = ({
 
 export const handleClear = ({
   x, y,
-  rows, setRows,
+  matrix, setMatrix,
   selecting,
   selectingArea,
 }: handlePropsType) => {
   const [top, left, bottom, right] = selectingArea;
   return () => {
     if (selecting[0] === -1) {
-      rows[y][x] = "";
+      matrix[y][x] = "";
     } else {
       for (let y = top; y <= bottom; y++) {
         for (let x = left; x <= right; x++) {
-          rows[y][x] = "";
+          matrix[y][x] = "";
         }
       }
     }
-    setRows([... rows]);
+    setMatrix([... matrix]);
   };
 };
 
 export const handleCopy = ({
   y, x,
-  rows,
+  matrix,
   clipboardRef,
   select, selecting, selectingArea,
   copy,
@@ -57,7 +57,7 @@ export const handleCopy = ({
   return (cutting=false) => {
     const input = clipboardRef.current;
     copy(area);
-    const copyingRows = cropMatrix(rows, area);
+    const copyingRows = cropMatrix(matrix, area);
     const tsv = convertArrayToTSV(copyingRows);
     const selectingLast = selecting;
     if (input != null) {
@@ -112,13 +112,12 @@ export const handleEscape = ({
 
 export const handlePaste = ({
   x, y,
-  rows,
+  matrix,
   selectingArea, copyingArea,
   cutting,
   select,
   copy,
-  heights, widths,
-  setRows,
+  setMatrix,
 }: handlePropsType) => {
   const [selectingTop, selectingLeft, selectingBottom, selectingRight] = selectingArea;
   const [copyingTop, copyingLeft, copyingBottom, copyingRight] = copyingArea;
@@ -126,34 +125,34 @@ export const handlePaste = ({
   const [copyingHeight, copyingWidth] = [copyingBottom - copyingTop, copyingRight - copyingLeft];
 
   return (text: string) => {
-    const copyingRows = cropMatrix(rows, copyingArea);
+    const copyingMatrix = cropMatrix(matrix, copyingArea);
     if (cutting) {
-      writeMatrix([[""]], [0, 0, 0, 0], rows, copyingArea);
+      writeMatrix([[""]], [0, 0, 0, 0], matrix, copyingArea);
     }
     if (selectingTop === -1) {
       if (copyingTop === -1) {
-        const tsvRows = convertTSVToArray(text);
-        const [height, width] = [tsvRows.length - 1, tsvRows[0].length - 1];
-        writeMatrix(tsvRows, [0, 0, height, width], rows, [y, x, y + height, width]);
+        const tsvMatrix = convertTSVToArray(text);
+        const [height, width] = [tsvMatrix.length - 1, tsvMatrix[0].length - 1];
+        writeMatrix(tsvMatrix, [0, 0, height, width], matrix, [y, x, y + height, width]);
         select([y, x, y + height, x + width]);
       } else {
-        writeMatrix(copyingRows, [0, 0, copyingHeight, copyingWidth], rows, [y, x, y + copyingHeight, x + copyingWidth]);
+        writeMatrix(copyingMatrix, [0, 0, copyingHeight, copyingWidth], matrix, [y, x, y + copyingHeight, x + copyingWidth]);
         if (copyingHeight > 0 || copyingWidth > 0) {
           select([y, x, y + copyingHeight, x + copyingWidth]);
         }
       }
     } else {
       if (copyingTop === -1) {
-        const tsvRows = convertTSVToArray(text);
-        const [height, width] = [tsvRows.length - 1, tsvRows[0].length - 1];
-        writeMatrix(tsvRows, [0, 0, height, width], rows, [y, x, y + selectingHeight, x + selectingWidth]);
+        const tsvMatrix = convertTSVToArray(text);
+        const [height, width] = [tsvMatrix.length - 1, tsvMatrix[0].length - 1];
+        writeMatrix(tsvMatrix, [0, 0, height, width], matrix, [y, x, y + selectingHeight, x + selectingWidth]);
       } else {
         const [biggerHeight, biggerWidth] = [selectingHeight > copyingHeight ? selectingHeight : copyingHeight, selectingWidth > copyingWidth ? selectingWidth : copyingWidth];
-        writeMatrix(copyingRows, [0, 0, copyingHeight, copyingWidth], rows, [y, x, y + biggerHeight, x + biggerWidth]);
+        writeMatrix(copyingMatrix, [0, 0, copyingHeight, copyingWidth], matrix, [y, x, y + biggerHeight, x + biggerWidth]);
         select([y, x, y + biggerHeight, x + biggerWidth]);
       }
     }
-    setRows([...rows]);
+    setMatrix([... matrix]);
     copy([-1, -1, -1, -1]);
   };
 };
@@ -200,10 +199,10 @@ export const handleChoose = ({
 
 export const handleWrite = ({
   y, x,
-  rows, setRows,
+  matrix, setMatrix,
 }: handlePropsType) => {
   return (value: string) => {
-    writeMatrix([[value]], [0, 0, 0, 0], rows, [y, x, y, x]);
-    setRows([...rows]);
+    writeMatrix([[value]], [0, 0, 0, 0], matrix, [y, x, y, x]);
+    setMatrix([... matrix]);
   };
 };
