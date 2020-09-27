@@ -5,6 +5,8 @@ import {
   DataType,
   WidthsType,
   HeightsType,
+  PositionType,
+  AreaType,
 } from "../types";
 import { Y_START, Y_END, X_START, X_END, DUMMY_IMG } from "../constants";
 
@@ -15,7 +17,7 @@ import {
   convertNtoA,
   convertArrayToTSV,
   convertTSVToArray,
-} from "../utils/converters";
+} from "../api/converters";
 
 interface Props {
   data: DataType;
@@ -25,8 +27,7 @@ interface Props {
   setHeights: (heights: HeightsType) => void;
 };
 
-type Position = [number, number];
-type Range = [number, number, number, number];
+
 
 const GridTableLayout = styled.div`
   height: auto;
@@ -63,7 +64,6 @@ const GridTableLayout = styled.div`
           color: #ffffff;
         }
       }
-
     }
     td {
       position: relative;
@@ -107,20 +107,20 @@ const GridTableLayout = styled.div`
 
 export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
   const [rows, setRows] = React.useState(data);
-  const [choosing, choose] = React.useState<Position>([0, 0]);
-  const [choosingLast, setChoosingLast] = React.useState<Position>([0, 0]);
+  const [choosing, choose] = React.useState<PositionType>([0, 0]);
+  const [choosingLast, setChoosingLast] = React.useState<PositionType>([0, 0]);
   const [cutting, setCutting] = React.useState(false);
 
   const [rowsSelecting, rowsSelect] = React.useState<[number, number]>([-1, -1]);
   const [colsSelecting, colsSelect] = React.useState<[number, number]>([-1, -1]);
 
-  const [selecting, select] = React.useState<Range>([-1, -1, -1, -1]); // (y-from, x-from) -> (y-to, x-to)
-  const selectingArea: Range = [-1, -1, -1, -1]; // (top, left) -> (bottom, right)
+  const [selecting, select] = React.useState<AreaType>([-1, -1, -1, -1]); // (y-from, x-from) -> (y-to, x-to)
+  const selectingArea: AreaType = [-1, -1, -1, -1]; // (top, left) -> (bottom, right)
   [selectingArea[0], selectingArea[2]] = selecting[Y_START] < selecting[Y_END] ? [selecting[Y_START], selecting[Y_END]] : [selecting[Y_END], selecting[Y_START]];
   [selectingArea[1], selectingArea[3]] = selecting[X_START] < selecting[X_END] ? [selecting[X_START], selecting[X_END]] : [selecting[X_END], selecting[X_START]];
 
-  const [copying, copy] = React.useState<Range>([-1, -1, -1, -1]); // (y-from, x-from) -> (y-to, x-to)
-  const copyingArea: Range = [-1, -1, -1, -1]; // (top, left) -> (bottom, right)
+  const [copying, copy] = React.useState<AreaType>([-1, -1, -1, -1]); // (y-from, x-from) -> (y-to, x-to)
+  const copyingArea: AreaType = [-1, -1, -1, -1]; // (top, left) -> (bottom, right)
   [copyingArea[0], copyingArea[2]] = copying[Y_START] < copying[Y_END] ? [copying[Y_START], copying[Y_END]] : [copying[Y_END], copying[Y_START]];
   [copyingArea[1], copyingArea[3]] = copying[X_START] < copying[X_END] ? [copying[X_START], copying[X_END]] : [copying[X_END], copying[X_START]];
 
@@ -299,18 +299,18 @@ type handlePropsType = {
   x: number;
   rows: DataType;
   clipboardRef: React.RefObject<HTMLTextAreaElement>;
-  choosing: Position;
-  selecting: Range;
-  selectingArea: Range;
-  copying: Range;
-  copyingArea: Range;
+  choosing: PositionType;
+  selecting: AreaType;
+  selectingArea: AreaType;
+  copying: AreaType;
+  copyingArea: AreaType;
   heights: string[];
   widths: string[];
   cutting: boolean,
-  copy: (range: Range) => void;
-  select: (range: Range) => void;
-  choose: (position: Position) => void;
-  setChoosingLast: (position: Position) => void;
+  copy: (range: AreaType) => void;
+  select: (range: AreaType) => void;
+  choose: (position: PositionType) => void;
+  setChoosingLast: (position: PositionType) => void;
   setCutting: (cutting: boolean) => void;
   setRows: (rows: DataType) => void;
   colsSelect: (cols: [number, number]) => void;
@@ -546,7 +546,7 @@ const handleWrite = ({
   };
 };
 
-const getCellStyle = (y: number, x: number, copyingArea: Range): React.CSSProperties => {
+const getCellStyle = (y: number, x: number, copyingArea: AreaType): React.CSSProperties => {
   let style: any = {};
   const [top, left, bottom, right] = copyingArea;
 
@@ -565,7 +565,7 @@ const getCellStyle = (y: number, x: number, copyingArea: Range): React.CSSProper
   return style;
 };
 
-const cropRows = (rows: DataType, area: Range): DataType => {
+const cropRows = (rows: DataType, area: AreaType): DataType => {
   const [top, left, bottom, right] = area;
   return rows.slice(top, bottom + 1).map((cols) => cols.slice(left, right + 1));
 };

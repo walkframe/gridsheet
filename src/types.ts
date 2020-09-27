@@ -20,3 +20,6 @@ export interface Props {
   data: DataType;
   options?: OptionsType;
 };
+
+export type PositionType = [number, number];
+export type AreaType = [number, number, number, number];
