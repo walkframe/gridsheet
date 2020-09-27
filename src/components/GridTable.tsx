@@ -13,11 +13,18 @@ import { Y_START, Y_END, X_START, X_END, DUMMY_IMG } from "../constants";
 import {
   Cell,
 } from "./Cell";
+import { convertNtoA } from "../api/converters";
 import {
-  convertNtoA,
-  convertArrayToTSV,
-  convertTSVToArray,
-} from "../api/converters";
+  handleBlur,
+  handleChoose,
+  handleClear,
+  handleCopy,
+  handleEscape,
+  handlePaste,
+  handleSelect,
+  handleSelectAll,
+  handleWrite,
+} from "../api/handlers";
 
 interface Props {
   data: DataType;
@@ -294,257 +301,6 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
   </GridTableLayout>);
 };
 
-type handlePropsType = {
-  y: number;
-  x: number;
-  rows: DataType;
-  clipboardRef: React.RefObject<HTMLTextAreaElement>;
-  choosing: PositionType;
-  selecting: AreaType;
-  selectingArea: AreaType;
-  copying: AreaType;
-  copyingArea: AreaType;
-  heights: string[];
-  widths: string[];
-  cutting: boolean,
-  copy: (range: AreaType) => void;
-  select: (range: AreaType) => void;
-  choose: (position: PositionType) => void;
-  setChoosingLast: (position: PositionType) => void;
-  setCutting: (cutting: boolean) => void;
-  setRows: (rows: DataType) => void;
-  colsSelect: (cols: [number, number]) => void;
-  rowsSelect: (rows: [number, number]) => void;
-  colsSelecting: [number, number];
-  rowsSelecting: [number, number];
-};
-
-const handleBlur = ({
-  select,
-  choose, choosing, setChoosingLast,
-  colsSelect, rowsSelect,
-}: handlePropsType) => {
-  return () => {
-    setChoosingLast(choosing);
-    select([-1, -1, -1, -1]);
-    choose([-1, -1]);
-    colsSelect([-1, -1]);
-    rowsSelect([-1, -1]);
-  };
-};
-
-const handleClear = ({
-  x, y,
-  rows, setRows,
-  selecting,
-  selectingArea,
-}: handlePropsType) => {
-  const [top, left, bottom, right] = selectingArea;
-  return () => {
-    if (selecting[0] === -1) {
-      rows[y][x] = "";
-    } else {
-      for (let y = top; y <= bottom; y++) {
-        for (let x = left; x <= right; x++) {
-          rows[y][x] = "";
-        }
-      }
-    }
-    setRows([... rows]);
-  };
-};
-
-const handleCopy = ({
-  y, x,
-  rows,
-  clipboardRef,
-  select, selecting, selectingArea,
-  copy,
-  choose,
-  setCutting,
-}: handlePropsType) => {
-  let area = selectingArea;
-  if (area[0] === -1) {
-    area = [y, x, y, x];
-  }
-  return (cutting=false) => {
-    const input = clipboardRef.current;
-    copy(area);
-    const copyingRows = cropRows(rows, area);
-    const tsv = convertArrayToTSV(copyingRows);
-    const selectingLast = selecting;
-    if (input != null) {
-      input.value = tsv;
-      input.focus();
-      input.select();
-      document.execCommand("copy");
-      input.value = "";
-      input.blur();
-      setTimeout(() => {
-        choose([y, x]);
-        select(selectingLast);
-      }, 100); // refocus
-    }
-    setCutting(cutting);
-  };
-};
-
-const handleSelect = ({
-  x, y,
-  select, selecting,
-  heights, widths,
-}: handlePropsType) => {
-  return (deltaY: number, deltaX: number) => {
-    let [dragEndY, dragEndX] = [selecting[2] === -1 ? y : selecting[2], selecting[3] === -1 ? x : selecting[3]];
-    let [nextY, nextX] = [dragEndY + deltaY, dragEndX + deltaX];
-    if (nextY < 0 || heights.length <= nextY || nextX < 0 || widths.length <= nextX) {
-      return;
-    }
-    y === nextY && x === nextX ? select([-1, -1, -1, -1]) : select([y, x, nextY, nextX]);
-  };
-}
-
-const handleSelectAll = ({
-  select, 
-  heights, widths,
-}: handlePropsType) => {
-  return () => {
-    select([0, 0, heights.length - 1, widths.length - 1]);
-  };
-};
-
-const handleEscape = ({
-  copy,
-  setCutting,
-}: handlePropsType) => {
-  return () => {
-    copy([-1, -1, -1, -1]);
-    setCutting(false);
-  };
-};
-
-const handlePaste = ({
-  x, y,
-  rows,
-  selectingArea, copyingArea,
-  cutting,
-  select,
-  copy,
-  heights, widths,
-  setRows,
-}: handlePropsType) => {
-  const [selectingTop, selectingLeft, selectingBottom, selectingRight] = selectingArea;
-  const [copyingTop, copyingLeft, copyingBottom, copyingRight] = copyingArea;
-  const [selectingHeight, selectingWidth] = [selectingBottom - selectingTop, selectingRight - selectingLeft];
-  const [copyingHeight, copyingWidth] = [copyingBottom - copyingTop, copyingRight - copyingLeft];
-
-  const copyingRows = cropRows(rows, copyingArea);
-  return (text: string) => {
-    if (cutting) {
-      for (let _y = 0; _y <= copyingHeight; _y++) {
-        for (let _x = 0; _x <= copyingWidth; _x++) {
-          const [srcY, srcX] = [copyingTop + _y, copyingLeft + _x];
-          rows[srcY][srcX] = "";
-        }
-      }
-    }
-    if (selectingTop === -1) {
-      if (copyingTop === -1) {
-        const tsvRows = convertTSVToArray(text);
-        for (let _y = 0; _y < tsvRows.length; _y++) {
-          for (let _x = 0; _x < tsvRows[_y].length; _x++) {
-            rows[y + _y][x + _x] = tsvRows[_y][_x];
-          }
-        }
-        select([y, x, y + tsvRows.length - 1, x + tsvRows[0].length - 1]);
-      } else {
-        for (let _y = 0; _y <= copyingHeight; _y++) {
-          for (let _x = 0; _x <= copyingWidth; _x++) {
-            const [dstY, dstX] = [y + _y, x + _x];
-            if (dstY < heights.length && dstX < widths.length) {
-              rows[dstY][dstX] = copyingRows[_y][_x];
-            }
-          }
-        }
-        if (copyingHeight > 0 || copyingWidth > 0) {
-          select([y, x, y + copyingHeight, x + copyingWidth]);
-        }
-      }
-    } else {
-      if (copyingTop === -1) {
-        const tsvRows = convertTSVToArray(text);
-        for (let y = 0; y <= selectingHeight; y++) {
-          for (let x = 0; x <= selectingHeight; x++) {
-            rows[selectingTop + y][selectingLeft + x] = tsvRows[y % tsvRows.length][x % tsvRows[0].length];
-          }
-        }
-      } else {
-        const [biggerHeight, biggerWidth] = [selectingHeight > copyingHeight ? selectingHeight : copyingHeight, selectingWidth > copyingWidth ? selectingWidth : copyingWidth]
-        for (let _y = 0; _y <= biggerHeight; _y++) {
-          for (let _x = 0; _x <= biggerWidth; _x++) {
-            const [dstY, dstX] = [y + _y, x + _x];
-            if (dstY < heights.length && dstX < widths.length) {
-              rows[dstY][dstX] = copyingRows[_y % (copyingHeight + 1)][_x % (copyingWidth + 1)];
-            }
-          }
-        }
-        select([y, x, y + biggerHeight, x + biggerWidth]);
-      }
-    }
-    setRows([...rows]);
-    copy([-1, -1, -1, -1]);
-  };
-};
-
-const handleChoose = ({
-  selectingArea,
-  select,
-  choose,
-  colsSelect, rowsSelect,
-  heights, widths,
-}: handlePropsType) => {
-  const [top, left, bottom, right] = selectingArea;
-
-  return (nextY: number, nextX: number, breaking: boolean) => {
-    if (breaking) {
-      colsSelect([-1, -1]);
-      rowsSelect([-1, -1]);
-    }
-    if (nextY < top && top !== -1 && !breaking) {
-      nextY = bottom;
-      nextX = nextX > left ? nextX - 1 : right;
-    }
-    if (nextY > bottom && bottom !== -1 && !breaking) {
-      nextY = top;
-      nextX = nextX < right ? nextX + 1 : left;
-    }
-    if (nextX < left && left !== -1 && !breaking) {
-      nextX = right;
-      nextY = nextY > top ? nextY - 1 : bottom;
-    }
-    if (nextX > right && right !== -1 && !breaking) {
-      nextX = left;
-      nextY = nextY < bottom ? nextY + 1 : top;
-    }
-    if (breaking) {
-      select([-1, -1, -1, -1]);
-    }
-    if (nextY < 0 || heights.length <= nextY || nextX < 0 || widths.length <= nextX) {
-      return;
-    }
-    choose([nextY, nextX]);
-  };
-};
-
-const handleWrite = ({
-  y, x,
-  rows, setRows,
-}: handlePropsType) => {
-  return (value: string) => {
-    rows[y][x] = value;
-    setRows([...rows]);
-  };
-};
 
 const getCellStyle = (y: number, x: number, copyingArea: AreaType): React.CSSProperties => {
   let style: any = {};
@@ -565,7 +321,4 @@ const getCellStyle = (y: number, x: number, copyingArea: AreaType): React.CSSPro
   return style;
 };
 
-const cropRows = (rows: DataType, area: AreaType): DataType => {
-  const [top, left, bottom, right] = area;
-  return rows.slice(top, bottom + 1).map((cols) => cols.slice(left, right + 1));
-};
+
