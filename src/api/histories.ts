@@ -39,8 +39,7 @@ export const undo = (operation: OperationType, matrix: DataType): DataType => {
   const { command, src, dst, before, after } = operation;
   switch(command) {
     case "replace":
-      matrix = writeMatrix(before, [0, 0, before.length, before[0].length], matrix, dst);
-    case "cut":
+      matrix = writeMatrix(...dst, before, matrix);
   }
   return matrix;
 };
@@ -49,9 +48,7 @@ export const redo = (operation: OperationType, matrix: DataType): DataType => {
   const { command, src, dst, before, after } = operation;
   switch(command) {
     case "replace":
-      console.log("after", after, dst);
-      matrix = writeMatrix(after, [0, 0, after.length, after[0].length], matrix, dst);
-    case "cut":
+      matrix = writeMatrix(...dst, after, matrix);
   }
   return matrix;
 };

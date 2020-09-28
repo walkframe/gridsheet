@@ -47,7 +47,7 @@ export const convertTSVToArray = (tsv: string): string[][] => {
         row.push(col.substring(0, enterIndex));
         rows.push(row);
         row = [];
-        const nextCol = col.substring(enterIndex + 1, col.length)
+        const nextCol = col.substring(enterIndex + 1, col.length);
         if (nextCol) {
           row.push(nextCol);
         }

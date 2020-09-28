@@ -36,8 +36,8 @@ export type OperationCommandType = "replace" | "cut" | "addRows" | "delRows" | "
 
 export type OperationType = {
   command: OperationCommandType;
-  src: AreaType;
-  dst: AreaType;
+  src: PositionType;
+  dst: PositionType;
   before: DataType;
   after: DataType;
 };

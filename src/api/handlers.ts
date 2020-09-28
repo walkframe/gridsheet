@@ -33,12 +33,12 @@ export const handleClear = ({
     }
     history.append({
       command: "replace",
-      src: [-1, -1, -1, -1],
-      dst: selectingArea,
+      src: [-1, -1],
+      dst: [top, left],
       before: cropMatrix(matrix, selectingArea),
       after: makeMatrix("", bottom - top + 1, right - left + 1),
     });
-    writeMatrix([[""]], [0, 0, 0, 0], matrix, selectingArea);
+    writeMatrix(top, left, spreadMatrix([[""]], bottom - top + 1, right - left + 1), matrix);
     setMatrix([... matrix]);
   };
 };
@@ -129,8 +129,8 @@ export const handlePaste = ({
 
   return (text: string) => {
     const copyingMatrix = cropMatrix(matrix, copyingArea);
-    if (cutting) {
-      writeMatrix([[""]], [0, 0, 0, 0], matrix, copyingArea);
+    if (cutting) {;
+      writeMatrix(copyingTop, copyingLeft, spreadMatrix([[""]], copyingHeight + 1, copyingWidth + 1), matrix);
     }
     if (selectingTop === -1) {
       if (copyingTop === -1) {
@@ -138,22 +138,22 @@ export const handlePaste = ({
         const [height, width] = [tsvMatrix.length - 1, tsvMatrix[0].length - 1];
         history.append({
           command: "replace",
-          src: [-1, -1, -1, -1],
-          dst: [y, x, y + height, x + width],
+          src: [copyingTop, copyingLeft],
+          dst: [y, x],
           before: cropMatrix(matrix, [y, x, y + height, x + width]),
           after: tsvMatrix,
         });
-        writeMatrix(tsvMatrix, [0, 0, height, width], matrix, [y, x, y + height, x + width]);
+        writeMatrix(y, x, tsvMatrix, matrix);
         select([y, x, y + height, x + width]);
       } else {
         history.append({
           command: "replace",
-          src: [-1, -1, -1, -1],
-          dst: [y, x, y + copyingHeight, x + copyingWidth],
+          src: [copyingTop, copyingLeft],
+          dst: [y, x],
           before: cropMatrix(matrix, [y, x, y + copyingHeight, x + copyingWidth]),
           after: copyingMatrix,
         });
-        writeMatrix(copyingMatrix, [0, 0, copyingHeight, copyingWidth], matrix, [y, x, y + copyingHeight, x + copyingWidth]);
+        writeMatrix(y, x, copyingMatrix, matrix);
         if (copyingHeight > 0 || copyingWidth > 0) {
           select([y, x, y + copyingHeight, x + copyingWidth]);
         }
@@ -165,24 +165,24 @@ export const handlePaste = ({
         const after = spreadMatrix(tsvMatrix, height, width);
         history.append({
           command: "replace",
-          src: [-1, -1, -1, -1],
-          dst: [y, x, y + height, x + width],
+          src: [copyingTop, copyingLeft],
+          dst: [y, x],
           before: cropMatrix(matrix, [selectingTop, selectingLeft, selectingTop + height, selectingLeft + width]),
           after,
         });
-        writeMatrix(after, [0, 0, height, width], matrix, [selectingTop, selectingLeft, selectingTop + height, selectingLeft + width]);
+        writeMatrix(selectingTop, selectingLeft, after, matrix);
         select([y, x, y + height, x + width]);
       } else {
         const [height, width] = superposeArea(copyingArea, selectingArea);
         const after = spreadMatrix(copyingMatrix, height, width);
         history.append({
           command: "replace",
-          src: [-1, -1, -1, -1],
-          dst: [y, x, y + height, x + width],
+          src: [copyingTop, copyingLeft],
+          dst: [y, x],
           before: cropMatrix(matrix, [selectingTop, selectingLeft, selectingTop + height, selectingLeft + width]),
           after,
         });
-        writeMatrix(after, [0, 0, height, width], matrix, [y, x, y + height, x + width]);
+        writeMatrix(selectingTop, selectingLeft, after, matrix);
         select([y, x, y + height, x + width]);
       }
     }
@@ -239,12 +239,12 @@ export const handleWrite = ({
   return (value: string) => {
     history.append({
       command: "replace",
-      src: [-1, -1, -1, -1],
-      dst: [y, x, y, x],
+      src: [-1, -1],
+      dst: [y, x],
       before: [[matrix[y][x]]],
       after: [[value]],
     });
-    writeMatrix([[value]], [0, 0, 0, 0], matrix, [y, x, y, x]);
+    writeMatrix(y, x, [[value]], matrix);
     setMatrix([... matrix]);
   };
 };

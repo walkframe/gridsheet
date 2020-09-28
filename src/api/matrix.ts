@@ -20,35 +20,19 @@ export const makeMatrix = (initial: string, height: number, width: number) => {
   return matrix;
 };
 
-
-export const writeMatrix = (src: DataType, srcArea: AreaType, dst: DataType, dstArea: AreaType): DataType => {
-  const [srcTop, srcLeft, srcBottom, srcRight] = srcArea;
-  const [dstTop, dstLeft, dstBottom, dstRight] = dstArea;
-  const [srcHeight, srcWidth, dstHeight, dstWidth] = [srcBottom - srcTop, srcRight - srcLeft, dstBottom - dstTop, dstRight - dstLeft];
-
-  for (let y = 0; y <= dstHeight; y++) {
-    if (dstTop + y >= dst.length) {
-      continue;
+export const writeMatrix = (y: number, x: number, src: DataType, dst: DataType): DataType => {
+  src.map((row, i) => {
+    if (y + i >= dst.length) {
+      return;
     }
-    const rowSrc = src[y % (srcHeight + 1)];
-    const rowDst = dst[dstTop + y];
-    for (let x = 0; x <= dstWidth; x++) {
-      if (dstLeft + x >= rowDst.length) {
-        continue;
+    row.map((col, j) => {
+      if (x + j >= dst[0].length) {
+        return;
       }
-      rowDst[dstLeft + x] = rowSrc[x % (srcWidth + 1)];
-    }
-  }
+      dst[y + i][x + j] = col;
+    });
+  });
   return dst;
-};
-
-export const superposeArea = (srcArea: AreaType, dstArea: AreaType): [number, number] => {
-  const [srcTop, srcLeft, srcBottom, srcRight] = srcArea;
-  const [dstTop, dstLeft, dstBottom, dstRight] = dstArea;
-  const [srcHeight, srcWidth, dstHeight, dstWidth] = [srcBottom - srcTop, srcRight - srcLeft, dstBottom - dstTop, dstRight - dstLeft];
-
-  // biggerHeight, biggerWidth
-  return [srcHeight > dstHeight ? srcHeight : dstHeight, srcWidth > dstWidth ? srcWidth : dstWidth];
 };
 
 export const spreadMatrix = (src: DataType, height: number, width: number): DataType => {
@@ -59,4 +43,18 @@ export const spreadMatrix = (src: DataType, height: number, width: number): Data
     }
   }
   return matrix;
+};
+
+export const slideArea = (area: AreaType, y: number, x: number): AreaType => {
+  const [top, left, bottom, right] = area;
+  return [top + y, left + x, bottom + y, right + x];
+}
+
+export const superposeArea = (srcArea: AreaType, dstArea: AreaType): [number, number] => {
+  const [srcTop, srcLeft, srcBottom, srcRight] = srcArea;
+  const [dstTop, dstLeft, dstBottom, dstRight] = dstArea;
+  const [srcHeight, srcWidth, dstHeight, dstWidth] = [srcBottom - srcTop, srcRight - srcLeft, dstBottom - dstTop, dstRight - dstLeft];
+
+  // biggerHeight, biggerWidth
+  return [srcHeight > dstHeight ? srcHeight : dstHeight, srcWidth > dstWidth ? srcWidth : dstWidth];
 };
