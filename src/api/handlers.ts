@@ -3,7 +3,7 @@ import {
   DataType,
 } from "../types";
 
-import { cropMatrix, makeMatrix, writeMatrix, spreadMatrix, superposeArea } from "../api/matrix";
+import { cropMatrix, writeMatrix, spreadMatrix, superposeArea } from "../api/matrix";
 import { convertArrayToTSV, convertTSVToArray} from "./converters";
 import { undo, redo } from "./histories";
 

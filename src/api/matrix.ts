@@ -8,18 +8,6 @@ export const cropMatrix = (matrix: DataType, area: AreaType): DataType => {
   return matrix.slice(top, bottom + 1).map((cols) => cols.slice(left, right + 1));
 };
 
-export const makeMatrix = (initial: string, height: number, width: number) => {
-  const matrix: DataType = [];
-  for (let y = 0; y < height; y++) {
-    const row: string[] = [];
-    for (let x = 0; x < width; x++) {
-      row.push(initial);
-    }
-    matrix.push(row);
-  }
-  return matrix;
-};
-
 export const writeMatrix = (y: number, x: number, src: DataType, dst: DataType): DataType => {
   src.map((row, i) => {
     if (y + i >= dst.length) {
@@ -36,13 +24,16 @@ export const writeMatrix = (y: number, x: number, src: DataType, dst: DataType):
 };
 
 export const spreadMatrix = (src: DataType, height: number, width: number): DataType => {
-  const matrix = makeMatrix("", height + 1, width + 1);
+  const dst: DataType = [];
   for (let y = 0; y <= height; y++) {
+    const row: string[] = [];
     for (let x = 0; x <= width; x++) {
-      matrix[y][x] = src[y % src.length][x % src[0].length];
+      const col = src[y % src.length][x % src[0].length];
+      row.push(col);
     }
+    dst.push(row);
   }
-  return matrix;
+  return dst;
 };
 
 export const slideArea = (area: AreaType, y: number, x: number): AreaType => {
@@ -58,3 +49,5 @@ export const superposeArea = (srcArea: AreaType, dstArea: AreaType): [number, nu
   // biggerHeight, biggerWidth
   return [srcHeight > dstHeight ? srcHeight : dstHeight, srcWidth > dstWidth ? srcWidth : dstWidth];
 };
+
+// shape
