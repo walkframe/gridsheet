@@ -1,5 +1,5 @@
 import {
-  DataType,
+  MatrixType,
   HistoryType,
   OperationType,
 } from "../types";
@@ -8,7 +8,7 @@ import {
   cropMatrix,
   spreadMatrix,
   slideArea,
-} from "./matrix";
+} from "./arrays";
 
 
 export class History implements HistoryType {
@@ -40,10 +40,10 @@ export class History implements HistoryType {
   }
 };
 
-export const undo = (operation: OperationType, matrix: DataType): DataType => {
+export const undo = (operation: OperationType, matrix: MatrixType): MatrixType => {
   const { command, cutting, position, before, after } = operation;
   switch(command) {
-    case "replace":
+    case "write":
       writeMatrix(...position, before, matrix);
       if (typeof cutting !== "undefined") {
         const [top, left] = cutting;
@@ -53,10 +53,10 @@ export const undo = (operation: OperationType, matrix: DataType): DataType => {
   return matrix;
 };
 
-export const redo = (operation: OperationType, matrix: DataType): DataType => {
+export const redo = (operation: OperationType, matrix: MatrixType): MatrixType => {
   const { command, cutting, position, before, after } = operation;
   switch(command) {
-    case "replace":
+    case "write":
       if (typeof cutting !== "undefined") {
         const [top, left, bottom, right] = cutting;
         const blank = spreadMatrix([[""]], bottom - top, right - left);

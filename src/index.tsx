@@ -2,7 +2,7 @@ import React from "react";
 import styled from "styled-components";
 
 import {
-  DataType,
+  MatrixType,
   Props,
 } from "./types";
 

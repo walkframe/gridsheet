@@ -4,7 +4,7 @@ export type RowType = {
 };
 
 export type RowArrayType = string[];
-export type DataType = RowArrayType[];
+export type MatrixType = RowArrayType[];
 
 export type WidthType = string;
 export type HeightType = string;
@@ -17,7 +17,7 @@ export interface OptionsType {
 };
 
 export interface Props {
-  data: DataType;
+  data: MatrixType;
   options?: OptionsType;
 };
 
@@ -32,20 +32,20 @@ export type HistoryType = {
   append: (operation: OperationType) => void;
 };
 
-export type OperationCommandType = "replace" | "cut" | "addRows" | "delRows" | "addCols" | "delCols";
+export type OperationCommandType = "write" | "addRows" | "delRows" | "addCols" | "delCols";
 
 export type OperationType = {
   command: OperationCommandType;
   cutting?: AreaType;
   position: PositionType;
-  before: DataType;
-  after: DataType;
+  before: MatrixType;
+  after: MatrixType;
 };
 
 export type handlePropsType = {
   y: number;
   x: number;
-  matrix: DataType;
+  matrix: MatrixType;
   history: HistoryType;
   clipboardRef: React.RefObject<HTMLTextAreaElement>;
   choosing: PositionType;
@@ -61,7 +61,7 @@ export type handlePropsType = {
   choose: (position: PositionType) => void;
   setChoosingLast: (position: PositionType) => void;
   setCutting: (cutting: boolean) => void;
-  setMatrix: (matrix: DataType) => void;
+  setMatrix: (matrix: MatrixType) => void;
   colsSelect: (cols: [number, number]) => void;
   rowsSelect: (rows: [number, number]) => void;
   colsSelecting: [number, number];

@@ -2,7 +2,7 @@ import React from "react";
 import styled from "styled-components";
 
 import {
-  DataType,
+  MatrixType,
   WidthsType,
   HeightsType,
   PositionType,
@@ -30,7 +30,7 @@ import {
 import { History } from "../api/histories";
 
 interface Props {
-  data: DataType;
+  data: MatrixType;
   widths: WidthsType;
   heights: HeightsType;
   setWidths: (widths: WidthsType) => void;
@@ -308,7 +308,6 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
     </table>
   </GridTableLayout>);
 };
-
 
 const getCellStyle = (y: number, x: number, copyingArea: AreaType): React.CSSProperties => {
   let style: any = {};

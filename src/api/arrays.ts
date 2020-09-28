@@ -1,14 +1,14 @@
 import {
-  DataType,
+  MatrixType,
   AreaType,
 } from "../types";
 
-export const cropMatrix = (matrix: DataType, area: AreaType): DataType => {
+export const cropMatrix = (matrix: MatrixType, area: AreaType): MatrixType => {
   const [top, left, bottom, right] = area;
   return matrix.slice(top, bottom + 1).map((cols) => cols.slice(left, right + 1));
 };
 
-export const writeMatrix = (y: number, x: number, src: DataType, dst: DataType): DataType => {
+export const writeMatrix = (y: number, x: number, src: MatrixType, dst: MatrixType): MatrixType => {
   src.map((row, i) => {
     if (y + i >= dst.length) {
       return;
@@ -23,8 +23,8 @@ export const writeMatrix = (y: number, x: number, src: DataType, dst: DataType):
   return dst;
 };
 
-export const spreadMatrix = (src: DataType, height: number, width: number): DataType => {
-  const dst: DataType = [];
+export const spreadMatrix = (src: MatrixType, height: number, width: number): MatrixType => {
+  const dst: MatrixType = [];
   for (let y = 0; y <= height; y++) {
     const row: string[] = [];
     for (let x = 0; x <= width; x++) {

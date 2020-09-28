@@ -1,9 +1,9 @@
 import {
   handlePropsType,
-  DataType,
+  MatrixType,
 } from "../types";
 
-import { cropMatrix, writeMatrix, spreadMatrix, superposeArea } from "../api/matrix";
+import { cropMatrix, writeMatrix, spreadMatrix, superposeArea } from "./arrays";
 import { convertArrayToTSV, convertTSVToArray} from "./converters";
 import { undo, redo } from "./histories";
 
@@ -34,7 +34,7 @@ export const handleClear = ({
     }
     const after = spreadMatrix([[""]], bottom - top, right - left);
     history.append({
-      command: "replace",
+      command: "write",
       position: [top, left],
       before: cropMatrix(matrix, selectingArea),
       after,
@@ -129,7 +129,7 @@ export const handlePaste = ({
   const [copyingHeight, copyingWidth] = [copyingBottom - copyingTop, copyingRight - copyingLeft];
 
   return (text: string) => {
-    let before: DataType = [];
+    let before: MatrixType = [];
     let after = cropMatrix(matrix, copyingArea);
     let height = copyingHeight;
     let width = copyingWidth;
@@ -157,7 +157,7 @@ export const handlePaste = ({
       writeMatrix(selectingTop, selectingLeft, after, matrix);
     }
     history.append({
-      command: "replace",
+      command: "write",
       position: [y, x],
       cutting: cutting ? copyingArea : undefined,
       before,
@@ -216,7 +216,7 @@ export const handleWrite = ({
 }: handlePropsType) => {
   return (value: string) => {
     history.append({
-      command: "replace",
+      command: "write",
       position: [y, x],
       before: [[matrix[y][x]]],
       after: [[value]],
