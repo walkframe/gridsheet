@@ -1,6 +1,7 @@
 import {
   handlePropsType,
   MatrixType,
+  PositionType,
 } from "../types";
 
 import { cropMatrix, writeMatrix, spreadMatrix, superposeArea } from "./arrays";
@@ -133,6 +134,7 @@ export const handlePaste = ({
     let after = cropMatrix(matrix, copyingArea);
     let height = copyingHeight;
     let width = copyingWidth;
+    let position: PositionType = [y, x];
     if (cutting) {;
       const blank = spreadMatrix([[""]], copyingHeight, copyingWidth);
       writeMatrix(copyingTop, copyingLeft, blank, matrix);
@@ -145,6 +147,7 @@ export const handlePaste = ({
       }
       before = cropMatrix(matrix, [y, x, y + height, x + width]);
       writeMatrix(y, x, after, matrix);
+      select([y, x, y + height, x + width]);
     } else { // selecting destination
       if (copyingTop === -1) { // unselecting source
         after = convertTSVToArray(text);
@@ -152,18 +155,20 @@ export const handlePaste = ({
       } else { // selecting source
         [height, width] = superposeArea(copyingArea, selectingArea);
       }
+      position = [selectingTop, selectingLeft];
       after = spreadMatrix(after, height, width);
       before = cropMatrix(matrix, [selectingTop, selectingLeft, selectingTop + height, selectingLeft + width]);
       writeMatrix(selectingTop, selectingLeft, after, matrix);
+      select([selectingTop, selectingLeft, selectingTop + height, selectingLeft + width]);
     }
     history.append({
       command: "write",
-      position: [y, x],
+      position,
       cutting: cutting ? copyingArea : undefined,
       before,
       after,
     });
-    select([y, x, y + height, x + width]);
+    
     setMatrix([... matrix]);
     copy([-1, -1, -1, -1]);
   };
