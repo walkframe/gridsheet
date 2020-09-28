@@ -47,7 +47,7 @@ export const undo = (operation: OperationType, matrix: MatrixType): MatrixType =
       writeMatrix(...position, before, matrix);
       if (typeof cutting !== "undefined") {
         const [top, left] = cutting;
-        writeMatrix(top, left, cropMatrix(after, slideArea(cutting, top, left)), matrix);
+        writeMatrix(top, left, cropMatrix(after, slideArea(cutting, -top, -left)), matrix);
       }
   }
   return matrix;

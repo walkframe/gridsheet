@@ -1,6 +1,9 @@
 import {
   MatrixType,
   AreaType,
+  DraggingType,
+  RangeType,
+  PositionType,
 } from "../types";
 
 export const cropMatrix = (matrix: MatrixType, area: AreaType): MatrixType => {
@@ -42,12 +45,34 @@ export const slideArea = (area: AreaType, y: number, x: number): AreaType => {
 }
 
 export const superposeArea = (srcArea: AreaType, dstArea: AreaType): [number, number] => {
-  const [srcTop, srcLeft, srcBottom, srcRight] = srcArea;
-  const [dstTop, dstLeft, dstBottom, dstRight] = dstArea;
-  const [srcHeight, srcWidth, dstHeight, dstWidth] = [srcBottom - srcTop, srcRight - srcLeft, dstBottom - dstTop, dstRight - dstLeft];
+  const [srcHeight, srcWidth] = shape(srcArea);
+  const [dstHeight, dstWidth] = shape(dstArea);
 
   // biggerHeight, biggerWidth
   return [srcHeight > dstHeight ? srcHeight : dstHeight, srcWidth > dstWidth ? srcWidth : dstWidth];
 };
 
-// shape
+export const Y_START = 0, X_START = 1, Y_END = 2, X_END = 3;
+
+export const draggingToArea = (dragging: DraggingType): AreaType => {
+  const [top, bottom] = dragging[Y_START] < dragging[Y_END] ? [dragging[Y_START], dragging[Y_END]] : [dragging[Y_END], dragging[Y_START]];
+  const [left, right] = dragging[X_START] < dragging[X_END] ? [dragging[X_START], dragging[X_END]] : [dragging[X_END], dragging[X_START]];
+  return [top, left, bottom, right];
+};
+
+export const between = (range: RangeType, index: number) => {
+  if (range[0] === -1 || range[1] === -1) {
+    return false;
+  }
+  return (range[0] <= index && index <= range[1]) || (range[1] <= index && index <= range[0]);
+};
+
+export const among = (area: AreaType, position: PositionType) => {
+  const [y, x] = position;
+  const [top, left, bottom, right] = area;
+  return top <= y && y <= bottom && left <= x && x <= right;
+};
+
+export const shape = (area: AreaType | DraggingType): [number, number] => {
+  return [Math.abs(area[0] - area[2]), Math.abs(area[1] - area[3])];
+};

@@ -7,8 +7,9 @@ import {
   HeightsType,
   PositionType,
   AreaType,
+  DraggingType,
 } from "../types";
-import { Y_START, Y_END, X_START, X_END, DUMMY_IMG } from "../constants";
+import { DUMMY_IMG } from "../constants";
 
 import {
   Cell,
@@ -28,6 +29,7 @@ import {
   handleRedo,
 } from "../api/handlers";
 import { History } from "../api/histories";
+import { draggingToArea, between, among, shape } from "../api/arrays";
 
 interface Props {
   data: MatrixType;
@@ -124,27 +126,12 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
   const [rowsSelecting, rowsSelect] = React.useState<[number, number]>([-1, -1]);
   const [colsSelecting, colsSelect] = React.useState<[number, number]>([-1, -1]);
 
-  const [selecting, select] = React.useState<AreaType>([-1, -1, -1, -1]); // (y-from, x-from) -> (y-to, x-to)
-  const selectingArea: AreaType = [-1, -1, -1, -1]; // (top, left) -> (bottom, right)
-  [selectingArea[0], selectingArea[2]] = selecting[Y_START] < selecting[Y_END] ? [selecting[Y_START], selecting[Y_END]] : [selecting[Y_END], selecting[Y_START]];
-  [selectingArea[1], selectingArea[3]] = selecting[X_START] < selecting[X_END] ? [selecting[X_START], selecting[X_END]] : [selecting[X_END], selecting[X_START]];
-
-  const [copying, copy] = React.useState<AreaType>([-1, -1, -1, -1]); // (y-from, x-from) -> (y-to, x-to)
-  const copyingArea: AreaType = [-1, -1, -1, -1]; // (top, left) -> (bottom, right)
-  [copyingArea[0], copyingArea[2]] = copying[Y_START] < copying[Y_END] ? [copying[Y_START], copying[Y_END]] : [copying[Y_END], copying[Y_START]];
-  [copyingArea[1], copyingArea[3]] = copying[X_START] < copying[X_END] ? [copying[X_START], copying[X_END]] : [copying[X_END], copying[X_START]];
+  const [selecting, select] = React.useState<DraggingType>([-1, -1, -1, -1]); // (y-from, x-from) -> (y-to, x-to)
+  const [copying, copy] = React.useState<DraggingType>([-1, -1, -1, -1]); // (y-from, x-from) -> (y-to, x-to)
+  const selectingArea = draggingToArea(selecting); // (top, left) -> (bottom, right)
+  const copyingArea = draggingToArea(copying); // (top, left) -> (bottom, right)
 
   const [history] = React.useState(new History(10));
-
-  const isSelecting = (y: number, x: number) => {
-    const [top, left, bottom, right] = selectingArea;
-    return top !== -1 && (top <= y && y <= bottom && left <= x && x <= right);
-  };
-  const isCopying = (y: number, x: number) => {
-    const [top, left, bottom, right] = copyingArea;
-    return (top <= y && y <= bottom && left <= x && x <= right);
-  };
-
   const clipboardRef = React.createRef<HTMLTextAreaElement>();
 
   const handleProps = {
@@ -164,11 +151,10 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
       <thead>
         <tr>
           <th></th>
-          {widths.map((width, x) => {
-            const isSelectingCols = colsSelecting[0] !== -1 && colsSelecting[1] !== -1 && ((colsSelecting[0] <= x && x <= colsSelecting[1]) || (colsSelecting[1] <= x && x <= colsSelecting[0]));
+          {widths.map((width, x) => {            
             return (<th 
               key={x}
-              className={`col-number ${choosing[1] === x ? "choosing" : ""} ${isSelectingCols ? "selecting" : ""}`}
+              className={`col-number ${choosing[1] === x ? "choosing" : ""} ${between(colsSelecting, x) ? "selecting" : ""}`}
               style={{ width }}
               onClick={(e) => {
                 const [_, xLast] = choosingLast;
@@ -205,10 +191,9 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
         </tr>
       </thead>
       <tbody>{heights.map((height, y) => {
-        const isSelectingRows = rowsSelecting[0] !== -1 && rowsSelecting[1] !== -1 && ((rowsSelecting[0] <= y && y <= rowsSelecting[1]) || (rowsSelecting[1] <= y && y <= rowsSelecting[0]));
         return (<tr key={y}>
           <th
-            className={`row-number ${choosing[0] === y ? "choosing" : ""} ${isSelectingRows ? "selecting" : ""}`}
+            className={`row-number ${choosing[0] === y ? "choosing" : ""} ${between(rowsSelecting, y) ? "selecting" : ""}`}
             style={{ height }}
             onClick={(e) => {
               const [yLast, _] = choosingLast;
@@ -244,7 +229,7 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
             const value = matrix[y][x];
             return (<td
               key={x}
-              className={`${isSelecting(y, x) ? "selecting": ""} ${isCopying(y, x) ? cutting ? "cutting" : "copying" : ""}`}
+              className={`${among(selectingArea, [y, x]) ? "selecting": ""} ${among(copyingArea, [y, x]) ? cutting ? "cutting" : "copying" : ""}`}
               style={getCellStyle(y, x, copyingArea)}
               draggable
               onClick={(e) => {
@@ -266,7 +251,8 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
                 select([y, x, -1, -1]);
               }}
               onDragEnd={() => {
-                if (selecting[0] === selecting[2] && selecting[1] === selecting[3]) {
+                const [height, width] = shape(selecting);
+                if (height + width === 0) {
                   select([-1, -1, -1, -1]);
                 }
               }}

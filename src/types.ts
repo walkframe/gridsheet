@@ -21,7 +21,9 @@ export interface Props {
   options?: OptionsType;
 };
 
+export type RangeType = [number, number];
 export type PositionType = [number, number];
+export type DraggingType = [number, number, number, number];
 export type AreaType = [number, number, number, number];
 
 export type HistoryType = {
@@ -49,9 +51,9 @@ export type handlePropsType = {
   history: HistoryType;
   clipboardRef: React.RefObject<HTMLTextAreaElement>;
   choosing: PositionType;
-  selecting: AreaType;
+  selecting: DraggingType;
   selectingArea: AreaType;
-  copying: AreaType;
+  copying: DraggingType;
   copyingArea: AreaType;
   heights: string[];
   widths: string[];
