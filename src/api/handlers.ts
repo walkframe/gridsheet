@@ -1,5 +1,6 @@
 import {
   handlePropsType,
+  DataType,
 } from "../types";
 
 import { cropMatrix, makeMatrix, writeMatrix, spreadMatrix, superposeArea } from "../api/matrix";
@@ -31,14 +32,14 @@ export const handleClear = ({
     if (top === -1) {
       selectingArea = [y, x, y, x];
     }
+    const after = spreadMatrix([[""]], bottom - top, right - left);
     history.append({
       command: "replace",
-      src: [-1, -1],
-      dst: [top, left],
+      position: [top, left],
       before: cropMatrix(matrix, selectingArea),
-      after: makeMatrix("", bottom - top + 1, right - left + 1),
+      after,
     });
-    writeMatrix(top, left, spreadMatrix([[""]], bottom - top + 1, right - left + 1), matrix);
+    writeMatrix(top, left, after, matrix);
     setMatrix([... matrix]);
   };
 };
@@ -128,64 +129,41 @@ export const handlePaste = ({
   const [copyingHeight, copyingWidth] = [copyingBottom - copyingTop, copyingRight - copyingLeft];
 
   return (text: string) => {
-    const copyingMatrix = cropMatrix(matrix, copyingArea);
+    let before: DataType = [];
+    let after = cropMatrix(matrix, copyingArea);
+    let height = copyingHeight;
+    let width = copyingWidth;
     if (cutting) {;
-      writeMatrix(copyingTop, copyingLeft, spreadMatrix([[""]], copyingHeight + 1, copyingWidth + 1), matrix);
+      const blank = spreadMatrix([[""]], copyingHeight, copyingWidth);
+      writeMatrix(copyingTop, copyingLeft, blank, matrix);
     }
-    if (selectingTop === -1) {
-      if (copyingTop === -1) {
-        const tsvMatrix = convertTSVToArray(text);
-        const [height, width] = [tsvMatrix.length - 1, tsvMatrix[0].length - 1];
-        history.append({
-          command: "replace",
-          src: [copyingTop, copyingLeft],
-          dst: [y, x],
-          before: cropMatrix(matrix, [y, x, y + height, x + width]),
-          after: tsvMatrix,
-        });
-        writeMatrix(y, x, tsvMatrix, matrix);
-        select([y, x, y + height, x + width]);
-      } else {
-        history.append({
-          command: "replace",
-          src: [copyingTop, copyingLeft],
-          dst: [y, x],
-          before: cropMatrix(matrix, [y, x, y + copyingHeight, x + copyingWidth]),
-          after: copyingMatrix,
-        });
-        writeMatrix(y, x, copyingMatrix, matrix);
-        if (copyingHeight > 0 || copyingWidth > 0) {
-          select([y, x, y + copyingHeight, x + copyingWidth]);
-        }
+
+    if (selectingTop === -1) { // unselecting destination
+      if (copyingTop === -1) { // unselecting source
+        after = convertTSVToArray(text);
+        [height, width] = [after.length - 1, after[0].length - 1];
       }
-    } else {
-      if (copyingTop === -1) {
-        const tsvMatrix = convertTSVToArray(text);
-        const [height, width] = superposeArea([0, 0, tsvMatrix.length - 1, tsvMatrix[0].length - 1], [0, 0, selectingHeight, selectingWidth]);
-        const after = spreadMatrix(tsvMatrix, height, width);
-        history.append({
-          command: "replace",
-          src: [copyingTop, copyingLeft],
-          dst: [y, x],
-          before: cropMatrix(matrix, [selectingTop, selectingLeft, selectingTop + height, selectingLeft + width]),
-          after,
-        });
-        writeMatrix(selectingTop, selectingLeft, after, matrix);
-        select([y, x, y + height, x + width]);
-      } else {
-        const [height, width] = superposeArea(copyingArea, selectingArea);
-        const after = spreadMatrix(copyingMatrix, height, width);
-        history.append({
-          command: "replace",
-          src: [copyingTop, copyingLeft],
-          dst: [y, x],
-          before: cropMatrix(matrix, [selectingTop, selectingLeft, selectingTop + height, selectingLeft + width]),
-          after,
-        });
-        writeMatrix(selectingTop, selectingLeft, after, matrix);
-        select([y, x, y + height, x + width]);
+      before = cropMatrix(matrix, [y, x, y + height, x + width]);
+      writeMatrix(y, x, after, matrix);
+    } else { // selecting destination
+      if (copyingTop === -1) { // unselecting source
+        after = convertTSVToArray(text);
+        [height, width] = superposeArea([0, 0, after.length - 1, after[0].length - 1], [0, 0, selectingHeight, selectingWidth]);
+      } else { // selecting source
+        [height, width] = superposeArea(copyingArea, selectingArea);
       }
+      after = spreadMatrix(after, height, width);
+      before = cropMatrix(matrix, [selectingTop, selectingLeft, selectingTop + height, selectingLeft + width]);
+      writeMatrix(selectingTop, selectingLeft, after, matrix);
     }
+    history.append({
+      command: "replace",
+      position: [y, x],
+      cutting: cutting ? copyingArea : undefined,
+      before,
+      after,
+    });
+    select([y, x, y + height, x + width]);
     setMatrix([... matrix]);
     copy([-1, -1, -1, -1]);
   };
@@ -239,8 +217,7 @@ export const handleWrite = ({
   return (value: string) => {
     history.append({
       command: "replace",
-      src: [-1, -1],
-      dst: [y, x],
+      position: [y, x],
       before: [[matrix[y][x]]],
       after: [[value]],
     });
