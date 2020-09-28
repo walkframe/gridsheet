@@ -4,7 +4,7 @@ import {
   PositionType,
 } from "../types";
 
-import { cropMatrix, writeMatrix, spreadMatrix, superposeArea } from "./arrays";
+import { cropMatrix, writeMatrix, spreadMatrix, superposeArea, slideArea, shape } from "./arrays";
 import { convertArrayToTSV, convertTSVToArray} from "./converters";
 import { undo, redo } from "./histories";
 
@@ -124,10 +124,10 @@ export const handlePaste = ({
   copy,
   setMatrix,
 }: handlePropsType) => {
-  const [selectingTop, selectingLeft, selectingBottom, selectingRight] = selectingArea;
-  const [copyingTop, copyingLeft, copyingBottom, copyingRight] = copyingArea;
-  const [selectingHeight, selectingWidth] = [selectingBottom - selectingTop, selectingRight - selectingLeft];
-  const [copyingHeight, copyingWidth] = [copyingBottom - copyingTop, copyingRight - copyingLeft];
+  const [selectingTop, selectingLeft] = selectingArea;
+  const [copyingTop, copyingLeft] = copyingArea;
+  const [selectingHeight, selectingWidth] = shape(selectingArea);
+  const [copyingHeight, copyingWidth] = shape(copyingArea);
 
   return (text: string) => {
     let before: MatrixType = [];
@@ -135,7 +135,7 @@ export const handlePaste = ({
     let height = copyingHeight;
     let width = copyingWidth;
     let position: PositionType = [y, x];
-    if (cutting) {;
+    if (cutting) {
       const blank = spreadMatrix([[""]], copyingHeight, copyingWidth);
       writeMatrix(copyingTop, copyingLeft, blank, matrix);
     }
@@ -157,9 +157,9 @@ export const handlePaste = ({
       }
       position = [selectingTop, selectingLeft];
       after = spreadMatrix(after, height, width);
-      before = cropMatrix(matrix, [selectingTop, selectingLeft, selectingTop + height, selectingLeft + width]);
+      before = cropMatrix(matrix, slideArea([0, 0, height, width], ...position));
       writeMatrix(selectingTop, selectingLeft, after, matrix);
-      select([selectingTop, selectingLeft, selectingTop + height, selectingLeft + width]);
+      select(slideArea([0, 0, height, width], ...position));
     }
     history.append({
       command: "write",
@@ -168,7 +168,6 @@ export const handlePaste = ({
       before,
       after,
     });
-    
     setMatrix([... matrix]);
     copy([-1, -1, -1, -1]);
   };
