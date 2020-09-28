@@ -33,6 +33,9 @@ export const convertArrayToTSV = (rows: string[][]): string => {
 export const convertTSVToArray = (tsv: string): string[][] => {
   const rows: string[][] = [];
   let row: string[] = [];
+  if (tsv.indexOf("\t") === -1) {
+    return tsv.split("\n").map((col) => [col]);
+  }
   tsv.split("\t").map((col) => {
     if (col[0] === '"' && col[col.length-1] === '"') { // escaping
       row.push(col.substring(1, col.length - 1).replace(/""/g, '"'));
