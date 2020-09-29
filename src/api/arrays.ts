@@ -68,7 +68,9 @@ export const between = (range: RangeType, index: number) => {
 };
 
 export const among = (area: AreaType, position: PositionType) => {
-
+  if (area[0] === -1 || area[1] === -1 || area[2] === -1 || area[3] === -1) {
+    return false;
+  }
   const [y, x] = position;
   const [top, left, bottom, right] = area;
   return top <= y && y <= bottom && left <= x && x <= right;

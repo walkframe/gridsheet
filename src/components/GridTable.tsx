@@ -257,6 +257,7 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
           {makeSequence(0, numCols).map((x) => {
             const colOption = colInfo[x] || {};
             const value = matrix[y][x];
+            const [editing, setEditing] = React.useState(false);
             return (<td
               key={x}
               className={` ${
@@ -265,7 +266,7 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
                 ... getCellStyle(y, x, copyingArea),
                 ... rowOption.style, ... colOption.style, // MEMO: prior to col style
               }}
-              draggable
+              draggable={!editing}
               onClick={(e) => {
                 if (e.shiftKey) {
                   choose(choosingLast);
@@ -316,6 +317,8 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
                 >
                   <Cell
                     value={value}
+                    editing={editing}
+                    setEditing={setEditing}
                     x={x}
                     y={y}
                     write={handleWrite({... handleProps, y, x})}

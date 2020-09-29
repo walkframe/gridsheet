@@ -52,6 +52,8 @@ interface Props {
   x: number;
   y: number;
   choosing: boolean;
+  editing: boolean;
+  setEditing: (editing: boolean) => void;
   write: (value: string) => void;
   choose: (nextY: number, nextX: number, breaking: boolean) => void;
   select: (deltaY: number, deltaX: number) => void;
@@ -66,8 +68,7 @@ interface Props {
 };
 
 export const Cell: React.FC<Props> = (props) => {
-  const { value, write, choose, choosing, blur } = props;
-  const [editing, setEditing] = React.useState(false);
+  const { value, write, choosing, blur, editing, setEditing } = props;
   return (<CellLayout
     className="cell"
   ><div className="unchooseed">{value}</div>
