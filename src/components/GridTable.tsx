@@ -51,6 +51,7 @@ const GridTableLayout = styled.div`
       color: #777777;
       font-size: 13px;
       font-weight: normal;
+      box-sizing: border-box;
       background-color: #eeeeee;
 
       &.col-number {
@@ -217,6 +218,7 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
                   colsSelect([x, x]);
                 }
                 rowsSelect([-1, -1]);
+                setColInfo({... colInfo, [x]: {... colOption, width: `${e.currentTarget.clientWidth - 2}px`}});
                 return false;
               }}
               draggable
@@ -233,6 +235,9 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
                 select([startY, startX, endY, x]);
                 colsSelect([colsSelecting[0], x]);
                 return false;
+              }}
+              onBlur={(e) => {
+                setColInfo({... colInfo, [x]: {... colOption, width: `${e.currentTarget.clientWidth - 2}px`}});;
               }}
             >
               <div
@@ -264,6 +269,9 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
               colsSelect([-1, -1]);
               setRowInfo({... rowInfo, [y]: {... rowOption, height: `${e.currentTarget.clientHeight - 2}px`}});
               return false;
+            }}
+            onBlur={(e) => {
+              setRowInfo({... rowInfo, [y]: {... rowOption, height: `${e.currentTarget.clientHeight - 2}px`}});
             }}
             draggable
             onDragStart={(e) => {
@@ -343,7 +351,7 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
             >
               <div 
                 className={`cell-wrapper-outer ${among(selectingArea, [y, x]) ? "selected": ""} ${pointed ? "pointed" : ""} ${editing ? "editing" : ""}`}
-                style={{ height }}
+                
               >
                 <div 
                   className={`cell-wrapper-inner`}
