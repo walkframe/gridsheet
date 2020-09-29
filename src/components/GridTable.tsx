@@ -98,13 +98,19 @@ const GridTableLayout = styled.div`
         left: 0;
         width: 100%;
         height: 100%;
-        &.selecting {
+        overflow: hidden;
+        box-sizing: border-box;
+        &.selected {
           background-color: rgba(0, 128, 255, 0.2);
+        }
+        &.pointed {
+          border: solid 2px #0077ff;
+        }
+        &.editing {
+          overflow: visible;
         }
       }
       .cell-wrapper-inner {
-        width: 99999px;
-        
         display: table-cell;
       }
     }
@@ -220,6 +226,7 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
       </thead>
       <tbody>{makeSequence(0, numRows).map((y) => {
         const rowOption = rowInfo[y] || {};
+        const height = rowOption.height || defaultHeight;
         return (<tr key={y}>
           <th
             className={`row-number ${choosing[0] === y ? "choosing" : ""} ${between(rowsSelecting, y) ? "selecting" : ""}`}
@@ -255,7 +262,9 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
             }}
           >{ rowOption.label ||  y + 1 }</th>
           {makeSequence(0, numCols).map((x) => {
+            const pointed = choosing[0] === y && choosing[1] === x;
             const colOption = colInfo[x] || {};
+            const width = colOption.width || defaultWidth;
             const value = matrix[y][x];
             const [editing, setEditing] = React.useState(false);
             return (<td
@@ -307,11 +316,12 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
               }}
             >
               <div 
-                className={`cell-wrapper-outer ${among(selectingArea, [y, x]) ? "selecting": ""}`}>
+                className={`cell-wrapper-outer ${among(selectingArea, [y, x]) ? "selected": ""} ${pointed ? "pointed" : ""} ${editing ? "editing" : ""}`}>
                 <div 
                   className={`cell-wrapper-inner`}
-                  style={{ 
-                    height: rowOption.height || defaultHeight,
+                  style={{
+                    width,
+                    height,
                     verticalAlign: rowOption.verticalAlign || colOption.verticalAlign || verticalAlign,
                   }}
                 >
@@ -321,6 +331,8 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
                     setEditing={setEditing}
                     x={x}
                     y={y}
+                    height={height}
+                    width={width}
                     write={handleWrite({... handleProps, y, x})}
                     copy={handleCopy({... handleProps, y, x})}
                     escape={handleEscape({... handleProps, y, x})}
