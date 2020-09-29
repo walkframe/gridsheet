@@ -31,25 +31,45 @@ export const convertArrayToTSV = (rows: string[][]): string => {
 };
 
 export const convertTSVToArray = (tsv: string): string[][] => {
+  tsv = tsv.replace(/""/g, "\x00");
+  const restoreDoubleQuote = (text: string) => text.replace(/\x00/g, '"');
   const rows: string[][] = [];
   let row: string[] = [];
   if (tsv.indexOf("\t") === -1) {
-    return tsv.split("\n").map((col) => [col]);
+    const cols: string[] = [];
+    const vals = tsv.split("\n");
+    let enter = false;
+    vals.map((val) => {
+      if (enter) {
+        if (val[val.length - 1] === '"') {
+          enter = false;
+          val = val.substring(0, val.length - 1);
+        }
+        cols[cols.length - 1] += `\n${val}`;
+      } else {
+        if (val.match(/^(\x00)*"/)) {
+          enter = true;
+          val = val.substring(1);
+        }
+        cols.push(val);
+      }
+    });
+    return cols.map((col) => [restoreDoubleQuote(col)]);
   }
   tsv.split("\t").map((col) => {
     if (col[0] === '"' && col[col.length-1] === '"') { // escaping
-      row.push(col.substring(1, col.length - 1).replace(/""/g, '"'));
+      row.push(restoreDoubleQuote(col.substring(1, col.length - 1)));
     } else {
       const enterIndex = col.indexOf("\n");
       if (enterIndex === -1) {
-        row.push(col);
+        row.push(restoreDoubleQuote(col));
       } else {
-        row.push(col.substring(0, enterIndex));
+        row.push(restoreDoubleQuote(col.substring(0, enterIndex)));
         rows.push(row);
         row = [];
         const nextCol = col.substring(enterIndex + 1, col.length);
         if (nextCol) {
-          row.push(nextCol);
+          row.push(restoreDoubleQuote(nextCol));
         }
       }
     }
