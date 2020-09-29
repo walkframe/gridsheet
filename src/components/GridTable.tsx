@@ -139,7 +139,7 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
     headerHeight = "auto",
     headerWidth = "auto",
     defaultHeight = "20px",
-    defaultWidth = "100px",
+    defaultWidth = "80px",
     verticalAlign = "middle",
     cols = [],
     rows = [],
