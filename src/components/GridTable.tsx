@@ -75,14 +75,10 @@ const GridTableLayout = styled.div`
       }
     }
     td {
-      position: relative;
       padding: 0;
       margin: 0;
+      position: relative;
       border: solid 1px #cccccc;
-      
-      &.selecting {
-        background-color: rgba(0, 128, 255, 0.2);
-      }
       &.cutting {
         border: dotted 2px #0077ff;
         textarea:focus {
@@ -94,6 +90,22 @@ const GridTableLayout = styled.div`
         textarea:focus {
           outline: solid 1px #0077ff;
         }
+      }
+
+      .cell-wrapper-outer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        &.selecting {
+          background-color: rgba(0, 128, 255, 0.2);
+        }
+      }
+      .cell-wrapper-inner {
+        width: 99999px;
+        
+        display: table-cell;
       }
     }
   }
@@ -120,6 +132,7 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
     headerWidth = "auto",
     defaultHeight = "20px",
     defaultWidth = "100px",
+    verticalAlign = "middle",
     cols = [],
     rows = [],
   } = options;
@@ -246,10 +259,11 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
             const value = matrix[y][x];
             return (<td
               key={x}
-              className={`${among(selectingArea, [y, x]) ? "selecting": ""} ${among(copyingArea, [y, x]) ? cutting ? "cutting" : "copying" : ""}`}
+              className={` ${
+                among(copyingArea, [y, x]) ? cutting ? "cutting" : "copying" : ""}`}
               style={{
                 ... getCellStyle(y, x, copyingArea),
-                ... rowOption.style, ... colOption.style
+                ... rowOption.style, ... colOption.style, // MEMO: prior to col style
               }}
               draggable
               onClick={(e) => {
@@ -290,23 +304,36 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
                 }
                 select([startY, startX, y, x])
               }}
-            ><Cell
-              value={value}
-              x={x}
-              y={y}
-              write={handleWrite({... handleProps, y, x})}
-              copy={handleCopy({... handleProps, y, x})}
-              escape={handleEscape({... handleProps, y, x})}
-              clear={handleClear({... handleProps, y, x})}
-              paste={handlePaste({... handleProps, y, x})}
-              select={handleSelect({... handleProps, y, x})}
-              selectAll={handleSelectAll({... handleProps, y, x})}
-              blur={handleBlur({... handleProps, y, x})}
-              choose={handleChoose({... handleProps, y, x})}
-              undo={handleUndo({... handleProps, y, x})}
-              redo={handleRedo({... handleProps, y, x})}
-              choosing={choosing[0] === y && choosing[1] === x}
-            /></td>);
+            >
+              <div 
+                className={`cell-wrapper-outer ${among(selectingArea, [y, x]) ? "selecting": ""}`}>
+                <div 
+                  className={`cell-wrapper-inner`}
+                  style={{ 
+                    height: rowOption.height || defaultHeight,
+                    verticalAlign: rowOption.verticalAlign || colOption.verticalAlign || verticalAlign,
+                  }}
+                >
+                  <Cell
+                    value={value}
+                    x={x}
+                    y={y}
+                    write={handleWrite({... handleProps, y, x})}
+                    copy={handleCopy({... handleProps, y, x})}
+                    escape={handleEscape({... handleProps, y, x})}
+                    clear={handleClear({... handleProps, y, x})}
+                    paste={handlePaste({... handleProps, y, x})}
+                    select={handleSelect({... handleProps, y, x})}
+                    selectAll={handleSelectAll({... handleProps, y, x})}
+                    blur={handleBlur({... handleProps, y, x})}
+                    choose={handleChoose({... handleProps, y, x})}
+                    undo={handleUndo({... handleProps, y, x})}
+                    redo={handleRedo({... handleProps, y, x})}
+                    choosing={choosing[0] === y && choosing[1] === x}
+                  />
+                </div>
+              </div>
+            </td>);
           })}
         </tr>);
       })

@@ -7,6 +7,7 @@ export type RowOptionType = {
   width?: string;
   height?: string;
   style?: React.CSSProperties;
+  verticalAlign?: string;
   key?: string | number;
 };
 
@@ -15,6 +16,7 @@ export type ColOptionType = {
   width?: string;
   height?: string;
   style?: React.CSSProperties;
+  verticalAlign?: string;
   key?: string | number;
 };
 
@@ -30,6 +32,7 @@ export interface OptionsType {
   defaultWidth?: string;
   headerHeight?: string;
   headerWidth?: string;
+  verticalAlign?: string;
   rows?: RowOptionsType;
   cols?: ColOptionsType;
 };

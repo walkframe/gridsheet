@@ -42,12 +42,14 @@ export const showIndex = () => (<Component
     // headerWidth: "50px",
     // headerHeight: "40px",
     cols: [
-      { key: 1, label: "ビー", style: { fontWeight: "bold", color: "#ff0000", backgroundColor: "#ffdddd"}},
+      { key: 1, label: "ビー", style: { fontWeight: "bold", color: "#ff0000", backgroundColor: "rgba(255, 200, 200, 0.5)"}},
       { key: 3, width: "300px"},
     ],
     rows: [
-      { key: 1, label: "二"},
+      { key: 1, label: "二", style: {borderBottom: "double 4px #000000"}},
       { key: 2, height: "100px"},
+      { key: 3, label: "よん", height: "50px", verticalAlign: "bottom"},
+
     ],
   }}
 />);

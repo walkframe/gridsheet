@@ -12,7 +12,7 @@ const CellLayout = styled.div`
   word-break: break-all;
 
   .unchooseed {
-    padding: 2px;
+    padding: 0 2px;
   }
 
   textarea {
