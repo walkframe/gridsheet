@@ -105,9 +105,11 @@ const GridTableLayout = styled.div`
         }
         &.pointed {
           border: solid 2px #0077ff;
-        }
-        &.editing {
-          overflow: visible;
+          &.editing {
+            overflow: visible;
+            border: none;
+            background-color: #ffffff;
+          }
         }
       }
       .cell-wrapper-inner {
@@ -344,7 +346,7 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
                     choose={handleChoose({... handleProps, y, x})}
                     undo={handleUndo({... handleProps, y, x})}
                     redo={handleRedo({... handleProps, y, x})}
-                    choosing={choosing[0] === y && choosing[1] === x}
+                    pointed={pointed}
                   />
                 </div>
               </div>

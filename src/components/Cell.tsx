@@ -11,7 +11,7 @@ const CellLayout = styled.div`
   word-wrap: break-word;
   word-break: break-all;
 
-  .unchooseed {
+  .rendered {
     padding: 0 2px;
   }
 
@@ -40,9 +40,8 @@ const CellLayout = styled.div`
       cursor: text;
       min-width: 100%;
       white-space: pre;
-    }
-    &:focus {
-      outline: none;
+      outline: solid 2px #0077ff;
+      height: auto;
     }
   }
 `;
@@ -53,7 +52,7 @@ interface Props {
   y: number;
   height: string;
   width: string;
-  choosing: boolean;
+  pointed: boolean;
   editing: boolean;
   setEditing: (editing: boolean) => void;
   write: (value: string) => void;
@@ -70,15 +69,14 @@ interface Props {
 };
 
 export const Cell: React.FC<Props> = (props) => {
-  const { value, write, choosing, blur, editing, setEditing, height } = props;
+  const { value, write, pointed, blur, editing, setEditing, height } = props;
   return (<CellLayout
     className="cell"
-  ><div className="unchooseed">{value}</div>
-    {!choosing ? null : (<textarea
+  >
+    {!editing && <div className="rendered">{value}</div>}
+    {!pointed ? null : (<textarea
       autoFocus
-      style={{
-        height: parseInt(height) * (value.split("\n").length),
-      }}
+      rows={value.split("\n").length}
       className={editing ? "editing" : ""}
       onDoubleClick={(e) => {
         const input = e.currentTarget;
