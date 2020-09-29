@@ -98,7 +98,6 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
   const { value, x, y, write, choose, select, selectAll, copy, paste, clear, escape, undo, redo } = props;
   return (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     const input = e.currentTarget;
-    console.debug(e.key, "shift:", e.shiftKey, "ctrl:", e.ctrlKey, "alt:", e.altKey, "meta:", e.metaKey);
 
     switch (e.key) {
       case "Tab": // TAB
