@@ -62,8 +62,14 @@ const GridTableLayout = styled.div`
           background-color: #555555;
           color: #ffffff;
         }
+        .resizer {
+          resize: horizontal;
+          overflow: hidden;
+        }
       }
       &.row-number {
+        resize: vertical;
+        overflow: hidden;
         min-width: 30px;
         &.choosing {
           background-color: #dddddd;
@@ -71,6 +77,10 @@ const GridTableLayout = styled.div`
         &.selecting {
           background-color: #555555;
           color: #ffffff;
+        }
+        .resizer {
+          resize: vertical;
+          overflow: hidden;
         }
       }
     }
@@ -191,7 +201,6 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
             return (<th 
               key={x}
               className={`col-number ${choosing[1] === x ? "choosing" : ""} ${between(colsSelecting, x) ? "selecting" : ""}`}
-              style={{ width: colOption.width || defaultWidth, height: headerHeight }}
               onClick={(e) => {
                 const [_, xLast] = choosingLast;
                 if (e.shiftKey) {
@@ -221,7 +230,12 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
                 colsSelect([colsSelecting[0], x]);
                 return false;
               }}
-            >{ colOption.label || convertNtoA(x + 1) }</th>);
+            >
+              <div
+                className="resizer"
+                style={{ width: colOption.width || defaultWidth, height: headerHeight }}>{ colOption.label || convertNtoA(x + 1) }
+              </div>
+            </th>);
           })
         }
         </tr>
@@ -232,7 +246,6 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
         return (<tr key={y}>
           <th
             className={`row-number ${choosing[0] === y ? "choosing" : ""} ${between(rowsSelecting, y) ? "selecting" : ""}`}
-            style={{ height: rowOption.height || defaultHeight, width: headerWidth }}
             onClick={(e) => {
               const [yLast, _] = choosingLast;
               if (e.shiftKey) {
@@ -262,7 +275,13 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
               rowsSelect([rowsSelecting[0], y]);
               return false;
             }}
-          >{ rowOption.label ||  y + 1 }</th>
+          >
+            <div
+              className="resizer"
+              style={{ height: rowOption.height || defaultHeight, width: headerWidth }}
+            >
+              { rowOption.label ||  y + 1 }
+            </div></th>
           {makeSequence(0, numCols).map((x) => {
             const pointed = choosing[0] === y && choosing[1] === x;
             const colOption = colInfo[x] || {};
