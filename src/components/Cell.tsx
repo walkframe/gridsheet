@@ -17,7 +17,6 @@ const CellLayout = styled.div`
 
   textarea {
     width: 100%;
-    height: 100%;
     position: absolute;
     font-size: 13px;
     line-height: 20px;
@@ -76,6 +75,7 @@ export const Cell: React.FC<Props> = (props) => {
     {!editing && <div className="rendered">{value}</div>}
     {!pointed ? null : (<textarea
       autoFocus
+      style={{ minHeight: height }}
       rows={value.split("\n").length}
       className={editing ? "editing" : ""}
       onDoubleClick={(e) => {
