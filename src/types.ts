@@ -55,8 +55,8 @@ export type handlePropsType = {
   selectingArea: AreaType;
   copying: DraggingType;
   copyingArea: AreaType;
-  heights: string[];
-  widths: string[];
+  numRows: number;
+  numCols: number;
   cutting: boolean,
   copy: (range: AreaType) => void;
   select: (range: AreaType) => void;

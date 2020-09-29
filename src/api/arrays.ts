@@ -76,3 +76,7 @@ export const among = (area: AreaType, position: PositionType) => {
 export const shape = (area: AreaType | DraggingType): [number, number] => {
   return [Math.abs(area[0] - area[2]), Math.abs(area[1] - area[3])];
 };
+
+export const makeSequence = (start: number, stop: number, step: number=1) => {
+  return Array.from({ length: (stop - start - 1) / step + 1}, (_, i) => start + (i * step));
+};

@@ -29,7 +29,7 @@ import {
   handleRedo,
 } from "../api/handlers";
 import { History } from "../api/histories";
-import { draggingToArea, between, among, shape } from "../api/arrays";
+import { draggingToArea, between, among, shape, makeSequence } from "../api/arrays";
 
 interface Props {
   data: MatrixType;
@@ -38,8 +38,6 @@ interface Props {
   setWidths: (widths: WidthsType) => void;
   setHeights: (heights: HeightsType) => void;
 };
-
-
 
 const GridTableLayout = styled.div`
   height: auto;
@@ -134,12 +132,14 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
   const [history] = React.useState(new History(10));
   const clipboardRef = React.createRef<HTMLTextAreaElement>();
 
+  const [numRows, numCols] = [data.length, data[0].length];
+
   const handleProps = {
     history,
     matrix, setMatrix,
     choosing, choose, setChoosingLast,
     cutting, setCutting,
-    heights, widths,
+    numRows, numCols,
     select, selecting, selectingArea,
     copy, copying, copyingArea, clipboardRef,
     colsSelect, rowsSelect, colsSelecting, rowsSelecting,
@@ -151,19 +151,19 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
       <thead>
         <tr>
           <th></th>
-          {widths.map((width, x) => {            
+          {makeSequence(0, numCols).map((x) => {            
             return (<th 
               key={x}
               className={`col-number ${choosing[1] === x ? "choosing" : ""} ${between(colsSelecting, x) ? "selecting" : ""}`}
-              style={{ width }}
+              style={{  }}
               onClick={(e) => {
                 const [_, xLast] = choosingLast;
                 if (e.shiftKey) {
-                  select([0, xLast, heights.length - 1, x]);
+                  select([0, xLast, numRows - 1, x]);
                   choose(choosingLast);
                   colsSelect([xLast, x]);
                 } else {
-                  select([0, x, heights.length - 1, x]);
+                  select([0, x, numRows - 1, x]);
                   choose([0, x]);
                   colsSelect([x, x]);
                 }
@@ -173,7 +173,7 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
               draggable
               onDragStart={(e) => {
                 e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
-                select([0, x, heights.length - 1, x]);
+                select([0, x, numRows - 1, x]);
                 choose([0, x]);
                 colsSelect([x, -1]);
                 rowsSelect([-1, -1]);
@@ -190,19 +190,19 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
         }
         </tr>
       </thead>
-      <tbody>{heights.map((height, y) => {
+      <tbody>{makeSequence(0, numRows).map((y) => {
         return (<tr key={y}>
           <th
             className={`row-number ${choosing[0] === y ? "choosing" : ""} ${between(rowsSelecting, y) ? "selecting" : ""}`}
-            style={{ height }}
+            style={{  }}
             onClick={(e) => {
               const [yLast, _] = choosingLast;
               if (e.shiftKey) {
-                select([yLast, 0, y, widths.length - 1]);
+                select([yLast, 0, y, numCols - 1]);
                 choose(choosingLast);
                 rowsSelect([yLast, y]);
               } else {
-                select([y, 0, y, widths.length - 1]);
+                select([y, 0, y, numCols - 1]);
                 choose([y, 0]);
                 rowsSelect([y, y]);
               }
@@ -212,7 +212,7 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
             draggable
             onDragStart={(e) => {
               e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
-              select([y, 0, y, widths.length - 1]);
+              select([y, 0, y, numCols - 1]);
               choose([y, 0]);
               rowsSelect([y, -1]);
               colsSelect([-1, -1]);
@@ -225,7 +225,7 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
               return false;
             }}
           >{y + 1}</th>
-          {widths.map((width, x) => {
+          {makeSequence(0, numCols).map((x) => {
             const value = matrix[y][x];
             return (<td
               key={x}
@@ -260,12 +260,12 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
                 const [startY, startX] = selecting;
                 if (colsSelecting[0] !== -1) {
                   colsSelect([colsSelecting[0], x]);
-                  select([startY, startX, heights.length - 1, x]);
+                  select([startY, startX, numRows - 1, x]);
                   return false;
                 }
                 if (rowsSelecting[0] !== -1) {
                   rowsSelect([rowsSelecting[0], y]);
-                  select([startY, startX, y, widths.length - 1]);
+                  select([startY, startX, y, numCols - 1]);
                   return false;
                 }
                 select([startY, startX, y, x])

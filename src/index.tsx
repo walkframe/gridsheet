@@ -44,7 +44,7 @@ export const Index: React.FC<Props> = ({data, options}) => {
       heights={heights}
       setWidths={setWidths}
       setHeights={setHeights}
-      data={data}
+      data={data.length === 0 ? [[]] : data}
     />
   </Layout>);
 };

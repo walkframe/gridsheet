@@ -44,10 +44,10 @@ export const undo = (operation: OperationType, matrix: MatrixType): MatrixType =
   const { command, cutting, position, before, after } = operation;
   switch(command) {
     case "write":
-      writeMatrix(...position, before, matrix);
+      matrix = writeMatrix(...position, before, matrix);
       if (typeof cutting !== "undefined") {
         const [top, left] = cutting;
-        writeMatrix(top, left, cropMatrix(after, slideArea(cutting, -top, -left)), matrix);
+        matrix = writeMatrix(top, left, cropMatrix(after, slideArea(cutting, -top, -left)), matrix);
       }
   }
   return matrix;
@@ -60,7 +60,7 @@ export const redo = (operation: OperationType, matrix: MatrixType): MatrixType =
       if (typeof cutting !== "undefined") {
         const [top, left, bottom, right] = cutting;
         const blank = spreadMatrix([[""]], bottom - top, right - left);
-        writeMatrix(top, left, blank, matrix);
+        matrix = writeMatrix(top, left, blank, matrix);
       }
       matrix = writeMatrix(...position, after, matrix);
   }

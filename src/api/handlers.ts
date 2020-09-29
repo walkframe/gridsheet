@@ -40,7 +40,7 @@ export const handleClear = ({
       before: cropMatrix(matrix, selectingArea),
       after,
     });
-    writeMatrix(top, left, after, matrix);
+    matrix = writeMatrix(top, left, after, matrix);
     setMatrix([... matrix]);
   };
 };
@@ -83,12 +83,12 @@ export const handleCopy = ({
 export const handleSelect = ({
   x, y,
   select, selecting,
-  heights, widths,
+  numRows, numCols,
 }: handlePropsType) => {
   return (deltaY: number, deltaX: number) => {
     let [dragEndY, dragEndX] = [selecting[2] === -1 ? y : selecting[2], selecting[3] === -1 ? x : selecting[3]];
     let [nextY, nextX] = [dragEndY + deltaY, dragEndX + deltaX];
-    if (nextY < 0 || heights.length <= nextY || nextX < 0 || widths.length <= nextX) {
+    if (nextY < 0 || numRows <= nextY || nextX < 0 || numCols <= nextX) {
       return;
     }
     y === nextY && x === nextX ? select([-1, -1, -1, -1]) : select([y, x, nextY, nextX]);
@@ -97,10 +97,10 @@ export const handleSelect = ({
 
 export const handleSelectAll = ({
   select, 
-  heights, widths,
+  numRows, numCols,
 }: handlePropsType) => {
   return () => {
-    select([0, 0, heights.length - 1, widths.length - 1]);
+    select([0, 0, numRows - 1, numCols - 1]);
   };
 };
 
@@ -138,7 +138,7 @@ export const handlePaste = ({
     let position: PositionType = [y, x];
     if (cutting) {
       const blank = spreadMatrix([[""]], copyingHeight, copyingWidth);
-      writeMatrix(copyingTop, copyingLeft, blank, matrix);
+      matrix = writeMatrix(copyingTop, copyingLeft, blank, matrix);
     }
     if (selectingTop === -1) { // unselecting destination
       if (copyingTop === -1) { // unselecting source
@@ -146,7 +146,7 @@ export const handlePaste = ({
         [height, width] = [after.length - 1, after[0].length - 1];
       }
       before = cropMatrix(matrix, [y, x, y + height, x + width]);
-      writeMatrix(y, x, after, matrix);
+      matrix = writeMatrix(y, x, after, matrix);
       select([y, x, y + height, x + width]);
     } else { // selecting destination
       if (copyingTop === -1) { // unselecting source
@@ -157,9 +157,9 @@ export const handlePaste = ({
       }
       position = [selectingTop, selectingLeft];
       after = spreadMatrix(after, height, width);
-      before = cropMatrix(matrix, slideArea([0, 0, height, width], ...position));
-      writeMatrix(selectingTop, selectingLeft, after, matrix);
-      select(slideArea([0, 0, height, width], ...position));
+      before = cropMatrix(matrix, slideArea([0, 0, height, width], ... position));
+      matrix = writeMatrix(selectingTop, selectingLeft, after, matrix);
+      select(slideArea([0, 0, height, width], ... position));
     }
     history.append({
       command: "write",
@@ -179,7 +179,7 @@ export const handleChoose = ({
   select,
   choose,
   colsSelect, rowsSelect,
-  heights, widths,
+  numRows, numCols,
 }: handlePropsType) => {
   const [top, left, bottom, right] = selectingArea;
 
@@ -207,7 +207,7 @@ export const handleChoose = ({
     if (breaking) {
       select([-1, -1, -1, -1]);
     }
-    if (nextY < 0 || heights.length <= nextY || nextX < 0 || widths.length <= nextX) {
+    if (nextY < 0 || numRows <= nextY || nextX < 0 || numCols <= nextX) {
       return;
     }
     choose([nextY, nextX]);
@@ -226,7 +226,7 @@ export const handleWrite = ({
       before: [[matrix[y][x]]],
       after: [[value]],
     });
-    writeMatrix(y, x, [[value]], matrix);
+    matrix = writeMatrix(y, x, [[value]], matrix);
     setMatrix([... matrix]);
   };
 };
