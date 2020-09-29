@@ -144,6 +144,13 @@ const GridTableLayout = styled.div`
   }
 `;
 
+const arrayToInfo = (options: any[]) => {
+  const info = {};
+  // @ts-ignore
+  options.map((opt, i) => info[typeof opt.key === "undefined" ? i : opt.key] = opt);
+  return info;
+}; 
+
 export const GridTable: React.FC<Props> = ({data, options}) => {
   const {
     historySize = 10,
@@ -156,11 +163,8 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
     rows = [],
   } = options;
 
-  const rowInfo: RowInfoType = {};
-  const colInfo: ColInfoType = {};
-
-  rows.map((row, i) => (rowInfo[typeof row.key === "undefined" ? i : row.key] = row));
-  cols.map((col, i) => (colInfo[typeof col.key === "undefined" ? i : col.key] = col));
+  const [rowInfo, setRowInfo] = React.useState(arrayToInfo(rows) as RowInfoType);
+  const [colInfo, setColInfo] = React.useState(arrayToInfo(cols) as ColInfoType);
 
   const [matrix, setMatrix] = React.useState(data);
   const [choosing, choose] = React.useState<PositionType>([0, 0]);
@@ -279,7 +283,7 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
           >
             <div
               className="resizer"
-              style={{ height: rowOption.height || defaultHeight, width: headerWidth }}
+              style={{ height, width: headerWidth }}
             >
               { rowOption.label ||  y + 1 }
             </div></th>
