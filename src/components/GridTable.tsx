@@ -68,7 +68,6 @@ const GridTableLayout = styled.div`
         }
       }
       &.row-number {
-        resize: vertical;
         overflow: hidden;
         min-width: 30px;
         &.choosing {
@@ -263,6 +262,7 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
                 rowsSelect([y, y]);
               }
               colsSelect([-1, -1]);
+              setRowInfo({... rowInfo, [y]: {... rowOption, height: `${e.currentTarget.clientHeight - 2}px`}});
               return false;
             }}
             draggable
@@ -342,7 +342,9 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
               }}
             >
               <div 
-                className={`cell-wrapper-outer ${among(selectingArea, [y, x]) ? "selected": ""} ${pointed ? "pointed" : ""} ${editing ? "editing" : ""}`}>
+                className={`cell-wrapper-outer ${among(selectingArea, [y, x]) ? "selected": ""} ${pointed ? "pointed" : ""} ${editing ? "editing" : ""}`}
+                style={{ height }}
+              >
                 <div 
                   className={`cell-wrapper-inner`}
                   style={{
