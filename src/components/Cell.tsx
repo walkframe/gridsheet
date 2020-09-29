@@ -24,6 +24,7 @@ const CellLayout = styled.div`
     top: 0;
     left: 0;
     border: none;
+    outline: none;
     background-color: transparent;
     resize: none;
     box-sizing: border-box;
