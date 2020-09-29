@@ -79,6 +79,7 @@ const GridTableLayout = styled.div`
           color: #ffffff;
         }
         .resizer {
+          padding: 0 10px;
           resize: vertical;
           overflow: hidden;
         }
