@@ -42,7 +42,7 @@ export const showIndex = () => (<Component
     // headerWidth: "50px",
     // headerHeight: "40px",
     cols: [
-      { key: 1, label: "ビー"},
+      { key: 1, label: "ビー", style: { fontWeight: "bold", color: "#ff0000", backgroundColor: "#ffdddd"}},
       { key: 3, width: "300px"},
     ],
     rows: [

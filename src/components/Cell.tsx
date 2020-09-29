@@ -68,7 +68,7 @@ interface Props {
 export const Cell: React.FC<Props> = (props) => {
   const { value, write, choose, choosing, blur } = props;
   const [editing, setEditing] = React.useState(false);
-  return (<CellLayout 
+  return (<CellLayout
     className="cell"
   ><div className="unchooseed">{value}</div>
     {!choosing ? null : (<textarea

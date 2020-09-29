@@ -6,6 +6,7 @@ export type RowOptionType = {
   label?: string;
   width?: string;
   height?: string;
+  style?: React.CSSProperties;
   key?: string | number;
 };
 
@@ -13,6 +14,7 @@ export type ColOptionType = {
   label?: string;
   width?: string;
   height?: string;
+  style?: React.CSSProperties;
   key?: string | number;
 };
 

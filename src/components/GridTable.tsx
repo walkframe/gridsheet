@@ -242,11 +242,15 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
             }}
           >{ rowOption.label ||  y + 1 }</th>
           {makeSequence(0, numCols).map((x) => {
+            const colOption = colInfo[x] || {};
             const value = matrix[y][x];
             return (<td
               key={x}
               className={`${among(selectingArea, [y, x]) ? "selecting": ""} ${among(copyingArea, [y, x]) ? cutting ? "cutting" : "copying" : ""}`}
-              style={getCellStyle(y, x, copyingArea)}
+              style={{
+                ... getCellStyle(y, x, copyingArea),
+                ... rowOption.style, ... colOption.style
+              }}
               draggable
               onClick={(e) => {
                 if (e.shiftKey) {
