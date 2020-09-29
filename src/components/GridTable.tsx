@@ -3,11 +3,12 @@ import styled from "styled-components";
 
 import {
   MatrixType,
-  WidthsType,
-  HeightsType,
+  OptionsType,
   PositionType,
   AreaType,
   DraggingType,
+  RowInfoType,
+  ColInfoType,
 } from "../types";
 import { DUMMY_IMG } from "../constants";
 
@@ -33,10 +34,7 @@ import { draggingToArea, between, among, shape, makeSequence } from "../api/arra
 
 interface Props {
   data: MatrixType;
-  widths: WidthsType;
-  heights: HeightsType;
-  setWidths: (widths: WidthsType) => void;
-  setHeights: (heights: HeightsType) => void;
+  options: OptionsType;
 };
 
 const GridTableLayout = styled.div`
@@ -53,10 +51,10 @@ const GridTableLayout = styled.div`
       color: #777777;
       font-size: 13px;
       font-weight: normal;
-      width: 80px;
       background-color: #eeeeee;
 
       &.col-number {
+        min-height: 20px;
         &.choosing {
           background-color: #dddddd;
         }
@@ -66,6 +64,7 @@ const GridTableLayout = styled.div`
         }
       }
       &.row-number {
+        min-width: 30px;
         &.choosing {
           background-color: #dddddd;
         }
@@ -79,7 +78,6 @@ const GridTableLayout = styled.div`
       position: relative;
       padding: 0;
       margin: 0;
-      width: 150px;
       border: solid 1px #cccccc;
       
       &.selecting {
@@ -115,7 +113,23 @@ const GridTableLayout = styled.div`
   }
 `;
 
-export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
+export const GridTable: React.FC<Props> = ({data, options}) => {
+  const {
+    historySize = 10,
+    headerHeight = "auto",
+    headerWidth = "auto",
+    defaultHeight = "20px",
+    defaultWidth = "100px",
+    cols = [],
+    rows = [],
+  } = options;
+
+  const rowInfo: RowInfoType = {};
+  const colInfo: ColInfoType = {};
+
+  rows.map((row, i) => (rowInfo[typeof row.key === "undefined" ? i : row.key] = row));
+  cols.map((col, i) => (colInfo[typeof col.key === "undefined" ? i : col.key] = col));
+
   const [matrix, setMatrix] = React.useState(data);
   const [choosing, choose] = React.useState<PositionType>([0, 0]);
   const [choosingLast, setChoosingLast] = React.useState<PositionType>([0, 0]);
@@ -129,7 +143,7 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
   const selectingArea = draggingToArea(selecting); // (top, left) -> (bottom, right)
   const copyingArea = draggingToArea(copying); // (top, left) -> (bottom, right)
 
-  const [history] = React.useState(new History(10));
+  const [history] = React.useState(new History(historySize));
   const clipboardRef = React.createRef<HTMLTextAreaElement>();
 
   const [numRows, numCols] = [data.length, data[0].length];
@@ -151,11 +165,12 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
       <thead>
         <tr>
           <th></th>
-          {makeSequence(0, numCols).map((x) => {            
+          {makeSequence(0, numCols).map((x) => {
+            const colOption = colInfo[x] || {};
             return (<th 
               key={x}
               className={`col-number ${choosing[1] === x ? "choosing" : ""} ${between(colsSelecting, x) ? "selecting" : ""}`}
-              style={{  }}
+              style={{ width: colOption.width || defaultWidth, height: headerHeight }}
               onClick={(e) => {
                 const [_, xLast] = choosingLast;
                 if (e.shiftKey) {
@@ -185,16 +200,17 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
                 colsSelect([colsSelecting[0], x]);
                 return false;
               }}
-            >{convertNtoA(x + 1)}</th>);
+            >{ colOption.label || convertNtoA(x + 1) }</th>);
           })
         }
         </tr>
       </thead>
       <tbody>{makeSequence(0, numRows).map((y) => {
+        const rowOption = rowInfo[y] || {};
         return (<tr key={y}>
           <th
             className={`row-number ${choosing[0] === y ? "choosing" : ""} ${between(rowsSelecting, y) ? "selecting" : ""}`}
-            style={{  }}
+            style={{ height: rowOption.height || defaultHeight, width: headerWidth }}
             onClick={(e) => {
               const [yLast, _] = choosingLast;
               if (e.shiftKey) {
@@ -224,7 +240,7 @@ export const GridTable: React.FC<Props> = ({data, widths, heights}) => {
               rowsSelect([rowsSelecting[0], y]);
               return false;
             }}
-          >{y + 1}</th>
+          >{ rowOption.label ||  y + 1 }</th>
           {makeSequence(0, numCols).map((x) => {
             const value = matrix[y][x];
             return (<td

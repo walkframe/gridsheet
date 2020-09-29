@@ -32,15 +32,22 @@ const data = [
   ["1", "2", "3", "4", "5"],
 ];
 
-const props = {
-  data,
-
-};
-
 export default {
   title: "index",
 };
 
 export const showIndex = () => (<Component 
-  {...props}
+  data={data}
+  options={{
+    // headerWidth: "50px",
+    // headerHeight: "40px",
+    cols: [
+      { key: 1, label: "ビー"},
+      { key: 3, width: "300px"},
+    ],
+    rows: [
+      { key: 1, label: "二"},
+      { key: 2, height: "100px"},
+    ],
+  }}
 />);

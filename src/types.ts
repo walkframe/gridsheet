@@ -1,19 +1,35 @@
-export type RowType = {
-  [index:number]: any;
-  [key:string]: any;
+
+export type CellType = string;
+export type MatrixType = CellType[][];
+
+export type RowOptionType = {
+  label?: string;
+  width?: string;
+  height?: string;
+  key?: string | number;
 };
 
-export type RowArrayType = string[];
-export type MatrixType = RowArrayType[];
+export type ColOptionType = {
+  label?: string;
+  width?: string;
+  height?: string;
+  key?: string | number;
+};
 
-export type WidthType = string;
-export type HeightType = string;
-export type WidthsType = WidthType[];
-export type HeightsType = HeightType[];
+export type RowOptionsType = RowOptionType[];
+export type ColOptionsType = ColOptionType[];
+
+export type RowInfoType = {[s: string]: RowOptionType, [i: number]: RowOptionType};
+export type ColInfoType = {[s: string]: ColOptionType, [i: number]: ColOptionType};
 
 export interface OptionsType {
-  widths?: WidthsType;
-  heights?: HeightsType;
+  historySize?: number;
+  defaultHeight?: string;
+  defaultWidth?: string;
+  headerHeight?: string;
+  headerWidth?: string;
+  rows?: RowOptionsType;
+  cols?: ColOptionsType;
 };
 
 export interface Props {
