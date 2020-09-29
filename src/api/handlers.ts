@@ -123,6 +123,7 @@ export const handlePaste = ({
   select,
   copy,
   setMatrix,
+  setCutting,
 }: handlePropsType) => {
   const [selectingTop, selectingLeft] = selectingArea;
   const [copyingTop, copyingLeft] = copyingArea;
@@ -139,7 +140,6 @@ export const handlePaste = ({
       const blank = spreadMatrix([[""]], copyingHeight, copyingWidth);
       writeMatrix(copyingTop, copyingLeft, blank, matrix);
     }
-
     if (selectingTop === -1) { // unselecting destination
       if (copyingTop === -1) { // unselecting source
         after = convertTSVToArray(text);
@@ -169,6 +169,7 @@ export const handlePaste = ({
       after,
     });
     setMatrix([... matrix]);
+    setCutting(false);
     copy([-1, -1, -1, -1]);
   };
 };
