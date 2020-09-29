@@ -166,13 +166,13 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
           return false;
         }
       case "a": // A
-      if (e.ctrlKey || e.metaKey) {
-        if (!editing) {
-          e.preventDefault();
-          selectAll();
-          return false;
+        if (e.ctrlKey || e.metaKey) {
+          if (!editing) {
+            e.preventDefault();
+            selectAll();
+            return false;
+          }
         }
-      }
       case "c": // C
         if (e.ctrlKey || e.metaKey) {
           if (!editing) {
@@ -181,7 +181,6 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
             return false;
           }
         }
-
       case "r": // R
         if (e.ctrlKey || e.metaKey) {
           if (!editing) {
