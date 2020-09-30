@@ -79,6 +79,7 @@ const GridTableLayout = styled.div`
           color: #ffffff;
         }
         .resizer {
+          box-sizing: border-box;
           padding: 0 10px;
           resize: vertical;
           overflow: hidden;
@@ -218,7 +219,6 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
                   colsSelect([x, x]);
                 }
                 rowsSelect([-1, -1]);
-                setColInfo({... colInfo, [x]: {... colOption, width: `${e.currentTarget.clientWidth - 2}px`}});
                 return false;
               }}
               draggable
@@ -236,13 +236,17 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
                 colsSelect([colsSelecting[0], x]);
                 return false;
               }}
-              onBlur={(e) => {
-                setColInfo({... colInfo, [x]: {... colOption, width: `${e.currentTarget.clientWidth - 2}px`}});;
-              }}
+              
+
             >
               <div
                 className="resizer"
-                style={{ width: colOption.width || defaultWidth, height: headerHeight }}>{ colOption.label || convertNtoA(x + 1) }
+                style={{ width: colOption.width || defaultWidth, height: headerHeight }}
+                onMouseEnter={(e) => {
+                  const width = e.currentTarget.clientWidth;
+                  setColInfo({... colInfo, [x]: {... colOption, width: `${width}px`}});;
+                }}  
+              >{ colOption.label || convertNtoA(x + 1) }
               </div>
             </th>);
           })
@@ -267,11 +271,7 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
                 rowsSelect([y, y]);
               }
               colsSelect([-1, -1]);
-              setRowInfo({... rowInfo, [y]: {... rowOption, height: `${e.currentTarget.clientHeight - 2}px`}});
               return false;
-            }}
-            onBlur={(e) => {
-              setRowInfo({... rowInfo, [y]: {... rowOption, height: `${e.currentTarget.clientHeight - 2}px`}});
             }}
             draggable
             onDragStart={(e) => {
@@ -292,6 +292,10 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
             <div
               className="resizer"
               style={{ height, width: headerWidth }}
+              onMouseLeave={(e) => {
+                const height = e.currentTarget.clientHeight;
+                setRowInfo({... rowInfo, [y]: {... rowOption, height: `${height}px`}});
+              }}
             >
               { rowOption.label ||  y + 1 }
             </div></th>
