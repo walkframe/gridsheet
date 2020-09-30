@@ -48,8 +48,8 @@ const CellLayout = styled.div`
 
 interface Props {
   value: string;
-  x: number;
   y: number;
+  x: number;
   height: string;
   width: string;
   pointed: boolean;

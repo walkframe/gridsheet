@@ -103,7 +103,16 @@ const GridTableLayout = styled.div`
           outline: solid 1px #0077ff;
         }
       }
-
+      .label {
+        position: absolute;
+        top: 0;
+        right: 0;
+        font-size: 8px;
+        background-color: rgba(0, 128, 255, 0.3);
+        color: #ffffff;
+        padding: 0 2px;
+        display: none;
+      }
       .cell-wrapper-outer {
         position: absolute;
         top: 0;
@@ -114,6 +123,9 @@ const GridTableLayout = styled.div`
         box-sizing: border-box;
         &.selected {
           background-color: rgba(0, 128, 255, 0.2);
+          .label {
+            display: block;
+          }
         }
         &.pointed {
           border: solid 2px #0077ff;
@@ -122,10 +134,16 @@ const GridTableLayout = styled.div`
             border: none;
             background-color: #ffffff;
           }
+          .label {
+            display: block;
+          }
+
         }
       }
       .cell-wrapper-inner {
         display: table-cell;
+
+
       }
     }
   }
@@ -160,6 +178,7 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
     defaultHeight = "20px",
     defaultWidth = "80px",
     verticalAlign = "middle",
+    cellLabel = true,
     cols = [],
     rows = [],
   } = options;
@@ -201,7 +220,10 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
     <table className="grid-table">
       <thead>
         <tr>
-          <th></th>
+          <th onClick={(e) => {
+            handleSelectAll({... handleProps, y: -1, x: -1})();
+            choose([0, 0]);
+          }}></th>
           {makeSequence(0, numCols).map((x) => {
             const colOption = colInfo[x] || {};
             return (<th 
@@ -242,7 +264,7 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
               <div
                 className="resizer"
                 style={{ width: colOption.width || defaultWidth, height: headerHeight }}
-                onMouseEnter={(e) => {
+                onMouseLeave={(e) => {
                   const width = e.currentTarget.clientWidth;
                   setColInfo({... colInfo, [x]: {... colOption, width: `${width}px`}});;
                 }}  
@@ -355,7 +377,6 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
             >
               <div 
                 className={`cell-wrapper-outer ${among(selectingArea, [y, x]) ? "selected": ""} ${pointed ? "pointed" : ""} ${editing ? "editing" : ""}`}
-                
               >
                 <div 
                   className={`cell-wrapper-inner`}
@@ -365,6 +386,7 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
                     verticalAlign: rowOption.verticalAlign || colOption.verticalAlign || verticalAlign,
                   }}
                 >
+                  { cellLabel && (<div className="label">{convertNtoA(x + 1)}{ y + 1 }</div>)}
                   <Cell
                     value={value}
                     editing={editing}

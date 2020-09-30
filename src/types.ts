@@ -35,6 +35,7 @@ export interface OptionsType {
   verticalAlign?: string;
   rows?: RowOptionsType;
   cols?: ColOptionsType;
+  cellLabel?: boolean;
 };
 
 export interface Props {
