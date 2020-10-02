@@ -20,6 +20,11 @@
   ],
   "author": "righ",
   "license": "Apache-2.0",
+  "files": [
+    "dist",
+    "package.json",
+    "README.md"
+  ],
   "bugs": {
     "url": "https://github.com/righ/react-gridsheet/issues"
   },

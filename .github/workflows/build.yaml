@@ -15,8 +15,15 @@ jobs:
         with:
           node-version: '14'
 
+      - name: cache
+        uses: actions/cache@v2.1.1
+        with:
+          path: |
+            node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
       - name: install
-        run: npm install tsc
+        run: npm install
 
       - name: build
         run: npm run build
