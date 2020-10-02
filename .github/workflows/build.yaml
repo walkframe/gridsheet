@@ -22,14 +22,11 @@ jobs:
             node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
 
-      - name: install
-        run: npm install
+      - name: upload
+        run: |
+          npm install
+          npm run build
+          ls dist/
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+          npm publish || true
 
-      - name: build
-        run: npm run build
-
-      - name: authenticate
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
-      
-      - name: publish
-        run: npm publish || true
