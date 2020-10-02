@@ -1,7 +1,7 @@
 
 react-gridsheet shows a spreadsheet based on given data.
 
-<img src="./gridsheet.png" />
+<img src="https://github.com/righ/react-gridsheet/raw/master/gridsheet.png" alt="gridsheet image" />
 
 Note: Now this is alpha version.
 
