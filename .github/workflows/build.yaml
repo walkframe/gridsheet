@@ -26,7 +26,8 @@ jobs:
         run: |
           npm install
           npm run build
-          ls dist/
+          ls dist/ -R
+          pwd
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
           npm publish || true
 
