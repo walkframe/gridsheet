@@ -1,0 +1,23 @@
+name: build
+on:
+  - push
+
+jobs:
+  release:
+    # needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    name: npm upload
+    steps:
+      - uses: actions/checkout@v1
+      - name: setup
+        uses: actions/typescript-action@v1.2.6
+
+      - name: build
+        run: npm run build
+
+      - name: authenticate
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+      
+      - name: publish
+        run: npm publish || true

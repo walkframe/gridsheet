@@ -20,7 +20,7 @@ const Layout = styled.div`
     sans-serif;
 `;
 
-export const Index: React.FC<Props> = ({data, options}) => {
+const GridSheet: React.FC<Props> = ({data, options}) => {
   if (typeof data === "undefined") {
     data = [];
   }
@@ -38,4 +38,4 @@ export const Index: React.FC<Props> = ({data, options}) => {
   </Layout>);
 };
 
-export default Index;
+export default GridSheet;

@@ -1,5 +1,5 @@
 import React from "react";
-import Component from "./index";
+import GridSheet from "./index";
 
 const data = [
   ["a", "b", "c", "d", "e"],
@@ -36,20 +36,21 @@ export default {
   title: "index",
 };
 
-export const showIndex = () => (<Component 
+export const showIndex = () => (<GridSheet
   data={data}
   options={{
     // headerWidth: "50px",
     // headerHeight: "40px",
     cols: [
-      { key: 1, label: "ビー", style: { fontWeight: "bold", color: "#ff0000", backgroundColor: "rgba(255, 200, 200, 0.5)"}},
+      { key: 1, label: "ビー"},
       { key: 3, width: "300px"},
     ],
     rows: [
       { key: 1, label: "二", style: {borderBottom: "double 4px #000000"}},
-      { key: 2, height: "100px"},
+      { key: 2, height: "100px", style: { fontWeight: "bold", color: "#ff0000", backgroundColor: "rgba(255, 200, 200, 0.5)"}},
       { key: 3, label: "よん", height: "50px", verticalAlign: "bottom"},
 
     ],
   }}
 />);
+
