@@ -9,9 +9,11 @@ jobs:
     if: github.ref == 'refs/heads/master'
     name: npm upload
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: setup
-        uses: actions/typescript-action@v1.2.6
+        uses: actions/setup-node@2.1.2
+        with:
+          node-version: '14'
 
       - name: build
         run: npm run build
