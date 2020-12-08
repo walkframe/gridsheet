@@ -41,6 +41,7 @@
     "babel-loader": "^8.1.0",
     "react-is": "^16.13.1",
     "require-context.macro": "^1.2.2",
+    "styled-components": "^5.2.1",
     "typescript": "^4.0.3"
   },
   "peerDependencies": {

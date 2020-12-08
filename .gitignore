@@ -106,3 +106,4 @@ typings/
 # Storybook
 stories/
 storybook-static/
+.idea
