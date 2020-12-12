@@ -1,5 +1,12 @@
 import React from "react";
+import { useDispatch, useSelector } from 'react-redux';
 import styled from "styled-components";
+import {convertNtoA} from "../api/converters";
+import {RootState} from "../store";
+import {
+  OperationState,
+  setEditingCell,
+} from "../store/operations";
 
 const CellLayout = styled.div`
   overflow: hidden;
@@ -53,8 +60,6 @@ interface Props {
   height: string;
   width: string;
   pointed: boolean;
-  editing: boolean;
-  setEditing: (editing: boolean) => void;
   write: (value: string) => void;
   choose: (nextY: number, nextX: number, breaking: boolean) => void;
   select: (deltaY: number, deltaX: number) => void;
@@ -69,7 +74,14 @@ interface Props {
 };
 
 export const Cell: React.FC<Props> = (props) => {
-  const { value, write, pointed, blur, editing, setEditing, height } = props;
+  const { value, write, pointed, blur, height, y, x } = props;
+
+  const cellId = `${convertNtoA(x + 1)}${ y + 1 }`;
+  const {
+    editingCell,
+  } = useSelector<RootState, OperationState>(state => state.operations);
+  const editing = cellId === editingCell;
+
   return (<CellLayout
     className="cell"
   >
@@ -83,24 +95,31 @@ export const Cell: React.FC<Props> = (props) => {
         const input = e.currentTarget;
         if (!editing) {
           input.value = value;
-          setEditing(true);
+          setEditingCell(cellId);
           setTimeout(() => input.style.width = `${input.scrollWidth}px`, 100);
         }
       }}
-      onKeyDown={handleKeyDown(props, editing, setEditing)}
+      onKeyDown={handleKeyDown(props, cellId)}
       onBlur={(e) => {
         if (editing) {
           write(e.target.value);
         }
-        setEditing(false);
+        setEditingCell("");
         blur();
       }}
     ></textarea>)}
   </CellLayout>);
 };
 
-const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boolean) => void) => {
+const handleKeyDown = (props: Props, cellId: string) => {
   const { value, x, y, write, choose, select, selectAll, copy, paste, clear, escape, undo, redo } = props;
+
+  const {
+    editingCell,
+  } = useSelector<RootState, OperationState>(state => state.operations);
+
+  const editing = editingCell == cellId;
+
   return (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     const input = e.currentTarget;
 
@@ -111,7 +130,7 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
           write(input.value);
         }
         choose(y, e.shiftKey ? x - 1 : x + 1, false);
-        setEditing(false);
+        setEditingCell("");
         return false;
       case "Enter": // ENTER
         if (e.altKey) {
@@ -123,7 +142,7 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
               return false;
             }
             write(input.value);
-            setEditing(false);
+            setEditingCell("");
           }
           choose(e.shiftKey ? y - 1 : y + 1, x, false);
           e.preventDefault();
@@ -145,7 +164,7 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
         return false;
       case "Escape": // ESCAPE
         escape();
-        setEditing(false);
+        setEditingCell("");
         input.value = value;
         // input.blur();
         return false;
@@ -222,6 +241,6 @@ const handleKeyDown = (props: Props, editing: boolean, setEditing: (editing: boo
       return false;
     }
     input.style.width = `${input.scrollWidth}px`;
-    setEditing(true);
+    setEditingCell(cellId);
   }
 };

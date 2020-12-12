@@ -4,30 +4,58 @@ import {
   PositionType,
 } from "../types";
 
-import { cropMatrix, writeMatrix, spreadMatrix, superposeArea, slideArea, shape } from "./arrays";
+import {
+  choose,
+  select,
+  copy,
+  selectCols,
+  selectRows,
+  setChoosingLast,
+  setCutting,
+  OperationState,
+} from "../store/operations";
+
+import {
+  setRowInfo,
+  setColInfo,
+  ConfigState,
+} from "../store/config";
+
+import {
+  cropMatrix,
+  writeMatrix,
+  spreadMatrix,
+  superposeArea,
+  slideArea,
+  shape, draggingToArea
+} from "./arrays";
 import { convertArrayToTSV, convertTSVToArray} from "./converters";
 import { undo, redo } from "./histories";
+import {useSelector} from "react-redux";
+import {RootState} from "../store";
 
-export const handleBlur = ({
-  select,
-  choose, choosing, setChoosingLast,
-  colsSelect, rowsSelect,
-}: handlePropsType) => {
-  return () => {
+export const handleBlur = () => {
+  const {
+    choosing,
+  } = useSelector<RootState, OperationState>(state => state.operations);
     setChoosingLast(choosing);
     select([-1, -1, -1, -1]);
     choose([-1, -1]);
-    colsSelect([-1, -1]);
-    rowsSelect([-1, -1]);
-  };
+    selectCols([-1, -1]);
+    selectRows([-1, -1]);
 };
 
 export const handleClear = ({
-  x, y,
-  history,
   matrix, setMatrix,
-  selectingArea,
-}: handlePropsType) => {
+}: { matrix: MatrixType, setMatrix: (v: MatrixType) => void}) => {
+  const {
+    history,
+    selecting,
+    choosing,
+  } = useSelector<RootState, OperationState>(state => state.operations);
+  const [y, x] = choosing;
+  let selectingArea = draggingToArea(selecting);
+
   return () => {
     const [top, left, bottom, right] = selectingArea;
     if (top === -1) {
@@ -46,14 +74,17 @@ export const handleClear = ({
 };
 
 export const handleCopy = ({
-  y, x,
   matrix,
-  clipboardRef,
-  select, selecting, selectingArea,
-  copy,
-  choose,
-  setCutting,
-}: handlePropsType) => {
+}: { matrix: MatrixType }) => {
+
+  const {
+    selecting,
+    choosing,
+    clipboardRef,
+  } = useSelector<RootState, OperationState>(state => state.operations);
+
+  const [y, x] = choosing;
+  let selectingArea = draggingToArea(selecting);
   let area = selectingArea;
   if (area[0] === -1) {
     area = [y, x, y, x];
@@ -80,11 +111,17 @@ export const handleCopy = ({
   };
 };
 
-export const handleSelect = ({
-  x, y,
-  select, selecting,
-  numRows, numCols,
-}: handlePropsType) => {
+export const handleSelect = () => {
+  const {
+    selecting,
+    choosing,
+  } = useSelector<RootState, OperationState>(state => state.operations);
+  const {
+    numRows,
+    numCols,
+  } = useSelector<RootState, ConfigState>(state => state.config);
+  const [y, x] = choosing;
+
   return (deltaY: number, deltaX: number) => {
     let [dragEndY, dragEndX] = [selecting[2] === -1 ? y : selecting[2], selecting[3] === -1 ? x : selecting[3]];
     let [nextY, nextX] = [dragEndY + deltaY, dragEndX + deltaX];
@@ -95,36 +132,35 @@ export const handleSelect = ({
   };
 }
 
-export const handleSelectAll = ({
-  select, 
-  numRows, numCols,
-}: handlePropsType) => {
-  return () => {
-    select([0, 0, numRows - 1, numCols - 1]);
-  };
+export const handleSelectAll = () => {
+  const {
+    numRows,
+    numCols,
+  } = useSelector<RootState, ConfigState>(state => state.config);
+  select([0, 0, numRows - 1, numCols - 1]);
 };
 
-export const handleEscape = ({
-  copy,
-  setCutting,
-}: handlePropsType) => {
-  return () => {
+export const handleEscape = () => {
+
     copy([-1, -1, -1, -1]);
     setCutting(false);
-  };
 };
 
 export const handlePaste = ({
-  x, y,
-  history,
   matrix,
-  selectingArea, copyingArea,
-  cutting,
-  select,
-  copy,
   setMatrix,
-  setCutting,
-}: handlePropsType) => {
+}: { matrix: MatrixType, setMatrix: (v: MatrixType) => void}) => {
+  const {
+    selecting,
+    copying,
+    cutting,
+    choosing,
+    history,
+  } = useSelector<RootState, OperationState>(state => state.operations);
+
+  const [y, x] = choosing;
+  const selectingArea = draggingToArea(selecting);
+  const copyingArea = draggingToArea(copying);
   const [selectingTop, selectingLeft] = selectingArea;
   const [copyingTop, copyingLeft] = copyingArea;
   const [selectingHeight, selectingWidth] = shape(selectingArea);
@@ -174,19 +210,23 @@ export const handlePaste = ({
   };
 };
 
-export const handleChoose = ({
-  selectingArea,
-  select,
-  choose,
-  colsSelect, rowsSelect,
-  numRows, numCols,
-}: handlePropsType) => {
+export const handleChoose = () => {
+  const {
+    numRows,
+    numCols,
+  } = useSelector<RootState, ConfigState>(state => state.config);
+
+  const {
+    selecting,
+  } = useSelector<RootState, OperationState>(state => state.operations);
+
+  const selectingArea = draggingToArea(selecting);
   const [top, left, bottom, right] = selectingArea;
 
   return (nextY: number, nextX: number, breaking: boolean) => {
     if (breaking) {
-      colsSelect([-1, -1]);
-      rowsSelect([-1, -1]);
+      selectCols([-1, -1]);
+      selectRows([-1, -1]);
     }
     if (nextY < top && top !== -1 && !breaking) {
       nextY = bottom;
@@ -215,10 +255,15 @@ export const handleChoose = ({
 };
 
 export const handleWrite = ({
-  y, x,
-  history,
   matrix, setMatrix,
-}: handlePropsType) => {
+}: { matrix: MatrixType, setMatrix: (v: MatrixType) => void}) => {
+
+  const {
+    history,
+    choosing,
+  } = useSelector<RootState, OperationState>(state => state.operations);
+  const [y, x] = choosing;
+
   return (value: string) => {
     history.append({
       command: "write",
@@ -232,9 +277,13 @@ export const handleWrite = ({
 };
 
 export const handleUndo = ({
-  history,
   matrix, setMatrix,
-}: handlePropsType) => {
+}: { matrix: MatrixType, setMatrix: (v: MatrixType) => void}) => {
+
+  const {
+    history,
+  } = useSelector<RootState, OperationState>(state => state.operations);
+
   return () => {
     const operation = history.prev();
     if (typeof operation === "undefined") {
@@ -246,9 +295,12 @@ export const handleUndo = ({
 };
 
 export const handleRedo = ({
-  history,
   matrix, setMatrix,
-}: handlePropsType) => {
+}: { matrix: MatrixType, setMatrix: (v: MatrixType) => void}) => {
+  const {
+    history,
+  } = useSelector<RootState, OperationState>(state => state.operations);
+
   return () => {
     const operation = history.next();
     if (typeof operation === "undefined") {

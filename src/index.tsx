@@ -1,10 +1,13 @@
 import React from "react";
+import { Provider } from 'react-redux'
 import styled from "styled-components";
 
 import {
   MatrixType,
   Props,
 } from "./types";
+
+import { store } from "./store";
 
 import {
   GridTable
@@ -31,10 +34,12 @@ const GridSheet: React.FC<Props> = ({data, options}) => {
     options = {};
   }
   return (<Layout>
-    <GridTable
-      data={data}
-      options={options}
-    />
+    <Provider store={store}>
+      <GridTable
+        data={data}
+        options={options}
+      />
+    </Provider>
   </Layout>);
 };
 

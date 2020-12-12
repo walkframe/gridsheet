@@ -83,3 +83,10 @@ export const shape = (area: AreaType | DraggingType): [number, number] => {
 export const makeSequence = (start: number, stop: number, step: number=1) => {
   return Array.from({ length: (stop - start - 1) / step + 1}, (_, i) => start + (i * step));
 };
+
+export const arrayToInfo = (options: any[]) => {
+  const info = {};
+  // @ts-ignore
+  options.map((opt, i) => info[typeof opt.key === "undefined" ? i : opt.key] = opt);
+  return info;
+};
