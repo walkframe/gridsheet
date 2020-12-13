@@ -4,7 +4,10 @@ import {
   DraggingType,
   RangeType,
   PositionType,
+  ReactionsType,
 } from "../types";
+
+import { convertNtoA } from "./converters";
 
 export const cropMatrix = (matrix: MatrixType, area: AreaType): MatrixType => {
   const [top, left, bottom, right] = area;
@@ -12,6 +15,7 @@ export const cropMatrix = (matrix: MatrixType, area: AreaType): MatrixType => {
 };
 
 export const writeMatrix = (y: number, x: number, src: MatrixType, dst: MatrixType): MatrixType => {
+  dst = dst.map(cols => ([... cols])); // unfasten immutable
   src.map((row, i) => {
     if (y + i >= dst.length) {
       return;
@@ -80,6 +84,14 @@ export const shape = (area: AreaType | DraggingType): [number, number] => {
   return [Math.abs(area[0] - area[2]), Math.abs(area[1] - area[3])];
 };
 
+export const matrixShape = (matrix: MatrixType): [number, number] => {
+  const h = matrix.length;
+  if (h === 0) {
+    return [0, 0]
+  }
+  return [h, matrix[h - 1].length];
+}
+
 export const makeSequence = (start: number, stop: number, step: number=1) => {
   return Array.from({ length: (stop - start - 1) / step + 1}, (_, i) => start + (i * step));
 };
@@ -90,3 +102,42 @@ export const arrayToInfo = (options: any[]) => {
   options.map((opt, i) => info[typeof opt.key === "undefined" ? i : opt.key] = opt);
   return info;
 };
+
+export const isInit = (indexes: number[]) => {
+  for (let i=0; i < indexes.length; i++) {
+    if (indexes[i] !== -1) {
+      return false;
+    }
+  }
+  return true;
+}
+
+export const makeReactions = (... areas: (AreaType | DraggingType | PositionType)[]): ReactionsType => {
+  const reactions: ReactionsType = {};
+  const colsCache: {[s: string]: string} = {};
+  areas.map((area) => {
+    if (area.length === 2) { // PositionType
+      const [y, x] = area;
+      area = [y, x, y, x];
+    }
+    area = draggingToArea(area); // force format to area
+    const [top, left, bottom, right] = area;
+    if (top === -1 || left === -1) {
+      return;
+    }
+    for (let y = top; y <= bottom; y++) {
+      const row = y + 1;
+      reactions[`${row}`] = true;
+      for (let x = left; x <= right; x++) {
+        let col = colsCache[x + 1];
+        if (typeof col === "undefined") {
+          col = convertNtoA(x + 1);
+          colsCache[x + 1] = col;
+        }
+        reactions[`${col}`] = true;
+        reactions[`${col}${row}`] = true;
+      }
+    }
+  });
+  return reactions;
+}

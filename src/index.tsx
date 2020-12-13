@@ -1,5 +1,5 @@
 import React from "react";
-import { Provider } from 'react-redux'
+import { Provider } from 'react-redux';
 import styled from "styled-components";
 
 import {
@@ -10,8 +10,8 @@ import {
 import { store } from "./store";
 
 import {
-  GridTable
-} from "./components/GridTable";
+  StoreInjector,
+} from "./components/StoreInjector";
 
 const Layout = styled.div`
   background-color: #ffffff;
@@ -33,9 +33,10 @@ const GridSheet: React.FC<Props> = ({data, options}) => {
   if (typeof options === "undefined") {
     options = {};
   }
+
   return (<Layout>
     <Provider store={store}>
-      <GridTable
+      <StoreInjector
         data={data}
         options={options}
       />

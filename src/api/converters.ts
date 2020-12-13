@@ -1,12 +1,18 @@
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+const CACHE: {[s: string]: string} = {};
+
 export const convertNtoA = (num: number): string => {
+  if (CACHE[num]) {
+    return CACHE[num];
+  }
   let result = "";
   do {
     result = ALPHABET[--num % 26] + result;
     num = Math.floor(num / 26);
-  } while(num > 0)
+  } while(num > 0);
+  CACHE[num] = result;
   return result;
 };
 

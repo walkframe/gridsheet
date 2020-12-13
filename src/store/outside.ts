@@ -1,29 +1,21 @@
-import React from "react";
-import { createSlice, PayloadAction, Draft, configureStore } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction, Draft } from "@reduxjs/toolkit";
 import {
-  MatrixType,
-  OptionsType,
-  PositionType,
-  RangeType,
-  AreaType,
-  DraggingType,
   RowInfoType,
   ColInfoType,
 } from "../types";
-import { History } from "../api/histories";
 
 import {
   arrayToInfo,
 } from "../api/arrays";
 
-export type ConfigState = {
+export type OutsideState = {
   rowInfo: RowInfoType;
   colInfo: ColInfoType;
   numRows: number;
   numCols: number;
 }
 
-export const initialState: ConfigState = {
+export const initialState: OutsideState = {
   rowInfo: arrayToInfo([]),
   colInfo: arrayToInfo([]),
   numRows: 1,
@@ -31,19 +23,19 @@ export const initialState: ConfigState = {
 };
 
 const slice = createSlice({
-  name: "operations",
+  name: "outside",
   initialState,
   reducers: {
-    setRowInfo: (state: Draft<ConfigState>, action: PayloadAction<RowInfoType>) => {
+    setRowInfo: (state: Draft<OutsideState>, action: PayloadAction<RowInfoType>) => {
       return {...state, rowInfo: action.payload};
     },
-    setColInfo: (state: Draft<ConfigState>, action: PayloadAction<ColInfoType>) => {
+    setColInfo: (state: Draft<OutsideState>, action: PayloadAction<ColInfoType>) => {
       return {...state, colInfo: action.payload};
     },
-    setNumRows: (state: Draft<ConfigState>, action: PayloadAction<number>) => {
+    setNumRows: (state: Draft<OutsideState>, action: PayloadAction<number>) => {
       return {...state, numRows: action.payload};
     },
-    setNumCols: (state: Draft<ConfigState>, action: PayloadAction<number>) => {
+    setNumCols: (state: Draft<OutsideState>, action: PayloadAction<number>) => {
       return {...state, numCols: action.payload};
     },
   },
@@ -53,4 +45,6 @@ export default slice.reducer;
 export const {
   setRowInfo,
   setColInfo,
+  setNumRows,
+  setNumCols,
 } = slice.actions;

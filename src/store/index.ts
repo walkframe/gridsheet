@@ -1,31 +1,28 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 
 import {
-  default as operations,
-  OperationState,
-} from "./operations";
+  default as inside,
+  InsideState,
+} from "./inside";
 import {
-  default as config,
-  ConfigState,
-} from "./config";
-import {
-  default as data,
-  DataState,
-} from "./data";
-
+  default as outside,
+  OutsideState,
+} from "./outside";
 
 export type RootState = {
-  operations: OperationState;
-  config: ConfigState;
-  data: DataState;
-}
+  inside: InsideState;
+  outside: OutsideState;
+};
 
 const rootReducer = combineReducers({
-  operations,
-  config,
-  data,
+  inside,
+  outside,
 });
 
 export const store = configureStore({
   reducer: rootReducer,
-})
+  devTools: process.env.NODE_ENV !== 'production',
+  //enhancers: composeEnhancers,
+});
+
+export type DispatchType = typeof store.dispatch;
