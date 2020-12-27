@@ -22,14 +22,15 @@ import {
   setCutting,
 } from "../store/inside";
 
+import {
+  OutsideState,
+} from "../store/outside";
+
 import { DUMMY_IMG } from "../constants";
 import {
   AreaType,
-  RowInfoType,
-  ColInfoType,
-  RowOptionType,
-  ColOptionType,
   DraggingType,
+  CellOptionType,
 } from "../types";
 
 const CellLayout = styled.div`
@@ -80,30 +81,30 @@ const CellLayout = styled.div`
 interface Props {
   y: number;
   x: number;
-  rowId: string;
-  colId: string;
-  height: string;
-  width: string;
   clipboardRef: React.RefObject<HTMLTextAreaElement>;
-  verticalAlign: string;
-  rowOption: RowOptionType;
-  colOption: ColOptionType;
 };
 
 export const Cell: React.FC<Props> = React.memo(({
   y,
   x,
-  rowId,
-  colId,
-  width,
-  height,
   clipboardRef,
-  verticalAlign,
-  rowOption,
-  colOption,
 }) => {
+  const rowId = `${ y + 1 }`;
+  const colId = convertNtoA(x + 1);
   const cellId = `${colId}${rowId}`;
   const dispatch = useDispatch();
+
+  const {
+    cellsOption,
+    cellLabel,
+    defaultHeight,
+    defaultWidth,
+  } = useSelector<RootState, OutsideState>(
+      state => state["outside"],
+      (current, old) => {
+        return false;
+      }
+  );
 
   const {
     matrix,
@@ -138,6 +139,14 @@ export const Cell: React.FC<Props> = React.memo(({
   }
   const value = matrix[y][x];
   const [numRows, numCols] = [matrix.length, matrix[0].length];
+  const defaultOption = cellsOption.DEFAULT || {};
+  const rowOption = cellsOption[rowId] || {};
+  const colOption = cellsOption[colId] || {};
+  const cellOption = cellsOption[cellId] || {};
+  // defaultOption < rowOption < colOption < cellOption
+  const option = {...defaultOption, ...rowOption, ... colOption, ...cellOption};
+  const height = rowOption.height || defaultHeight;
+  const width = colOption.width || defaultWidth;
 
   return (<td
     key={x}
@@ -145,7 +154,7 @@ export const Cell: React.FC<Props> = React.memo(({
         among(copyingArea, [y, x]) ? cutting ? "cutting" : "copying" : ""}`}
     style={{
       ... getCellStyle(y, x, copyingArea),
-      ... rowOption.style, ... colOption.style, // MEMO: row style priors to col style
+      ... option.style,
     }}
     draggable={!editing}
     onClick={(e) => {
@@ -159,8 +168,8 @@ export const Cell: React.FC<Props> = React.memo(({
       dispatch(select([y, x, y, x]));
     }}
     onDragEnd={() => {
-      const [height, width] = shape(selecting);
-      if (height + width === 0) {
+      const [h, w] = shape(selecting);
+      if (h + w === 0) {
         dispatch(select([-1, -1, -1, -1]));
       }
     }}
@@ -183,10 +192,10 @@ export const Cell: React.FC<Props> = React.memo(({
         style={{
           width,
           height,
-          verticalAlign: rowOption.verticalAlign || colOption.verticalAlign || verticalAlign,
+          verticalAlign: rowOption.verticalAlign || colOption.verticalAlign || "middle",
         }}
       >
-        { cellId && (<div className="label">{ cellId }</div>)}
+        { cellLabel && (<div className="label">{ cellId }</div>)}
         <CellLayout>
           {!editing && <div className="rendered">{value}</div>}
           {!pointed ? null : (<textarea

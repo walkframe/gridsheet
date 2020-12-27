@@ -48,8 +48,6 @@ const data = [
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-
-
 ];
 
 export default {
@@ -59,9 +57,12 @@ export default {
 export const showIndex = () => (<GridSheet
   data={data}
   options={{
+    // cellLabel: false,
     // headerWidth: "50px",
     // headerHeight: "40px",
     cells: {
+      "DEFAULT": { style: { fontStyle: "italic" }},
+      "A1": { style: { color: "#008888"}},
       "B": { label: "ビー"},
       "D": { width: "300px"},
       "2": { label: "二", style: {borderBottom: "double 4px #000000" }},

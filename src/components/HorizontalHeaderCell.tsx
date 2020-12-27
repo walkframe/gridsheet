@@ -16,28 +16,28 @@ import {
 
 import {DUMMY_IMG} from "../constants";
 import {
-  ColOptionType,
+  CellOptionType,
 } from "../types";
 
-import {OutsideState, setColInfo} from "../store/outside";
+import {OutsideState, setCellsOption} from "../store/outside";
 
 interface Props {
   x: number;
-  defaultWidth: string;
-  headerHeight: string;
-  colOption: ColOptionType;
 };
 
 export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
   x,
-  defaultWidth,
-  headerHeight,
-  colOption,
 }) => {
   const dispatch = useDispatch();
   const colId = convertNtoA(x + 1);
 
-  const { colInfo, numRows, numCols } = useSelector<RootState, OutsideState>(state => state["outside"]);
+  const {
+    cellsOption,
+    numRows,
+    numCols,
+    headerHeight,
+    defaultWidth,
+  } = useSelector<RootState, OutsideState>(state => state["outside"]);
   const {
     choosing,
     selecting,
@@ -51,6 +51,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
       return true;
     }
   );
+  const colOption = cellsOption[colId] || {};
   const width = colOption.width || defaultWidth;
   return (<th
     className={`col-number ${choosing[1] === x ? "choosing" : ""} ${between([selecting[1], selecting[3]], x) ? horizontalHeadersSelecting ? "header-selecting" : "selecting" : ""}`}
@@ -74,7 +75,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
       style={{ width, height: headerHeight }}
       onMouseLeave={(e) => {
         const width = e.currentTarget.clientWidth;
-        dispatch(setColInfo({... colInfo, [x]: {... colOption, width: `${width}px`}}));
+        dispatch(setCellsOption({... cellsOption, [colId]: {... colOption, width: `${width}px`}}));
       }}
     >{ colOption.label || colId }
     </div>

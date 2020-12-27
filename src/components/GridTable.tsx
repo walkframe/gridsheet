@@ -14,7 +14,6 @@ import { convertNtoA } from "../api/converters";
 
 import {
   makeSequence,
-
 } from "../api/arrays";
 
 import {
@@ -114,6 +113,8 @@ const GridTableLayout = styled.div`
         color: #ffffff;
         padding: 0 2px;
         display: none;
+        opacity: 0.7;
+        font-weight: normal;
       }
       .cell-wrapper-outer {
         position: absolute;
@@ -168,20 +169,14 @@ const GridTableLayout = styled.div`
 export const GridTable: React.FC<Props> = ({data, options}) => {
   const {
     historySize = 10,
-    headerHeight = "auto",
-    headerWidth = "auto",
-    defaultHeight = "20px",
-    defaultWidth = "80px",
     verticalAlign = "middle",
     cellLabel = true,
   } = options;
 
   const clipboardRef = React.createRef<HTMLTextAreaElement>();
-
   const dispatch = useDispatch();
   const {
-    rowInfo,
-    colInfo,
+    cellsOption,
     numRows,
     numCols,
   } = useSelector<RootState, OutsideState>(state => state["outside"]);
@@ -196,48 +191,26 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
             dispatch(selectAll({numRows, numCols}));
           }} />
           {makeSequence(0, numCols).map((x) => {
-            const colOption = colInfo[x] || {};
             return (<HorizontalHeaderCell
               key={x}
               x={x}
-              defaultWidth={defaultWidth}
-              headerHeight={headerHeight}
-              colOption={colOption}
             />);
           })
         }
         </tr>
       </thead>
       <tbody>{makeSequence(0, numRows).map((y) => {
-        const rowOption = rowInfo[y] || {};
-        const rowId = `${y + 1}`;
-        const height = rowOption.height || defaultHeight;
-
         return (<tr key={y}>
           <VerticalHeaderCell
             key={y}
             y={y}
-            defaultHeight={defaultHeight}
-            headerWidth={headerWidth}
-            rowOption={rowOption}
           />
           {makeSequence(0, numCols).map((x) => {
-            const colOption = colInfo[x] || {};
-            const width = colOption.width || defaultWidth;
-            const colId = convertNtoA(x + 1);
-            const cellId = `${colId}${rowId}`;
             return (<Cell
-                key={cellId}
+                key={`${y}-${x}`}
                 y={y}
                 x={x}
-                rowId={rowId}
-                colId={colId}
-                height={height}
-                width={width}
                 clipboardRef={clipboardRef}
-                verticalAlign={verticalAlign}
-                rowOption={rowOption}
-                colOption={colOption}
             />);
           })}
         </tr>);

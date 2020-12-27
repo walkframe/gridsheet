@@ -5,13 +5,15 @@ export type X = number;
 export type CellType = any;
 export type MatrixType = CellType[][];
 
-export type OptionType = {
+export type CellOptionType = {
   label?: string;
   width?: string;
   height?: string;
   style?: React.CSSProperties;
   verticalAlign?: string;
 };
+
+export type CellsOptionType = {[s: string]: CellOptionType};
 
 export interface OptionsType {
   historySize?: number;
@@ -21,7 +23,7 @@ export interface OptionsType {
   headerWidth?: string;
   verticalAlign?: string;
   cellLabel?: boolean;
-  cells?: {[s: string]: OptionType};
+  cells?: CellsOptionType;
 };
 
 export interface Props {

@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction, Draft } from "@reduxjs/toolkit";
 import {
-  RowInfoType,
-  ColInfoType,
+  CellOptionType,
+  CellsOptionType,
 } from "../types";
 
 import {
@@ -9,28 +9,48 @@ import {
 } from "../api/arrays";
 
 export type OutsideState = {
-  rowInfo: RowInfoType;
-  colInfo: ColInfoType;
+  cellsOption: {[s: string]: CellOptionType};
   numRows: number;
   numCols: number;
+  headerHeight: string;
+  headerWidth: string;
+  defaultHeight: string;
+  defaultWidth: string;
+  cellLabel: boolean;
 }
 
 export const initialState: OutsideState = {
-  rowInfo: arrayToInfo([]),
-  colInfo: arrayToInfo([]),
+  cellsOption: {},
   numRows: 1,
   numCols: 1,
+  headerHeight: "auto",
+  headerWidth: "auto",
+  defaultHeight: "20px",
+  defaultWidth: "80px",
+  cellLabel: true,
 };
 
 const slice = createSlice({
   name: "outside",
   initialState,
   reducers: {
-    setRowInfo: (state: Draft<OutsideState>, action: PayloadAction<RowInfoType>) => {
-      return {...state, rowInfo: action.payload};
+    setCellsOption: (state: Draft<OutsideState>, action: PayloadAction<CellsOptionType>) => {
+      return {...state, cellsOption: action.payload};
     },
-    setColInfo: (state: Draft<OutsideState>, action: PayloadAction<ColInfoType>) => {
-      return {...state, colInfo: action.payload};
+    setHeaderHeight: (state: Draft<OutsideState>, action: PayloadAction<string>) => {
+      return {...state, headerHeight: action.payload};
+    },
+    setHeaderWidth: (state: Draft<OutsideState>, action: PayloadAction<string>) => {
+      return {...state, headerWidth: action.payload};
+    },
+    setDefaultHeight: (state: Draft<OutsideState>, action: PayloadAction<string>) => {
+      return {...state, defaultHeight: action.payload};
+    },
+    setDefaultWidth: (state: Draft<OutsideState>, action: PayloadAction<string>) => {
+      return {...state, defaultWidth: action.payload};
+    },
+    setCellLabel: (state: Draft<OutsideState>, action: PayloadAction<boolean>) => {
+      return {...state, cellLabel: action.payload};
     },
     setNumRows: (state: Draft<OutsideState>, action: PayloadAction<number>) => {
       return {...state, numRows: action.payload};
@@ -43,8 +63,12 @@ const slice = createSlice({
 
 export default slice.reducer;
 export const {
-  setRowInfo,
-  setColInfo,
+  setCellsOption,
+  setHeaderHeight,
+  setHeaderWidth,
+  setDefaultHeight,
+  setDefaultWidth,
+  setCellLabel,
   setNumRows,
   setNumCols,
 } = slice.actions;

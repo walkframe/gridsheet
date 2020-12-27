@@ -17,32 +17,29 @@ import {
 import {DUMMY_IMG} from "../constants";
 import {
   AreaType,
-  RowInfoType,
-  ColInfoType,
-  RowOptionType,
-  ColOptionType,
+  CellOptionType,
   DraggingType,
 } from "../types";
 
-import {OutsideState, setRowInfo} from "../store/outside";
+import {OutsideState, setCellsOption} from "../store/outside";
 
 interface Props {
   y: number;
-  defaultHeight: string;
-  headerWidth: string;
-  rowOption: RowOptionType;
 };
 
 export const VerticalHeaderCell: React.FC<Props> = React.memo(({
   y,
-  defaultHeight,
-  headerWidth,
-  rowOption,
 }) => {
   const rowId = `${ y + 1 }`;
   const dispatch = useDispatch();
 
-  const { rowInfo, colInfo, numRows, numCols } = useSelector<RootState, OutsideState>(state => state["outside"]);
+  const {
+    cellsOption,
+    numRows,
+    numCols,
+    defaultHeight,
+    headerWidth,
+  } = useSelector<RootState, OutsideState>(state => state["outside"]);
   const {
     choosing,
     selecting,
@@ -56,6 +53,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({
         return true;
       }
   );
+  const rowOption = cellsOption[rowId] || {};
   const height = rowOption.height || defaultHeight;
 
   return (<th
@@ -80,7 +78,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({
       style={{ height, width: headerWidth }}
       onMouseLeave={(e) => {
         const height = e.currentTarget.clientHeight;
-        dispatch(setRowInfo({... rowInfo, [y]: {... rowOption, height: `${height}px`}}));
+        dispatch(setCellsOption({... cellsOption, [rowId]: {... rowOption, height: `${height}px`}}));
       }}
     >
       { rowOption.label ||  rowId }
