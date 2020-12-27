@@ -50,10 +50,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({
   } = useSelector<RootState, InsideState>(
       state => state["inside"],
       (current, old) => {
-        if (old.reactions[rowId]) {
-          return false;
-        }
-        if (current.reactions[rowId]) {
+        if (old.reactions[rowId] || current.reactions[rowId]) {
           return false;
         }
         return true;

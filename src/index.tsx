@@ -27,9 +27,6 @@ const GridSheet: React.FC<Props> = ({data, options}) => {
   if (typeof data === "undefined") {
     data = [];
   }
-  if (typeof data[0] === "undefined") {
-    data.push([]);
-  }
   if (typeof options === "undefined") {
     options = {};
   }

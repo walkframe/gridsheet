@@ -16,12 +16,7 @@ import {
 
 import {DUMMY_IMG} from "../constants";
 import {
-  AreaType,
-  RowInfoType,
-  ColInfoType,
-  RowOptionType,
   ColOptionType,
-  DraggingType,
 } from "../types";
 
 import {OutsideState, setColInfo} from "../store/outside";
@@ -50,10 +45,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
   } = useSelector<RootState, InsideState>(
     state => state["inside"],
     (current, old) => {
-      if (old.reactions[colId]) {
-        return false;
-      }
-      if (current.reactions[colId]) {
+      if (old.reactions[colId] || current.reactions[colId]) {
         return false;
       }
       return true;

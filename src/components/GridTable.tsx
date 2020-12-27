@@ -174,8 +174,6 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
     defaultWidth = "80px",
     verticalAlign = "middle",
     cellLabel = true,
-    cols = [],
-    rows = [],
   } = options;
 
   const clipboardRef = React.createRef<HTMLTextAreaElement>();

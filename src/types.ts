@@ -2,32 +2,16 @@
 export type Y = number;
 export type X = number;
 
-export type CellType = string;
+export type CellType = any;
 export type MatrixType = CellType[][];
 
-export type RowOptionType = {
+export type OptionType = {
   label?: string;
   width?: string;
   height?: string;
   style?: React.CSSProperties;
   verticalAlign?: string;
-  key?: string | number;
 };
-
-export type ColOptionType = {
-  label?: string;
-  width?: string;
-  height?: string;
-  style?: React.CSSProperties;
-  verticalAlign?: string;
-  key?: string | number;
-};
-
-export type RowOptionsType = RowOptionType[];
-export type ColOptionsType = ColOptionType[];
-
-export type RowInfoType = {[s: string]: RowOptionType, [i: number]: RowOptionType};
-export type ColInfoType = {[s: string]: ColOptionType, [i: number]: ColOptionType};
 
 export interface OptionsType {
   historySize?: number;
@@ -36,9 +20,8 @@ export interface OptionsType {
   headerHeight?: string;
   headerWidth?: string;
   verticalAlign?: string;
-  rows?: RowOptionsType;
-  cols?: ColOptionsType;
   cellLabel?: boolean;
+  cells?: {[s: string]: OptionType};
 };
 
 export interface Props {
@@ -47,8 +30,8 @@ export interface Props {
 };
 
 export type RangeType = [number, number]; // [start, end]
-export type PositionType = [number, number]; // [y, x]
-export type DraggingType = [number, number, number, number]; // [startY, startX, endY, endX]
+export type PositionType = [Y, X]; // [y, x]
+export type DraggingType = [Y, X, Y, X]; // [startY, startX, endY, endX]
 export type AreaType = DraggingType; // [top, left, bottom, right] (subtype of DraggingType)
 
 export type HistoryType = {

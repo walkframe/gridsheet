@@ -5,7 +5,7 @@ const data = [
 //  ["a", "b", "c", "d", "e"],
 //  ["a", "b", "c", "d", "e"],
 //  ["a", "b", "c", "d", "e"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
+  [123456, 88888888888, "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
@@ -61,16 +61,13 @@ export const showIndex = () => (<GridSheet
   options={{
     // headerWidth: "50px",
     // headerHeight: "40px",
-    cols: [
-      { key: "B", label: "ビー"},
-      { key: "D", width: "300px"},
-    ],
-    rows: [
-      { key: 2, label: "二", style: {borderBottom: "double 4px #000000"}},
-      { key: 3, height: "100px", style: { fontWeight: "bold", color: "#ff0000", backgroundColor: "rgba(255, 200, 200, 0.5)"}},
-      { key: 4, label: "よん", height: "50px", verticalAlign: "bottom"},
-
-    ],
+    cells: {
+      "B": { label: "ビー"},
+      "D": { width: "300px"},
+      "2": { label: "二", style: {borderBottom: "double 4px #000000" }},
+      "3": { height: "100px", style: { fontWeight: "bold", color: "#ff0000", backgroundColor: "rgba(255, 200, 200, 0.5)"}},
+      "4": { label: "よん", height: "50px", verticalAlign: "bottom"},
+    },
   }}
 />);
 

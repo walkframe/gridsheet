@@ -121,10 +121,7 @@ export const Cell: React.FC<Props> = React.memo(({
       if (old.matrix.length === 0) {
           return false;
       }
-      if (old.reactions[cellId]) {
-        return false;
-      }
-      if (current.reactions[cellId]) {
+      if (old.reactions[cellId] || current.reactions[cellId]) {
         return false;
       }
       return true;
@@ -195,7 +192,7 @@ export const Cell: React.FC<Props> = React.memo(({
           {!pointed ? null : (<textarea
             autoFocus
             style={{ minHeight: height }}
-            rows={value.split("\n").length}
+            rows={typeof value === "string" ? value.split("\n").length : 1}
             className={editing ? "editing" : ""}
             onDoubleClick={(e) => {
               const input = e.currentTarget;
