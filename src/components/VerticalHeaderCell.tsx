@@ -1,25 +1,15 @@
 import React from "react";
 import { useDispatch, useSelector } from 'react-redux';
-import { createSelector } from 'reselect';
-import styled from "styled-components";
-import {convertNtoA} from "../api/converters";
-import { draggingToArea, among, shape, between } from "../api/arrays";
-import {RootState, DispatchType } from "../store";
+import { between } from "../api/arrays";
+import { RootState } from "../store";
 import {
   InsideState,
-  blur,
-  choose,
-  select, drag,
-  selectCols, selectRows,
-  setEditingCell,
-  undo, redo,
+  drag,
+  selectRows,
+
 } from "../store/inside";
 import {DUMMY_IMG} from "../constants";
-import {
-  AreaType,
-  CellOptionType,
-  DraggingType,
-} from "../types";
+
 
 import {OutsideState, setCellsOption} from "../store/outside";
 
@@ -59,7 +49,11 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({
   return (<th
     className={`row-number ${choosing[0] === y ? "choosing" : ""} ${between([selecting[0], selecting[2]], y) ? verticalHeadersSelecting ? "header-selecting" : "selecting" : ""}`}
     onClick={(e) => {
-      dispatch(selectRows({range: [y, y], numCols}));
+      let startY = e.shiftKey ? selecting[0] : y;
+      if (startY === -1) {
+        startY = choosing[0];
+      }
+      dispatch(selectRows({range: [startY, y], numCols}));
       return false;
     }}
     draggable

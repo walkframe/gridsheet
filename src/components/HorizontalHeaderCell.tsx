@@ -1,23 +1,15 @@
 import React from "react";
 import { useDispatch, useSelector } from 'react-redux';
-import { createSelector } from 'reselect';
-import styled from "styled-components";
 import {convertNtoA} from "../api/converters";
-import { draggingToArea, among, shape, between } from "../api/arrays";
-import {RootState, DispatchType } from "../store";
+import { between } from "../api/arrays";
+import {RootState } from "../store";
 import {
-  blur,
-  choose,
+
   InsideState, select, drag,
-  selectCols, selectRows,
-  setEditingCell,
-  undo, redo,
+  selectCols
 } from "../store/inside";
 
 import {DUMMY_IMG} from "../constants";
-import {
-  CellOptionType,
-} from "../types";
 
 import {OutsideState, setCellsOption} from "../store/outside";
 
@@ -34,7 +26,6 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
   const {
     cellsOption,
     numRows,
-    numCols,
     headerHeight,
     defaultWidth,
   } = useSelector<RootState, OutsideState>(state => state["outside"]);
@@ -57,7 +48,11 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
     className={`col-number ${choosing[1] === x ? "choosing" : ""} ${between([selecting[1], selecting[3]], x) ? horizontalHeadersSelecting ? "header-selecting" : "selecting" : ""}`}
     draggable
     onClick={(e) => {
-      dispatch(selectCols({range: [x, x], numRows}));
+      let startX = e.shiftKey ? selecting[1] : x;
+      if (startX === -1) {
+        startX = choosing[1];
+      }
+      dispatch(selectCols({range: [startX, x], numRows}));
       return false;
     }}
     onDragStart={(e) => {
