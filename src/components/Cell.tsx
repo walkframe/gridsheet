@@ -15,7 +15,6 @@ import {
   select, drag,
   selectCols, selectRows,
   selectAll,
-  dragCols, dragRows,
   setEditingCell,
   undo, redo,
   arrow, walk, write,
@@ -112,8 +111,8 @@ export const Cell: React.FC<Props> = React.memo(({
     choosing,
     choosingLast,
     selecting,
-    colsSelecting,
-    rowsSelecting,
+    horizontalHeadersSelecting,
+    verticalHeadersSelecting,
     copying,
     cutting,
   } = useSelector<RootState, InsideState>(
@@ -160,7 +159,7 @@ export const Cell: React.FC<Props> = React.memo(({
     onDragStart={(e) => {
       e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
       dispatch(choose([y, x]));
-      dispatch(select([y, x, -1, -1]));
+      dispatch(select([y, x, y, x]));
     }}
     onDragEnd={() => {
       const [height, width] = shape(selecting);
@@ -169,13 +168,13 @@ export const Cell: React.FC<Props> = React.memo(({
       }
     }}
     onDragEnter={(e) => {
-      const [startY, startX] = [rowsSelecting[0], colsSelecting[0]];
-      if (colsSelecting[0] !== -1) {
-        dispatch(dragCols({end: x, numRows}));
+      const [startY, startX] = selecting;
+      if (horizontalHeadersSelecting) {
+        dispatch(drag([numRows - 1, x]));
         return false;
       }
-      if (rowsSelecting[0] !== -1) {
-        dispatch(dragRows({end: y, numCols}));
+      if (verticalHeadersSelecting) {
+        dispatch(drag([y, numCols - 1]));
         return false;
       }
       dispatch(drag([y, x]));

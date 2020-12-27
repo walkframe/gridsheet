@@ -8,7 +8,7 @@ import {RootState, DispatchType } from "../store";
 import {
   blur,
   choose,
-  InsideState, select, drag, dragCols,
+  InsideState, select, drag,
   selectCols, selectRows,
   setEditingCell,
   undo, redo,
@@ -46,7 +46,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
   const {
     choosing,
     selecting,
-    colsSelecting,
+    horizontalHeadersSelecting,
   } = useSelector<RootState, InsideState>(
     state => state["inside"],
     (current, old) => {
@@ -61,7 +61,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
   );
   const width = colOption.width || defaultWidth;
   return (<th
-    className={`col-number ${choosing[1] === x ? "choosing" : ""} ${between([selecting[1], selecting[3]], x) ? "selecting" : ""} ${between(colsSelecting, x) ? "header-selecting" : ""}`}
+    className={`col-number ${choosing[1] === x ? "choosing" : ""} ${between([selecting[1], selecting[3]], x) ? horizontalHeadersSelecting ? "header-selecting" : "selecting" : ""}`}
     draggable
     onClick={(e) => {
       dispatch(selectCols({range: [x, x], numRows}));
@@ -73,7 +73,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
       return false;
     }}
     onDragEnter={(e) => {
-      dispatch(dragCols({end: x, numRows}));
+      dispatch(drag([numRows - 1, x]));
       return false;
     }}
   >

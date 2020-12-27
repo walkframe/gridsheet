@@ -9,7 +9,7 @@ import {
   InsideState,
   blur,
   choose,
-  select, drag, dragRows,
+  select, drag,
   selectCols, selectRows,
   setEditingCell,
   undo, redo,
@@ -46,7 +46,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({
   const {
     choosing,
     selecting,
-    rowsSelecting,
+    verticalHeadersSelecting,
   } = useSelector<RootState, InsideState>(
       state => state["inside"],
       (current, old) => {
@@ -62,7 +62,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({
   const height = rowOption.height || defaultHeight;
 
   return (<th
-    className={`row-number ${choosing[0] === y ? "choosing" : ""} ${between([selecting[0], selecting[2]], y) ? "selecting" : ""} ${between(rowsSelecting, y) ? "header-selecting" : ""}`}
+    className={`row-number ${choosing[0] === y ? "choosing" : ""} ${between([selecting[0], selecting[2]], y) ? verticalHeadersSelecting ? "header-selecting" : "selecting" : ""}`}
     onClick={(e) => {
       dispatch(selectRows({range: [y, y], numCols}));
       return false;
@@ -74,7 +74,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({
       return false;
     }}
     onDragEnter={(e) => {
-      dispatch(dragRows({end: y, numCols}));
+      dispatch(drag([y, numCols - 1]));
       return false;
     }}
   >
