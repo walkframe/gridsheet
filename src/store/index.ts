@@ -1,4 +1,4 @@
-import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import { combineReducers, configureStore, getDefaultMiddleware } from "@reduxjs/toolkit";
 
 import {
   default as inside,
@@ -14,6 +14,10 @@ export type RootState = {
   outside: OutsideState;
 };
 
+const middleware = getDefaultMiddleware({
+  serializableCheck: false,
+})
+
 const rootReducer = combineReducers({
   inside,
   outside,
@@ -22,6 +26,7 @@ const rootReducer = combineReducers({
 export const store = configureStore({
   reducer: rootReducer,
   devTools: process.env.NODE_ENV !== 'production',
+  middleware,
   //enhancers: composeEnhancers,
 });
 

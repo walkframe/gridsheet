@@ -24,6 +24,8 @@ export interface OptionsType {
   verticalAlign?: string;
   cellLabel?: boolean;
   cells?: CellsOptionType;
+  renderers?: (value: any) => string;
+  parsers?: (value: string) => any;
 };
 
 export interface Props {

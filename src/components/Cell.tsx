@@ -32,6 +32,8 @@ import {
   DraggingType,
   CellOptionType,
 } from "../types";
+import { Renderer as DefaultRenderer } from "../renderers/core";
+import { Parser as DefaultParser } from "../parsers/core";
 
 const CellLayout = styled.div`
   overflow: hidden;
@@ -139,7 +141,7 @@ export const Cell: React.FC<Props> = React.memo(({
   }
   const value = matrix[y][x];
   const [numRows, numCols] = [matrix.length, matrix[0].length];
-  const defaultOption = cellsOption.DEFAULT || {};
+  const defaultOption = cellsOption.default || {};
   const rowOption = cellsOption[rowId] || {};
   const colOption = cellsOption[colId] || {};
   const cellOption = cellsOption[cellId] || {};
@@ -147,6 +149,12 @@ export const Cell: React.FC<Props> = React.memo(({
   const option = {...defaultOption, ...rowOption, ... colOption, ...cellOption};
   const height = rowOption.height || defaultHeight;
   const width = colOption.width || defaultWidth;
+  const Renderer = DefaultRenderer;
+  const Parser = DefaultParser;
+  const writeCell = (value: string) => {
+    const parsed = new Parser(value).parse();
+    dispatch(write(parsed));
+  };
 
   return (<td
     key={x}
@@ -197,7 +205,7 @@ export const Cell: React.FC<Props> = React.memo(({
       >
         { cellLabel && (<div className="label">{ cellId }</div>)}
         <CellLayout>
-          {!editing && <div className="rendered">{value}</div>}
+          {!editing && <div className="rendered">{ new Renderer(value).render() }</div>}
           {!pointed ? null : (<textarea
             autoFocus
             style={{ minHeight: height }}
@@ -206,14 +214,14 @@ export const Cell: React.FC<Props> = React.memo(({
             onDoubleClick={(e) => {
               const input = e.currentTarget;
               if (!editing) {
-                input.value = value;
+                input.value = new Renderer(value).renderEditing();
                 dispatch(setEditingCell(cellId));
                 setTimeout(() => input.style.width = `${input.scrollWidth}px`, 100);
               }
             }}
             onBlur={(e) => {
               if (editing) {
-                dispatch(write(e.target.value));
+                writeCell(e.target.value);
               }
               dispatch(blur());
             }}
@@ -224,7 +232,7 @@ export const Cell: React.FC<Props> = React.memo(({
                 case "Tab": // TAB
                   e.preventDefault();
                   if (editing) {
-                    dispatch(write(input.value));
+                    writeCell(input.value);
                   }
                   dispatch(walk({numRows, numCols, deltaY: 0, deltaX: shiftKey ? -1 : 1}));
                   dispatch(setEditingCell(""));
@@ -238,7 +246,7 @@ export const Cell: React.FC<Props> = React.memo(({
                       if (e.nativeEvent.isComposing) {
                         return false;
                       }
-                      dispatch(write(input.value));
+                      writeCell(input.value);
                       dispatch(setEditingCell(""));
                       input.value = "";
                     }

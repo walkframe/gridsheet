@@ -366,7 +366,7 @@ const reducers = {
       choosing: [nextY, nextX] as PositionType,
     };
   },
-  write: (state: Draft<InsideState>, action: PayloadAction<string>): InsideState => {
+  write: (state: Draft<InsideState>, action: PayloadAction<any>): InsideState => {
     const [y, x] = state.choosing;
     const value = action.payload;
     const matrix = writeMatrix(y, x, [[value]], state.matrix);

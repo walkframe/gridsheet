@@ -92,12 +92,8 @@ export const StoreInjector: React.FC<Props> = ({data, options}) => {
     }
   }, [cellLabel]);
 
-
-
   React.useEffect(() => {
-
     dispatch(initHistory(historySize));
-
   }, []);
 
   return (<div>
