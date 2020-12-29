@@ -104,7 +104,7 @@ export const Cell: React.FC<Props> = React.memo(({
   } = useSelector<RootState, OutsideState>(
       state => state["outside"],
       (current, old) => {
-        return false;
+        return true;
       }
   );
 
