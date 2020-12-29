@@ -13,6 +13,9 @@ export class Parser {
   }
 
   public parse (): any {
+    if (this.value[0] === "'") {
+      return this.value;
+    }
     for (let i = 0; i < this.parseFunctions.length; i++) {
       const result = this.parseFunctions[i](this.value);
       if (result != null) {
