@@ -1,6 +1,4 @@
 
-
-
 export class Renderer {
   protected value: any;
 

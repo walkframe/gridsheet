@@ -141,16 +141,22 @@ export const Cell: React.FC<Props> = React.memo(({
   }
   const value = matrix[y][x];
   const [numRows, numCols] = [matrix.length, matrix[0].length];
-  const defaultOption = cellsOption.default || {};
-  const rowOption = cellsOption[rowId] || {};
-  const colOption = cellsOption[colId] || {};
-  const cellOption = cellsOption[cellId] || {};
+  const defaultOption: CellOptionType = cellsOption.default || {};
+  const rowOption: CellOptionType = cellsOption[rowId] || {};
+  const colOption: CellOptionType = cellsOption[colId] || {};
+  const cellOption: CellOptionType = cellsOption[cellId] || {};
   // defaultOption < rowOption < colOption < cellOption
-  const option = {...defaultOption, ...rowOption, ... colOption, ...cellOption};
+  const style = {
+    ...defaultOption.style,
+    ...rowOption.style,
+    ...colOption.style,
+    ...cellOption.style
+  };
+  const Renderer = cellOption.renderer || colOption.renderer || rowOption.renderer || defaultOption.renderer || DefaultRenderer;
+  const Parser = cellOption.parser || colOption.parser || rowOption.parser || defaultOption.parser || DefaultParser;
   const height = rowOption.height || defaultHeight;
   const width = colOption.width || defaultWidth;
-  const Renderer = DefaultRenderer;
-  const Parser = DefaultParser;
+  
   const writeCell = (value: string) => {
     const parsed = new Parser(value).parse();
     dispatch(write(parsed));
@@ -162,7 +168,7 @@ export const Cell: React.FC<Props> = React.memo(({
         among(copyingArea, [y, x]) ? cutting ? "cutting" : "copying" : ""}`}
     style={{
       ... getCellStyle(y, x, copyingArea),
-      ... option.style,
+      ... style,
     }}
     draggable={!editing}
     onClick={(e) => {

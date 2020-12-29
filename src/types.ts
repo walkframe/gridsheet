@@ -1,6 +1,9 @@
 import { Renderer } from "./renderers/core";
 import { Parser } from "./parsers/core";
 
+export type RenderersType = {[s: string]: Renderer};
+export type ParsersType = {[s: string]: Parser};
+
 export type Y = number;
 export type X = number;
 
