@@ -20,6 +20,7 @@ import {
   makeReactions,
 } from "../api/arrays"
 import {convertTSVToArray} from "../api/converters";
+import { RendererType } from "../renderers/core";
 
 export type InsideState = {
   matrix: MatrixType;

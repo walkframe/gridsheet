@@ -36,10 +36,19 @@ export class Renderer {
     if (this.value instanceof Date) {
       return this.date(this.value);
     }
-    return this.value;
+    if (typeof this.value === "string") {
+      return this.value;
+    }
+    if (typeof this.value === "number") {
+      return this.value.toString();
+    }
+    return this.render();
   }
 
   protected string (value: string): string {
+    if (value[0] === "'") {
+      return value.substring(1);
+    }
     return value;
   }
 
@@ -74,6 +83,6 @@ export class Renderer {
   protected undefined (value: undefined): string {
     return "";
   }
-
-
 };
+
+export type RendererType = typeof Renderer;

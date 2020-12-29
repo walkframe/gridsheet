@@ -51,3 +51,4 @@ export class Parser {
   }
 };
 
+export type ParserType = typeof Parser;

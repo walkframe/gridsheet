@@ -9,10 +9,12 @@ import {
   draggingToArea,
 } from "./arrays";
 import { convertArrayToTSV, convertTSVToArray} from "./converters";
+import { RendererType } from "../renderers/core";
 
 export const clip = (
   selecting: DraggingType, choosing: PositionType, matrix: MatrixType,
-  clipboardRef: React.RefObject<HTMLTextAreaElement>
+  clipboardRef: React.RefObject<HTMLTextAreaElement>,
+  renderer: RendererType,
 ): DraggingType => {
   const [y, x] = choosing;
   let selectingArea = draggingToArea(selecting);
@@ -22,8 +24,7 @@ export const clip = (
   }
   const input = clipboardRef.current;
   const copyingRows = cropMatrix(matrix, area);
-  const tsv = convertArrayToTSV(copyingRows);
-  const selectingLast = selecting;
+  const tsv = convertArrayToTSV(copyingRows, renderer);
   if (input != null) {
     input.value = tsv;
     input.focus();

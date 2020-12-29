@@ -1,3 +1,4 @@
+import { RendererType } from "../renderers/core";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -20,15 +21,16 @@ export const convertAtoN = (alpha: string): number => {
   return 0;
 };
 
-export const convertArrayToTSV = (rows: string[][]): string => {
+export const convertArrayToTSV = (rows: any[][], renderer: RendererType): string => {
   const lines: string[] = [];
   rows.map((row) => {
     const cols: string[] = [];
     row.map((col) => {
-      if (col.indexOf("\n") !== -1) {
-        cols.push(`"${col.replace(/"/g, '""')}"`);
+      const value = new renderer(col).renderEditing();
+      if (value.indexOf("\n") !== -1) {
+        cols.push(`"${value.replace(/"/g, '""')}"`);
       } else {
-        cols.push(col);
+        cols.push(value);
       }
     });
     lines.push(cols.join("\t"));

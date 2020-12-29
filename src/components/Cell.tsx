@@ -312,7 +312,7 @@ export const Cell: React.FC<Props> = React.memo(({
                   if (e.ctrlKey || e.metaKey) {
                     if (!editing) {
                       e.preventDefault();
-                      const area = clip(selecting, choosing, matrix, clipboardRef);
+                      const area = clip(selecting, choosing, matrix, clipboardRef, Renderer);
                       dispatch(copy(area));
                       setTimeout(() => {
                         dispatch(refocus({choosing: [y, x], selecting}));
@@ -341,7 +341,7 @@ export const Cell: React.FC<Props> = React.memo(({
                   if (e.ctrlKey || e.metaKey) {
                     if (!editing) {
                       e.preventDefault();
-                      const area = clip(selecting, choosing, matrix, clipboardRef);
+                      const area = clip(selecting, choosing, matrix, clipboardRef, Renderer);
                       dispatch(cut(area));
                       setTimeout(() => {
                         dispatch(refocus({choosing: [y, x], selecting}));
