@@ -1,3 +1,5 @@
+import { Renderer } from "./renderers/core";
+import { Parser } from "./parsers/core";
 
 export type Y = number;
 export type X = number;
@@ -11,6 +13,8 @@ export type CellOptionType = {
   height?: string;
   style?: React.CSSProperties;
   verticalAlign?: string;
+  renderer?: typeof Renderer;
+  parser?: typeof Parser;
 };
 
 export type CellsOptionType = {[s: string]: CellOptionType};
@@ -24,8 +28,6 @@ export interface OptionsType {
   verticalAlign?: string;
   cellLabel?: boolean;
   cells?: CellsOptionType;
-  renderers?: (value: any) => string;
-  parsers?: (value: string) => any;
 };
 
 export interface Props {

@@ -1,8 +1,8 @@
 import { parseFromTimeZone, formatToTimeZone } from "date-fns-timezone";
 
 export class Parser {
-  private value: string;
-  private parseFunctions: ((value: string) => any)[] = [
+  protected value: string;
+  protected parseFunctions: ((value: string) => any)[] = [
     this.number,
     this.date,
     this.bool,
@@ -22,7 +22,7 @@ export class Parser {
     return this.value;
   }
 
-  private bool (value: string): boolean | undefined {
+  protected bool (value: string): boolean | undefined {
     if (value.match(/^true$/i)) {
       return true;
     }
@@ -31,14 +31,14 @@ export class Parser {
     }
   }
 
-  private number (value: string): number | undefined {
+  protected number (value: string): number | undefined {
     const m = value.match(/^[\d.]+$/);
     if (m != null) {
       return parseFloat(value);
     }
   }
 
-  private date (value: string): Date | undefined {
+  protected date (value: string): Date | undefined {
     let timeZone = "UTC";
     try {
       timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
