@@ -1,3 +1,4 @@
+import { parseFromTimeZone, formatToTimeZone } from "date-fns-timezone";
 
 export class Parser {
   private value: string;
@@ -38,7 +39,11 @@ export class Parser {
   }
 
   private date (value: string): Date | undefined {
-    const d = new Date(value);
+    let timeZone = "UTC";
+    try {
+      timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch (e) {}
+    const d = parseFromTimeZone(value, { timeZone });
     if (d.toString() === "Invalid Date") {
       return;
     }

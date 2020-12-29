@@ -53,6 +53,8 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^1.5.0",
+    "date-fns": "^2.16.1",
+    "date-fns-timezone": "^0.1.4",
     "react-redux": "^7.2.2",
     "redux": "^4.0.5",
     "redux-devtools-extension": "^2.13.8"

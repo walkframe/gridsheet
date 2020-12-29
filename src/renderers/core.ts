@@ -57,6 +57,9 @@ export class Renderer {
   }
 
   private date (value: Date): string {
+    if (value.getHours() + value.getMinutes() + value.getSeconds() === 0) {
+      return value.toLocaleDateString();
+    }
     return value.toLocaleString();
   }
 
