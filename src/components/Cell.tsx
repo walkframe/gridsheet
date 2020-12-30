@@ -357,6 +357,13 @@ export const Cell: React.FC<Props> = React.memo(({
                       return false;
                     }
                   }
+                case ";": // semicolon
+                if (e.ctrlKey || e.metaKey) {
+                  if (!editing) {
+                    // MAYBE: need to aware timezone.
+                    writeCell(new Date().toDateString());
+                  }
+                }
               }
               if (e.ctrlKey || e.metaKey) {
                 return false;
