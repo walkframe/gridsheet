@@ -151,7 +151,7 @@ const reducers = {
       dst = [y, x, y + height, x + width];
       before = cropMatrix(matrix, dst);
       matrix = writeMatrix(y, x, after, matrix);
-      selecting = [y, x, y + height, x + width];
+      selecting = height === 0 && width === 0 ? [-1, -1, -1, -1] : [y, x, y + height, x + width];
     } else { // selecting destination
       if (copyingTop === -1) { // unselecting source
         after = convertTSVToArray(text);
@@ -165,7 +165,6 @@ const reducers = {
       matrix = writeMatrix(selectingTop, selectingLeft, after, matrix);
       selecting = slideArea([0, 0, height, width], selectingTop, selectingLeft);
     }
-
     const command = copyingArea[0] !== -1 ? cutting ? "cut" : "copy": "write";
     const history = pushHistory(state.history, {
       command,

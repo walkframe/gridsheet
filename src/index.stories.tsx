@@ -4,7 +4,7 @@ import { Parser } from "./parsers/core";
 import { Renderer } from "./renderers/core";
 
 class KanjiRenderer extends Renderer {
-  private kanjiMap: {[s: string]: string} = {
+  protected kanjiMap: {[s: string]: string} = {
     "0": "〇",
     "1": "一",
     "2": "二",
