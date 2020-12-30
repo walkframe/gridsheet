@@ -167,8 +167,8 @@ export const Cell: React.FC<Props> = React.memo(({
     className={` ${
         among(copyingArea, [y, x]) ? cutting ? "cutting" : "copying" : ""}`}
     style={{
-      ... getCellStyle(y, x, copyingArea),
       ... style,
+      ... getCellStyle(y, x, copyingArea, cutting),
     }}
     draggable={!editing}
     onClick={(e) => {
@@ -374,21 +374,21 @@ export const Cell: React.FC<Props> = React.memo(({
   </td>);
 });
 
-const getCellStyle = (y: number, x: number, copyingArea: AreaType): React.CSSProperties => {
+const getCellStyle = (y: number, x: number, copyingArea: AreaType, cutting: boolean): React.CSSProperties => {
   let style: any = {};
   const [top, left, bottom, right] = copyingArea;
-
-  if (top < y && y <= bottom) {
-    style.borderTop = "solid 1px #dddddd";
+  
+  if (top === y && left <= x && x <= right) {
+    style.borderTop = `${ cutting ? "dotted" : "dashed" } 2px #0077ff`;
   }
-  if (top <= y && y < bottom) {
-    style.borderBottom = "solid 1px #dddddd";
+  if (bottom === y && left <= x && x <= right) {
+    style.borderBottom = `${ cutting ? "dotted" : "dashed" } 2px #0077ff`;
   }
-  if (left < x && x <= right) {
-    style.borderLeft = "solid 1px #dddddd";
+  if (left === x && top <= y && y <= bottom) {
+    style.borderLeft = `${ cutting ? "dotted" : "dashed" } 2px #0077ff`;
   }
-  if (left <= x && x < right) {
-    style.borderRight = "solid 1px #dddddd";
+  if (right === x && top <= y && y <= bottom) {
+    style.borderRight = `${ cutting ? "dotted" : "dashed" } 2px #0077ff`;
   }
   return style;
 };

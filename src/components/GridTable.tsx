@@ -93,13 +93,12 @@ const GridTableLayout = styled.div`
       position: relative;
       border: solid 1px #cccccc;
       &.cutting {
-        border: dotted 2px #0077ff;
         textarea:focus {
           outline: solid 1px #0077ff;
         }
       }
       &.copying {
-        border: dashed 2px #0077ff;
+        
         textarea:focus {
           outline: solid 1px #0077ff;
         }

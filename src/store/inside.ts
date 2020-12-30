@@ -378,7 +378,7 @@ const reducers = {
       before: [[state.matrix[y][x]]],
       after: [[value]],
     });
-    const reactions = makeReactions(point);
+    const reactions = makeReactions(point, state.copying);
     return {...state, matrix, history, reactions, copying: [-1, -1, -1, -1]};
   },
   clear: (state: Draft<InsideState>): InsideState => {
