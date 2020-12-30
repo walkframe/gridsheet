@@ -26,10 +26,10 @@ export type InsideState = {
   matrix: MatrixType;
   choosing: PositionType;
   cutting: boolean;
-  selecting: ZoneType;
+  copyingZone: ZoneType;
+  selectingZone: ZoneType;
   horizontalHeadersSelecting: boolean;
   verticalHeadersSelecting: boolean;
-  copying: ZoneType;
   editingCell: string;
   history: HistoryType;
   reactions: ReactionsType;
@@ -39,8 +39,8 @@ export const initialState: InsideState = {
   matrix: [],
   choosing: [-1, -1],
   cutting: false,
-  copying: [-1, -1, -1, -1],
-  selecting: [-1, -1, -1, -1],
+  selectingZone: [-1, -1, -1, -1],
+  copyingZone: [-1, -1, -1, -1],
   horizontalHeadersSelecting: false,
   verticalHeadersSelecting: false,
   editingCell: "",
@@ -53,23 +53,23 @@ const reducers = {
     return {...state, matrix: [... action.payload]};
   },
   blur: (state: Draft<InsideState>) => {
-    const reactions = makeReactions(state.choosing, state.selecting);
+    const reactions = makeReactions(state.choosing, state.selectingZone);
     return {
       ...state,
       reactions,
       choosing: [-1, -1] as PositionType,
-      selecting: [-1, -1, -1, -1] as ZoneType,
+      selectingZone: [-1, -1, -1, -1] as ZoneType,
       horizontalHeadersSelecting: false,
       verticalHeadersSelecting: false,
       editingCell: "",
     };
   },
   escape: (state: Draft<InsideState>) => {
-    const reactions = makeReactions(state.selecting, state.copying);
+    const reactions = makeReactions(state.selectingZone, state.copyingZone);
     return {
       ...state,
       reactions,
-      copying: [-1, -1, -1, -1] as ZoneType,
+      copyingZone: [-1, -1, -1, -1] as ZoneType,
       cutting: false,
       editingCell: "",
       horizontalHeadersSelecting: false,
@@ -77,19 +77,19 @@ const reducers = {
     };
   },
   copy: (state: Draft<InsideState>, action: PayloadAction<ZoneType>) => {
-    const reactions = makeReactions(action.payload, state.copying);
-    return {...state, reactions, copying: action.payload, cutting: false};
+    const reactions = makeReactions(action.payload, state.copyingZone);
+    return {...state, reactions, copyingZone: action.payload, cutting: false};
   },
   cut: (state: Draft<InsideState>, action: PayloadAction<ZoneType>) => {
-    const reactions = makeReactions(action.payload, state.copying);
-    return {...state, reactions, copying: action.payload, cutting: true};
+    const reactions = makeReactions(action.payload, state.copyingZone);
+    return {...state, reactions, copyingZone: action.payload, cutting: true};
   },
   refocus: (state: Draft<InsideState>, action: PayloadAction<{
-    selecting: ZoneType;
+    selectingZone: ZoneType;
     choosing: PositionType;
   }>) => {
-    const { selecting, choosing } = action.payload;
-    const reactions = makeReactions(selecting, choosing);
+    const { selectingZone, choosing } = action.payload;
+    const reactions = makeReactions(selectingZone, choosing);
     return {
       ...state,
       ...action.payload,
@@ -98,12 +98,12 @@ const reducers = {
   },
   choose: (state: Draft<InsideState>, action: PayloadAction<PositionType>) => {
     const [y, x] = action.payload;
-    const reactions = makeReactions([y, x, y, x], state.selecting, state.choosing);
+    const reactions = makeReactions([y, x, y, x], state.selectingZone, state.choosing);
     return {
       ...state,
       reactions,
       choosing: action.payload,
-      selecting: [y, x, y, x] as ZoneType,
+      selectingZone: [y, x, y, x] as ZoneType,
       horizontalHeadersSelecting: false,
       verticalHeadersSelecting: false,
     };
@@ -113,15 +113,15 @@ const reducers = {
   },
   setEditingCell: (state: Draft<InsideState>, action: PayloadAction<string>) => {
     const [y, x] = state.choosing;
-    const reactions = makeReactions(state.selecting, [y, x, y, x]);
+    const reactions = makeReactions(state.selectingZone, [y, x, y, x]);
     return {...state, reactions, editingCell: action.payload};
   },
   paste: (state: Draft<InsideState>, action: PayloadAction<string>) => {
-    const { choosing, copying, cutting } = state;
-    let { matrix, selecting } = state;
+    const { choosing, copyingZone, cutting } = state;
+    let { matrix, selectingZone } = state;
     const [y, x] = choosing;
-    const selectingArea = zoneToArea(selecting);
-    const copyingArea = zoneToArea(copying);
+    const selectingArea = zoneToArea(selectingZone);
+    const copyingArea = zoneToArea(copyingZone);
     const [selectingTop, selectingLeft] = selectingArea;
     const [copyingTop, copyingLeft] = copyingArea;
     const [selectingHeight, selectingWidth] = shape(selectingArea);
@@ -145,7 +145,7 @@ const reducers = {
       dst = [y, x, y + height, x + width];
       before = cropMatrix(matrix, dst);
       matrix = writeMatrix(y, x, after, matrix);
-      selecting = height === 0 && width === 0 ? [-1, -1, -1, -1] : [y, x, y + height, x + width];
+      selectingZone = height === 0 && width === 0 ? [-1, -1, -1, -1] : [y, x, y + height, x + width];
     } else { // selecting destination
       if (copyingTop === -1) { // unselecting source
         after = convertTSVToArray(text);
@@ -157,7 +157,7 @@ const reducers = {
       after = spreadMatrix(after, height, width);
       before = cropMatrix(matrix, slideArea([0, 0, height, width], selectingTop, selectingLeft));
       matrix = writeMatrix(selectingTop, selectingLeft, after, matrix);
-      selecting = slideArea([0, 0, height, width], selectingTop, selectingLeft);
+      selectingZone = slideArea([0, 0, height, width], selectingTop, selectingLeft);
     }
     const command = copyingArea[0] !== -1 ? cutting ? "cut" : "copy": "write";
     const history = pushHistory(state.history, {
@@ -167,15 +167,15 @@ const reducers = {
       before,
       after,
     });
-    const reactions = makeReactions(copyingArea, selecting, dst);
+    const reactions = makeReactions(copyingArea, selectingZone, dst);
     return {
       ...state,
       matrix,
       history,
-      selecting,
+      selectingZone,
       reactions,
       cutting: false,
-      copying: [-1, -1, -1, -1] as ZoneType,
+      copyingZone: [-1, -1, -1, -1] as ZoneType,
     };
   },
   select: (state: Draft<InsideState>, action: PayloadAction<ZoneType>) => {
@@ -183,24 +183,24 @@ const reducers = {
     return {
       ...state,
       reactions,
-      selecting: action.payload,
+      selectingZone: action.payload,
       horizontalHeadersSelecting: false,
       verticalHeadersSelecting: false,
     };
   },
   drag: (state: Draft<InsideState>, action: PayloadAction<PositionType>): InsideState => {
     const [y, x] = state.choosing;
-    const selecting = [y, x, action.payload[0], action.payload[1]] as ZoneType;
-    const reactions = makeReactions(selecting, state.selecting, state.choosing, [y, x]);
-    return {...state, reactions, selecting};
+    const selectingZone = [y, x, action.payload[0], action.payload[1]] as ZoneType;
+    const reactions = makeReactions(selectingZone, state.selectingZone, state.choosing, [y, x]);
+    return {...state, reactions, selectingZone};
   },
   selectAll: (state: Draft<InsideState>, action: PayloadAction<{numRows: number, numCols: number}>) => {
     const { numRows, numCols } = action.payload;
-    const selecting = [0, 0, numRows - 1, numCols - 1] as ZoneType;
-    const reactions = makeReactions(selecting);
+    const selectingZone = [0, 0, numRows - 1, numCols - 1] as ZoneType;
+    const reactions = makeReactions(selectingZone);
     return {
       ...state,
-      selecting,
+      selectingZone,
       reactions,
       horizontalHeadersSelecting: true,
       verticalHeadersSelecting: true,
@@ -209,11 +209,11 @@ const reducers = {
   selectRows: (state: Draft<InsideState>, action: PayloadAction<{range: RangeType, numCols: number}>) => {
     const { range, numCols } = action.payload;
     const [start, end] = range.sort();
-    const selecting = [start, 0, end, numCols - 1] as ZoneType;
-    const reactions = makeReactions(state.selecting, selecting);
+    const selectingZone = [start, 0, end, numCols - 1] as ZoneType;
+    const reactions = makeReactions(state.selectingZone, selectingZone);
     return {
       ...state,
-      selecting,
+      selectingZone,
       reactions,
       choosing: [start, 0] as PositionType,
       verticalHeadersSelecting: true,
@@ -223,11 +223,11 @@ const reducers = {
   selectCols: (state: Draft<InsideState>, action: PayloadAction<{range: RangeType, numRows: number}>) => {
     const { range, numRows} = action.payload;
     const [start, end] = range.sort();
-    const selecting = [0, start, numRows - 1, end] as ZoneType;
-    const reactions = makeReactions(state.selecting, selecting);
+    const selectingZone = [0, start, numRows - 1, end] as ZoneType;
+    const reactions = makeReactions(state.selectingZone, selectingZone);
     return {
       ...state,
-      selecting,
+      selectingZone,
       reactions,
       choosing: [0, start] as PositionType,
       verticalHeadersSelecting: false,
@@ -248,22 +248,22 @@ const reducers = {
     const reactions = makeReactions(src, dst, state.choosing);
     const choosing = [y, x] as PositionType;
     const [h, w] = matrixShape(before);
-    const selecting: ZoneType = h === 1 && w === 1 ? [-1, -1, -1, -1] : [y, x, y + h - 1, x + w - 1];
-    let copying = src as ZoneType;
+    const selectingZone: ZoneType = h === 1 && w === 1 ? [-1, -1, -1, -1] : [y, x, y + h - 1, x + w - 1];
+    let copyingZone = src as ZoneType;
     matrix = writeMatrix(y, x, before, matrix);
 
     switch(command) {
       case "copy":
-        return {...state, matrix, selecting, history, choosing, copying, reactions, cutting: false};
+        return {...state, matrix, selectingZone, history, choosing, copyingZone, reactions, cutting: false};
 
       case "cut":
         const [top, left] = src;
         matrix = writeMatrix(top, left, cropMatrix(after, slideArea(src, -top, -left)), matrix);
-        return {...state, matrix, selecting, history, choosing, copying, reactions, cutting: true};
+        return {...state, matrix, selectingZone, history, choosing, copyingZone, reactions, cutting: true};
 
       case "write":
-        copying = [-1, -1, -1, -1];
-        return {... state, matrix, selecting, history, choosing, copying, reactions, cutting: false};
+        copyingZone = [-1, -1, -1, -1];
+        return {... state, matrix, selectingZone, history, choosing, copyingZone, reactions, cutting: false};
     }
     return state;
   },
@@ -278,21 +278,21 @@ const reducers = {
     const reactions = makeReactions(src, dst, state.choosing);
     const choosing = [y, x] as PositionType;
     const [h, w] = matrixShape(after);
-    const selecting: ZoneType = h === 1 && w === 1 ? [-1, -1, -1, -1] : [y, x, y + h - 1, x + w - 1];
-    const copying = [-1, -1, -1, -1] as ZoneType;
+    const selectingZone: ZoneType = h === 1 && w === 1 ? [-1, -1, -1, -1] : [y, x, y + h - 1, x + w - 1];
+    const copyingZone = [-1, -1, -1, -1] as ZoneType;
     matrix = writeMatrix(y, x, after, matrix);
 
     switch(command) {
       case "copy":
-        return {... state, matrix, selecting, copying, history, choosing, reactions};
+        return {... state, matrix, selectingZone, copyingZone, history, choosing, reactions};
       case "cut":
         const [top, left, bottom, right] = src;
         const blank = spreadMatrix([[""]], bottom - top, right - left);
         matrix = writeMatrix(top, left, blank, matrix);
         matrix = writeMatrix(y, x, after, matrix);
-        return {... state, matrix, selecting, copying, history, choosing, reactions};
+        return {... state, matrix, selectingZone, copyingZone, history, choosing, reactions};
       case "write":
-        return {... state, matrix, selecting, copying, history, choosing, reactions};
+        return {... state, matrix, selectingZone, copyingZone, history, choosing, reactions};
     }
     return state;
   },
@@ -300,9 +300,9 @@ const reducers = {
     deltaY: number; deltaX: number; numRows: number; numCols: number;
   }>) => {
     const { deltaY, deltaX, numRows, numCols } = action.payload;
-    let { choosing, selecting } = state;
+    let { choosing, selectingZone } = state;
     const [y, x] = choosing;
-    const selectingArea = zoneToArea(selecting);
+    const selectingArea = zoneToArea(selectingZone);
     const [top, left, bottom, right] = selectingArea;
     let [nextY, nextX] = [y + deltaY, x + deltaX];
     if (nextY < top && top !== -1) {
@@ -326,7 +326,7 @@ const reducers = {
     }
     return {
       ...state,
-      reactions: makeReactions([nextY, nextX, nextY, nextY], state.selecting, state.choosing),
+      reactions: makeReactions([nextY, nextX, nextY, nextY], state.selectingZone, state.choosing),
       choosing: [nextY, nextX] as PositionType,
     };
   },
@@ -334,19 +334,19 @@ const reducers = {
     shiftKey: boolean; deltaY: number; deltaX: number; numRows: number; numCols: number;
   }>) => {
     const { shiftKey, deltaY, deltaX, numRows, numCols } = action.payload;
-    let { choosing, selecting } = state;
+    let { choosing, selectingZone } = state;
     const [y, x] = choosing;
     if (shiftKey) {
-      let [dragEndY, dragEndX] = [selecting[2] === -1 ? y : selecting[2], selecting[3] === -1 ? x : selecting[3]];
+      let [dragEndY, dragEndX] = [selectingZone[2] === -1 ? y : selectingZone[2], selectingZone[3] === -1 ? x : selectingZone[3]];
       const [nextY, nextX] = [dragEndY + deltaY, dragEndX + deltaX];
       if (nextY < 0 || numRows <= nextY || nextX < 0 || numCols <= nextX) {
         return state;
       }
-      selecting = (y === nextY && x === nextX) ? [-1, -1, -1, -1] : [y, x, nextY, nextX];
+      selectingZone = (y === nextY && x === nextX) ? [-1, -1, -1, -1] : [y, x, nextY, nextX];
       return {
         ... state,
-        selecting,
-        reactions: makeReactions(selecting, state.selecting, choosing),
+        selectingZone,
+        reactions: makeReactions(selectingZone, state.selectingZone, choosing),
       };
     }
     const [nextY, nextX] = [y + deltaY, x + deltaX];
@@ -355,8 +355,8 @@ const reducers = {
     }
     return {
       ...state,
-      reactions: makeReactions([nextY, nextX, nextY, nextY], state.selecting, choosing),
-      selecting: [-1, -1, -1, -1] as ZoneType,
+      reactions: makeReactions([nextY, nextX, nextY, nextY], state.selectingZone, choosing),
+      selectingZone: [-1, -1, -1, -1] as ZoneType,
       choosing: [nextY, nextX] as PositionType,
     };
   },
@@ -372,13 +372,13 @@ const reducers = {
       before: [[state.matrix[y][x]]],
       after: [[value]],
     });
-    const reactions = makeReactions(point, state.copying);
-    return {...state, matrix, history, reactions, copying: [-1, -1, -1, -1]};
+    const reactions = makeReactions(point, state.copyingZone);
+    return {...state, matrix, history, reactions, copyingZone: [-1, -1, -1, -1]};
   },
   clear: (state: Draft<InsideState>): InsideState => {
-    const { choosing, selecting, matrix } = state;
+    const { choosing, selectingZone, matrix } = state;
 
-    let selectingArea = zoneToArea(selecting);
+    let selectingArea = zoneToArea(selectingZone);
     const [top, left, bottom, right] = selectingArea;
     let [y, x] = [top, left];
     if (top === -1) {
@@ -394,13 +394,12 @@ const reducers = {
       before: cropMatrix(matrix, selectingArea),
       after,
     });
-    const reactions = makeReactions(selectingArea, state.choosing, state.selecting);
+    const reactions = makeReactions(selectingArea, state.choosing, state.selectingZone);
     return {
       ...state,
       history,
       reactions,
       matrix: written,
-      // selecting: [-1, -1, -1, -1],
     };
   },
 };

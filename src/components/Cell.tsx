@@ -112,10 +112,10 @@ export const Cell: React.FC<Props> = React.memo(({
     matrix,
     editingCell,
     choosing,
-    selecting,
+    selectingZone,
     horizontalHeadersSelecting,
     verticalHeadersSelecting,
-    copying,
+    copyingZone,
     cutting,
   } = useSelector<RootState, InsideState>(
     state => state["inside"],
@@ -130,8 +130,8 @@ export const Cell: React.FC<Props> = React.memo(({
     }
   );
 
-  const selectingArea = zoneToArea(selecting); // (top, left) -> (bottom, right)
-  const copyingArea = zoneToArea(copying); // (top, left) -> (bottom, right)
+  const selectingArea = zoneToArea(selectingZone); // (top, left) -> (bottom, right)
+  const copyingArea = zoneToArea(copyingZone); // (top, left) -> (bottom, right)
   const editing = editingCell === cellId;
   const pointed = choosing[0] === y && choosing[1] === x;
 
@@ -181,13 +181,13 @@ export const Cell: React.FC<Props> = React.memo(({
       dispatch(select([y, x, y, x]));
     }}
     onDragEnd={() => {
-      const [h, w] = shape(selecting);
+      const [h, w] = shape(selectingZone);
       if (h + w === 0) {
         dispatch(select([-1, -1, -1, -1]));
       }
     }}
     onDragEnter={(e) => {
-      const [startY, startX] = selecting;
+      const [startY, startX] = selectingZone;
       if (horizontalHeadersSelecting) {
         dispatch(drag([numRows - 1, x]));
         return false;
@@ -311,10 +311,11 @@ export const Cell: React.FC<Props> = React.memo(({
                   if (e.ctrlKey || e.metaKey) {
                     if (!editing) {
                       e.preventDefault();
-                      const area = clip(selecting, choosing, matrix, clipboardRef, Renderer);
+                      const area = clip(selectingZone, choosing, matrix, clipboardRef, Renderer);
                       dispatch(copy(area));
-                      setTimeout(() => {
-                        dispatch(refocus({choosing: [y, x], selecting}));
+                      const tid = setTimeout(() => {
+                        dispatch(refocus({choosing: [y, x], selectingZone}));
+                        clearTimeout(tid);
                       }, 100); // refocus
                       return false;
                     }
@@ -340,10 +341,10 @@ export const Cell: React.FC<Props> = React.memo(({
                   if (e.ctrlKey || e.metaKey) {
                     if (!editing) {
                       e.preventDefault();
-                      const area = clip(selecting, choosing, matrix, clipboardRef, Renderer);
+                      const area = clip(selectingZone, choosing, matrix, clipboardRef, Renderer);
                       dispatch(cut(area));
                       setTimeout(() => {
-                        dispatch(refocus({choosing: [y, x], selecting}));
+                        dispatch(refocus({choosing: [y, x], selectingZone}));
                       }, 100); // refocus
                       return false;
                     }
