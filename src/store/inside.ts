@@ -15,7 +15,7 @@ import {
   writeMatrix,
   slideArea,
   spreadMatrix,
-  matrixShape, draggingToArea,
+  matrixShape, zoneToArea,
   shape, superposeArea,
   makeReactions,
 } from "../api/arrays"
@@ -126,8 +126,8 @@ const reducers = {
     const { choosing, copying, cutting } = state;
     let { matrix, selecting } = state;
     const [y, x] = choosing;
-    const selectingArea = draggingToArea(selecting);
-    const copyingArea = draggingToArea(copying);
+    const selectingArea = zoneToArea(selecting);
+    const copyingArea = zoneToArea(copying);
     const [selectingTop, selectingLeft] = selectingArea;
     const [copyingTop, copyingLeft] = copyingArea;
     const [selectingHeight, selectingWidth] = shape(selectingArea);
@@ -308,7 +308,7 @@ const reducers = {
     const { deltaY, deltaX, numRows, numCols } = action.payload;
     let { choosing, selecting } = state;
     const [y, x] = choosing;
-    const selectingArea = draggingToArea(selecting);
+    const selectingArea = zoneToArea(selecting);
     const [top, left, bottom, right] = selectingArea;
     let [nextY, nextX] = [y + deltaY, x + deltaX];
     if (nextY < top && top !== -1) {
@@ -384,7 +384,7 @@ const reducers = {
   clear: (state: Draft<InsideState>): InsideState => {
     const { choosing, selecting, matrix } = state;
 
-    let selectingArea = draggingToArea(selecting);
+    let selectingArea = zoneToArea(selecting);
     const [top, left, bottom, right] = selectingArea;
     let [y, x] = [top, left];
     if (top === -1) {

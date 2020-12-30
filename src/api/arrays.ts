@@ -58,9 +58,9 @@ export const superposeArea = (srcArea: AreaType, dstArea: AreaType): [number, nu
 
 export const Y_START = 0, X_START = 1, Y_END = 2, X_END = 3;
 
-export const draggingToArea = (dragging: ZoneType): AreaType => {
-  const [top, bottom] = dragging[Y_START] < dragging[Y_END] ? [dragging[Y_START], dragging[Y_END]] : [dragging[Y_END], dragging[Y_START]];
-  const [left, right] = dragging[X_START] < dragging[X_END] ? [dragging[X_START], dragging[X_END]] : [dragging[X_END], dragging[X_START]];
+export const zoneToArea = (zone: ZoneType): AreaType => {
+  const [top, bottom] = zone[Y_START] < zone[Y_END] ? [zone[Y_START], zone[Y_END]] : [zone[Y_END], zone[Y_START]];
+  const [left, right] = zone[X_START] < zone[X_END] ? [zone[X_START], zone[X_END]] : [zone[X_END], zone[X_START]];
   return [top, left, bottom, right];
 };
 
@@ -120,7 +120,7 @@ export const makeReactions = (... areas: (AreaType | ZoneType | PositionType)[])
       const [y, x] = area;
       area = [y, x, y, x];
     }
-    area = draggingToArea(area); // force format to area
+    area = zoneToArea(area); // force format to area
     const [top, left, bottom, right] = area;
     if (top === -1 || left === -1) {
       return;

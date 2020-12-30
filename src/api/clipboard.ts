@@ -6,7 +6,7 @@ import {
 
 import {
   cropMatrix,
-  draggingToArea,
+  zoneToArea,
 } from "./arrays";
 import { convertArrayToTSV, convertTSVToArray} from "./converters";
 import { RendererType } from "../renderers/core";
@@ -17,7 +17,7 @@ export const clip = (
   renderer: RendererType,
 ): ZoneType => {
   const [y, x] = choosing;
-  let selectingArea = draggingToArea(selecting);
+  let selectingArea = zoneToArea(selecting);
   let area = selectingArea;
   if (area[0] === -1) {
     area = [y, x, y, x];

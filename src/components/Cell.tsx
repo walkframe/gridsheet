@@ -4,7 +4,7 @@ import { createSelector } from 'reselect';
 import styled from "styled-components";
 import {convertNtoA} from "../api/converters";
 import { clip } from "../api/clipboard";
-import { draggingToArea, among, shape } from "../api/arrays";
+import { zoneToArea, among, shape } from "../api/arrays";
 import {RootState, DispatchType } from "../store";
 import {
   InsideState,
@@ -131,8 +131,8 @@ export const Cell: React.FC<Props> = React.memo(({
     }
   );
 
-  const selectingArea = draggingToArea(selecting); // (top, left) -> (bottom, right)
-  const copyingArea = draggingToArea(copying); // (top, left) -> (bottom, right)
+  const selectingArea = zoneToArea(selecting); // (top, left) -> (bottom, right)
+  const copyingArea = zoneToArea(copying); // (top, left) -> (bottom, right)
   const editing = editingCell === cellId;
   const pointed = choosing[0] === y && choosing[1] === x;
 

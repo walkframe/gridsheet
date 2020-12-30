@@ -11,7 +11,7 @@ import {
 } from "./GridTable";
 
 import {
-  draggingToArea,
+  zoneToArea,
   between,
   among,
   shape,
