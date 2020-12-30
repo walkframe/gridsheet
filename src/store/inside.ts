@@ -25,7 +25,6 @@ import { RendererType } from "../renderers/core";
 export type InsideState = {
   matrix: MatrixType;
   choosing: PositionType;
-  choosingLast: PositionType;
   cutting: boolean;
   selecting: ZoneType;
   horizontalHeadersSelecting: boolean;
@@ -39,7 +38,6 @@ export type InsideState = {
 export const initialState: InsideState = {
   matrix: [],
   choosing: [-1, -1],
-  choosingLast: [-1, -1],
   cutting: false,
   copying: [-1, -1, -1, -1],
   selecting: [-1, -1, -1, -1],
@@ -59,7 +57,6 @@ const reducers = {
     return {
       ...state,
       reactions,
-      choosingLast: state.choosing,
       choosing: [-1, -1] as PositionType,
       selecting: [-1, -1, -1, -1] as ZoneType,
       horizontalHeadersSelecting: false,
@@ -110,9 +107,6 @@ const reducers = {
       horizontalHeadersSelecting: false,
       verticalHeadersSelecting: false,
     };
-  },
-  setChoosingLast: (state: Draft<InsideState>, action: PayloadAction<PositionType>) => {
-    return {...state, choosingLast: action.payload};
   },
   setCutting: (state: Draft<InsideState>, action: PayloadAction<boolean>) => {
     return {...state, cutting: action.payload};
@@ -424,7 +418,6 @@ export const {
   blur,
   escape,
   choose,
-  setChoosingLast,
   setCutting,
   setEditingCell,
   copy,

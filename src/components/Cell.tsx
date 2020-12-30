@@ -112,7 +112,6 @@ export const Cell: React.FC<Props> = React.memo(({
     matrix,
     editingCell,
     choosing,
-    choosingLast,
     selecting,
     horizontalHeadersSelecting,
     verticalHeadersSelecting,
