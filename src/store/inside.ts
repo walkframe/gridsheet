@@ -173,7 +173,7 @@ const reducers = {
       before,
       after,
     });
-    const reactions = makeReactions(copyingArea, dst);
+    const reactions = makeReactions(copyingArea, selecting, dst);
     return {
       ...state,
       matrix,
