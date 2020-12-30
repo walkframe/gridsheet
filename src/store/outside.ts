@@ -16,6 +16,7 @@ export type OutsideState = {
   headerWidth: string;
   defaultHeight: string;
   defaultWidth: string;
+  editingOnEnter: boolean;
   cellLabel: boolean;
 }
 
@@ -27,6 +28,7 @@ export const initialState: OutsideState = {
   headerWidth: "auto",
   defaultHeight: "20px",
   defaultWidth: "80px",
+  editingOnEnter: true,
   cellLabel: true,
 };
 
@@ -49,6 +51,9 @@ const slice = createSlice({
     setDefaultWidth: (state: Draft<OutsideState>, action: PayloadAction<string>) => {
       return {...state, defaultWidth: action.payload};
     },
+    setEditingOnEnter: (state: Draft<OutsideState>, action: PayloadAction<boolean>) => {
+      return {...state, editingOnEnter: action.payload};
+    },
     setCellLabel: (state: Draft<OutsideState>, action: PayloadAction<boolean>) => {
       return {...state, cellLabel: action.payload};
     },
@@ -68,6 +73,7 @@ export const {
   setHeaderWidth,
   setDefaultHeight,
   setDefaultWidth,
+  setEditingOnEnter,
   setCellLabel,
   setNumRows,
   setNumCols,

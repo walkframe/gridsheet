@@ -25,9 +25,11 @@ export interface OptionsType {
   defaultWidth?: string;
   headerHeight?: string;
   headerWidth?: string;
-  verticalAlign?: string;
+  editingOnEnter?: boolean;
   cellLabel?: boolean;
   cells?: CellsOptionType;
+  onSave?: (matrix: MatrixType, options: OptionsType) => void;
+  onChange?: (matrix: MatrixType, options: OptionsType) => void;
 };
 
 export interface Props {

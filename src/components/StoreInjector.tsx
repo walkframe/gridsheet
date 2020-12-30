@@ -31,6 +31,7 @@ import {
   setHeaderWidth,
   setDefaultHeight,
   setDefaultWidth,
+  setEditingOnEnter,
   setCellLabel,
   setNumRows,
   setNumCols,
@@ -50,6 +51,7 @@ export const StoreInjector: React.FC<Props> = ({data, options}) => {
     headerWidth,
     defaultHeight,
     defaultWidth,
+    editingOnEnter,
     cellLabel,
   } = options;
 
@@ -86,6 +88,11 @@ export const StoreInjector: React.FC<Props> = ({data, options}) => {
       dispatch(setDefaultWidth(defaultWidth));
     }
   }, [defaultWidth]);
+  React.useEffect(() => {
+    if (typeof editingOnEnter !== "undefined") {
+      dispatch(setEditingOnEnter(editingOnEnter));
+    }
+  }, [editingOnEnter]);
   React.useEffect(() => {
     if (typeof cellLabel !== "undefined") {
       dispatch(setCellLabel(cellLabel));

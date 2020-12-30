@@ -98,6 +98,7 @@ export const Cell: React.FC<Props> = React.memo(({
     cellLabel,
     defaultHeight,
     defaultWidth,
+    editingOnEnter,
   } = useSelector<RootState, OutsideState>(
       state => state["outside"],
       (current, old) => {
@@ -241,11 +242,12 @@ export const Cell: React.FC<Props> = React.memo(({
                   dispatch(setEditingCell(""));
                   return false;
                 case "Enter": // ENTER
-                  if (e.altKey) {
-                    input.value = `${input.value}\n`;
-                    input.style.height = `${input.clientHeight + 20}px`;
-                  } else {
-                    if (editing) {
+                  if (editing) {
+                    if (e.altKey) {
+                      input.value = `${input.value}\n`;
+                      input.style.height = `${input.clientHeight + 20}px`;
+                      return false;
+                    } else {
                       if (e.nativeEvent.isComposing) {
                         return false;
                       }
@@ -253,10 +255,16 @@ export const Cell: React.FC<Props> = React.memo(({
                       dispatch(setEditingCell(""));
                       input.value = "";
                     }
-                    dispatch(walk({numRows, numCols, deltaY: shiftKey ? -1 : 1, deltaX: 0}));
+                  } else if (editingOnEnter && selectingZone[0] === -1) {
+                    const dblclick = document.createEvent('MouseEvents');
+                    dblclick.initEvent("dblclick", true, true);
+                    input.dispatchEvent(dblclick);
                     e.preventDefault();
                     return false;
                   }
+                  dispatch(walk({numRows, numCols, deltaY: shiftKey ? -1 : 1, deltaX: 0}));
+                  e.preventDefault();
+                  return false;
                 case "Backspace": // BACKSPACE
                   if (!editing) {
                     dispatch(clear());
