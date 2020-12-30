@@ -156,18 +156,10 @@ const GridTableLayout = styled.div`
   }
 `;
 
-
-
-export const GridTable: React.FC<Props> = ({data, options}) => {
-  const {
-    historySize = 10,
-    cellLabel = true,
-  } = options;
-
+export const GridTable: React.FC = () => {
   const clipboardRef = React.createRef<HTMLTextAreaElement>();
   const dispatch = useDispatch();
   const {
-    cellsOption,
     numRows,
     numCols,
   } = useSelector<RootState, OutsideState>(state => state["outside"]);
@@ -178,8 +170,11 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
       <thead>
         <tr>
           <th onClick={(e) => {
-            dispatch(choose([0, 0]));
-            dispatch(select([0, 0, numRows - 1, numCols - 1]));
+            dispatch(choose([-1, -1]));
+            setTimeout(() => {
+              dispatch(choose([0, 0]));
+              dispatch(select([0, 0, numRows - 1, numCols - 1]));
+            }, 100);
           }} />
           {makeSequence(0, numCols).map((x) => {
             return (<HorizontalHeaderCell
@@ -210,6 +205,3 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
     </table>
   </GridTableLayout>);
 };
-
-
-

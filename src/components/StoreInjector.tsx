@@ -11,21 +11,21 @@ import {
 } from "./GridTable";
 
 import {
-  zoneToArea,
-  between,
-  among,
-  shape,
-  makeSequence,
   matrixShape,
-  arrayToInfo,
 } from "../api/arrays";
 
 import {
+  InsideState,
   setMatrix,
   initHistory,
 } from "../store/inside";
 
 import {
+  ChangeEmitter,
+} from "./ChangeEmitter";
+
+import {
+  OutsideState,
   setCellsOption,
   setHeaderHeight,
   setHeaderWidth,
@@ -37,7 +37,6 @@ import {
   setNumCols,
   setOnSave,
   setOnChange,
-  OutsideState,
 } from "../store/outside";
 
 interface Props {
@@ -117,10 +116,8 @@ export const StoreInjector: React.FC<Props> = ({data, options}) => {
   }, []);
 
   return (<div>
-    <GridTable
-      data={data}
-      options={options}
-    />
+    { onChange && <ChangeEmitter onChange={onChange} /> }
+    <GridTable />
   </div>);
 };
 

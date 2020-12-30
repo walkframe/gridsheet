@@ -19,7 +19,7 @@ export type CellOptionType = {
 
 export type CellsOptionType = {[s: string]: CellOptionType};
 
-export type Feedback = (matrix: MatrixType, cellOptions: CellsOptionType) => void;
+export type Feedback = (matrix?: MatrixType, cellOptions?: CellsOptionType) => void;
 
 export interface OptionsType {
   historySize?: number;

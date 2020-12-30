@@ -49,23 +49,7 @@ const data = [
 ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
 ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
 ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
+
 
 
 
@@ -91,7 +75,12 @@ export const showIndex = () => (<GridSheet
       "4": { label: "よん", height: "50px", verticalAlign: "bottom"},
     },
     onSave: (matrix, option) => {
-      console.log("matrix:", matrix);
+      console.log("matrix on save:", matrix);
+    },
+    onChange: (matrix, option) => {
+      if (typeof matrix !== "undefined") {
+        console.log("matrix on change:", matrix);
+      }
     },
   }}
 />);
