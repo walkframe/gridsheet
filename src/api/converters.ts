@@ -3,18 +3,18 @@ import { ParserType } from "../parsers/core";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-const CACHE: {[s: string]: string} = {};
+const CONVERTER_CACHE: {[s: string]: string} = {};
 
 export const convertNtoA = (num: number): string => {
-  if (CACHE[num]) {
-    return CACHE[num];
+  if (CONVERTER_CACHE[num]) {
+    return CONVERTER_CACHE[num];
   }
   let result = "";
   do {
     result = ALPHABET[--num % 26] + result;
     num = Math.floor(num / 26);
   } while(num > 0);
-  CACHE[num] = result;
+  CONVERTER_CACHE[num] = result;
   return result;
 };
 
