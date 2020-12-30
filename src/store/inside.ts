@@ -108,9 +108,6 @@ const reducers = {
       verticalHeadersSelecting: false,
     };
   },
-  setCutting: (state: Draft<InsideState>, action: PayloadAction<boolean>) => {
-    return {...state, cutting: action.payload};
-  },
   setEditingCell: (state: Draft<InsideState>, action: PayloadAction<string>) => {
     const [y, x] = state.choosing;
     const reactions = makeReactions(state.selectingZone, [y, x, y, x]);
@@ -193,18 +190,6 @@ const reducers = {
     const selectingZone = [y, x, action.payload[0], action.payload[1]] as ZoneType;
     const reactions = makeReactions(selectingZone, state.selectingZone, state.choosing, [y, x]);
     return {...state, reactions, selectingZone};
-  },
-  selectAll: (state: Draft<InsideState>, action: PayloadAction<{numRows: number, numCols: number}>) => {
-    const { numRows, numCols } = action.payload;
-    const selectingZone = [0, 0, numRows - 1, numCols - 1] as ZoneType;
-    const reactions = makeReactions(selectingZone);
-    return {
-      ...state,
-      selectingZone,
-      reactions,
-      horizontalHeadersSelecting: true,
-      verticalHeadersSelecting: true,
-    };
   },
   selectRows: (state: Draft<InsideState>, action: PayloadAction<{range: RangeType, numCols: number}>) => {
     const { range, numCols } = action.payload;
@@ -364,15 +349,15 @@ const reducers = {
     const [y, x] = state.choosing;
     const value = action.payload;
     const matrix = writeMatrix(y, x, [[value]], state.matrix);
-    const point = [y, x, y, x] as AreaType;
+    const pointedArea = [y, x, y, x] as AreaType;
     const history = pushHistory(state.history, {
       command: "write",
-      src: point,
-      dst: point,
+      src: pointedArea,
+      dst: pointedArea,
       before: [[state.matrix[y][x]]],
       after: [[value]],
     });
-    const reactions = makeReactions(point, state.copyingZone);
+    const reactions = makeReactions(pointedArea, state.copyingZone);
     return {...state, matrix, history, reactions, copyingZone: [-1, -1, -1, -1]};
   },
   clear: (state: Draft<InsideState>): InsideState => {
@@ -417,7 +402,6 @@ export const {
   blur,
   escape,
   choose,
-  setCutting,
   setEditingCell,
   copy,
   cut,
@@ -425,7 +409,6 @@ export const {
   paste,
   select,
   drag,
-  selectAll,
   selectRows,
   selectCols,
   initHistory,

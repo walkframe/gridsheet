@@ -10,7 +10,6 @@ import {
 import { Cell } from "./Cell";
 import { HorizontalHeaderCell } from "./HorizontalHeaderCell";
 import { VerticalHeaderCell } from "./VerticalHeaderCell";
-import { convertNtoA } from "../api/converters";
 
 import {
   makeSequence,
@@ -18,7 +17,7 @@ import {
 
 import {
   choose,
-  selectAll,
+  select,
 } from "../store/inside";
 
 import {
@@ -92,13 +91,7 @@ const GridTableLayout = styled.div`
       margin: 0;
       position: relative;
       border: solid 1px #cccccc;
-      &.cutting {
-        textarea:focus {
-          outline: solid 1px #0077ff;
-        }
-      }
       &.copying {
-        
         textarea:focus {
           outline: solid 1px #0077ff;
         }
@@ -187,7 +180,7 @@ export const GridTable: React.FC<Props> = ({data, options}) => {
         <tr>
           <th onClick={(e) => {
             dispatch(choose([0, 0]));
-            dispatch(selectAll({numRows, numCols}));
+            dispatch(select([0, 0, numRows - 1, numCols - 1]));
           }} />
           {makeSequence(0, numCols).map((x) => {
             return (<HorizontalHeaderCell

@@ -13,13 +13,10 @@ import {
   escape,
   choose,
   select, drag,
-  selectCols, selectRows,
-  selectAll,
   setEditingCell,
   undo, redo,
   arrow, walk, write,
   copy, cut, paste, refocus,
-  setCutting,
 } from "../store/inside";
 
 import {
@@ -164,7 +161,7 @@ export const Cell: React.FC<Props> = React.memo(({
   return (<td
     key={x}
     className={` ${
-        among(copyingArea, [y, x]) ? cutting ? "cutting" : "copying" : ""}`}
+        among(copyingArea, [y, x]) ? "copying" : ""}`}
     style={{
       ... style,
       ... getCellStyle(y, x, copyingArea, cutting),
@@ -303,7 +300,7 @@ export const Cell: React.FC<Props> = React.memo(({
                   if (e.ctrlKey || e.metaKey) {
                     if (!editing) {
                       e.preventDefault();
-                      dispatch(selectAll({numRows, numCols}));
+                      dispatch(select([0, 0, numRows - 1, numCols - 1]));
                       return false;
                     }
                   }
