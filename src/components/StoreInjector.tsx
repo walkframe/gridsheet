@@ -35,6 +35,8 @@ import {
   setCellLabel,
   setNumRows,
   setNumCols,
+  setOnSave,
+  setOnChange,
   OutsideState,
 } from "../store/outside";
 
@@ -53,6 +55,8 @@ export const StoreInjector: React.FC<Props> = ({data, options}) => {
     defaultWidth,
     editingOnEnter,
     cellLabel,
+    onSave,
+    onChange,
   } = options;
 
   const dispatch = useDispatch();
@@ -98,7 +102,16 @@ export const StoreInjector: React.FC<Props> = ({data, options}) => {
       dispatch(setCellLabel(cellLabel));
     }
   }, [cellLabel]);
-
+  React.useEffect(() => {
+    if (typeof onSave !== "undefined") {
+      dispatch(setOnSave(onSave));
+    }
+  }, [onSave]);
+  React.useEffect(() => {
+    if (typeof onChange !== "undefined") {
+      dispatch(setOnChange(onChange));
+    }
+  }, [onChange]);
   React.useEffect(() => {
     dispatch(initHistory(historySize));
   }, []);

@@ -19,6 +19,8 @@ export type CellOptionType = {
 
 export type CellsOptionType = {[s: string]: CellOptionType};
 
+export type Feedback = (matrix: MatrixType, cellOptions: CellsOptionType) => void;
+
 export interface OptionsType {
   historySize?: number;
   defaultHeight?: string;
@@ -28,8 +30,8 @@ export interface OptionsType {
   editingOnEnter?: boolean;
   cellLabel?: boolean;
   cells?: CellsOptionType;
-  onSave?: (matrix: MatrixType, options: OptionsType) => void;
-  onChange?: (matrix: MatrixType, options: OptionsType) => void;
+  onSave?: Feedback;
+  onChange?: Feedback;
 };
 
 export interface Props {

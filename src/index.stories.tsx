@@ -90,6 +90,9 @@ export const showIndex = () => (<GridSheet
       "3": { height: "100px", style: { fontWeight: "bold", color: "#ff0000", backgroundColor: "rgba(255, 200, 200, 0.5)"}},
       "4": { label: "よん", height: "50px", verticalAlign: "bottom"},
     },
+    onSave: (matrix, option) => {
+      console.log("matrix:", matrix);
+    },
   }}
 />);
 

@@ -2,6 +2,7 @@ import { createSlice, PayloadAction, Draft } from "@reduxjs/toolkit";
 import {
   CellOptionType,
   CellsOptionType,
+  Feedback,
 } from "../types";
 
 import {
@@ -18,6 +19,8 @@ export type OutsideState = {
   defaultWidth: string;
   editingOnEnter: boolean;
   cellLabel: boolean;
+  onSave?: Feedback;
+  onChange?: Feedback;
 }
 
 export const initialState: OutsideState = {
@@ -27,7 +30,7 @@ export const initialState: OutsideState = {
   headerHeight: "auto",
   headerWidth: "auto",
   defaultHeight: "20px",
-  defaultWidth: "80px",
+  defaultWidth: "90px",
   editingOnEnter: true,
   cellLabel: true,
 };
@@ -63,6 +66,12 @@ const slice = createSlice({
     setNumCols: (state: Draft<OutsideState>, action: PayloadAction<number>) => {
       return {...state, numCols: action.payload};
     },
+    setOnSave: (state: Draft<OutsideState>, action: PayloadAction<Feedback>) => {
+      return {...state, onSave: action.payload};
+    },
+    setOnChange: (state: Draft<OutsideState>, action: PayloadAction<Feedback>) => {
+      return {...state, onChange: action.payload};
+    },
   },
 });
 
@@ -77,4 +86,6 @@ export const {
   setCellLabel,
   setNumRows,
   setNumCols,
+  setOnSave,
+  setOnChange,
 } = slice.actions;

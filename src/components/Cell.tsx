@@ -99,6 +99,8 @@ export const Cell: React.FC<Props> = React.memo(({
     defaultHeight,
     defaultWidth,
     editingOnEnter,
+    onSave,
+    onChange,
   } = useSelector<RootState, OutsideState>(
       state => state["outside"],
       (current, old) => {
@@ -331,11 +333,19 @@ export const Cell: React.FC<Props> = React.memo(({
                       return false;
                     }
                   }
+                case "s": // S
+                  if (e.ctrlKey || e.metaKey) {
+                    if (!editing) {
+                      e.preventDefault();
+                      onSave && onSave(matrix, cellsOption);
+                      return false;
+                    }
+                  }
                 case "v": // V
                   if (e.ctrlKey || e.metaKey) {
                     if (!editing) {
                       setTimeout(() => {
-                        dispatch(paste(input.value));
+                        dispatch(paste({ text: input.value, Parser }));
                         input.value = "";
                       }, 50);
                       return false;

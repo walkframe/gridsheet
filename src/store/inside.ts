@@ -20,7 +20,7 @@ import {
   makeReactions,
 } from "../api/arrays"
 import {convertTSVToArray} from "../api/converters";
-import { RendererType } from "../renderers/core";
+import { ParserType } from "../parsers/core";
 
 export type InsideState = {
   matrix: MatrixType;
@@ -103,7 +103,7 @@ const reducers = {
     const reactions = makeReactions(state.selectingZone, [y, x, y, x]);
     return {...state, reactions, editingCell: action.payload};
   },
-  paste: (state: Draft<InsideState>, action: PayloadAction<string>) => {
+  paste: (state: Draft<InsideState>, action: PayloadAction<{text: string, Parser: ParserType}>) => {
     const { choosing, copyingZone, cutting } = state;
     let { matrix, selectingZone } = state;
     const [y, x] = choosing;
@@ -113,7 +113,7 @@ const reducers = {
     const [copyingTop, copyingLeft] = copyingArea;
     const [selectingHeight, selectingWidth] = shape(selectingArea);
     const [copyingHeight, copyingWidth] = shape(copyingArea);
-    const text = action.payload;
+    const { text, Parser } = action.payload;
 
     let before: MatrixType = [];
     let after = cropMatrix(matrix, copyingArea);
@@ -126,7 +126,7 @@ const reducers = {
     }
     if (selectingTop === -1) { // unselecting destination
       if (copyingTop === -1) { // unselecting source
-        after = convertTSVToArray(text);
+        after = convertTSVToArray(text, Parser);
         [height, width] = [after.length - 1, after[0].length - 1];
       }
       dst = [y, x, y + height, x + width];
@@ -135,7 +135,7 @@ const reducers = {
       selectingZone = height === 0 && width === 0 ? [-1, -1, -1, -1] : [y, x, y + height, x + width];
     } else { // selecting destination
       if (copyingTop === -1) { // unselecting source
-        after = convertTSVToArray(text);
+        after = convertTSVToArray(text, Parser);
         [height, width] = superposeArea([0, 0, after.length - 1, after[0].length - 1], [0, 0, selectingHeight, selectingWidth]);
       } else { // selecting source
         [height, width] = superposeArea(copyingArea, selectingArea);
