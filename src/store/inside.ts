@@ -57,11 +57,13 @@ const reducers = {
     return {
       ...state,
       reactions,
+      editingCell: "",
+      /*
       choosing: [-1, -1] as PositionType,
       selectingZone: [-1, -1, -1, -1] as ZoneType,
       horizontalHeadersSelecting: false,
       verticalHeadersSelecting: false,
-      editingCell: "",
+      */
     };
   },
   escape: (state: Draft<InsideState>) => {

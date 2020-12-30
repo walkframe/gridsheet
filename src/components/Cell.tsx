@@ -168,9 +168,12 @@ export const Cell: React.FC<Props> = React.memo(({
     }}
     draggable={!editing}
     onClick={(e) => {
-      dispatch(choose([y, x]));
-      dispatch(select([-1, -1, -1, -1]));
-      //dispatch(select([y, x, y, x]));
+      if (e.shiftKey) {
+        dispatch(drag([y, x]));
+      } else {
+        dispatch(choose([y, x]));
+        dispatch(select([-1, -1, -1, -1]));
+      }
     }}
     onDragStart={(e) => {
       e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
@@ -225,6 +228,7 @@ export const Cell: React.FC<Props> = React.memo(({
               if (editing) {
                 writeCell(e.target.value);
               }
+              e.target.value = "";
               dispatch(blur());
             }}
             onKeyDown={(e) => {
