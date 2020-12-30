@@ -29,7 +29,7 @@ import {
 import { DUMMY_IMG } from "../constants";
 import {
   AreaType,
-  DraggingType,
+  ZoneType,
   CellOptionType,
 } from "../types";
 import { Renderer as DefaultRenderer } from "../renderers/core";

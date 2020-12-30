@@ -1,5 +1,5 @@
 import {
-  AreaType, DraggingType,
+  AreaType, ZoneType,
   MatrixType,
   PositionType,
 } from "../types";
@@ -12,10 +12,10 @@ import { convertArrayToTSV, convertTSVToArray} from "./converters";
 import { RendererType } from "../renderers/core";
 
 export const clip = (
-  selecting: DraggingType, choosing: PositionType, matrix: MatrixType,
+  selecting: ZoneType, choosing: PositionType, matrix: MatrixType,
   clipboardRef: React.RefObject<HTMLTextAreaElement>,
   renderer: RendererType,
-): DraggingType => {
+): ZoneType => {
   const [y, x] = choosing;
   let selectingArea = draggingToArea(selecting);
   let area = selectingArea;

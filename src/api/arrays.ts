@@ -1,7 +1,7 @@
 import {
   MatrixType,
   AreaType,
-  DraggingType,
+  ZoneType,
   RangeType,
   PositionType,
   ReactionsType,
@@ -58,7 +58,7 @@ export const superposeArea = (srcArea: AreaType, dstArea: AreaType): [number, nu
 
 export const Y_START = 0, X_START = 1, Y_END = 2, X_END = 3;
 
-export const draggingToArea = (dragging: DraggingType): AreaType => {
+export const draggingToArea = (dragging: ZoneType): AreaType => {
   const [top, bottom] = dragging[Y_START] < dragging[Y_END] ? [dragging[Y_START], dragging[Y_END]] : [dragging[Y_END], dragging[Y_START]];
   const [left, right] = dragging[X_START] < dragging[X_END] ? [dragging[X_START], dragging[X_END]] : [dragging[X_END], dragging[X_START]];
   return [top, left, bottom, right];
@@ -80,7 +80,7 @@ export const among = (area: AreaType, position: PositionType) => {
   return top <= y && y <= bottom && left <= x && x <= right;
 };
 
-export const shape = (area: AreaType | DraggingType): [number, number] => {
+export const shape = (area: AreaType | ZoneType): [number, number] => {
   return [Math.abs(area[0] - area[2]), Math.abs(area[1] - area[3])];
 };
 
@@ -112,7 +112,7 @@ export const isInit = (indexes: number[]) => {
   return true;
 }
 
-export const makeReactions = (... areas: (AreaType | DraggingType | PositionType)[]): ReactionsType => {
+export const makeReactions = (... areas: (AreaType | ZoneType | PositionType)[]): ReactionsType => {
   const reactions: ReactionsType = {};
   const colsCache: {[s: string]: string} = {};
   areas.map((area) => {

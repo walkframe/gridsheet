@@ -1,8 +1,5 @@
-import { Renderer } from "./renderers/core";
-import { Parser } from "./parsers/core";
-
-export type RenderersType = {[s: string]: Renderer};
-export type ParsersType = {[s: string]: Parser};
+import { RendererType } from "./renderers/core";
+import { ParserType } from "./parsers/core";
 
 export type Y = number;
 export type X = number;
@@ -16,8 +13,8 @@ export type CellOptionType = {
   height?: string;
   style?: React.CSSProperties;
   verticalAlign?: string;
-  renderer?: typeof Renderer;
-  parser?: typeof Parser;
+  renderer?: RendererType;
+  parser?: ParserType;
 };
 
 export type CellsOptionType = {[s: string]: CellOptionType};
@@ -40,8 +37,8 @@ export interface Props {
 
 export type RangeType = [number, number]; // [start, end]
 export type PositionType = [Y, X]; // [y, x]
-export type DraggingType = [Y, X, Y, X]; // [startY, startX, endY, endX]
-export type AreaType = DraggingType; // [top, left, bottom, right] (subtype of DraggingType)
+export type ZoneType = [Y, X, Y, X]; // [startY, startX, endY, endX]
+export type AreaType = ZoneType; // [top, left, bottom, right] (subtype of ZoneType)
 
 export type HistoryType = {
   index: number;
