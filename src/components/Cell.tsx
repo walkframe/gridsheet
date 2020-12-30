@@ -117,9 +117,6 @@ export const Cell: React.FC<Props> = React.memo(({
   } = useSelector<RootState, InsideState>(
     state => state["inside"],
     (current, old) => {
-      if (old.matrix.length === 0) {
-          return false;
-      }
       if (old.reactions[cellId] || current.reactions[cellId]) {
         return false;
       }
