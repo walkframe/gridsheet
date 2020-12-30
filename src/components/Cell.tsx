@@ -16,7 +16,7 @@ import {
   setEditingCell,
   undo, redo,
   arrow, walk, write,
-  copy, cut, paste, refocus,
+  copy, cut, paste,
 } from "../store/inside";
 
 import {
@@ -320,10 +320,7 @@ export const Cell: React.FC<Props> = React.memo(({
                       e.preventDefault();
                       const area = clip(selectingZone, choosing, matrix, clipboardRef, Renderer);
                       dispatch(copy(area));
-                      const tid = setTimeout(() => {
-                        dispatch(refocus({choosing: [y, x], selectingZone}));
-                        clearTimeout(tid);
-                      }, 100); // refocus
+                      input.focus(); // refocus
                       return false;
                     }
                   }
@@ -350,9 +347,7 @@ export const Cell: React.FC<Props> = React.memo(({
                       e.preventDefault();
                       const area = clip(selectingZone, choosing, matrix, clipboardRef, Renderer);
                       dispatch(cut(area));
-                      setTimeout(() => {
-                        dispatch(refocus({choosing: [y, x], selectingZone}));
-                      }, 100); // refocus
+                      input.focus(); // refocus
                       return false;
                     }
                   }

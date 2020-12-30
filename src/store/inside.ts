@@ -86,18 +86,6 @@ const reducers = {
     const reactions = makeReactions(action.payload, state.copyingZone);
     return {...state, reactions, copyingZone: action.payload, cutting: true};
   },
-  refocus: (state: Draft<InsideState>, action: PayloadAction<{
-    selectingZone: ZoneType;
-    choosing: PositionType;
-  }>) => {
-    const { selectingZone, choosing } = action.payload;
-    const reactions = makeReactions(selectingZone, choosing);
-    return {
-      ...state,
-      ...action.payload,
-      reactions,
-    };
-  },
   choose: (state: Draft<InsideState>, action: PayloadAction<PositionType>) => {
     const [y, x] = action.payload;
     const reactions = makeReactions([y, x, y, x], state.selectingZone, state.choosing);
@@ -407,7 +395,6 @@ export const {
   setEditingCell,
   copy,
   cut,
-  refocus,
   paste,
   select,
   drag,
