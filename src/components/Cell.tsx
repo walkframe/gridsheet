@@ -150,6 +150,7 @@ export const Cell: React.FC<Props> = React.memo(({
   const Parser = cellOption.parser || colOption.parser || rowOption.parser || defaultOption.parser || DefaultParser;
   const height = rowOption.height || defaultHeight;
   const width = colOption.width || defaultWidth;
+  const verticalAlign = cellOption.verticalAlign || colOption.verticalAlign || rowOption.verticalAlign || defaultOption.verticalAlign || "middle";
   
   const writeCell = (value: string) => {
     const parsed = new Parser(value).parse();
@@ -203,7 +204,7 @@ export const Cell: React.FC<Props> = React.memo(({
         style={{
           width,
           height,
-          verticalAlign: rowOption.verticalAlign || colOption.verticalAlign || "middle",
+          verticalAlign,
         }}
       >
         { cellLabel && (<div className="label">{ cellId }</div>)}

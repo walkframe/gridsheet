@@ -161,7 +161,6 @@ const GridTableLayout = styled.div`
 export const GridTable: React.FC<Props> = ({data, options}) => {
   const {
     historySize = 10,
-    verticalAlign = "middle",
     cellLabel = true,
   } = options;
 
