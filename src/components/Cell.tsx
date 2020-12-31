@@ -1,6 +1,5 @@
 import React from "react";
 import { useDispatch, useSelector } from 'react-redux';
-import styled from "styled-components";
 import {convertNtoA} from "../api/converters";
 import { clip } from "../api/clipboard";
 import { zoneToArea, among, shape } from "../api/arrays";
@@ -30,56 +29,6 @@ import {
 import { Renderer as DefaultRenderer } from "../renderers/core";
 import { Parser as DefaultParser } from "../parsers/core";
 
-const CellLayout = styled.div`
-  overflow: hidden;
-  font-size: 13px;
-  letter-spacing: 1px;
-  white-space: pre-wrap;
-  line-height: 20px;
-  cursor: auto;
-  word-wrap: break-word;
-  word-break: break-all;
-
-  .rendered {
-    padding: 0 2px;
-    & > * {
-      position: absolute;
-      top: 0;
-      z-index: 1;
-    }
-  }
-
-  textarea {
-    width: 100%;
-    position: absolute;
-    font-size: 13px;
-    line-height: 20px;
-    letter-spacing: 1px;
-    top: 0;
-    left: 0;
-    border: none;
-    outline: none;
-    background-color: transparent;
-    resize: none;
-    box-sizing: border-box;
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    overflow: hidden;
-    caret-color: transparent;
-    cursor: default;
-    &.editing {
-      caret-color: #000000;
-      background-color: #ffffff;
-      z-index: 1;
-      cursor: text;
-      min-width: 100%;
-      white-space: pre;
-      outline: solid 2px #0077ff;
-      height: auto;
-    }
-  }
-`;
-
 interface Props {
   y: number;
   x: number;
@@ -103,7 +52,6 @@ export const Cell: React.FC<Props> = React.memo(({
     defaultWidth,
     editingOnEnter,
     onSave,
-    onChange,
   } = useSelector<RootState, OutsideState>(
       state => state["outside"],
       (current, old) => {
@@ -213,7 +161,7 @@ export const Cell: React.FC<Props> = React.memo(({
         }}
       >
         { cellLabel && (<div className="label">{ cellId }</div>)}
-        <CellLayout>
+        <div className="cell">
           {!editing && <div className="rendered">{ new Renderer(value).render(writeCell) }</div>}
           {!pointed ? null : (<textarea
             autoFocus
@@ -390,7 +338,7 @@ export const Cell: React.FC<Props> = React.memo(({
               dispatch(setEditingCell(cellId));
             }}
           />)}
-        </CellLayout>
+        </div>
       </div>
     </div>
   </td>);

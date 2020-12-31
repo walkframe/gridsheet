@@ -21,6 +21,6 @@ indent_size = 2
 indent_style = space
 indent_size = 2
 
-[*.scss,*.css]
+[*.scss,*.css,*.styl]
 indent_style = space
 indent_size = 2
