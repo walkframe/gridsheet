@@ -29,7 +29,7 @@ import {
 import { Renderer as DefaultRenderer } from "../renderers/core";
 import { Parser as DefaultParser } from "../parsers/core";
 
-interface Props {
+type Props = {
   y: number;
   x: number;
   clipboardRef: React.RefObject<HTMLTextAreaElement>;

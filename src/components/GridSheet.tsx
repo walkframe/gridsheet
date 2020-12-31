@@ -4,7 +4,8 @@ import React from "react";
 import { Provider } from 'react-redux';
 
 import {
-  Props,
+  MatrixType,
+  OptionsType,
 } from "../types";
 
 import { store } from "../store";
@@ -12,6 +13,15 @@ import { store } from "../store";
 import {
   StoreInjector,
 } from "./StoreInjector";
+
+import {
+  ChangeEmitter,
+} from "./ChangeEmitter";
+
+type Props = {
+  data: MatrixType;
+  options?: OptionsType;
+};
 
 export const GridSheet: React.FC<Props> = ({data, options}) => {
   if (typeof data === "undefined") {
@@ -21,13 +31,14 @@ export const GridSheet: React.FC<Props> = ({data, options}) => {
     options = {};
   }
 
+  const { onChange } = options;
   return (<div className="react-grid-sheet">
     <Provider store={store}>
       <StoreInjector
         data={data}
         options={options}
       />
+      { onChange && <ChangeEmitter onChange={onChange} /> }
     </Provider>
   </div>);
 };
-

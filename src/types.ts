@@ -21,7 +21,7 @@ export type CellsOptionType = {[s: string]: CellOptionType};
 
 export type Feedback = (matrix?: MatrixType, cellOptions?: CellsOptionType) => void;
 
-export interface OptionsType {
+export type OptionsType = {
   historySize?: number;
   defaultHeight?: string;
   defaultWidth?: string;
@@ -32,11 +32,6 @@ export interface OptionsType {
   cells?: CellsOptionType;
   onSave?: Feedback;
   onChange?: Feedback;
-};
-
-export interface Props {
-  data: MatrixType;
-  options?: OptionsType;
 };
 
 export type RangeType = [number, number]; // [start, end]

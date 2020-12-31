@@ -20,10 +20,6 @@ import {
 } from "../store/inside";
 
 import {
-  ChangeEmitter,
-} from "./ChangeEmitter";
-
-import {
   setCellsOption,
   setHeaderHeight,
   setHeaderWidth,
@@ -37,7 +33,7 @@ import {
   setOnChange,
 } from "../store/outside";
 
-interface Props {
+type Props = {
   data: MatrixType;
   options: OptionsType;
 };
@@ -114,7 +110,6 @@ export const StoreInjector: React.FC<Props> = ({data, options}) => {
   }, []);
 
   return (<div>
-    { onChange && <ChangeEmitter onChange={onChange} /> }
     <GridTable />
   </div>);
 };

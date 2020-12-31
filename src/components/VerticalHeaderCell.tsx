@@ -12,7 +12,7 @@ import {DUMMY_IMG} from "../constants";
 
 import {OutsideState, setCellsOption} from "../store/outside";
 
-interface Props {
+type Props = {
   y: number;
 };
 
@@ -24,7 +24,6 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({
 
   const {
     cellsOption,
-    numRows,
     numCols,
     defaultHeight,
     headerWidth,

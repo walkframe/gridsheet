@@ -21,7 +21,7 @@ import {
 
 import { Renderer } from "../renderers/core";
 
-interface Props {
+type Props = {
   onChange: Feedback,
 };
 
@@ -46,6 +46,3 @@ export const ChangeEmitter: React.FC<Props> = ({ onChange }) => {
 
   return (<></>);
 };
-
-
-

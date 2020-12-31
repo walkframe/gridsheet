@@ -13,7 +13,7 @@ import {DUMMY_IMG} from "../constants";
 
 import {OutsideState, setCellsOption} from "../store/outside";
 
-interface Props {
+type Props = {
   x: number;
 };
 
