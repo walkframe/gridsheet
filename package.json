@@ -5,7 +5,9 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "$(npm bin)/tsc",
+    "build": "$(npm bin)/webpack --mode=production",
+    "dev": "$(npm bin)/webpack --mode=development",
+    "watch": "$(npm bin)/webpack --mode=development --watch",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
   },
@@ -51,7 +53,8 @@
     "stylus": "^0.54.8",
     "stylus-loader": "^4.3.1",
     "ts-loader": "^8.0.13",
-    "typescript": "^4.0.3"
+    "typescript": "^4.0.3",
+    "webpack-cli": "^4.3.1"
   },
   "peerDependencies": {
     "react": ">=16.9.0",
