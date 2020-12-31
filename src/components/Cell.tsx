@@ -2,7 +2,7 @@ import React from "react";
 import { useDispatch, useSelector } from 'react-redux';
 import {convertNtoA} from "../api/converters";
 import { clip } from "../api/clipboard";
-import { zoneToArea, among, shape } from "../api/arrays";
+import { zoneToArea, among, zoneShape } from "../api/arrays";
 import { RootState } from "../store";
 import {
   InsideState,
@@ -133,7 +133,7 @@ export const Cell: React.FC<Props> = React.memo(({
       dispatch(select([y, x, y, x]));
     }}
     onDragEnd={() => {
-      const [h, w] = shape(selectingZone);
+      const [h, w] = zoneShape(selectingZone);
       if (h + w === 0) {
         dispatch(select([-1, -1, -1, -1]));
       }

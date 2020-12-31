@@ -4,6 +4,9 @@ import { ParserType } from "./parsers/core";
 export type Y = number;
 export type X = number;
 
+export type Height = number;
+export type Width = number;
+
 export type CellType = any;
 export type MatrixType = CellType[][];
 

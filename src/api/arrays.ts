@@ -5,6 +5,8 @@ import {
   RangeType,
   PositionType,
   ReactionsType,
+  Y, X,
+  Height, Width,
 } from "../types";
 
 import { convertNtoA } from "./converters";
@@ -30,7 +32,7 @@ export const writeMatrix = (y: number, x: number, src: MatrixType, dst: MatrixTy
   return dst;
 };
 
-export const spreadMatrix = (src: MatrixType, height: number, width: number): MatrixType => {
+export const spreadMatrix = (src: MatrixType, height: Height, width: Width): MatrixType => {
   const dst: MatrixType = [];
   for (let y = 0; y <= height; y++) {
     const row: string[] = [];
@@ -43,14 +45,14 @@ export const spreadMatrix = (src: MatrixType, height: number, width: number): Ma
   return dst;
 };
 
-export const slideArea = (area: AreaType, y: number, x: number): AreaType => {
+export const slideArea = (area: AreaType, y: Y, x: X): AreaType => {
   const [top, left, bottom, right] = area;
   return [top + y, left + x, bottom + y, right + x];
 };
 
-export const superposeArea = (srcArea: AreaType, dstArea: AreaType): [number, number] => {
-  const [srcHeight, srcWidth] = shape(srcArea);
-  const [dstHeight, dstWidth] = shape(dstArea);
+export const superposeArea = (srcArea: AreaType, dstArea: AreaType): [Height, Width] => {
+  const [srcHeight, srcWidth] = zoneShape(srcArea);
+  const [dstHeight, dstWidth] = zoneShape(dstArea);
 
   // biggerHeight, biggerWidth
   return [srcHeight > dstHeight ? srcHeight : dstHeight, srcWidth > dstWidth ? srcWidth : dstWidth];
@@ -80,30 +82,21 @@ export const among = (area: AreaType, position: PositionType) => {
   return top <= y && y <= bottom && left <= x && x <= right;
 };
 
-export const shape = (area: AreaType | ZoneType): [number, number] => {
-  return [Math.abs(area[0] - area[2]), Math.abs(area[1] - area[3])];
+export const zoneShape = (zone: ZoneType): [Height, Width] => {
+  return [Math.abs(zone[0] - zone[2]), Math.abs(zone[1] - zone[3])];
 };
 
-export const matrixShape = (matrix: MatrixType): [number, number] => {
+export const matrixShape = (matrix: MatrixType): [Height, Width] => {
   const h = matrix.length;
   if (h === 0) {
     return [0, 0]
   }
   return [h, matrix[h - 1].length];
-}
+};
 
 export const makeSequence = (start: number, stop: number, step: number=1) => {
   return Array.from({ length: (stop - start - 1) / step + 1}, (_, i) => start + (i * step));
 };
-
-export const isInit = (indexes: number[]) => {
-  for (let i=0; i < indexes.length; i++) {
-    if (indexes[i] !== -1) {
-      return false;
-    }
-  }
-  return true;
-}
 
 export const makeReactions = (... areas: (AreaType | ZoneType | PositionType)[]): ReactionsType => {
   const reactions: ReactionsType = {};
@@ -133,4 +126,32 @@ export const makeReactions = (... areas: (AreaType | ZoneType | PositionType)[])
     }
   });
   return reactions;
+};
+
+export const oa2aa = (oa: {[s: string]: any}[], fields: string[]): any[][] => {
+  const aa: any[][] = [];
+  oa.map((o) => {
+    const a: any[] = [];
+    fields.map((field) => {
+      a.push(o[field]);
+    });
+    aa.push(a);
+  });
+  return aa;
+};
+
+export const aa2oa = (aa: any[][], fields: string[]): {[s: string]: any} => {
+  const oa: {[s: string]: any}[] = [];
+  aa.map((a) => {
+    const o: {[s: string]: any} = {};
+    a.map((v, i) => {
+      if (i >= fields.length) {
+        return;
+      }
+      const field = fields[i];
+      o[field] = v;
+    });
+    oa.push(o);
+  });
+  return oa;
 };

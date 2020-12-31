@@ -16,7 +16,7 @@ import {
   slideArea,
   spreadMatrix,
   matrixShape, zoneToArea,
-  shape, superposeArea,
+  zoneShape, superposeArea,
   makeReactions,
 } from "../api/arrays"
 import {convertTSVToArray} from "../api/converters";
@@ -111,8 +111,8 @@ const reducers = {
     const copyingArea = zoneToArea(copyingZone);
     const [selectingTop, selectingLeft] = selectingArea;
     const [copyingTop, copyingLeft] = copyingArea;
-    const [selectingHeight, selectingWidth] = shape(selectingArea);
-    const [copyingHeight, copyingWidth] = shape(copyingArea);
+    const [selectingHeight, selectingWidth] = zoneShape(selectingArea);
+    const [copyingHeight, copyingWidth] = zoneShape(copyingArea);
     const { text, Parser } = action.payload;
 
     let before: MatrixType = [];
