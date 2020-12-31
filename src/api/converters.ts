@@ -1,12 +1,20 @@
+import { RendererType } from "../renderers/core";
+import { ParserType } from "../parsers/core";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+const CONVERTER_CACHE: {[s: string]: string} = {};
+
 export const convertNtoA = (num: number): string => {
+  if (CONVERTER_CACHE[num]) {
+    return CONVERTER_CACHE[num];
+  }
   let result = "";
   do {
     result = ALPHABET[--num % 26] + result;
     num = Math.floor(num / 26);
-  } while(num > 0)
+  } while(num > 0);
+  CONVERTER_CACHE[num] = result;
   return result;
 };
 
@@ -14,15 +22,16 @@ export const convertAtoN = (alpha: string): number => {
   return 0;
 };
 
-export const convertArrayToTSV = (rows: string[][]): string => {
+export const convertArrayToTSV = (rows: any[][], renderer: RendererType): string => {
   const lines: string[] = [];
   rows.map((row) => {
     const cols: string[] = [];
     row.map((col) => {
-      if (col.indexOf("\n") !== -1) {
-        cols.push(`"${col.replace(/"/g, '""')}"`);
+      const value = new renderer(col).stringify();
+      if (value.indexOf("\n") !== -1) {
+        cols.push(`"${value.replace(/"/g, '""')}"`);
       } else {
-        cols.push(col);
+        cols.push(value);
       }
     });
     lines.push(cols.join("\t"));
@@ -30,13 +39,13 @@ export const convertArrayToTSV = (rows: string[][]): string => {
   return lines.join("\n");
 };
 
-export const convertTSVToArray = (tsv: string): string[][] => {
+export const convertTSVToArray = (tsv: string, Parser: ParserType): any[][] => {
   tsv = tsv.replace(/""/g, "\x00");
   const restoreDoubleQuote = (text: string) => text.replace(/\x00/g, '"');
-  const rows: string[][] = [];
-  let row: string[] = [];
-  if (tsv.indexOf("\t") === -1) {
-    const cols: string[] = [];
+  const rows: any[][] = [];
+  let row: any[] = [];
+  if (tsv.indexOf("\t") === -1) { // 1col
+    const cols: any[] = [];
     const vals = tsv.split("\n");
     let enter = false;
     vals.map((val) => {
@@ -54,22 +63,26 @@ export const convertTSVToArray = (tsv: string): string[][] => {
         cols.push(val);
       }
     });
-    return cols.map((col) => [restoreDoubleQuote(col)]);
+    return cols.map((col) => [new Parser(restoreDoubleQuote(col)).parse()]);
   }
   tsv.split("\t").map((col) => {
     if (col[0] === '"' && col[col.length-1] === '"') { // escaping
-      row.push(restoreDoubleQuote(col.substring(1, col.length - 1)));
+      const cell = restoreDoubleQuote(col.substring(1, col.length - 1));
+      row.push(new Parser(cell).parse());
     } else {
       const enterIndex = col.indexOf("\n");
       if (enterIndex === -1) {
-        row.push(restoreDoubleQuote(col));
+        const cell = restoreDoubleQuote(col);
+        row.push(new Parser(cell).parse());
       } else {
-        row.push(restoreDoubleQuote(col.substring(0, enterIndex)));
+        const cell = restoreDoubleQuote(col.substring(0, enterIndex));
+        row.push(new Parser(cell).parse());
         rows.push(row);
         row = [];
         const nextCol = col.substring(enterIndex + 1, col.length);
         if (nextCol) {
-          row.push(restoreDoubleQuote(nextCol));
+          const nextCell = restoreDoubleQuote(nextCol);
+          row.push(new Parser(nextCell).parse());
         }
       }
     }
