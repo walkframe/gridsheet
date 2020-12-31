@@ -128,7 +128,7 @@ export const makeReactions = (... areas: (AreaType | ZoneType | PositionType)[])
   return reactions;
 };
 
-export const oa2aa = (oa: {[s: string]: any}[], fields: string[]): any[][] => {
+export const oa2aa = (oa: {[s: string]: any}[], fields: string[]): MatrixType => {
   const aa: any[][] = [];
   oa.map((o) => {
     const a: any[] = [];
@@ -140,7 +140,7 @@ export const oa2aa = (oa: {[s: string]: any}[], fields: string[]): any[][] => {
   return aa;
 };
 
-export const aa2oa = (aa: any[][], fields: string[]): {[s: string]: any} => {
+export const aa2oa = (aa: MatrixType, fields: string[]): {[s: string]: any} => {
   const oa: {[s: string]: any}[] = [];
   aa.map((a) => {
     const o: {[s: string]: any} = {};

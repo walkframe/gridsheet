@@ -1,5 +1,5 @@
 import React from "react";
-import GridSheet, { Renderer } from "./";
+import GridSheet, { Renderer, aa2oa } from "./";
 
 class KanjiRenderer extends Renderer {
   protected kanjiMap: {[s: string]: string} = {
@@ -70,7 +70,7 @@ export const showIndex = () => (<GridSheet
       "4": { label: "よん", height: "50px", verticalAlign: "bottom"},
     },
     onSave: (matrix, option) => {
-      console.log("matrix on save:", matrix);
+      console.log("matrix on save:", aa2oa(matrix || [], ["A", "B", "C", "D", "E", "F"]));
     },
     onChange: (matrix, option) => {
       if (typeof matrix !== "undefined") {
