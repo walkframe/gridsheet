@@ -59,6 +59,7 @@ export const showIndex = () => (<GridSheet
     // cellLabel: false,
     // headerWidth: "50px",
     // headerHeight: "40px",
+    historySize: 100,
     mode: "dark",
     cells: {
       "default": { style: { fontStyle: "italic" }},

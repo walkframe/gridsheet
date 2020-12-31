@@ -45,7 +45,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
   const colOption = cellsOption[colId] || {};
   const width = colOption.width || defaultWidth;
   return (<th
-    className={`col-number ${choosing[1] === x ? "choosing" : ""} ${between([selectingZone[1], selectingZone[3]], x) ? horizontalHeadersSelecting ? "header-selecting" : "selecting" : ""}`}
+    className={`horizontal ${choosing[1] === x ? "choosing" : ""} ${between([selectingZone[1], selectingZone[3]], x) ? horizontalHeadersSelecting ? "header-selecting" : "selecting" : ""}`}
     draggable
     onClick={(e) => {
       let startX = e.shiftKey ? selectingZone[1] : x;

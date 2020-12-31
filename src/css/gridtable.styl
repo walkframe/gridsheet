@@ -10,14 +10,18 @@
     font-size: 13px;
     font-weight: normal;
     box-sizing: border-box;
-    &.col-number {
+    &.horizontal {
+      position: sticky;
+      top: 0;
       min-height: 20px;
       .resizer {
         resize: horizontal;
         overflow: hidden;
       }
     }
-    &.row-number {
+    &.vertical {
+      position: sticky;
+      left: 0;
       overflow: hidden;
       min-width: 30px;
       .resizer {
