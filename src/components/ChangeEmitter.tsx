@@ -29,6 +29,9 @@ export const ChangeEmitter: React.FC<Props> = ({ onChange }) => {
   useSelector<RootState, InsideState>(
     state => state["inside"],
     (current, old) => {
+      if (old.matrix.length === 0) {
+        return false;
+      }
       if (convertArrayToTSV(current.matrix, Renderer) !== convertArrayToTSV(old.matrix, Renderer)) {
         onChange(current.matrix, undefined);
         return false;
