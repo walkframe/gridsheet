@@ -44,6 +44,11 @@ const CellLayout = styled.div`
 
   .rendered {
     padding: 0 2px;
+    & > * {
+      position: absolute;
+      top: 0;
+      z-index: 1;
+    }
   }
 
   textarea {
@@ -211,7 +216,7 @@ export const Cell: React.FC<Props> = React.memo(({
       >
         { cellLabel && (<div className="label">{ cellId }</div>)}
         <CellLayout>
-          {!editing && <div className="rendered">{ new Renderer(value).render() }</div>}
+          {!editing && <div className="rendered">{ new Renderer(value).render(writeCell) }</div>}
           {!pointed ? null : (<textarea
             autoFocus
             style={{ minHeight: height }}
@@ -220,7 +225,7 @@ export const Cell: React.FC<Props> = React.memo(({
             onDoubleClick={(e) => {
               const input = e.currentTarget;
               if (!editing) {
-                input.value = new Renderer(value).renderEditing();
+                input.value = new Renderer(value).stringify();
                 dispatch(setEditingCell(cellId));
                 setTimeout(() => input.style.width = `${input.scrollWidth}px`, 100);
               }

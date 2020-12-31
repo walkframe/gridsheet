@@ -61,3 +61,5 @@ export type OperationType = {
 };
 
 export type ReactionsType = {[s: string]: boolean};
+
+export type Writer = (value: string) => void;

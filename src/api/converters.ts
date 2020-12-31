@@ -27,7 +27,7 @@ export const convertArrayToTSV = (rows: any[][], renderer: RendererType): string
   rows.map((row) => {
     const cols: string[] = [];
     row.map((col) => {
-      const value = new renderer(col).renderEditing();
+      const value = new renderer(col).stringify();
       if (value.indexOf("\n") !== -1) {
         cols.push(`"${value.replace(/"/g, '""')}"`);
       } else {
