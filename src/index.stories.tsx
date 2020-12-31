@@ -1,6 +1,5 @@
 import React from "react";
-import GridSheet from "./index";
-import { Parser } from "./parsers/core";
+import GridSheet from "./components/GridSheet";
 import { Renderer } from "./renderers/core";
 
 class KanjiRenderer extends Renderer {

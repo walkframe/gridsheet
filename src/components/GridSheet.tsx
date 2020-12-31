@@ -5,13 +5,13 @@ import styled from "styled-components";
 import {
   MatrixType,
   Props,
-} from "./types";
+} from "../types";
 
-import { store } from "./store";
+import { store } from "../store";
 
 import {
   StoreInjector,
-} from "./components/StoreInjector";
+} from "./StoreInjector";
 
 const Layout = styled.div`
   background-color: #ffffff;
@@ -31,7 +31,7 @@ const GridSheet: React.FC<Props> = ({data, options}) => {
     options = {};
   }
 
-  return (<Layout>
+  return (<Layout className="react-grid-sheet">
     <Provider store={store}>
       <StoreInjector
         data={data}
