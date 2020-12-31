@@ -30,7 +30,6 @@ import {
   setNumRows,
   setNumCols,
   setOnSave,
-  setOnChange,
 } from "../store/outside";
 
 type Props = {
@@ -100,11 +99,6 @@ export const StoreInjector: React.FC<Props> = ({data, options}) => {
       dispatch(setOnSave(onSave));
     }
   }, [onSave]);
-  React.useEffect(() => {
-    if (typeof onChange !== "undefined") {
-      dispatch(setOnChange(onChange));
-    }
-  }, [onChange]);
   React.useEffect(() => {
     dispatch(initHistory(historySize));
   }, []);

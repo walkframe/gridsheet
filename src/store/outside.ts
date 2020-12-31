@@ -16,7 +16,6 @@ export type OutsideState = {
   editingOnEnter: boolean;
   cellLabel: boolean;
   onSave?: Feedback;
-  onChange?: Feedback;
 }
 
 export const initialState: OutsideState = {
@@ -65,9 +64,6 @@ const slice = createSlice({
     setOnSave: (state: Draft<OutsideState>, action: PayloadAction<Feedback>) => {
       return {...state, onSave: action.payload};
     },
-    setOnChange: (state: Draft<OutsideState>, action: PayloadAction<Feedback>) => {
-      return {...state, onChange: action.payload};
-    },
   },
 });
 
@@ -83,5 +79,4 @@ export const {
   setNumRows,
   setNumCols,
   setOnSave,
-  setOnChange,
 } = slice.actions;
