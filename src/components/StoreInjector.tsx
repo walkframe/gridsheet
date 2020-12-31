@@ -1,5 +1,5 @@
 import React from "react";
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 
 import {
   MatrixType,
@@ -15,7 +15,6 @@ import {
 } from "../api/arrays";
 
 import {
-  InsideState,
   setMatrix,
   initHistory,
 } from "../store/inside";
@@ -25,7 +24,6 @@ import {
 } from "./ChangeEmitter";
 
 import {
-  OutsideState,
   setCellsOption,
   setHeaderHeight,
   setHeaderWidth,

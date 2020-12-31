@@ -1,13 +1,11 @@
 import React from "react";
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import {
-  MatrixType,
-  OptionsType,
   Feedback,
 } from "../types";
 
-import {RootState, DispatchType } from "../store";
+import { RootState } from "../store";
 
 import {
   InsideState,

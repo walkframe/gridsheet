@@ -1,11 +1,10 @@
 import React from "react";
 import { useDispatch, useSelector } from 'react-redux';
-import { createSelector } from 'reselect';
 import styled from "styled-components";
 import {convertNtoA} from "../api/converters";
 import { clip } from "../api/clipboard";
 import { zoneToArea, among, shape } from "../api/arrays";
-import {RootState, DispatchType } from "../store";
+import { RootState } from "../store";
 import {
   InsideState,
   blur,
@@ -26,7 +25,6 @@ import {
 import { DUMMY_IMG } from "../constants";
 import {
   AreaType,
-  ZoneType,
   CellOptionType,
 } from "../types";
 import { Renderer as DefaultRenderer } from "../renderers/core";

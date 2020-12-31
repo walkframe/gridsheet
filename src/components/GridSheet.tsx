@@ -23,7 +23,7 @@ const Layout = styled.div`
     sans-serif;
 `;
 
-const GridSheet: React.FC<Props> = ({data, options}) => {
+export const GridSheet: React.FC<Props> = ({data, options}) => {
   if (typeof data === "undefined") {
     data = [];
   }
@@ -41,4 +41,3 @@ const GridSheet: React.FC<Props> = ({data, options}) => {
   </Layout>);
 };
 
-export default GridSheet;

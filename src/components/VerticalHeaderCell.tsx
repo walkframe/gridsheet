@@ -6,7 +6,6 @@ import {
   InsideState,
   drag,
   selectRows,
-
 } from "../store/inside";
 import {DUMMY_IMG} from "../constants";
 

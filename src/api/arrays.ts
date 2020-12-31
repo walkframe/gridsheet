@@ -46,7 +46,7 @@ export const spreadMatrix = (src: MatrixType, height: number, width: number): Ma
 export const slideArea = (area: AreaType, y: number, x: number): AreaType => {
   const [top, left, bottom, right] = area;
   return [top + y, left + x, bottom + y, right + x];
-}
+};
 
 export const superposeArea = (srcArea: AreaType, dstArea: AreaType): [number, number] => {
   const [srcHeight, srcWidth] = shape(srcArea);
@@ -96,13 +96,6 @@ export const makeSequence = (start: number, stop: number, step: number=1) => {
   return Array.from({ length: (stop - start - 1) / step + 1}, (_, i) => start + (i * step));
 };
 
-export const arrayToInfo = (options: any[]) => {
-  const info = {};
-  // @ts-ignore
-  options.map((opt, i) => info[typeof opt.key === "undefined" ? i : opt.key] = opt);
-  return info;
-};
-
 export const isInit = (indexes: number[]) => {
   for (let i=0; i < indexes.length; i++) {
     if (indexes[i] !== -1) {
@@ -140,4 +133,4 @@ export const makeReactions = (... areas: (AreaType | ZoneType | PositionType)[])
     }
   });
   return reactions;
-}
+};

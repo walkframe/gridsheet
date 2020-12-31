@@ -1,4 +1,4 @@
-import { parseFromTimeZone, formatToTimeZone } from "date-fns-timezone";
+import { parseFromTimeZone } from "date-fns-timezone";
 
 export class Parser {
   protected value: string;

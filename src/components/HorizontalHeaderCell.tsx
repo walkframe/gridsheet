@@ -4,8 +4,8 @@ import {convertNtoA} from "../api/converters";
 import { between } from "../api/arrays";
 import {RootState } from "../store";
 import {
-
-  InsideState, select, drag,
+  InsideState, 
+  drag,
   selectCols
 } from "../store/inside";
 

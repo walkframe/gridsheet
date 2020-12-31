@@ -1,5 +1,5 @@
 import {
-  AreaType, ZoneType,
+  ZoneType,
   MatrixType,
   PositionType,
 } from "../types";
@@ -8,7 +8,7 @@ import {
   cropMatrix,
   zoneToArea,
 } from "./arrays";
-import { convertArrayToTSV, convertTSVToArray} from "./converters";
+import { convertArrayToTSV } from "./converters";
 import { RendererType } from "../renderers/core";
 
 export const clip = (

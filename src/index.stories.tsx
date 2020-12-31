@@ -1,6 +1,5 @@
 import React from "react";
-import GridSheet from "./components/GridSheet";
-import { Renderer } from "./renderers/core";
+import GridSheet, { Renderer } from "./";
 
 class KanjiRenderer extends Renderer {
   protected kanjiMap: {[s: string]: string} = {

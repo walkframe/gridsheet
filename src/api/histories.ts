@@ -1,5 +1,4 @@
 import {
-  MatrixType,
   HistoryType,
   OperationType,
 } from "../types";

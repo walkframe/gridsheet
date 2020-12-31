@@ -5,10 +5,6 @@ import {
   Feedback,
 } from "../types";
 
-import {
-  arrayToInfo,
-} from "../api/arrays";
-
 export type OutsideState = {
   cellsOption: {[s: string]: CellOptionType};
   numRows: number;
