@@ -78,6 +78,8 @@ export const Cell: React.FC<Props> = React.memo(({
     }
   );
 
+  const [before, setBefore] = React.useState("");
+
   const selectingArea = zoneToArea(selectingZone); // (top, left) -> (bottom, right)
   const copyingArea = zoneToArea(copyingZone); // (top, left) -> (bottom, right)
   const editing = editingCell === cellId;
@@ -106,8 +108,11 @@ export const Cell: React.FC<Props> = React.memo(({
   const verticalAlign = cellOption.verticalAlign || colOption.verticalAlign || rowOption.verticalAlign || defaultOption.verticalAlign || "middle";
   
   const writeCell = (value: string) => {
-    const parsed = new Parser(value).parse();
-    dispatch(write(parsed));
+    if (before !== value) {
+      const parsed = new Parser(value).parse();
+      dispatch(write(parsed));
+    }
+    setBefore("");
   };
 
   return (<td
@@ -172,6 +177,7 @@ export const Cell: React.FC<Props> = React.memo(({
               const input = e.currentTarget;
               if (!editing) {
                 input.value = new Renderer(value).stringify();
+                setBefore(input.value);
                 dispatch(setEditingCell(cellId));
                 setTimeout(() => input.style.width = `${input.scrollWidth}px`, 100);
               }
