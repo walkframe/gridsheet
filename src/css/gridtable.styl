@@ -6,27 +6,12 @@
 .grid-table {
   table-layout: fixed;
   border-collapse: collapse;
-  th, td {
-    border: solid 1px #bbbbbb;
-  }
   th {
-    color: #666666;
     font-size: 13px;
     font-weight: normal;
     box-sizing: border-box;
-    background-color: #eeeeee;
     &.col-number {
       min-height: 20px;
-      &.selecting {
-        background-color: #dddddd;
-      }
-      &.choosing {
-        background-color: #bbbbbb;
-      }
-      &.header-selecting {
-        background-color: #555555;
-        color: #ffffff;
-      }
       .resizer {
         resize: horizontal;
         overflow: hidden;
@@ -35,16 +20,6 @@
     &.row-number {
       overflow: hidden;
       min-width: 30px;
-      &.selecting {
-        background-color: #dddddd;
-      }
-      &.choosing {
-        background-color: #bbbbbb;
-      }
-      &.header-selecting {
-        background-color: #555555;
-        color: #ffffff;
-      }
       .resizer {
         box-sizing: border-box;
         padding: 0 10px;
@@ -57,7 +32,6 @@
     padding: 0;
     margin: 0;
     position: relative;
-    border: solid 1px #cccccc;
     &.copying {
       textarea:focus {
         outline: solid 1px #0077ff;
@@ -94,7 +68,6 @@
         &.editing {
           overflow: visible;
           border: none;
-          background-color: #ffffff;
         }
         .label {
           display: block;

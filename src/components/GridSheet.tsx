@@ -31,8 +31,8 @@ export const GridSheet: React.FC<Props> = ({data, options}) => {
     options = {};
   }
 
-  const { onChange } = options;
-  return (<div className="react-grid-sheet">
+  const { onChange, mode } = options;
+  return (<div className={`react-grid-sheet ${mode || "light"}`}>
     <Provider store={store}>
       <StoreInjector
         data={data}

@@ -24,6 +24,8 @@ export type CellsOptionType = {[s: string]: CellOptionType};
 
 export type Feedback = (matrix?: MatrixType, cellOptions?: CellsOptionType) => void;
 
+export type Mode = "light" | "dark";
+
 export type OptionsType = {
   historySize?: number;
   defaultHeight?: string;
@@ -33,6 +35,7 @@ export type OptionsType = {
   editingOnEnter?: boolean;
   cellLabel?: boolean;
   cells?: CellsOptionType;
+  mode?: Mode;
   onSave?: Feedback;
   onChange?: Feedback;
 };
