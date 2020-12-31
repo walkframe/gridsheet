@@ -9,6 +9,8 @@ import {
 
 import { store } from "../store";
 
+import "../css/index.styl";
+
 import {
   StoreInjector,
 } from "./StoreInjector";
