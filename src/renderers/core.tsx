@@ -56,7 +56,7 @@ export class Renderer {
     return (
       <input 
         type="checkbox"
-        defaultChecked={value}
+        checked={value}
         onChange={(e) => {
           writer && writer(e.currentTarget.checked.toString());
         }}
@@ -79,7 +79,7 @@ export class Renderer {
   }
 
   protected array (value: any[], writer?: Writer): any {
-    return value.map((v) => new Renderer(v).render(writer)).join(",");
+    return  value.map((v) => new Renderer(v).stringify()).join(",");
   }
   protected object (value: any, writer?: Writer): any {
     return "{}";
