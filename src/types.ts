@@ -10,14 +10,18 @@ export type Width = number;
 export type CellType = any;
 export type MatrixType = CellType[][];
 
+export type Renderers = {[s: string]: RendererType};
+export type Parsers = {[s: string]: ParserType};
+
+// All fields have to be primitive types.
 export type CellOptionType = {
   label?: string;
   width?: string;
   height?: string;
   style?: React.CSSProperties;
   verticalAlign?: string;
-  renderer?: RendererType;
-  parser?: ParserType;
+  renderer?: string;
+  parser?: string;
 };
 
 export type CellsOptionType = {[s: string]: CellOptionType};
@@ -38,6 +42,8 @@ export type OptionsType = {
   cells?: CellsOptionType;
   mode?: Mode;
   stickyHeaders?: Headers;
+  renderers?: Renderers;
+  parsers?: Parsers;
   onSave?: Feedback;
   onChange?: Feedback;
 };

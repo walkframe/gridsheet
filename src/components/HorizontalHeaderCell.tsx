@@ -75,6 +75,9 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
       style={{ width, height: headerHeight }}
       onMouseLeave={(e) => {
         const width = e.currentTarget.clientWidth;
+        if (typeof colOption.width === "undefined" && width === parseInt(defaultWidth)) {
+          return;
+        }
         dispatch(setCellsOption({... cellsOption, [colId]: {... colOption, width: `${width}px`}}));
       }}
     >{ colOption.label || colId }

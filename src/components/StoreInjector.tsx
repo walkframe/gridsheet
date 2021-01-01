@@ -28,6 +28,8 @@ import {
   setEditingOnEnter,
   setCellLabel,
   setStickyHeaders,
+  setRenderers,
+  setParsers,
   setNumRows,
   setNumCols,
   setOnSave,
@@ -49,6 +51,8 @@ export const StoreInjector: React.FC<Props> = ({data, options}) => {
     editingOnEnter,
     cellLabel,
     stickyHeaders,
+    renderers,
+    parsers,
     onSave,
     onChange,
   } = options;
@@ -101,6 +105,16 @@ export const StoreInjector: React.FC<Props> = ({data, options}) => {
       dispatch(setStickyHeaders(stickyHeaders));
     }
   }, [stickyHeaders]);
+  React.useEffect(() => {
+    if (typeof renderers !== "undefined") {
+      dispatch(setRenderers(renderers));
+    }
+  }, [renderers]);
+  React.useEffect(() => {
+    if (typeof parsers !== "undefined") {
+      dispatch(setParsers(parsers));
+    }
+  }, [parsers]);
   React.useEffect(() => {
     if (typeof onSave !== "undefined") {
       dispatch(setOnSave(onSave));

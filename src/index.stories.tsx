@@ -67,17 +67,23 @@ export const showIndex = () => (<GridSheet
       "A1": { style: { color: "#008888"}},
       "B": { label: "ビー" },
       "D": { width: "300px"},
-      "2": { label: "二", style: {borderBottom: "double 4px #000000" }, renderer: KanjiRenderer },
+      "2": { label: "二", style: {borderBottom: "double 4px #000000" }, renderer: "kanji" },
       "3": { height: "100px", style: { fontWeight: "bold", color: "#ff0000", backgroundColor: "rgba(255, 200, 200, 0.5)"}},
       "4": { label: "よん", height: "50px", verticalAlign: "bottom"},
     },
-    onSave: (matrix, option) => {
+    onSave: (matrix, options) => {
       console.log("matrix on save:", aa2oa(matrix || [], ["A", "B", "C", "D", "E", "F"]));
     },
-    onChange: (matrix, option) => {
+    onChange: (matrix, options) => {
       if (typeof matrix !== "undefined") {
         console.log("matrix on change:", matrix);
       }
+      if (typeof options !== "undefined") {
+        console.log("options on change", options);
+      }
+    },
+    renderers: {
+      kanji: KanjiRenderer,
     },
   }}
 />);

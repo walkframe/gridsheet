@@ -51,6 +51,8 @@ export const Cell: React.FC<Props> = React.memo(({
     defaultHeight,
     defaultWidth,
     editingOnEnter,
+    renderers,
+    parsers,
     onSave,
   } = useSelector<RootState, OutsideState>(
       state => state["outside"],
@@ -101,8 +103,12 @@ export const Cell: React.FC<Props> = React.memo(({
     ...colOption.style,
     ...cellOption.style
   };
-  const Renderer = cellOption.renderer || colOption.renderer || rowOption.renderer || defaultOption.renderer || DefaultRenderer;
-  const Parser = cellOption.parser || colOption.parser || rowOption.parser || defaultOption.parser || DefaultParser;
+
+  const renderer = cellOption.renderer || colOption.renderer || rowOption.renderer || defaultOption.renderer;
+  const parser = cellOption.parser || colOption.parser || rowOption.parser || defaultOption.parser;
+
+  const Renderer = renderers[renderer || ""] || DefaultRenderer;
+  const Parser = parsers[parser || ""] || DefaultParser;
   const height = rowOption.height || defaultHeight;
   const width = colOption.width || defaultWidth;
   const verticalAlign = cellOption.verticalAlign || colOption.verticalAlign || rowOption.verticalAlign || defaultOption.verticalAlign || "middle";

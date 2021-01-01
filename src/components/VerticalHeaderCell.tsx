@@ -75,6 +75,9 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({
       style={{ height, width: headerWidth }}
       onMouseLeave={(e) => {
         const height = e.currentTarget.clientHeight;
+        if (typeof rowOption.height === "undefined" && height === parseInt(defaultHeight)) {
+          return;
+        }
         dispatch(setCellsOption({... cellsOption, [rowId]: {... rowOption, height: `${height}px`}}));
       }}
     >
