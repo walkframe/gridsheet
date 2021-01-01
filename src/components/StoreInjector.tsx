@@ -27,6 +27,7 @@ import {
   setDefaultWidth,
   setEditingOnEnter,
   setCellLabel,
+  setStickyHeaders,
   setNumRows,
   setNumCols,
   setOnSave,
@@ -47,6 +48,7 @@ export const StoreInjector: React.FC<Props> = ({data, options}) => {
     defaultWidth,
     editingOnEnter,
     cellLabel,
+    stickyHeaders,
     onSave,
     onChange,
   } = options;
@@ -94,6 +96,11 @@ export const StoreInjector: React.FC<Props> = ({data, options}) => {
       dispatch(setCellLabel(cellLabel));
     }
   }, [cellLabel]);
+  React.useEffect(() => {
+    if (typeof stickyHeaders !== "undefined") {
+      dispatch(setStickyHeaders(stickyHeaders));
+    }
+  }, [stickyHeaders]);
   React.useEffect(() => {
     if (typeof onSave !== "undefined") {
       dispatch(setOnSave(onSave));

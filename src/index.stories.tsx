@@ -61,6 +61,7 @@ export const showIndex = () => (<GridSheet
     // headerHeight: "40px",
     historySize: 100,
     mode: "dark",
+    stickyHeaders: "horizontal",
     cells: {
       "default": { style: { fontStyle: "italic" }},
       "A1": { style: { color: "#008888"}},

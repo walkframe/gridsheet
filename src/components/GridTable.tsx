@@ -33,7 +33,7 @@ export const GridTable: React.FC = () => {
     <table className="grid-table">
       <thead>
         <tr>
-          <th onClick={(e) => {
+          <th className="vertical horizontal" onClick={(e) => {
             dispatch(choose([-1, -1]));
             setTimeout(() => {
               dispatch(choose([0, 0]));

@@ -1,18 +1,17 @@
-.grid-table-wrapper {
-  height: auto;
-  overflow: auto;
-}
-
 .grid-table {
   table-layout: fixed;
   border-collapse: collapse;
   th {
+    z-index: 2;
     font-size: 13px;
     font-weight: normal;
     box-sizing: border-box;
-    &.horizontal {
+    &.sticky {
       position: sticky;
-      top: 0;
+      position: -webkit-sticky;
+    }
+    &.horizontal {
+      top: -1px;
       min-height: 20px;
       .resizer {
         resize: horizontal;
@@ -20,8 +19,7 @@
       }
     }
     &.vertical {
-      position: sticky;
-      left: 0;
+      left: -1px;
       overflow: hidden;
       min-width: 30px;
       .resizer {

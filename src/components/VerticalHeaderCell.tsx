@@ -27,6 +27,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({
     numCols,
     defaultHeight,
     headerWidth,
+    stickyHeaders,
   } = useSelector<RootState, OutsideState>(state => state["outside"]);
   const {
     choosing,
@@ -45,7 +46,11 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({
   const height = rowOption.height || defaultHeight;
 
   return (<th
-    className={`vertical ${choosing[0] === y ? "choosing" : ""} ${between([selectingZone[0], selectingZone[2]], y) ? verticalHeadersSelecting ? "header-selecting" : "selecting" : ""}`}
+    className={`
+      vertical
+      ${stickyHeaders === "both" || stickyHeaders === "vertical" ? "sticky" : ""}
+      ${choosing[0] === y ? "choosing" : ""} 
+      ${between([selectingZone[0], selectingZone[2]], y) ? verticalHeadersSelecting ? "header-selecting" : "selecting" : ""}`}
     onClick={(e) => {
       let startY = e.shiftKey ? selectingZone[0] : y;
       if (startY === -1) {

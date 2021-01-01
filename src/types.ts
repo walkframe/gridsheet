@@ -25,6 +25,7 @@ export type CellsOptionType = {[s: string]: CellOptionType};
 export type Feedback = (matrix?: MatrixType, cellOptions?: CellsOptionType) => void;
 
 export type Mode = "light" | "dark";
+export type Headers = "both" | "vertical" | "horizontal" | "none";
 
 export type OptionsType = {
   historySize?: number;
@@ -36,6 +37,7 @@ export type OptionsType = {
   cellLabel?: boolean;
   cells?: CellsOptionType;
   mode?: Mode;
+  stickyHeaders?: Headers;
   onSave?: Feedback;
   onChange?: Feedback;
 };

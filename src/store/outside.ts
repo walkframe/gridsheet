@@ -3,6 +3,7 @@ import {
   CellOptionType,
   CellsOptionType,
   Feedback,
+  Headers,
 } from "../types";
 
 export type OutsideState = {
@@ -15,6 +16,7 @@ export type OutsideState = {
   defaultWidth: string;
   editingOnEnter: boolean;
   cellLabel: boolean;
+  stickyHeaders: Headers;
   onSave?: Feedback;
 }
 
@@ -28,6 +30,7 @@ export const initialState: OutsideState = {
   defaultWidth: "90px",
   editingOnEnter: true,
   cellLabel: true,
+  stickyHeaders: "both",
 };
 
 const slice = createSlice({
@@ -55,6 +58,9 @@ const slice = createSlice({
     setCellLabel: (state: Draft<OutsideState>, action: PayloadAction<boolean>) => {
       return {...state, cellLabel: action.payload};
     },
+    setStickyHeaders: (state: Draft<OutsideState>, action: PayloadAction<Headers>) => {
+      return {...state, stickyHeaders: action.payload};
+    },
     setNumRows: (state: Draft<OutsideState>, action: PayloadAction<number>) => {
       return {...state, numRows: action.payload};
     },
@@ -76,6 +82,7 @@ export const {
   setDefaultWidth,
   setEditingOnEnter,
   setCellLabel,
+  setStickyHeaders,
   setNumRows,
   setNumCols,
   setOnSave,

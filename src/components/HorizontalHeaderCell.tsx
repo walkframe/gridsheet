@@ -1,17 +1,17 @@
 import React from "react";
 import { useDispatch, useSelector } from 'react-redux';
-import {convertNtoA} from "../api/converters";
+import { convertNtoA } from "../api/converters";
 import { between } from "../api/arrays";
-import {RootState } from "../store";
+import { RootState } from "../store";
 import {
   InsideState, 
   drag,
   selectCols
 } from "../store/inside";
 
-import {DUMMY_IMG} from "../constants";
+import { DUMMY_IMG } from "../constants";
 
-import {OutsideState, setCellsOption} from "../store/outside";
+import { OutsideState, setCellsOption } from "../store/outside";
 
 type Props = {
   x: number;
@@ -28,6 +28,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
     numRows,
     headerHeight,
     defaultWidth,
+    stickyHeaders,
   } = useSelector<RootState, OutsideState>(state => state["outside"]);
   const {
     choosing,
@@ -45,7 +46,11 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
   const colOption = cellsOption[colId] || {};
   const width = colOption.width || defaultWidth;
   return (<th
-    className={`horizontal ${choosing[1] === x ? "choosing" : ""} ${between([selectingZone[1], selectingZone[3]], x) ? horizontalHeadersSelecting ? "header-selecting" : "selecting" : ""}`}
+    className={`
+      horizontal
+      ${stickyHeaders === "both" || stickyHeaders === "horizontal" ? "sticky" : ""}
+      ${choosing[1] === x ? "choosing" : ""} 
+      ${between([selectingZone[1], selectingZone[3]], x) ? horizontalHeadersSelecting ? "header-selecting" : "selecting" : ""}`}
     draggable
     onClick={(e) => {
       let startX = e.shiftKey ? selectingZone[1] : x;
