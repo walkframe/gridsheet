@@ -28,6 +28,9 @@ import {
 } from "../types";
 import { Renderer as DefaultRenderer } from "../renderers/core";
 import { Parser as DefaultParser } from "../parsers/core";
+import {
+  CellLayout,
+} from "./styles/CellLayout";
 
 type Props = {
   y: number;
@@ -172,7 +175,7 @@ export const Cell: React.FC<Props> = React.memo(({
         }}
       >
         { cellLabel && (<div className="label">{ cellId }</div>)}
-        <div className="cell">
+        <CellLayout>
           {!editing && <div className="rendered">{ new Renderer(value).render(writeCell) }</div>}
           {!pointed ? null : (<textarea
             autoFocus
@@ -350,7 +353,7 @@ export const Cell: React.FC<Props> = React.memo(({
               dispatch(setEditingCell(cellId));
             }}
           />)}
-        </div>
+        </CellLayout>
       </div>
     </div>
   </td>);

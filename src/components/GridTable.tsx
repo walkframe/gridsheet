@@ -17,6 +17,9 @@ import {
 import {
   OutsideState,
 } from "../store/outside"
+import {
+  GridTableLayout,
+} from "./styles/GridTableLayout";
 
 import { RootState } from "../store";
 
@@ -28,9 +31,9 @@ export const GridTable: React.FC = () => {
     numCols,
   } = useSelector<RootState, OutsideState>(state => state["outside"]);
 
-  return (<div className="grid-table-wrapper">
+  return (<GridTableLayout>
     <textarea className="clipboard" ref={clipboardRef} />
-    <table className="grid-table">
+    <table>
       <thead>
         <tr>
           <th className="vertical horizontal" onClick={(e) => {
@@ -67,5 +70,5 @@ export const GridTable: React.FC = () => {
       })
       }</tbody>
     </table>
-  </div>);
+  </GridTableLayout>);
 };

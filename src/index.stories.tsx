@@ -1,5 +1,6 @@
 import React from "react";
-import { GridSheet, Renderer, aa2oa } from "./";
+import { GridSheet, Renderer, aa2oa } from ".";
+// import { GridSheet, Renderer, aa2oa } from "../dist";
 
 class KanjiRenderer extends Renderer {
   protected kanjiMap: {[s: string]: string} = {
@@ -61,7 +62,7 @@ export const showIndex = () => (<GridSheet
     // headerHeight: "40px",
     historySize: 100,
     mode: "dark",
-    stickyHeaders: "horizontal",
+    //stickyHeaders: "horizontal",
     cells: {
       "default": { style: { fontStyle: "italic" }},
       "A1": { style: { color: "#008888"}},

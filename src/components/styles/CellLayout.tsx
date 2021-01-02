@@ -1,4 +1,6 @@
-.cell {
+import styled from "styled-components";
+
+export const CellLayout = styled.div`
   overflow: hidden;
   font-size: 13px;
   letter-spacing: 1px;
@@ -44,4 +46,5 @@
       height: auto;
     }
   }
-}
+`;
+

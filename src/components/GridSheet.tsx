@@ -1,5 +1,3 @@
-import "../css/gridsheet.styl";
-
 import React from "react";
 import { Provider } from 'react-redux';
 
@@ -17,6 +15,9 @@ import {
 import {
   ChangeEmitter,
 } from "./ChangeEmitter";
+import {
+  GridSheetLayout,
+} from "./styles/GridSheetLayout";
 
 type Props = {
   data: MatrixType;
@@ -32,7 +33,7 @@ export const GridSheet: React.FC<Props> = ({data, options}) => {
   }
 
   const { onChange, mode } = options;
-  return (<div className={`react-grid-sheet ${mode || "light"}`}>
+  return (<GridSheetLayout className={`react-grid-sheet ${mode || "light"}`}>
     <Provider store={store}>
       <StoreInjector
         data={data}
@@ -40,5 +41,5 @@ export const GridSheet: React.FC<Props> = ({data, options}) => {
       />
       { onChange && <ChangeEmitter onChange={onChange} /> }
     </Provider>
-  </div>);
+  </GridSheetLayout>);
 };
