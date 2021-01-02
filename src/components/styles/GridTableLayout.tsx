@@ -6,7 +6,7 @@ export const GridTableLayout = styled.div`
     border-collapse: collapse;
   }
   th {
-    z-index: 2;
+    z-index: 3;
     font-size: 13px;
     font-weight: normal;
     box-sizing: border-box;

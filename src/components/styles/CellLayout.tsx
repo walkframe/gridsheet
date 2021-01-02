@@ -22,6 +22,7 @@ export const CellLayout = styled.div`
 
   textarea {
     width: 100%;
+    z-index: 1;
     position: absolute;
     font-size: 13px;
     line-height: 20px;
@@ -39,7 +40,7 @@ export const CellLayout = styled.div`
     caret-color: transparent;
     cursor: default;
     &.editing {
-      z-index: 1;
+      z-index: 2;
       cursor: text;
       min-width: 100%;
       white-space: pre;
