@@ -29,7 +29,7 @@ export const initialState: OutsideState = {
   numRows: 1,
   numCols: 1,
   headerHeight: "auto",
-  headerWidth: "auto",
+  headerWidth: "50px",
   defaultHeight: "20px",
   defaultWidth: "90px",
   editingOnEnter: true,

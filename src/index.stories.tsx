@@ -48,6 +48,20 @@ const data = [
 ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
 [true, "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
 [false, "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
+[123456, "b", "c", "d", "e", "aa", "bb", "cc", [1,2,3], "ee"],
+["a", "b", 789, "d", "e", "aa", "bb", "cc", "dd", "ee"],
+["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
+["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
+["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
+["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
+["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
+["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
+["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
+["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
+["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
+["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
+[true, "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
+[false, "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
 ];
 
 export default {
@@ -59,7 +73,7 @@ export const showIndex = () => (<GridSheet
   options={{
     // cellLabel: false,
     // headerWidth: "50px",
-    // headerHeight: "40px",
+    headerHeight: "40px",
     historySize: 100,
     mode: "dark",
     //stickyHeaders: "horizontal",

@@ -19,7 +19,6 @@ export const GridTableLayout = styled.div`
       min-height: 20px;
       .resizer {
         resize: horizontal;
-        overflow: hidden;
       }
     }
     &.vertical {
@@ -27,11 +26,15 @@ export const GridTableLayout = styled.div`
       overflow: hidden;
       min-width: 30px;
       .resizer {
-        box-sizing: border-box;
         padding: 0 10px;
-        resize: vertical;
-        overflow: hidden;
+        resize: vertical; 
       }
+    }
+    .resizer {
+      box-sizing: border-box;
+      display: table-cell;
+      vertical-align: middle;
+      overflow: hidden;
     }
   }
   td {
