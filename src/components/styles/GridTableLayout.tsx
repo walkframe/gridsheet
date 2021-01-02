@@ -32,9 +32,11 @@ export const GridTableLayout = styled.div`
     }
     .resizer {
       box-sizing: border-box;
-      display: table-cell;
       vertical-align: middle;
       overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
   }
   td {
