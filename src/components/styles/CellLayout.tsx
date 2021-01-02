@@ -15,7 +15,8 @@ export const CellLayout = styled.div`
     & > * {
       position: absolute;
       top: 0;
-      z-index: 1;
+      left: 0;
+      z-index: 0;
     }
   }
 
