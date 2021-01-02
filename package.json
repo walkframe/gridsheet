@@ -3,6 +3,7 @@
   "version": "0.2.1",
   "description": "",
   "main": "dist/index.js",
+  "module": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "$(npm bin)/webpack --mode=production",
@@ -25,7 +26,8 @@
   "files": [
     "dist/",
     "package.json",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "bugs": {
     "url": "https://github.com/righ/react-gridsheet/issues"
