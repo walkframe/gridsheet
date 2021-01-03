@@ -19,7 +19,7 @@ import {
   zoneShape, superposeArea,
   makeReactions,
 } from "../api/arrays"
-import {convertTSVToArray} from "../api/converters";
+import {tsv2matrix} from "../api/converters";
 import { ParserType } from "../parsers/core";
 
 export type InsideState = {
@@ -126,7 +126,7 @@ const reducers = {
     }
     if (selectingTop === -1) { // unselecting destination
       if (copyingTop === -1) { // unselecting source
-        after = convertTSVToArray(text, Parser);
+        after = tsv2matrix(text, Parser);
         [height, width] = [after.length - 1, after[0].length - 1];
       }
       dst = [y, x, y + height, x + width];
@@ -135,7 +135,7 @@ const reducers = {
       selectingZone = height === 0 && width === 0 ? [-1, -1, -1, -1] : [y, x, y + height, x + width];
     } else { // selecting destination
       if (copyingTop === -1) { // unselecting source
-        after = convertTSVToArray(text, Parser);
+        after = tsv2matrix(text, Parser);
         [height, width] = superposeArea([0, 0, after.length - 1, after[0].length - 1], [0, 0, selectingHeight, selectingWidth]);
       } else { // selecting source
         [height, width] = superposeArea(copyingArea, selectingArea);

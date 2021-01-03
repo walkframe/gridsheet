@@ -1,28 +1,45 @@
-import { RendererType } from "../renderers/core";
-import { ParserType } from "../parsers/core";
+import { Renderer } from "../renderers/core";
+import { Parser } from "../parsers/core";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-const CONVERTER_CACHE: {[s: string]: string} = {};
+const N2A_CACHE: {[s: string]: string} = {};
+const A2N_CACHE: {[s: string]: number} = {};
 
-export const convertNtoA = (num: number): string => {
-  if (CONVERTER_CACHE[num]) {
-    return CONVERTER_CACHE[num];
+export const n2a = (num: number, useCache=true): string => {
+  if (useCache && N2A_CACHE[num]) {
+    return N2A_CACHE[num];
   }
   let result = "";
   do {
     result = ALPHABET[--num % 26] + result;
     num = Math.floor(num / 26);
   } while(num > 0);
-  CONVERTER_CACHE[num] = result;
+  if (useCache) {
+    N2A_CACHE[num] = result;
+    A2N_CACHE[result] = num;
+  }
   return result;
 };
 
-export const convertAtoN = (alpha: string): number => {
-  return 0;
+export const a2n = (alpha: string, useCache=true): number => {
+  if (useCache && A2N_CACHE[alpha]) {
+    return A2N_CACHE[alpha];
+  }
+  let result = 0;
+  for (let digit = 0; digit < alpha.length; digit++) {
+    const a = alpha[alpha.length - digit - 1];
+    const num = ALPHABET.indexOf(a) + 1;
+    result += (ALPHABET.length ** digit) * num;
+  }
+  if (useCache) {
+    N2A_CACHE[result] = alpha;
+    A2N_CACHE[alpha] = result;
+  }
+  return result;
 };
 
-export const convertArrayToTSV = (rows: any[][], renderer: RendererType): string => {
+export const matrix2tsv = (rows: any[][], renderer=Renderer): string => {
   const lines: string[] = [];
   rows.map((row) => {
     const cols: string[] = [];
@@ -39,7 +56,7 @@ export const convertArrayToTSV = (rows: any[][], renderer: RendererType): string
   return lines.join("\n");
 };
 
-export const convertTSVToArray = (tsv: string, Parser: ParserType): any[][] => {
+export const tsv2matrix = (tsv: string, parser=Parser): any[][] => {
   tsv = tsv.replace(/""/g, "\x00");
   const restoreDoubleQuote = (text: string) => text.replace(/\x00/g, '"');
   const rows: any[][] = [];
@@ -68,21 +85,21 @@ export const convertTSVToArray = (tsv: string, Parser: ParserType): any[][] => {
   tsv.split("\t").map((col) => {
     if (col[0] === '"' && col[col.length-1] === '"') { // escaping
       const cell = restoreDoubleQuote(col.substring(1, col.length - 1));
-      row.push(new Parser(cell).parse());
+      row.push(new parser(cell).parse());
     } else {
       const enterIndex = col.indexOf("\n");
       if (enterIndex === -1) {
         const cell = restoreDoubleQuote(col);
-        row.push(new Parser(cell).parse());
+        row.push(new parser(cell).parse());
       } else {
         const cell = restoreDoubleQuote(col.substring(0, enterIndex));
-        row.push(new Parser(cell).parse());
+        row.push(new parser(cell).parse());
         rows.push(row);
         row = [];
         const nextCol = col.substring(enterIndex + 1, col.length);
         if (nextCol) {
           const nextCell = restoreDoubleQuote(nextCol);
-          row.push(new Parser(nextCell).parse());
+          row.push(new parser(nextCell).parse());
         }
       }
     }

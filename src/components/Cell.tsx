@@ -1,6 +1,6 @@
 import React from "react";
 import { useDispatch, useSelector } from 'react-redux';
-import {convertNtoA} from "../api/converters";
+import {n2a} from "../api/converters";
 import { clip } from "../api/clipboard";
 import { zoneToArea, among, zoneShape } from "../api/arrays";
 import { RootState } from "../store";
@@ -44,7 +44,7 @@ export const Cell: React.FC<Props> = React.memo(({
   clipboardRef,
 }) => {
   const rowId = `${ y + 1 }`;
-  const colId = convertNtoA(x + 1);
+  const colId = n2a(x + 1);
   const cellId = `${colId}${rowId}`;
   const dispatch = useDispatch();
 

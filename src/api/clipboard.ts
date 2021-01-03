@@ -8,7 +8,7 @@ import {
   cropMatrix,
   zoneToArea,
 } from "./arrays";
-import { convertArrayToTSV } from "./converters";
+import { matrix2tsv } from "./converters";
 import { RendererType } from "../renderers/core";
 
 export const clip = (
@@ -24,7 +24,7 @@ export const clip = (
   }
   const input = clipboardRef.current;
   const copyingRows = cropMatrix(matrix, area);
-  const tsv = convertArrayToTSV(copyingRows, renderer);
+  const tsv = matrix2tsv(copyingRows, renderer);
   if (input != null) {
     input.value = tsv;
     input.focus();

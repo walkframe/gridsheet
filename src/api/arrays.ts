@@ -9,7 +9,7 @@ import {
   Height, Width,
 } from "../types";
 
-import { convertNtoA } from "./converters";
+import { n2a } from "./converters";
 
 export const cropMatrix = (matrix: MatrixType, area: AreaType): MatrixType => {
   const [top, left, bottom, right] = area;
@@ -117,7 +117,7 @@ export const makeReactions = (... areas: (AreaType | ZoneType | PositionType)[])
       for (let x = left; x <= right; x++) {
         let col = colsCache[x + 1];
         if (typeof col === "undefined") {
-          col = convertNtoA(x + 1);
+          col = n2a(x + 1);
           colsCache[x + 1] = col;
         }
         reactions[`${col}`] = true;

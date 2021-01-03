@@ -16,7 +16,7 @@ import {
 } from "../store/outside";
 
 import {
-  convertArrayToTSV,
+  matrix2tsv,
 } from "../api/converters";
 
 import { Renderer } from "../renderers/core";
@@ -32,7 +32,7 @@ export const ChangeEmitter: React.FC<Props> = ({ onChange }) => {
       if (old.matrix.length === 0) {
         return false;
       }
-      if (convertArrayToTSV(current.matrix, Renderer) !== convertArrayToTSV(old.matrix, Renderer)) {
+      if (matrix2tsv(current.matrix, Renderer) !== matrix2tsv(old.matrix, Renderer)) {
         onChange(current.matrix, undefined);
         return false;
       }

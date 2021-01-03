@@ -1,6 +1,6 @@
 import React from "react";
 import { useDispatch, useSelector } from 'react-redux';
-import { convertNtoA } from "../api/converters";
+import { n2a } from "../api/converters";
 import { between } from "../api/arrays";
 import { RootState } from "../store";
 import {
@@ -21,7 +21,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
   x,
 }) => {
   const dispatch = useDispatch();
-  const colId = convertNtoA(x + 1);
+  const colId = n2a(x + 1);
 
   const {
     cellsOption,
