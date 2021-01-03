@@ -25,6 +25,7 @@ import { ParserType } from "../parsers/core";
 export type InsideState = {
   matrix: MatrixType;
   choosing: PositionType;
+  lastChoosing: PositionType;
   cutting: boolean;
   copyingZone: ZoneType;
   selectingZone: ZoneType;
@@ -38,6 +39,7 @@ export type InsideState = {
 export const initialState: InsideState = {
   matrix: [],
   choosing: [-1, -1],
+  lastChoosing: [-1, -1],
   cutting: false,
   selectingZone: [-1, -1, -1, -1],
   copyingZone: [-1, -1, -1, -1],
@@ -93,9 +95,15 @@ const reducers = {
       ...state,
       reactions,
       choosing: action.payload,
-      selectingZone: [y, x, y, x] as ZoneType,
-      horizontalHeadersSelecting: false,
-      verticalHeadersSelecting: false,
+      lastChoosing: state.choosing,
+    };
+  },
+  reChoose: (state: Draft<InsideState>) => {
+    const reactions = makeReactions(state.lastChoosing, state.choosing);
+    return {
+      ...state,
+      reactions,
+      choosing: state.lastChoosing,
     };
   },
   setEditingCell: (state: Draft<InsideState>, action: PayloadAction<string>) => {
@@ -392,6 +400,7 @@ export const {
   blur,
   escape,
   choose,
+  reChoose,
   setEditingCell,
   copy,
   cut,

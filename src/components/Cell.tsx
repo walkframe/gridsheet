@@ -9,7 +9,7 @@ import {
   blur,
   clear,
   escape,
-  choose,
+  choose, reChoose,
   select, drag,
   setEditingCell,
   undo, redo,
@@ -136,6 +136,10 @@ export const Cell: React.FC<Props> = React.memo(({
     onClick={(e) => {
       if (e.shiftKey) {
         dispatch(drag([y, x]));
+        dispatch(choose([-1, -1]));
+        setTimeout(() => {
+          dispatch(reChoose());
+        }, 100)
       } else {
         dispatch(choose([y, x]));
         dispatch(select([-1, -1, -1, -1]));
