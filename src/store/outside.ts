@@ -28,7 +28,7 @@ export const initialState: OutsideState = {
   cellsOption: {},
   numRows: 1,
   numCols: 1,
-  headerHeight: "auto",
+  headerHeight: "20px",
   headerWidth: "50px",
   defaultHeight: "20px",
   defaultWidth: "90px",
