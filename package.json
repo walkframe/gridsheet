@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/righ/react-gridsheet.git"
+    "url": "git+https://github.com/walkframe/react-gridsheet.git"
   },
   "keywords": [
     "spreadsheet",
@@ -28,9 +28,9 @@
     "LICENSE"
   ],
   "bugs": {
-    "url": "https://github.com/righ/react-gridsheet/issues"
+    "url": "https://github.com/walkframe/react-gridsheet/issues"
   },
-  "homepage": "https://github.com/righ/react-gridsheet#readme",
+  "homepage": "https://docs.walkframe.com/products/react-gridsheet/",
   "devDependencies": {
     "@storybook/addon-actions": "^6.0.21",
     "@storybook/addon-essentials": "^6.0.21",

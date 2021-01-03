@@ -1,4 +1,4 @@
-<img src="https://github.com/righ/react-gridsheet/raw/master/gridsheet.png" alt="gridsheet image" />
+<img src="https://github.com/walkframe/react-gridsheet/raw/master/gridsheet.png" alt="gridsheet image" />
 
 ## Installation
 
