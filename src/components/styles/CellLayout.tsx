@@ -16,6 +16,9 @@ export const CellLayout = styled.div`
       position: absolute;
       top: 0;
       left: 0;
+      z-index: 2;
+    }
+    & > .backface {
       z-index: 0;
     }
   }
