@@ -13,10 +13,8 @@ export const CellLayout = styled.div`
   .rendered {
     padding: 0 2px;
     & > * {
-      position: absolute;
-      top: 0;
-      left: 0;
       z-index: 2;
+      position: relative;
     }
     & > .backface {
       z-index: 0;
