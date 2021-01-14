@@ -49,7 +49,6 @@ export const Cell: React.FC<Props> = React.memo(({
   const dispatch = useDispatch();
 
   const {
-    cellsOption,
     cellLabel,
     defaultHeight,
     defaultWidth,
@@ -66,6 +65,7 @@ export const Cell: React.FC<Props> = React.memo(({
 
   const {
     matrix,
+    cellsOption,
     editingCell,
     choosing,
     selectingZone,

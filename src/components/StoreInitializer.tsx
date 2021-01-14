@@ -7,20 +7,16 @@ import {
 } from "../types";
 
 import {
-  GridTable,
-} from "./GridTable";
-
-import {
   matrixShape,
 } from "../api/arrays";
 
 import {
   setMatrix,
+  setCellsOption,
   initHistory,
 } from "../store/inside";
 
 import {
-  setCellsOption,
   setHeaderHeight,
   setHeaderWidth,
   setDefaultHeight,
@@ -40,7 +36,7 @@ type Props = {
   options: OptionsType;
 };
 
-export const StoreInjector: React.FC<Props> = ({data, options}) => {
+export const StoreInitializer: React.FC<Props> = ({data, options}) => {
   const {
     historySize = 10,
     cells,
@@ -124,9 +120,7 @@ export const StoreInjector: React.FC<Props> = ({data, options}) => {
     dispatch(initHistory(historySize));
   }, []);
 
-  return (<div>
-    <GridTable />
-  </div>);
+  return (<></>);
 };
 
 

@@ -1,7 +1,5 @@
 import { createSlice, PayloadAction, Draft } from "@reduxjs/toolkit";
 import {
-  CellOptionType,
-  CellsOptionType,
   Feedback,
   Headers,
   Renderers,
@@ -9,7 +7,6 @@ import {
 } from "../types";
 
 export type OutsideState = {
-  cellsOption: {[s: string]: CellOptionType};
   numRows: number;
   numCols: number;
   headerHeight: string;
@@ -25,7 +22,6 @@ export type OutsideState = {
 }
 
 export const initialState: OutsideState = {
-  cellsOption: {},
   numRows: 1,
   numCols: 1,
   headerHeight: "20px",
@@ -43,9 +39,6 @@ const slice = createSlice({
   name: "outside",
   initialState,
   reducers: {
-    setCellsOption: (state: Draft<OutsideState>, action: PayloadAction<CellsOptionType>) => {
-      return {...state, cellsOption: action.payload};
-    },
     setHeaderHeight: (state: Draft<OutsideState>, action: PayloadAction<string>) => {
       return {...state, headerHeight: action.payload};
     },
@@ -87,7 +80,6 @@ const slice = createSlice({
 
 export default slice.reducer;
 export const {
-  setCellsOption,
   setHeaderHeight,
   setHeaderWidth,
   setDefaultHeight,

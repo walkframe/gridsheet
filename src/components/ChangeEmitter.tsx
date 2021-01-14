@@ -39,8 +39,8 @@ export const ChangeEmitter: React.FC<Props> = ({ onChange }) => {
       return true;
     }
   );
-  useSelector<RootState, OutsideState>(
-      state => state["outside"],
+  useSelector<RootState, InsideState>(
+      state => state["inside"],
       (current, old) => {
         if (JSON.stringify(current.cellsOption) !== JSON.stringify(old.cellsOption)) {
           onChange(undefined, current.cellsOption);

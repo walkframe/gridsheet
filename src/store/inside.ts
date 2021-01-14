@@ -1,6 +1,8 @@
 import { createSlice, PayloadAction, Draft } from "@reduxjs/toolkit";
 import {
   MatrixType,
+  CellsOptionType,
+  CellOptionType,
   PositionType,
   RangeType,
   AreaType,
@@ -24,6 +26,7 @@ import { ParserType } from "../parsers/core";
 
 export type InsideState = {
   matrix: MatrixType;
+  cellsOption: {[s: string]: CellOptionType};
   choosing: PositionType;
   lastChoosing: PositionType;
   cutting: boolean;
@@ -38,6 +41,7 @@ export type InsideState = {
 
 export const initialState: InsideState = {
   matrix: [],
+  cellsOption: {},
   choosing: [-1, -1],
   lastChoosing: [-1, -1],
   cutting: false,
@@ -53,6 +57,9 @@ export const initialState: InsideState = {
 const reducers = {
   setMatrix: (state: Draft<InsideState>, action: PayloadAction<MatrixType>) => {
     return {...state, matrix: [... action.payload]};
+  },
+  setCellsOption: (state: Draft<InsideState>, action: PayloadAction<CellsOptionType>) => {
+    return {...state, cellsOption: action.payload};
   },
   blur: (state: Draft<InsideState>) => {
     const reactions = makeReactions(state.choosing, state.selectingZone);
@@ -397,6 +404,7 @@ const slice = createSlice({
 export default slice.reducer;
 export const {
   setMatrix,
+  setCellsOption,
   blur,
   escape,
   choose,

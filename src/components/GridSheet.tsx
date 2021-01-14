@@ -9,8 +9,12 @@ import {
 import { store } from "../store";
 
 import {
-  StoreInjector,
-} from "./StoreInjector";
+  GridTable,
+} from "./GridTable";
+
+import {
+  StoreInitializer,
+} from "./StoreInitializer";
 
 import {
   ChangeEmitter,
@@ -35,7 +39,8 @@ export const GridSheet: React.FC<Props> = ({data, options}) => {
   const { onChange, mode } = options;
   return (<GridSheetLayout className={`react-grid-sheet ${mode || "light"}`}>
     <Provider store={store}>
-      <StoreInjector
+      <GridTable />
+      <StoreInitializer
         data={data}
         options={options}
       />

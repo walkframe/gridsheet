@@ -59,6 +59,7 @@ export class Renderer {
         checked={value}
         onChange={(e) => {
           writer && writer(e.currentTarget.checked.toString());
+          e.currentTarget.blur();
         }}
       />
     );

@@ -4,13 +4,14 @@ import { between } from "../api/arrays";
 import { RootState } from "../store";
 import {
   InsideState,
+  setCellsOption,
   drag,
   selectRows,
 } from "../store/inside";
 import {DUMMY_IMG} from "../constants";
 
 
-import {OutsideState, setCellsOption} from "../store/outside";
+import { OutsideState } from "../store/outside";
 
 type Props = {
   y: number;
@@ -23,13 +24,13 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({
   const dispatch = useDispatch();
 
   const {
-    cellsOption,
     numCols,
     defaultHeight,
     headerWidth,
     stickyHeaders,
   } = useSelector<RootState, OutsideState>(state => state["outside"]);
   const {
+    cellsOption,
     choosing,
     selectingZone,
     verticalHeadersSelecting,

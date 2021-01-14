@@ -4,14 +4,15 @@ import { n2a } from "../api/converters";
 import { between } from "../api/arrays";
 import { RootState } from "../store";
 import {
-  InsideState, 
+  InsideState,
+  setCellsOption,
   drag,
   selectCols
 } from "../store/inside";
 
 import { DUMMY_IMG } from "../constants";
 
-import { OutsideState, setCellsOption } from "../store/outside";
+import { OutsideState } from "../store/outside";
 
 type Props = {
   x: number;
@@ -24,7 +25,6 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
   const colId = n2a(x + 1);
 
   const {
-    cellsOption,
     numRows,
     headerHeight,
     defaultWidth,
@@ -32,6 +32,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
   } = useSelector<RootState, OutsideState>(state => state["outside"]);
   const {
     choosing,
+    cellsOption,
     selectingZone,
     horizontalHeadersSelecting,
   } = useSelector<RootState, InsideState>(
