@@ -137,8 +137,7 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
           dispatch(setNumRows(numRows + height + 1));
           dispatch(setContextMenuPosition([-1, -1]));
         }}>
-          <div className="name">Add row{ height > 0 && "s" } above</div>
-          <div className="shortcut"><span className="underline">C</span></div>
+          <div className="name">Insert { height + 1 } row{ height > 0 && "s" } above</div>
         </li>
       }
       { !horizontalHeadersSelecting &&
@@ -147,8 +146,7 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
           dispatch(setNumRows(numRows + height + 1));
           dispatch(setContextMenuPosition([-1, -1]));
         }}>
-          <div className="name">Add row{ height > 0 && "s" } below</div>
-          <div className="shortcut"><span className="underline">C</span></div>
+          <div className="name">Insert { height + 1 } row{ height > 0 && "s" } below</div>
         </li>
       }
       
@@ -159,8 +157,7 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
           dispatch(setNumCols(numCols + width + 1));
           dispatch(setContextMenuPosition([-1, -1]));
         }}>
-          <div className="name">Add column{ width > 0 && "s" } left</div>
-          <div className="shortcut"><span className="underline">C</span></div>
+          <div className="name">Insert { width + 1 } column{ width > 0 && "s" } left</div>
         </li>
       }
       { !verticalHeadersSelecting &&
@@ -170,8 +167,7 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
           dispatch(setNumCols(numCols + width + 1));
           dispatch(setContextMenuPosition([-1, -1]));
         }}>
-          <div className="name">Add column{ width > 0 && "s" } right</div>
-          <div className="shortcut"><span className="underline">C</span></div>
+          <div className="name">Insert { width + 1 } column{ width > 0 && "s" } right</div>
         </li>
       }
 
@@ -181,8 +177,7 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
           dispatch(setNumRows(numRows - height - 1));
           dispatch(setContextMenuPosition([-1, -1]));
         }}>
-          <div className="name">Remove row{ height > 0 && "s" }</div>
-          <div className="shortcut"><span className="underline">C</span></div>
+          <div className="name">Remove { height + 1 } row{ height > 0 && "s" }</div>
         </li>
       }
 
@@ -192,8 +187,7 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
           dispatch(setNumCols(numCols - width - 1));
           dispatch(setContextMenuPosition([-1, -1]));
         }}>
-          <div className="name">Remove column{ width > 0 && "s" }</div>
-          <div className="shortcut"><span className="underline">C</span></div>
+          <div className="name">Remove { width + 1 } column{ width > 0 && "s" }</div>
         </li>
       }
 

@@ -8,7 +8,7 @@ export const ContextMenuLayout = styled.div`
   border-radius: 5px;
 
   ul {
-    min-width: 200px;
+    min-width: 250px;
     color: #555555;
     margin: 0;
     padding: 0;
