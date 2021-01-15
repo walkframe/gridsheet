@@ -20,6 +20,9 @@ import {
   ChangeEmitter,
 } from "./ChangeEmitter";
 import {
+  ContextMenu,
+} from "./ContextMenu"
+import {
   GridSheetLayout,
 } from "./styles/GridSheetLayout";
 
@@ -37,13 +40,16 @@ export const GridSheet: React.FC<Props> = ({data, options}) => {
   }
 
   const { onChange, mode } = options;
+  const clipboardRef = React.createRef<HTMLTextAreaElement>();
   return (<GridSheetLayout className={`react-grid-sheet ${mode || "light"}`}>
+    <textarea className="clipboard" ref={clipboardRef} />
     <Provider store={store}>
-      <GridTable />
+      <GridTable clipboardRef={clipboardRef} />
       <StoreInitializer
         data={data}
         options={options}
       />
+      <ContextMenu clipboardRef={clipboardRef} />
       { onChange && <ChangeEmitter onChange={onChange} /> }
     </Provider>
   </GridSheetLayout>);

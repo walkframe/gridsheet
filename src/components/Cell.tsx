@@ -1,6 +1,6 @@
 import React from "react";
 import { useDispatch, useSelector } from 'react-redux';
-import {n2a} from "../api/converters";
+import { n2a } from "../api/converters";
 import { clip } from "../api/clipboard";
 import { zoneToArea, among, zoneShape } from "../api/arrays";
 import { RootState } from "../store";
@@ -19,6 +19,7 @@ import {
 
 import {
   OutsideState,
+  setContextMenuPosition,
 } from "../store/outside";
 
 import { DUMMY_IMG } from "../constants";
@@ -133,7 +134,13 @@ export const Cell: React.FC<Props> = React.memo(({
       ... getCellStyle(y, x, copyingArea, cutting),
     }}
     draggable={!editing}
+    onContextMenu={(e) => {
+      e.preventDefault();
+      dispatch(setContextMenuPosition([e.pageY, e.pageX]));
+      return false;
+    }}
     onClick={(e) => {
+      dispatch(setContextMenuPosition([-1, -1]));
       if (e.shiftKey) {
         dispatch(drag([y, x]));
         dispatch(choose([-1, -1]));

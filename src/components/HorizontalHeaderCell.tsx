@@ -12,7 +12,7 @@ import {
 
 import { DUMMY_IMG } from "../constants";
 
-import { OutsideState } from "../store/outside";
+import { OutsideState, setContextMenuPosition } from "../store/outside";
 
 type Props = {
   x: number;
@@ -53,6 +53,11 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
       ${choosing[1] === x ? "choosing" : ""} 
       ${between([selectingZone[1], selectingZone[3]], x) ? horizontalHeadersSelecting ? "header-selecting" : "selecting" : ""}`}
     draggable
+    onContextMenu={(e) => {
+      e.preventDefault();
+      dispatch(setContextMenuPosition([e.pageY, e.pageX]));
+      return false;
+    }}
     onClick={(e) => {
       let startX = e.shiftKey ? selectingZone[1] : x;
       if (startX === -1) {

@@ -23,8 +23,11 @@ import {
 
 import { RootState } from "../store";
 
-export const GridTable: React.FC = () => {
-  const clipboardRef = React.createRef<HTMLTextAreaElement>();
+type Props = {
+  clipboardRef: React.RefObject<HTMLTextAreaElement>;
+};
+
+export const GridTable: React.FC<Props> = ({ clipboardRef }) => {
   const dispatch = useDispatch();
   const {
     numRows,
@@ -32,7 +35,6 @@ export const GridTable: React.FC = () => {
   } = useSelector<RootState, OutsideState>(state => state["outside"]);
 
   return (<GridTableLayout>
-    <textarea className="clipboard" ref={clipboardRef} />
     <table>
       <thead>
         <tr>

@@ -8,10 +8,10 @@ import {
   drag,
   selectRows,
 } from "../store/inside";
-import {DUMMY_IMG} from "../constants";
+import { DUMMY_IMG } from "../constants";
 
 
-import { OutsideState } from "../store/outside";
+import { OutsideState, setContextMenuPosition } from "../store/outside";
 
 type Props = {
   y: number;
@@ -61,6 +61,11 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({
       return false;
     }}
     draggable
+    onContextMenu={(e) => {
+      e.preventDefault();
+      dispatch(setContextMenuPosition([e.pageY, e.pageX]));
+      return false;
+    }}
     onDragStart={(e) => {
       e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
       dispatch(selectRows({range: [y, y], numCols}));

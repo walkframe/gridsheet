@@ -16,6 +16,7 @@ export type OutsideState = {
   editingOnEnter: boolean;
   cellLabel: boolean;
   stickyHeaders: Headers;
+  contextMenuPosition: [number, number];
   renderers: Renderers;
   parsers: Parsers;
   onSave?: Feedback;
@@ -31,6 +32,7 @@ export const initialState: OutsideState = {
   editingOnEnter: true,
   cellLabel: true,
   stickyHeaders: "both",
+  contextMenuPosition: [-1, -1],
   renderers: {},
   parsers: {},
 };
@@ -60,6 +62,9 @@ const slice = createSlice({
     setStickyHeaders: (state: Draft<OutsideState>, action: PayloadAction<Headers>) => {
       return {...state, stickyHeaders: action.payload};
     },
+    setContextMenuPosition: (state: Draft<OutsideState>, action: PayloadAction<[number, number]>) => {
+      return {...state, contextMenuPosition: action.payload};
+    },
     setRenderers: (state: Draft<OutsideState>, action: PayloadAction<Renderers>) => {
       return {...state, renderers: action.payload};
     },
@@ -87,6 +92,7 @@ export const {
   setEditingOnEnter,
   setCellLabel,
   setStickyHeaders,
+  setContextMenuPosition,
   setRenderers,
   setParsers,
   setNumRows,
