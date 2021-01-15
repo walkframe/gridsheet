@@ -70,11 +70,11 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
   const colOption: CellOptionType = cellsOption[colId] || {};
   const cellOption: CellOptionType = cellsOption[cellId] || {};
 
-  const renderer = cellOption.renderer || colOption.renderer || rowOption.renderer || defaultOption.renderer;
-  const parser = cellOption.parser || colOption.parser || rowOption.parser || defaultOption.parser;
+  const rendererKey = cellOption.renderer || colOption.renderer || rowOption.renderer || defaultOption.renderer;
+  const parserKey = cellOption.parser || colOption.parser || rowOption.parser || defaultOption.parser;
 
-  const Renderer = renderers[renderer || ""] || DefaultRenderer;
-  const Parser = parsers[parser || ""] || DefaultParser;
+  const renderer = renderers[rendererKey || ""] || new DefaultRenderer();
+  const parser = parsers[parserKey || ""] || new DefaultParser();
 
   const [top, left] = contextMenuPosition;
   if (top === -1) {
@@ -89,7 +89,7 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
   >
     <ul>
       <li onClick={(e) => {
-        const area = clip(selectingZone, choosing, matrix, clipboardRef, Renderer);
+        const area = clip(selectingZone, choosing, matrix, clipboardRef, renderer);
         dispatch(cut(area));
         dispatch(setContextMenuPosition([-1, -1]));
       }}>
@@ -97,7 +97,7 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
         <div className="shortcut"><span className="underline">X</span></div>
       </li>
       <li onClick={(e) => {
-        const area = clip(selectingZone, choosing, matrix, clipboardRef, Renderer);
+        const area = clip(selectingZone, choosing, matrix, clipboardRef, renderer);
         dispatch(copy(area));
         dispatch(setContextMenuPosition([-1, -1]));
       }}>
@@ -106,7 +106,7 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
       </li>
       <li onClick={async (e) => {
         const text = await navigator.clipboard.readText();
-        dispatch(paste({ text, Parser }));
+        dispatch(paste({ text, parser }));
         dispatch(setContextMenuPosition([-1, -1]));
       }}>
         <div className="name">Paste</div>

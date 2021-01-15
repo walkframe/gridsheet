@@ -98,7 +98,7 @@ export const showIndex = () => (<GridSheet
       }
     },
     renderers: {
-      kanji: KanjiRenderer,
+      kanji: new KanjiRenderer(),
     },
   }}
 />);

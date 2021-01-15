@@ -118,7 +118,7 @@ const reducers = {
     const reactions = makeReactions(state.selectingZone, [y, x, y, x]);
     return {...state, reactions, editingCell: action.payload};
   },
-  paste: (state: Draft<InsideState>, action: PayloadAction<{text: string, Parser: ParserType}>) => {
+  paste: (state: Draft<InsideState>, action: PayloadAction<{text: string, parser: ParserType}>) => {
     const { choosing, copyingZone, cutting } = state;
     let { matrix, selectingZone } = state;
     const [y, x] = choosing;
@@ -128,7 +128,7 @@ const reducers = {
     const [copyingTop, copyingLeft] = copyingArea;
     const [selectingHeight, selectingWidth] = zoneShape(selectingArea);
     const [copyingHeight, copyingWidth] = zoneShape(copyingArea);
-    const { text, Parser } = action.payload;
+    const { text, parser } = action.payload;
 
     let before: MatrixType = [];
     let after = cropMatrix(matrix, copyingArea);
@@ -141,7 +141,7 @@ const reducers = {
     }
     if (selectingTop === -1) { // unselecting destination
       if (copyingTop === -1) { // unselecting source
-        after = tsv2matrix(text, Parser);
+        after = tsv2matrix(text, parser);
         [height, width] = [after.length - 1, after[0].length - 1];
       }
       dst = [y, x, y + height, x + width];
@@ -150,7 +150,7 @@ const reducers = {
       selectingZone = height === 0 && width === 0 ? [-1, -1, -1, -1] : [y, x, y + height, x + width];
     } else { // selecting destination
       if (copyingTop === -1) { // unselecting source
-        after = tsv2matrix(text, Parser);
+        after = tsv2matrix(text, parser);
         [height, width] = superposeArea([0, 0, after.length - 1, after[0].length - 1], [0, 0, selectingHeight, selectingWidth]);
       } else { // selecting source
         [height, width] = superposeArea(copyingArea, selectingArea);

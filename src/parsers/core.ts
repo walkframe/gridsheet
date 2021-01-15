@@ -1,28 +1,47 @@
 import { parseFromTimeZone } from "date-fns-timezone";
 
+type Condition = (value: string) => boolean;
+type Stringify = (value: string) => any;
+
+type Props = {
+  condition?: Condition;
+  complement?: Stringify;
+}
+
 export class Parser {
-  protected value: string;
   protected parseFunctions: ((value: string) => any)[] = [
     this.number,
     this.date,
     this.bool,
   ];
 
-  constructor(value: string) {
-    this.value = value;
+  private condition?: Condition;
+  private complement?: Stringify;
+
+  constructor(props?: Props) {
+    if (props == null) {
+      return;
+    }
+    const { condition, complement } = props;
+    this.condition = condition;
+    this.complement = complement;
   }
 
-  public parse (): any {
-    if (this.value[0] === "'") {
-      return this.value;
+  public parse (value: string): any {
+    if (this.condition && !this.condition(value)) {
+      return this.complement ? this.complement(value) : value;
+    }
+
+    if (value[0] === "'") {
+      return value;
     }
     for (let i = 0; i < this.parseFunctions.length; i++) {
-      const result = this.parseFunctions[i](this.value);
+      const result = this.parseFunctions[i](value);
       if (result != null) {
         return result;
       }
     }
-    return this.value;
+    return value;
   }
 
   protected bool (value: string): boolean | undefined {
@@ -54,4 +73,4 @@ export class Parser {
   }
 };
 
-export type ParserType = typeof Parser;
+export type ParserType = Parser;
