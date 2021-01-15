@@ -13,6 +13,7 @@ import {
 import { pushHistory } from "../api/histories";
 
 import {
+  makeSequence,
   cropMatrix,
   writeMatrix,
   slideArea,
@@ -392,6 +393,67 @@ const reducers = {
       matrix: written,
     };
   },
+  addRows: (state: Draft<InsideState>, action: PayloadAction<{
+    numRows: number;
+    target: number;
+  }>) => {
+    const matrix = [...state.matrix];
+    const width = matrix[0].length;
+    const { numRows, target } = action.payload;
+    const blanks = makeSequence(0, numRows).map(() => makeSequence(0, width).map(() => ""));
+    matrix.splice(target, 0, ...blanks);
+    return {
+      ...state,
+      matrix: [... matrix],
+      reactions: makeReactions([0, 0, matrix.length, matrix[0].length]),
+    }
+  },
+  removeRows: (state: Draft<InsideState>, action: PayloadAction<{
+    numRows: number;
+    target: number;
+  }>) => {
+    const matrix = [...state.matrix];
+    const { numRows, target } = action.payload;
+    matrix.splice(target, numRows);
+    return {
+      ...state,
+      matrix: [... matrix],
+      reactions: makeReactions([0, 0, matrix.length, matrix[0].length]),
+    }
+  },
+  addCols: (state: Draft<InsideState>, action: PayloadAction<{
+    numCols: number;
+    target: number;
+  }>) => {
+    const { numCols, target } = action.payload;
+    const matrix = [...state.matrix].map((cols) => {
+      const blanks = makeSequence(0, numCols).map(() => "");
+      cols = [...cols];
+      cols.splice(target, 0, ...blanks);
+      return cols;
+    });
+    return {
+      ...state,
+      matrix,
+      reactions: makeReactions([0, 0, matrix.length, matrix[0].length]),
+    }
+  },
+  removeCols: (state: Draft<InsideState>, action: PayloadAction<{
+    numCols: number;
+    target: number;
+  }>) => {
+    const { numCols, target } = action.payload;
+    const matrix = [...state.matrix].map((cols) => {
+      cols = [...cols];
+      cols.splice(target, numCols);
+      return cols;
+    });
+    return {
+      ...state,
+      matrix,
+      reactions: makeReactions([0, 0, matrix.length, matrix[0].length]),
+    }
+  },
 };
 
 const slice = createSlice({
@@ -424,4 +486,8 @@ export const {
   walk,
   write,
   clear,
+  addRows,
+  removeRows,
+  addCols,
+  removeCols,
 } = slice.actions;

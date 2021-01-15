@@ -18,14 +18,22 @@ import {
   undo, redo,
   arrow, walk, write,
   copy, cut, paste,
+  addRows, removeRows,
+  addCols, removeCols,
 } from "../store/inside";
 import {
   OutsideState,
+  setNumRows,
+  setNumCols,
   setContextMenuPosition,
 } from "../store/outside"
 import {
   ContextMenuLayout,
 } from "./styles/ContextMenuLayout";
+import {
+  zoneShape,
+  zoneToArea,
+} from "../api/arrays";
 
 import {
   AreaType,
@@ -45,6 +53,8 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
     renderers,
     parsers,
     onSave,
+    numRows,
+    numCols,
     contextMenuPosition,
   } = useSelector<RootState, OutsideState>(
       state => state["outside"]);
@@ -61,9 +71,15 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
   } = useSelector<RootState, InsideState>(state => state["inside"]);
 
   const [y, x] = choosing;
+  let [selectingTop, selectingLeft, selectingBottom, selectingRight] = zoneToArea(selectingZone);
+  if (selectingTop === -1) {
+    [selectingTop, selectingLeft, selectingBottom, selectingRight] = [y, x, y, x];
+  }
   const rowId = `${ y + 1 }`;
   const colId = n2a(x + 1);
   const cellId = `${colId}${rowId}`;
+
+  const [height, width] = zoneShape(selectingZone);
 
   const defaultOption: CellOptionType = cellsOption.default || {};
   const rowOption: CellOptionType = cellsOption[rowId] || {};
@@ -112,6 +128,74 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
         <div className="name">Paste</div>
         <div className="shortcut"><span className="underline">V</span></div>
       </li>
+
+      <li className="divider" />
+
+      { !horizontalHeadersSelecting &&
+        <li onClick={(e) => {
+          dispatch(addRows({ numRows: height + 1, target: selectingTop}));
+          dispatch(setNumRows(numRows + height + 1));
+          dispatch(setContextMenuPosition([-1, -1]));
+        }}>
+          <div className="name">Add row{ height > 0 && "s" } above</div>
+          <div className="shortcut"><span className="underline">C</span></div>
+        </li>
+      }
+      { !horizontalHeadersSelecting &&
+        <li onClick={(e) => {
+          dispatch(addRows({ numRows: height + 1, target: selectingBottom + 1}));
+          dispatch(setNumRows(numRows + height + 1));
+          dispatch(setContextMenuPosition([-1, -1]));
+        }}>
+          <div className="name">Add row{ height > 0 && "s" } below</div>
+          <div className="shortcut"><span className="underline">C</span></div>
+        </li>
+      }
+      
+      { !verticalHeadersSelecting &&
+        <li onClick={(e) => {
+          const area = clip(selectingZone, choosing, matrix, clipboardRef, renderer);
+          dispatch(addCols({ numCols: width + 1, target: selectingLeft}));
+          dispatch(setNumCols(numCols + width + 1));
+          dispatch(setContextMenuPosition([-1, -1]));
+        }}>
+          <div className="name">Add column{ width > 0 && "s" } left</div>
+          <div className="shortcut"><span className="underline">C</span></div>
+        </li>
+      }
+      { !verticalHeadersSelecting &&
+        <li onClick={(e) => {
+          const area = clip(selectingZone, choosing, matrix, clipboardRef, renderer);
+          dispatch(addCols({ numCols: width + 1, target: selectingRight + 1}));
+          dispatch(setNumCols(numCols + width + 1));
+          dispatch(setContextMenuPosition([-1, -1]));
+        }}>
+          <div className="name">Add column{ width > 0 && "s" } right</div>
+          <div className="shortcut"><span className="underline">C</span></div>
+        </li>
+      }
+
+      { !horizontalHeadersSelecting &&
+        <li onClick={(e) => {
+          dispatch(removeRows({ numRows: height + 1, target: y}));
+          dispatch(setNumRows(numRows - height - 1));
+          dispatch(setContextMenuPosition([-1, -1]));
+        }}>
+          <div className="name">Remove row{ height > 0 && "s" }</div>
+          <div className="shortcut"><span className="underline">C</span></div>
+        </li>
+      }
+
+      { !verticalHeadersSelecting &&
+        <li onClick={(e) => {
+          dispatch(removeCols({ numCols: width + 1, target: x}));
+          dispatch(setNumCols(numCols - width - 1));
+          dispatch(setContextMenuPosition([-1, -1]));
+        }}>
+          <div className="name">Remove column{ width > 0 && "s" }</div>
+          <div className="shortcut"><span className="underline">C</span></div>
+        </li>
+      }
 
       <li className="divider" />
 

@@ -2,7 +2,7 @@ import styled from "styled-components";
 
 export const ContextMenuLayout = styled.div`
   z-index: 3;
-  position: fixed;
+  position: absolute;
   background-color: #ffffff;
   padding: 5px 0;
   border-radius: 5px;
