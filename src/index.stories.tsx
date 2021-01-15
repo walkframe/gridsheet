@@ -14,16 +14,24 @@ class KanjiRenderer extends Renderer {
     "7": "七",
     "8": "八",
     "9": "九",
+    ".": ".",
   };
   number (value: number): string {
     let kanji = "";
-    let str = "" + value;
-    for (let i = 0; i < str.length; i++) {
-      const j = str.length - i;
+    let [int, fraction] = String(value).split(".");
+    for (let i = 0; i < int.length; i++) {
+      const j = int.length - i;
       if (j % 3 === 0 && i !== 0) {
         kanji += ',';
       }
-      kanji += this.kanjiMap[str[i]];
+      kanji += this.kanjiMap[int[i]];
+    }
+    if (fraction == null) {
+      return kanji;
+    }
+    kanji += ".";
+    for (let i = 0; i < fraction.length; i++) {
+      kanji += this.kanjiMap[fraction[i]];
     }
     return kanji;
   }
