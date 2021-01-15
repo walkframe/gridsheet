@@ -54,8 +54,8 @@ export class Parser {
   }
 
   protected number (value: string): number | undefined {
-    const m = value.match(/^[\d.]+$/);
-    if (m != null) {
+    const m = value.match(/^-?[\d.]+$/);
+    if (m != null && value.match(/\.$/) == null && (value.match(/\./g) || []).length <= 1) {
       return parseFloat(value);
     }
   }

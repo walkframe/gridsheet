@@ -87,7 +87,12 @@ export class Renderer {
     if (isNaN(value)) {
       return "NaN";
     }
-    return value.toLocaleString();
+    const [int, fraction] = String(value).split(".");
+    const result = int.replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
+    if (fraction == null) {
+      return result;
+    }
+    return `${result}.${fraction}`;
   }
 
   protected date (value: Date, writer?: Writer): any {
