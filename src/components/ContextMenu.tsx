@@ -135,6 +135,8 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
         <li onClick={(e) => {
           dispatch(addRows({ numRows: height + 1, target: selectingTop}));
           dispatch(setNumRows(numRows + height + 1));
+          dispatch(select([selectingTop, 0, selectingTop + height, matrix[0].length]));
+          dispatch(choose([selectingTop, 0]));
           dispatch(setContextMenuPosition([-1, -1]));
         }}>
           <div className="name">Insert { height + 1 } row{ height > 0 && "s" } above</div>
@@ -144,6 +146,8 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
         <li onClick={(e) => {
           dispatch(addRows({ numRows: height + 1, target: selectingBottom + 1}));
           dispatch(setNumRows(numRows + height + 1));
+          dispatch(select([selectingBottom + 1, 0, selectingBottom + height + 1, matrix[0].length]));
+          dispatch(choose([selectingBottom + 1, 0]));
           dispatch(setContextMenuPosition([-1, -1]));
         }}>
           <div className="name">Insert { height + 1 } row{ height > 0 && "s" } below</div>
@@ -155,6 +159,8 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
           const area = clip(selectingZone, choosing, matrix, clipboardRef, renderer);
           dispatch(addCols({ numCols: width + 1, target: selectingLeft}));
           dispatch(setNumCols(numCols + width + 1));
+          dispatch(select([0, selectingLeft, matrix.length, selectingLeft + width]));
+          dispatch(choose([0, selectingLeft]));
           dispatch(setContextMenuPosition([-1, -1]));
         }}>
           <div className="name">Insert { width + 1 } column{ width > 0 && "s" } left</div>
@@ -165,6 +171,8 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
           const area = clip(selectingZone, choosing, matrix, clipboardRef, renderer);
           dispatch(addCols({ numCols: width + 1, target: selectingRight + 1}));
           dispatch(setNumCols(numCols + width + 1));
+          dispatch(select([0, selectingRight + 1, matrix.length, selectingRight + width + 1]));
+          dispatch(choose([0, selectingRight + 1]));
           dispatch(setContextMenuPosition([-1, -1]));
         }}>
           <div className="name">Insert { width + 1 } column{ width > 0 && "s" } right</div>
