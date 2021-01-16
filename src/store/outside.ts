@@ -23,8 +23,8 @@ export type OutsideState = {
 }
 
 export const initialState: OutsideState = {
-  numRows: 1,
-  numCols: 1,
+  numRows: 0,
+  numCols: 0,
   headerHeight: "20px",
   headerWidth: "50px",
   defaultHeight: "20px",
