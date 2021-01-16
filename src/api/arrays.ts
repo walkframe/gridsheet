@@ -155,3 +155,36 @@ export const aa2oa = (aa: MatrixType, fields: string[]): {[s: string]: any} => {
   });
   return oa;
 };
+
+export const slideFlattend = (
+  flattend: {[s: string]: any},
+  height: number | null,
+  width: number | null,
+  y: number | null,
+  x: number | null,
+): {[s: string]: any} => {
+
+  const addOptions: {[x: string]: any} = {};
+  const delKeys: string[] = [];
+
+  Object.entries(flattend).map(([key, value]) => {
+    const m = key.match(/([A-Z]*)([0-9]*)/);
+    if (m == null || key === "default") {
+      return;
+    }
+    const [_, a, n] = m?.slice();
+    if (y != null && height != null) {
+      const rowNumber = parseInt(n, 10) - 1;
+      if (Number.isNaN(rowNumber) || rowNumber < y) {
+        return;
+      }
+      addOptions[`${a}${rowNumber + height + 1}`] = value;
+      delKeys.push(key);
+    }
+    if (x !== -1) {
+
+    }
+  });
+  delKeys.map((k) => (delete flattend[k]));
+  return {...flattend, ...addOptions};
+}

@@ -21,8 +21,9 @@ import {
   matrixShape, zoneToArea,
   zoneShape, superposeArea,
   makeReactions,
+  slideFlattend,
 } from "../api/arrays"
-import {tsv2matrix} from "../api/converters";
+import { tsv2matrix, n2a, a2n } from "../api/converters";
 import { ParserType } from "../parsers/core";
 
 export type InsideState = {
@@ -398,6 +399,7 @@ const reducers = {
     target: number;
   }>) => {
     const matrix = [...state.matrix];
+    const cellsOption = {...state.cellsOption};
     const width = matrix[0].length;
     const { numRows, target } = action.payload;
     const blanks = makeSequence(0, numRows).map(() => makeSequence(0, width).map(() => ""));
@@ -406,6 +408,7 @@ const reducers = {
       ...state,
       matrix: [... matrix],
       reactions: makeReactions([0, 0, matrix.length, matrix[0].length]),
+      cellsOption: slideFlattend({...cellsOption}, numRows, null, target, null),
     }
   },
   removeRows: (state: Draft<InsideState>, action: PayloadAction<{
