@@ -22,6 +22,7 @@ export type CellOptionType = {
   verticalAlign?: string;
   renderer?: string;
   parser?: string;
+  fixed?: boolean;
 };
 
 export type CellsOptionType = {[s: string]: CellOptionType};
@@ -67,8 +68,11 @@ export type OperationType = {
   dst: AreaType;
   before: MatrixType;
   after: MatrixType;
+  options?: CellsOptionType;
 };
 
 export type ReactionsType = {[s: string]: boolean};
 
 export type Writer = (value: string) => void;
+
+export type FlattenedType = {[s: string]: any};

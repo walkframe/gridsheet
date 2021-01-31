@@ -5,11 +5,12 @@ import {
   RangeType,
   PositionType,
   ReactionsType,
+  FlattenedType,
   Y, X,
   Height, Width,
 } from "../types";
 
-import { n2a } from "./converters";
+import { n2a, a2n } from "./converters";
 
 export const cropMatrix = (matrix: MatrixType, area: AreaType): MatrixType => {
   const [top, left, bottom, right] = area;
@@ -156,35 +157,99 @@ export const aa2oa = (aa: MatrixType, fields: string[]): {[s: string]: any} => {
   return oa;
 };
 
-export const slideFlattend = (
-  flattend: {[s: string]: any},
+export const slideFlattened = (
+  base: FlattenedType,
   height: number | null,
   width: number | null,
   y: number | null,
   x: number | null,
 ): {[s: string]: any} => {
 
-  const addOptions: {[x: string]: any} = {};
-  const delKeys: string[] = [];
-
-  Object.entries(flattend).map(([key, value]) => {
+  const slided: FlattenedType = {};
+  const splitted: [(string | undefined), (string | undefined), any][] = Object.entries(base).map(([key, value]) => {
     const m = key.match(/([A-Z]*)([0-9]*)/);
-    if (m == null || key === "default") {
-      return;
+    if (m == null) {
+      return [undefined, undefined, value];
     }
-    const [_, a, n] = m?.slice();
-    if (y != null && height != null) {
-      const rowNumber = parseInt(n, 10) - 1;
-      if (Number.isNaN(rowNumber) || rowNumber < y) {
+    const [_, a, n] = m.slice();
+    return [a, n, value];
+  })
+
+  if (y != null && height != null) {
+    splitted.sort((a, b) => {
+      if (typeof a[1] === "undefined" || typeof b[1] === "undefined") {
+        return 1;
+      }
+      const [gt, lt] = height > 0 ? [-1, 1] : [1, -1];
+      return parseInt(a[1], 10) > parseInt(b[1], 10) ? gt : lt;
+    }).map(([a, n, value]) => {
+      if (typeof n === "undefined") {
         return;
       }
-      addOptions[`${a}${rowNumber + height + 1}`] = value;
-      delKeys.push(key);
-    }
-    if (x !== -1) {
+      const rowNumber = parseInt(n, 10) - 1;
+      if (height < 0 && y <= rowNumber && rowNumber < y - height) {
+        slided[`-${a}${rowNumber + 1}`] = value;
+        return;
+      }
+      if (Number.isNaN(rowNumber) || rowNumber < y || rowNumber + height < 1) {
+        return;
+      }
+      slided[`${a}${rowNumber + height + 1}`] = value;
+      slided[`-${a}${n}`] = value;
+    });
+  }
+  if (x !== null && width != null) {
+    splitted.sort((a, b) => {
+      if (typeof a[0] === "undefined" || typeof b[0] === "undefined") {
+        return 1;
+      }
+      const [gt, lt] = width > 0 ? [-1, 1] : [1, -1];
+      return a2n(a[0]) > a2n(b[0]) ? gt : lt;
+    }).map(([a, n, value]) => {
+      if (typeof a === "undefined") {
+        return;
+      }
+      const colNumber = a2n(a);
+      if (width < 0 && x <= colNumber && colNumber < x - width) {
+        slided[`-${colNumber + 1}${n}`] = value;
+        return;
+      }
+      if (Number.isNaN(colNumber) || colNumber < x || colNumber + width < 1) {
+        return;
+      }
+      slided[`${n2a(colNumber + width)}${n}`] = value;
+      slided[`-${a}${n}`] = value;
+    });
+  }
+  return slided;
+};
 
+export const applyFlattened = (
+  base: FlattenedType,
+  next: FlattenedType,
+): FlattenedType => {
+  const applied: FlattenedType = {... base};
+  Object.keys(next).map((key) => {
+    if (key[0] === '-') {
+      delete applied[key.substring(1)];
     }
   });
-  delKeys.map((k) => (delete flattend[k]));
-  return {...flattend, ...addOptions};
-}
+  Object.entries(next).map(([key, value]) => {
+    if (key[0] !== '-') {
+      applied[key] = value;
+    }
+  });
+  return applied;
+};
+
+export const inverseFlattened = (before: FlattenedType): FlattenedType => {
+  const after: FlattenedType = {};
+  Object.entries(before).map(([key, value]) => {
+    if (key[0] === '-') {
+      after[key.substring(1)] = value;
+    } else {
+      after[`-${key}`] = value;
+    }
+  });
+  return after;
+};

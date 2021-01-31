@@ -21,7 +21,8 @@ import {
   matrixShape, zoneToArea,
   zoneShape, superposeArea,
   makeReactions,
-  slideFlattend,
+  slideFlattened,
+  applyFlattened,
 } from "../api/arrays"
 import { tsv2matrix, n2a, a2n } from "../api/converters";
 import { ParserType } from "../parsers/core";
@@ -236,13 +237,13 @@ const reducers = {
       return state;
     }
     const { command, src, dst, before, after } = history.operations[history.index--];
-    const [y, x] = dst;
+    const [top, left, bottom, right] = dst;
     const reactions = makeReactions(src, dst, state.choosing);
-    const choosing = [y, x] as PositionType;
+    const choosing = [top, left] as PositionType;
     const [h, w] = matrixShape(before);
-    const selectingZone: ZoneType = h === 1 && w === 1 ? [-1, -1, -1, -1] : [y, x, y + h - 1, x + w - 1];
+    const selectingZone: ZoneType = h === 1 && w === 1 ? [-1, -1, -1, -1] : [top, left, top + h - 1, left + w - 1];
     let copyingZone = src as ZoneType;
-    matrix = writeMatrix(y, x, before, matrix);
+    matrix = writeMatrix(top, left, before, matrix);
 
     switch(command) {
       case "copy":
@@ -255,6 +256,18 @@ const reducers = {
 
       case "write":
         copyingZone = [-1, -1, -1, -1];
+        return {... state, matrix, selectingZone, history, choosing, copyingZone, reactions, cutting: false};
+      
+      case "addRows":
+        matrix.splice(top, bottom - top + 1);
+        return {... state, matrix, selectingZone, history, choosing, copyingZone, reactions, cutting: false};
+      
+      case "addCols":
+        matrix = [...matrix].map((cols) => {
+          cols = [...cols];
+          cols.splice(left, right - left + 1);
+          return cols;
+        });
         return {... state, matrix, selectingZone, history, choosing, copyingZone, reactions, cutting: false};
     }
     return state;
@@ -396,65 +409,109 @@ const reducers = {
   },
   addRows: (state: Draft<InsideState>, action: PayloadAction<{
     numRows: number;
-    target: number;
+    y: number;
   }>) => {
     const matrix = [...state.matrix];
-    const cellsOption = {...state.cellsOption};
     const width = matrix[0].length;
-    const { numRows, target } = action.payload;
+    const { numRows, y } = action.payload;
+    const diff = slideFlattened(state.cellsOption, numRows, null, y, null);
     const blanks = makeSequence(0, numRows).map(() => makeSequence(0, width).map(() => ""));
-    matrix.splice(target, 0, ...blanks);
+    matrix.splice(y, 0, ...blanks);
+    const history = pushHistory(state.history, {
+      command: "addRows",
+      dst: [y, 0, y + numRows - 1, 0] as AreaType,
+      src: [-1, -1, -1, -1] as AreaType,
+      before: [] as MatrixType,
+      after: [] as MatrixType,
+      options: diff,
+    });
     return {
       ...state,
       matrix: [... matrix],
       reactions: makeReactions([0, 0, matrix.length, matrix[0].length]),
-      cellsOption: slideFlattend({...cellsOption}, numRows, null, target, null),
+      cellsOption: applyFlattened(state.cellsOption, diff),
+      history,
     }
   },
   removeRows: (state: Draft<InsideState>, action: PayloadAction<{
     numRows: number;
-    target: number;
+    y: number;
   }>) => {
     const matrix = [...state.matrix];
-    const { numRows, target } = action.payload;
-    matrix.splice(target, numRows);
+    const { numRows, y } = action.payload;
+    const numCols = matrix[0]?.length;
+    const diff = slideFlattened(state.cellsOption, -numRows, null, y, null);
+    matrix.splice(y, numRows);
+    const history = pushHistory(state.history, {
+      command: "delRows",
+      dst: [y, 0, y + numRows - 1, 0] as AreaType,
+      src: [-1, -1, -1, -1] as AreaType,
+      before: cropMatrix(matrix, [y, 0, y + numRows - 1, numCols]),
+      after: [] as MatrixType,
+      options: diff,
+    });
     return {
       ...state,
       matrix: [... matrix],
-      reactions: makeReactions([0, 0, matrix.length, matrix[0].length]),
+      reactions: makeReactions([0, 0, matrix.length, numCols]),
+      cellsOption: applyFlattened(state.cellsOption, diff),
+      history,
     }
   },
   addCols: (state: Draft<InsideState>, action: PayloadAction<{
     numCols: number;
-    target: number;
+    x: number;
   }>) => {
-    const { numCols, target } = action.payload;
+    const { numCols, x } = action.payload;
     const matrix = [...state.matrix].map((cols) => {
       const blanks = makeSequence(0, numCols).map(() => "");
       cols = [...cols];
-      cols.splice(target, 0, ...blanks);
+      cols.splice(x, 0, ...blanks);
       return cols;
+    });
+    const diff = slideFlattened({...state.cellsOption}, null, numCols, null, x);
+    const history = pushHistory(state.history, {
+      command: "addCols",
+      dst: [0, x, 0, x + numCols - 1] as AreaType,
+      src: [-1, -1, -1, -1] as AreaType,
+      before: [] as MatrixType,
+      after: [] as MatrixType,
+      options: diff,
     });
     return {
       ...state,
       matrix,
       reactions: makeReactions([0, 0, matrix.length, matrix[0].length]),
+      cellsOption: applyFlattened(state.cellsOption, diff),
+      history,
     }
   },
   removeCols: (state: Draft<InsideState>, action: PayloadAction<{
     numCols: number;
-    target: number;
+    x: number;
   }>) => {
-    const { numCols, target } = action.payload;
     const matrix = [...state.matrix].map((cols) => {
       cols = [...cols];
-      cols.splice(target, numCols);
+      cols.splice(x, numCols);
       return cols;
+    });
+    const { numCols, x } = action.payload;
+    const numRows = matrix.length;
+    const diff = slideFlattened({...state.cellsOption}, null, -numCols, null, x);
+    const history = pushHistory(state.history, {
+      command: "delCols",
+      dst: [0, x, 0, x + numCols - 1] as AreaType,
+      src: [-1, -1, -1, -1] as AreaType,
+      before: cropMatrix(matrix, [0, x, numRows - 1, x + numCols]),
+      after: [] as MatrixType,
+      options: diff,
     });
     return {
       ...state,
       matrix,
-      reactions: makeReactions([0, 0, matrix.length, matrix[0].length]),
+      reactions: makeReactions([0, 0, numRows, matrix[0].length]),
+      cellsOption: applyFlattened(state.cellsOption, diff),
+      history,
     }
   },
 };
