@@ -221,7 +221,6 @@ export const slideFlattened = (
       slided[`-${a}${n}`] = value;
     });
   }
-  console.log("SLIDED:", slided)
   return slided;
 };
 
