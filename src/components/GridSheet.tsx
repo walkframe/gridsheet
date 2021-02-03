@@ -9,8 +9,8 @@ import {
 import { store } from "../store";
 
 import {
-  GridTable,
-} from "./GridTable";
+  GridTableWrapper,
+} from "./GridTableWrapper";
 
 import {
   StoreInitializer,
@@ -44,7 +44,9 @@ export const GridSheet: React.FC<Props> = ({data, options}) => {
   return (<GridSheetLayout className={`react-grid-sheet ${mode || "light"}`}>
     <textarea className="clipboard" ref={clipboardRef} />
     <Provider store={store}>
-      <GridTable clipboardRef={clipboardRef} />
+      <GridTableWrapper
+        clipboardRef={clipboardRef}
+      />
       <StoreInitializer
         data={data}
         options={options}

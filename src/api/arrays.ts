@@ -173,7 +173,7 @@ export const slideFlattened = (
     }
     const [_, a, n] = m.slice();
     return [a, n, value];
-  })
+  });
 
   if (y != null && height != null) {
     splitted.sort((a, b) => {
@@ -209,9 +209,9 @@ export const slideFlattened = (
       if (typeof a === "undefined") {
         return;
       }
-      const colNumber = a2n(a);
+      const colNumber = a2n(a) - 1;
       if (width < 0 && x <= colNumber && colNumber < x - width) {
-        slided[`-${colNumber + 1}${n}`] = value;
+        slided[`-${n2a(colNumber + 1)}${n}`] = value;
         return;
       }
       if (Number.isNaN(colNumber) || colNumber < x || colNumber + width < 1) {
@@ -221,6 +221,7 @@ export const slideFlattened = (
       slided[`-${a}${n}`] = value;
     });
   }
+  console.log("SLIDED:", slided)
   return slided;
 };
 

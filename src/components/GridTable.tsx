@@ -15,30 +15,24 @@ import {
 } from "../store/inside";
 
 import {
-  OutsideState,
-} from "../store/outside"
-import {
   GridTableLayout,
 } from "./styles/GridTableLayout";
 
-import { RootState } from "../store";
 
 type Props = {
   clipboardRef: React.RefObject<HTMLTextAreaElement>;
+  numRows: number;
+  numCols: number;
 };
 
-export const GridTable: React.FC<Props> = ({ clipboardRef }) => {
+export const GridTable: React.FC<Props> = ({ clipboardRef, numRows, numCols }) => {
   const dispatch = useDispatch();
-  const {
-    numRows,
-    numCols,
-  } = useSelector<RootState, OutsideState>(state => state["outside"]);
 
   return (<GridTableLayout>
     <table>
       <thead>
         <tr>
-          <th className="vertical horizontal" onClick={(e) => {
+          <th className="vertical horizontal" onClick={() => {
             dispatch(choose([-1, -1]));
             setTimeout(() => {
               dispatch(choose([0, 0]));

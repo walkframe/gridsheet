@@ -181,7 +181,7 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
 
       { !horizontalHeadersSelecting &&
         <li onClick={(e) => {
-          dispatch(removeRows({ numRows: height + 1, y}));
+          dispatch(removeRows({ numRows: height + 1, y: selectingTop}));
           dispatch(setNumRows(numRows - height - 1));
           dispatch(setContextMenuPosition([-1, -1]));
         }}>
@@ -191,7 +191,7 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
 
       { !verticalHeadersSelecting &&
         <li onClick={(e) => {
-          dispatch(removeCols({ numCols: width + 1, x}));
+          dispatch(removeCols({ numCols: width + 1, x: selectingLeft}));
           dispatch(setNumCols(numCols - width - 1));
           dispatch(setContextMenuPosition([-1, -1]));
         }}>

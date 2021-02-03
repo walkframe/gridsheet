@@ -10,7 +10,8 @@ import {
   HistoryType,
   ReactionsType,
 } from "../types";
-import { pushHistory } from "../api/histories";
+
+import * as histories from "../api/histories";
 
 import {
   makeSequence,
@@ -165,7 +166,7 @@ const reducers = {
       selectingZone = slideArea([0, 0, height, width], selectingTop, selectingLeft);
     }
     const command = copyingArea[0] !== -1 ? cutting ? "cut" : "copy": "write";
-    const history = pushHistory(state.history, {
+    const history = histories.pushHistory(state.history, {
       command,
       dst,
       src: copyingArea,
@@ -232,72 +233,61 @@ const reducers = {
   },
   undo: (state: Draft<InsideState>) => {
     const history = {... state.history };
-    let { matrix } = state;
     if (history.index < 0) {
       return state;
     }
-    const { command, src, dst, before, after } = history.operations[history.index--];
-    const [top, left, bottom, right] = dst;
-    const reactions = makeReactions(src, dst, state.choosing);
-    const choosing = [top, left] as PositionType;
-    const [h, w] = matrixShape(before);
-    const selectingZone: ZoneType = h === 1 && w === 1 ? [-1, -1, -1, -1] : [top, left, top + h - 1, left + w - 1];
-    let copyingZone = src as ZoneType;
-    matrix = writeMatrix(top, left, before, matrix);
-
-    switch(command) {
+    const operation = history.operations[history.index--];
+    switch(operation.command) {
       case "copy":
-        return {...state, matrix, selectingZone, history, choosing, copyingZone, reactions, cutting: false};
+        return {...histories.undoCopy(state, operation), history};
 
       case "cut":
-        const [top, left] = src;
-        matrix = writeMatrix(top, left, cropMatrix(after, slideArea(src, -top, -left)), matrix);
-        return {...state, matrix, selectingZone, history, choosing, copyingZone, reactions, cutting: true};
+        return {...histories.undoCut(state, operation), history};
 
       case "write":
-        copyingZone = [-1, -1, -1, -1];
-        return {... state, matrix, selectingZone, history, choosing, copyingZone, reactions, cutting: false};
+        return {...histories.undoWrite(state, operation), history};
       
       case "addRows":
-        matrix.splice(top, bottom - top + 1);
-        return {... state, matrix, selectingZone, history, choosing, copyingZone, reactions, cutting: false};
+        return {...histories.undoAddRows(state, operation), history};
       
       case "addCols":
-        matrix = [...matrix].map((cols) => {
-          cols = [...cols];
-          cols.splice(left, right - left + 1);
-          return cols;
-        });
-        return {... state, matrix, selectingZone, history, choosing, copyingZone, reactions, cutting: false};
+        return {...histories.undoAddCols(state, operation), history};
+
+      case "delRows":
+        return {...histories.undoRemoveRows(state, operation), history};
+      
+      case "delCols":
+        return {...histories.undoRemoveCols(state, operation), history};
     }
     return state;
   },
   redo: (state: Draft<InsideState>) => {
     const history = {... state.history };
-    let { matrix } = state;
     if (history.index + 1 >= history.operations.length) {
       return state;
     }
-    const { command, src, dst, after } = history.operations[++history.index];
-    const [y, x] = dst;
-    const reactions = makeReactions(src, dst, state.choosing);
-    const choosing = [y, x] as PositionType;
-    const [h, w] = matrixShape(after);
-    const selectingZone: ZoneType = h === 1 && w === 1 ? [-1, -1, -1, -1] : [y, x, y + h - 1, x + w - 1];
-    const copyingZone = [-1, -1, -1, -1] as ZoneType;
-    matrix = writeMatrix(y, x, after, matrix);
-
-    switch(command) {
+    const operation = history.operations[++history.index];
+    switch(operation.command) {
       case "copy":
-        return {... state, matrix, selectingZone, copyingZone, history, choosing, reactions};
+        return {...histories.redoCopy(state, operation), history};
+
       case "cut":
-        const [top, left, bottom, right] = src;
-        const blank = spreadMatrix([[""]], bottom - top, right - left);
-        matrix = writeMatrix(top, left, blank, matrix);
-        matrix = writeMatrix(y, x, after, matrix);
-        return {... state, matrix, selectingZone, copyingZone, history, choosing, reactions};
+        return {...histories.redoCut(state, operation), history};
+
       case "write":
-        return {... state, matrix, selectingZone, copyingZone, history, choosing, reactions};
+        return {...histories.redoWrite(state, operation), history};
+      
+      case "addRows":
+        return {...histories.redoAddRows(state, operation), history};
+      
+      case "addCols":
+        return {...histories.redoAddCols(state, operation), history};
+
+      case "delRows":
+        return {...histories.redoRemoveRows(state, operation), history};
+      
+      case "delCols":
+        return {...histories.redoRemoveCols(state, operation), history};
     }
     return state;
   },
@@ -370,7 +360,7 @@ const reducers = {
     const value = action.payload;
     const matrix = writeMatrix(y, x, [[value]], state.matrix);
     const pointedArea = [y, x, y, x] as AreaType;
-    const history = pushHistory(state.history, {
+    const history = histories.pushHistory(state.history, {
       command: "write",
       src: pointedArea,
       dst: pointedArea,
@@ -392,7 +382,7 @@ const reducers = {
     }
     const after = spreadMatrix([[""]], bottom - top, right - left);
     const written = writeMatrix(y, x, after, matrix);
-    const history = pushHistory(state.history, {
+    const history = histories.pushHistory(state.history, {
       command: "write",
       dst: [y, x, y, x] as AreaType,
       src: selectingArea,
@@ -412,14 +402,14 @@ const reducers = {
     y: number;
   }>) => {
     const matrix = [...state.matrix];
-    const width = matrix[0].length;
+    const numCols = matrix[0]?.length || 0;
     const { numRows, y } = action.payload;
     const diff = slideFlattened(state.cellsOption, numRows, null, y, null);
-    const blanks = makeSequence(0, numRows).map(() => makeSequence(0, width).map(() => ""));
+    const blanks = makeSequence(0, numRows).map(() => makeSequence(0, numCols).map(() => ""));
     matrix.splice(y, 0, ...blanks);
-    const history = pushHistory(state.history, {
+    const history = histories.pushHistory(state.history, {
       command: "addRows",
-      dst: [y, 0, y + numRows - 1, 0] as AreaType,
+      dst: [y, 0, y + numRows - 1, numCols - 1] as AreaType,
       src: [-1, -1, -1, -1] as AreaType,
       before: [] as MatrixType,
       after: [] as MatrixType,
@@ -440,13 +430,14 @@ const reducers = {
     const matrix = [...state.matrix];
     const { numRows, y } = action.payload;
     const numCols = matrix[0]?.length;
+    const before = cropMatrix(matrix, [y, 0, y + numRows - 1, numCols - 1]);
     const diff = slideFlattened(state.cellsOption, -numRows, null, y, null);
     matrix.splice(y, numRows);
-    const history = pushHistory(state.history, {
+    const history = histories.pushHistory(state.history, {
       command: "delRows",
-      dst: [y, 0, y + numRows - 1, 0] as AreaType,
-      src: [-1, -1, -1, -1] as AreaType,
-      before: cropMatrix(matrix, [y, 0, y + numRows - 1, numCols]),
+      dst: [-1, -1, -1, -1] as AreaType,
+      src: [y, 0, y + numRows - 1, numCols - 1] as AreaType,
+      before,
       after: [] as MatrixType,
       options: diff,
     });
@@ -469,10 +460,11 @@ const reducers = {
       cols.splice(x, 0, ...blanks);
       return cols;
     });
+    const numRows = matrix.length;
     const diff = slideFlattened({...state.cellsOption}, null, numCols, null, x);
-    const history = pushHistory(state.history, {
+    const history = histories.pushHistory(state.history, {
       command: "addCols",
-      dst: [0, x, 0, x + numCols - 1] as AreaType,
+      dst: [0, x, numRows, x + numCols - 1] as AreaType,
       src: [-1, -1, -1, -1] as AreaType,
       before: [] as MatrixType,
       after: [] as MatrixType,
@@ -481,7 +473,7 @@ const reducers = {
     return {
       ...state,
       matrix,
-      reactions: makeReactions([0, 0, matrix.length, matrix[0].length]),
+      reactions: makeReactions([0, 0, numRows, matrix[0].length]),
       cellsOption: applyFlattened(state.cellsOption, diff),
       history,
     }
@@ -490,19 +482,21 @@ const reducers = {
     numCols: number;
     x: number;
   }>) => {
+    const { numCols, x } = action.payload;
+    const numRows = state.matrix.length;
+    const before = cropMatrix(state.matrix, [0, x, numRows - 1, x + numCols]);
     const matrix = [...state.matrix].map((cols) => {
       cols = [...cols];
       cols.splice(x, numCols);
       return cols;
     });
-    const { numCols, x } = action.payload;
-    const numRows = matrix.length;
+
     const diff = slideFlattened({...state.cellsOption}, null, -numCols, null, x);
-    const history = pushHistory(state.history, {
+    const history = histories.pushHistory(state.history, {
       command: "delCols",
-      dst: [0, x, 0, x + numCols - 1] as AreaType,
-      src: [-1, -1, -1, -1] as AreaType,
-      before: cropMatrix(matrix, [0, x, numRows - 1, x + numCols]),
+      dst: [-1, -1, -1, -1] as AreaType,
+      src: [0, x, numRows - 1, x + numCols - 1] as AreaType,
+      before,
       after: [] as MatrixType,
       options: diff,
     });
