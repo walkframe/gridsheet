@@ -23,8 +23,6 @@ import {
 } from "../store/inside";
 import {
   OutsideState,
-  setNumRows,
-  setNumCols,
   setContextMenuPosition,
 } from "../store/outside"
 import {
@@ -53,8 +51,6 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
     renderers,
     parsers,
     onSave,
-    numRows,
-    numCols,
     contextMenuPosition,
   } = useSelector<RootState, OutsideState>(
       state => state["outside"]);
@@ -134,7 +130,6 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
       { !horizontalHeadersSelecting &&
         <li onClick={(e) => {
           dispatch(addRows({ numRows: height + 1, y: selectingTop}));
-          dispatch(setNumRows(numRows + height + 1));
           dispatch(select([selectingTop, 0, selectingTop + height, matrix[0].length]));
           dispatch(choose([selectingTop, 0]));
           dispatch(setContextMenuPosition([-1, -1]));
@@ -145,7 +140,6 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
       { !horizontalHeadersSelecting &&
         <li onClick={(e) => {
           dispatch(addRows({ numRows: height + 1, y: selectingBottom + 1}));
-          dispatch(setNumRows(numRows + height + 1));
           dispatch(select([selectingBottom + 1, 0, selectingBottom + height + 1, matrix[0].length]));
           dispatch(choose([selectingBottom + 1, 0]));
           dispatch(setContextMenuPosition([-1, -1]));
@@ -158,7 +152,6 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
         <li onClick={(e) => {
           const area = clip(selectingZone, choosing, matrix, clipboardRef, renderer);
           dispatch(addCols({ numCols: width + 1, x: selectingLeft}));
-          dispatch(setNumCols(numCols + width + 1));
           dispatch(select([0, selectingLeft, matrix.length, selectingLeft + width]));
           dispatch(choose([0, selectingLeft]));
           dispatch(setContextMenuPosition([-1, -1]));
@@ -170,7 +163,6 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
         <li onClick={(e) => {
           const area = clip(selectingZone, choosing, matrix, clipboardRef, renderer);
           dispatch(addCols({ numCols: width + 1, x: selectingRight + 1}));
-          dispatch(setNumCols(numCols + width + 1));
           dispatch(select([0, selectingRight + 1, matrix.length, selectingRight + width + 1]));
           dispatch(choose([0, selectingRight + 1]));
           dispatch(setContextMenuPosition([-1, -1]));
@@ -182,7 +174,6 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
       { !horizontalHeadersSelecting &&
         <li onClick={(e) => {
           dispatch(removeRows({ numRows: height + 1, y: selectingTop}));
-          dispatch(setNumRows(numRows - height - 1));
           dispatch(setContextMenuPosition([-1, -1]));
         }}>
           <div className="name">Remove { height + 1 } row{ height > 0 && "s" }</div>
@@ -192,7 +183,6 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
       { !verticalHeadersSelecting &&
         <li onClick={(e) => {
           dispatch(removeCols({ numCols: width + 1, x: selectingLeft}));
-          dispatch(setNumCols(numCols - width - 1));
           dispatch(setContextMenuPosition([-1, -1]));
         }}>
           <div className="name">Remove { width + 1 } column{ width > 0 && "s" }</div>

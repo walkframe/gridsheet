@@ -26,27 +26,22 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
   const colId = n2a(x + 1);
 
   const {
-    numRows,
     headerHeight,
     defaultWidth,
     stickyHeaders,
   } = useSelector<RootState, OutsideState>(state => state["outside"]);
   const {
+    matrix,
     choosing,
     cellsOption,
     selectingZone,
     horizontalHeadersSelecting,
   } = useSelector<RootState, InsideState>(
     state => state["inside"],
-    (current, old) => {
-      if (old.reactions[colId] || current.reactions[colId]) {
-        return false;
-      }
-      return true;
-    }
   );
   const colOption = cellsOption[colId] || {};
   const width = colOption.width || defaultWidth;
+  const numRows = matrix.length;
   return (<th
     className={`
       horizontal
@@ -65,6 +60,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
         startX = choosing[1];
       }
       dispatch(selectCols({range: [startX, x], numRows}));
+      dispatch(setContextMenuPosition([-1, -1]));
       return false;
     }}
     onDragStart={(e) => {

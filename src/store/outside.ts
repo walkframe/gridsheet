@@ -7,8 +7,6 @@ import {
 } from "../types";
 
 export type OutsideState = {
-  numRows: number;
-  numCols: number;
   headerHeight: string;
   headerWidth: string;
   defaultHeight: string;
@@ -23,8 +21,6 @@ export type OutsideState = {
 }
 
 export const initialState: OutsideState = {
-  numRows: 0,
-  numCols: 0,
   headerHeight: "20px",
   headerWidth: "50px",
   defaultHeight: "20px",
@@ -71,12 +67,6 @@ const slice = createSlice({
     setParsers: (state: Draft<OutsideState>, action: PayloadAction<Parsers>) => {
       return {...state, parsers: action.payload};
     },
-    setNumRows: (state: Draft<OutsideState>, action: PayloadAction<number>) => {
-      return {...state, numRows: action.payload};
-    },
-    setNumCols: (state: Draft<OutsideState>, action: PayloadAction<number>) => {
-      return {...state, numCols: action.payload};
-    },
     setOnSave: (state: Draft<OutsideState>, action: PayloadAction<Feedback>) => {
       return {...state, onSave: action.payload};
     },
@@ -95,7 +85,5 @@ export const {
   setContextMenuPosition,
   setRenderers,
   setParsers,
-  setNumRows,
-  setNumCols,
   setOnSave,
 } = slice.actions;

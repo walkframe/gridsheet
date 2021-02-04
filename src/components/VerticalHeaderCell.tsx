@@ -25,27 +25,22 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({
   const dispatch = useDispatch();
 
   const {
-    numCols,
     defaultHeight,
     headerWidth,
     stickyHeaders,
   } = useSelector<RootState, OutsideState>(state => state["outside"]);
   const {
+    matrix,
     cellsOption,
     choosing,
     selectingZone,
     verticalHeadersSelecting,
   } = useSelector<RootState, InsideState>(
       state => state["inside"],
-      (current, old) => {
-        if (old.reactions[rowId] || current.reactions[rowId]) {
-          return false;
-        }
-        return true;
-      }
   );
   const rowOption = cellsOption[rowId] || {};
   const height = rowOption.height || defaultHeight;
+  const numCols = matrix[0]?.length || 0;
 
   return (<th
     className={`
@@ -59,6 +54,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({
         startY = choosing[0];
       }
       dispatch(selectRows({range: [startY, y], numCols}));
+      dispatch(setContextMenuPosition([-1, -1]));
       return false;
     }}
     draggable

@@ -1,33 +1,22 @@
 import { Draft } from "@reduxjs/toolkit";
 import {
-  CellsOptionType,
-  CellOptionType,
   PositionType,
-  RangeType,
   OperationType,
-  MatrixType,
-  AreaType,
   ZoneType,
   HistoryType,
-  ReactionsType,
-  FlattenedType,
 } from "../types";
 import { InsideState } from "../store/inside";
-import { tsv2matrix, n2a, a2n } from "../api/converters";
 import {
   makeSequence,
   cropMatrix,
   writeMatrix,
   slideArea,
   spreadMatrix,
-  matrixShape, zoneToArea,
-  zoneShape, superposeArea,
+  matrixShape,
   makeReactions,
-  slideFlattened,
   applyFlattened,
   inverseFlattened,
-} from "../api/arrays"
-import { ParserType } from "../parsers/core";
+} from "../api/arrays";
 
 export const pushHistory = (history: HistoryType, operation: OperationType): HistoryType => {
   history = {... history};
