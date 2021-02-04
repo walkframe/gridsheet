@@ -6,13 +6,14 @@ import { RootState } from "../store";
 import {
   InsideState,
   setCellsOption,
+  setCellOption,
   drag,
   selectCols
 } from "../store/inside";
 
 import { DUMMY_IMG } from "../constants";
 
-import { OutsideState } from "../store/outside";
+import { OutsideState, setContextMenuPosition } from "../store/outside";
 
 type Props = {
   x: number;
@@ -25,27 +26,22 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
   const colId = n2a(x + 1);
 
   const {
-    numRows,
     headerHeight,
     defaultWidth,
     stickyHeaders,
   } = useSelector<RootState, OutsideState>(state => state["outside"]);
   const {
+    matrix,
     choosing,
     cellsOption,
     selectingZone,
     horizontalHeadersSelecting,
   } = useSelector<RootState, InsideState>(
     state => state["inside"],
-    (current, old) => {
-      if (old.reactions[colId] || current.reactions[colId]) {
-        return false;
-      }
-      return true;
-    }
   );
   const colOption = cellsOption[colId] || {};
   const width = colOption.width || defaultWidth;
+  const numRows = matrix.length;
   return (<th
     className={`
       horizontal
@@ -53,12 +49,18 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
       ${choosing[1] === x ? "choosing" : ""} 
       ${between([selectingZone[1], selectingZone[3]], x) ? horizontalHeadersSelecting ? "header-selecting" : "selecting" : ""}`}
     draggable
+    onContextMenu={(e) => {
+      e.preventDefault();
+      dispatch(setContextMenuPosition([e.pageY, e.pageX]));
+      return false;
+    }}
     onClick={(e) => {
       let startX = e.shiftKey ? selectingZone[1] : x;
       if (startX === -1) {
         startX = choosing[1];
       }
       dispatch(selectCols({range: [startX, x], numRows}));
+      dispatch(setContextMenuPosition([-1, -1]));
       return false;
     }}
     onDragStart={(e) => {
@@ -79,7 +81,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
         if (typeof colOption.width === "undefined" && width === parseInt(defaultWidth)) {
           return;
         }
-        dispatch(setCellsOption({... cellsOption, [colId]: {... colOption, width: `${width}px`}}));
+        dispatch(setCellOption({ cell: colId, option: {... colOption, width: `${width}px`}}));
       }}
     >{ colOption.label || colId }
     </div>

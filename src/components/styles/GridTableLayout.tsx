@@ -89,18 +89,4 @@ export const GridTableLayout = styled.div`
       display: table-cell;
     }
   }
-  .clipboard {
-    width: 0;
-    height: 0;
-    padding: 0;
-    margin: 0;
-    color: transparent;
-    background-color: transparent;
-    position: absolute;
-    top: -999999px;
-    left: -999999px;
-    margin-left: -9999px;
-    margin-top: -9999px;
-    z-index: -9999;
-  }
 `;

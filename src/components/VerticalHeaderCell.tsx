@@ -5,13 +5,14 @@ import { RootState } from "../store";
 import {
   InsideState,
   setCellsOption,
+  setCellOption,
   drag,
   selectRows,
 } from "../store/inside";
-import {DUMMY_IMG} from "../constants";
+import { DUMMY_IMG } from "../constants";
 
 
-import { OutsideState } from "../store/outside";
+import { OutsideState, setContextMenuPosition } from "../store/outside";
 
 type Props = {
   y: number;
@@ -24,27 +25,22 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({
   const dispatch = useDispatch();
 
   const {
-    numCols,
     defaultHeight,
     headerWidth,
     stickyHeaders,
   } = useSelector<RootState, OutsideState>(state => state["outside"]);
   const {
+    matrix,
     cellsOption,
     choosing,
     selectingZone,
     verticalHeadersSelecting,
   } = useSelector<RootState, InsideState>(
       state => state["inside"],
-      (current, old) => {
-        if (old.reactions[rowId] || current.reactions[rowId]) {
-          return false;
-        }
-        return true;
-      }
   );
   const rowOption = cellsOption[rowId] || {};
   const height = rowOption.height || defaultHeight;
+  const numCols = matrix[0]?.length || 0;
 
   return (<th
     className={`
@@ -58,9 +54,15 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({
         startY = choosing[0];
       }
       dispatch(selectRows({range: [startY, y], numCols}));
+      dispatch(setContextMenuPosition([-1, -1]));
       return false;
     }}
     draggable
+    onContextMenu={(e) => {
+      e.preventDefault();
+      dispatch(setContextMenuPosition([e.pageY, e.pageX]));
+      return false;
+    }}
     onDragStart={(e) => {
       e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
       dispatch(selectRows({range: [y, y], numCols}));
@@ -79,7 +81,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({
         if (typeof rowOption.height === "undefined" && height === parseInt(defaultHeight)) {
           return;
         }
-        dispatch(setCellsOption({... cellsOption, [rowId]: {... rowOption, height: `${height}px`}}));
+        dispatch(setCellOption({ cell: rowId, option: {... rowOption, height: `${height}px`}}));
       }}
     >
       { rowOption.label ||  rowId }

@@ -1,5 +1,6 @@
-import { Renderer } from "../renderers/core";
-import { Parser } from "../parsers/core";
+import { MatrixType } from "../types";
+import { Renderer as DefaultRenderer } from "../renderers/core";
+import { Parser as DefaultParser } from "../parsers/core";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -39,12 +40,13 @@ export const a2n = (alpha: string, useCache=true): number => {
   return result;
 };
 
-export const matrix2tsv = (rows: any[][], renderer=Renderer): string => {
+const _renderer = new DefaultRenderer();
+export const matrix2tsv = (rows: MatrixType, renderer=_renderer): string => {
   const lines: string[] = [];
   rows.map((row) => {
     const cols: string[] = [];
     row.map((col) => {
-      const value = new renderer(col).stringify();
+      const value = renderer.stringify(col);
       if (value.indexOf("\n") !== -1) {
         cols.push(`"${value.replace(/"/g, '""')}"`);
       } else {
@@ -56,7 +58,8 @@ export const matrix2tsv = (rows: any[][], renderer=Renderer): string => {
   return lines.join("\n");
 };
 
-export const tsv2matrix = (tsv: string, parser=Parser): any[][] => {
+const _parser = new DefaultParser();
+export const tsv2matrix = (tsv: string, parser=_parser): any[][] => {
   tsv = tsv.replace(/""/g, "\x00");
   const restoreDoubleQuote = (text: string) => text.replace(/\x00/g, '"');
   const rows: any[][] = [];
@@ -80,26 +83,26 @@ export const tsv2matrix = (tsv: string, parser=Parser): any[][] => {
         cols.push(val);
       }
     });
-    return cols.map((col) => [new Parser(restoreDoubleQuote(col)).parse()]);
+    return cols.map((col) => [parser.parse(restoreDoubleQuote(col))]);
   }
   tsv.split("\t").map((col) => {
     if (col[0] === '"' && col[col.length-1] === '"') { // escaping
       const cell = restoreDoubleQuote(col.substring(1, col.length - 1));
-      row.push(new parser(cell).parse());
+      row.push(parser.parse(cell));
     } else {
       const enterIndex = col.indexOf("\n");
       if (enterIndex === -1) {
         const cell = restoreDoubleQuote(col);
-        row.push(new parser(cell).parse());
+        row.push(parser.parse(cell));
       } else {
         const cell = restoreDoubleQuote(col.substring(0, enterIndex));
-        row.push(new parser(cell).parse());
+        row.push(parser.parse(cell));
         rows.push(row);
         row = [];
         const nextCol = col.substring(enterIndex + 1, col.length);
         if (nextCol) {
           const nextCell = restoreDoubleQuote(nextCol);
-          row.push(new parser(nextCell).parse());
+          row.push(parser.parse(nextCell));
         }
       }
     }

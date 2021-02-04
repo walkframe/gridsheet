@@ -7,8 +7,6 @@ import {
 } from "../types";
 
 export type OutsideState = {
-  numRows: number;
-  numCols: number;
   headerHeight: string;
   headerWidth: string;
   defaultHeight: string;
@@ -16,14 +14,13 @@ export type OutsideState = {
   editingOnEnter: boolean;
   cellLabel: boolean;
   stickyHeaders: Headers;
+  contextMenuPosition: [number, number];
   renderers: Renderers;
   parsers: Parsers;
   onSave?: Feedback;
 }
 
 export const initialState: OutsideState = {
-  numRows: 1,
-  numCols: 1,
   headerHeight: "20px",
   headerWidth: "50px",
   defaultHeight: "20px",
@@ -31,6 +28,7 @@ export const initialState: OutsideState = {
   editingOnEnter: true,
   cellLabel: true,
   stickyHeaders: "both",
+  contextMenuPosition: [-1, -1],
   renderers: {},
   parsers: {},
 };
@@ -60,17 +58,14 @@ const slice = createSlice({
     setStickyHeaders: (state: Draft<OutsideState>, action: PayloadAction<Headers>) => {
       return {...state, stickyHeaders: action.payload};
     },
+    setContextMenuPosition: (state: Draft<OutsideState>, action: PayloadAction<[number, number]>) => {
+      return {...state, contextMenuPosition: action.payload};
+    },
     setRenderers: (state: Draft<OutsideState>, action: PayloadAction<Renderers>) => {
       return {...state, renderers: action.payload};
     },
     setParsers: (state: Draft<OutsideState>, action: PayloadAction<Parsers>) => {
       return {...state, parsers: action.payload};
-    },
-    setNumRows: (state: Draft<OutsideState>, action: PayloadAction<number>) => {
-      return {...state, numRows: action.payload};
-    },
-    setNumCols: (state: Draft<OutsideState>, action: PayloadAction<number>) => {
-      return {...state, numCols: action.payload};
     },
     setOnSave: (state: Draft<OutsideState>, action: PayloadAction<Feedback>) => {
       return {...state, onSave: action.payload};
@@ -87,9 +82,8 @@ export const {
   setEditingOnEnter,
   setCellLabel,
   setStickyHeaders,
+  setContextMenuPosition,
   setRenderers,
   setParsers,
-  setNumRows,
-  setNumCols,
   setOnSave,
 } = slice.actions;

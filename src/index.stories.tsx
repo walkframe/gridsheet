@@ -14,16 +14,24 @@ class KanjiRenderer extends Renderer {
     "7": "七",
     "8": "八",
     "9": "九",
+    ".": ".",
   };
   number (value: number): string {
     let kanji = "";
-    let str = "" + value;
-    for (let i = 0; i < str.length; i++) {
-      const j = str.length - i;
+    let [int, fraction] = String(value).split(".");
+    for (let i = 0; i < int.length; i++) {
+      const j = int.length - i;
       if (j % 3 === 0 && i !== 0) {
         kanji += ',';
       }
-      kanji += this.kanjiMap[str[i]];
+      kanji += this.kanjiMap[int[i]];
+    }
+    if (fraction == null) {
+      return kanji;
+    }
+    kanji += ".";
+    for (let i = 0; i < fraction.length; i++) {
+      kanji += this.kanjiMap[fraction[i]];
     }
     return kanji;
   }
@@ -80,11 +88,13 @@ export const showIndex = () => (<GridSheet
     cells: {
       "default": { style: { fontStyle: "italic" }},
       "A1": { style: { color: "#008888"}},
-      "B": { label: "ビー" },
+      "B": { fixed: true, label: "ビー" },
       "D": { width: "300px"},
       "2": { label: "二", style: {borderBottom: "double 4px #000000" }, renderer: "kanji" },
       "3": { height: "100px", style: { fontWeight: "bold", color: "#ff0000", backgroundColor: "rgba(255, 200, 200, 0.5)"}},
-      "4": { label: "よん", height: "50px", verticalAlign: "bottom"},
+      "4": { fixed: true, label: "よん", height: "50px", verticalAlign: "bottom"},
+      "5": { height: "100px", style: { fontWeight: "bold", color: "#000fff", backgroundColor: "rgba(0, 200, 200, 0.5)"}},
+      "6": { height: "100px", style: { fontWeight: "bold", color: "#ff0000", backgroundColor: "rgba(255, 200, 200, 0.5)"}},
     },
     onSave: (matrix, options) => {
       console.log("matrix on save:", aa2oa(matrix || [], ["A", "B", "C", "D", "E", "F"]));
@@ -98,7 +108,7 @@ export const showIndex = () => (<GridSheet
       }
     },
     renderers: {
-      kanji: KanjiRenderer,
+      kanji: new KanjiRenderer(),
     },
   }}
 />);

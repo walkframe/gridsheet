@@ -1,6 +1,6 @@
 import React from "react";
 import { useDispatch, useSelector } from 'react-redux';
-import {n2a} from "../api/converters";
+import { n2a } from "../api/converters";
 import { clip } from "../api/clipboard";
 import { zoneToArea, among, zoneShape } from "../api/arrays";
 import { RootState } from "../store";
@@ -19,6 +19,7 @@ import {
 
 import {
   OutsideState,
+  setContextMenuPosition,
 } from "../store/outside";
 
 import { DUMMY_IMG } from "../constants";
@@ -107,18 +108,18 @@ export const Cell: React.FC<Props> = React.memo(({
     ...cellOption.style
   };
 
-  const renderer = cellOption.renderer || colOption.renderer || rowOption.renderer || defaultOption.renderer;
-  const parser = cellOption.parser || colOption.parser || rowOption.parser || defaultOption.parser;
+  const rendererKey = cellOption.renderer || colOption.renderer || rowOption.renderer || defaultOption.renderer;
+  const parserKey = cellOption.parser || colOption.parser || rowOption.parser || defaultOption.parser;
 
-  const Renderer = renderers[renderer || ""] || DefaultRenderer;
-  const Parser = parsers[parser || ""] || DefaultParser;
+  const renderer = renderers[rendererKey || ""] || new DefaultRenderer();
+  const parser = parsers[parserKey || ""] || new DefaultParser();
   const height = rowOption.height || defaultHeight;
   const width = colOption.width || defaultWidth;
   const verticalAlign = cellOption.verticalAlign || colOption.verticalAlign || rowOption.verticalAlign || defaultOption.verticalAlign || "middle";
   
   const writeCell = (value: string) => {
     if (before !== value) {
-      const parsed = new Parser(value).parse();
+      const parsed = parser.parse(value);
       dispatch(write(parsed));
     }
     setBefore("");
@@ -133,7 +134,13 @@ export const Cell: React.FC<Props> = React.memo(({
       ... getCellStyle(y, x, copyingArea, cutting),
     }}
     draggable={!editing}
+    onContextMenu={(e) => {
+      e.preventDefault();
+      dispatch(setContextMenuPosition([e.pageY, e.pageX]));
+      return false;
+    }}
     onClick={(e) => {
+      dispatch(setContextMenuPosition([-1, -1]));
       if (e.shiftKey) {
         dispatch(drag([y, x]));
         dispatch(choose([-1, -1]));
@@ -157,7 +164,6 @@ export const Cell: React.FC<Props> = React.memo(({
       }
     }}
     onDragEnter={(e) => {
-      const [startY, startX] = selectingZone;
       if (horizontalHeadersSelecting) {
         dispatch(drag([numRows - 1, x]));
         return false;
@@ -180,7 +186,7 @@ export const Cell: React.FC<Props> = React.memo(({
       >
         { cellLabel && (<div className="label">{ cellId }</div>)}
         <CellLayout>
-          {!editing && <div className="rendered">{ new Renderer(value).render(writeCell) }</div>}
+          {!editing && <div className="rendered">{ renderer.render(value, writeCell) }</div>}
           {!pointed ? null : (<textarea
             autoFocus
             style={{ minHeight: height }}
@@ -189,7 +195,7 @@ export const Cell: React.FC<Props> = React.memo(({
             onDoubleClick={(e) => {
               const input = e.currentTarget;
               if (!editing) {
-                input.value = new Renderer(value).stringify();
+                input.value = renderer.stringify(value);
                 setBefore(input.value);
                 dispatch(setEditingCell(cellId));
                 setTimeout(() => input.style.width = `${input.scrollWidth}px`, 100);
@@ -290,7 +296,7 @@ export const Cell: React.FC<Props> = React.memo(({
                   if (e.ctrlKey || e.metaKey) {
                     if (!editing) {
                       e.preventDefault();
-                      const area = clip(selectingZone, choosing, matrix, clipboardRef, Renderer);
+                      const area = clip(selectingZone, choosing, matrix, clipboardRef, renderer);
                       dispatch(copy(area));
                       input.focus(); // refocus
                       return false;
@@ -315,7 +321,7 @@ export const Cell: React.FC<Props> = React.memo(({
                   if (e.ctrlKey || e.metaKey) {
                     if (!editing) {
                       setTimeout(() => {
-                        dispatch(paste({ text: input.value, Parser }));
+                        dispatch(paste({ text: input.value, parser }));
                         input.value = "";
                       }, 50);
                       return false;
@@ -325,7 +331,7 @@ export const Cell: React.FC<Props> = React.memo(({
                   if (e.ctrlKey || e.metaKey) {
                     if (!editing) {
                       e.preventDefault();
-                      const area = clip(selectingZone, choosing, matrix, clipboardRef, Renderer);
+                      const area = clip(selectingZone, choosing, matrix, clipboardRef, renderer);
                       dispatch(cut(area));
                       input.focus(); // refocus
                       return false;

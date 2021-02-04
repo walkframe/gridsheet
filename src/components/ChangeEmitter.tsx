@@ -19,8 +19,6 @@ import {
   matrix2tsv,
 } from "../api/converters";
 
-import { Renderer } from "../renderers/core";
-
 type Props = {
   onChange: Feedback,
 };
@@ -32,7 +30,7 @@ export const ChangeEmitter: React.FC<Props> = ({ onChange }) => {
       if (old.matrix.length === 0) {
         return false;
       }
-      if (matrix2tsv(current.matrix, Renderer) !== matrix2tsv(old.matrix, Renderer)) {
+      if (matrix2tsv(current.matrix) !== matrix2tsv(old.matrix)) {
         onChange(current.matrix, undefined);
         return false;
       }

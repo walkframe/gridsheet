@@ -26,8 +26,6 @@ import {
   setStickyHeaders,
   setRenderers,
   setParsers,
-  setNumRows,
-  setNumCols,
   setOnSave,
 } from "../store/outside";
 
@@ -57,9 +55,6 @@ export const StoreInitializer: React.FC<Props> = ({data, options}) => {
 
   React.useEffect(() => {
     dispatch(setMatrix(data));
-    const [y, x] = matrixShape(data);
-    dispatch(setNumRows(y));
-    dispatch(setNumCols(x));
   }, [data]);
   React.useEffect(() => {
     if (typeof cells !== "undefined") {
