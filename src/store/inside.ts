@@ -65,6 +65,16 @@ const reducers = {
   setCellsOption: (state: Draft<InsideState>, action: PayloadAction<CellsOptionType>) => {
     return {...state, cellsOption: action.payload};
   },
+  setCellOption: (state: Draft<InsideState>, action: PayloadAction<{
+    cell: string;
+    option: CellOptionType;
+  }>) => {
+    const { cell, option } = action.payload;
+    return {...state, cellsOption: {
+      ...state.cellsOption,
+      [cell]: option,
+    }};
+  },
   blur: (state: Draft<InsideState>) => {
     const reactions = makeReactions(state.choosing, state.selectingZone);
     return {
@@ -204,7 +214,7 @@ const reducers = {
     const { range, numCols } = action.payload;
     const [start, end] = range.sort();
     const selectingZone = [start, 0, end, numCols - 1] as ZoneType;
-    const reactions = makeReactions(state.selectingZone, selectingZone);
+    const reactions = makeReactions(state.selectingZone, state.choosing, selectingZone);
     return {
       ...state,
       selectingZone,
@@ -218,7 +228,7 @@ const reducers = {
     const { range, numRows} = action.payload;
     const [start, end] = range.sort();
     const selectingZone = [0, start, numRows - 1, end] as ZoneType;
-    const reactions = makeReactions(state.selectingZone, selectingZone);
+    const reactions = makeReactions(state.selectingZone, state.choosing, selectingZone);
     return {
       ...state,
       selectingZone,
@@ -484,7 +494,7 @@ const reducers = {
   }>) => {
     const { numCols, x } = action.payload;
     const numRows = state.matrix.length;
-    const before = cropMatrix(state.matrix, [0, x, numRows - 1, x + numCols]);
+    const before = cropMatrix(state.matrix, [0, x, numRows - 1, x + numCols - 1]);
     const matrix = [...state.matrix].map((cols) => {
       cols = [...cols];
       cols.splice(x, numCols);
@@ -521,6 +531,7 @@ export default slice.reducer;
 export const {
   setMatrix,
   setCellsOption,
+  setCellOption,
   blur,
   escape,
   choose,

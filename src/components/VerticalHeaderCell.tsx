@@ -5,6 +5,7 @@ import { RootState } from "../store";
 import {
   InsideState,
   setCellsOption,
+  setCellOption,
   drag,
   selectRows,
 } from "../store/inside";
@@ -84,7 +85,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({
         if (typeof rowOption.height === "undefined" && height === parseInt(defaultHeight)) {
           return;
         }
-        dispatch(setCellsOption({... cellsOption, [rowId]: {... rowOption, height: `${height}px`}}));
+        dispatch(setCellOption({ cell: rowId, option: {... rowOption, height: `${height}px`}}));
       }}
     >
       { rowOption.label ||  rowId }

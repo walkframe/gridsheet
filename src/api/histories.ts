@@ -65,7 +65,7 @@ export const redoCopy = (
   { src, dst, after, options }: OperationType,
 ): Draft<InsideState> => {
   const [y, x] = dst;
-  const reactions = makeReactions(src, dst, state.choosing);
+  const reactions = makeReactions(src, dst, state.choosing, state.selectingZone);
   const choosing = [y, x] as PositionType;
   const [h, w] = matrixShape(after);
   const selectingZone: ZoneType = h === 1 && w === 1 ? [-1, -1, -1, -1] : [y, x, y + h - 1, x + w - 1];
@@ -110,7 +110,7 @@ export const redoCut = (
   { src, dst, after, options }: OperationType,
 ): Draft<InsideState> => {
   const [y, x] = dst;
-  const reactions = makeReactions(src, dst, state.choosing);
+  const reactions = makeReactions(src, dst, state.choosing, state.selectingZone);
   const choosing = [y, x] as PositionType;
   const [h, w] = matrixShape(after);
   const selectingZone: ZoneType = h === 1 && w === 1 ? [-1, -1, -1, -1] : [y, x, y + h - 1, x + w - 1];
@@ -228,7 +228,6 @@ export const redoAddCols = (state: Draft<InsideState>, { dst, options }: Operati
   };
 };
 
-// TODO: fix
 export const undoRemoveRows = (state: Draft<InsideState>, { src, before, options }: OperationType): Draft<InsideState> => {
   let matrix = [... state.matrix];
   const [top, left, bottom] = [...src];
@@ -253,7 +252,6 @@ export const redoRemoveRows = (state: Draft<InsideState>, { src, options }: Oper
   };
 };
 
-// TODO: fix
 export const undoRemoveCols = (state: Draft<InsideState>, { src, before, options }: OperationType): Draft<InsideState> => {
   let matrix = [... state.matrix];
   const [top, left, bottom, right] = [...src];

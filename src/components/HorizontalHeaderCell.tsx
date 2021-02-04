@@ -6,6 +6,7 @@ import { RootState } from "../store";
 import {
   InsideState,
   setCellsOption,
+  setCellOption,
   drag,
   selectCols
 } from "../store/inside";
@@ -84,7 +85,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
         if (typeof colOption.width === "undefined" && width === parseInt(defaultWidth)) {
           return;
         }
-        dispatch(setCellsOption({... cellsOption, [colId]: {... colOption, width: `${width}px`}}));
+        dispatch(setCellOption({ cell: colId, option: {... colOption, width: `${width}px`}}));
       }}
     >{ colOption.label || colId }
     </div>
