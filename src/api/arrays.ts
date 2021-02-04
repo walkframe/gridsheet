@@ -217,7 +217,7 @@ export const slideFlattened = (
       if (Number.isNaN(colNumber) || colNumber < x || colNumber + width < 1) {
         return;
       }
-      slided[`${n2a(colNumber + width)}${n}`] = value;
+      slided[`${n2a(colNumber + width + 1)}${n}`] = value;
       slided[`-${a}${n}`] = value;
     });
   }
