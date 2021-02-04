@@ -175,6 +175,10 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
         <li onClick={(e) => {
           dispatch(removeRows({ numRows: height + 1, y: selectingTop}));
           dispatch(setContextMenuPosition([-1, -1]));
+          dispatch(choose([-1, -1]));
+          setTimeout(() => {
+            dispatch(choose([y, 0]));
+          }, 200);
         }}>
           <div className="name">Remove { height + 1 } row{ height > 0 && "s" }</div>
         </li>
@@ -184,6 +188,11 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
         <li onClick={(e) => {
           dispatch(removeCols({ numCols: width + 1, x: selectingLeft}));
           dispatch(setContextMenuPosition([-1, -1]));
+          dispatch(choose([-1, -1]));
+          setTimeout(() => {
+            dispatch(choose([0, x]));
+          }, 200);
+          
         }}>
           <div className="name">Remove { width + 1 } column{ width > 0 && "s" }</div>
         </li>
