@@ -17,5 +17,5 @@ $ yarn add react-gridsheet
 ## History
 
 - 0.3.0
-  - BREAKING CHANGE: `renderers` and `parsers` in options got to receive theirs instance.
+  - BREAKING CHANGE: `renderers` and `parsers` in options got to receive theirs instances.
     - See examples for details.
