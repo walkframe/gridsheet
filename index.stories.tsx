@@ -1,5 +1,5 @@
 import React from "react";
-import { GridSheet, Renderer, aa2oa } from ".";
+import { GridSheet, Renderer, aa2oa } from "./src";
 // import { GridSheet, Renderer, aa2oa } from "../dist";
 
 class KanjiRenderer extends Renderer {

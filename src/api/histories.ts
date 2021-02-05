@@ -51,7 +51,7 @@ export const undoCopy = (state: Draft<InsideState>, { dst, src, before }: Operat
 
 export const redoCopy = (
   state: Draft<InsideState>,
-  { src, dst, after, options }: OperationType,
+  { src, dst, after }: OperationType,
 ): Draft<InsideState> => {
   const [y, x] = dst;
   const reactions = makeReactions(src, dst, state.choosing, state.selectingZone);
@@ -96,7 +96,7 @@ export const undoCut = (state: Draft<InsideState>, {
 
 export const redoCut = (
   state: Draft<InsideState>,
-  { src, dst, after, options }: OperationType,
+  { src, dst, after }: OperationType,
 ): Draft<InsideState> => {
   const [y, x] = dst;
   const reactions = makeReactions(src, dst, state.choosing, state.selectingZone);
@@ -139,7 +139,7 @@ export const undoWrite = (state: Draft<InsideState>, { dst, src, before }: Opera
 
 export const redoWrite = (
   state: Draft<InsideState>,
-  { src, dst, after, options }: OperationType,
+  { src, dst, after }: OperationType,
 ): Draft<InsideState> => {
   const [y, x] = dst;
   const reactions = makeReactions(src, dst, state.choosing);
@@ -186,7 +186,7 @@ export const redoAddRows = (state: Draft<InsideState>, { dst, options }: Operati
 
 export const undoAddCols = (state: Draft<InsideState>, { dst, options }: OperationType): Draft<InsideState> => {
   let matrix = [... state.matrix];
-  const [top, left, bottom, right] = [...dst];
+  const [top, left, _, right] = [...dst];
   matrix = [...state.matrix].map((cols) => {
     cols = [...cols];
     cols.splice(left, right - left + 1);
@@ -202,7 +202,7 @@ export const undoAddCols = (state: Draft<InsideState>, { dst, options }: Operati
 
 export const redoAddCols = (state: Draft<InsideState>, { dst, options }: OperationType): Draft<InsideState> => {
   let matrix = [... state.matrix];
-  const [top, left, bottom, right] = [...dst];
+  const [top, left, _, right] = [...dst];
   matrix = [...state.matrix].map((cols) => {
     const blanks = makeSequence(0, right - left + 1).map(() => "");
     cols = [...cols];
@@ -219,7 +219,7 @@ export const redoAddCols = (state: Draft<InsideState>, { dst, options }: Operati
 
 export const undoRemoveRows = (state: Draft<InsideState>, { src, before, options }: OperationType): Draft<InsideState> => {
   let matrix = [... state.matrix];
-  const [top, left, bottom] = [...src];
+  const [top, left] = [...src];
   matrix.splice(top, 0, ...before);
   return {
     ...state,
@@ -243,7 +243,7 @@ export const redoRemoveRows = (state: Draft<InsideState>, { src, options }: Oper
 
 export const undoRemoveCols = (state: Draft<InsideState>, { src, before, options }: OperationType): Draft<InsideState> => {
   let matrix = [... state.matrix];
-  const [top, left, bottom, right] = [...src];
+  const [top, left] = [...src];
   matrix = [...state.matrix].map((cols, i) => {
     cols = [...cols];
     cols.splice(left, 0, ...before[i]);
@@ -259,7 +259,7 @@ export const undoRemoveCols = (state: Draft<InsideState>, { src, before, options
 
 export const redoRemoveCols = (state: Draft<InsideState>, { src, options }: OperationType): Draft<InsideState> => {
   let matrix = [... state.matrix];
-  const [top, left, bottom, right] = [...src];
+  const [top, left, _, right] = [...src];
   matrix = [...state.matrix].map((cols) => {
     cols = [...cols];
     cols.splice(left, right - left + 1);
