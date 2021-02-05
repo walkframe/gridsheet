@@ -29,7 +29,7 @@ export const ContextMenuLayout = styled.div`
       }
 
       display: flex;
-      
+
       .name {
         flex: 1;
         font-size: 15px;
@@ -55,5 +55,4 @@ export const ContextMenuLayout = styled.div`
       }
     }
   }
-
 `;

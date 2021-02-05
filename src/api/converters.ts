@@ -64,7 +64,8 @@ export const tsv2matrix = (tsv: string, parser = _parser): any[][] => {
   const restoreDoubleQuote = (text: string) => text.replace(/\x00/g, '"');
   const rows: any[][] = [];
   let row: any[] = [];
-  if (tsv.indexOf("\t") === -1) { // 1col
+  if (tsv.indexOf("\t") === -1) {
+    // 1col
     const cols: any[] = [];
     const vals = tsv.split("\n");
     let enter = false;
@@ -86,7 +87,8 @@ export const tsv2matrix = (tsv: string, parser = _parser): any[][] => {
     return cols.map((col) => [parser.parse(restoreDoubleQuote(col))]);
   }
   tsv.split("\t").map((col) => {
-    if (col[0] === '"' && col[col.length - 1] === '"') { // escaping
+    if (col[0] === '"' && col[col.length - 1] === '"') {
+      // escaping
       const cell = restoreDoubleQuote(col.substring(1, col.length - 1));
       row.push(parser.parse(cell));
     } else {

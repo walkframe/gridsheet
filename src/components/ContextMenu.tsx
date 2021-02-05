@@ -1,36 +1,29 @@
 import React from "react";
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector } from "react-redux";
 
 import { n2a } from "../api/converters";
 import { clip } from "../api/clipboard";
 import { Renderer as DefaultRenderer } from "../renderers/core";
 import { Parser as DefaultParser } from "../parsers/core";
 
-
 import {
   choose,
   select,
-  undo, redo,
-  copy, cut, paste,
-  addRows, removeRows,
-  addCols, removeCols,
+  undo,
+  redo,
+  copy,
+  cut,
+  paste,
+  addRows,
+  removeRows,
+  addCols,
+  removeCols,
 } from "../store/inside";
-import {
-  setContextMenuPosition,
-} from "../store/outside"
-import {
-  ContextMenuLayout,
-} from "./styles/ContextMenuLayout";
-import {
-  zoneShape,
-  zoneToArea,
-} from "../api/arrays";
+import { setContextMenuPosition } from "../store/outside";
+import { ContextMenuLayout } from "./styles/ContextMenuLayout";
+import { zoneShape, zoneToArea } from "../api/arrays";
 
-import {
-  CellOptionType,
-  InsideState,
-  OutsideState,
-} from "../types";
+import { CellOptionType, InsideState, OutsideState } from "../types";
 
 import { RootState } from "../store";
 
@@ -41,12 +34,10 @@ type Props = {
 export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
   const dispatch = useDispatch();
 
-  const {
-    renderers,
-    parsers,
-    contextMenuPosition,
-  } = useSelector<RootState, OutsideState>(
-      state => state["outside"]);
+  const { renderers, parsers, contextMenuPosition } = useSelector<
+    RootState,
+    OutsideState
+  >((state) => state["outside"]);
 
   const {
     matrix,
@@ -55,14 +46,24 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
     selectingZone,
     horizontalHeadersSelecting,
     verticalHeadersSelecting,
-  } = useSelector<RootState, InsideState>(state => state["inside"]);
+  } = useSelector<RootState, InsideState>((state) => state["inside"]);
 
   const [y, x] = choosing;
-  let [selectingTop, selectingLeft, selectingBottom, selectingRight] = zoneToArea(selectingZone);
+  let [
+    selectingTop,
+    selectingLeft,
+    selectingBottom,
+    selectingRight,
+  ] = zoneToArea(selectingZone);
   if (selectingTop === -1) {
-    [selectingTop, selectingLeft, selectingBottom, selectingRight] = [y, x, y, x];
+    [selectingTop, selectingLeft, selectingBottom, selectingRight] = [
+      y,
+      x,
+      y,
+      x,
+    ];
   }
-  const rowId = `${ y + 1 }`;
+  const rowId = `${y + 1}`;
   const colId = n2a(x + 1);
   const cellId = `${colId}${rowId}`;
 
@@ -73,8 +74,16 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
   const colOption: CellOptionType = cellsOption[colId] || {};
   const cellOption: CellOptionType = cellsOption[cellId] || {};
 
-  const rendererKey = cellOption.renderer || colOption.renderer || rowOption.renderer || defaultOption.renderer;
-  const parserKey = cellOption.parser || colOption.parser || rowOption.parser || defaultOption.parser;
+  const rendererKey =
+    cellOption.renderer ||
+    colOption.renderer ||
+    rowOption.renderer ||
+    defaultOption.renderer;
+  const parserKey =
+    cellOption.parser ||
+    colOption.parser ||
+    rowOption.parser ||
+    defaultOption.parser;
 
   const renderer = renderers[rendererKey || ""] || new DefaultRenderer();
   const parser = parsers[parserKey || ""] || new DefaultParser();
@@ -84,127 +93,209 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
     return null;
   }
 
-  return (<ContextMenuLayout
-    style={{
-      top,
-      left,
-    }}
-  >
-    <ul>
-      <li onClick={() => {
-        const area = clip(selectingZone, choosing, matrix, clipboardRef, renderer);
-        dispatch(cut(area));
-        dispatch(setContextMenuPosition([-1, -1]));
-      }}>
-        <div className="name">Cut</div>
-        <div className="shortcut"><span className="underline">X</span></div>
-      </li>
-      <li onClick={() => {
-        const area = clip(selectingZone, choosing, matrix, clipboardRef, renderer);
-        dispatch(copy(area));
-        dispatch(setContextMenuPosition([-1, -1]));
-      }}>
-        <div className="name">Copy</div>
-        <div className="shortcut"><span className="underline">C</span></div>
-      </li>
-      <li onClick={async () => {
-        const text = await navigator.clipboard.readText();
-        dispatch(paste({ text, parser }));
-        dispatch(setContextMenuPosition([-1, -1]));
-      }}>
-        <div className="name">Paste</div>
-        <div className="shortcut"><span className="underline">V</span></div>
-      </li>
-
-      <li className="divider" />
-
-      { !horizontalHeadersSelecting &&
-        <li onClick={() => {
-          dispatch(addRows({ numRows: height + 1, y: selectingTop}));
-          dispatch(select([selectingTop, 0, selectingTop + height, matrix[0].length]));
-          dispatch(choose([selectingTop, 0]));
-          dispatch(setContextMenuPosition([-1, -1]));
-        }}>
-          <div className="name">Insert { height + 1 } row{ height > 0 && "s" } above</div>
+  return (
+    <ContextMenuLayout
+      style={{
+        top,
+        left,
+      }}
+    >
+      <ul>
+        <li
+          onClick={() => {
+            const area = clip(
+              selectingZone,
+              choosing,
+              matrix,
+              clipboardRef,
+              renderer
+            );
+            dispatch(cut(area));
+            dispatch(setContextMenuPosition([-1, -1]));
+          }}
+        >
+          <div className="name">Cut</div>
+          <div className="shortcut">
+            <span className="underline">X</span>
+          </div>
         </li>
-      }
-      { !horizontalHeadersSelecting &&
-        <li onClick={() => {
-          dispatch(addRows({ numRows: height + 1, y: selectingBottom + 1}));
-          dispatch(select([selectingBottom + 1, 0, selectingBottom + height + 1, matrix[0].length]));
-          dispatch(choose([selectingBottom + 1, 0]));
-          dispatch(setContextMenuPosition([-1, -1]));
-        }}>
-          <div className="name">Insert { height + 1 } row{ height > 0 && "s" } below</div>
+        <li
+          onClick={() => {
+            const area = clip(
+              selectingZone,
+              choosing,
+              matrix,
+              clipboardRef,
+              renderer
+            );
+            dispatch(copy(area));
+            dispatch(setContextMenuPosition([-1, -1]));
+          }}
+        >
+          <div className="name">Copy</div>
+          <div className="shortcut">
+            <span className="underline">C</span>
+          </div>
         </li>
-      }
-      
-      { !verticalHeadersSelecting &&
-        <li onClick={() => {
-          clip(selectingZone, choosing, matrix, clipboardRef, renderer);
-          dispatch(addCols({ numCols: width + 1, x: selectingLeft}));
-          dispatch(select([0, selectingLeft, matrix.length, selectingLeft + width]));
-          dispatch(choose([0, selectingLeft]));
-          dispatch(setContextMenuPosition([-1, -1]));
-        }}>
-          <div className="name">Insert { width + 1 } column{ width > 0 && "s" } left</div>
+        <li
+          onClick={async () => {
+            const text = await navigator.clipboard.readText();
+            dispatch(paste({ text, parser }));
+            dispatch(setContextMenuPosition([-1, -1]));
+          }}
+        >
+          <div className="name">Paste</div>
+          <div className="shortcut">
+            <span className="underline">V</span>
+          </div>
         </li>
-      }
-      { !verticalHeadersSelecting &&
-        <li onClick={() => {
-          clip(selectingZone, choosing, matrix, clipboardRef, renderer);
-          dispatch(addCols({ numCols: width + 1, x: selectingRight + 1}));
-          dispatch(select([0, selectingRight + 1, matrix.length, selectingRight + width + 1]));
-          dispatch(choose([0, selectingRight + 1]));
-          dispatch(setContextMenuPosition([-1, -1]));
-        }}>
-          <div className="name">Insert { width + 1 } column{ width > 0 && "s" } right</div>
-        </li>
-      }
 
-      { !horizontalHeadersSelecting &&
-        <li onClick={() => {
-          dispatch(removeRows({ numRows: height + 1, y: selectingTop}));
-          dispatch(setContextMenuPosition([-1, -1]));
-          dispatch(choose([-1, -1]));
-          setTimeout(() => {
-            dispatch(choose([y, 0]));
-          }, 200);
-        }}>
-          <div className="name">Remove { height + 1 } row{ height > 0 && "s" }</div>
+        <li className="divider" />
+
+        {!horizontalHeadersSelecting && (
+          <li
+            onClick={() => {
+              dispatch(addRows({ numRows: height + 1, y: selectingTop }));
+              dispatch(
+                select([
+                  selectingTop,
+                  0,
+                  selectingTop + height,
+                  matrix[0].length,
+                ])
+              );
+              dispatch(choose([selectingTop, 0]));
+              dispatch(setContextMenuPosition([-1, -1]));
+            }}
+          >
+            <div className="name">
+              Insert {height + 1} row{height > 0 && "s"} above
+            </div>
+          </li>
+        )}
+        {!horizontalHeadersSelecting && (
+          <li
+            onClick={() => {
+              dispatch(
+                addRows({ numRows: height + 1, y: selectingBottom + 1 })
+              );
+              dispatch(
+                select([
+                  selectingBottom + 1,
+                  0,
+                  selectingBottom + height + 1,
+                  matrix[0].length,
+                ])
+              );
+              dispatch(choose([selectingBottom + 1, 0]));
+              dispatch(setContextMenuPosition([-1, -1]));
+            }}
+          >
+            <div className="name">
+              Insert {height + 1} row{height > 0 && "s"} below
+            </div>
+          </li>
+        )}
+
+        {!verticalHeadersSelecting && (
+          <li
+            onClick={() => {
+              clip(selectingZone, choosing, matrix, clipboardRef, renderer);
+              dispatch(addCols({ numCols: width + 1, x: selectingLeft }));
+              dispatch(
+                select([0, selectingLeft, matrix.length, selectingLeft + width])
+              );
+              dispatch(choose([0, selectingLeft]));
+              dispatch(setContextMenuPosition([-1, -1]));
+            }}
+          >
+            <div className="name">
+              Insert {width + 1} column{width > 0 && "s"} left
+            </div>
+          </li>
+        )}
+        {!verticalHeadersSelecting && (
+          <li
+            onClick={() => {
+              clip(selectingZone, choosing, matrix, clipboardRef, renderer);
+              dispatch(addCols({ numCols: width + 1, x: selectingRight + 1 }));
+              dispatch(
+                select([
+                  0,
+                  selectingRight + 1,
+                  matrix.length,
+                  selectingRight + width + 1,
+                ])
+              );
+              dispatch(choose([0, selectingRight + 1]));
+              dispatch(setContextMenuPosition([-1, -1]));
+            }}
+          >
+            <div className="name">
+              Insert {width + 1} column{width > 0 && "s"} right
+            </div>
+          </li>
+        )}
+
+        {!horizontalHeadersSelecting && (
+          <li
+            onClick={() => {
+              dispatch(removeRows({ numRows: height + 1, y: selectingTop }));
+              dispatch(setContextMenuPosition([-1, -1]));
+              dispatch(choose([-1, -1]));
+              setTimeout(() => {
+                dispatch(choose([y, 0]));
+              }, 200);
+            }}
+          >
+            <div className="name">
+              Remove {height + 1} row{height > 0 && "s"}
+            </div>
+          </li>
+        )}
+
+        {!verticalHeadersSelecting && (
+          <li
+            onClick={() => {
+              dispatch(removeCols({ numCols: width + 1, x: selectingLeft }));
+              dispatch(setContextMenuPosition([-1, -1]));
+              dispatch(choose([-1, -1]));
+              setTimeout(() => {
+                dispatch(choose([0, x]));
+              }, 200);
+            }}
+          >
+            <div className="name">
+              Remove {width + 1} column{width > 0 && "s"}
+            </div>
+          </li>
+        )}
+
+        <li className="divider" />
+
+        <li
+          onClick={async () => {
+            dispatch(undo());
+            dispatch(setContextMenuPosition([-1, -1]));
+          }}
+        >
+          <div className="name">Undo</div>
+          <div className="shortcut">
+            <span className="underline">Z</span>
+          </div>
         </li>
-      }
-
-      { !verticalHeadersSelecting &&
-        <li onClick={() => {
-          dispatch(removeCols({ numCols: width + 1, x: selectingLeft}));
-          dispatch(setContextMenuPosition([-1, -1]));
-          dispatch(choose([-1, -1]));
-          setTimeout(() => {
-            dispatch(choose([0, x]));
-          }, 200);
-          
-        }}>
-          <div className="name">Remove { width + 1 } column{ width > 0 && "s" }</div>
+        <li
+          onClick={async () => {
+            dispatch(redo());
+            dispatch(setContextMenuPosition([-1, -1]));
+          }}
+        >
+          <div className="name">Redo</div>
+          <div className="shortcut">
+            <span className="underline">R</span>
+          </div>
         </li>
-      }
-
-      <li className="divider" />
-
-      <li onClick={async () => {
-        dispatch(undo());
-        dispatch(setContextMenuPosition([-1, -1]));
-      }}>
-        <div className="name">Undo</div>
-        <div className="shortcut"><span className="underline">Z</span></div>
-      </li>
-      <li onClick={async () => {
-        dispatch(redo());
-        dispatch(setContextMenuPosition([-1, -1]));
-      }}>
-        <div className="name">Redo</div>
-        <div className="shortcut"><span className="underline">R</span></div>
-      </li>
-    </ul>
-  </ContextMenuLayout>);
+      </ul>
+    </ContextMenuLayout>
+  );
 };

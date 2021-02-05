@@ -27,7 +27,7 @@ export const GridTableLayout = styled.div`
       min-width: 30px;
       .resizer {
         padding: 0 10px;
-        resize: vertical; 
+        resize: vertical;
       }
     }
     .resizer {

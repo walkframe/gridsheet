@@ -3,12 +3,8 @@ import styled from "styled-components";
 export const GridSheetLayout = styled.div`
   width: min-content;
   width: fit-content;
-  font-family: "Helvetica Neue",
-    Arial,
-    "Hiragino Kaku Gothic ProN",
-    "Hiragino Sans",
-    Meiryo,
-    sans-serif;
+  font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN",
+    "Hiragino Sans", Meiryo, sans-serif;
 
   &.light {
     background-color: #ffffff;
@@ -39,7 +35,7 @@ export const GridSheetLayout = styled.div`
       }
     }
   }
-  
+
   &.dark {
     background-color: #4a4a4a;
     color: #eeeeee;

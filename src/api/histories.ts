@@ -18,24 +18,33 @@ import {
   inverseFlattened,
 } from "../api/arrays";
 
-export const pushHistory = (history: HistoryType, operation: OperationType): HistoryType => {
-  history = {... history};
-  const operations = [... history.operations];
+export const pushHistory = (
+  history: HistoryType,
+  operation: OperationType
+): HistoryType => {
+  history = { ...history };
+  const operations = [...history.operations];
   operations.splice(history.index + 1, operations.length);
-  operations.push({... operation});
+  operations.push({ ...operation });
   history.index++;
   if (operations.length > history.size) {
     operations.splice(0, 1);
     history.index--;
   }
-  return {... history, operations};
+  return { ...history, operations };
 };
 
-export const undoCopy = (state: Draft<InsideState>, { dst, src, before }: OperationType): Draft<InsideState> => {
-  let matrix = [... state.matrix];
+export const undoCopy = (
+  state: Draft<InsideState>,
+  { dst, src, before }: OperationType
+): Draft<InsideState> => {
+  let matrix = [...state.matrix];
   const [top, left] = dst;
   const [h, w] = matrixShape(before);
-  const selectingZone: ZoneType = h === 1 && w === 1 ? [-1, -1, -1, -1] : [top, left, top + h - 1, left + w - 1];
+  const selectingZone: ZoneType =
+    h === 1 && w === 1
+      ? [-1, -1, -1, -1]
+      : [top, left, top + h - 1, left + w - 1];
   matrix = writeMatrix(top, left, before, matrix);
 
   return {
@@ -51,13 +60,19 @@ export const undoCopy = (state: Draft<InsideState>, { dst, src, before }: Operat
 
 export const redoCopy = (
   state: Draft<InsideState>,
-  { src, dst, after }: OperationType,
+  { src, dst, after }: OperationType
 ): Draft<InsideState> => {
   const [y, x] = dst;
-  const reactions = makeReactions(src, dst, state.choosing, state.selectingZone);
+  const reactions = makeReactions(
+    src,
+    dst,
+    state.choosing,
+    state.selectingZone
+  );
   const choosing = [y, x] as PositionType;
   const [h, w] = matrixShape(after);
-  const selectingZone: ZoneType = h === 1 && w === 1 ? [-1, -1, -1, -1] : [y, x, y + h - 1, x + w - 1];
+  const selectingZone: ZoneType =
+    h === 1 && w === 1 ? [-1, -1, -1, -1] : [y, x, y + h - 1, x + w - 1];
   const copyingZone = [-1, -1, -1, -1] as ZoneType;
   const matrix = writeMatrix(y, x, after, state.matrix);
   return {
@@ -70,14 +85,17 @@ export const redoCopy = (
   };
 };
 
-export const undoCut = (state: Draft<InsideState>, {
-  dst, src,
-  before, after,
-}: OperationType): Draft<InsideState> => {
-  let matrix = [... state.matrix];
+export const undoCut = (
+  state: Draft<InsideState>,
+  { dst, src, before, after }: OperationType
+): Draft<InsideState> => {
+  let matrix = [...state.matrix];
   const [top, left] = dst;
   const [h, w] = matrixShape(before);
-  const selectingZone: ZoneType = h === 1 && w === 1 ? [-1, -1, -1, -1] : [top, left, top + h - 1, left + w - 1];
+  const selectingZone: ZoneType =
+    h === 1 && w === 1
+      ? [-1, -1, -1, -1]
+      : [top, left, top + h - 1, left + w - 1];
   matrix = writeMatrix(top, left, before, matrix);
 
   const [y, x] = src;
@@ -96,13 +114,19 @@ export const undoCut = (state: Draft<InsideState>, {
 
 export const redoCut = (
   state: Draft<InsideState>,
-  { src, dst, after }: OperationType,
+  { src, dst, after }: OperationType
 ): Draft<InsideState> => {
   const [y, x] = dst;
-  const reactions = makeReactions(src, dst, state.choosing, state.selectingZone);
+  const reactions = makeReactions(
+    src,
+    dst,
+    state.choosing,
+    state.selectingZone
+  );
   const choosing = [y, x] as PositionType;
   const [h, w] = matrixShape(after);
-  const selectingZone: ZoneType = h === 1 && w === 1 ? [-1, -1, -1, -1] : [y, x, y + h - 1, x + w - 1];
+  const selectingZone: ZoneType =
+    h === 1 && w === 1 ? [-1, -1, -1, -1] : [y, x, y + h - 1, x + w - 1];
   const copyingZone = [-1, -1, -1, -1] as ZoneType;
   let matrix = writeMatrix(y, x, after, state.matrix);
   const [top, left, bottom, right] = src;
@@ -120,11 +144,17 @@ export const redoCut = (
   };
 };
 
-export const undoWrite = (state: Draft<InsideState>, { dst, src, before }: OperationType): Draft<InsideState> => {
-  let matrix = [... state.matrix];
+export const undoWrite = (
+  state: Draft<InsideState>,
+  { dst, src, before }: OperationType
+): Draft<InsideState> => {
+  let matrix = [...state.matrix];
   const [top, left] = dst;
   const [h, w] = matrixShape(before);
-  const selectingZone: ZoneType = h === 1 && w === 1 ? [-1, -1, -1, -1] : [top, left, top + h - 1, left + w - 1];
+  const selectingZone: ZoneType =
+    h === 1 && w === 1
+      ? [-1, -1, -1, -1]
+      : [top, left, top + h - 1, left + w - 1];
   matrix = writeMatrix(top, left, before, matrix);
   return {
     ...state,
@@ -139,13 +169,14 @@ export const undoWrite = (state: Draft<InsideState>, { dst, src, before }: Opera
 
 export const redoWrite = (
   state: Draft<InsideState>,
-  { src, dst, after }: OperationType,
+  { src, dst, after }: OperationType
 ): Draft<InsideState> => {
   const [y, x] = dst;
   const reactions = makeReactions(src, dst, state.choosing);
   const choosing = [y, x] as PositionType;
   const [h, w] = matrixShape(after);
-  const selectingZone: ZoneType = h === 1 && w === 1 ? [-1, -1, -1, -1] : [y, x, y + h - 1, x + w - 1];
+  const selectingZone: ZoneType =
+    h === 1 && w === 1 ? [-1, -1, -1, -1] : [y, x, y + h - 1, x + w - 1];
   const copyingZone = [-1, -1, -1, -1] as ZoneType;
   const matrix = writeMatrix(y, x, after, state.matrix);
   return {
@@ -158,34 +189,58 @@ export const redoWrite = (
   };
 };
 
-export const undoAddRows = (state: Draft<InsideState>, { dst, options }: OperationType): Draft<InsideState> => {
-  let matrix = [... state.matrix];
+export const undoAddRows = (
+  state: Draft<InsideState>,
+  { dst, options }: OperationType
+): Draft<InsideState> => {
+  let matrix = [...state.matrix];
   const [top, left, bottom] = [...dst];
   matrix.splice(top, bottom - top + 1);
   return {
     ...state,
     matrix: [...matrix],
-    reactions: makeReactions([top, left, matrix.length, matrix[0]?.length || 0]),
-    cellsOption: applyFlattened(state.cellsOption, inverseFlattened(options || {})),
+    reactions: makeReactions([
+      top,
+      left,
+      matrix.length,
+      matrix[0]?.length || 0,
+    ]),
+    cellsOption: applyFlattened(
+      state.cellsOption,
+      inverseFlattened(options || {})
+    ),
   };
 };
 
-export const redoAddRows = (state: Draft<InsideState>, { dst, options }: OperationType): Draft<InsideState> => {
-  let matrix = [... state.matrix];
+export const redoAddRows = (
+  state: Draft<InsideState>,
+  { dst, options }: OperationType
+): Draft<InsideState> => {
+  let matrix = [...state.matrix];
   const [top, left, bottom, right] = [...dst];
   const width = right - left + 1;
-  const blanks = makeSequence(0, bottom - top + 1).map(() => makeSequence(0, width).map(() => ""));
+  const blanks = makeSequence(0, bottom - top + 1).map(() =>
+    makeSequence(0, width).map(() => "")
+  );
   matrix.splice(top, 0, ...blanks);
   return {
     ...state,
     matrix: [...matrix],
-    reactions: makeReactions([top, left, matrix.length, matrix[0]?.length || 0]),
+    reactions: makeReactions([
+      top,
+      left,
+      matrix.length,
+      matrix[0]?.length || 0,
+    ]),
     cellsOption: applyFlattened(state.cellsOption, options || {}),
   };
 };
 
-export const undoAddCols = (state: Draft<InsideState>, { dst, options }: OperationType): Draft<InsideState> => {
-  let matrix = [... state.matrix];
+export const undoAddCols = (
+  state: Draft<InsideState>,
+  { dst, options }: OperationType
+): Draft<InsideState> => {
+  let matrix = [...state.matrix];
   const [top, left, _, right] = [...dst];
   matrix = [...state.matrix].map((cols) => {
     cols = [...cols];
@@ -195,13 +250,24 @@ export const undoAddCols = (state: Draft<InsideState>, { dst, options }: Operati
   return {
     ...state,
     matrix: [...matrix],
-    reactions: makeReactions([top, left, matrix.length, matrix[0]?.length || 0]),
-    cellsOption: applyFlattened(state.cellsOption, inverseFlattened(options || {})),
+    reactions: makeReactions([
+      top,
+      left,
+      matrix.length,
+      matrix[0]?.length || 0,
+    ]),
+    cellsOption: applyFlattened(
+      state.cellsOption,
+      inverseFlattened(options || {})
+    ),
   };
 };
 
-export const redoAddCols = (state: Draft<InsideState>, { dst, options }: OperationType): Draft<InsideState> => {
-  let matrix = [... state.matrix];
+export const redoAddCols = (
+  state: Draft<InsideState>,
+  { dst, options }: OperationType
+): Draft<InsideState> => {
+  let matrix = [...state.matrix];
   const [top, left, _, right] = [...dst];
   matrix = [...state.matrix].map((cols) => {
     const blanks = makeSequence(0, right - left + 1).map(() => "");
@@ -212,37 +278,64 @@ export const redoAddCols = (state: Draft<InsideState>, { dst, options }: Operati
   return {
     ...state,
     matrix: [...matrix],
-    reactions: makeReactions([top, left, matrix.length, matrix[0]?.length || 0]),
+    reactions: makeReactions([
+      top,
+      left,
+      matrix.length,
+      matrix[0]?.length || 0,
+    ]),
     cellsOption: applyFlattened(state.cellsOption, options || {}),
   };
 };
 
-export const undoRemoveRows = (state: Draft<InsideState>, { src, before, options }: OperationType): Draft<InsideState> => {
-  let matrix = [... state.matrix];
+export const undoRemoveRows = (
+  state: Draft<InsideState>,
+  { src, before, options }: OperationType
+): Draft<InsideState> => {
+  let matrix = [...state.matrix];
   const [top, left] = [...src];
   matrix.splice(top, 0, ...before);
   return {
     ...state,
     matrix,
-    reactions: makeReactions([top, left, matrix.length, matrix[0]?.length || 0]),
-    cellsOption: applyFlattened(state.cellsOption, inverseFlattened(options || {})),
+    reactions: makeReactions([
+      top,
+      left,
+      matrix.length,
+      matrix[0]?.length || 0,
+    ]),
+    cellsOption: applyFlattened(
+      state.cellsOption,
+      inverseFlattened(options || {})
+    ),
   };
 };
 
-export const redoRemoveRows = (state: Draft<InsideState>, { src, options }: OperationType): Draft<InsideState> => {
-  let matrix = [... state.matrix];
+export const redoRemoveRows = (
+  state: Draft<InsideState>,
+  { src, options }: OperationType
+): Draft<InsideState> => {
+  let matrix = [...state.matrix];
   const [top, left, bottom] = [...src];
   matrix.splice(top, bottom - top + 1);
   return {
     ...state,
     matrix: [...matrix],
-    reactions: makeReactions([top, left, matrix.length, matrix[0]?.length || 0]),
+    reactions: makeReactions([
+      top,
+      left,
+      matrix.length,
+      matrix[0]?.length || 0,
+    ]),
     cellsOption: applyFlattened(state.cellsOption, options || {}),
   };
 };
 
-export const undoRemoveCols = (state: Draft<InsideState>, { src, before, options }: OperationType): Draft<InsideState> => {
-  let matrix = [... state.matrix];
+export const undoRemoveCols = (
+  state: Draft<InsideState>,
+  { src, before, options }: OperationType
+): Draft<InsideState> => {
+  let matrix = [...state.matrix];
   const [top, left] = [...src];
   matrix = [...state.matrix].map((cols, i) => {
     cols = [...cols];
@@ -252,13 +345,24 @@ export const undoRemoveCols = (state: Draft<InsideState>, { src, before, options
   return {
     ...state,
     matrix,
-    reactions: makeReactions([top, left, matrix.length, matrix[0]?.length || 0]),
-    cellsOption: applyFlattened(state.cellsOption, inverseFlattened(options || {})),
+    reactions: makeReactions([
+      top,
+      left,
+      matrix.length,
+      matrix[0]?.length || 0,
+    ]),
+    cellsOption: applyFlattened(
+      state.cellsOption,
+      inverseFlattened(options || {})
+    ),
   };
 };
 
-export const redoRemoveCols = (state: Draft<InsideState>, { src, options }: OperationType): Draft<InsideState> => {
-  let matrix = [... state.matrix];
+export const redoRemoveCols = (
+  state: Draft<InsideState>,
+  { src, options }: OperationType
+): Draft<InsideState> => {
+  let matrix = [...state.matrix];
   const [top, left, _, right] = [...src];
   matrix = [...state.matrix].map((cols) => {
     cols = [...cols];
@@ -268,7 +372,12 @@ export const redoRemoveCols = (state: Draft<InsideState>, { src, options }: Oper
   return {
     ...state,
     matrix: [...matrix],
-    reactions: makeReactions([top, left, matrix.length, matrix[0]?.length || 0]),
+    reactions: makeReactions([
+      top,
+      left,
+      matrix.length,
+      matrix[0]?.length || 0,
+    ]),
     cellsOption: applyFlattened(state.cellsOption, options || {}),
   };
 };

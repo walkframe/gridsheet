@@ -1,20 +1,15 @@
-import {
-  ZoneType,
-  MatrixType,
-  PositionType,
-} from "../types";
+import { ZoneType, MatrixType, PositionType } from "../types";
 
-import {
-  cropMatrix,
-  zoneToArea,
-} from "./arrays";
+import { cropMatrix, zoneToArea } from "./arrays";
 import { matrix2tsv } from "./converters";
 import { RendererType } from "../renderers/core";
 
 export const clip = (
-  selecting: ZoneType, choosing: PositionType, matrix: MatrixType,
+  selecting: ZoneType,
+  choosing: PositionType,
+  matrix: MatrixType,
   clipboardRef: React.RefObject<HTMLTextAreaElement>,
-  renderer: RendererType,
+  renderer: RendererType
 ): ZoneType => {
   const [y, x] = choosing;
   let selectingArea = zoneToArea(selecting);
@@ -32,7 +27,6 @@ export const clip = (
     document.execCommand("copy");
     input.value = "";
     input.blur();
-
   }
   return area;
 };

@@ -1,16 +1,9 @@
 import React from "react";
-import { useDispatch } from 'react-redux';
+import { useDispatch } from "react-redux";
 
-import {
-  MatrixType,
-  OptionsType,
-} from "../types";
+import { MatrixType, OptionsType } from "../types";
 
-import {
-  setMatrix,
-  setCellsOption,
-  initHistory,
-} from "../store/inside";
+import { setMatrix, setCellsOption, initHistory } from "../store/inside";
 
 import {
   setHeaderHeight,
@@ -30,7 +23,7 @@ type Props = {
   options: OptionsType;
 };
 
-export const StoreInitializer: React.FC<Props> = ({data, options}) => {
+export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
   const {
     historySize = 10,
     cells,
@@ -110,8 +103,5 @@ export const StoreInitializer: React.FC<Props> = ({data, options}) => {
     dispatch(initHistory(historySize));
   }, []);
 
-  return (<></>);
+  return <></>;
 };
-
-
-
