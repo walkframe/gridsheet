@@ -5,6 +5,7 @@
     "moduleResolution": "node",
     "lib": ["ES2015", "dom"],
     "declaration": true,
+    "declarationMap": true,
     "allowJs": true,
     "jsx": "react",
     "sourceMap": true,
@@ -13,21 +14,10 @@
     "noImplicitAny": true,
     "strictNullChecks": true,
 
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "exclude": [
-    "node_modules",
-    "src/stories",
-    "*.stories.tsx"
-  ],
-  "include": [
-    "**/*.ts",
-    "**/*.tsx"
-  ]
+  "exclude": ["node_modules", "src/stories", "*.stories.tsx"],
+  "include": ["**/*.ts", "**/*.tsx"]
 }
