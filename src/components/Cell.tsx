@@ -5,7 +5,6 @@ import { clip } from "../api/clipboard";
 import { zoneToArea, among, zoneShape } from "../api/arrays";
 import { RootState } from "../store";
 import {
-  InsideState,
   blur,
   clear,
   escape,
@@ -18,7 +17,6 @@ import {
 } from "../store/inside";
 
 import {
-  OutsideState,
   setContextMenuPosition,
 } from "../store/outside";
 
@@ -26,6 +24,8 @@ import { DUMMY_IMG } from "../constants";
 import {
   AreaType,
   CellOptionType,
+  InsideState,
+  OutsideState,
 } from "../types";
 import { Renderer as DefaultRenderer } from "../renderers/core";
 import { Parser as DefaultParser } from "../parsers/core";
@@ -59,7 +59,7 @@ export const Cell: React.FC<Props> = React.memo(({
     onSave,
   } = useSelector<RootState, OutsideState>(
       state => state["outside"],
-      (current, old) => {
+      () => {
         return true;
       }
   );
@@ -163,7 +163,7 @@ export const Cell: React.FC<Props> = React.memo(({
         dispatch(select([-1, -1, -1, -1]));
       }
     }}
-    onDragEnter={(e) => {
+    onDragEnter={() => {
       if (horizontalHeadersSelecting) {
         dispatch(drag([numRows - 1, x]));
         return false;
@@ -173,6 +173,7 @@ export const Cell: React.FC<Props> = React.memo(({
         return false;
       }
       dispatch(drag([y, x]));
+      return false;
     }}>
     <div
       className={`cell-wrapper-outer ${among(selectingArea, [y, x]) ? "selected": ""} ${pointed ? "pointed" : ""} ${editing ? "editing" : ""}`}>
@@ -361,6 +362,7 @@ export const Cell: React.FC<Props> = React.memo(({
               }
               input.style.width = `${input.scrollWidth}px`;
               dispatch(setEditingCell(cellId));
+              return false;
             }}
           />)}
         </CellLayout>

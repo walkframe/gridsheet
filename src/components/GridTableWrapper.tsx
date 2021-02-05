@@ -1,9 +1,7 @@
 import React from "react";
 import { useSelector } from 'react-redux';
 import { RootState } from "../store";
-import {
-  InsideState,
-} from "../store/inside";
+import { InsideState } from "../types";
 
 import {
   GridTable,

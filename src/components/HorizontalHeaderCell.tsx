@@ -4,16 +4,16 @@ import { n2a } from "../api/converters";
 import { between } from "../api/arrays";
 import { RootState } from "../store";
 import {
-  InsideState,
-  setCellsOption,
   setCellOption,
   drag,
   selectCols
 } from "../store/inside";
-
+import {
+  InsideState,
+  OutsideState,
+} from "../types";
 import { DUMMY_IMG } from "../constants";
-
-import { OutsideState, setContextMenuPosition } from "../store/outside";
+import { setContextMenuPosition } from "../store/outside";
 
 type Props = {
   x: number;
@@ -68,7 +68,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({
       dispatch(selectCols({range: [x, x], numRows}));
       return false;
     }}
-    onDragEnter={(e) => {
+    onDragEnter={() => {
       dispatch(drag([numRows - 1, x]));
       return false;
     }}

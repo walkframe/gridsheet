@@ -7,8 +7,7 @@ import {
   RangeType,
   AreaType,
   ZoneType,
-  HistoryType,
-  ReactionsType,
+  InsideState,
 } from "../types";
 
 import * as histories from "../api/histories";
@@ -19,29 +18,14 @@ import {
   writeMatrix,
   slideArea,
   spreadMatrix,
-  matrixShape, zoneToArea,
+  zoneToArea,
   zoneShape, superposeArea,
   makeReactions,
   slideFlattened,
   applyFlattened,
 } from "../api/arrays"
-import { tsv2matrix, n2a, a2n } from "../api/converters";
+import { tsv2matrix } from "../api/converters";
 import { ParserType } from "../parsers/core";
-
-export type InsideState = {
-  matrix: MatrixType;
-  cellsOption: {[s: string]: CellOptionType};
-  choosing: PositionType;
-  lastChoosing: PositionType;
-  cutting: boolean;
-  copyingZone: ZoneType;
-  selectingZone: ZoneType;
-  horizontalHeadersSelecting: boolean;
-  verticalHeadersSelecting: boolean;
-  editingCell: string;
-  history: HistoryType;
-  reactions: ReactionsType;
-}
 
 export const initialState: InsideState = {
   matrix: [],

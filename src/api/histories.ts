@@ -4,8 +4,8 @@ import {
   OperationType,
   ZoneType,
   HistoryType,
+  InsideState,
 } from "../types";
-import { InsideState } from "../store/inside";
 import {
   makeSequence,
   cropMatrix,

@@ -3,18 +3,10 @@ import { useSelector } from 'react-redux';
 
 import {
   Feedback,
+  InsideState,
 } from "../types";
 
 import { RootState } from "../store";
-
-import {
-  InsideState,
-} from "../store/inside";
-
-import {
-  OutsideState,
-} from "../store/outside";
-
 import {
   matrix2tsv,
 } from "../api/converters";

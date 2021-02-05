@@ -4,10 +4,10 @@ import { Parser as DefaultParser } from "../parsers/core";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-const N2A_CACHE: {[s: string]: string} = {};
-const A2N_CACHE: {[s: string]: number} = {};
+const N2A_CACHE: { [s: string]: string } = {};
+const A2N_CACHE: { [s: string]: number } = {};
 
-export const n2a = (num: number, useCache=true): string => {
+export const n2a = (num: number, useCache = true): string => {
   if (useCache && N2A_CACHE[num]) {
     return N2A_CACHE[num];
   }
@@ -15,7 +15,7 @@ export const n2a = (num: number, useCache=true): string => {
   do {
     result = ALPHABET[--num % 26] + result;
     num = Math.floor(num / 26);
-  } while(num > 0);
+  } while (num > 0);
   if (useCache) {
     N2A_CACHE[num] = result;
     A2N_CACHE[result] = num;
@@ -23,7 +23,7 @@ export const n2a = (num: number, useCache=true): string => {
   return result;
 };
 
-export const a2n = (alpha: string, useCache=true): number => {
+export const a2n = (alpha: string, useCache = true): number => {
   if (useCache && A2N_CACHE[alpha]) {
     return A2N_CACHE[alpha];
   }
@@ -31,7 +31,7 @@ export const a2n = (alpha: string, useCache=true): number => {
   for (let digit = 0; digit < alpha.length; digit++) {
     const a = alpha[alpha.length - digit - 1];
     const num = ALPHABET.indexOf(a) + 1;
-    result += (ALPHABET.length ** digit) * num;
+    result += ALPHABET.length ** digit * num;
   }
   if (useCache) {
     N2A_CACHE[result] = alpha;
@@ -41,7 +41,7 @@ export const a2n = (alpha: string, useCache=true): number => {
 };
 
 const _renderer = new DefaultRenderer();
-export const matrix2tsv = (rows: MatrixType, renderer=_renderer): string => {
+export const matrix2tsv = (rows: MatrixType, renderer = _renderer): string => {
   const lines: string[] = [];
   rows.map((row) => {
     const cols: string[] = [];
@@ -59,7 +59,7 @@ export const matrix2tsv = (rows: MatrixType, renderer=_renderer): string => {
 };
 
 const _parser = new DefaultParser();
-export const tsv2matrix = (tsv: string, parser=_parser): any[][] => {
+export const tsv2matrix = (tsv: string, parser = _parser): any[][] => {
   tsv = tsv.replace(/""/g, "\x00");
   const restoreDoubleQuote = (text: string) => text.replace(/\x00/g, '"');
   const rows: any[][] = [];
@@ -86,7 +86,7 @@ export const tsv2matrix = (tsv: string, parser=_parser): any[][] => {
     return cols.map((col) => [parser.parse(restoreDoubleQuote(col))]);
   }
   tsv.split("\t").map((col) => {
-    if (col[0] === '"' && col[col.length-1] === '"') { // escaping
+    if (col[0] === '"' && col[col.length - 1] === '"') { // escaping
       const cell = restoreDoubleQuote(col.substring(1, col.length - 1));
       row.push(parser.parse(cell));
     } else {

@@ -1,0 +1,28 @@
+extends:
+  - "eslint:recommended"
+  - "plugin:@typescript-eslint/eslint-recommended"
+  - "plugin:@typescript-eslint/recommended"
+  - "plugin:prettier/recommended"
+  - "prettier/@typescript-eslint"
+plugins:
+  - "@typescript-eslint"
+  - "prettier"
+
+env:
+  node: true
+  es6: true
+parser: "@typescript-eslint/parser"
+parserOptions:
+  sourceType: module
+  project: "./tsconfig.json"
+rules:
+  semi: error
+  node/no-missing-import: error
+  prettier/prettier: error
+  quotes:
+    - warn
+    - single
+    - double
+  no-unused-vars:
+    - 2
+    - argsIgnorePattern: "^_"

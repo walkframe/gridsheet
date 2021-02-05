@@ -49,6 +49,35 @@ export type OptionsType = {
   onChange?: Feedback;
 };
 
+export type InsideState = {
+  matrix: MatrixType;
+  cellsOption: {[s: string]: CellOptionType};
+  choosing: PositionType;
+  lastChoosing: PositionType;
+  cutting: boolean;
+  copyingZone: ZoneType;
+  selectingZone: ZoneType;
+  horizontalHeadersSelecting: boolean;
+  verticalHeadersSelecting: boolean;
+  editingCell: string;
+  history: HistoryType;
+  reactions: ReactionsType;
+};
+
+export type OutsideState = {
+  headerHeight: string;
+  headerWidth: string;
+  defaultHeight: string;
+  defaultWidth: string;
+  editingOnEnter: boolean;
+  cellLabel: boolean;
+  stickyHeaders: Headers;
+  contextMenuPosition: [number, number];
+  renderers: Renderers;
+  parsers: Parsers;
+  onSave?: Feedback;
+};
+
 export type RangeType = [number, number]; // [start, end]
 export type PositionType = [Y, X]; // [y, x]
 export type ZoneType = [Y, X, Y, X]; // [startY, startX, endY, endX]

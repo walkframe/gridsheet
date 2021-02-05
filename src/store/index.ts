@@ -1,12 +1,15 @@
 import { combineReducers, configureStore, getDefaultMiddleware } from "@reduxjs/toolkit";
 
 import {
-  default as inside,
   InsideState,
+  OutsideState,
+} from "../types";
+
+import {
+  default as inside,
 } from "./inside";
 import {
   default as outside,
-  OutsideState,
 } from "./outside";
 
 export type RootState = {

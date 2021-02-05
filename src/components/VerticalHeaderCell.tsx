@@ -3,16 +3,16 @@ import { useDispatch, useSelector } from 'react-redux';
 import { between } from "../api/arrays";
 import { RootState } from "../store";
 import {
-  InsideState,
-  setCellsOption,
   setCellOption,
   drag,
   selectRows,
 } from "../store/inside";
 import { DUMMY_IMG } from "../constants";
-
-
-import { OutsideState, setContextMenuPosition } from "../store/outside";
+import {
+  InsideState,
+  OutsideState,
+} from "../types";
+import { setContextMenuPosition } from "../store/outside";
 
 type Props = {
   y: number;
@@ -68,7 +68,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({
       dispatch(selectRows({range: [y, y], numCols}));
       return false;
     }}
-    onDragEnter={(e) => {
+    onDragEnter={() => {
       dispatch(drag([y, numCols - 1]));
       return false;
     }}

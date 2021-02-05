@@ -7,10 +7,6 @@ import {
 } from "../types";
 
 import {
-  matrixShape,
-} from "../api/arrays";
-
-import {
   setMatrix,
   setCellsOption,
   initHistory,
@@ -48,7 +44,6 @@ export const StoreInitializer: React.FC<Props> = ({data, options}) => {
     renderers,
     parsers,
     onSave,
-    onChange,
   } = options;
 
   const dispatch = useDispatch();

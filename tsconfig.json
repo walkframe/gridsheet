@@ -1,18 +1,25 @@
 {
   "compilerOptions": {
-    "target": "ES2015",                       /* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', 'ES2018', 'ES2019', 'ES2020', or 'ESNEXT'. */
-    "module": "ESNext",                       /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', 'es2020', or 'ESNext'. */
+    "target": "ES2015",
+    "module": "ESNext",
     "moduleResolution": "node",
-    "lib": ["ES2015", "dom"],                 /* Specify library files to be included in the compilation. */
+    "lib": ["ES2015", "dom"],
     "declaration": true,
-    "allowJs": true,                          /* Allow javascript files to be compiled. */
-    "jsx": "react",                        /* Specify JSX code generation: 'preserve', 'react-native', or 'react'. */
-    "sourceMap": true,                        /* Generates corresponding '.map' file. */
+    "allowJs": true,
+    "jsx": "react",
+    "sourceMap": true,
     "outDir": "./dist/",
-    "strict": true,                           /* Enable all strict type-checking options. */
-    "esModuleInterop": true,                  /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */
-    "skipLibCheck": true,                     /* Skip type checking of declaration files. */
-    "forceConsistentCasingInFileNames": true  /* Disallow inconsistently-cased references to the same file. */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
   },
   "exclude": [
     "node_modules",

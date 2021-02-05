@@ -4,21 +4,8 @@ import {
   Headers,
   Renderers,
   Parsers,
+  OutsideState,
 } from "../types";
-
-export type OutsideState = {
-  headerHeight: string;
-  headerWidth: string;
-  defaultHeight: string;
-  defaultWidth: string;
-  editingOnEnter: boolean;
-  cellLabel: boolean;
-  stickyHeaders: Headers;
-  contextMenuPosition: [number, number];
-  renderers: Renderers;
-  parsers: Parsers;
-  onSave?: Feedback;
-}
 
 export const initialState: OutsideState = {
   headerHeight: "20px",
