@@ -46,6 +46,7 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
     selectingZone,
     horizontalHeadersSelecting,
     verticalHeadersSelecting,
+    history,
   } = useSelector<RootState, InsideState>((state) => state["inside"]);
 
   const [y, x] = choosing;
@@ -271,30 +272,37 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
           </li>
         )}
 
-        <li className="divider" />
+        {(history.index > -1 ||
+          history.index < history.operations.length - 1) && (
+          <li className="divider" />
+        )}
 
-        <li
-          onClick={async () => {
-            dispatch(undo());
-            dispatch(setContextMenuPosition([-1, -1]));
-          }}
-        >
-          <div className="name">Undo</div>
-          <div className="shortcut">
-            <span className="underline">Z</span>
-          </div>
-        </li>
-        <li
-          onClick={async () => {
-            dispatch(redo());
-            dispatch(setContextMenuPosition([-1, -1]));
-          }}
-        >
-          <div className="name">Redo</div>
-          <div className="shortcut">
-            <span className="underline">R</span>
-          </div>
-        </li>
+        {history.index > -1 && (
+          <li
+            onClick={async () => {
+              dispatch(undo());
+              dispatch(setContextMenuPosition([-1, -1]));
+            }}
+          >
+            <div className="name">Undo</div>
+            <div className="shortcut">
+              <span className="underline">Z</span>
+            </div>
+          </li>
+        )}
+        {history.index < history.operations.length - 1 && (
+          <li
+            onClick={async () => {
+              dispatch(redo());
+              dispatch(setContextMenuPosition([-1, -1]));
+            }}
+          >
+            <div className="name">Redo</div>
+            <div className="shortcut">
+              <span className="underline">R</span>
+            </div>
+          </li>
+        )}
       </ul>
     </ContextMenuLayout>
   );
