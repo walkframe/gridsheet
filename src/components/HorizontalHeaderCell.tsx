@@ -9,31 +9,34 @@ import { DUMMY_IMG } from "../constants";
 import { setContextMenuPosition } from "../store/outside";
 
 type Props = {
-  x: number;
+  index: number;
+  style: React.CSSProperties;
 };
 
-export const HorizontalHeaderCell: React.FC<Props> = React.memo(({ x }) => {
-  const dispatch = useDispatch();
-  const colId = n2a(x + 1);
+export const HorizontalHeaderCell: React.FC<Props> = React.memo(
+  ({ index: x, style: outerStyle }) => {
+    const dispatch = useDispatch();
+    const colId = n2a(x + 1);
 
-  const { headerHeight, defaultWidth, stickyHeaders } = useSelector<
-    RootState,
-    OutsideState
-  >((state) => state["outside"]);
-  const {
-    matrix,
-    choosing,
-    cellsOption,
-    selectingZone,
-    horizontalHeadersSelecting,
-  } = useSelector<RootState, InsideState>((state) => state["inside"]);
-  const colOption = cellsOption[colId] || {};
-  const width = colOption.width || defaultWidth;
-  const numRows = matrix.length;
-  return (
-    <th
-      className={`
-      horizontal
+    const { headerHeight, defaultWidth, stickyHeaders } = useSelector<
+      RootState,
+      OutsideState
+    >((state) => state["outside"]);
+    const {
+      matrix,
+      choosing,
+      cellsOption,
+      selectingZone,
+      horizontalHeadersSelecting,
+    } = useSelector<RootState, InsideState>((state) => state["inside"]);
+    const colOption = cellsOption[colId] || {};
+    const width = colOption.width || defaultWidth;
+    const numRows = matrix.length;
+    return (
+      <div
+        style={outerStyle}
+        className={`
+      headers horizontal
       ${
         stickyHeaders === "both" || stickyHeaders === "horizontal"
           ? "sticky"
@@ -47,52 +50,53 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({ x }) => {
             : "selecting"
           : ""
       }`}
-      draggable
-      onContextMenu={(e) => {
-        e.preventDefault();
-        dispatch(setContextMenuPosition([e.pageY, e.pageX]));
-        return false;
-      }}
-      onClick={(e) => {
-        let startX = e.shiftKey ? selectingZone[1] : x;
-        if (startX === -1) {
-          startX = choosing[1];
-        }
-        dispatch(selectCols({ range: [startX, x], numRows }));
-        dispatch(setContextMenuPosition([-1, -1]));
-        return false;
-      }}
-      onDragStart={(e) => {
-        e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
-        dispatch(selectCols({ range: [x, x], numRows }));
-        return false;
-      }}
-      onDragEnter={() => {
-        dispatch(drag([numRows - 1, x]));
-        return false;
-      }}
-    >
-      <div
-        className="resizer"
-        style={{ width, height: headerHeight }}
-        onMouseLeave={(e) => {
-          const width = e.currentTarget.clientWidth;
-          if (
-            typeof colOption.width === "undefined" &&
-            width === parseInt(defaultWidth)
-          ) {
-            return;
+        draggable
+        onContextMenu={(e) => {
+          e.preventDefault();
+          dispatch(setContextMenuPosition([e.pageY, e.pageX]));
+          return false;
+        }}
+        onClick={(e) => {
+          let startX = e.shiftKey ? selectingZone[1] : x;
+          if (startX === -1) {
+            startX = choosing[1];
           }
-          dispatch(
-            setCellOption({
-              cell: colId,
-              option: { ...colOption, width: `${width}px` },
-            })
-          );
+          dispatch(selectCols({ range: [startX, x], numRows }));
+          dispatch(setContextMenuPosition([-1, -1]));
+          return false;
+        }}
+        onDragStart={(e) => {
+          e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
+          dispatch(selectCols({ range: [x, x], numRows }));
+          return false;
+        }}
+        onDragEnter={() => {
+          dispatch(drag([numRows - 1, x]));
+          return false;
         }}
       >
-        {colOption.label || colId}
+        <div
+          className="resizer"
+          style={{ width, height: headerHeight }}
+          onMouseLeave={(e) => {
+            const width = e.currentTarget.clientWidth;
+            if (
+              typeof colOption.width === "undefined" &&
+              width === parseInt(defaultWidth)
+            ) {
+              return;
+            }
+            dispatch(
+              setCellOption({
+                cell: colId,
+                option: { ...colOption, width: `${width}px` },
+              })
+            );
+          }}
+        >
+          {colOption.label || colId}
+        </div>
       </div>
-    </th>
-  );
-});
+    );
+  }
+);

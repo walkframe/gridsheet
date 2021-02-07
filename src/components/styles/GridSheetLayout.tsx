@@ -16,8 +16,9 @@ export const GridSheetLayout = styled.div`
         caret-color: #000000;
       }
     }
-    td {
-      border: solid 1px #bbbbbb;
+    .cell {
+      border-top: solid 1px #bbbbbb;
+      border-left: solid 1px #bbbbbb;
     }
     th {
       background-color: #eeeeee;
@@ -46,8 +47,9 @@ export const GridSheetLayout = styled.div`
         caret-color: #dddddd;
       }
     }
-    td {
-      border: solid 1px #666666;
+    .cell {
+      border-top: solid 1px #666666;
+      border-left: solid 1px #666666;
     }
     th {
       background-color: #666666;

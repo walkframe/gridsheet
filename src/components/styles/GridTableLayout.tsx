@@ -39,7 +39,7 @@ export const GridTableLayout = styled.div`
       justify-content: center;
     }
   }
-  td {
+  .cell {
     padding: 0;
     margin: 0;
     position: relative;
