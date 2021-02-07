@@ -10,6 +10,7 @@ export const GridTableLayout = styled.div`
     font-size: 13px;
     font-weight: normal;
     box-sizing: border-box;
+    vertical-align: top;
     &.sticky {
       position: sticky;
       position: -webkit-sticky;

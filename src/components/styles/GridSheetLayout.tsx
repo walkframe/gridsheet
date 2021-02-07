@@ -22,7 +22,6 @@ export const GridSheetLayout = styled.div`
     }
     th {
       background-color: #eeeeee;
-      border: solid 1px #bbbbbb;
       color: #666666;
       &.selecting {
         background-color: #dddddd;
@@ -53,7 +52,6 @@ export const GridSheetLayout = styled.div`
     }
     th {
       background-color: #666666;
-      border: solid 1px #999999;
       color: #eeeeee;
       &.selecting {
         background-color: #777777;

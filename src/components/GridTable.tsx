@@ -18,6 +18,7 @@ import { GridTableLayout } from "./styles/GridTableLayout";
 import { RootState } from "../store";
 import { AreaType, CellOptionType, InsideState, OutsideState } from "../types";
 
+const gridRef = React.createRef<HTMLDivElement>();
 const verticalHeadersRef = React.createRef<List>();
 const horizontalHeadersRef = React.createRef<List>();
 
@@ -66,7 +67,7 @@ export const GridTable: React.FC<Props> = ({
                 parseInt(cellsOption[n2a(index + 1)]?.width || defaultWidth)
               }
               layout="horizontal"
-              width={1000}
+              width={gridRef.current?.clientWidth || 0}
               height={parseInt(headerHeight, 10)}
               style={{ overflow: "hidden" }}
             >
@@ -82,7 +83,7 @@ export const GridTable: React.FC<Props> = ({
               itemSize={(index) =>
                 parseInt(cellsOption[index + 1]?.height || defaultHeight)
               }
-              height={500}
+              height={gridRef.current?.clientHeight || 0}
               width={parseInt(headerWidth, 10)}
               style={{ overflow: "hidden" }}
             >
@@ -91,6 +92,7 @@ export const GridTable: React.FC<Props> = ({
           </th>
           <td>
             <Grid
+              outerRef={gridRef}
               columnCount={numCols || 0}
               rowCount={numRows || 0}
               width={1000}
@@ -102,6 +104,7 @@ export const GridTable: React.FC<Props> = ({
                 parseInt(cellsOption[index + 1]?.height || defaultHeight)
               }
               onScroll={(e) => {
+                //console.log(gridRef.current);
                 verticalHeadersRef.current?.scrollTo(e.scrollTop);
                 horizontalHeadersRef.current?.scrollTo(e.scrollLeft);
               }}
