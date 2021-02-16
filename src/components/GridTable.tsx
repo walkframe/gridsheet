@@ -6,7 +6,7 @@ import {
 } from "react-window";
 
 import { Context } from "./GridSheet";
-import { Current } from "./Current";
+import { Editor } from "./Editor";
 import { Cell } from "./Cell";
 import { HorizontalHeaderCell } from "./HorizontalHeaderCell";
 import { VerticalHeaderCell } from "./VerticalHeaderCell";
@@ -107,7 +107,7 @@ export const GridTable: React.FC<Props> = ({
           </div>
           <div className="gs-col">
             <div className="cells-wrapper">
-              <Current />
+              <Editor />
               <Grid
                 ref={gridRef}
                 outerRef={gridOuterRef}

@@ -44,7 +44,7 @@ export const initialState: InsideState = {
   editingCell: "",
   history: { index: -1, size: 0, operations: [] },
   reactions: {},
-  clientRect: [0, 0, 0, 0],
+  editorRect: [0, 0, 0, 0],
 };
 
 const reducers = {
@@ -54,11 +54,11 @@ const reducers = {
   ) => {
     return { ...state, currentStyle: action.payload };
   },
-  setClientRect: (
+  setEditorRect: (
     state: Draft<InsideState>,
     action: PayloadAction<RectType>
   ) => {
-    return { ...state, clientRect: [...action.payload] as RectType };
+    return { ...state, editorRect: [...action.payload] as RectType };
   },
   setMatrix: (state: Draft<InsideState>, action: PayloadAction<MatrixType>) => {
     return { ...state, matrix: [...action.payload] };
@@ -405,7 +405,7 @@ const reducers = {
       return state;
     }
 
-    let [editorTop, editorLeft, height, width] = state.clientRect;
+    let [editorTop, editorLeft, height, width] = state.editorRect;
     const defaultHeight = cellsOption.default?.height || DEFAULT_HEIGHT;
     const defaultWidth = cellsOption.default?.width || DEFAULT_WIDTH;
     if (deltaY > 0) {
@@ -437,7 +437,7 @@ const reducers = {
         state.choosing
       ),
       choosing: [nextY, nextX] as PositionType,
-      clientRect: [editorTop, editorLeft, height, width] as RectType,
+      editorRect: [editorTop, editorLeft, height, width] as RectType,
     };
   },
   arrow: (
@@ -474,7 +474,7 @@ const reducers = {
     if (nextY < 0 || numRows <= nextY || nextX < 0 || numCols <= nextX) {
       return state;
     }
-    let [editorTop, editorLeft, height, width] = state.clientRect;
+    let [editorTop, editorLeft, height, width] = state.editorRect;
     const defaultHeight = cellsOption.default?.height || DEFAULT_HEIGHT;
     const defaultWidth = cellsOption.default?.width || DEFAULT_WIDTH;
     if (deltaY > 0) {
@@ -507,7 +507,7 @@ const reducers = {
       ),
       selectingZone: [-1, -1, -1, -1] as ZoneType,
       choosing: [nextY, nextX] as PositionType,
-      clientRect: [editorTop, editorLeft, height, width] as RectType,
+      editorRect: [editorTop, editorLeft, height, width] as RectType,
     };
   },
   write: (
@@ -718,7 +718,7 @@ const slice = createSlice({
 export default slice.reducer;
 export const {
   setMatrix,
-  setClientRect,
+  setEditorRect,
   setCurrentStyle,
   setCellsOption,
   setCellOption,

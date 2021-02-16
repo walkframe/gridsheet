@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-export const CurrentLayout = styled.div`
+export const EditorLayout = styled.div`
   position: fixed;
   .label {
     font-family: mono, serif;

@@ -73,7 +73,7 @@ export type InsideState = {
   history: HistoryType;
   reactions: ReactionsType;
   currentStyle?: React.CSSProperties;
-  clientRect: RectType;
+  editorRect: RectType;
 };
 
 export type OutsideState = {
@@ -128,7 +128,7 @@ export type FlattenedType = { [s: string]: any };
 export type StoreType = {
   editorRef: React.RefObject<HTMLTextAreaElement>;
   gridRef: React.RefObject<Grid>;
-  cellRef: React.RefObject<HTMLDivElement>;
+  gridOuterRef: React.RefObject<HTMLDivElement>;
   verticalHeadersRef: React.RefObject<List>;
   horizontalHeadersRef: React.RefObject<List>;
 };

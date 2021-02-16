@@ -22,7 +22,7 @@ import {
   cut,
   paste,
   setCurrentStyle,
-  setClientRect,
+  setEditorRect,
 } from "../store/inside";
 
 import { setContextMenuPosition } from "../store/outside";
@@ -176,7 +176,7 @@ export const Cell: React.FC<Props> = React.memo(
           const { y: top, x: left } = e.currentTarget.getBoundingClientRect();
           const rect = e.currentTarget.getBoundingClientRect();
           dispatch(
-            setClientRect([rect.top, rect.left, rect.height, rect.width])
+            setEditorRect([rect.top, rect.left, rect.height, rect.width])
           );
           dispatch(setCurrentStyle({ top, left }));
         }}

@@ -30,7 +30,7 @@ import { DUMMY_IMG } from "../constants";
 import { AreaType, CellOptionType, InsideState, OutsideState } from "../types";
 import { Renderer as DefaultRenderer } from "../renderers/core";
 import { Parser as DefaultParser } from "../parsers/core";
-import { CurrentLayout } from "./styles/CurrentLayout";
+import { EditorLayout } from "./styles/EditorLayout";
 
 import { Context } from "./GridSheet";
 
@@ -38,7 +38,7 @@ type Props = {
   style: React.CSSProperties;
 };
 
-export const Current: React.FC = () => {
+export const Editor: React.FC = () => {
   const dispatch = useDispatch();
   const {
     cellLabel,
@@ -52,7 +52,7 @@ export const Current: React.FC = () => {
 
   const {
     matrix,
-    clientRect,
+    editorRect,
     cellsOption,
     editingCell,
     choosing,
@@ -117,7 +117,7 @@ export const Current: React.FC = () => {
   //const height = rowOption.height || defaultHeight;
   //const width = colOption.width || defaultWidth;
 
-  const [top, left, height, width] = clientRect;
+  const [top, left, height, width] = editorRect;
 
   const writeCell = (value: string) => {
     if (before !== value) {
@@ -128,7 +128,7 @@ export const Current: React.FC = () => {
   };
 
   return (
-    <CurrentLayout
+    <EditorLayout
       style={editing ? { top, left, height, width, zIndex: 2 } : {}}
       draggable
       onDragStart={(e) => {
@@ -382,6 +382,6 @@ export const Current: React.FC = () => {
           return false;
         }}
       />
-    </CurrentLayout>
+    </EditorLayout>
   );
 };
