@@ -5,6 +5,8 @@ import {
   VariableSizeList as List,
 } from "react-window";
 
+import { Context } from "./GridSheet";
+import { Current } from "./Current";
 import { Cell } from "./Cell";
 import { HorizontalHeaderCell } from "./HorizontalHeaderCell";
 import { VerticalHeaderCell } from "./VerticalHeaderCell";
@@ -18,9 +20,7 @@ import { GridTableLayout } from "./styles/GridTableLayout";
 import { RootState } from "../store";
 import { AreaType, CellOptionType, InsideState, OutsideState } from "../types";
 
-const gridRef = React.createRef<HTMLDivElement>();
-const verticalHeadersRef = React.createRef<List>();
-const horizontalHeadersRef = React.createRef<List>();
+import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
 
 type Props = {
   clipboardRef: React.RefObject<HTMLTextAreaElement>;
@@ -47,27 +47,41 @@ export const GridTable: React.FC<Props> = ({
     cutting,
   } = useSelector<RootState, InsideState>((state) => state["inside"]);
 
-  const {
-    defaultHeight,
-    defaultWidth,
-    headerHeight,
-    headerWidth,
-  } = useSelector<RootState, OutsideState>((state) => state["outside"]);
+  const { headerHeight, headerWidth } = useSelector<RootState, OutsideState>(
+    (state) => state["outside"]
+  );
 
+  const {
+    gridRef,
+    cellRef,
+    verticalHeadersRef,
+    horizontalHeadersRef,
+  } = React.useContext(Context);
+
+  const defaultHeight = cellsOption.default?.height || DEFAULT_HEIGHT;
+  const defaultWidth = cellsOption.default?.width || DEFAULT_WIDTH;
   return (
     <GridTableLayout>
       <table>
         <thead>
-          <th></th>
+          <th
+            onClick={() => {
+              dispatch(choose([-1, -1]));
+              setTimeout(() => {
+                dispatch(choose([0, 0]));
+                dispatch(select([0, 0, numRows - 1, numCols - 1]));
+              }, 100);
+            }}
+          ></th>
           <th>
             <List
               ref={horizontalHeadersRef}
               itemCount={numCols || 0}
               itemSize={(index) =>
-                parseInt(cellsOption[n2a(index + 1)]?.width || defaultWidth)
+                cellsOption[n2a(index + 1)]?.width || defaultWidth
               }
               layout="horizontal"
-              width={gridRef.current?.clientWidth || 0}
+              width={1000}
               height={parseInt(headerHeight, 10)}
               style={{ overflow: "hidden" }}
             >
@@ -81,9 +95,9 @@ export const GridTable: React.FC<Props> = ({
               ref={verticalHeadersRef}
               itemCount={numRows || 0}
               itemSize={(index) =>
-                parseInt(cellsOption[index + 1]?.height || defaultHeight)
+                cellsOption[index + 1]?.height || defaultHeight
               }
-              height={gridRef.current?.clientHeight || 0}
+              height={500}
               width={parseInt(headerWidth, 10)}
               style={{ overflow: "hidden" }}
             >
@@ -91,26 +105,29 @@ export const GridTable: React.FC<Props> = ({
             </List>
           </th>
           <td>
-            <Grid
-              outerRef={gridRef}
-              columnCount={numCols || 0}
-              rowCount={numRows || 0}
-              width={1000}
-              height={500}
-              columnWidth={(index) =>
-                parseInt(cellsOption[n2a(index + 1)]?.width || defaultWidth)
-              }
-              rowHeight={(index) =>
-                parseInt(cellsOption[index + 1]?.height || defaultHeight)
-              }
-              onScroll={(e) => {
-                //console.log(gridRef.current);
-                verticalHeadersRef.current?.scrollTo(e.scrollTop);
-                horizontalHeadersRef.current?.scrollTo(e.scrollLeft);
-              }}
-            >
-              {Cell}
-            </Grid>
+            <div className="cells-wrapper">
+              <Current />
+              <Grid
+                ref={gridRef}
+                innerRef={cellRef}
+                columnCount={numCols || 0}
+                rowCount={numRows || 0}
+                width={1000}
+                height={500}
+                columnWidth={(index) =>
+                  cellsOption[n2a(index + 1)]?.width || defaultWidth
+                }
+                rowHeight={(index) =>
+                  cellsOption[index + 1]?.height || defaultHeight
+                }
+                onScroll={(e) => {
+                  verticalHeadersRef.current?.scrollTo(e.scrollTop);
+                  horizontalHeadersRef.current?.scrollTo(e.scrollLeft);
+                }}
+              >
+                {Cell}
+              </Grid>
+            </div>
           </td>
         </tbody>
       </table>

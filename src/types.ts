@@ -1,3 +1,8 @@
+import {
+  VariableSizeGrid as Grid,
+  VariableSizeList as List,
+} from "react-window";
+
 import { RendererType } from "./renderers/core";
 import { ParserType } from "./parsers/core";
 
@@ -7,17 +12,19 @@ export type X = number;
 export type Height = number;
 export type Width = number;
 
+export type RectType = [Y, X, Height, Width];
+
 export type CellType = any;
 export type MatrixType = CellType[][];
 
-export type Renderers = {[s: string]: RendererType};
-export type Parsers = {[s: string]: ParserType};
+export type Renderers = { [s: string]: RendererType };
+export type Parsers = { [s: string]: ParserType };
 
 // All fields have to be primitive types.
 export type CellOptionType = {
   label?: string;
-  width?: string;
-  height?: string;
+  width?: number;
+  height?: number;
   style?: React.CSSProperties;
   verticalAlign?: string;
   renderer?: string;
@@ -25,9 +32,12 @@ export type CellOptionType = {
   fixed?: boolean;
 };
 
-export type CellsOptionType = {[s: string]: CellOptionType};
+export type CellsOptionType = { [s: string]: CellOptionType };
 
-export type Feedback = (matrix?: MatrixType, cellOptions?: CellsOptionType) => void;
+export type Feedback = (
+  matrix?: MatrixType,
+  cellOptions?: CellsOptionType
+) => void;
 
 export type Mode = "light" | "dark";
 export type Headers = "both" | "vertical" | "horizontal" | "none";
@@ -51,7 +61,7 @@ export type OptionsType = {
 
 export type InsideState = {
   matrix: MatrixType;
-  cellsOption: {[s: string]: CellOptionType};
+  cellsOption: { [s: string]: CellOptionType };
   choosing: PositionType;
   lastChoosing: PositionType;
   cutting: boolean;
@@ -62,6 +72,8 @@ export type InsideState = {
   editingCell: string;
   history: HistoryType;
   reactions: ReactionsType;
+  currentStyle?: React.CSSProperties;
+  clientRect: RectType;
 };
 
 export type OutsideState = {
@@ -89,7 +101,14 @@ export type HistoryType = {
   operations: OperationType[];
 };
 
-export type OperationCommandType = "write" | "copy" | "cut" | "addRows" | "delRows" | "addCols" | "delCols";
+export type OperationCommandType =
+  | "write"
+  | "copy"
+  | "cut"
+  | "addRows"
+  | "delRows"
+  | "addCols"
+  | "delCols";
 
 export type OperationType = {
   command: OperationCommandType;
@@ -100,8 +119,21 @@ export type OperationType = {
   options?: CellsOptionType;
 };
 
-export type ReactionsType = {[s: string]: boolean};
+export type ReactionsType = { [s: string]: boolean };
 
 export type Writer = (value: string) => void;
 
-export type FlattenedType = {[s: string]: any};
+export type FlattenedType = { [s: string]: any };
+
+export type StoreType = {
+  editorRef: React.RefObject<HTMLTextAreaElement>;
+  gridRef: React.RefObject<Grid>;
+  cellRef: React.RefObject<HTMLDivElement>;
+  verticalHeadersRef: React.RefObject<List>;
+  horizontalHeadersRef: React.RefObject<List>;
+};
+
+export type ActionType = {
+  type: string;
+  payload: any;
+};

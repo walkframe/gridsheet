@@ -5,7 +5,7 @@ export const GridTableLayout = styled.div`
     table-layout: fixed;
     border-collapse: collapse;
   }
-  th {
+  .header {
     z-index: 3;
     font-size: 13px;
     font-weight: normal;
@@ -40,9 +40,11 @@ export const GridTableLayout = styled.div`
       justify-content: center;
     }
   }
+
   .cell {
     padding: 0;
     margin: 0;
+    box-sizing: border-box;
     position: relative;
     &.copying {
       textarea:focus {
@@ -50,10 +52,13 @@ export const GridTableLayout = styled.div`
       }
     }
     .label {
+      font-family: mono, serif;
       position: absolute;
       top: 0;
       right: 0;
       font-size: 8px;
+      font-weight: normal;
+      font-style: normal;
       background-color: rgba(0, 128, 255, 0.3);
       color: #ffffff;
       padding: 0 2px;

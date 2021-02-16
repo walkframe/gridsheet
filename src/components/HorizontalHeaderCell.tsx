@@ -5,7 +5,7 @@ import { between } from "../api/arrays";
 import { RootState } from "../store";
 import { setCellOption, drag, selectCols } from "../store/inside";
 import { InsideState, OutsideState } from "../types";
-import { DUMMY_IMG } from "../constants";
+import { DUMMY_IMG, DEFAULT_WIDTH } from "../constants";
 import { setContextMenuPosition } from "../store/outside";
 
 type Props = {
@@ -18,7 +18,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
     const dispatch = useDispatch();
     const colId = n2a(x + 1);
 
-    const { headerHeight, defaultWidth, stickyHeaders } = useSelector<
+    const { headerHeight, stickyHeaders } = useSelector<
       RootState,
       OutsideState
     >((state) => state["outside"]);
@@ -29,6 +29,8 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
       selectingZone,
       horizontalHeadersSelecting,
     } = useSelector<RootState, InsideState>((state) => state["inside"]);
+
+    const defaultWidth = cellsOption.default?.width || DEFAULT_WIDTH;
     const colOption = cellsOption[colId] || {};
     const width = colOption.width || defaultWidth;
     const numRows = matrix.length;
@@ -36,7 +38,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
       <div
         style={outerStyle}
         className={`
-      headers horizontal
+      header horizontal
       ${
         stickyHeaders === "both" || stickyHeaders === "horizontal"
           ? "sticky"
@@ -82,14 +84,14 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
             const width = e.currentTarget.clientWidth;
             if (
               typeof colOption.width === "undefined" &&
-              width === parseInt(defaultWidth)
+              width === defaultWidth
             ) {
               return;
             }
             dispatch(
               setCellOption({
                 cell: colId,
-                option: { ...colOption, width: `${width}px` },
+                option: { ...colOption, width },
               })
             );
           }}

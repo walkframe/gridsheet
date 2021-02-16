@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { between } from "../api/arrays";
 import { RootState } from "../store";
 import { setCellOption, drag, selectRows } from "../store/inside";
-import { DUMMY_IMG } from "../constants";
+import { DUMMY_IMG, DEFAULT_HEIGHT } from "../constants";
 import { InsideState, OutsideState } from "../types";
 import { setContextMenuPosition } from "../store/outside";
 
@@ -17,10 +17,9 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
     const rowId = `${y + 1}`;
     const dispatch = useDispatch();
 
-    const { defaultHeight, headerWidth, stickyHeaders } = useSelector<
-      RootState,
-      OutsideState
-    >((state) => state["outside"]);
+    const { headerWidth, stickyHeaders } = useSelector<RootState, OutsideState>(
+      (state) => state["outside"]
+    );
     const {
       matrix,
       cellsOption,
@@ -28,15 +27,17 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
       selectingZone,
       verticalHeadersSelecting,
     } = useSelector<RootState, InsideState>((state) => state["inside"]);
+
+    const defaultHeight = cellsOption.default?.height || DEFAULT_HEIGHT;
     const rowOption = cellsOption[rowId] || {};
     const height = rowOption.height || defaultHeight;
     const numCols = matrix[0]?.length || 0;
 
     return (
-      <th
+      <div
         style={outerStyle}
         className={`
-      headers vertical
+      header vertical
       ${
         stickyHeaders === "both" || stickyHeaders === "vertical" ? "sticky" : ""
       }
@@ -80,21 +81,21 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
             const height = e.currentTarget.clientHeight;
             if (
               typeof rowOption.height === "undefined" &&
-              height === parseInt(defaultHeight)
+              height === defaultHeight
             ) {
               return;
             }
             dispatch(
               setCellOption({
                 cell: rowId,
-                option: { ...rowOption, height: `${height}px` },
+                option: { ...rowOption, height },
               })
             );
           }}
         >
           {rowOption.label || rowId}
         </div>
-      </th>
+      </div>
     );
   }
 );

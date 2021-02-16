@@ -1,7 +1,11 @@
-import React from "react";
+import * as React from "react";
 import { Provider } from "react-redux";
+import {
+  VariableSizeGrid as Grid,
+  VariableSizeList as List,
+} from "react-window";
 
-import { MatrixType, OptionsType } from "../types";
+import { MatrixType, OptionsType, StoreType, ActionType } from "../types";
 
 import { store } from "../store";
 
@@ -18,6 +22,13 @@ type Props = {
   options?: OptionsType;
 };
 
+type ContextType = {
+  state: StoreType;
+  dispatch: React.Dispatch<ActionType>;
+};
+
+export const Context = React.createContext({} as StoreType);
+
 export const GridSheet: React.FC<Props> = ({ data, options }) => {
   if (typeof data === "undefined") {
     data = [];
@@ -26,17 +37,32 @@ export const GridSheet: React.FC<Props> = ({ data, options }) => {
     options = {};
   }
 
-  const { onChange, mode } = options;
   const clipboardRef = React.createRef<HTMLTextAreaElement>();
+  const editorRef = React.createRef<HTMLTextAreaElement>();
+  const gridRef = React.createRef<Grid>();
+  const cellRef = React.createRef<HTMLDivElement>();
+  const verticalHeadersRef = React.createRef<List>();
+  const horizontalHeadersRef = React.createRef<List>();
+  const initialState: StoreType = {
+    editorRef,
+    gridRef,
+    cellRef,
+    verticalHeadersRef,
+    horizontalHeadersRef,
+  };
+
+  const { onChange, mode } = options;
   return (
     <GridSheetLayout className={`react-grid-sheet ${mode || "light"}`}>
-      <textarea className="clipboard" ref={clipboardRef} />
-      <Provider store={store}>
-        <GridTableWrapper clipboardRef={clipboardRef} />
-        <StoreInitializer data={data} options={options} />
-        <ContextMenu clipboardRef={clipboardRef} />
-        {onChange && <ChangeEmitter onChange={onChange} />}
-      </Provider>
+      <Context.Provider value={initialState}>
+        <textarea className="clipboard" ref={clipboardRef} />
+        <Provider store={store}>
+          <GridTableWrapper clipboardRef={clipboardRef} />
+          <StoreInitializer data={data} options={options} />
+          <ContextMenu clipboardRef={clipboardRef} />
+          {onChange && <ChangeEmitter onChange={onChange} />}
+        </Provider>
+      </Context.Provider>
     </GridSheetLayout>
   );
 };

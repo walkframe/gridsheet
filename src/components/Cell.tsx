@@ -21,6 +21,8 @@ import {
   copy,
   cut,
   paste,
+  setCurrentStyle,
+  setClientRect,
 } from "../store/inside";
 
 import { setContextMenuPosition } from "../store/outside";
@@ -31,6 +33,8 @@ import { Renderer as DefaultRenderer } from "../renderers/core";
 import { Parser as DefaultParser } from "../parsers/core";
 import { CellLayout } from "./styles/CellLayout";
 
+import { Context } from "./GridSheet";
+
 type Props = {
   rowIndex: number;
   columnIndex: number;
@@ -38,11 +42,18 @@ type Props = {
 };
 
 export const Cell: React.FC<Props> = React.memo(
-  ({ rowIndex, columnIndex, style: outerStyle }) => {
-    const rowId = `${rowIndex + 1}`;
-    const colId = n2a(columnIndex + 1);
+  ({ rowIndex: y, columnIndex: x, style: outerStyle }) => {
+    const rowId = `${y + 1}`;
+    const colId = n2a(x + 1);
     const cellId = `${colId}${rowId}`;
     const dispatch = useDispatch();
+
+    if (y === 0) {
+      outerStyle.borderTop = "none";
+    }
+    if (x === 0) {
+      outerStyle.borderLeft = "none";
+    }
 
     const {
       cellLabel,
@@ -80,20 +91,19 @@ export const Cell: React.FC<Props> = React.memo(
       }*/
     );
 
+    const { editorRef } = React.useContext(Context);
+
     const [before, setBefore] = React.useState("");
 
     const selectingArea = zoneToArea(selectingZone); // (top, left) -> (bottom, right)
     const copyingArea = zoneToArea(copyingZone); // (top, left) -> (bottom, right)
     const editing = editingCell === cellId;
-    const pointed = choosing[0] === rowIndex && choosing[1] === columnIndex;
+    const pointed = choosing[0] === y && choosing[1] === x;
 
-    if (
-      (matrix && matrix[rowIndex] == null) ||
-      matrix[rowIndex][columnIndex] == null
-    ) {
-      return <td />;
+    if ((matrix && matrix[y] == null) || matrix[y][x] == null) {
+      return <div />;
     }
-    const value = matrix[rowIndex][columnIndex];
+    const value = matrix[y][x];
     const [numRows, numCols] = [matrix.length, matrix[0].length];
     const defaultOption: CellOptionType = cellsOption.default || {};
     const rowOption: CellOptionType = cellsOption[rowId] || {};
@@ -139,16 +149,13 @@ export const Cell: React.FC<Props> = React.memo(
 
     return (
       <div
-        key={columnIndex}
-        className={`cell ${
-          among(copyingArea, [rowIndex, columnIndex]) ? "copying" : ""
-        }`}
+        key={x}
+        className={`cell ${among(copyingArea, [y, x]) ? "copying" : ""}`}
         style={{
           ...outerStyle,
           ...style,
-          ...getCellStyle(rowIndex, columnIndex, copyingArea, cutting),
+          ...getCellStyle(y, x, copyingArea, cutting),
         }}
-        draggable={!editing}
         onContextMenu={(e) => {
           e.preventDefault();
           dispatch(setContextMenuPosition([e.pageY, e.pageX]));
@@ -157,22 +164,38 @@ export const Cell: React.FC<Props> = React.memo(
         onClick={(e) => {
           dispatch(setContextMenuPosition([-1, -1]));
           if (e.shiftKey) {
-            dispatch(drag([rowIndex, columnIndex]));
+            dispatch(drag([y, x]));
             dispatch(choose([-1, -1]));
             setTimeout(() => {
               dispatch(reChoose());
             }, 100);
           } else {
-            dispatch(choose([rowIndex, columnIndex]));
+            dispatch(choose([y, x]));
             dispatch(select([-1, -1, -1, -1]));
           }
+          const { y: top, x: left } = e.currentTarget.getBoundingClientRect();
+          const rect = e.currentTarget.getBoundingClientRect();
+          dispatch(
+            setClientRect([rect.top, rect.left, rect.height, rect.width])
+          );
+          dispatch(setCurrentStyle({ top, left }));
         }}
+        onDoubleClick={(e) => {
+          e.preventDefault();
+          const dblclick = document.createEvent("MouseEvents");
+          dblclick.initEvent("dblclick", true, true);
+          editorRef.current?.dispatchEvent(dblclick);
+          return false;
+        }}
+        draggable
         onDragStart={(e) => {
           e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
-          dispatch(choose([rowIndex, columnIndex]));
-          dispatch(select([rowIndex, columnIndex, rowIndex, columnIndex]));
+          dispatch(choose([y, x]));
+          dispatch(select([y, x, y, x]));
+          const { y: top, x: left } = e.currentTarget.getBoundingClientRect();
+          dispatch(setCurrentStyle({ top, left }));
         }}
-        onDragEnd={() => {
+        onDragEnd={(e) => {
           const [h, w] = zoneShape(selectingZone);
           if (h + w === 0) {
             dispatch(select([-1, -1, -1, -1]));
@@ -180,20 +203,20 @@ export const Cell: React.FC<Props> = React.memo(
         }}
         onDragEnter={() => {
           if (horizontalHeadersSelecting) {
-            dispatch(drag([numRows - 1, columnIndex]));
+            dispatch(drag([numRows - 1, x]));
             return false;
           }
           if (verticalHeadersSelecting) {
-            dispatch(drag([rowIndex, numCols - 1]));
+            dispatch(drag([y, numCols - 1]));
             return false;
           }
-          dispatch(drag([rowIndex, columnIndex]));
+          dispatch(drag([y, x]));
           return false;
         }}
       >
         <div
           className={`cell-wrapper-outer ${
-            among(selectingArea, [rowIndex, columnIndex]) ? "selected" : ""
+            among(selectingArea, [y, x]) ? "selected" : ""
           } ${pointed ? "pointed" : ""} ${editing ? "editing" : ""}`}
         >
           <div
@@ -206,257 +229,9 @@ export const Cell: React.FC<Props> = React.memo(
           >
             {cellLabel && <div className="label">{cellId}</div>}
             <CellLayout>
-              {!editing && (
-                <div className="rendered">
-                  {renderer.render(value, writeCell)}
-                </div>
-              )}
-              {!pointed ? null : (
-                <textarea
-                  autoFocus
-                  style={{ minHeight: height }}
-                  rows={
-                    typeof value === "string" ? value.split("\n").length : 1
-                  }
-                  className={editing ? "editing" : ""}
-                  onDoubleClick={(e) => {
-                    const input = e.currentTarget;
-                    if (!editing) {
-                      input.value = renderer.stringify(value);
-                      setBefore(input.value);
-                      dispatch(setEditingCell(cellId));
-                      setTimeout(
-                        () => (input.style.width = `${input.scrollWidth}px`),
-                        100
-                      );
-                    }
-                  }}
-                  onBlur={(e) => {
-                    if (editing) {
-                      writeCell(e.target.value);
-                    }
-                    e.target.value = "";
-                    dispatch(blur());
-                  }}
-                  onKeyDown={(e) => {
-                    const input = e.currentTarget;
-                    const shiftKey = e.shiftKey;
-                    switch (e.key) {
-                      case "Tab": // TAB
-                        e.preventDefault();
-                        if (editing) {
-                          writeCell(input.value);
-                        }
-                        dispatch(
-                          walk({
-                            numRows,
-                            numCols,
-                            deltaY: 0,
-                            deltaX: shiftKey ? -1 : 1,
-                          })
-                        );
-                        dispatch(setEditingCell(""));
-                        return false;
-                      case "Enter": // ENTER
-                        if (editing) {
-                          if (e.altKey) {
-                            input.value = `${input.value}\n`;
-                            input.style.height = `${input.clientHeight + 20}px`;
-                            return false;
-                          } else {
-                            if (e.nativeEvent.isComposing) {
-                              return false;
-                            }
-                            writeCell(input.value);
-                            dispatch(setEditingCell(""));
-                            input.value = "";
-                          }
-                        } else if (editingOnEnter && selectingZone[0] === -1) {
-                          const dblclick = document.createEvent("MouseEvents");
-                          dblclick.initEvent("dblclick", true, true);
-                          input.dispatchEvent(dblclick);
-                          e.preventDefault();
-                          return false;
-                        }
-                        dispatch(
-                          walk({
-                            numRows,
-                            numCols,
-                            deltaY: shiftKey ? -1 : 1,
-                            deltaX: 0,
-                          })
-                        );
-                        e.preventDefault();
-                        return false;
-                      case "Backspace": // BACKSPACE
-                        if (!editing) {
-                          dispatch(clear());
-                          return false;
-                        }
-                      case "Shift": // SHIFT
-                        return false;
-                      case "Control": // CTRL
-                        return false;
-                      case "Alt": // OPTION
-                        return false;
-                      case "Meta": // COMMAND
-                        return false;
-                      case "NumLock": // NUMLOCK
-                        return false;
-                      case "Escape": // ESCAPE
-                        dispatch(escape());
-                        input.value = "";
-                        // input.blur();
-                        return false;
-                      case "ArrowLeft": // LEFT
-                        if (!editing) {
-                          dispatch(
-                            arrow({
-                              shiftKey,
-                              numRows,
-                              numCols,
-                              deltaY: 0,
-                              deltaX: -1,
-                            })
-                          );
-                          return false;
-                        }
-                      case "ArrowUp": // UP
-                        if (!editing) {
-                          dispatch(
-                            arrow({
-                              shiftKey,
-                              numRows,
-                              numCols,
-                              deltaY: -1,
-                              deltaX: 0,
-                            })
-                          );
-                          return false;
-                        }
-                      case "ArrowRight": // RIGHT
-                        if (!editing) {
-                          dispatch(
-                            arrow({
-                              shiftKey,
-                              numRows,
-                              numCols,
-                              deltaY: 0,
-                              deltaX: 1,
-                            })
-                          );
-                          return false;
-                        }
-                      case "ArrowDown": // DOWN
-                        if (!editing) {
-                          dispatch(
-                            arrow({
-                              shiftKey,
-                              numRows,
-                              numCols,
-                              deltaY: 1,
-                              deltaX: 0,
-                            })
-                          );
-                          return false;
-                        }
-                      case "a": // A
-                        if (e.ctrlKey || e.metaKey) {
-                          if (!editing) {
-                            e.preventDefault();
-                            dispatch(select([0, 0, numRows - 1, numCols - 1]));
-                            return false;
-                          }
-                        }
-                      case "c": // C
-                        if (e.ctrlKey || e.metaKey) {
-                          if (!editing) {
-                            e.preventDefault();
-                            /*
-                          const area = clip(
-                            selectingZone,
-                            choosing,
-                            matrix,
-                            //clipboardRef,
-                            renderer
-                          );
-                          dispatch(copy(area));
-                          input.focus(); // refocus
-                          */
-                            return false;
-                          }
-                        }
-                      case "r": // R
-                        if (e.ctrlKey || e.metaKey) {
-                          if (!editing) {
-                            dispatch(redo());
-                            return false;
-                          }
-                        }
-                      case "s": // S
-                        if (e.ctrlKey || e.metaKey) {
-                          if (!editing) {
-                            e.preventDefault();
-                            onSave && onSave(matrix, cellsOption);
-                            return false;
-                          }
-                        }
-                      case "v": // V
-                        if (e.ctrlKey || e.metaKey) {
-                          if (!editing) {
-                            setTimeout(() => {
-                              dispatch(paste({ text: input.value, parser }));
-                              input.value = "";
-                            }, 50);
-                            return false;
-                          }
-                        }
-                      case "x": // X
-                        if (e.ctrlKey || e.metaKey) {
-                          if (!editing) {
-                            e.preventDefault();
-                            /*
-                          const area = clip(
-                            selectingZone,
-                            choosing,
-                            matrix,
-                            //clipboardRef,
-                            renderer
-                          );
-                          dispatch(cut(area));
-                          input.focus(); // refocus
-                          */
-                            return false;
-                          }
-                        }
-                      case "z": // Z
-                        if (e.ctrlKey || e.metaKey) {
-                          if (!editing) {
-                            if (e.shiftKey) {
-                              dispatch(redo());
-                            } else {
-                              dispatch(undo());
-                            }
-                            return false;
-                          }
-                        }
-                      case ";": // semicolon
-                        if (e.ctrlKey || e.metaKey) {
-                          if (!editing) {
-                            // MAYBE: need to aware timezone.
-                            writeCell(new Date().toDateString());
-                          }
-                        }
-                    }
-                    if (e.ctrlKey || e.metaKey) {
-                      return false;
-                    }
-                    input.style.width = `${input.scrollWidth}px`;
-                    dispatch(setEditingCell(cellId));
-                    return false;
-                  }}
-                />
-              )}
+              <div className="rendered">
+                {renderer.render(value, writeCell)}
+              </div>
             </CellLayout>
           </div>
         </div>

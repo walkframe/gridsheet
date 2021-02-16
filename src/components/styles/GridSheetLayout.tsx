@@ -20,7 +20,7 @@ export const GridSheetLayout = styled.div`
       border-top: solid 1px #bbbbbb;
       border-left: solid 1px #bbbbbb;
     }
-    th {
+    .header {
       background-color: #eeeeee;
       color: #666666;
       &.selecting {
@@ -50,7 +50,7 @@ export const GridSheetLayout = styled.div`
       border-top: solid 1px #666666;
       border-left: solid 1px #666666;
     }
-    th {
+    .header {
       background-color: #666666;
       color: #eeeeee;
       &.selecting {
