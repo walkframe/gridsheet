@@ -53,7 +53,7 @@ export const GridTable: React.FC<Props> = ({
 
   const {
     gridRef,
-    cellRef,
+    gridOuterRef,
     verticalHeadersRef,
     horizontalHeadersRef,
   } = React.useContext(Context);
@@ -62,9 +62,10 @@ export const GridTable: React.FC<Props> = ({
   const defaultWidth = cellsOption.default?.width || DEFAULT_WIDTH;
   return (
     <GridTableLayout>
-      <table>
-        <thead>
-          <th
+      <div className="gs-table">
+        <div className="gs-row">
+          <div
+            className="gs-col"
             onClick={() => {
               dispatch(choose([-1, -1]));
               setTimeout(() => {
@@ -72,8 +73,8 @@ export const GridTable: React.FC<Props> = ({
                 dispatch(select([0, 0, numRows - 1, numCols - 1]));
               }, 100);
             }}
-          ></th>
-          <th>
+          ></div>
+          <div className="gs-col">
             <List
               ref={horizontalHeadersRef}
               itemCount={numCols || 0}
@@ -81,35 +82,35 @@ export const GridTable: React.FC<Props> = ({
                 cellsOption[n2a(index + 1)]?.width || defaultWidth
               }
               layout="horizontal"
-              width={1000}
+              width={gridOuterRef.current?.clientWidth || 0}
               height={parseInt(headerHeight, 10)}
               style={{ overflow: "hidden" }}
             >
               {HorizontalHeaderCell}
             </List>
-          </th>
-        </thead>
-        <tbody>
-          <th>
+          </div>
+        </div>
+        <div className="gs-row">
+          <div className="gs-col" style={{ verticalAlign: "top" }}>
             <List
               ref={verticalHeadersRef}
               itemCount={numRows || 0}
               itemSize={(index) =>
                 cellsOption[index + 1]?.height || defaultHeight
               }
-              height={500}
+              height={gridOuterRef.current?.clientHeight || 0}
               width={parseInt(headerWidth, 10)}
               style={{ overflow: "hidden" }}
             >
               {VerticalHeaderCell}
             </List>
-          </th>
-          <td>
+          </div>
+          <div className="gs-col">
             <div className="cells-wrapper">
               <Current />
               <Grid
                 ref={gridRef}
-                innerRef={cellRef}
+                outerRef={gridOuterRef}
                 columnCount={numCols || 0}
                 rowCount={numRows || 0}
                 width={1000}
@@ -128,9 +129,9 @@ export const GridTable: React.FC<Props> = ({
                 {Cell}
               </Grid>
             </div>
-          </td>
-        </tbody>
-      </table>
+          </div>
+        </div>
+      </div>
     </GridTableLayout>
   );
 };

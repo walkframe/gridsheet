@@ -65,8 +65,9 @@ export const Current: React.FC = () => {
   } = useSelector<RootState, InsideState>((state) => state["inside"]);
 
   const {
+    editorRef,
     gridRef,
-    cellRef,
+    gridOuterRef,
     verticalHeadersRef,
     horizontalHeadersRef,
   } = React.useContext(Context);
@@ -78,7 +79,6 @@ export const Current: React.FC = () => {
   const cellId = `${colId}${rowId}`;
 
   const [before, setBefore] = React.useState("");
-  const { editorRef } = React.useContext(Context);
 
   const selectingArea = zoneToArea(selectingZone); // (top, left) -> (bottom, right)
   const copyingArea = zoneToArea(copyingZone); // (top, left) -> (bottom, right)
@@ -300,17 +300,16 @@ export const Current: React.FC = () => {
               if (e.ctrlKey || e.metaKey) {
                 if (!editing) {
                   e.preventDefault();
-                  /*
-                          const area = clip(
-                            selectingZone,
-                            choosing,
-                            matrix,
-                            //clipboardRef,
-                            renderer
-                          );
-                          dispatch(copy(area));
-                          input.focus(); // refocus
-                          */
+                  const area = clip(
+                    selectingZone,
+                    choosing,
+                    matrix,
+                    editorRef,
+                    renderer
+                  );
+                  dispatch(copy(area));
+                  input.focus(); // refocus
+
                   return false;
                 }
               }
@@ -343,17 +342,16 @@ export const Current: React.FC = () => {
               if (e.ctrlKey || e.metaKey) {
                 if (!editing) {
                   e.preventDefault();
-                  /*
-                          const area = clip(
-                            selectingZone,
-                            choosing,
-                            matrix,
-                            //clipboardRef,
-                            renderer
-                          );
-                          dispatch(cut(area));
-                          input.focus(); // refocus
-                          */
+                  const area = clip(
+                    selectingZone,
+                    choosing,
+                    matrix,
+                    editorRef,
+                    renderer
+                  );
+                  dispatch(cut(area));
+                  input.focus(); // refocus
+
                   return false;
                 }
               }

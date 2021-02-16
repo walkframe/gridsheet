@@ -1,9 +1,16 @@
 import styled from "styled-components";
 
 export const GridTableLayout = styled.div`
-  table {
+  .gs-table {
+    display: table;
     table-layout: fixed;
     border-collapse: collapse;
+  }
+  .gs-row {
+    display: table-row;
+  }
+  .gs-col {
+    display: table-cell;
   }
   .header {
     z-index: 3;
@@ -18,6 +25,7 @@ export const GridTableLayout = styled.div`
     &.horizontal {
       top: -1px;
       min-height: 20px;
+      border-right: solid 1px #777777;
       .resizer {
         resize: horizontal;
       }
@@ -26,6 +34,7 @@ export const GridTableLayout = styled.div`
       left: -1px;
       overflow: hidden;
       min-width: 30px;
+      border-bottom: solid 1px #777777;
       .resizer {
         padding: 0 10px;
         resize: vertical;

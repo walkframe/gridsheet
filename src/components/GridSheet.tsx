@@ -40,13 +40,13 @@ export const GridSheet: React.FC<Props> = ({ data, options }) => {
   const clipboardRef = React.createRef<HTMLTextAreaElement>();
   const editorRef = React.createRef<HTMLTextAreaElement>();
   const gridRef = React.createRef<Grid>();
-  const cellRef = React.createRef<HTMLDivElement>();
+  const gridOuterRef = React.createRef<HTMLDivElement>();
   const verticalHeadersRef = React.createRef<List>();
   const horizontalHeadersRef = React.createRef<List>();
   const initialState: StoreType = {
     editorRef,
     gridRef,
-    cellRef,
+    gridOuterRef,
     verticalHeadersRef,
     horizontalHeadersRef,
   };
