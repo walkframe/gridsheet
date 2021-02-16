@@ -1,4 +1,9 @@
 import {
+  VariableSizeGrid as Grid,
+  VariableSizeList as List,
+} from "react-window";
+
+import {
   MatrixType,
   AreaType,
   ZoneType,
@@ -6,19 +11,28 @@ import {
   PositionType,
   ReactionsType,
   FlattenedType,
-  Y, X,
-  Height, Width,
+  Y,
+  X,
+  Height,
+  Width,
 } from "../types";
 
 import { n2a, a2n } from "./converters";
 
 export const cropMatrix = (matrix: MatrixType, area: AreaType): MatrixType => {
   const [top, left, bottom, right] = area;
-  return matrix.slice(top, bottom + 1).map((cols) => cols.slice(left, right + 1));
+  return matrix
+    .slice(top, bottom + 1)
+    .map((cols) => cols.slice(left, right + 1));
 };
 
-export const writeMatrix = (y: number, x: number, src: MatrixType, dst: MatrixType): MatrixType => {
-  dst = dst.map(cols => ([... cols])); // unfasten immutable
+export const writeMatrix = (
+  y: number,
+  x: number,
+  src: MatrixType,
+  dst: MatrixType
+): MatrixType => {
+  dst = dst.map((cols) => [...cols]); // unfasten immutable
   src.map((row, i) => {
     if (y + i >= dst.length) {
       return;
@@ -33,7 +47,11 @@ export const writeMatrix = (y: number, x: number, src: MatrixType, dst: MatrixTy
   return dst;
 };
 
-export const spreadMatrix = (src: MatrixType, height: Height, width: Width): MatrixType => {
+export const spreadMatrix = (
+  src: MatrixType,
+  height: Height,
+  width: Width
+): MatrixType => {
   const dst: MatrixType = [];
   for (let y = 0; y <= height; y++) {
     const row: string[] = [];
@@ -51,19 +69,34 @@ export const slideArea = (area: AreaType, y: Y, x: X): AreaType => {
   return [top + y, left + x, bottom + y, right + x];
 };
 
-export const superposeArea = (srcArea: AreaType, dstArea: AreaType): [Height, Width] => {
+export const superposeArea = (
+  srcArea: AreaType,
+  dstArea: AreaType
+): [Height, Width] => {
   const [srcHeight, srcWidth] = zoneShape(srcArea);
   const [dstHeight, dstWidth] = zoneShape(dstArea);
 
   // biggerHeight, biggerWidth
-  return [srcHeight > dstHeight ? srcHeight : dstHeight, srcWidth > dstWidth ? srcWidth : dstWidth];
+  return [
+    srcHeight > dstHeight ? srcHeight : dstHeight,
+    srcWidth > dstWidth ? srcWidth : dstWidth,
+  ];
 };
 
-export const Y_START = 0, X_START = 1, Y_END = 2, X_END = 3;
+export const Y_START = 0,
+  X_START = 1,
+  Y_END = 2,
+  X_END = 3;
 
 export const zoneToArea = (zone: ZoneType): AreaType => {
-  const [top, bottom] = zone[Y_START] < zone[Y_END] ? [zone[Y_START], zone[Y_END]] : [zone[Y_END], zone[Y_START]];
-  const [left, right] = zone[X_START] < zone[X_END] ? [zone[X_START], zone[X_END]] : [zone[X_END], zone[X_START]];
+  const [top, bottom] =
+    zone[Y_START] < zone[Y_END]
+      ? [zone[Y_START], zone[Y_END]]
+      : [zone[Y_END], zone[Y_START]];
+  const [left, right] =
+    zone[X_START] < zone[X_END]
+      ? [zone[X_START], zone[X_END]]
+      : [zone[X_END], zone[X_START]];
   return [top, left, bottom, right];
 };
 
@@ -71,7 +104,10 @@ export const between = (range: RangeType, index: number) => {
   if (range[0] === -1 || range[1] === -1) {
     return false;
   }
-  return (range[0] <= index && index <= range[1]) || (range[1] <= index && index <= range[0]);
+  return (
+    (range[0] <= index && index <= range[1]) ||
+    (range[1] <= index && index <= range[0])
+  );
 };
 
 export const among = (area: AreaType, position: PositionType) => {
@@ -90,20 +126,26 @@ export const zoneShape = (zone: ZoneType): [Height, Width] => {
 export const matrixShape = (matrix: MatrixType): [Height, Width] => {
   const h = matrix.length;
   if (h === 0) {
-    return [0, 0]
+    return [0, 0];
   }
   return [h, matrix[h - 1].length];
 };
 
-export const makeSequence = (start: number, stop: number, step: number=1) => {
-  return Array.from({ length: (stop - start - 1) / step + 1}, (_, i) => start + (i * step));
+export const makeSequence = (start: number, stop: number, step: number = 1) => {
+  return Array.from(
+    { length: (stop - start - 1) / step + 1 },
+    (_, i) => start + i * step
+  );
 };
 
-export const makeReactions = (... areas: (AreaType | ZoneType | PositionType)[]): ReactionsType => {
+export const makeReactions = (
+  ...areas: (AreaType | ZoneType | PositionType)[]
+): ReactionsType => {
   const reactions: ReactionsType = {};
-  const colsCache: {[s: string]: string} = {};
+  const colsCache: { [s: string]: string } = {};
   areas.map((area) => {
-    if (area.length === 2) { // PositionType
+    if (area.length === 2) {
+      // PositionType
       const [y, x] = area;
       area = [y, x, y, x];
     }
@@ -129,7 +171,10 @@ export const makeReactions = (... areas: (AreaType | ZoneType | PositionType)[])
   return reactions;
 };
 
-export const oa2aa = (oa: {[s: string]: any}[], fields: string[]): MatrixType => {
+export const oa2aa = (
+  oa: { [s: string]: any }[],
+  fields: string[]
+): MatrixType => {
   const aa: any[][] = [];
   oa.map((o) => {
     const a: any[] = [];
@@ -141,10 +186,13 @@ export const oa2aa = (oa: {[s: string]: any}[], fields: string[]): MatrixType =>
   return aa;
 };
 
-export const aa2oa = (aa: MatrixType, fields: string[]): {[s: string]: any} => {
-  const oa: {[s: string]: any}[] = [];
+export const aa2oa = (
+  aa: MatrixType,
+  fields: string[]
+): { [s: string]: any } => {
+  const oa: { [s: string]: any }[] = [];
   aa.map((a) => {
-    const o: {[s: string]: any} = {};
+    const o: { [s: string]: any } = {};
     a.map((v, i) => {
       if (i >= fields.length) {
         return;
@@ -162,11 +210,14 @@ export const slideFlattened = (
   height: number | null,
   width: number | null,
   y: number | null,
-  x: number | null,
-): {[s: string]: any} => {
-
+  x: number | null
+): { [s: string]: any } => {
   const slided: FlattenedType = {};
-  const splitted: [(string | undefined), (string | undefined), any][] = Object.entries(base).map(([key, value]) => {
+  const splitted: [
+    string | undefined,
+    string | undefined,
+    any
+  ][] = Object.entries(base).map(([key, value]) => {
     const m = key.match(/([A-Z]*)([0-9]*)/);
     if (m == null) {
       return [undefined, undefined, value];
@@ -176,66 +227,74 @@ export const slideFlattened = (
   });
 
   if (y != null && height != null) {
-    splitted.sort((a, b) => {
-      if (typeof a[1] === "undefined" || typeof b[1] === "undefined") {
-        return 1;
-      }
-      const [gt, lt] = height > 0 ? [-1, 1] : [1, -1];
-      return parseInt(a[1], 10) > parseInt(b[1], 10) ? gt : lt;
-    }).map(([a, n, value]) => {
-      if (typeof n === "undefined") {
-        return;
-      }
-      const rowNumber = parseInt(n, 10) - 1;
-      if (height < 0 && y <= rowNumber && rowNumber < y - height) {
-        slided[`-${a}${rowNumber + 1}`] = value;
-        return;
-      }
-      if (Number.isNaN(rowNumber) || rowNumber < y || rowNumber + height < 1) {
-        return;
-      }
-      slided[`${a}${rowNumber + height + 1}`] = value;
-      slided[`-${a}${n}`] = value;
-    });
+    splitted
+      .sort((a, b) => {
+        if (typeof a[1] === "undefined" || typeof b[1] === "undefined") {
+          return 1;
+        }
+        const [gt, lt] = height > 0 ? [-1, 1] : [1, -1];
+        return parseInt(a[1], 10) > parseInt(b[1], 10) ? gt : lt;
+      })
+      .map(([a, n, value]) => {
+        if (typeof n === "undefined") {
+          return;
+        }
+        const rowNumber = parseInt(n, 10) - 1;
+        if (height < 0 && y <= rowNumber && rowNumber < y - height) {
+          slided[`-${a}${rowNumber + 1}`] = value;
+          return;
+        }
+        if (
+          Number.isNaN(rowNumber) ||
+          rowNumber < y ||
+          rowNumber + height < 1
+        ) {
+          return;
+        }
+        slided[`${a}${rowNumber + height + 1}`] = value;
+        slided[`-${a}${n}`] = value;
+      });
   }
   if (x !== null && width != null) {
-    splitted.sort((a, b) => {
-      if (typeof a[0] === "undefined" || typeof b[0] === "undefined") {
-        return 1;
-      }
-      const [gt, lt] = width > 0 ? [-1, 1] : [1, -1];
-      return a2n(a[0]) > a2n(b[0]) ? gt : lt;
-    }).map(([a, n, value]) => {
-      if (typeof a === "undefined") {
-        return;
-      }
-      const colNumber = a2n(a) - 1;
-      if (width < 0 && x <= colNumber && colNumber < x - width) {
-        slided[`-${n2a(colNumber + 1)}${n}`] = value;
-        return;
-      }
-      if (Number.isNaN(colNumber) || colNumber < x || colNumber + width < 1) {
-        return;
-      }
-      slided[`${n2a(colNumber + width + 1)}${n}`] = value;
-      slided[`-${a}${n}`] = value;
-    });
+    splitted
+      .sort((a, b) => {
+        if (typeof a[0] === "undefined" || typeof b[0] === "undefined") {
+          return 1;
+        }
+        const [gt, lt] = width > 0 ? [-1, 1] : [1, -1];
+        return a2n(a[0]) > a2n(b[0]) ? gt : lt;
+      })
+      .map(([a, n, value]) => {
+        if (typeof a === "undefined") {
+          return;
+        }
+        const colNumber = a2n(a) - 1;
+        if (width < 0 && x <= colNumber && colNumber < x - width) {
+          slided[`-${n2a(colNumber + 1)}${n}`] = value;
+          return;
+        }
+        if (Number.isNaN(colNumber) || colNumber < x || colNumber + width < 1) {
+          return;
+        }
+        slided[`${n2a(colNumber + width + 1)}${n}`] = value;
+        slided[`-${a}${n}`] = value;
+      });
   }
   return slided;
 };
 
 export const applyFlattened = (
   base: FlattenedType,
-  next: FlattenedType,
+  next: FlattenedType
 ): FlattenedType => {
-  const applied: FlattenedType = {... base};
+  const applied: FlattenedType = { ...base };
   Object.keys(next).map((key) => {
-    if (key[0] === '-') {
+    if (key[0] === "-") {
       delete applied[key.substring(1)];
     }
   });
   Object.entries(next).map(([key, value]) => {
-    if (key[0] !== '-') {
+    if (key[0] !== "-") {
       applied[key] = value;
     }
   });
@@ -245,11 +304,36 @@ export const applyFlattened = (
 export const inverseFlattened = (before: FlattenedType): FlattenedType => {
   const after: FlattenedType = {};
   Object.entries(before).map(([key, value]) => {
-    if (key[0] === '-') {
+    if (key[0] === "-") {
       after[key.substring(1)] = value;
     } else {
       after[`-${key}`] = value;
     }
   });
   return after;
+};
+
+export const rerenderCells = ({
+  rows,
+  cols,
+  gridRef,
+  verticalHeadersRef,
+  horizontalHeadersRef,
+}: {
+  rows?: [number, number];
+  cols?: [number, number];
+  gridRef: React.RefObject<Grid>;
+  verticalHeadersRef: React.RefObject<List>;
+  horizontalHeadersRef: React.RefObject<List>;
+}) => {
+  const [startY, endY] = rows || [0, 0];
+  for (let index = startY; index <= endY; index++) {
+    verticalHeadersRef.current?.resetAfterIndex(index);
+    gridRef.current?.resetAfterRowIndex(index);
+  }
+  const [startX, endX] = cols || [0, 0];
+  for (let index = startX; index <= endX; index++) {
+    horizontalHeadersRef.current?.resetAfterIndex(index);
+    gridRef.current?.resetAfterColumnIndex(index);
+  }
 };

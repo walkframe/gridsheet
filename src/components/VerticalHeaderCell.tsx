@@ -1,4 +1,5 @@
 import React from "react";
+import { areEqual } from "react-window";
 import { useDispatch, useSelector } from "react-redux";
 import { between } from "../api/arrays";
 import { RootState } from "../store";
@@ -97,5 +98,6 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
         </div>
       </div>
     );
-  }
+  },
+  areEqual
 );
