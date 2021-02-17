@@ -7,7 +7,7 @@ export const EditorLayout = styled.div`
     position: absolute;
     top: 0;
     right: 0;
-    margin-top: -20px;
+    margin-top: -18px;
     margin-right: -2px;
     padding: 3px 5px;
     font-size: 10px;

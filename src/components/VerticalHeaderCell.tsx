@@ -3,8 +3,13 @@ import { areEqual } from "react-window";
 import { useDispatch, useSelector } from "react-redux";
 import { between } from "../api/arrays";
 import { RootState } from "../store";
-import { setCellOption, drag, selectRows } from "../store/inside";
-import { DUMMY_IMG, DEFAULT_HEIGHT } from "../constants";
+import {
+  setCellOption,
+  drag,
+  selectRows,
+  setResizingRect,
+} from "../store/inside";
+import { DUMMY_IMG, DEFAULT_HEIGHT, MIN_WIDTH } from "../constants";
 import { InsideState, OutsideState } from "../types";
 import { setContextMenuPosition } from "../store/outside";
 
@@ -27,6 +32,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
       choosing,
       selectingZone,
       verticalHeadersSelecting,
+      resizingRect,
     } = useSelector<RootState, InsideState>((state) => state["inside"]);
 
     const defaultHeight = cellsOption.default?.height || DEFAULT_HEIGHT;
@@ -71,29 +77,17 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
           return false;
         }}
         onDragEnter={() => {
-          dispatch(drag([y, numCols - 1]));
+          if (resizingRect[0] === -1) {
+            dispatch(drag([y, numCols - 1]));
+          }
           return false;
         }}
+        onDragOver={(e) => {
+          e.dataTransfer.dropEffect = "move";
+          e.preventDefault();
+        }}
       >
-        <div
-          className="header-inner"
-          style={{ height, width: headerWidth }}
-          onMouseLeave={(e) => {
-            const height = e.currentTarget.clientHeight;
-            if (
-              typeof rowOption.height === "undefined" &&
-              height === defaultHeight
-            ) {
-              return;
-            }
-            dispatch(
-              setCellOption({
-                cell: rowId,
-                option: { ...rowOption, height },
-              })
-            );
-          }}
-        >
+        <div className="header-inner" style={{ height, width: headerWidth }}>
           {rowOption.label || rowId}
         </div>
         <div
@@ -101,9 +95,28 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
           style={{ width: headerWidth }}
           draggable={true}
           onDragStart={(e) => {
-            e.dataTransfer.effectAllowed = "copy";
-            e.dataTransfer.setData("text/plain", "");
+            dispatch(setResizingRect([y, -1, e.screenY, -1]));
+            e.currentTarget.classList.add("dragging");
             e.stopPropagation();
+            return false;
+          }}
+          onDragEnd={(e) => {
+            e.currentTarget.classList.remove("dragging");
+            e.preventDefault();
+            const [y, _x, screenY, _h] = resizingRect;
+            const cell = `${y + 1}`;
+            const nextHeight = height + (e.screenY - screenY);
+            dispatch(
+              setCellOption({
+                cell,
+                option: {
+                  ...rowOption,
+                  height: nextHeight > 0 ? nextHeight : MIN_WIDTH,
+                },
+              })
+            );
+            dispatch(setResizingRect([-1, -1, -1, -1]));
+            return true;
           }}
         >
           <i />

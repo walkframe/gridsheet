@@ -140,6 +140,7 @@ export const Editor: React.FC = () => {
       {editing && <div className="label">{cellId}</div>}
       <textarea
         autoFocus
+        draggable={false}
         ref={editorRef}
         style={{ height, width }}
         rows={typeof value === "string" ? value.split("\n").length : 1}

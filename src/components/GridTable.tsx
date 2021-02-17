@@ -84,7 +84,7 @@ export const GridTable: React.FC<Props> = ({
                 cellsOption[n2a(index + 1)]?.width || defaultWidth
               }
               layout="horizontal"
-              width={gridOuterRef.current?.clientWidth || 0}
+              width={gridOuterRef.current?.clientWidth || sheetWidth}
               height={parseInt(headerHeight, 10)}
               style={{ overflow: "hidden" }}
             >
@@ -100,7 +100,7 @@ export const GridTable: React.FC<Props> = ({
               itemSize={(index) =>
                 cellsOption[index + 1]?.height || defaultHeight
               }
-              height={gridOuterRef.current?.clientHeight || 0}
+              height={gridOuterRef.current?.clientHeight || sheetHeight}
               width={parseInt(headerWidth, 10)}
               style={{ overflow: "hidden" }}
             >

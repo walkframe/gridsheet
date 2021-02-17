@@ -11,7 +11,7 @@ import {
   setResizingRect,
 } from "../store/inside";
 import { InsideState, OutsideState } from "../types";
-import { DUMMY_IMG, DEFAULT_WIDTH } from "../constants";
+import { DUMMY_IMG, DEFAULT_WIDTH, MIN_WIDTH } from "../constants";
 import { setContextMenuPosition } from "../store/outside";
 import { Context } from "./GridSheet";
 
@@ -104,22 +104,24 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
           style={{ height: headerHeight }}
           draggable={true}
           onDragStart={(e) => {
-            dispatch(setResizingRect([-1, x, -1, e.clientX]));
-            const resizer = e.currentTarget;
-            resizer.style.height = `${sheetHeight}px`;
-            resizer.style.opacity = "1";
+            dispatch(setResizingRect([-1, x, -1, e.screenX]));
+            e.currentTarget.classList.add("dragging");
             e.stopPropagation();
             return false;
           }}
           onDragEnd={(e) => {
+            e.currentTarget.classList.remove("dragging");
             e.preventDefault();
-            const [_y, x, _h, clientX] = resizingRect;
+            const [_y, x, _h, screenX] = resizingRect;
             const cell = n2a(x + 1);
-            const nextWidth = width + (e.clientX - clientX);
+            const nextWidth = width + (e.screenX - screenX);
             dispatch(
               setCellOption({
                 cell,
-                option: { ...colOption, width: nextWidth },
+                option: {
+                  ...colOption,
+                  width: nextWidth > 0 ? nextWidth : MIN_WIDTH,
+                },
               })
             );
             dispatch(setResizingRect([-1, -1, -1, -1]));

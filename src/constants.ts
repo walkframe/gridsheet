@@ -7,3 +7,5 @@ export const DEFAULT_WIDTH = 90;
 
 export const SHEET_HEIGHT = 500;
 export const SHEET_WIDTH = 1000;
+
+export const MIN_WIDTH = 3;
