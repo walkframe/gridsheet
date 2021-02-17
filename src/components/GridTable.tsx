@@ -45,6 +45,8 @@ export const GridTable: React.FC<Props> = ({
     verticalHeadersSelecting,
     copyingZone,
     cutting,
+    sheetHeight,
+    sheetWidth,
   } = useSelector<RootState, InsideState>((state) => state["inside"]);
 
   const { headerHeight, headerWidth } = useSelector<RootState, OutsideState>(
@@ -113,8 +115,8 @@ export const GridTable: React.FC<Props> = ({
                 outerRef={gridOuterRef}
                 columnCount={numCols || 0}
                 rowCount={numRows || 0}
-                width={1000}
-                height={500}
+                width={sheetWidth}
+                height={sheetHeight}
                 columnWidth={(index) =>
                   cellsOption[n2a(index + 1)]?.width || defaultWidth
                 }

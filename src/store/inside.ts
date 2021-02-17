@@ -46,6 +46,8 @@ export const initialState: InsideState = {
   reactions: {},
   editorRect: [0, 0, 0, 0],
   resizingRect: [-1, -1, -1, -1],
+  sheetHeight: 0,
+  sheetWidth: 0,
 };
 
 const reducers = {
@@ -54,6 +56,15 @@ const reducers = {
     action: PayloadAction<React.CSSProperties>
   ) => {
     return { ...state, currentStyle: action.payload };
+  },
+  setSheetHeight: (
+    state: Draft<InsideState>,
+    action: PayloadAction<number>
+  ) => {
+    return { ...state, sheetHeight: action.payload };
+  },
+  setSheetWidth: (state: Draft<InsideState>, action: PayloadAction<number>) => {
+    return { ...state, sheetWidth: action.payload };
   },
   setEditorRect: (
     state: Draft<InsideState>,
@@ -726,6 +737,8 @@ export default slice.reducer;
 export const {
   setMatrix,
   setEditorRect,
+  setSheetHeight,
+  setSheetWidth,
   setResizingRect,
   setCurrentStyle,
   setCellsOption,

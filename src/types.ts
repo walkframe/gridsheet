@@ -43,9 +43,9 @@ export type Mode = "light" | "dark";
 export type Headers = "both" | "vertical" | "horizontal" | "none";
 
 export type OptionsType = {
+  sheetHeight?: number;
+  sheetWidth?: number;
   historySize?: number;
-  defaultHeight?: string;
-  defaultWidth?: string;
   headerHeight?: string;
   headerWidth?: string;
   editingOnEnter?: boolean;
@@ -75,6 +75,8 @@ export type InsideState = {
   currentStyle?: React.CSSProperties;
   editorRect: RectType;
   resizingRect: RectType;
+  sheetHeight: number;
+  sheetWidth: number;
 };
 
 export type OutsideState = {

@@ -4,3 +4,6 @@ DUMMY_IMG.src =
 
 export const DEFAULT_HEIGHT = 22;
 export const DEFAULT_WIDTH = 90;
+
+export const SHEET_HEIGHT = 500;
+export const SHEET_WIDTH = 1000;

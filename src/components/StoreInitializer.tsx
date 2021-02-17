@@ -3,13 +3,17 @@ import { useDispatch } from "react-redux";
 
 import { MatrixType, OptionsType } from "../types";
 
-import { setMatrix, setCellsOption, initHistory } from "../store/inside";
+import {
+  setMatrix,
+  setCellsOption,
+  initHistory,
+  setSheetHeight,
+  setSheetWidth,
+} from "../store/inside";
 
 import {
   setHeaderHeight,
   setHeaderWidth,
-  setDefaultHeight,
-  setDefaultWidth,
   setEditingOnEnter,
   setCellLabel,
   setStickyHeaders,
@@ -17,6 +21,8 @@ import {
   setParsers,
   setOnSave,
 } from "../store/outside";
+
+import { SHEET_HEIGHT, SHEET_WIDTH } from "../constants";
 
 type Props = {
   data: MatrixType;
@@ -29,8 +35,8 @@ export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
     cells,
     headerHeight,
     headerWidth,
-    defaultHeight,
-    defaultWidth,
+    sheetHeight = SHEET_HEIGHT,
+    sheetWidth = SHEET_WIDTH,
     editingOnEnter,
     cellLabel,
     stickyHeaders,
@@ -60,15 +66,15 @@ export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
     }
   }, [headerWidth]);
   React.useEffect(() => {
-    if (typeof defaultHeight !== "undefined") {
-      dispatch(setDefaultHeight(defaultHeight));
+    if (typeof sheetHeight !== "undefined") {
+      dispatch(setSheetHeight(sheetHeight));
     }
-  }, [defaultHeight]);
+  }, [sheetHeight]);
   React.useEffect(() => {
-    if (typeof defaultWidth !== "undefined") {
-      dispatch(setDefaultWidth(defaultWidth));
+    if (typeof sheetWidth !== "undefined") {
+      dispatch(setSheetWidth(sheetWidth));
     }
-  }, [defaultWidth]);
+  }, [sheetWidth]);
   React.useEffect(() => {
     if (typeof editingOnEnter !== "undefined") {
       dispatch(setEditingOnEnter(editingOnEnter));

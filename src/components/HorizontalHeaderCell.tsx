@@ -36,6 +36,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
       selectingZone,
       resizingRect,
       horizontalHeadersSelecting,
+      sheetHeight,
     } = useSelector<RootState, InsideState>((state) => state["inside"]);
 
     const defaultWidth = cellsOption.default?.width || DEFAULT_WIDTH;
@@ -105,7 +106,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
           onDragStart={(e) => {
             dispatch(setResizingRect([-1, x, -1, e.clientX]));
             const resizer = e.currentTarget;
-            resizer.style.height = "1000px";
+            resizer.style.height = `${sheetHeight}px`;
             resizer.style.opacity = "1";
             e.stopPropagation();
             return false;
