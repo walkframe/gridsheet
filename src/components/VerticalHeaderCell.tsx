@@ -76,7 +76,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
         }}
       >
         <div
-          className="resizer"
+          className="header-inner"
           style={{ height, width: headerWidth }}
           onMouseLeave={(e) => {
             const height = e.currentTarget.clientHeight;
@@ -96,8 +96,19 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
         >
           {rowOption.label || rowId}
         </div>
+        <div
+          className="resizer"
+          style={{ width: headerWidth }}
+          draggable={true}
+          onDragStart={(e) => {
+            e.dataTransfer.effectAllowed = "copy";
+            e.dataTransfer.setData("text/plain", "");
+            e.stopPropagation();
+          }}
+        >
+          <i />
+        </div>
       </div>
     );
-  },
-  areEqual
+  }
 );

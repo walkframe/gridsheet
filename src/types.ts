@@ -74,6 +74,7 @@ export type InsideState = {
   reactions: ReactionsType;
   currentStyle?: React.CSSProperties;
   editorRect: RectType;
+  resizingRect: RectType;
 };
 
 export type OutsideState = {

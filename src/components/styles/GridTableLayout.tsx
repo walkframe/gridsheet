@@ -22,12 +22,35 @@ export const GridTableLayout = styled.div`
       position: sticky;
       position: -webkit-sticky;
     }
+    .resizer {
+      position: absolute;
+      background-color: #0077ff;
+      opacity: 0.5;
+      display: none;
+      z-index: 0;
+    }
+    &:hover {
+      .resizer {
+        display: block;
+        i {
+          display: none;
+        }
+      }
+    }
     &.horizontal {
       top: -1px;
       min-height: 20px;
       border-right: solid 1px #777777;
       .resizer {
-        resize: horizontal;
+        top: 0;
+        right: 0;
+        width: 10px;
+        cursor: e-resize;
+        i {
+          display: block;
+          width: 2px;
+          height: 1000px;
+        }
       }
     }
     &.vertical {
@@ -36,11 +59,17 @@ export const GridTableLayout = styled.div`
       min-width: 30px;
       border-bottom: solid 1px #777777;
       .resizer {
-        padding: 0 10px;
-        resize: vertical;
+        left: 0;
+        bottom: 0;
+        height: 5px;
+        cursor: s-resize;
+        i {
+          display: block;
+          height: 2px;
+        }
       }
     }
-    .resizer {
+    .header-inner {
       box-sizing: border-box;
       vertical-align: middle;
       overflow: hidden;

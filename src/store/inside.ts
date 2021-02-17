@@ -45,6 +45,7 @@ export const initialState: InsideState = {
   history: { index: -1, size: 0, operations: [] },
   reactions: {},
   editorRect: [0, 0, 0, 0],
+  resizingRect: [-1, -1, -1, -1],
 };
 
 const reducers = {
@@ -59,6 +60,12 @@ const reducers = {
     action: PayloadAction<RectType>
   ) => {
     return { ...state, editorRect: [...action.payload] as RectType };
+  },
+  setResizingRect: (
+    state: Draft<InsideState>,
+    action: PayloadAction<RectType>
+  ) => {
+    return { ...state, resizingRect: [...action.payload] as RectType };
   },
   setMatrix: (state: Draft<InsideState>, action: PayloadAction<MatrixType>) => {
     return { ...state, matrix: [...action.payload] };
@@ -719,6 +726,7 @@ export default slice.reducer;
 export const {
   setMatrix,
   setEditorRect,
+  setResizingRect,
   setCurrentStyle,
   setCellsOption,
   setCellOption,

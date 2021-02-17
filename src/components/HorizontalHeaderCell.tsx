@@ -2,12 +2,18 @@ import React from "react";
 import { areEqual } from "react-window";
 import { useDispatch, useSelector } from "react-redux";
 import { n2a } from "../api/converters";
-import { between } from "../api/arrays";
+import { between, rerenderCells } from "../api/arrays";
 import { RootState } from "../store";
-import { setCellOption, drag, selectCols } from "../store/inside";
+import {
+  setCellOption,
+  drag,
+  selectCols,
+  setResizingRect,
+} from "../store/inside";
 import { InsideState, OutsideState } from "../types";
 import { DUMMY_IMG, DEFAULT_WIDTH } from "../constants";
 import { setContextMenuPosition } from "../store/outside";
+import { Context } from "./GridSheet";
 
 type Props = {
   index: number;
@@ -28,6 +34,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
       choosing,
       cellsOption,
       selectingZone,
+      resizingRect,
       horizontalHeadersSelecting,
     } = useSelector<RootState, InsideState>((state) => state["inside"]);
 
@@ -74,33 +81,53 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
           return false;
         }}
         onDragEnter={() => {
-          dispatch(drag([numRows - 1, x]));
+          if (resizingRect[1] === -1) {
+            dispatch(drag([numRows - 1, x]));
+          }
           return false;
+        }}
+        onDragOver={(e) => {
+          e.dataTransfer.dropEffect = "move";
+          e.preventDefault();
         }}
       >
         <div
-          className="resizer"
+          className="header-inner"
           style={{ width, height: headerHeight }}
-          onMouseLeave={(e) => {
-            const width = e.currentTarget.clientWidth;
-            if (
-              typeof colOption.width === "undefined" &&
-              width === defaultWidth
-            ) {
-              return;
-            }
-            dispatch(
-              setCellOption({
-                cell: colId,
-                option: { ...colOption, width },
-              })
-            );
-          }}
+          draggable
         >
           {colOption.label || colId}
         </div>
+        <div
+          className="resizer"
+          style={{ height: headerHeight }}
+          draggable={true}
+          onDragStart={(e) => {
+            dispatch(setResizingRect([-1, x, -1, e.clientX]));
+            const resizer = e.currentTarget;
+            resizer.style.height = "1000px";
+            resizer.style.opacity = "1";
+            e.stopPropagation();
+            return false;
+          }}
+          onDragEnd={(e) => {
+            e.preventDefault();
+            const [_y, x, _h, clientX] = resizingRect;
+            const cell = n2a(x + 1);
+            const nextWidth = width + (e.clientX - clientX);
+            dispatch(
+              setCellOption({
+                cell,
+                option: { ...colOption, width: nextWidth },
+              })
+            );
+            dispatch(setResizingRect([-1, -1, -1, -1]));
+            return true;
+          }}
+        >
+          <i />
+        </div>
       </div>
     );
-  },
-  areEqual
+  }
 );

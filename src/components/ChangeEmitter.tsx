@@ -47,6 +47,13 @@ export const ChangeEmitter: React.FC<Props> = ({ onChange }) => {
         JSON.stringify(current.cellsOption) !== JSON.stringify(old.cellsOption)
       ) {
         onChange(undefined, current.cellsOption);
+        const [height, width] = matrixShape(current.matrix);
+        rerenderCells({
+          ...refs,
+          rows: [0, height],
+          cols: [0, width],
+        });
+
         return false;
       }
       return true;
