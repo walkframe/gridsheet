@@ -1,5 +1,4 @@
 import React from "react";
-import { areEqual } from "react-window";
 import { useDispatch, useSelector } from "react-redux";
 import { n2a } from "../api/converters";
 import { between, rerenderCells } from "../api/arrays";
@@ -25,10 +24,9 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
     const dispatch = useDispatch();
     const colId = n2a(x + 1);
 
-    const { headerHeight, stickyHeaders } = useSelector<
-      RootState,
-      OutsideState
-    >((state) => state["outside"]);
+    const { headerHeight } = useSelector<RootState, OutsideState>(
+      (state) => state["outside"]
+    );
     const {
       matrix,
       choosing,
@@ -48,11 +46,6 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
         style={outerStyle}
         className={`
       header horizontal
-      ${
-        stickyHeaders === "both" || stickyHeaders === "horizontal"
-          ? "sticky"
-          : ""
-      }
       ${choosing[1] === x ? "choosing" : ""} 
       ${
         between([selectingZone[1], selectingZone[3]], x)

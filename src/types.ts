@@ -52,7 +52,6 @@ export type OptionsType = {
   cellLabel?: boolean;
   cells?: CellsOptionType;
   mode?: Mode;
-  stickyHeaders?: Headers;
   renderers?: Renderers;
   parsers?: Parsers;
   onSave?: Feedback;
@@ -71,8 +70,6 @@ export type InsideState = {
   verticalHeadersSelecting: boolean;
   editingCell: string;
   history: HistoryType;
-  reactions: ReactionsType;
-  currentStyle?: React.CSSProperties;
   editorRect: RectType;
   resizingRect: RectType;
   sheetHeight: number;
@@ -82,11 +79,8 @@ export type InsideState = {
 export type OutsideState = {
   headerHeight: string;
   headerWidth: string;
-  defaultHeight: string;
-  defaultWidth: string;
   editingOnEnter: boolean;
   cellLabel: boolean;
-  stickyHeaders: Headers;
   contextMenuPosition: [number, number];
   renderers: Renderers;
   parsers: Parsers;

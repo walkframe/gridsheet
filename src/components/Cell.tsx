@@ -21,13 +21,12 @@ import {
   copy,
   cut,
   paste,
-  setCurrentStyle,
   setEditorRect,
 } from "../store/inside";
 
 import { setContextMenuPosition } from "../store/outside";
 
-import { DUMMY_IMG } from "../constants";
+import { DUMMY_IMG, DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
 import { AreaType, CellOptionType, InsideState, OutsideState } from "../types";
 import { Renderer as DefaultRenderer } from "../renderers/core";
 import { Parser as DefaultParser } from "../parsers/core";
@@ -57,8 +56,6 @@ export const Cell: React.FC<Props> = React.memo(
 
     const {
       cellLabel,
-      defaultHeight,
-      defaultWidth,
       editingOnEnter,
       renderers,
       parsers,
@@ -130,8 +127,8 @@ export const Cell: React.FC<Props> = React.memo(
 
     const renderer = renderers[rendererKey || ""] || new DefaultRenderer();
     const parser = parsers[parserKey || ""] || new DefaultParser();
-    const height = rowOption.height || defaultHeight;
-    const width = colOption.width || defaultWidth;
+    const height = rowOption.height || DEFAULT_HEIGHT;
+    const width = colOption.width || DEFAULT_WIDTH;
     const verticalAlign =
       cellOption.verticalAlign ||
       colOption.verticalAlign ||
@@ -178,7 +175,6 @@ export const Cell: React.FC<Props> = React.memo(
           dispatch(
             setEditorRect([rect.top, rect.left, rect.height, rect.width])
           );
-          dispatch(setCurrentStyle({ top, left }));
         }}
         onDoubleClick={(e) => {
           e.preventDefault();
@@ -192,8 +188,6 @@ export const Cell: React.FC<Props> = React.memo(
           e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
           dispatch(choose([y, x]));
           dispatch(select([y, x, y, x]));
-          const { y: top, x: left } = e.currentTarget.getBoundingClientRect();
-          dispatch(setCurrentStyle({ top, left }));
         }}
         onDragEnd={(e) => {
           const [h, w] = zoneShape(selectingZone);

@@ -16,7 +16,6 @@ import {
   setHeaderWidth,
   setEditingOnEnter,
   setCellLabel,
-  setStickyHeaders,
   setRenderers,
   setParsers,
   setOnSave,
@@ -39,7 +38,6 @@ export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
     sheetWidth = SHEET_WIDTH,
     editingOnEnter,
     cellLabel,
-    stickyHeaders,
     renderers,
     parsers,
     onSave,
@@ -85,11 +83,6 @@ export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
       dispatch(setCellLabel(cellLabel));
     }
   }, [cellLabel]);
-  React.useEffect(() => {
-    if (typeof stickyHeaders !== "undefined") {
-      dispatch(setStickyHeaders(stickyHeaders));
-    }
-  }, [stickyHeaders]);
   React.useEffect(() => {
     if (typeof renderers !== "undefined") {
       dispatch(setRenderers(renderers));

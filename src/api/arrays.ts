@@ -138,39 +138,6 @@ export const makeSequence = (start: number, stop: number, step: number = 1) => {
   );
 };
 
-export const makeReactions = (
-  ...areas: (AreaType | ZoneType | PositionType)[]
-): ReactionsType => {
-  const reactions: ReactionsType = {};
-  const colsCache: { [s: string]: string } = {};
-  areas.map((area) => {
-    if (area.length === 2) {
-      // PositionType
-      const [y, x] = area;
-      area = [y, x, y, x];
-    }
-    area = zoneToArea(area); // force format to area
-    const [top, left, bottom, right] = area;
-    if (top === -1 || left === -1) {
-      return;
-    }
-    for (let y = top; y <= bottom; y++) {
-      const row = y + 1;
-      reactions[`${row}`] = true;
-      for (let x = left; x <= right; x++) {
-        let col = colsCache[x + 1];
-        if (typeof col === "undefined") {
-          col = n2a(x + 1);
-          colsCache[x + 1] = col;
-        }
-        reactions[`${col}`] = true;
-        reactions[`${col}${row}`] = true;
-      }
-    }
-  });
-  return reactions;
-};
-
 export const oa2aa = (
   oa: { [s: string]: any }[],
   fields: string[]

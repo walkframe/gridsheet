@@ -23,7 +23,6 @@ import {
   zoneToArea,
   zoneShape,
   superposeArea,
-  makeReactions,
   slideFlattened,
   applyFlattened,
 } from "../api/arrays";
@@ -43,7 +42,6 @@ export const initialState: InsideState = {
   verticalHeadersSelecting: false,
   editingCell: "",
   history: { index: -1, size: 0, operations: [] },
-  reactions: {},
   editorRect: [0, 0, 0, 0],
   resizingRect: [-1, -1, -1, -1],
   sheetHeight: 0,
@@ -51,12 +49,6 @@ export const initialState: InsideState = {
 };
 
 const reducers = {
-  setCurrentStyle: (
-    state: Draft<InsideState>,
-    action: PayloadAction<React.CSSProperties>
-  ) => {
-    return { ...state, currentStyle: action.payload };
-  },
   setSheetHeight: (
     state: Draft<InsideState>,
     action: PayloadAction<number>
@@ -104,10 +96,8 @@ const reducers = {
     };
   },
   blur: (state: Draft<InsideState>) => {
-    const reactions = makeReactions(state.choosing, state.selectingZone);
     return {
       ...state,
-      reactions,
       editingCell: "",
       /*
       choosing: [-1, -1] as PositionType,
@@ -118,10 +108,8 @@ const reducers = {
     };
   },
   escape: (state: Draft<InsideState>) => {
-    const reactions = makeReactions(state.selectingZone, state.copyingZone);
     return {
       ...state,
-      reactions,
       copyingZone: [-1, -1, -1, -1] as ZoneType,
       cutting: false,
       editingCell: "",
@@ -130,32 +118,21 @@ const reducers = {
     };
   },
   copy: (state: Draft<InsideState>, action: PayloadAction<ZoneType>) => {
-    const reactions = makeReactions(action.payload, state.copyingZone);
-    return { ...state, reactions, copyingZone: action.payload, cutting: false };
+    return { ...state, copyingZone: action.payload, cutting: false };
   },
   cut: (state: Draft<InsideState>, action: PayloadAction<ZoneType>) => {
-    const reactions = makeReactions(action.payload, state.copyingZone);
-    return { ...state, reactions, copyingZone: action.payload, cutting: true };
+    return { ...state, copyingZone: action.payload, cutting: true };
   },
   choose: (state: Draft<InsideState>, action: PayloadAction<PositionType>) => {
-    const [y, x] = action.payload;
-    const reactions = makeReactions(
-      [y, x, y, x],
-      state.selectingZone,
-      state.choosing
-    );
     return {
       ...state,
-      reactions,
       choosing: action.payload,
       lastChoosing: state.choosing,
     };
   },
   reChoose: (state: Draft<InsideState>) => {
-    const reactions = makeReactions(state.lastChoosing, state.choosing);
     return {
       ...state,
-      reactions,
       choosing: state.lastChoosing,
     };
   },
@@ -164,8 +141,7 @@ const reducers = {
     action: PayloadAction<string>
   ) => {
     const [y, x] = state.choosing;
-    const reactions = makeReactions(state.selectingZone, [y, x, y, x]);
-    return { ...state, reactions, editingCell: action.payload };
+    return { ...state, editingCell: action.payload };
   },
   paste: (
     state: Draft<InsideState>,
@@ -240,22 +216,18 @@ const reducers = {
       before,
       after,
     });
-    const reactions = makeReactions(copyingArea, selectingZone, dst);
     return {
       ...state,
       matrix,
       history,
       selectingZone,
-      reactions,
       cutting: false,
       copyingZone: [-1, -1, -1, -1] as ZoneType,
     };
   },
   select: (state: Draft<InsideState>, action: PayloadAction<ZoneType>) => {
-    const reactions = makeReactions(action.payload);
     return {
       ...state,
-      reactions,
       selectingZone: action.payload,
       horizontalHeadersSelecting: false,
       verticalHeadersSelecting: false,
@@ -272,13 +244,7 @@ const reducers = {
       action.payload[0],
       action.payload[1],
     ] as ZoneType;
-    const reactions = makeReactions(
-      selectingZone,
-      state.selectingZone,
-      state.choosing,
-      [y, x]
-    );
-    return { ...state, reactions, selectingZone };
+    return { ...state, selectingZone };
   },
   selectRows: (
     state: Draft<InsideState>,
@@ -287,15 +253,9 @@ const reducers = {
     const { range, numCols } = action.payload;
     const [start, end] = range.sort();
     const selectingZone = [start, 0, end, numCols - 1] as ZoneType;
-    const reactions = makeReactions(
-      state.selectingZone,
-      state.choosing,
-      selectingZone
-    );
     return {
       ...state,
       selectingZone,
-      reactions,
       choosing: [start, 0] as PositionType,
       verticalHeadersSelecting: true,
       horizontalHeadersSelecting: false,
@@ -308,15 +268,10 @@ const reducers = {
     const { range, numRows } = action.payload;
     const [start, end] = range.sort();
     const selectingZone = [0, start, numRows - 1, end] as ZoneType;
-    const reactions = makeReactions(
-      state.selectingZone,
-      state.choosing,
-      selectingZone
-    );
+
     return {
       ...state,
       selectingZone,
-      reactions,
       choosing: [0, start] as PositionType,
       verticalHeadersSelecting: false,
       horizontalHeadersSelecting: true,
@@ -449,11 +404,6 @@ const reducers = {
 
     return {
       ...state,
-      reactions: makeReactions(
-        [nextY, nextX, nextY, nextY],
-        state.selectingZone,
-        state.choosing
-      ),
       choosing: [nextY, nextX] as PositionType,
       editorRect: [editorTop, editorLeft, height, width] as RectType,
     };
@@ -485,7 +435,6 @@ const reducers = {
       return {
         ...state,
         selectingZone,
-        reactions: makeReactions(selectingZone, state.selectingZone, choosing),
       };
     }
     const [nextY, nextX] = [y + deltaY, x + deltaX];
@@ -518,11 +467,6 @@ const reducers = {
 
     return {
       ...state,
-      reactions: makeReactions(
-        [nextY, nextX, nextY, nextY],
-        state.selectingZone,
-        choosing
-      ),
       selectingZone: [-1, -1, -1, -1] as ZoneType,
       choosing: [nextY, nextX] as PositionType,
       editorRect: [editorTop, editorLeft, height, width] as RectType,
@@ -543,12 +487,10 @@ const reducers = {
       before: [[state.matrix[y][x]]],
       after: [[value]],
     });
-    const reactions = makeReactions(pointedArea, state.copyingZone);
     return {
       ...state,
       matrix,
       history,
-      reactions,
       copyingZone: [-1, -1, -1, -1],
     };
   },
@@ -571,15 +513,9 @@ const reducers = {
       before: cropMatrix(matrix, selectingArea),
       after,
     });
-    const reactions = makeReactions(
-      selectingArea,
-      state.choosing,
-      state.selectingZone
-    );
     return {
       ...state,
       history,
-      reactions,
       matrix: written,
     };
   },
@@ -609,7 +545,6 @@ const reducers = {
     return {
       ...state,
       matrix: [...matrix],
-      reactions: makeReactions([0, 0, matrix.length, matrix[0].length]),
       cellsOption: applyFlattened(state.cellsOption, diff),
       history,
     };
@@ -638,7 +573,6 @@ const reducers = {
     return {
       ...state,
       matrix: [...matrix],
-      reactions: makeReactions([0, 0, matrix.length, numCols]),
       cellsOption: applyFlattened(state.cellsOption, diff),
       history,
     };
@@ -676,7 +610,6 @@ const reducers = {
     return {
       ...state,
       matrix,
-      reactions: makeReactions([0, 0, numRows, matrix[0].length]),
       cellsOption: applyFlattened(state.cellsOption, diff),
       history,
     };
@@ -720,7 +653,6 @@ const reducers = {
     return {
       ...state,
       matrix,
-      reactions: makeReactions([0, 0, numRows, matrix[0].length]),
       cellsOption: applyFlattened(state.cellsOption, diff),
       history,
     };
@@ -740,7 +672,6 @@ export const {
   setSheetHeight,
   setSheetWidth,
   setResizingRect,
-  setCurrentStyle,
   setCellsOption,
   setCellOption,
   blur,

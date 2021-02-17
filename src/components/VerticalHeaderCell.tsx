@@ -1,5 +1,4 @@
 import React from "react";
-import { areEqual } from "react-window";
 import { useDispatch, useSelector } from "react-redux";
 import { between } from "../api/arrays";
 import { RootState } from "../store";
@@ -23,7 +22,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
     const rowId = `${y + 1}`;
     const dispatch = useDispatch();
 
-    const { headerWidth, stickyHeaders } = useSelector<RootState, OutsideState>(
+    const { headerWidth } = useSelector<RootState, OutsideState>(
       (state) => state["outside"]
     );
     const {
@@ -45,9 +44,6 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
         style={outerStyle}
         className={`
       header vertical
-      ${
-        stickyHeaders === "both" || stickyHeaders === "vertical" ? "sticky" : ""
-      }
       ${choosing[0] === y ? "choosing" : ""} 
       ${
         between([selectingZone[0], selectingZone[2]], y)

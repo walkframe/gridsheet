@@ -21,7 +21,6 @@ import {
   copy,
   cut,
   paste,
-  setCurrentStyle,
 } from "../store/inside";
 
 import { setContextMenuPosition } from "../store/outside";
@@ -40,15 +39,10 @@ type Props = {
 
 export const Editor: React.FC = () => {
   const dispatch = useDispatch();
-  const {
-    cellLabel,
-    defaultHeight,
-    defaultWidth,
-    editingOnEnter,
-    renderers,
-    parsers,
-    onSave,
-  } = useSelector<RootState, OutsideState>((state) => state["outside"]);
+  const { cellLabel, editingOnEnter, renderers, parsers, onSave } = useSelector<
+    RootState,
+    OutsideState
+  >((state) => state["outside"]);
 
   const {
     matrix,
@@ -61,16 +55,9 @@ export const Editor: React.FC = () => {
     verticalHeadersSelecting,
     copyingZone,
     cutting,
-    currentStyle,
   } = useSelector<RootState, InsideState>((state) => state["inside"]);
 
-  const {
-    editorRef,
-    gridRef,
-    gridOuterRef,
-    verticalHeadersRef,
-    horizontalHeadersRef,
-  } = React.useContext(Context);
+  const { editorRef } = React.useContext(Context);
 
   const [y, x] = choosing;
 
@@ -80,8 +67,6 @@ export const Editor: React.FC = () => {
 
   const [before, setBefore] = React.useState("");
 
-  const selectingArea = zoneToArea(selectingZone); // (top, left) -> (bottom, right)
-  const copyingArea = zoneToArea(copyingZone); // (top, left) -> (bottom, right)
   const editing = editingCell === cellId;
 
   if ((matrix && matrix[y] == null) || matrix[y][x] == null) {
@@ -94,12 +79,6 @@ export const Editor: React.FC = () => {
   const colOption: CellOptionType = cellsOption[colId] || {};
   const cellOption: CellOptionType = cellsOption[cellId] || {};
   // defaultOption < rowOption < colOption < cellOption
-  const style = {
-    ...defaultOption.style,
-    ...rowOption.style,
-    ...colOption.style,
-    ...cellOption.style,
-  };
 
   const rendererKey =
     cellOption.renderer ||
