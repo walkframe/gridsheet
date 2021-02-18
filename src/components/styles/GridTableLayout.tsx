@@ -24,23 +24,15 @@ export const GridTableLayout = styled.div`
     }
     .resizer {
       position: absolute;
-      border-color: #0077ff;
+      border-color: transparent;
       box-sizing: border-box;
       border-width: 3px;
       z-index: 2;
-    }
-    &:hover {
-      &.horizontal {
-        .resizer {
-          border-right-style: solid;
-        }
-      }
-      &.vertical {
-        .resizer {
-          border-bottom-style: solid;
-        }
+      &:hover {
+        border-color: #0077ff;
       }
     }
+
     &.horizontal {
       top: -1px;
       min-height: 20px;
@@ -48,12 +40,14 @@ export const GridTableLayout = styled.div`
       .resizer {
         top: 0;
         right: 0;
-        width: 7px;
+        width: 9px;
         cursor: e-resize;
+        border-right-style: solid;
 
         &.dragging {
           border-right-style: dotted;
           height: 1000000px !important;
+          cursor: e-resize;
         }
       }
     }
@@ -65,12 +59,14 @@ export const GridTableLayout = styled.div`
       .resizer {
         left: 0;
         bottom: 0;
-        height: 7px;
-        cursor: s-resize;
+        height: 9px;
+        cursor: n-resize;
+        border-bottom-style: solid;
 
         &.dragging {
           border-bottom-style: dotted;
           width: 1000000px !important;
+          cursor: n-resize;
         }
       }
     }
