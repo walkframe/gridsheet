@@ -101,6 +101,7 @@ export const GridTable: React.FC<Props> = ({ numRows, numCols }) => {
               <Editor />
               <Grid
                 ref={gridRef}
+                style={{ marginTop: -1, marginLeft: -1 }}
                 outerRef={gridOuterRef}
                 columnCount={numCols || 0}
                 rowCount={numRows || 0}

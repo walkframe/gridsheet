@@ -7,7 +7,8 @@ export const GridSheetLayout = styled.div`
     "Hiragino Sans", Meiryo, sans-serif;
 
   &.light {
-    background-color: #ffffff;
+    border: solid 1px #aaaaaa;
+    background-color: #f7f7f7;
     color: #000000;
     textarea {
       &.editing {
