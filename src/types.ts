@@ -105,7 +105,8 @@ export type OperationCommandType =
   | "addRows"
   | "delRows"
   | "addCols"
-  | "delCols";
+  | "delCols"
+  | "styling";
 
 export type OperationType = {
   command: OperationCommandType;

@@ -313,3 +313,26 @@ export const redoRemoveCols = (
     cellsOption: applyFlattened(state.cellsOption, options || {}),
   };
 };
+
+export const undoStyling = (
+  state: Draft<InsideState>,
+  { options }: OperationType
+): Draft<InsideState> => {
+  return {
+    ...state,
+    cellsOption: applyFlattened(
+      state.cellsOption,
+      inverseFlattened(options || {})
+    ),
+  };
+};
+
+export const redoStyling = (
+  state: Draft<InsideState>,
+  { options }: OperationType
+): Draft<InsideState> => {
+  return {
+    ...state,
+    cellsOption: applyFlattened(state.cellsOption, options || {}),
+  };
+};

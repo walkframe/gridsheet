@@ -25,6 +25,7 @@ import {
   superposeArea,
   slideFlattened,
   applyFlattened,
+  inverseFlattened,
 } from "../api/arrays";
 import { tsv2matrix, n2a } from "../api/converters";
 import { ParserType } from "../parsers/core";
@@ -87,8 +88,20 @@ const reducers = {
     }>
   ) => {
     const { cell, option } = action.payload;
+    const history = histories.pushHistory(state.history, {
+      command: "styling",
+      src: [-1, -1, -1, -1],
+      dst: [-1, -1, -1, -1],
+      before: [],
+      after: [],
+      options: {
+        [`-${cell}`]: state.cellsOption[cell] || {},
+        [cell]: option,
+      },
+    });
     return {
       ...state,
+      history,
       cellsOption: {
         ...state.cellsOption,
         [cell]: option,
@@ -310,6 +323,9 @@ const reducers = {
 
       case "delCols":
         return { ...histories.undoRemoveCols(state, operation), history };
+
+      case "styling":
+        return { ...histories.undoStyling(state, operation), history };
     }
     return state;
   },
@@ -340,6 +356,9 @@ const reducers = {
 
       case "delCols":
         return { ...histories.redoRemoveCols(state, operation), history };
+
+      case "styling":
+        return { ...histories.redoStyling(state, operation), history };
     }
     return state;
   },
