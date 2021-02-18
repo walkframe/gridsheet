@@ -12,7 +12,6 @@ import { HorizontalHeaderCell } from "./HorizontalHeaderCell";
 import { VerticalHeaderCell } from "./VerticalHeaderCell";
 
 import { n2a } from "../api/converters";
-import { makeSequence } from "../api/arrays";
 
 import { choose, select } from "../store/inside";
 
@@ -23,31 +22,17 @@ import { AreaType, CellOptionType, InsideState, OutsideState } from "../types";
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
 
 type Props = {
-  clipboardRef: React.RefObject<HTMLTextAreaElement>;
   numRows: number;
   numCols: number;
 };
 
-export const GridTable: React.FC<Props> = ({
-  clipboardRef,
-  numRows,
-  numCols,
-}) => {
+export const GridTable: React.FC<Props> = ({ numRows, numCols }) => {
   const dispatch = useDispatch();
 
-  const {
-    matrix,
-    cellsOption,
-    editingCell,
-    choosing,
-    selectingZone,
-    horizontalHeadersSelecting,
-    verticalHeadersSelecting,
-    copyingZone,
-    cutting,
-    sheetHeight,
-    sheetWidth,
-  } = useSelector<RootState, InsideState>((state) => state["inside"]);
+  const { cellsOption, sheetHeight, sheetWidth } = useSelector<
+    RootState,
+    InsideState
+  >((state) => state["inside"]);
 
   const { headerHeight, headerWidth } = useSelector<RootState, OutsideState>(
     (state) => state["outside"]
@@ -62,6 +47,10 @@ export const GridTable: React.FC<Props> = ({
 
   const defaultHeight = cellsOption.default?.height || DEFAULT_HEIGHT;
   const defaultWidth = cellsOption.default?.width || DEFAULT_WIDTH;
+
+  const sheetInnerHeight = sheetHeight - headerHeight;
+  const sheetInnerWidth = sheetWidth - headerWidth;
+
   return (
     <GridTableLayout>
       <div className="gs-table">
@@ -84,8 +73,8 @@ export const GridTable: React.FC<Props> = ({
                 cellsOption[n2a(index + 1)]?.width || defaultWidth
               }
               layout="horizontal"
-              width={gridOuterRef.current?.clientWidth || sheetWidth}
-              height={parseInt(headerHeight, 10)}
+              width={gridOuterRef.current?.clientWidth || sheetInnerWidth}
+              height={headerHeight}
               style={{ overflow: "hidden" }}
             >
               {HorizontalHeaderCell}
@@ -100,8 +89,8 @@ export const GridTable: React.FC<Props> = ({
               itemSize={(index) =>
                 cellsOption[index + 1]?.height || defaultHeight
               }
-              height={gridOuterRef.current?.clientHeight || sheetHeight}
-              width={parseInt(headerWidth, 10)}
+              height={gridOuterRef.current?.clientHeight || sheetInnerHeight}
+              width={headerWidth}
               style={{ overflow: "hidden" }}
             >
               {VerticalHeaderCell}
@@ -115,8 +104,8 @@ export const GridTable: React.FC<Props> = ({
                 outerRef={gridOuterRef}
                 columnCount={numCols || 0}
                 rowCount={numRows || 0}
-                width={sheetWidth}
-                height={sheetHeight}
+                width={sheetWidth - headerWidth}
+                height={sheetHeight - headerHeight}
                 columnWidth={(index) =>
                   cellsOption[n2a(index + 1)]?.width || defaultWidth
                 }

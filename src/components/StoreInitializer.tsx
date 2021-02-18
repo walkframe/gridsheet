@@ -32,8 +32,8 @@ export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
   const {
     historySize = 10,
     cells,
-    headerHeight,
-    headerWidth,
+    headerHeight = 20,
+    headerWidth = 50,
     sheetHeight = SHEET_HEIGHT,
     sheetWidth = SHEET_WIDTH,
     editingOnEnter,

@@ -46,8 +46,8 @@ export type OptionsType = {
   sheetHeight?: number;
   sheetWidth?: number;
   historySize?: number;
-  headerHeight?: string;
-  headerWidth?: string;
+  headerHeight?: number;
+  headerWidth?: number;
   editingOnEnter?: boolean;
   cellLabel?: boolean;
   cells?: CellsOptionType;
@@ -77,8 +77,8 @@ export type InsideState = {
 };
 
 export type OutsideState = {
-  headerHeight: string;
-  headerWidth: string;
+  headerHeight: number;
+  headerWidth: number;
   editingOnEnter: boolean;
   cellLabel: boolean;
   contextMenuPosition: [number, number];

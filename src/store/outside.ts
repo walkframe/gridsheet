@@ -2,8 +2,8 @@ import { createSlice, PayloadAction, Draft } from "@reduxjs/toolkit";
 import { Feedback, Headers, Renderers, Parsers, OutsideState } from "../types";
 
 export const initialState: OutsideState = {
-  headerHeight: "20px",
-  headerWidth: "50px",
+  headerHeight: 20,
+  headerWidth: 50,
   editingOnEnter: true,
   cellLabel: true,
   contextMenuPosition: [-1, -1],
@@ -17,13 +17,13 @@ const slice = createSlice({
   reducers: {
     setHeaderHeight: (
       state: Draft<OutsideState>,
-      action: PayloadAction<string>
+      action: PayloadAction<number>
     ) => {
       return { ...state, headerHeight: action.payload };
     },
     setHeaderWidth: (
       state: Draft<OutsideState>,
-      action: PayloadAction<string>
+      action: PayloadAction<number>
     ) => {
       return { ...state, headerWidth: action.payload };
     },

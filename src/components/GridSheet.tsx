@@ -37,7 +37,6 @@ export const GridSheet: React.FC<Props> = ({ data, options }) => {
     options = {};
   }
 
-  const clipboardRef = React.createRef<HTMLTextAreaElement>();
   const editorRef = React.createRef<HTMLTextAreaElement>();
   const gridRef = React.createRef<Grid>();
   const gridOuterRef = React.createRef<HTMLDivElement>();
@@ -55,11 +54,10 @@ export const GridSheet: React.FC<Props> = ({ data, options }) => {
   return (
     <GridSheetLayout className={`react-grid-sheet ${mode || "light"}`}>
       <Context.Provider value={initialState}>
-        <textarea className="clipboard" ref={clipboardRef} />
         <Provider store={store}>
-          <GridTableWrapper clipboardRef={clipboardRef} />
+          <GridTableWrapper />
           <StoreInitializer data={data} options={options} />
-          <ContextMenu clipboardRef={clipboardRef} />
+          <ContextMenu />
           {onChange && <ChangeEmitter onChange={onChange} />}
         </Provider>
       </Context.Provider>
