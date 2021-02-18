@@ -109,12 +109,6 @@ export const Editor: React.FC = () => {
   return (
     <EditorLayout
       style={editing ? { top, left, height, width, zIndex: 2 } : {}}
-      draggable
-      onDragStart={(e) => {
-        e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
-        dispatch(choose([y, x]));
-        dispatch(select([y, x, y, x]));
-      }}
     >
       {editing && <div className="label">{cellId}</div>}
       <textarea

@@ -188,6 +188,10 @@ export const Cell: React.FC<Props> = React.memo(
           e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
           dispatch(choose([y, x]));
           dispatch(select([y, x, y, x]));
+          const rect = e.currentTarget.getBoundingClientRect();
+          dispatch(
+            setEditorRect([rect.top, rect.left, rect.height, rect.width])
+          );
         }}
         onDragEnd={(e) => {
           const [h, w] = zoneShape(selectingZone);

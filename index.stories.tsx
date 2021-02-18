@@ -187,8 +187,8 @@ export const showIndex = () => (
       data={data}
       options={{
         // cellLabel: false,
-        // headerWidth: "50px",
-        headerHeight: "40px",
+        // headerWidth: 50,
+        headerHeight: 40,
         historySize: 100,
         mode: "dark",
         //stickyHeaders: "horizontal",
