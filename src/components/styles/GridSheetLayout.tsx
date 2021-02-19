@@ -20,6 +20,13 @@ export const GridSheetLayout = styled.div`
     .cell {
       border-top: solid 1px #bbbbbb;
       border-left: solid 1px #bbbbbb;
+
+      &.lower-end {
+        border-bottom: solid 1px #bbbbbb;
+      }
+      &.right-end {
+        border-right: solid 1px #bbbbbb;
+      }
     }
     .header {
       background-color: #eeeeee;
@@ -34,6 +41,9 @@ export const GridSheetLayout = styled.div`
         background-color: #555555;
         color: #ffffff;
       }
+      border-color: #bbbbbb;
+      border-style: solid;
+      border-width: 0;
     }
   }
 
@@ -50,6 +60,13 @@ export const GridSheetLayout = styled.div`
     .cell {
       border-top: solid 1px #666666;
       border-left: solid 1px #666666;
+
+      &.lower-end {
+        border-bottom: solid 1px #666666;
+      }
+      &.right-end {
+        border-right: solid 1px #666666;
+      }
     }
     .header {
       background-color: #666666;
@@ -64,6 +81,9 @@ export const GridSheetLayout = styled.div`
         background-color: #bbbbbb;
         color: #444444;
       }
+      border-color: #888888;
+      border-style: solid;
+      border-width: 0;
     }
   }
   .clipboard {

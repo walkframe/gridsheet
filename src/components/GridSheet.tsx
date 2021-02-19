@@ -7,7 +7,7 @@ import {
 
 import { MatrixType, OptionsType, StoreType, ActionType } from "../types";
 
-import { store } from "../store";
+import { createStore } from "../store";
 
 import { GridTableWrapper } from "./GridTableWrapper";
 
@@ -54,7 +54,7 @@ export const GridSheet: React.FC<Props> = ({ data, options }) => {
   return (
     <GridSheetLayout className={`react-grid-sheet ${mode || "light"}`}>
       <Context.Provider value={initialState}>
-        <Provider store={store}>
+        <Provider store={createStore()}>
           <GridTableWrapper />
           <StoreInitializer data={data} options={options} />
           <ContextMenu />

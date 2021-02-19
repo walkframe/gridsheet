@@ -101,7 +101,7 @@ export const Cell: React.FC<Props> = React.memo(
       return <div />;
     }
     const value = matrix[y][x];
-    const [numRows, numCols] = [matrix.length, matrix[0].length];
+    const [numRows, numCols] = [matrix.length, matrix[0].length || 0];
     const defaultOption: CellOptionType = cellsOption.default || {};
     const rowOption: CellOptionType = cellsOption[rowId] || {};
     const colOption: CellOptionType = cellsOption[colId] || {};
@@ -147,7 +147,9 @@ export const Cell: React.FC<Props> = React.memo(
     return (
       <div
         key={x}
-        className={`cell ${among(copyingArea, [y, x]) ? "copying" : ""}`}
+        className={`cell ${among(copyingArea, [y, x]) ? "copying" : ""} ${
+          y === numRows - 1 ? "lower-end" : ""
+        } ${x === numCols - 1 ? "right-end" : ""}`}
         style={{
           ...outerStyle,
           ...style,
