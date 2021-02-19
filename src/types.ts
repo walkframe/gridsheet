@@ -74,17 +74,20 @@ export type InsideState = {
   resizingRect: RectType;
   sheetHeight: number;
   sheetWidth: number;
+  headerHeight: number;
+  headerWidth: number;
   entering: boolean;
+  searchQuery?: string;
+  matchingCells: string[];
+  matchingCellIndex: number;
+  renderers: Renderers;
+  parsers: Parsers;
 };
 
 export type OutsideState = {
-  headerHeight: number;
-  headerWidth: number;
   editingOnEnter: boolean;
   cellLabel: boolean;
   contextMenuPosition: [number, number];
-  renderers: Renderers;
-  parsers: Parsers;
   onSave?: Feedback;
 };
 
@@ -128,6 +131,7 @@ export type StoreType = {
   editorRef: React.RefObject<HTMLTextAreaElement>;
   gridRef: React.RefObject<Grid>;
   gridOuterRef: React.RefObject<HTMLDivElement>;
+  searchInputRef: React.RefObject<HTMLInputElement>;
   verticalHeadersRef: React.RefObject<List>;
   horizontalHeadersRef: React.RefObject<List>;
 };

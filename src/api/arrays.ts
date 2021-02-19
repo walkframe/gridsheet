@@ -172,6 +172,15 @@ export const aa2oa = (
   return oa;
 };
 
+export const cellToIndexes = (cellId: string): [Y, X] | undefined => {
+  const m = cellId.match(/([A-Z]*)([0-9]*)/);
+  if (m == null) {
+    return undefined;
+  }
+  const [_, a, n] = m.slice();
+  return [parseInt(n, 10) - 1, a2n(a)];
+};
+
 export const slideFlattened = (
   base: FlattenedType,
   height: number | null,

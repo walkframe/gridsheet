@@ -10,8 +10,11 @@ import {
   ZoneType,
   InsideState,
   RectType,
+  Renderers,
+  Parsers,
 } from "../types";
 
+import { Renderer as DefaultRenderer } from "../renderers/core";
 import * as histories from "../api/histories";
 
 import {
@@ -26,6 +29,7 @@ import {
   slideFlattened,
   applyFlattened,
   inverseFlattened,
+  matrixShape,
 } from "../api/arrays";
 import { tsv2matrix, n2a } from "../api/converters";
 import { ParserType } from "../parsers/core";
@@ -47,12 +51,76 @@ export const initialState: InsideState = {
   resizingRect: [-1, -1, -1, -1],
   sheetHeight: 0,
   sheetWidth: 0,
+  headerHeight: 0,
+  headerWidth: 0,
   entering: false,
+  matchingCells: [],
+  matchingCellIndex: 0,
+  renderers: {},
+  parsers: {},
 };
 
 const reducers = {
+  setSearchQuery: (
+    state: Draft<InsideState>,
+    action: PayloadAction<string | undefined>
+  ) => {
+    const searchQuery = action.payload;
+    const matchingCells: string[] = [];
+    if (!searchQuery) {
+      return { ...state, searchQuery, matchingCells, matchingCellIndex: 0 };
+    }
+    const [numRows, numCols] = matrixShape(state.matrix);
+    const defaultRendererKey = state.cellsOption.default?.renderer;
+    for (let x = 0; x < numCols; x++) {
+      const colId = n2a(x + 1);
+      const colRendererKey = state.cellsOption[colId]?.renderer;
+      for (let y = 0; y < numRows; y++) {
+        const rowId = y + 1;
+        const rowRendererKey = state.cellsOption[rowId]?.renderer;
+
+        const cellId = `${colId}${rowId}`;
+        const cellRendererKey = state.cellsOption[cellId]?.renderer;
+        const rendererKey =
+          cellRendererKey ||
+          colRendererKey ||
+          rowRendererKey ||
+          defaultRendererKey;
+        const renderer =
+          state.renderers[rendererKey || ""] || new DefaultRenderer();
+        if (
+          renderer.stringify(state.matrix[y][x]).indexOf(searchQuery) !== -1
+        ) {
+          matchingCells.push(cellId);
+        }
+      }
+    }
+    return { ...state, searchQuery, matchingCells, matchingCellIndex: 0 };
+  },
+  search: (state: Draft<InsideState>, action: PayloadAction<number>) => {
+    let { matchingCells, matchingCellIndex } = state;
+    matchingCellIndex += action.payload;
+    if (matchingCellIndex >= matchingCells.length) {
+      matchingCellIndex = 0;
+    } else if (matchingCellIndex < 0) {
+      matchingCellIndex = matchingCells.length - 1;
+    }
+    return { ...state, matchingCells, matchingCellIndex };
+  },
   setEntering: (state: Draft<InsideState>, action: PayloadAction<boolean>) => {
     return { ...state, entering: action.payload };
+  },
+  setHeaderHeight: (
+    state: Draft<InsideState>,
+    action: PayloadAction<number>
+  ) => {
+    return { ...state, headerHeight: action.payload };
+  },
+  setHeaderWidth: (
+    state: Draft<InsideState>,
+    action: PayloadAction<number>
+  ) => {
+    return { ...state, headerWidth: action.payload };
   },
   setSheetHeight: (
     state: Draft<InsideState>,
@@ -145,6 +213,7 @@ const reducers = {
       ...state,
       choosing: action.payload,
       lastChoosing: state.choosing,
+      entering: true,
     };
   },
   reChoose: (state: Draft<InsideState>) => {
@@ -250,10 +319,7 @@ const reducers = {
       verticalHeadersSelecting: false,
     };
   },
-  drag: (
-    state: Draft<InsideState>,
-    action: PayloadAction<PositionType>
-  ): InsideState => {
+  drag: (state: Draft<InsideState>, action: PayloadAction<PositionType>) => {
     const [y, x] = state.choosing;
     const selectingZone = [
       y,
@@ -495,10 +561,7 @@ const reducers = {
       editorRect: [editorTop, editorLeft, height, width] as RectType,
     };
   },
-  write: (
-    state: Draft<InsideState>,
-    action: PayloadAction<any>
-  ): InsideState => {
+  write: (state: Draft<InsideState>, action: PayloadAction<any>) => {
     const [y, x] = state.choosing;
     const value = action.payload;
     const matrix = writeMatrix(y, x, [[value]], state.matrix);
@@ -514,10 +577,10 @@ const reducers = {
       ...state,
       matrix,
       history,
-      copyingZone: [-1, -1, -1, -1],
+      copyingZone: [-1, -1, -1, -1] as ZoneType,
     };
   },
-  clear: (state: Draft<InsideState>): InsideState => {
+  clear: (state: Draft<InsideState>) => {
     const { choosing, selectingZone, matrix } = state;
 
     let selectingArea = zoneToArea(selectingZone);
@@ -680,6 +743,15 @@ const reducers = {
       history,
     };
   },
+  setRenderers: (
+    state: Draft<InsideState>,
+    action: PayloadAction<Renderers>
+  ) => {
+    return { ...state, renderers: action.payload };
+  },
+  setParsers: (state: Draft<InsideState>, action: PayloadAction<Parsers>) => {
+    return { ...state, parsers: action.payload };
+  },
 };
 
 const slice = createSlice({
@@ -692,6 +764,8 @@ export default slice.reducer;
 export const {
   setMatrix,
   setEditorRect,
+  setHeaderHeight,
+  setHeaderWidth,
   setSheetHeight,
   setSheetWidth,
   setResizingRect,
@@ -721,4 +795,8 @@ export const {
   addCols,
   removeCols,
   setEntering,
+  setSearchQuery,
+  setRenderers,
+  setParsers,
+  search,
 } = slice.actions;

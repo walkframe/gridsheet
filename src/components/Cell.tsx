@@ -1,8 +1,8 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { n2a } from "../api/converters";
+import { n2a, a2n } from "../api/converters";
 import { clip } from "../api/clipboard";
-import { zoneToArea, among, zoneShape } from "../api/arrays";
+import { zoneToArea, among, zoneShape, cellToIndexes } from "../api/arrays";
 import { RootState } from "../store";
 import {
   blur,
@@ -22,6 +22,7 @@ import {
   cut,
   paste,
   setEditorRect,
+  setEntering,
 } from "../store/inside";
 
 import { setContextMenuPosition } from "../store/outside";
@@ -47,20 +48,10 @@ export const Cell: React.FC<Props> = React.memo(
     const cellId = `${colId}${rowId}`;
     const dispatch = useDispatch();
 
-    if (y === 0) {
-      outerStyle.borderTop = "none";
-    }
-    if (x === 0) {
-      outerStyle.borderLeft = "none";
-    }
-
-    const {
-      cellLabel,
-      editingOnEnter,
-      renderers,
-      parsers,
-      onSave,
-    } = useSelector<RootState, OutsideState>(
+    const { cellLabel, editingOnEnter, onSave } = useSelector<
+      RootState,
+      OutsideState
+    >(
       (state) => state["outside"],
       () => {
         return true;
@@ -69,6 +60,8 @@ export const Cell: React.FC<Props> = React.memo(
 
     const {
       matrix,
+      renderers,
+      parsers,
       cellsOption,
       editingCell,
       choosing,
@@ -77,6 +70,9 @@ export const Cell: React.FC<Props> = React.memo(
       verticalHeadersSelecting,
       copyingZone,
       cutting,
+      searchQuery,
+      matchingCells,
+      matchingCellIndex,
     } = useSelector<RootState, InsideState>(
       (state) => state["inside"]
       /*
@@ -88,9 +84,11 @@ export const Cell: React.FC<Props> = React.memo(
       }*/
     );
 
-    const { editorRef } = React.useContext(Context);
+    const { editorRef, gridRef } = React.useContext(Context);
 
     const [before, setBefore] = React.useState("");
+
+    const matchingCell = matchingCells[matchingCellIndex];
 
     const selectingArea = zoneToArea(selectingZone); // (top, left) -> (bottom, right)
     const copyingArea = zoneToArea(copyingZone); // (top, left) -> (bottom, right)
@@ -144,12 +142,17 @@ export const Cell: React.FC<Props> = React.memo(
       setBefore("");
     };
 
+    let matching = false;
+    if (searchQuery && renderer.stringify(value).indexOf(searchQuery) !== -1) {
+      matching = true;
+    }
+
     return (
       <div
         key={x}
         className={`cell ${among(copyingArea, [y, x]) ? "copying" : ""} ${
-          y === numRows - 1 ? "lower-end" : ""
-        } ${x === numCols - 1 ? "right-end" : ""}`}
+          y === 0 ? "top-end" : y === numRows - 1 ? "lower-end" : ""
+        } ${x === 0 ? "left-end" : x === numCols - 1 ? "right-end" : ""}`}
         style={{
           ...outerStyle,
           ...style,
@@ -172,11 +175,11 @@ export const Cell: React.FC<Props> = React.memo(
             dispatch(choose([y, x]));
             dispatch(select([-1, -1, -1, -1]));
           }
-          const { y: top, x: left } = e.currentTarget.getBoundingClientRect();
           const rect = e.currentTarget.getBoundingClientRect();
           dispatch(
             setEditorRect([rect.top, rect.left, rect.height, rect.width])
           );
+          editorRef.current?.focus();
         }}
         onDoubleClick={(e) => {
           e.preventDefault();
@@ -194,6 +197,7 @@ export const Cell: React.FC<Props> = React.memo(
           dispatch(
             setEditorRect([rect.top, rect.left, rect.height, rect.width])
           );
+          editorRef.current?.focus();
         }}
         onDragEnd={(e) => {
           const [h, w] = zoneShape(selectingZone);
@@ -217,7 +221,9 @@ export const Cell: React.FC<Props> = React.memo(
         <div
           className={`cell-wrapper-outer ${
             among(selectingArea, [y, x]) ? "selected" : ""
-          } ${pointed ? "pointed" : ""} ${editing ? "editing" : ""}`}
+          } ${pointed ? "pointed" : ""} ${editing ? "editing" : ""} ${
+            matching ? "gs-matching" : ""
+          } ${matchingCell === cellId ? "gs-searching" : ""}`}
         >
           <div
             className={`cell-wrapper-inner`}

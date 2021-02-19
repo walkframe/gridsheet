@@ -37,12 +37,14 @@ export const GridSheet: React.FC<Props> = ({ data, options }) => {
     options = {};
   }
 
+  const searchInputRef = React.createRef<HTMLInputElement>();
   const editorRef = React.createRef<HTMLTextAreaElement>();
   const gridRef = React.createRef<Grid>();
   const gridOuterRef = React.createRef<HTMLDivElement>();
   const verticalHeadersRef = React.createRef<List>();
   const horizontalHeadersRef = React.createRef<List>();
   const initialState: StoreType = {
+    searchInputRef,
     editorRef,
     gridRef,
     gridOuterRef,
@@ -58,7 +60,7 @@ export const GridSheet: React.FC<Props> = ({ data, options }) => {
           <GridTableWrapper />
           <StoreInitializer data={data} options={options} />
           <ContextMenu />
-          {onChange && <ChangeEmitter onChange={onChange} />}
+          <ChangeEmitter onChange={onChange} />
         </Provider>
       </Context.Provider>
     </GridSheetLayout>

@@ -8,9 +8,15 @@ import {
   drag,
   selectCols,
   setResizingRect,
+  setEditorRect,
 } from "../store/inside";
 import { InsideState, OutsideState } from "../types";
-import { DUMMY_IMG, DEFAULT_WIDTH, MIN_WIDTH } from "../constants";
+import {
+  DUMMY_IMG,
+  DEFAULT_WIDTH,
+  DEFAULT_HEIGHT,
+  MIN_WIDTH,
+} from "../constants";
 import { setContextMenuPosition } from "../store/outside";
 import { Context } from "./GridSheet";
 
@@ -24,9 +30,6 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
     const dispatch = useDispatch();
     const colId = n2a(x + 1);
 
-    const { headerHeight } = useSelector<RootState, OutsideState>(
-      (state) => state["outside"]
-    );
     const {
       matrix,
       choosing,
@@ -35,7 +38,10 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
       resizingRect,
       horizontalHeadersSelecting,
       sheetHeight,
+      headerHeight,
     } = useSelector<RootState, InsideState>((state) => state["inside"]);
+
+    const { gridOuterRef } = React.useContext(Context);
 
     const defaultWidth = cellsOption.default?.width || DEFAULT_WIDTH;
     const colOption = cellsOption[colId] || {};
@@ -67,11 +73,29 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
           }
           dispatch(selectCols({ range: [startX, x], numRows }));
           dispatch(setContextMenuPosition([-1, -1]));
+          const rect = e.currentTarget.getBoundingClientRect();
+          dispatch(
+            setEditorRect([
+              rect.top + rect.height,
+              rect.left,
+              cellsOption[1]?.height || DEFAULT_HEIGHT,
+              rect.width,
+            ])
+          );
           return false;
         }}
         onDragStart={(e) => {
           e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
           dispatch(selectCols({ range: [x, x], numRows }));
+          const rect = e.currentTarget.getBoundingClientRect();
+          dispatch(
+            setEditorRect([
+              rect.top + rect.height,
+              rect.left,
+              cellsOption[1]?.height || DEFAULT_HEIGHT,
+              rect.width,
+            ])
+          );
           return false;
         }}
         onDragEnter={() => {

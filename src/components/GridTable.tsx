@@ -10,6 +10,7 @@ import { Editor } from "./Editor";
 import { Cell } from "./Cell";
 import { HorizontalHeaderCell } from "./HorizontalHeaderCell";
 import { VerticalHeaderCell } from "./VerticalHeaderCell";
+import { SearchBox } from "./SearchBox";
 
 import { n2a } from "../api/converters";
 
@@ -29,14 +30,13 @@ type Props = {
 export const GridTable: React.FC<Props> = ({ numRows, numCols }) => {
   const dispatch = useDispatch();
 
-  const { cellsOption, sheetHeight, sheetWidth } = useSelector<
-    RootState,
-    InsideState
-  >((state) => state["inside"]);
-
-  const { headerHeight, headerWidth } = useSelector<RootState, OutsideState>(
-    (state) => state["outside"]
-  );
+  const {
+    cellsOption,
+    sheetHeight,
+    sheetWidth,
+    headerHeight,
+    headerWidth,
+  } = useSelector<RootState, InsideState>((state) => state["inside"]);
 
   const {
     gridRef,
@@ -53,17 +53,19 @@ export const GridTable: React.FC<Props> = ({ numRows, numCols }) => {
   const sheetInnerWidth = sheetWidth - headerWidth;
 
   return (
-    <GridTableLayout
-      onMouseEnter={(e) => {
-        editorRef.current?.focus();
-        dispatch(setEntering(true));
-      }}
-      onMouseLeave={(e) => {
-        editorRef.current?.blur();
-        dispatch(setEntering(false));
-      }}
-    >
-      <div className="gs-table">
+    <GridTableLayout>
+      <Editor />
+      <SearchBox />
+      <div
+        className="gs-table"
+        onMouseEnter={() => {
+          editorRef.current?.focus();
+          dispatch(setEntering(true));
+        }}
+        onMouseLeave={() => {
+          dispatch(setEntering(false));
+        }}
+      >
         <div className="gs-row">
           <div
             className="gs-col"
@@ -85,7 +87,9 @@ export const GridTable: React.FC<Props> = ({ numRows, numCols }) => {
               layout="horizontal"
               width={gridOuterRef.current?.clientWidth || sheetInnerWidth}
               height={headerHeight}
-              style={{ overflow: "hidden" }}
+              style={{
+                overflow: "hidden",
+              }}
             >
               {HorizontalHeaderCell}
             </List>
@@ -108,10 +112,9 @@ export const GridTable: React.FC<Props> = ({ numRows, numCols }) => {
           </div>
           <div className="gs-col">
             <div className="cells-wrapper">
-              <Editor />
               <Grid
                 ref={gridRef}
-                style={{ marginTop: -1 }}
+                style={{ marginTop: -1, marginLeft: -1 }}
                 outerRef={gridOuterRef}
                 columnCount={numCols || 0}
                 rowCount={numRows || 0}

@@ -2,23 +2,22 @@ import styled from "styled-components";
 
 export const EditorLayout = styled.div`
   position: fixed;
+  z-index: -1;
   .label {
     font-family: mono, serif;
     position: absolute;
     top: 0;
     right: 0;
-    margin-top: -18px;
+    margin-top: -21px;
     margin-right: -2px;
     padding: 3px 5px;
     font-size: 10px;
     background-color: #0077ff;
     color: #ffffff;
-    z-index: 2;
   }
   textarea {
     width: 100%;
     position: absolute;
-    z-index: -1;
     font-size: 13px;
     line-height: 20px;
     letter-spacing: 1px;
@@ -34,8 +33,11 @@ export const EditorLayout = styled.div`
     overflow: hidden;
     caret-color: transparent;
     cursor: default;
-    &.editing {
-      z-index: 2;
+  }
+  &.editing {
+    z-index: 2;
+
+    textarea {
       cursor: text;
       min-width: 100%;
       white-space: pre;

@@ -10,17 +10,25 @@ export const GridSheetLayout = styled.div`
     border: solid 1px #aaaaaa;
     background-color: #f7f7f7;
     color: #000000;
-    textarea {
+    .gs-editor {
       &.editing {
-        background-color: #f5f5f5;
-        color: #111111;
-        caret-color: #000000;
+        textarea {
+          background-color: #f5f5f5;
+          color: #111111;
+          caret-color: #000000;
+        }
       }
     }
     .cell {
       border-top: solid 1px #bbbbbb;
       border-left: solid 1px #bbbbbb;
 
+      &.top-end {
+        border-top: none;
+      }
+      &.left-end {
+        border-left: none;
+      }
       &.lower-end {
         border-bottom: solid 1px #bbbbbb;
       }
@@ -50,17 +58,26 @@ export const GridSheetLayout = styled.div`
   &.dark {
     background-color: #4a4a4a;
     color: #eeeeee;
-    textarea {
+
+    .gs-editor {
       &.editing {
-        background-color: #4f4f4f;
-        color: #dddddd;
-        caret-color: #dddddd;
+        textarea {
+          background-color: #4f4f4f;
+          color: #dddddd;
+          caret-color: #dddddd;
+        }
       }
     }
     .cell {
       border-top: solid 1px #666666;
       border-left: solid 1px #666666;
 
+      &.top-end {
+        border-top: none;
+      }
+      &.left-end {
+        border-left: none;
+      }
       &.lower-end {
         border-bottom: solid 1px #666666;
       }

@@ -9,17 +9,13 @@ import {
   initHistory,
   setSheetHeight,
   setSheetWidth,
-} from "../store/inside";
-
-import {
   setHeaderHeight,
   setHeaderWidth,
-  setEditingOnEnter,
-  setCellLabel,
   setRenderers,
   setParsers,
-  setOnSave,
-} from "../store/outside";
+} from "../store/inside";
+
+import { setEditingOnEnter, setCellLabel, setOnSave } from "../store/outside";
 
 import { SHEET_HEIGHT, SHEET_WIDTH } from "../constants";
 
@@ -54,16 +50,6 @@ export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
     }
   }, [cells]);
   React.useEffect(() => {
-    if (typeof headerHeight !== "undefined") {
-      dispatch(setHeaderHeight(headerHeight));
-    }
-  }, [headerHeight]);
-  React.useEffect(() => {
-    if (typeof headerWidth !== "undefined") {
-      dispatch(setHeaderWidth(headerWidth));
-    }
-  }, [headerWidth]);
-  React.useEffect(() => {
     if (typeof sheetHeight !== "undefined") {
       dispatch(setSheetHeight(sheetHeight));
     }
@@ -73,6 +59,16 @@ export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
       dispatch(setSheetWidth(sheetWidth));
     }
   }, [sheetWidth]);
+  React.useEffect(() => {
+    if (typeof headerHeight !== "undefined") {
+      dispatch(setHeaderHeight(headerHeight));
+    }
+  }, [headerHeight]);
+  React.useEffect(() => {
+    if (typeof headerWidth !== "undefined") {
+      dispatch(setHeaderWidth(headerWidth));
+    }
+  }, [headerWidth]);
   React.useEffect(() => {
     if (typeof editingOnEnter !== "undefined") {
       dispatch(setEditingOnEnter(editingOnEnter));

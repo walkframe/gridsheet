@@ -9,7 +9,7 @@ import { matrix2tsv } from "../api/converters";
 import { matrixShape, rerenderCells } from "../api/arrays";
 
 type Props = {
-  onChange: Feedback;
+  onChange?: Feedback;
 };
 
 export const ChangeEmitter: React.FC<Props> = ({ onChange }) => {
@@ -17,10 +17,7 @@ export const ChangeEmitter: React.FC<Props> = ({ onChange }) => {
   useSelector<RootState, InsideState>(
     (state) => state["inside"],
     (current, old) => {
-      if (old.matrix.length === 0) {
-        return false;
-      }
-      if (matrix2tsv(current.matrix) !== matrix2tsv(old.matrix)) {
+      if (onChange && matrix2tsv(current.matrix) !== matrix2tsv(old.matrix)) {
         onChange(current.matrix, undefined);
       }
       const [currentHeight, currentWidth] = matrixShape(current.matrix);
@@ -46,14 +43,13 @@ export const ChangeEmitter: React.FC<Props> = ({ onChange }) => {
       if (
         JSON.stringify(current.cellsOption) !== JSON.stringify(old.cellsOption)
       ) {
-        onChange(undefined, current.cellsOption);
+        onChange && onChange(undefined, current.cellsOption);
         const [height, width] = matrixShape(current.matrix);
         rerenderCells({
           ...refs,
           rows: [0, height],
           cols: [0, width],
         });
-
         return false;
       }
       return true;

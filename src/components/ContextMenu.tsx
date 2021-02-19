@@ -31,10 +31,9 @@ import { Context } from "./GridSheet";
 export const ContextMenu: React.FC = () => {
   const dispatch = useDispatch();
 
-  const { renderers, parsers, contextMenuPosition } = useSelector<
-    RootState,
-    OutsideState
-  >((state) => state["outside"]);
+  const { contextMenuPosition } = useSelector<RootState, OutsideState>(
+    (state) => state["outside"]
+  );
 
   const {
     matrix,
@@ -44,6 +43,8 @@ export const ContextMenu: React.FC = () => {
     horizontalHeadersSelecting,
     verticalHeadersSelecting,
     history,
+    renderers,
+    parsers,
   } = useSelector<RootState, InsideState>((state) => state["inside"]);
   const { editorRef } = React.useContext(Context);
 

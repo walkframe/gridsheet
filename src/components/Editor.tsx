@@ -21,11 +21,10 @@ import {
   copy,
   cut,
   paste,
+  setSearchQuery,
+  setEntering,
 } from "../store/inside";
 
-import { setContextMenuPosition } from "../store/outside";
-
-import { DUMMY_IMG } from "../constants";
 import { AreaType, CellOptionType, InsideState, OutsideState } from "../types";
 import { Renderer as DefaultRenderer } from "../renderers/core";
 import { Parser as DefaultParser } from "../parsers/core";
@@ -39,7 +38,7 @@ type Props = {
 
 export const Editor: React.FC = () => {
   const dispatch = useDispatch();
-  const { cellLabel, editingOnEnter, renderers, parsers, onSave } = useSelector<
+  const { cellLabel, editingOnEnter, onSave } = useSelector<
     RootState,
     OutsideState
   >((state) => state["outside"]);
@@ -56,9 +55,12 @@ export const Editor: React.FC = () => {
     copyingZone,
     cutting,
     entering,
+    renderers,
+    parsers,
+    searchQuery,
   } = useSelector<RootState, InsideState>((state) => state["inside"]);
 
-  const { editorRef } = React.useContext(Context);
+  const { editorRef, searchInputRef } = React.useContext(Context);
 
   const [y, x] = choosing;
 
@@ -94,9 +96,6 @@ export const Editor: React.FC = () => {
 
   const renderer = renderers[rendererKey || ""] || new DefaultRenderer();
   const parser = parsers[parserKey || ""] || new DefaultParser();
-  //const height = rowOption.height || defaultHeight;
-  //const width = colOption.width || defaultWidth;
-
   const [top, left, height, width] = editorRect;
 
   const writeCell = (value: string) => {
@@ -109,7 +108,8 @@ export const Editor: React.FC = () => {
 
   return (
     <EditorLayout
-      style={editing ? { top, left, height, width, zIndex: 2 } : {}}
+      className={`gs-editor ${editing ? "editing" : ""}`}
+      style={editing ? { top, left, height, width } : {}}
     >
       {editing && <div className="label">{cellId}</div>}
       <textarea
@@ -208,6 +208,7 @@ export const Editor: React.FC = () => {
               return false;
             case "Escape": // ESCAPE
               dispatch(escape());
+              dispatch(setSearchQuery(undefined));
               input.value = "";
               // input.blur();
               return false;
@@ -285,6 +286,19 @@ export const Editor: React.FC = () => {
                   dispatch(copy(area));
                   input.focus(); // refocus
 
+                  return false;
+                }
+              }
+
+            case "f": // F
+              if (e.ctrlKey || e.metaKey) {
+                if (!editing) {
+                  if (typeof searchQuery === "undefined") {
+                    dispatch(setSearchQuery(""));
+                  }
+                  dispatch(setEntering(false));
+                  setTimeout(() => searchInputRef.current?.focus(), 100);
+                  e.preventDefault();
                   return false;
                 }
               }

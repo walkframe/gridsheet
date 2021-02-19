@@ -137,9 +137,61 @@ export const GridTableLayout = styled.div`
           display: block;
         }
       }
+      &.gs-matching {
+        background-color: rgba(0, 255, 128, 0.2);
+      }
+      &.gs-searching {
+        border: solid 2px #00ff77;
+      }
     }
     .cell-wrapper-inner {
       display: table-cell;
+    }
+  }
+  .gs-search {
+    width: 300px;
+    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px,
+      rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+    display: flex;
+    background-color: #fdfdfd;
+    border: solid 2px #eeeeee;
+    border-radius: 5px;
+    padding: 10px;
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 5;
+
+    .gs-searchbox {
+      display: flex;
+      position: relative;
+      border: solid 2px #0077ff;
+      border-radius: 5px;
+      flex: 1;
+      input[type="text"] {
+        padding: 5px;
+        background-color: transparent;
+        border: none;
+        outline: 0;
+        z-index: 1;
+        flex: 1;
+      }
+      .gs-search-progress {
+        padding: 6px 3px;
+        font-size: 13px;
+        text-align: right;
+      }
+    }
+
+    button {
+      padding: 2px;
+    }
+    .gs-search-close {
+      margin: 6px 5px;
+      cursor: pointer;
+      color: #dddddd;
+      width: 50px;
+      text-align: center;
     }
   }
 `;
