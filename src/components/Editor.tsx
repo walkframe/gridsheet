@@ -55,6 +55,7 @@ export const Editor: React.FC = () => {
     verticalHeadersSelecting,
     copyingZone,
     cutting,
+    entering,
   } = useSelector<RootState, InsideState>((state) => state["inside"]);
 
   const { editorRef } = React.useContext(Context);
@@ -137,7 +138,7 @@ export const Editor: React.FC = () => {
           }
           e.target.value = "";
           dispatch(blur());
-          setTimeout(() => e.target.focus(), 100);
+          setTimeout(() => entering && e.target.focus(), 100);
         }}
         onKeyDown={(e) => {
           const input = e.currentTarget;

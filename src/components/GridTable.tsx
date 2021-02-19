@@ -13,7 +13,7 @@ import { VerticalHeaderCell } from "./VerticalHeaderCell";
 
 import { n2a } from "../api/converters";
 
-import { choose, select } from "../store/inside";
+import { choose, select, setEntering } from "../store/inside";
 
 import { GridTableLayout } from "./styles/GridTableLayout";
 import { RootState } from "../store";
@@ -43,6 +43,7 @@ export const GridTable: React.FC<Props> = ({ numRows, numCols }) => {
     gridOuterRef,
     verticalHeadersRef,
     horizontalHeadersRef,
+    editorRef,
   } = React.useContext(Context);
 
   const defaultHeight = cellsOption.default?.height || DEFAULT_HEIGHT;
@@ -52,7 +53,16 @@ export const GridTable: React.FC<Props> = ({ numRows, numCols }) => {
   const sheetInnerWidth = sheetWidth - headerWidth;
 
   return (
-    <GridTableLayout>
+    <GridTableLayout
+      onMouseEnter={(e) => {
+        editorRef.current?.focus();
+        dispatch(setEntering(true));
+      }}
+      onMouseLeave={(e) => {
+        editorRef.current?.blur();
+        dispatch(setEntering(false));
+      }}
+    >
       <div className="gs-table">
         <div className="gs-row">
           <div

@@ -74,6 +74,7 @@ export type InsideState = {
   resizingRect: RectType;
   sheetHeight: number;
   sheetWidth: number;
+  entering: boolean;
 };
 
 export type OutsideState = {

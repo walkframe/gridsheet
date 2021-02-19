@@ -47,9 +47,13 @@ export const initialState: InsideState = {
   resizingRect: [-1, -1, -1, -1],
   sheetHeight: 0,
   sheetWidth: 0,
+  entering: false,
 };
 
 const reducers = {
+  setEntering: (state: Draft<InsideState>, action: PayloadAction<boolean>) => {
+    return { ...state, entering: action.payload };
+  },
   setSheetHeight: (
     state: Draft<InsideState>,
     action: PayloadAction<number>
@@ -716,4 +720,5 @@ export const {
   removeRows,
   addCols,
   removeCols,
+  setEntering,
 } = slice.actions;
