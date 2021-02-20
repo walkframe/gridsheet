@@ -59,7 +59,6 @@ export const GridTable: React.FC<Props> = ({ numRows, numCols }) => {
       <div
         className="gs-table"
         onMouseEnter={() => {
-          editorRef.current?.focus();
           dispatch(setEntering(true));
         }}
         onMouseLeave={() => {
