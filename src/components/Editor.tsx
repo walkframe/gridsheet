@@ -148,6 +148,8 @@ export const Editor: React.FC = () => {
               e.preventDefault();
               if (editing) {
                 writeCell(input.value);
+                dispatch(setEditingCell(""));
+                input.value = "";
               }
               dispatch(
                 walk({
