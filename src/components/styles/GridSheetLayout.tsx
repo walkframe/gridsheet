@@ -7,21 +7,37 @@ export const GridSheetLayout = styled.div`
     "Hiragino Sans", Meiryo, sans-serif;
 
   &.light {
-    background-color: #ffffff;
+    border: solid 1px #aaaaaa;
+    background-color: #f7f7f7;
     color: #000000;
-    textarea {
+    .gs-editor {
       &.editing {
-        background-color: #f5f5f5;
-        color: #111111;
-        caret-color: #000000;
+        textarea {
+          background-color: #f5f5f5;
+          color: #111111;
+          caret-color: #000000;
+        }
       }
     }
-    td {
-      border: solid 1px #bbbbbb;
+    .cell {
+      border-top: solid 1px #bbbbbb;
+      border-left: solid 1px #bbbbbb;
+
+      &.top-end {
+        border-top: none;
+      }
+      &.left-end {
+        border-left: none;
+      }
+      &.lower-end {
+        border-bottom: solid 1px #bbbbbb;
+      }
+      &.right-end {
+        border-right: solid 1px #bbbbbb;
+      }
     }
-    th {
+    .header {
       background-color: #eeeeee;
-      border: solid 1px #bbbbbb;
       color: #666666;
       &.selecting {
         background-color: #dddddd;
@@ -33,25 +49,44 @@ export const GridSheetLayout = styled.div`
         background-color: #555555;
         color: #ffffff;
       }
+      border-color: #bbbbbb;
+      border-style: solid;
+      border-width: 0;
     }
   }
 
   &.dark {
     background-color: #4a4a4a;
     color: #eeeeee;
-    textarea {
+
+    .gs-editor {
       &.editing {
-        background-color: #4f4f4f;
-        color: #dddddd;
-        caret-color: #dddddd;
+        textarea {
+          background-color: #4f4f4f;
+          color: #dddddd;
+          caret-color: #dddddd;
+        }
       }
     }
-    td {
-      border: solid 1px #666666;
+    .cell {
+      border-top: solid 1px #666666;
+      border-left: solid 1px #666666;
+
+      &.top-end {
+        border-top: none;
+      }
+      &.left-end {
+        border-left: none;
+      }
+      &.lower-end {
+        border-bottom: solid 1px #666666;
+      }
+      &.right-end {
+        border-right: solid 1px #666666;
+      }
     }
-    th {
+    .header {
       background-color: #666666;
-      border: solid 1px #999999;
       color: #eeeeee;
       &.selecting {
         background-color: #777777;
@@ -63,6 +98,9 @@ export const GridSheetLayout = styled.div`
         background-color: #bbbbbb;
         color: #444444;
       }
+      border-color: #888888;
+      border-style: solid;
+      border-width: 0;
     }
   }
   .clipboard {

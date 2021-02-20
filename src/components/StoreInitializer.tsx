@@ -3,20 +3,21 @@ import { useDispatch } from "react-redux";
 
 import { MatrixType, OptionsType } from "../types";
 
-import { setMatrix, setCellsOption, initHistory } from "../store/inside";
-
 import {
+  setMatrix,
+  setCellsOption,
+  initHistory,
+  setSheetHeight,
+  setSheetWidth,
   setHeaderHeight,
   setHeaderWidth,
-  setDefaultHeight,
-  setDefaultWidth,
-  setEditingOnEnter,
-  setCellLabel,
-  setStickyHeaders,
   setRenderers,
   setParsers,
-  setOnSave,
-} from "../store/outside";
+} from "../store/inside";
+
+import { setEditingOnEnter, setCellLabel, setOnSave } from "../store/outside";
+
+import { SHEET_HEIGHT, SHEET_WIDTH } from "../constants";
 
 type Props = {
   data: MatrixType;
@@ -27,13 +28,12 @@ export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
   const {
     historySize = 10,
     cells,
-    headerHeight,
-    headerWidth,
-    defaultHeight,
-    defaultWidth,
+    headerHeight = 20,
+    headerWidth = 50,
+    sheetHeight = SHEET_HEIGHT,
+    sheetWidth = SHEET_WIDTH,
     editingOnEnter,
     cellLabel,
-    stickyHeaders,
     renderers,
     parsers,
     onSave,
@@ -50,6 +50,16 @@ export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
     }
   }, [cells]);
   React.useEffect(() => {
+    if (typeof sheetHeight !== "undefined") {
+      dispatch(setSheetHeight(sheetHeight));
+    }
+  }, [sheetHeight]);
+  React.useEffect(() => {
+    if (typeof sheetWidth !== "undefined") {
+      dispatch(setSheetWidth(sheetWidth));
+    }
+  }, [sheetWidth]);
+  React.useEffect(() => {
     if (typeof headerHeight !== "undefined") {
       dispatch(setHeaderHeight(headerHeight));
     }
@@ -60,16 +70,6 @@ export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
     }
   }, [headerWidth]);
   React.useEffect(() => {
-    if (typeof defaultHeight !== "undefined") {
-      dispatch(setDefaultHeight(defaultHeight));
-    }
-  }, [defaultHeight]);
-  React.useEffect(() => {
-    if (typeof defaultWidth !== "undefined") {
-      dispatch(setDefaultWidth(defaultWidth));
-    }
-  }, [defaultWidth]);
-  React.useEffect(() => {
     if (typeof editingOnEnter !== "undefined") {
       dispatch(setEditingOnEnter(editingOnEnter));
     }
@@ -79,11 +79,6 @@ export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
       dispatch(setCellLabel(cellLabel));
     }
   }, [cellLabel]);
-  React.useEffect(() => {
-    if (typeof stickyHeaders !== "undefined") {
-      dispatch(setStickyHeaders(stickyHeaders));
-    }
-  }, [stickyHeaders]);
   React.useEffect(() => {
     if (typeof renderers !== "undefined") {
       dispatch(setRenderers(renderers));

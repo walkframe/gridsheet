@@ -20,33 +20,4 @@ export const CellLayout = styled.div`
       z-index: 0;
     }
   }
-
-  textarea {
-    width: 100%;
-    z-index: 1;
-    position: absolute;
-    font-size: 13px;
-    line-height: 20px;
-    letter-spacing: 1px;
-    top: 0;
-    left: 0;
-    border: none;
-    outline: none;
-    background-color: transparent;
-    resize: none;
-    box-sizing: border-box;
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    overflow: hidden;
-    caret-color: transparent;
-    cursor: default;
-    &.editing {
-      z-index: 2;
-      cursor: text;
-      min-width: 100%;
-      white-space: pre;
-      outline: solid 2px #0077ff;
-      height: auto;
-    }
-  }
 `;

@@ -13,7 +13,6 @@ import {
   slideArea,
   spreadMatrix,
   matrixShape,
-  makeReactions,
   applyFlattened,
   inverseFlattened,
 } from "../api/arrays";
@@ -54,7 +53,6 @@ export const undoCopy = (
     choosing: [top, left],
     copyingZone: src,
     cutting: false,
-    reactions: makeReactions(src, dst, state.choosing),
   };
 };
 
@@ -63,12 +61,6 @@ export const redoCopy = (
   { src, dst, after }: OperationType
 ): Draft<InsideState> => {
   const [y, x] = dst;
-  const reactions = makeReactions(
-    src,
-    dst,
-    state.choosing,
-    state.selectingZone
-  );
   const choosing = [y, x] as PositionType;
   const [h, w] = matrixShape(after);
   const selectingZone: ZoneType =
@@ -81,7 +73,6 @@ export const redoCopy = (
     selectingZone,
     copyingZone,
     choosing,
-    reactions,
   };
 };
 
@@ -108,7 +99,6 @@ export const undoCut = (
     choosing: [top, left],
     copyingZone: src,
     cutting: true,
-    reactions: makeReactions(src, dst, state.choosing),
   };
 };
 
@@ -117,12 +107,6 @@ export const redoCut = (
   { src, dst, after }: OperationType
 ): Draft<InsideState> => {
   const [y, x] = dst;
-  const reactions = makeReactions(
-    src,
-    dst,
-    state.choosing,
-    state.selectingZone
-  );
   const choosing = [y, x] as PositionType;
   const [h, w] = matrixShape(after);
   const selectingZone: ZoneType =
@@ -140,7 +124,6 @@ export const redoCut = (
     selectingZone,
     copyingZone,
     choosing,
-    reactions,
   };
 };
 
@@ -162,7 +145,6 @@ export const undoWrite = (
     selectingZone,
     choosing: [top, left],
     cutting: false,
-    reactions: makeReactions(src, dst, state.choosing),
     copyingZone: [-1, -1, -1, -1],
   };
 };
@@ -172,7 +154,6 @@ export const redoWrite = (
   { src, dst, after }: OperationType
 ): Draft<InsideState> => {
   const [y, x] = dst;
-  const reactions = makeReactions(src, dst, state.choosing);
   const choosing = [y, x] as PositionType;
   const [h, w] = matrixShape(after);
   const selectingZone: ZoneType =
@@ -185,7 +166,6 @@ export const redoWrite = (
     selectingZone,
     copyingZone,
     choosing,
-    reactions,
   };
 };
 
@@ -194,17 +174,11 @@ export const undoAddRows = (
   { dst, options }: OperationType
 ): Draft<InsideState> => {
   let matrix = [...state.matrix];
-  const [top, left, bottom] = [...dst];
+  const [top, _left, bottom] = [...dst];
   matrix.splice(top, bottom - top + 1);
   return {
     ...state,
     matrix: [...matrix],
-    reactions: makeReactions([
-      top,
-      left,
-      matrix.length,
-      matrix[0]?.length || 0,
-    ]),
     cellsOption: applyFlattened(
       state.cellsOption,
       inverseFlattened(options || {})
@@ -226,12 +200,6 @@ export const redoAddRows = (
   return {
     ...state,
     matrix: [...matrix],
-    reactions: makeReactions([
-      top,
-      left,
-      matrix.length,
-      matrix[0]?.length || 0,
-    ]),
     cellsOption: applyFlattened(state.cellsOption, options || {}),
   };
 };
@@ -241,7 +209,7 @@ export const undoAddCols = (
   { dst, options }: OperationType
 ): Draft<InsideState> => {
   let matrix = [...state.matrix];
-  const [top, left, _, right] = [...dst];
+  const [_top, left, _, right] = [...dst];
   matrix = [...state.matrix].map((cols) => {
     cols = [...cols];
     cols.splice(left, right - left + 1);
@@ -250,12 +218,6 @@ export const undoAddCols = (
   return {
     ...state,
     matrix: [...matrix],
-    reactions: makeReactions([
-      top,
-      left,
-      matrix.length,
-      matrix[0]?.length || 0,
-    ]),
     cellsOption: applyFlattened(
       state.cellsOption,
       inverseFlattened(options || {})
@@ -268,7 +230,7 @@ export const redoAddCols = (
   { dst, options }: OperationType
 ): Draft<InsideState> => {
   let matrix = [...state.matrix];
-  const [top, left, _, right] = [...dst];
+  const [_top, left, _, right] = [...dst];
   matrix = [...state.matrix].map((cols) => {
     const blanks = makeSequence(0, right - left + 1).map(() => "");
     cols = [...cols];
@@ -278,12 +240,6 @@ export const redoAddCols = (
   return {
     ...state,
     matrix: [...matrix],
-    reactions: makeReactions([
-      top,
-      left,
-      matrix.length,
-      matrix[0]?.length || 0,
-    ]),
     cellsOption: applyFlattened(state.cellsOption, options || {}),
   };
 };
@@ -298,12 +254,6 @@ export const undoRemoveRows = (
   return {
     ...state,
     matrix,
-    reactions: makeReactions([
-      top,
-      left,
-      matrix.length,
-      matrix[0]?.length || 0,
-    ]),
     cellsOption: applyFlattened(
       state.cellsOption,
       inverseFlattened(options || {})
@@ -321,12 +271,6 @@ export const redoRemoveRows = (
   return {
     ...state,
     matrix: [...matrix],
-    reactions: makeReactions([
-      top,
-      left,
-      matrix.length,
-      matrix[0]?.length || 0,
-    ]),
     cellsOption: applyFlattened(state.cellsOption, options || {}),
   };
 };
@@ -336,7 +280,7 @@ export const undoRemoveCols = (
   { src, before, options }: OperationType
 ): Draft<InsideState> => {
   let matrix = [...state.matrix];
-  const [top, left] = [...src];
+  const [_top, left] = [...src];
   matrix = [...state.matrix].map((cols, i) => {
     cols = [...cols];
     cols.splice(left, 0, ...before[i]);
@@ -345,12 +289,6 @@ export const undoRemoveCols = (
   return {
     ...state,
     matrix,
-    reactions: makeReactions([
-      top,
-      left,
-      matrix.length,
-      matrix[0]?.length || 0,
-    ]),
     cellsOption: applyFlattened(
       state.cellsOption,
       inverseFlattened(options || {})
@@ -363,7 +301,7 @@ export const redoRemoveCols = (
   { src, options }: OperationType
 ): Draft<InsideState> => {
   let matrix = [...state.matrix];
-  const [top, left, _, right] = [...src];
+  const [_top, left, _, right] = [...src];
   matrix = [...state.matrix].map((cols) => {
     cols = [...cols];
     cols.splice(left, right - left + 1);
@@ -372,12 +310,29 @@ export const redoRemoveCols = (
   return {
     ...state,
     matrix: [...matrix],
-    reactions: makeReactions([
-      top,
-      left,
-      matrix.length,
-      matrix[0]?.length || 0,
-    ]),
+    cellsOption: applyFlattened(state.cellsOption, options || {}),
+  };
+};
+
+export const undoStyling = (
+  state: Draft<InsideState>,
+  { options }: OperationType
+): Draft<InsideState> => {
+  return {
+    ...state,
+    cellsOption: applyFlattened(
+      state.cellsOption,
+      inverseFlattened(options || {})
+    ),
+  };
+};
+
+export const redoStyling = (
+  state: Draft<InsideState>,
+  { options }: OperationType
+): Draft<InsideState> => {
+  return {
+    ...state,
     cellsOption: applyFlattened(state.cellsOption, options || {}),
   };
 };

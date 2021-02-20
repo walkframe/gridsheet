@@ -26,18 +26,14 @@ import { zoneShape, zoneToArea } from "../api/arrays";
 import { CellOptionType, InsideState, OutsideState } from "../types";
 
 import { RootState } from "../store";
+import { Context } from "./GridSheet";
 
-type Props = {
-  clipboardRef: React.RefObject<HTMLTextAreaElement>;
-};
-
-export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
+export const ContextMenu: React.FC = () => {
   const dispatch = useDispatch();
 
-  const { renderers, parsers, contextMenuPosition } = useSelector<
-    RootState,
-    OutsideState
-  >((state) => state["outside"]);
+  const { contextMenuPosition } = useSelector<RootState, OutsideState>(
+    (state) => state["outside"]
+  );
 
   const {
     matrix,
@@ -47,7 +43,10 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
     horizontalHeadersSelecting,
     verticalHeadersSelecting,
     history,
+    renderers,
+    parsers,
   } = useSelector<RootState, InsideState>((state) => state["inside"]);
+  const { editorRef } = React.useContext(Context);
 
   const [y, x] = choosing;
   let [
@@ -108,7 +107,7 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
               selectingZone,
               choosing,
               matrix,
-              clipboardRef,
+              editorRef,
               renderer
             );
             dispatch(cut(area));
@@ -126,7 +125,7 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
               selectingZone,
               choosing,
               matrix,
-              clipboardRef,
+              editorRef,
               renderer
             );
             dispatch(copy(area));
@@ -140,7 +139,7 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
         </li>
         <li
           onClick={async () => {
-            const text = await navigator.clipboard.readText();
+            const text = editorRef.current?.value || "";
             dispatch(paste({ text, parser }));
             dispatch(setContextMenuPosition([-1, -1]));
           }}
@@ -201,7 +200,6 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
         {!verticalHeadersSelecting && (
           <li
             onClick={() => {
-              clip(selectingZone, choosing, matrix, clipboardRef, renderer);
               dispatch(addCols({ numCols: width + 1, x: selectingLeft }));
               dispatch(
                 select([0, selectingLeft, matrix.length, selectingLeft + width])
@@ -218,7 +216,6 @@ export const ContextMenu: React.FC<Props> = ({ clipboardRef }) => {
         {!verticalHeadersSelecting && (
           <li
             onClick={() => {
-              clip(selectingZone, choosing, matrix, clipboardRef, renderer);
               dispatch(addCols({ numCols: width + 1, x: selectingRight + 1 }));
               dispatch(
                 select([
