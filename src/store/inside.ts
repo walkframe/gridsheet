@@ -33,7 +33,14 @@ import {
 } from "../api/arrays";
 import { tsv2matrix, n2a } from "../api/converters";
 import { ParserType } from "../parsers/core";
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
+import {
+  DEFAULT_HEIGHT,
+  DEFAULT_WIDTH,
+  SHEET_HEIGHT,
+  SHEET_WIDTH,
+  HEADER_HEIGHT,
+  HEADER_WIDTH,
+} from "../constants";
 
 export const initialState: InsideState = {
   matrix: [],

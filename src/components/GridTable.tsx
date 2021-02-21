@@ -113,8 +113,8 @@ export const GridTable: React.FC<Props> = ({ numRows, numCols }) => {
             <div className="cells-wrapper">
               <Grid
                 ref={gridRef}
-                style={{ marginTop: -1, marginLeft: -1 }}
                 outerRef={gridOuterRef}
+                style={{ marginTop: -1, marginLeft: -1 }}
                 columnCount={numCols || 0}
                 rowCount={numRows || 0}
                 width={sheetWidth - headerWidth}

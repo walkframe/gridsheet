@@ -22,11 +22,6 @@ type Props = {
   options?: OptionsType;
 };
 
-type ContextType = {
-  state: StoreType;
-  dispatch: React.Dispatch<ActionType>;
-};
-
 export const Context = React.createContext({} as StoreType);
 
 export const GridSheet: React.FC<Props> = ({ data, options }) => {
@@ -37,17 +32,25 @@ export const GridSheet: React.FC<Props> = ({ data, options }) => {
     options = {};
   }
 
-  const searchInputRef = React.createRef<HTMLInputElement>();
-  const editorRef = React.createRef<HTMLTextAreaElement>();
-  const gridRef = React.createRef<Grid>();
-  const gridOuterRef = React.createRef<HTMLDivElement>();
-  const verticalHeadersRef = React.createRef<List>();
-  const horizontalHeadersRef = React.createRef<List>();
+  const [store] = React.useState(createStore());
+
+  const searchInputRef = React.useRef<HTMLInputElement>(
+    document.createElement("input")
+  );
+  const editorRef = React.useRef<HTMLTextAreaElement>(
+    document.createElement("textarea")
+  );
+  const gridOuterRef = React.useRef<HTMLDivElement>(
+    document.createElement("div")
+  );
+  const gridRef = React.useRef<Grid>(null);
+  const verticalHeadersRef = React.useRef<List>(null);
+  const horizontalHeadersRef = React.useRef<List>(null);
   const initialState: StoreType = {
     searchInputRef,
     editorRef,
-    gridRef,
     gridOuterRef,
+    gridRef,
     verticalHeadersRef,
     horizontalHeadersRef,
   };
@@ -55,14 +58,14 @@ export const GridSheet: React.FC<Props> = ({ data, options }) => {
   const { onChange, mode } = options;
   return (
     <GridSheetLayout className={`react-grid-sheet ${mode || "light"}`}>
-      <Context.Provider value={initialState}>
-        <Provider store={createStore()}>
+      <Provider store={store}>
+        <Context.Provider value={initialState}>
           <GridTableWrapper />
           <StoreInitializer data={data} options={options} />
           <ContextMenu />
           <ChangeEmitter onChange={onChange} />
-        </Provider>
-      </Context.Provider>
+        </Context.Provider>
+      </Provider>
     </GridSheetLayout>
   );
 };

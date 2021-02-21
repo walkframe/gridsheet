@@ -128,12 +128,12 @@ export type Writer = (value: string) => void;
 export type FlattenedType = { [s: string]: any };
 
 export type StoreType = {
-  editorRef: React.RefObject<HTMLTextAreaElement>;
-  gridRef: React.RefObject<Grid>;
-  gridOuterRef: React.RefObject<HTMLDivElement>;
-  searchInputRef: React.RefObject<HTMLInputElement>;
-  verticalHeadersRef: React.RefObject<List>;
-  horizontalHeadersRef: React.RefObject<List>;
+  editorRef: React.MutableRefObject<HTMLTextAreaElement>;
+  gridOuterRef: React.MutableRefObject<HTMLDivElement>;
+  searchInputRef: React.MutableRefObject<HTMLInputElement>;
+  gridRef: React.MutableRefObject<Grid | null>;
+  verticalHeadersRef: React.MutableRefObject<List | null>;
+  horizontalHeadersRef: React.MutableRefObject<List | null>;
 };
 
 export type ActionType = {

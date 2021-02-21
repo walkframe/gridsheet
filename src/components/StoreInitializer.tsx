@@ -17,7 +17,13 @@ import {
 
 import { setEditingOnEnter, setCellLabel, setOnSave } from "../store/outside";
 
-import { SHEET_HEIGHT, SHEET_WIDTH } from "../constants";
+import {
+  HISTORY_SIZE,
+  SHEET_HEIGHT,
+  SHEET_WIDTH,
+  HEADER_HEIGHT,
+  HEADER_WIDTH,
+} from "../constants";
 
 type Props = {
   data: MatrixType;
@@ -26,10 +32,10 @@ type Props = {
 
 export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
   const {
-    historySize = 10,
+    historySize = HISTORY_SIZE,
     cells,
-    headerHeight = 20,
-    headerWidth = 50,
+    headerHeight = HEADER_HEIGHT,
+    headerWidth = HEADER_WIDTH,
     sheetHeight = SHEET_HEIGHT,
     sheetWidth = SHEET_WIDTH,
     editingOnEnter,
@@ -50,22 +56,22 @@ export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
     }
   }, [cells]);
   React.useEffect(() => {
-    if (typeof sheetHeight !== "undefined") {
+    if (sheetHeight) {
       dispatch(setSheetHeight(sheetHeight));
     }
   }, [sheetHeight]);
   React.useEffect(() => {
-    if (typeof sheetWidth !== "undefined") {
+    if (sheetWidth) {
       dispatch(setSheetWidth(sheetWidth));
     }
   }, [sheetWidth]);
   React.useEffect(() => {
-    if (typeof headerHeight !== "undefined") {
+    if (headerHeight) {
       dispatch(setHeaderHeight(headerHeight));
     }
   }, [headerHeight]);
   React.useEffect(() => {
-    if (typeof headerWidth !== "undefined") {
+    if (headerWidth) {
       dispatch(setHeaderWidth(headerWidth));
     }
   }, [headerWidth]);

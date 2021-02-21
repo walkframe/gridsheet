@@ -298,9 +298,9 @@ export const rerenderCells = ({
 }: {
   rows?: [number, number];
   cols?: [number, number];
-  gridRef: React.RefObject<Grid>;
-  verticalHeadersRef: React.RefObject<List>;
-  horizontalHeadersRef: React.RefObject<List>;
+  gridRef: React.MutableRefObject<Grid | null>;
+  verticalHeadersRef: React.MutableRefObject<List | null>;
+  horizontalHeadersRef: React.MutableRefObject<List | null>;
 }) => {
   const [startY, endY] = rows || [0, 0];
   for (let index = startY; index <= endY; index++) {
