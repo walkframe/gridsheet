@@ -130,7 +130,6 @@ export const GridTableLayout = styled.div`
       &.pointed {
         border: solid 2px #0077ff;
         &.editing {
-          overflow: visible;
           border: none;
         }
         .label {
