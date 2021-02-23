@@ -6,7 +6,7 @@ import {
 } from "react-window";
 
 import { MatrixType, OptionsType, StoreType, ActionType } from "../types";
-
+import { SHEET_HEIGHT, SHEET_WIDTH } from "../constants";
 import { createStore } from "../store";
 
 import { GridTableWrapper } from "./GridTableWrapper";
@@ -20,11 +20,18 @@ import { GridSheetLayout } from "./styles/GridSheetLayout";
 type Props = {
   data: MatrixType;
   options?: OptionsType;
+  className?: string;
+  style?: React.CSSProperties;
 };
 
 export const Context = React.createContext({} as StoreType);
 
-export const GridSheet: React.FC<Props> = ({ data, options }) => {
+export const GridSheet: React.FC<Props> = ({
+  data,
+  options,
+  className,
+  style,
+}) => {
   if (typeof data === "undefined") {
     data = [];
   }
@@ -32,8 +39,11 @@ export const GridSheet: React.FC<Props> = ({ data, options }) => {
     options = {};
   }
 
+  const { sheetResize: resize = "both" } = options;
+
   const [store] = React.useState(createStore());
 
+  const sheetRef = React.useRef<HTMLDivElement>(document.createElement("div"));
   const searchInputRef = React.useRef<HTMLInputElement>(
     document.createElement("input")
   );
@@ -55,13 +65,37 @@ export const GridSheet: React.FC<Props> = ({ data, options }) => {
     horizontalHeadersRef,
   };
 
+  const [sheetHeight, setSheetHeight] = React.useState(
+    options.sheetHeight || SHEET_HEIGHT
+  );
+  const [sheetWidth, setSheetWidth] = React.useState(
+    options.sheetWidth || SHEET_WIDTH
+  );
+  React.useEffect(() => {
+    setInterval(() => {
+      if (sheetRef.current?.clientHeight) {
+        setSheetHeight(sheetRef.current?.clientHeight);
+      }
+      if (sheetRef.current?.clientWidth) {
+        setSheetWidth(sheetRef.current?.clientWidth);
+      }
+    }, 700);
+  }, []);
+
   const { onChange, mode } = options;
   return (
-    <GridSheetLayout className={`react-grid-sheet ${mode || "light"}`}>
+    <GridSheetLayout
+      ref={sheetRef}
+      className={`react-grid-sheet ${mode || "light"} ${className || ""}`}
+      style={{ ...style, resize, height: sheetHeight, width: sheetWidth }}
+    >
       <Provider store={store}>
         <Context.Provider value={initialState}>
           <GridTableWrapper />
-          <StoreInitializer data={data} options={options} />
+          <StoreInitializer
+            data={data}
+            options={{ ...options, sheetHeight, sheetWidth }}
+          />
           <ContextMenu />
           <ChangeEmitter onChange={onChange} />
         </Context.Provider>

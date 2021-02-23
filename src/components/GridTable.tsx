@@ -43,7 +43,6 @@ export const GridTable: React.FC<Props> = ({ numRows, numCols }) => {
     gridOuterRef,
     verticalHeadersRef,
     horizontalHeadersRef,
-    editorRef,
   } = React.useContext(Context);
 
   const defaultHeight = cellsOption.default?.height || DEFAULT_HEIGHT;
@@ -114,7 +113,6 @@ export const GridTable: React.FC<Props> = ({ numRows, numCols }) => {
               <Grid
                 ref={gridRef}
                 outerRef={gridOuterRef}
-                style={{ marginTop: -1, marginLeft: -1 }}
                 columnCount={numCols || 0}
                 rowCount={numRows || 0}
                 width={sheetWidth - headerWidth}

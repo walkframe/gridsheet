@@ -45,6 +45,7 @@ export type Headers = "both" | "vertical" | "horizontal" | "none";
 export type OptionsType = {
   sheetHeight?: number;
   sheetWidth?: number;
+  sheetResize?: "both" | "vertical" | "horizontal" | "none";
   historySize?: number;
   headerHeight?: number;
   headerWidth?: number;

@@ -132,8 +132,6 @@ export const showIndex = () => {
           // headerWidth: 50,
           headerHeight: 40,
           historySize: 100,
-          sheetHeight: 400,
-          sheetWidth: 900,
           mode: "dark",
           //stickyHeaders: "horizontal",
           cells: {
@@ -201,13 +199,62 @@ export const showIndex = () => {
       <hr />
 
       {true && (
-        <GridSheet
-          data={[
-            [1, 2, 3, 4],
-            [5, 6, 7, 8],
-            [9, 10, 11, 12],
-          ]}
-        />
+        <table style={{ width: "100%", tableLayout: "fixed" }}>
+          <tbody>
+            <tr>
+              <td>
+                {" "}
+                <GridSheet
+                  style={{ maxWidth: "100%", maxHeight: "150px" }}
+                  data={[
+                    [1, 2, 3, 4],
+                    [5, 6, 7, 8],
+                    [9, 10, 11, "both"],
+                  ]}
+                  options={{ sheetResize: "both" }}
+                />
+              </td>
+              <td>
+                {" "}
+                <GridSheet
+                  style={{ maxWidth: "100%", maxHeight: "150px" }}
+                  data={[
+                    [1, 2, 3, 4],
+                    [5, 6, 7, 8],
+                    [9, 10, 11, "vertical"],
+                  ]}
+                  options={{ sheetResize: "vertical" }}
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>
+                {" "}
+                <GridSheet
+                  style={{ maxWidth: "100%", maxHeight: "150px" }}
+                  data={[
+                    [1, 2, 3, 4],
+                    [5, 6, 7, 8],
+                    [9, 10, 11, "horizontal"],
+                  ]}
+                  options={{ sheetResize: "horizontal" }}
+                />
+              </td>
+              <td>
+                {" "}
+                <GridSheet
+                  style={{ maxWidth: "100%", maxHeight: "150px" }}
+                  data={[
+                    [1, 2, 3, 4],
+                    [5, 6, 7, 8],
+                    [9, 10, 11, "none"],
+                  ]}
+                  options={{ sheetResize: "none" }}
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
       )}
     </>
   );

@@ -17,13 +17,7 @@ import {
 
 import { setEditingOnEnter, setCellLabel, setOnSave } from "../store/outside";
 
-import {
-  HISTORY_SIZE,
-  SHEET_HEIGHT,
-  SHEET_WIDTH,
-  HEADER_HEIGHT,
-  HEADER_WIDTH,
-} from "../constants";
+import { HISTORY_SIZE, HEADER_HEIGHT, HEADER_WIDTH } from "../constants";
 
 type Props = {
   data: MatrixType;
@@ -33,11 +27,11 @@ type Props = {
 export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
   const {
     historySize = HISTORY_SIZE,
-    cells,
     headerHeight = HEADER_HEIGHT,
     headerWidth = HEADER_WIDTH,
-    sheetHeight = SHEET_HEIGHT,
-    sheetWidth = SHEET_WIDTH,
+    cells,
+    sheetHeight,
+    sheetWidth,
     editingOnEnter,
     cellLabel,
     renderers,

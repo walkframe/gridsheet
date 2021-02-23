@@ -5,24 +5,12 @@ import { clip } from "../api/clipboard";
 import { zoneToArea, among, zoneShape, cellToIndexes } from "../api/arrays";
 import { RootState } from "../store";
 import {
-  blur,
-  clear,
-  escape,
   choose,
   reChoose,
   select,
   drag,
-  setEditingCell,
-  undo,
-  redo,
-  arrow,
-  walk,
   write,
-  copy,
-  cut,
-  paste,
   setEditorRect,
-  setEntering,
 } from "../store/inside";
 
 import { setContextMenuPosition } from "../store/outside";
@@ -48,10 +36,7 @@ export const Cell: React.FC<Props> = React.memo(
     const cellId = `${colId}${rowId}`;
     const dispatch = useDispatch();
 
-    const { cellLabel, editingOnEnter, onSave } = useSelector<
-      RootState,
-      OutsideState
-    >(
+    const { cellLabel } = useSelector<RootState, OutsideState>(
       (state) => state["outside"],
       () => {
         return true;

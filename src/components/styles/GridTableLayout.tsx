@@ -36,10 +36,10 @@ export const GridTableLayout = styled.div`
     &.horizontal {
       top: -1px;
       min-height: 20px;
-      border-right-width: 1px !important;
+      border-left-width: 1px !important;
       border-bottom-width: 1px !important;
-      &:first-child {
-        border-left-width: 1px !important;
+      &:last-child {
+        border-right-width: 1px !important;
       }
       .resizer {
         top: 0;
@@ -59,10 +59,10 @@ export const GridTableLayout = styled.div`
       left: -1px;
       overflow: hidden;
       min-width: 30px;
-      border-bottom-width: 1px !important;
+      border-top-width: 1px !important;
       border-right-width: 1px !important;
-      &:first-child {
-        border-top-width: 1px !important;
+      &:last-child {
+        border-bottom-width: 1px !important;
       }
       .resizer {
         left: 0;

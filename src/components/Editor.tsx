@@ -2,16 +2,12 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { n2a } from "../api/converters";
 import { clip } from "../api/clipboard";
-import { zoneToArea, among, zoneShape } from "../api/arrays";
 import { RootState } from "../store";
 import {
   blur,
   clear,
   escape,
-  choose,
-  reChoose,
   select,
-  drag,
   setEditingCell,
   undo,
   redo,
@@ -25,23 +21,18 @@ import {
   setEntering,
 } from "../store/inside";
 
-import { AreaType, CellOptionType, InsideState, OutsideState } from "../types";
+import { CellOptionType, InsideState, OutsideState } from "../types";
 import { Renderer as DefaultRenderer } from "../renderers/core";
 import { Parser as DefaultParser } from "../parsers/core";
 import { EditorLayout } from "./styles/EditorLayout";
 
 import { Context } from "./GridSheet";
 
-type Props = {
-  style: React.CSSProperties;
-};
-
 export const Editor: React.FC = () => {
   const dispatch = useDispatch();
-  const { cellLabel, editingOnEnter, onSave } = useSelector<
-    RootState,
-    OutsideState
-  >((state) => state["outside"]);
+  const { editingOnEnter, onSave } = useSelector<RootState, OutsideState>(
+    (state) => state["outside"]
+  );
 
   const {
     matrix,
@@ -50,10 +41,7 @@ export const Editor: React.FC = () => {
     editingCell,
     choosing,
     selectingZone,
-    horizontalHeadersSelecting,
-    verticalHeadersSelecting,
-    copyingZone,
-    cutting,
+
     entering,
     renderers,
     parsers,
