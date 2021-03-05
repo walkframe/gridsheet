@@ -39,7 +39,6 @@ export const initialState: InsideState = {
   matrix: [],
   cellsOption: {},
   choosing: [-1, -1],
-  lastChoosing: [-1, -1],
   cutting: false,
   selectingZone: [-1, -1, -1, -1],
   copyingZone: [-1, -1, -1, -1],
@@ -212,14 +211,7 @@ const reducers = {
     return {
       ...state,
       choosing: action.payload,
-      lastChoosing: state.choosing,
       entering: true,
-    };
-  },
-  reChoose: (state: Draft<InsideState>) => {
-    return {
-      ...state,
-      choosing: state.lastChoosing,
     };
   },
   setEditingCell: (
@@ -774,7 +766,6 @@ export const {
   blur,
   escape,
   choose,
-  reChoose,
   setEditingCell,
   copy,
   cut,

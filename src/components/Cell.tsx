@@ -4,14 +4,7 @@ import { n2a, a2n } from "../api/converters";
 import { clip } from "../api/clipboard";
 import { zoneToArea, among, zoneShape, cellToIndexes } from "../api/arrays";
 import { RootState } from "../store";
-import {
-  choose,
-  reChoose,
-  select,
-  drag,
-  write,
-  setEditorRect,
-} from "../store/inside";
+import { choose, select, drag, write, setEditorRect } from "../store/inside";
 
 import { setContextMenuPosition } from "../store/outside";
 
@@ -152,10 +145,6 @@ export const Cell: React.FC<Props> = React.memo(
           dispatch(setContextMenuPosition([-1, -1]));
           if (e.shiftKey) {
             dispatch(drag([y, x]));
-            dispatch(choose([-1, -1]));
-            setTimeout(() => {
-              dispatch(reChoose());
-            }, 100);
           } else {
             dispatch(choose([y, x]));
             dispatch(select([-1, -1, -1, -1]));

@@ -63,7 +63,6 @@ export type InsideState = {
   matrix: MatrixType;
   cellsOption: { [s: string]: CellOptionType };
   choosing: PositionType;
-  lastChoosing: PositionType;
   cutting: boolean;
   copyingZone: ZoneType;
   selectingZone: ZoneType;
@@ -135,6 +134,32 @@ export type StoreType = {
   gridRef: React.MutableRefObject<Grid | null>;
   verticalHeadersRef: React.MutableRefObject<List | null>;
   horizontalHeadersRef: React.MutableRefObject<List | null>;
+  entering: boolean;
+  matrix: MatrixType;
+  cellsOption: { [s: string]: CellOptionType };
+  choosing: PositionType;
+  cutting: boolean;
+  copyingZone: ZoneType;
+  selectingZone: ZoneType;
+  horizontalHeadersSelecting: boolean;
+  verticalHeadersSelecting: boolean;
+  editingCell: string;
+  history: HistoryType;
+  editorRect: RectType;
+  resizingRect: RectType;
+  sheetHeight: number;
+  sheetWidth: number;
+  headerHeight: number;
+  headerWidth: number;
+  searchQuery?: string;
+  matchingCells: string[];
+  matchingCellIndex: number;
+  renderers: Renderers;
+  parsers: Parsers;
+  editingOnEnter: boolean;
+  cellLabel: boolean;
+  contextMenuPosition: [number, number];
+  onSave?: Feedback;
 };
 
 export type ActionType = {
