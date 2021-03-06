@@ -1,21 +1,19 @@
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
 
 import { cellToIndexes } from "../api/arrays";
-import { Context } from "./GridSheet";
-import { setSearchQuery, search } from "../store/inside";
-
-import { RootState } from "../store";
-import { InsideState } from "../types";
+import { Context } from "../store";
+import { setSearchQuery, search } from "../store/actions";
 
 export const SearchBox: React.FC = () => {
-  const dispatch = useDispatch();
+  const { store, dispatch } = React.useContext(Context);
 
-  const { searchInputRef, gridRef } = React.useContext(Context);
-  const { searchQuery, matchingCellIndex, matchingCells } = useSelector<
-    RootState,
-    InsideState
-  >((state) => state["inside"]);
+  const {
+    searchInputRef,
+    gridRef,
+    searchQuery,
+    matchingCellIndex,
+    matchingCells,
+  } = store;
 
   const matchingCell = matchingCells[matchingCellIndex];
   React.useEffect(() => {

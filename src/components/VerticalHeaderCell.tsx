@@ -1,22 +1,20 @@
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { between } from "../api/arrays";
-import { RootState } from "../store";
+import { Context } from "../store";
 import {
   setCellOption,
   drag,
   selectRows,
   setResizingRect,
   setEditorRect,
-} from "../store/inside";
+  setContextMenuPosition,
+} from "../store/actions";
 import {
   DUMMY_IMG,
   DEFAULT_HEIGHT,
   DEFAULT_WIDTH,
   MIN_WIDTH,
 } from "../constants";
-import { InsideState, OutsideState } from "../types";
-import { setContextMenuPosition } from "../store/outside";
 
 type Props = {
   index: number;
@@ -26,7 +24,7 @@ type Props = {
 export const VerticalHeaderCell: React.FC<Props> = React.memo(
   ({ index: y, style: outerStyle }) => {
     const rowId = `${y + 1}`;
-    const dispatch = useDispatch();
+    const { store, dispatch } = React.useContext(Context);
 
     const {
       matrix,
@@ -36,7 +34,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
       verticalHeadersSelecting,
       resizingRect,
       headerWidth,
-    } = useSelector<RootState, InsideState>((state) => state["inside"]);
+    } = store;
 
     const defaultHeight = cellsOption.default?.height || DEFAULT_HEIGHT;
     const rowOption = cellsOption[rowId] || {};
@@ -47,13 +45,13 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
       <div
         style={outerStyle}
         className={`
-      header vertical
-      ${choosing[0] === y ? "choosing" : ""} 
+      gs-header gs-vertical
+      ${choosing[0] === y ? "gs-choosing" : ""} 
       ${
         between([selectingZone[0], selectingZone[2]], y)
           ? verticalHeadersSelecting
-            ? "header-selecting"
-            : "selecting"
+            ? "gs-header-selecting"
+            : "gs-selecting"
           : ""
       }`}
         onClick={(e) => {
@@ -105,21 +103,21 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
           e.preventDefault();
         }}
       >
-        <div className="header-inner" style={{ height, width: headerWidth }}>
+        <div className="gs-header-inner" style={{ height, width: headerWidth }}>
           {rowOption.label || rowId}
         </div>
         <div
-          className="resizer"
+          className="gs-resizer"
           style={{ width: headerWidth }}
           draggable={true}
           onDragStart={(e) => {
             dispatch(setResizingRect([y, -1, e.screenY, -1]));
-            e.currentTarget.classList.add("dragging");
+            e.currentTarget.classList.add("gs-dragging");
             e.stopPropagation();
             return false;
           }}
           onDragEnd={(e) => {
-            e.currentTarget.classList.remove("dragging");
+            e.currentTarget.classList.remove("gs-dragging");
             e.preventDefault();
             const [y, _x, screenY, _h] = resizingRect;
             const cell = `${y + 1}`;

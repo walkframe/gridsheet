@@ -10,6 +10,7 @@ import {
   Renderers,
   Parsers,
   RangeType,
+  Feedback,
 } from "../types";
 import {
   makeSequence,
@@ -20,12 +21,16 @@ import {
   zoneToArea,
   zoneShape,
   superposeArea,
+  applyFlattened,
+  slideFlattened,
+  matrixShape,
 } from "../api/arrays";
 import { ParserType } from "../parsers/core";
 
 import * as histories from "../api/histories";
 import { tsv2matrix, n2a } from "../api/converters";
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
+import { Renderer as DefaultRenderer } from "../renderers/core";
 
 const actions: { [s: string]: CoreAction<any> } = {};
 
@@ -43,9 +48,6 @@ export const reducer = <T>(
 export class CoreAction<T> {
   public code = "";
 
-  constructor() {
-    actions[this.code] = this;
-  }
   public reduce(store: StoreType, payload: T): StoreType {
     return store;
   }
@@ -56,12 +58,13 @@ export class CoreAction<T> {
     };
   }
   public bind() {
+    actions[this.code] = this;
     return this.call.bind(this);
   }
 }
 
 class InitHistoryAction<T extends number> extends CoreAction<T> {
-  code = "SET_RENDERERS";
+  code = "INIT_HISTORY";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -70,6 +73,45 @@ class InitHistoryAction<T extends number> extends CoreAction<T> {
   }
 }
 export const initHistory = new InitHistoryAction().bind();
+
+class SetSearchQueryAction<T extends string | undefined> extends CoreAction<T> {
+  code = "SET_SEARCH_QUERY";
+  reduce(store: StoreType, payload: T): StoreType {
+    const searchQuery = payload;
+    const matchingCells: string[] = [];
+    if (!searchQuery) {
+      return { ...store, searchQuery, matchingCells, matchingCellIndex: 0 };
+    }
+    const [numRows, numCols] = matrixShape(store.matrix);
+    const defaultRendererKey = store.cellsOption.default?.renderer;
+    for (let x = 0; x < numCols; x++) {
+      const colId = n2a(x + 1);
+      const colRendererKey = store.cellsOption[colId]?.renderer;
+      for (let y = 0; y < numRows; y++) {
+        const rowId = y + 1;
+        const rowRendererKey = store.cellsOption[rowId]?.renderer;
+
+        const cellId = `${colId}${rowId}`;
+        const cellRendererKey = store.cellsOption[cellId]?.renderer;
+        const rendererKey =
+          cellRendererKey ||
+          colRendererKey ||
+          rowRendererKey ||
+          defaultRendererKey;
+        const renderer =
+          store.renderers[rendererKey || ""] || new DefaultRenderer();
+        if (
+          typeof searchQuery === "string" &&
+          renderer.stringify(store.matrix[y][x]).indexOf(searchQuery) !== -1
+        ) {
+          matchingCells.push(cellId);
+        }
+      }
+    }
+    return { ...store, searchQuery, matchingCells, matchingCellIndex: 0 };
+  }
+}
+export const setSearchQuery = new SetSearchQueryAction().bind();
 
 class SetEditingCellAction<T extends string> extends CoreAction<T> {
   code = "SET_EDITING_CELL";
@@ -81,6 +123,63 @@ class SetEditingCellAction<T extends string> extends CoreAction<T> {
   }
 }
 export const setEditingCell = new SetEditingCellAction().bind();
+
+class SetEditingOnEnterAction<T extends boolean> extends CoreAction<T> {
+  code = "SET_EDITING_ON_ENTER";
+  reduce(store: StoreType, payload: T): StoreType {
+    return {
+      ...store,
+      editingOnEnter: payload,
+    };
+  }
+}
+export const setEditingOnEnter = new SetEditingOnEnterAction().bind();
+
+class SetCellLabelAction<T extends boolean> extends CoreAction<T> {
+  code = "SET_CELL_LABEL";
+  reduce(store: StoreType, payload: T): StoreType {
+    return {
+      ...store,
+      cellLabel: payload,
+    };
+  }
+}
+export const setCellLabel = new SetCellLabelAction().bind();
+
+class SetContextMenuPositionAction<
+  T extends [number, number]
+> extends CoreAction<T> {
+  code = "SET_CONTEXT_MENU_POSITION";
+  reduce(store: StoreType, payload: T): StoreType {
+    return {
+      ...store,
+      contextMenuPosition: payload,
+    };
+  }
+}
+export const setContextMenuPosition = new SetContextMenuPositionAction().bind();
+
+class SetOnSaveAction<T extends Feedback> extends CoreAction<T> {
+  code = "SET_ON_SAVE";
+  reduce(store: StoreType, payload: T): StoreType {
+    return {
+      ...store,
+      onSave: payload,
+    };
+  }
+}
+export const setOnSave = new SetOnSaveAction().bind();
+
+class SetOnChangeAction<T extends Feedback> extends CoreAction<T> {
+  code = "SET_ON_CHANGE";
+  reduce(store: StoreType, payload: T): StoreType {
+    return {
+      ...store,
+      onChange: payload,
+    };
+  }
+}
+export const setOnChange = new SetOnChangeAction().bind();
 
 class SetRenderersAction<T extends Renderers> extends CoreAction<T> {
   code = "SET_RENDERERS";
@@ -209,7 +308,7 @@ class SetCellOptionAction<
     option: CellOptionType;
   }
 > extends CoreAction<T> {
-  code = "SET_CELLS_OPTION";
+  code = "SET_CELL_OPTION";
   reduce(store: StoreType, payload: T): StoreType {
     const { cell, option } = payload;
     const history = histories.pushHistory(store.history, {
@@ -235,9 +334,9 @@ class SetCellOptionAction<
 }
 export const setCellOption = new SetCellOptionAction().bind();
 
-class BlurAction<T extends any> extends CoreAction<T> {
+class BlurAction<T extends null> extends CoreAction<T> {
   code = "BLUR";
-  reduce(store: StoreType): StoreType {
+  reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
       editingCell: "",
@@ -245,17 +344,6 @@ class BlurAction<T extends any> extends CoreAction<T> {
   }
 }
 export const blur = new BlurAction().bind();
-
-class SetEditingAction<T extends string> extends CoreAction<T> {
-  code = "SET_EDITING_CELL";
-  reduce(store: StoreType, payload: T): StoreType {
-    return {
-      ...store,
-      editingCell: payload,
-    };
-  }
-}
-export const setEditing = new SetEditingAction().bind();
 
 class CopyAction<T extends ZoneType> extends CoreAction<T> {
   code = "COPY";
@@ -367,9 +455,9 @@ class PasteAction<
 }
 export const paste = new PasteAction().bind();
 
-class EscapeAction<T extends any> extends CoreAction<T> {
+class EscapeAction<T extends null> extends CoreAction<T> {
   code = "ESCAPE";
-  reduce(store: StoreType): StoreType {
+  reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
       copyingZone: [-1, -1, -1, -1] as ZoneType,
@@ -495,9 +583,9 @@ class WriteAction<T extends any> extends CoreAction<T> {
 }
 export const write = new WriteAction().bind();
 
-class ClearAction<T extends any> extends CoreAction<T> {
+class ClearAction<T extends null> extends CoreAction<T> {
   code = "CLEAR";
-  reduce(store: StoreType): StoreType {
+  reduce(store: StoreType, payload: T): StoreType {
     const { choosing, selectingZone, matrix } = store;
 
     let selectingArea = zoneToArea(selectingZone);
@@ -525,9 +613,9 @@ class ClearAction<T extends any> extends CoreAction<T> {
 }
 export const clear = new ClearAction().bind();
 
-class UndoAction<T extends any> extends CoreAction<T> {
+class UndoAction<T extends null> extends CoreAction<T> {
   code = "UNDO";
-  reduce(store: StoreType): StoreType {
+  reduce(store: StoreType, payload: T): StoreType {
     const history = { ...store.history };
     if (history.index < 0) {
       return store;
@@ -563,9 +651,9 @@ class UndoAction<T extends any> extends CoreAction<T> {
 }
 export const undo = new UndoAction().bind();
 
-class RedoAction<T extends any> extends CoreAction<T> {
+class RedoAction<T extends null> extends CoreAction<T> {
   code = "REDO";
-  reduce(store: StoreType): StoreType {
+  reduce(store: StoreType, payload: T): StoreType {
     const history = { ...store.history };
     if (history.index + 1 >= history.operations.length) {
       return store;
@@ -679,33 +767,61 @@ class WalkAction<
 > extends CoreAction<T> {
   code = "WALK";
   reduce(store: StoreType, payload: T): StoreType {
-    const { deltaY, deltaX, numRows, numCols } = payload;
+    let { deltaY, deltaX, numRows, numCols } = payload;
     let { choosing, selectingZone, cellsOption } = store;
+    let [editorTop, editorLeft, height, width] = store.editorRect;
     const [y, x] = choosing;
     const selectingArea = zoneToArea(selectingZone);
     const [top, left, bottom, right] = selectingArea;
     let [nextY, nextX] = [y + deltaY, x + deltaX];
     if (nextY < top && top !== -1) {
+      deltaY = bottom - nextY;
       nextY = bottom;
-      nextX = nextX > left ? nextX - 1 : right;
+      if (nextX > left) {
+        nextX--;
+        deltaX--;
+      } else {
+        deltaX = right - nextX;
+        nextX = right;
+      }
     }
     if (nextY > bottom && bottom !== -1) {
+      deltaY = top - nextY;
       nextY = top;
-      nextX = nextX < right ? nextX + 1 : left;
+      if (nextX < right) {
+        nextX++;
+        deltaX++;
+      } else {
+        deltaX = left - nextX;
+        nextX = left;
+      }
     }
     if (nextX < left && left !== -1) {
+      deltaX = right - nextX;
       nextX = right;
-      nextY = nextY > top ? nextY - 1 : bottom;
+      if (nextY > top) {
+        nextY--;
+        deltaY--;
+      } else {
+        deltaY = bottom - nextY;
+        nextY = bottom;
+      }
     }
     if (nextX > right && right !== -1) {
+      deltaX = left - nextX;
       nextX = left;
-      nextY = nextY < bottom ? nextY + 1 : top;
+      if (nextY < bottom) {
+        nextY++;
+        deltaY++;
+      } else {
+        deltaY = top - nextY;
+        nextY = top;
+      }
     }
     if (nextY < 0 || numRows <= nextY || nextX < 0 || numCols <= nextX) {
       return store;
     }
 
-    let [editorTop, editorLeft, height, width] = store.editorRect;
     const defaultHeight = cellsOption.default?.height || DEFAULT_HEIGHT;
     const defaultWidth = cellsOption.default?.width || DEFAULT_WIDTH;
     if (deltaY > 0) {
@@ -737,3 +853,157 @@ class WalkAction<
   }
 }
 export const walk = new WalkAction().bind();
+
+class AddRowsAction<
+  T extends {
+    numRows: number;
+    y: number;
+  }
+> extends CoreAction<T> {
+  code = "ADD_ROWS";
+  reduce(store: StoreType, payload: T): StoreType {
+    const matrix = [...store.matrix];
+    const numCols = matrix[0]?.length || 0;
+    const { numRows, y } = payload;
+    const diff = slideFlattened(store.cellsOption, numRows, null, y, null);
+    const blanks = makeSequence(0, numRows).map(() =>
+      makeSequence(0, numCols).map(() => "")
+    );
+    matrix.splice(y, 0, ...blanks);
+    const history = histories.pushHistory(store.history, {
+      command: "addRows",
+      dst: [y, 0, y + numRows - 1, numCols - 1] as AreaType,
+      src: [-1, -1, -1, -1] as AreaType,
+      before: [] as MatrixType,
+      after: [] as MatrixType,
+      options: diff,
+    });
+    return {
+      ...store,
+      matrix: [...matrix],
+      cellsOption: applyFlattened(store.cellsOption, diff),
+      history,
+    };
+  }
+}
+export const addRows = new AddRowsAction().bind();
+
+class AddColsAction<
+  T extends {
+    numCols: number;
+    x: number;
+  }
+> extends CoreAction<T> {
+  code = "ADD_COLS";
+  reduce(store: StoreType, payload: T): StoreType {
+    const { numCols, x } = payload;
+    const matrix = [...store.matrix].map((cols) => {
+      const blanks = makeSequence(0, numCols).map(() => "");
+      cols = [...cols];
+      cols.splice(x, 0, ...blanks);
+      return cols;
+    });
+    const numRows = matrix.length;
+    const diff = slideFlattened(
+      { ...store.cellsOption },
+      null,
+      numCols,
+      null,
+      x
+    );
+    const history = histories.pushHistory(store.history, {
+      command: "addCols",
+      dst: [0, x, numRows, x + numCols - 1] as AreaType,
+      src: [-1, -1, -1, -1] as AreaType,
+      before: [] as MatrixType,
+      after: [] as MatrixType,
+      options: diff,
+    });
+    return {
+      ...store,
+      matrix,
+      cellsOption: applyFlattened(store.cellsOption, diff),
+      history,
+    };
+  }
+}
+export const addCols = new AddColsAction().bind();
+
+class RemoveRowsAction<
+  T extends {
+    numRows: number;
+    y: number;
+  }
+> extends CoreAction<T> {
+  code = "REMOVE_ROWS";
+  reduce(store: StoreType, payload: T): StoreType {
+    const matrix = [...store.matrix];
+    const { numRows, y } = payload;
+    const numCols = matrix[0]?.length;
+    const before = cropMatrix(matrix, [y, 0, y + numRows - 1, numCols - 1]);
+    const diff = slideFlattened(store.cellsOption, -numRows, null, y, null);
+    matrix.splice(y, numRows);
+    const history = histories.pushHistory(store.history, {
+      command: "delRows",
+      dst: [-1, -1, -1, -1] as AreaType,
+      src: [y, 0, y + numRows - 1, numCols - 1] as AreaType,
+      before,
+      after: [] as MatrixType,
+      options: diff,
+    });
+    return {
+      ...store,
+      matrix: [...matrix],
+      cellsOption: applyFlattened(store.cellsOption, diff),
+      history,
+    };
+  }
+}
+export const removeRows = new RemoveRowsAction().bind();
+
+class RemoveColsAction<
+  T extends {
+    numCols: number;
+    x: number;
+  }
+> extends CoreAction<T> {
+  code = "ADD_ROWS";
+  reduce(store: StoreType, payload: T): StoreType {
+    const { numCols, x } = payload;
+    const numRows = store.matrix.length;
+    const before = cropMatrix(store.matrix, [
+      0,
+      x,
+      numRows - 1,
+      x + numCols - 1,
+    ]);
+    const matrix = [...store.matrix].map((cols) => {
+      cols = [...cols];
+      cols.splice(x, numCols);
+      return cols;
+    });
+
+    const diff = slideFlattened(
+      { ...store.cellsOption },
+      null,
+      -numCols,
+      null,
+      x
+    );
+    const history = histories.pushHistory(store.history, {
+      command: "delCols",
+      dst: [-1, -1, -1, -1] as AreaType,
+      src: [0, x, numRows - 1, x + numCols - 1] as AreaType,
+      before,
+      after: [] as MatrixType,
+      options: diff,
+    });
+    return {
+      ...store,
+      matrix,
+      cellsOption: applyFlattened(store.cellsOption, diff),
+      history,
+    };
+  }
+}
+export const removeCols = new RemoveColsAction().bind();

@@ -1,10 +1,8 @@
-import { Draft } from "@reduxjs/toolkit";
 import {
   PositionType,
   OperationType,
   ZoneType,
   HistoryType,
-  InsideState,
   StoreType,
 } from "../types";
 import {

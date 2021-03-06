@@ -1,8 +1,6 @@
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { n2a } from "../api/converters";
 import { clip } from "../api/clipboard";
-import { RootState } from "../store";
 import {
   blur,
   clear,
@@ -19,20 +17,17 @@ import {
   paste,
   setSearchQuery,
   setEntering,
-} from "../store/inside";
+} from "../store/actions";
 
-import { CellOptionType, InsideState, OutsideState } from "../types";
+import { CellOptionType } from "../types";
 import { Renderer as DefaultRenderer } from "../renderers/core";
 import { Parser as DefaultParser } from "../parsers/core";
 import { EditorLayout } from "./styles/EditorLayout";
 
-import { Context } from "./GridSheet";
+import { Context } from "../store";
 
 export const Editor: React.FC = () => {
-  const dispatch = useDispatch();
-  const { editingOnEnter, onSave } = useSelector<RootState, OutsideState>(
-    (state) => state["outside"]
-  );
+  const { store, dispatch } = React.useContext(Context);
 
   const {
     matrix,
@@ -46,9 +41,11 @@ export const Editor: React.FC = () => {
     renderers,
     parsers,
     searchQuery,
-  } = useSelector<RootState, InsideState>((state) => state["inside"]);
-
-  const { editorRef, searchInputRef } = React.useContext(Context);
+    editorRef,
+    searchInputRef,
+    editingOnEnter,
+    onSave,
+  } = store;
 
   const [y, x] = choosing;
 
@@ -96,17 +93,16 @@ export const Editor: React.FC = () => {
 
   return (
     <EditorLayout
-      className={`gs-editor ${editing ? "editing" : ""}`}
+      className={`gs-editor ${editing ? "gs-editing" : ""}`}
       style={editing ? { top, left, height, width } : {}}
     >
-      {editing && <div className="label">{cellId}</div>}
+      <div className="gs-cell-label">{cellId}</div>
       <textarea
         autoFocus
         draggable={false}
         ref={editorRef}
         style={{ height, width }}
         rows={typeof value === "string" ? value.split("\n").length : 1}
-        className={editing ? "editing" : ""}
         onDoubleClick={(e) => {
           const input = e.currentTarget;
           if (!editing) {
@@ -125,7 +121,7 @@ export const Editor: React.FC = () => {
             writeCell(e.target.value);
           }
           e.target.value = "";
-          dispatch(blur());
+          dispatch(blur(null));
           setTimeout(() => entering && e.target.focus(), 100);
         }}
         onKeyDown={(e) => {
@@ -183,7 +179,7 @@ export const Editor: React.FC = () => {
               return false;
             case "Backspace": // BACKSPACE
               if (!editing) {
-                dispatch(clear());
+                dispatch(clear(null));
                 return false;
               }
             case "Shift": // SHIFT
@@ -197,7 +193,7 @@ export const Editor: React.FC = () => {
             case "NumLock": // NUMLOCK
               return false;
             case "Escape": // ESCAPE
-              dispatch(escape());
+              dispatch(escape(null));
               dispatch(setSearchQuery(undefined));
               input.value = "";
               // input.blur();
@@ -295,7 +291,7 @@ export const Editor: React.FC = () => {
             case "r": // R
               if (e.ctrlKey || e.metaKey) {
                 if (!editing) {
-                  dispatch(redo());
+                  dispatch(redo(null));
                   return false;
                 }
               }
@@ -338,9 +334,9 @@ export const Editor: React.FC = () => {
               if (e.ctrlKey || e.metaKey) {
                 if (!editing) {
                   if (e.shiftKey) {
-                    dispatch(redo());
+                    dispatch(redo(null));
                   } else {
-                    dispatch(undo());
+                    dispatch(undo(null));
                   }
                   return false;
                 }

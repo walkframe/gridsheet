@@ -1,8 +1,8 @@
 import React from "react";
-import { useDispatch } from "react-redux";
 
 import { MatrixType, OptionsType } from "../types";
 
+import { Context } from "../store";
 import {
   setMatrix,
   setCellsOption,
@@ -13,9 +13,11 @@ import {
   setHeaderWidth,
   setRenderers,
   setParsers,
-} from "../store/inside";
-
-import { setEditingOnEnter, setCellLabel, setOnSave } from "../store/outside";
+  setEditingOnEnter,
+  setCellLabel,
+  setOnSave,
+  setOnChange,
+} from "../store/actions";
 
 import { HISTORY_SIZE, HEADER_HEIGHT, HEADER_WIDTH } from "../constants";
 
@@ -37,10 +39,10 @@ export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
     renderers,
     parsers,
     onSave,
+    onChange,
   } = options;
 
-  const dispatch = useDispatch();
-
+  const { store, dispatch } = React.useContext(Context);
   React.useEffect(() => {
     dispatch(setMatrix(data));
   }, [data]);
@@ -94,6 +96,11 @@ export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
       dispatch(setOnSave(onSave));
     }
   }, [onSave]);
+  React.useEffect(() => {
+    if (typeof onChange !== "undefined") {
+      dispatch(setOnChange(onChange));
+    }
+  }, [onChange]);
   React.useEffect(() => {
     dispatch(initHistory(historySize));
   }, []);

@@ -1,11 +1,9 @@
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
 import {
   VariableSizeGrid as Grid,
   VariableSizeList as List,
 } from "react-window";
 
-import { Context } from "./GridSheet";
 import { Editor } from "./Editor";
 import { Cell } from "./Cell";
 import { HorizontalHeaderCell } from "./HorizontalHeaderCell";
@@ -14,11 +12,10 @@ import { SearchBox } from "./SearchBox";
 
 import { n2a } from "../api/converters";
 
-import { choose, select, setEntering } from "../store/inside";
+import { Context } from "../store";
+import { choose, select, setEntering } from "../store/actions";
 
 import { GridTableLayout } from "./styles/GridTableLayout";
-import { RootState } from "../store";
-import { AreaType, CellOptionType, InsideState, OutsideState } from "../types";
 
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
 
@@ -28,22 +25,19 @@ type Props = {
 };
 
 export const GridTable: React.FC<Props> = ({ numRows, numCols }) => {
-  const dispatch = useDispatch();
-
-  const {
-    cellsOption,
-    sheetHeight,
-    sheetWidth,
-    headerHeight,
-    headerWidth,
-  } = useSelector<RootState, InsideState>((state) => state["inside"]);
+  const { store, dispatch } = React.useContext(Context);
 
   const {
     gridRef,
     gridOuterRef,
     verticalHeadersRef,
     horizontalHeadersRef,
-  } = React.useContext(Context);
+    cellsOption,
+    sheetHeight,
+    sheetWidth,
+    headerHeight,
+    headerWidth,
+  } = store;
 
   const defaultHeight = cellsOption.default?.height || DEFAULT_HEIGHT;
   const defaultWidth = cellsOption.default?.width || DEFAULT_WIDTH;
@@ -56,7 +50,7 @@ export const GridTable: React.FC<Props> = ({ numRows, numCols }) => {
       <Editor />
       <SearchBox />
       <div
-        className="gs-table"
+        className="gs-tabular"
         onMouseEnter={() => {
           dispatch(setEntering(true));
         }}
@@ -64,9 +58,9 @@ export const GridTable: React.FC<Props> = ({ numRows, numCols }) => {
           dispatch(setEntering(false));
         }}
       >
-        <div className="gs-row">
+        <div className="gs-tabular-row">
           <div
-            className="gs-col"
+            className="gs-tabular-col"
             onClick={() => {
               dispatch(choose([-1, -1]));
               setTimeout(() => {
@@ -75,7 +69,7 @@ export const GridTable: React.FC<Props> = ({ numRows, numCols }) => {
               }, 100);
             }}
           ></div>
-          <div className="gs-col">
+          <div className="gs-tabular-col">
             <List
               ref={horizontalHeadersRef}
               itemCount={numCols || 0}
@@ -93,8 +87,8 @@ export const GridTable: React.FC<Props> = ({ numRows, numCols }) => {
             </List>
           </div>
         </div>
-        <div className="gs-row">
-          <div className="gs-col" style={{ verticalAlign: "top" }}>
+        <div className="gs-tabular-row">
+          <div className="gs-tabular-col" style={{ verticalAlign: "top" }}>
             <List
               ref={verticalHeadersRef}
               itemCount={numRows || 0}
@@ -108,29 +102,27 @@ export const GridTable: React.FC<Props> = ({ numRows, numCols }) => {
               {VerticalHeaderCell}
             </List>
           </div>
-          <div className="gs-col">
-            <div className="cells-wrapper">
-              <Grid
-                ref={gridRef}
-                outerRef={gridOuterRef}
-                columnCount={numCols || 0}
-                rowCount={numRows || 0}
-                width={sheetWidth - headerWidth}
-                height={sheetHeight - headerHeight}
-                columnWidth={(index) =>
-                  cellsOption[n2a(index + 1)]?.width || defaultWidth
-                }
-                rowHeight={(index) =>
-                  cellsOption[index + 1]?.height || defaultHeight
-                }
-                onScroll={(e) => {
-                  verticalHeadersRef.current?.scrollTo(e.scrollTop);
-                  horizontalHeadersRef.current?.scrollTo(e.scrollLeft);
-                }}
-              >
-                {Cell}
-              </Grid>
-            </div>
+          <div className="gs-tabular-col">
+            <Grid
+              ref={gridRef}
+              outerRef={gridOuterRef}
+              columnCount={numCols || 0}
+              rowCount={numRows || 0}
+              width={sheetWidth - headerWidth}
+              height={sheetHeight - headerHeight}
+              columnWidth={(index) =>
+                cellsOption[n2a(index + 1)]?.width || defaultWidth
+              }
+              rowHeight={(index) =>
+                cellsOption[index + 1]?.height || defaultHeight
+              }
+              onScroll={(e) => {
+                verticalHeadersRef.current?.scrollTo(e.scrollTop);
+                horizontalHeadersRef.current?.scrollTo(e.scrollLeft);
+              }}
+            >
+              {Cell}
+            </Grid>
           </div>
         </div>
       </div>

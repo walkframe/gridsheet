@@ -11,7 +11,7 @@ export const GridSheetLayout = styled.div`
     background-color: #f7f7f7;
     color: #000000;
     .gs-editor {
-      &.editing {
+      &.gs-editing {
         textarea {
           background-color: #f5f5f5;
           color: #111111;
@@ -19,33 +19,33 @@ export const GridSheetLayout = styled.div`
         }
       }
     }
-    .cell {
+    .gs-cell {
       border-top: solid 1px #bbbbbb;
       border-left: solid 1px #bbbbbb;
 
-      &.top-end {
+      &.gs-cell-top-end {
         border-top: none;
       }
-      &.left-end {
+      &.gs-cell-left-end {
         border-left: none;
       }
-      &.lower-end {
+      &.gs-cell-lower-end {
         border-bottom: solid 1px #bbbbbb;
       }
-      &.right-end {
+      &.gs-cell-right-end {
         border-right: solid 1px #bbbbbb;
       }
     }
-    .header {
+    .gs-header {
       background-color: #eeeeee;
       color: #666666;
-      &.selecting {
+      &.gs-selecting {
         background-color: #dddddd;
       }
-      &.choosing {
+      &.gs-choosing {
         background-color: #bbbbbb;
       }
-      &.header-selecting {
+      &.gs-header-selecting {
         background-color: #555555;
         color: #ffffff;
       }
@@ -60,7 +60,7 @@ export const GridSheetLayout = styled.div`
     color: #eeeeee;
 
     .gs-editor {
-      &.editing {
+      &.gs-editing {
         textarea {
           background-color: #4f4f4f;
           color: #dddddd;
@@ -68,33 +68,33 @@ export const GridSheetLayout = styled.div`
         }
       }
     }
-    .cell {
+    .gs-cell {
       border-top: solid 1px #666666;
       border-left: solid 1px #666666;
 
-      &.top-end {
+      &.gs-cell-top-end {
         border-top: none;
       }
-      &.left-end {
+      &.gs-cell-left-end {
         border-left: none;
       }
-      &.lower-end {
+      &.gs-cell-lower-end {
         border-bottom: solid 1px #666666;
       }
-      &.right-end {
+      &.gs-cell-right-end {
         border-right: solid 1px #666666;
       }
     }
-    .header {
+    .gs-header {
       background-color: #666666;
       color: #eeeeee;
-      &.selecting {
+      &.gs-selecting {
         background-color: #777777;
       }
-      &.choosing {
+      &.gs-choosing {
         background-color: #999999;
       }
-      &.header-selecting {
+      &.gs-header-selecting {
         background-color: #bbbbbb;
         color: #444444;
       }
@@ -102,19 +102,5 @@ export const GridSheetLayout = styled.div`
       border-style: solid;
       border-width: 0;
     }
-  }
-  .clipboard {
-    width: 0;
-    height: 0;
-    padding: 0;
-    margin: 0;
-    color: transparent;
-    background-color: transparent;
-    position: absolute;
-    top: -999999px;
-    left: -999999px;
-    margin-left: -9999px;
-    margin-top: -9999px;
-    z-index: -9999;
   }
 `;

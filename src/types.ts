@@ -59,38 +59,6 @@ export type OptionsType = {
   onChange?: Feedback;
 };
 
-export type InsideState = {
-  matrix: MatrixType;
-  cellsOption: { [s: string]: CellOptionType };
-  choosing: PositionType;
-  cutting: boolean;
-  copyingZone: ZoneType;
-  selectingZone: ZoneType;
-  horizontalHeadersSelecting: boolean;
-  verticalHeadersSelecting: boolean;
-  editingCell: string;
-  history: HistoryType;
-  editorRect: RectType;
-  resizingRect: RectType;
-  sheetHeight: number;
-  sheetWidth: number;
-  headerHeight: number;
-  headerWidth: number;
-  entering: boolean;
-  searchQuery?: string;
-  matchingCells: string[];
-  matchingCellIndex: number;
-  renderers: Renderers;
-  parsers: Parsers;
-};
-
-export type OutsideState = {
-  editingOnEnter: boolean;
-  cellLabel: boolean;
-  contextMenuPosition: [number, number];
-  onSave?: Feedback;
-};
-
 export type RangeType = [number, number]; // [start, end]
 export type PositionType = [Y, X]; // [y, x]
 export type ZoneType = [Y, X, Y, X]; // [startY, startX, endY, endX]
@@ -159,10 +127,6 @@ export type StoreType = {
   editingOnEnter: boolean;
   cellLabel: boolean;
   contextMenuPosition: [number, number];
+  onChange?: Feedback;
   onSave?: Feedback;
-};
-
-export type ActionType = {
-  type: string;
-  payload: any;
 };

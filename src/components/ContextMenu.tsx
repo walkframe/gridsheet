@@ -1,5 +1,4 @@
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
 
 import { n2a } from "../api/converters";
 import { clip } from "../api/clipboard";
@@ -18,22 +17,16 @@ import {
   removeRows,
   addCols,
   removeCols,
-} from "../store/inside";
-import { setContextMenuPosition } from "../store/outside";
+  setContextMenuPosition,
+} from "../store/actions";
 import { ContextMenuLayout } from "./styles/ContextMenuLayout";
 import { zoneShape, zoneToArea } from "../api/arrays";
 
-import { CellOptionType, InsideState, OutsideState } from "../types";
-
-import { RootState } from "../store";
-import { Context } from "./GridSheet";
+import { CellOptionType } from "../types";
+import { Context } from "../store";
 
 export const ContextMenu: React.FC = () => {
-  const dispatch = useDispatch();
-
-  const { contextMenuPosition } = useSelector<RootState, OutsideState>(
-    (state) => state["outside"]
-  );
+  const { store, dispatch } = React.useContext(Context);
 
   const {
     matrix,
@@ -45,8 +38,9 @@ export const ContextMenu: React.FC = () => {
     history,
     renderers,
     parsers,
-  } = useSelector<RootState, InsideState>((state) => state["inside"]);
-  const { editorRef } = React.useContext(Context);
+    editorRef,
+    contextMenuPosition,
+  } = store;
 
   const [y, x] = choosing;
   let [
@@ -114,9 +108,9 @@ export const ContextMenu: React.FC = () => {
             dispatch(setContextMenuPosition([-1, -1]));
           }}
         >
-          <div className="name">Cut</div>
-          <div className="shortcut">
-            <span className="underline">X</span>
+          <div className="gs-menu-name">Cut</div>
+          <div className="gs-menu-shortcut">
+            <span className="gs-menu-underline">X</span>
           </div>
         </li>
         <li
@@ -132,9 +126,9 @@ export const ContextMenu: React.FC = () => {
             dispatch(setContextMenuPosition([-1, -1]));
           }}
         >
-          <div className="name">Copy</div>
-          <div className="shortcut">
-            <span className="underline">C</span>
+          <div className="gs-menu-name">Copy</div>
+          <div className="gs-menu-shortcut">
+            <span className="gs-menu-underline">C</span>
           </div>
         </li>
         <li
@@ -144,13 +138,13 @@ export const ContextMenu: React.FC = () => {
             dispatch(setContextMenuPosition([-1, -1]));
           }}
         >
-          <div className="name">Paste</div>
-          <div className="shortcut">
-            <span className="underline">V</span>
+          <div className="gs-menu-name">Paste</div>
+          <div className="gs-menu-shortcut">
+            <span className="gs-menu-underline">V</span>
           </div>
         </li>
 
-        <li className="divider" />
+        <li className="gs-menu-divider" />
 
         {!horizontalHeadersSelecting && (
           <li
@@ -168,7 +162,7 @@ export const ContextMenu: React.FC = () => {
               dispatch(setContextMenuPosition([-1, -1]));
             }}
           >
-            <div className="name">
+            <div className="gs-menu-name">
               Insert {height + 1} row{height > 0 && "s"} above
             </div>
           </li>
@@ -191,7 +185,7 @@ export const ContextMenu: React.FC = () => {
               dispatch(setContextMenuPosition([-1, -1]));
             }}
           >
-            <div className="name">
+            <div className="gs-menu-name">
               Insert {height + 1} row{height > 0 && "s"} below
             </div>
           </li>
@@ -208,7 +202,7 @@ export const ContextMenu: React.FC = () => {
               dispatch(setContextMenuPosition([-1, -1]));
             }}
           >
-            <div className="name">
+            <div className="gs-menu-name">
               Insert {width + 1} column{width > 0 && "s"} left
             </div>
           </li>
@@ -229,7 +223,7 @@ export const ContextMenu: React.FC = () => {
               dispatch(setContextMenuPosition([-1, -1]));
             }}
           >
-            <div className="name">
+            <div className="gs-menu-name">
               Insert {width + 1} column{width > 0 && "s"} right
             </div>
           </li>
@@ -246,7 +240,7 @@ export const ContextMenu: React.FC = () => {
               }, 200);
             }}
           >
-            <div className="name">
+            <div className="gs-menu-name">
               Remove {height + 1} row{height > 0 && "s"}
             </div>
           </li>
@@ -263,7 +257,7 @@ export const ContextMenu: React.FC = () => {
               }, 200);
             }}
           >
-            <div className="name">
+            <div className="gs-menu-name">
               Remove {width + 1} column{width > 0 && "s"}
             </div>
           </li>
@@ -271,32 +265,32 @@ export const ContextMenu: React.FC = () => {
 
         {(history.index > -1 ||
           history.index < history.operations.length - 1) && (
-          <li className="divider" />
+          <li className="gs-menu-divider" />
         )}
 
         {history.index > -1 && (
           <li
             onClick={async () => {
-              dispatch(undo());
+              dispatch(undo(null));
               dispatch(setContextMenuPosition([-1, -1]));
             }}
           >
-            <div className="name">Undo</div>
-            <div className="shortcut">
-              <span className="underline">Z</span>
+            <div className="gs-menu-name">Undo</div>
+            <div className="gs-menu-shortcut">
+              <span className="gs-menu-underline">Z</span>
             </div>
           </li>
         )}
         {history.index < history.operations.length - 1 && (
           <li
             onClick={async () => {
-              dispatch(redo());
+              dispatch(redo(null));
               dispatch(setContextMenuPosition([-1, -1]));
             }}
           >
-            <div className="name">Redo</div>
-            <div className="shortcut">
-              <span className="underline">R</span>
+            <div className="gs-menu-name">Redo</div>
+            <div className="gs-menu-shortcut">
+              <span className="gs-menu-underline">R</span>
             </div>
           </li>
         )}

@@ -1,14 +1,10 @@
 import React from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "../store";
-import { InsideState } from "../types";
 
 import { GridTable } from "./GridTable";
+import { Context } from "../store";
 
 export const GridTableWrapper: React.FC = React.memo(() => {
-  const { matrix } = useSelector<RootState, InsideState>(
-    (state) => state["inside"]
-  );
-
+  const { store, dispatch } = React.useContext(Context);
+  const { matrix } = store;
   return <GridTable numRows={matrix.length} numCols={matrix[0]?.length || 0} />;
 });

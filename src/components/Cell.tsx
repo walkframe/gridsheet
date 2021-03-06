@@ -1,20 +1,22 @@
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { n2a, a2n } from "../api/converters";
-import { clip } from "../api/clipboard";
 import { zoneToArea, among, zoneShape, cellToIndexes } from "../api/arrays";
-import { RootState } from "../store";
-import { choose, select, drag, write, setEditorRect } from "../store/inside";
-
-import { setContextMenuPosition } from "../store/outside";
+import {
+  choose,
+  select,
+  drag,
+  write,
+  setEditorRect,
+  setContextMenuPosition,
+} from "../store/actions";
 
 import { DUMMY_IMG, DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
-import { AreaType, CellOptionType, InsideState, OutsideState } from "../types";
+import { AreaType, CellOptionType } from "../types";
 import { Renderer as DefaultRenderer } from "../renderers/core";
 import { Parser as DefaultParser } from "../parsers/core";
 import { CellLayout } from "./styles/CellLayout";
 
-import { Context } from "./GridSheet";
+import { Context } from "../store";
 
 type Props = {
   rowIndex: number;
@@ -27,14 +29,7 @@ export const Cell: React.FC<Props> = React.memo(
     const rowId = `${y + 1}`;
     const colId = n2a(x + 1);
     const cellId = `${colId}${rowId}`;
-    const dispatch = useDispatch();
-
-    const { cellLabel } = useSelector<RootState, OutsideState>(
-      (state) => state["outside"],
-      () => {
-        return true;
-      }
-    );
+    const { store, dispatch } = React.useContext(Context);
 
     const {
       matrix,
@@ -51,18 +46,10 @@ export const Cell: React.FC<Props> = React.memo(
       searchQuery,
       matchingCells,
       matchingCellIndex,
-    } = useSelector<RootState, InsideState>(
-      (state) => state["inside"]
-      /*
-      (current, old) => {
-        if (old.reactions[cellId] || current.reactions[cellId]) {
-          return false;
-        }
-        return true;
-      }*/
-    );
-
-    const { editorRef, gridRef } = React.useContext(Context);
+      editorRef,
+      gridRef,
+      cellLabel,
+    } = store;
 
     const [before, setBefore] = React.useState("");
 
@@ -126,11 +113,21 @@ export const Cell: React.FC<Props> = React.memo(
     }
 
     return (
-      <div
+      <CellLayout
         key={x}
-        className={`cell ${among(copyingArea, [y, x]) ? "copying" : ""} ${
-          y === 0 ? "top-end" : y === numRows - 1 ? "lower-end" : ""
-        } ${x === 0 ? "left-end" : x === numCols - 1 ? "right-end" : ""}`}
+        className={`gs-cell ${among(copyingArea, [y, x]) ? "gs-copying" : ""} ${
+          y === 0
+            ? "gs-cell-top-end"
+            : y === numRows - 1
+            ? "gs-cell-lower-end"
+            : ""
+        } ${
+          x === 0
+            ? "gs-cell-left-end"
+            : x === numCols - 1
+            ? "gs-cell-right-end"
+            : ""
+        }`}
         style={{
           ...outerStyle,
           ...style,
@@ -193,29 +190,28 @@ export const Cell: React.FC<Props> = React.memo(
         }}
       >
         <div
-          className={`cell-wrapper-outer ${
-            among(selectingArea, [y, x]) ? "selected" : ""
-          } ${pointed ? "pointed" : ""} ${editing ? "editing" : ""} ${
+          className={`gs-cell-rendered-wrapper-outer ${
+            among(selectingArea, [y, x]) ? "gs-selected" : ""
+          } ${pointed ? "gs-pointed" : ""} ${editing ? "gs-editing" : ""} ${
             matching ? "gs-matching" : ""
           } ${matchingCell === cellId ? "gs-searching" : ""}`}
         >
           <div
-            className={`cell-wrapper-inner`}
+            className={`gs-cell-rendered-wrapper-inner`}
             style={{
               width,
               height,
               verticalAlign,
             }}
           >
-            {cellLabel && <div className="label">{cellId}</div>}
-            <CellLayout>
-              <div className="rendered">
-                {renderer.render(value, writeCell)}
-              </div>
-            </CellLayout>
+            {cellLabel && <div className="gs-cell-label">{cellId}</div>}
+
+            <div className="gs-cell-rendered">
+              {renderer.render(value, writeCell)}
+            </div>
           </div>
         </div>
-      </div>
+      </CellLayout>
     );
   }
 );

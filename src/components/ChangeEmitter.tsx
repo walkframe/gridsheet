@@ -1,60 +1,27 @@
 import React from "react";
-import { useSelector } from "react-redux";
 
-import { Context } from "./GridSheet";
-import { Feedback, InsideState } from "../types";
+import { Context } from "../store";
+import { Feedback } from "../types";
 
-import { RootState } from "../store";
-import { matrix2tsv } from "../api/converters";
-import { matrixShape, rerenderCells } from "../api/arrays";
+import { rerenderCells } from "../api/arrays";
 
 type Props = {
   onChange?: Feedback;
 };
 
 export const ChangeEmitter: React.FC<Props> = ({ onChange }) => {
-  const refs = React.useContext(Context);
-  useSelector<RootState, InsideState>(
-    (state) => state["inside"],
-    (current, old) => {
-      if (onChange && matrix2tsv(current.matrix) !== matrix2tsv(old.matrix)) {
-        onChange(current.matrix, undefined);
-      }
-      const [currentHeight, currentWidth] = matrixShape(current.matrix);
-      const [oldHeight, oldWidth] = matrixShape(old.matrix);
-      if (currentHeight !== oldHeight) {
-        rerenderCells({
-          ...refs,
-          rows: [0, currentHeight > oldHeight ? currentHeight : oldHeight],
-        });
-      }
-      if (currentWidth !== oldWidth) {
-        rerenderCells({
-          ...refs,
-          cols: [0, currentWidth > oldWidth ? currentWidth : oldWidth],
-        });
-      }
-      return false;
-    }
-  );
-  useSelector<RootState, InsideState>(
-    (state) => state["inside"],
-    (current, old) => {
-      if (
-        JSON.stringify(current.cellsOption) !== JSON.stringify(old.cellsOption)
-      ) {
-        onChange && onChange(undefined, current.cellsOption);
-        const [height, width] = matrixShape(current.matrix);
-        rerenderCells({
-          ...refs,
-          rows: [0, height],
-          cols: [0, width],
-        });
-        return false;
-      }
-      return true;
-    }
-  );
+  const { store, dispatch } = React.useContext(Context);
+  const { matrix, cellsOption } = store;
+  React.useEffect(() => {
+    rerenderCells({
+      ...store,
+      rows: [0, matrix.length],
+      cols: [0, matrix[0]?.length || 0],
+    });
+  }, [matrix, cellsOption]);
+  React.useEffect(() => {
+    onChange && onChange(matrix, cellsOption);
+  }, [onChange, matrix, cellsOption]);
 
   return <></>;
 };
