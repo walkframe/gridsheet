@@ -1,24 +1,21 @@
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { n2a } from "../api/converters";
 import { between, rerenderCells } from "../api/arrays";
-import { RootState } from "../store";
+import { Context } from "../store";
 import {
   setCellOption,
   drag,
   selectCols,
   setResizingRect,
   setEditorRect,
-} from "../store/inside";
-import { InsideState, OutsideState } from "../types";
+  setContextMenuPosition,
+} from "../store/actions";
 import {
   DUMMY_IMG,
   DEFAULT_WIDTH,
   DEFAULT_HEIGHT,
   MIN_WIDTH,
 } from "../constants";
-import { setContextMenuPosition } from "../store/outside";
-import { Context } from "./GridSheet";
 
 type Props = {
   index: number;
@@ -27,7 +24,7 @@ type Props = {
 
 export const HorizontalHeaderCell: React.FC<Props> = React.memo(
   ({ index: x, style: outerStyle }) => {
-    const dispatch = useDispatch();
+    const { store, dispatch } = React.useContext(Context);
     const colId = n2a(x + 1);
 
     const {
@@ -39,9 +36,8 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
       horizontalHeadersSelecting,
       sheetHeight,
       headerHeight,
-    } = useSelector<RootState, InsideState>((state) => state["inside"]);
-
-    const { gridOuterRef } = React.useContext(Context);
+      gridOuterRef,
+    } = store;
 
     const defaultWidth = cellsOption.default?.width || DEFAULT_WIDTH;
     const colOption = cellsOption[colId] || {};
@@ -51,13 +47,13 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
       <div
         style={outerStyle}
         className={`
-      header horizontal
-      ${choosing[1] === x ? "choosing" : ""} 
+      gs-header gs-horizontal
+      ${choosing[1] === x ? "gs-choosing" : ""} 
       ${
         between([selectingZone[1], selectingZone[3]], x)
           ? horizontalHeadersSelecting
-            ? "header-selecting"
-            : "selecting"
+            ? "gs-header-selecting"
+            : "gs-selecting"
           : ""
       }`}
         draggable
@@ -110,24 +106,24 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
         }}
       >
         <div
-          className="header-inner"
+          className="gs-header-inner"
           style={{ width, height: headerHeight }}
           draggable
         >
           {colOption.label || colId}
         </div>
         <div
-          className="resizer"
+          className="gs-resizer"
           style={{ height: headerHeight }}
           draggable={true}
           onDragStart={(e) => {
             dispatch(setResizingRect([-1, x, -1, e.screenX]));
-            e.currentTarget.classList.add("dragging");
+            e.currentTarget.classList.add("gs-dragging");
             e.stopPropagation();
             return false;
           }}
           onDragEnd={(e) => {
-            e.currentTarget.classList.remove("dragging");
+            e.currentTarget.classList.remove("gs-dragging");
             e.preventDefault();
             const [_y, x, _h, screenX] = resizingRect;
             const cell = n2a(x + 1);

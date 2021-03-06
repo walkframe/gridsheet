@@ -9,7 +9,6 @@ import {
   ZoneType,
   RangeType,
   PositionType,
-  ReactionsType,
   FlattenedType,
   Y,
   X,

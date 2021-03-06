@@ -23,7 +23,7 @@ export const ContextMenuLayout = styled.div`
         background-color: #eeeeee;
       }
 
-      &.divider {
+      &.gs-menu-divider {
         background-color: #aaaaaa;
         margin: 10px 0;
         padding: 0;
@@ -32,13 +32,13 @@ export const ContextMenuLayout = styled.div`
 
       display: flex;
 
-      .name {
+      .gs-menu-name {
         flex: 1;
         font-size: 15px;
         letter-spacing: 1px;
       }
 
-      .shortcut {
+      .gs-menu-shortcut {
         font-size: 10px;
         line-height: 15px;
         color: #999999;
@@ -51,7 +51,7 @@ export const ContextMenuLayout = styled.div`
           content: ")";
         }
 
-        .underline {
+        .gs-menu-underline {
           text-decoration: underline;
         }
       }

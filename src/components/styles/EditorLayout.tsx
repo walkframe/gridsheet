@@ -3,18 +3,6 @@ import styled from "styled-components";
 export const EditorLayout = styled.div`
   position: fixed;
   z-index: -1;
-  .label {
-    font-family: mono, serif;
-    position: absolute;
-    top: 0;
-    right: 0;
-    margin-top: -19px;
-    margin-right: -2px;
-    padding: 3px 5px;
-    font-size: 10px;
-    background-color: #0077ff;
-    color: #ffffff;
-  }
   textarea {
     width: 100%;
     position: absolute;
@@ -34,7 +22,7 @@ export const EditorLayout = styled.div`
     caret-color: transparent;
     cursor: default;
   }
-  &.editing {
+  &.gs-editing {
     z-index: 2;
 
     textarea {
@@ -43,6 +31,18 @@ export const EditorLayout = styled.div`
       white-space: pre;
       outline: solid 2px #0077ff;
       height: auto;
+    }
+    .gs-cell-label {
+      font-family: mono, serif;
+      position: absolute;
+      top: 0;
+      right: 0;
+      margin-top: -19px;
+      margin-right: -2px;
+      padding: 3px 5px;
+      font-size: 10px;
+      background-color: #0077ff;
+      color: #ffffff;
     }
   }
 `;
