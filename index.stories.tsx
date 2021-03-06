@@ -138,7 +138,7 @@ export const showIndex = () => {
             default: { style: { fontStyle: "italic" } },
             A1: { style: { color: "#008888" } },
             B: { fixed: true, label: "ビー" },
-            D: { width: 300 },
+            D: { width: 300, style: { textAlign: "right" } },
             "2": {
               label: "二",
               style: { borderBottom: "double 4px #000000" },
