@@ -5,7 +5,7 @@ export const CellLayout = styled.div`
   margin: 0;
   box-sizing: border-box;
   position: relative;
-  &.copying {
+  &.gs-copying {
     textarea:focus {
       outline: solid 1px #0077ff;
     }
