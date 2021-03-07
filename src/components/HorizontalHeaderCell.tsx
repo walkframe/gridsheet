@@ -1,5 +1,5 @@
 import React from "react";
-import { n2a } from "../api/converters";
+import { x2c } from "../api/converters";
 import { between, rerenderCells } from "../api/arrays";
 import { Context } from "../store";
 import {
@@ -25,7 +25,7 @@ type Props = {
 export const HorizontalHeaderCell: React.FC<Props> = React.memo(
   ({ index: x, style: outerStyle }) => {
     const { store, dispatch } = React.useContext(Context);
-    const colId = n2a(x + 1);
+    const colId = x2c(x);
 
     const {
       matrix,
@@ -126,11 +126,11 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
             e.currentTarget.classList.remove("gs-dragging");
             e.preventDefault();
             const [_y, x, _h, screenX] = resizingRect;
-            const cell = n2a(x + 1);
+            const c = x2c(x);
             const nextWidth = width + (e.screenX - screenX);
             dispatch(
               setCellOption({
-                cell,
+                cell: c,
                 option: {
                   ...colOption,
                   width: nextWidth > 0 ? nextWidth : MIN_WIDTH,

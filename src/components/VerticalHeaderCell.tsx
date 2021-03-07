@@ -1,4 +1,5 @@
 import React from "react";
+import { y2r } from "../api/converters";
 import { between } from "../api/arrays";
 import { Context } from "../store";
 import {
@@ -23,7 +24,7 @@ type Props = {
 
 export const VerticalHeaderCell: React.FC<Props> = React.memo(
   ({ index: y, style: outerStyle }) => {
-    const rowId = `${y + 1}`;
+    const rowId = `${y2r(y)}`;
     const { store, dispatch } = React.useContext(Context);
 
     const {
@@ -120,11 +121,11 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
             e.currentTarget.classList.remove("gs-dragging");
             e.preventDefault();
             const [y, _x, screenY, _h] = resizingRect;
-            const cell = `${y + 1}`;
+            const r = `${y2r(y)}`;
             const nextHeight = height + (e.screenY - screenY);
             dispatch(
               setCellOption({
-                cell,
+                cell: r,
                 option: {
                   ...rowOption,
                   height: nextHeight > 0 ? nextHeight : MIN_WIDTH,
