@@ -10,7 +10,7 @@ import { HorizontalHeaderCell } from "./HorizontalHeaderCell";
 import { VerticalHeaderCell } from "./VerticalHeaderCell";
 import { SearchBox } from "./SearchBox";
 
-import { n2a } from "../api/converters";
+import { x2c, y2r } from "../api/converters";
 
 import { Context } from "../store";
 import { choose, select, setEntering } from "../store/actions";
@@ -73,9 +73,7 @@ export const GridTable: React.FC<Props> = ({ numRows, numCols }) => {
             <List
               ref={horizontalHeadersRef}
               itemCount={numCols || 0}
-              itemSize={(index) =>
-                cellsOption[n2a(index + 1)]?.width || defaultWidth
-              }
+              itemSize={(x) => cellsOption[x2c(x)]?.width || defaultWidth}
               layout="horizontal"
               width={gridOuterRef.current?.clientWidth || sheetInnerWidth}
               height={headerHeight}
@@ -92,9 +90,7 @@ export const GridTable: React.FC<Props> = ({ numRows, numCols }) => {
             <List
               ref={verticalHeadersRef}
               itemCount={numRows || 0}
-              itemSize={(index) =>
-                cellsOption[index + 1]?.height || defaultHeight
-              }
+              itemSize={(y) => cellsOption[y2r(y)]?.height || defaultHeight}
               height={gridOuterRef.current?.clientHeight || sheetInnerHeight}
               width={headerWidth}
               style={{ overflow: "hidden" }}
@@ -110,12 +106,8 @@ export const GridTable: React.FC<Props> = ({ numRows, numCols }) => {
               rowCount={numRows || 0}
               width={sheetWidth - headerWidth}
               height={sheetHeight - headerHeight}
-              columnWidth={(index) =>
-                cellsOption[n2a(index + 1)]?.width || defaultWidth
-              }
-              rowHeight={(index) =>
-                cellsOption[index + 1]?.height || defaultHeight
-              }
+              columnWidth={(x) => cellsOption[x2c(x)]?.width || defaultWidth}
+              rowHeight={(y) => cellsOption[y2r(y)]?.height || defaultHeight}
               onScroll={(e) => {
                 verticalHeadersRef.current?.scrollTo(e.scrollTop);
                 horizontalHeadersRef.current?.scrollTo(e.scrollLeft);

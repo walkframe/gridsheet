@@ -1,43 +1,88 @@
 import { MatrixType } from "../types";
 import { Renderer as DefaultRenderer } from "../renderers/core";
 import { Parser as DefaultParser } from "../parsers/core";
+import { DEFAULT_ALPHA_CACHE_SIZE } from "../constants";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-const N2A_CACHE: { [s: string]: string } = {};
-const A2N_CACHE: { [s: string]: number } = {};
+const N2A_CACHE = new Map<number, string>();
+const A2N_CACHE = new Map<string, number>();
 
-export const n2a = (num: number, useCache = true): string => {
-  if (useCache && N2A_CACHE[num]) {
-    return N2A_CACHE[num];
+export const n2a = (
+  key: number,
+  cacheSize = DEFAULT_ALPHA_CACHE_SIZE
+): string => {
+  const cached = N2A_CACHE.get(key);
+  if (cached != null) {
+    return cached;
   }
+  if (key === 0) {
+    return "";
+  }
+  let num = key;
   let result = "";
   do {
     result = ALPHABET[--num % 26] + result;
     num = Math.floor(num / 26);
   } while (num > 0);
-  if (useCache) {
-    N2A_CACHE[num] = result;
-    A2N_CACHE[result] = num;
+
+  N2A_CACHE.set(key, result);
+  const it = N2A_CACHE.keys();
+  for (let st = it.next(); N2A_CACHE.size > cacheSize; st = it.next()) {
+    N2A_CACHE.delete(st.value);
   }
   return result;
 };
 
-export const a2n = (alpha: string, useCache = true): number => {
-  if (useCache && A2N_CACHE[alpha]) {
-    return A2N_CACHE[alpha];
+export const a2n = (
+  key: string,
+  cacheSize = DEFAULT_ALPHA_CACHE_SIZE
+): number => {
+  const cached = A2N_CACHE.get(key);
+  if (cached != null) {
+    return cached;
   }
+  if (key === "") {
+    return 0;
+  }
+  let alpha = key;
   let result = 0;
   for (let digit = 0; digit < alpha.length; digit++) {
     const a = alpha[alpha.length - digit - 1];
     const num = ALPHABET.indexOf(a) + 1;
     result += ALPHABET.length ** digit * num;
   }
-  if (useCache) {
-    N2A_CACHE[result] = alpha;
-    A2N_CACHE[alpha] = result;
+  A2N_CACHE.set(key, result);
+  const it = A2N_CACHE.keys();
+  for (let st = it.next(); A2N_CACHE.size > cacheSize; st = it.next()) {
+    A2N_CACHE.delete(st.value);
   }
   return result;
+};
+
+export const x2c = (
+  x: number,
+  cacheSize = DEFAULT_ALPHA_CACHE_SIZE
+): string => {
+  return n2a(x + 1, cacheSize);
+};
+
+export const c2x = (
+  col: string,
+  cacheSize = DEFAULT_ALPHA_CACHE_SIZE
+): number => {
+  return a2n(col, cacheSize) - 1;
+};
+
+export const y2r = (y: number) => {
+  return y + 1;
+};
+
+export const r2y = (row: number | string) => {
+  if (typeof row === "string") {
+    row = parseInt(row, 10);
+  }
+  return row - 1;
 };
 
 const _renderer = new DefaultRenderer();

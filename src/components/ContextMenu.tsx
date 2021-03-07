@@ -1,6 +1,6 @@
 import React from "react";
 
-import { n2a } from "../api/converters";
+import { x2c, y2r } from "../api/converters";
 import { clip } from "../api/clipboard";
 import { Renderer as DefaultRenderer } from "../renderers/core";
 import { Parser as DefaultParser } from "../parsers/core";
@@ -57,8 +57,8 @@ export const ContextMenu: React.FC = () => {
       x,
     ];
   }
-  const rowId = `${y + 1}`;
-  const colId = n2a(x + 1);
+  const rowId = y2r(y);
+  const colId = x2c(x);
   const cellId = `${colId}${rowId}`;
 
   const [height, width] = zoneShape(selectingZone);

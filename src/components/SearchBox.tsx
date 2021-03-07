@@ -8,6 +8,7 @@ export const SearchBox: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);
 
   const {
+    editorRef,
     searchInputRef,
     gridRef,
     searchQuery,
@@ -46,11 +47,17 @@ export const SearchBox: React.FC = () => {
           onChange={(e) => dispatch(setSearchQuery(e.target.value))}
           onKeyDown={(e) => {
             if (e.key === "Escape") {
+              editorRef.current?.focus();
               dispatch(setSearchQuery(undefined));
+            }
+            if (e.key === "f" && (e.ctrlKey || e.metaKey)) {
+              e.preventDefault();
+              return false;
             }
             if (e.key !== "Enter") {
               return true;
             }
+
             dispatch(search(e.shiftKey ? -1 : 1));
             return false;
           }}

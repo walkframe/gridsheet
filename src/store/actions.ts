@@ -28,7 +28,7 @@ import {
 import { ParserType } from "../parsers/core";
 
 import * as histories from "../api/histories";
-import { tsv2matrix, n2a } from "../api/converters";
+import { tsv2matrix, x2c, y2r } from "../api/converters";
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
 import { Renderer as DefaultRenderer } from "../renderers/core";
 
@@ -85,7 +85,7 @@ class SetSearchQueryAction<T extends string | undefined> extends CoreAction<T> {
     const [numRows, numCols] = matrixShape(store.matrix);
     const defaultRendererKey = store.cellsOption.default?.renderer;
     for (let x = 0; x < numCols; x++) {
-      const colId = n2a(x + 1);
+      const colId = x2c(x);
       const colRendererKey = store.cellsOption[colId]?.renderer;
       for (let y = 0; y < numRows; y++) {
         const rowId = y + 1;
@@ -728,24 +728,24 @@ class ArrowAction<
     const defaultWidth = cellsOption.default?.width || DEFAULT_WIDTH;
     if (deltaY > 0) {
       for (let i = y; i < nextY; i++) {
-        editorTop += cellsOption[i + 1]?.height || defaultHeight;
+        editorTop += cellsOption[y2r(i)]?.height || defaultHeight;
       }
     } else if (deltaY < 0) {
       for (let i = y - 1; i >= nextY; i--) {
-        editorTop -= cellsOption[i + 1]?.height || defaultHeight;
+        editorTop -= cellsOption[y2r(i)]?.height || defaultHeight;
       }
     }
     if (deltaX > 0) {
       for (let i = x; i < nextX; i++) {
-        editorLeft += store.cellsOption[n2a(i + 1)]?.width || defaultWidth;
+        editorLeft += store.cellsOption[x2c(i)]?.width || defaultWidth;
       }
     } else if (deltaX < 0) {
       for (let i = x - 1; i >= nextX; i--) {
-        editorLeft -= store.cellsOption[n2a(i + 1)]?.width || defaultWidth;
+        editorLeft -= store.cellsOption[x2c(i)]?.width || defaultWidth;
       }
     }
-    height = cellsOption[nextY + 1]?.height || defaultHeight;
-    width = cellsOption[n2a(nextX + 1)]?.width || defaultWidth;
+    height = cellsOption[y2r(nextY)]?.height || defaultHeight;
+    width = cellsOption[x2c(nextX)]?.width || defaultWidth;
 
     return {
       ...store,
@@ -826,24 +826,24 @@ class WalkAction<
     const defaultWidth = cellsOption.default?.width || DEFAULT_WIDTH;
     if (deltaY > 0) {
       for (let i = y; i < nextY; i++) {
-        editorTop += cellsOption[i + 1]?.height || defaultHeight;
+        editorTop += cellsOption[y2r(i)]?.height || defaultHeight;
       }
     } else if (deltaY < 0) {
       for (let i = y - 1; i >= nextY; i--) {
-        editorTop -= cellsOption[i + 1]?.height || defaultHeight;
+        editorTop -= cellsOption[y2r(i)]?.height || defaultHeight;
       }
     }
     if (deltaX > 0) {
       for (let i = x; i < nextX; i++) {
-        editorLeft += store.cellsOption[n2a(i + 1)]?.width || defaultWidth;
+        editorLeft += store.cellsOption[x2c(i)]?.width || defaultWidth;
       }
     } else if (deltaX < 0) {
       for (let i = x - 1; i >= nextX; i--) {
-        editorLeft -= store.cellsOption[n2a(i + 1)]?.width || defaultWidth;
+        editorLeft -= store.cellsOption[x2c(i)]?.width || defaultWidth;
       }
     }
-    height = cellsOption[nextY + 1]?.height || defaultHeight;
-    width = cellsOption[n2a(nextX + 1)]?.width || defaultWidth;
+    height = cellsOption[y2r(nextY)]?.height || defaultHeight;
+    width = cellsOption[x2c(nextX)]?.width || defaultWidth;
 
     return {
       ...store,

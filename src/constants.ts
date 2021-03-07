@@ -14,3 +14,5 @@ export const HEADER_HEIGHT = 20;
 export const HEADER_WIDTH = 50;
 
 export const MIN_WIDTH = 3;
+
+export const DEFAULT_ALPHA_CACHE_SIZE = 1000;

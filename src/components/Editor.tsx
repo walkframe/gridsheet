@@ -1,5 +1,5 @@
 import React from "react";
-import { n2a } from "../api/converters";
+import { x2c, y2r } from "../api/converters";
 import { clip } from "../api/clipboard";
 import {
   blur,
@@ -49,8 +49,8 @@ export const Editor: React.FC = () => {
 
   const [y, x] = choosing;
 
-  const rowId = `${y + 1}`;
-  const colId = n2a(x + 1);
+  const rowId = `${y2r(y)}`;
+  const colId = x2c(x);
   const cellId = `${colId}${rowId}`;
 
   const [before, setBefore] = React.useState("");

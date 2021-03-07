@@ -16,7 +16,7 @@ import {
   Width,
 } from "../types";
 
-import { n2a, a2n } from "./converters";
+import { a2n, x2c, c2x, r2y } from "./converters";
 
 export const cropMatrix = (matrix: MatrixType, area: AreaType): MatrixType => {
   const [top, left, bottom, right] = area;
@@ -176,8 +176,8 @@ export const cellToIndexes = (cellId: string): [Y, X] | undefined => {
   if (m == null) {
     return undefined;
   }
-  const [_, a, n] = m.slice();
-  return [parseInt(n, 10) - 1, a2n(a)];
+  const [_, col, row] = m.slice();
+  return [r2y(row), c2x(col)];
 };
 
 export const slideFlattened = (
@@ -243,15 +243,15 @@ export const slideFlattened = (
         if (typeof a === "undefined") {
           return;
         }
-        const colNumber = a2n(a) - 1;
+        const colNumber = c2x(a);
         if (width < 0 && x <= colNumber && colNumber < x - width) {
-          slided[`-${n2a(colNumber + 1)}${n}`] = value;
+          slided[`-${x2c(colNumber)}${n}`] = value;
           return;
         }
         if (Number.isNaN(colNumber) || colNumber < x || colNumber + width < 1) {
           return;
         }
-        slided[`${n2a(colNumber + width + 1)}${n}`] = value;
+        slided[`${x2c(colNumber + width)}${n}`] = value;
         slided[`-${a}${n}`] = value;
       });
   }

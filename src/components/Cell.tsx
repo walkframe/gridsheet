@@ -1,6 +1,6 @@
 import React from "react";
-import { n2a, a2n } from "../api/converters";
-import { zoneToArea, among, zoneShape, cellToIndexes } from "../api/arrays";
+import { x2c, y2r } from "../api/converters";
+import { zoneToArea, among, zoneShape } from "../api/arrays";
 import {
   choose,
   select,
@@ -26,8 +26,8 @@ type Props = {
 
 export const Cell: React.FC<Props> = React.memo(
   ({ rowIndex: y, columnIndex: x, style: outerStyle }) => {
-    const rowId = `${y + 1}`;
-    const colId = n2a(x + 1);
+    const rowId = y2r(y);
+    const colId = x2c(x);
     const cellId = `${colId}${rowId}`;
     const { store, dispatch } = React.useContext(Context);
 
@@ -47,7 +47,6 @@ export const Cell: React.FC<Props> = React.memo(
       matchingCells,
       matchingCellIndex,
       editorRef,
-      gridRef,
       cellLabel,
     } = store;
 
