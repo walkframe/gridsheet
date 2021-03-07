@@ -25,7 +25,7 @@ $ yarn add react-gridsheet
   - BREAKING CHANGE: dropped `stickyHeaders` option.
 
 - 0.5.x:
-  - dropped redux
+  - Quit using redux.
 
 
 
