@@ -26,11 +26,11 @@ export const n2a = (
     num = Math.floor(num / 26);
   } while (num > 0);
 
+  N2A_CACHE.set(key, result);
   const it = N2A_CACHE.keys();
   for (let st = it.next(); N2A_CACHE.size > cacheSize; st = it.next()) {
     N2A_CACHE.delete(st.value);
   }
-  N2A_CACHE.set(key, result);
   return result;
 };
 
@@ -52,11 +52,11 @@ export const a2n = (
     const num = ALPHABET.indexOf(a) + 1;
     result += ALPHABET.length ** digit * num;
   }
+  A2N_CACHE.set(key, result);
   const it = A2N_CACHE.keys();
   for (let st = it.next(); A2N_CACHE.size > cacheSize; st = it.next()) {
     A2N_CACHE.delete(st.value);
   }
-  A2N_CACHE.set(key, result);
   return result;
 };
 
