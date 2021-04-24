@@ -12,6 +12,7 @@ import { reducer } from "../store/actions";
 import { GridTableWrapper } from "./GridTableWrapper";
 
 import { StoreInitializer } from "./StoreInitializer";
+import { Resizing } from "./Resizing";
 
 import { ChangeEmitter } from "./ChangeEmitter";
 import { ContextMenu } from "./ContextMenu";
@@ -53,6 +54,7 @@ export const GridSheet: React.FC<Props> = ({
   const verticalHeadersRef = React.useRef<List>(null);
   const horizontalHeadersRef = React.useRef<List>(null);
   const initialState: StoreType = {
+    sheetRef,
     searchInputRef,
     editorRef,
     gridOuterRef,
@@ -83,6 +85,8 @@ export const GridSheet: React.FC<Props> = ({
     editingOnEnter: true,
     cellLabel: true,
     contextMenuPosition: [-1, -1],
+    resizingPositionY: [-1, -1, -1],
+    resizingPositionX: [-1, -1, -1],
   };
 
   const [store, dispatch] = React.useReducer(reducer, initialState);
@@ -118,6 +122,7 @@ export const GridSheet: React.FC<Props> = ({
           options={{ ...options, sheetHeight, sheetWidth }}
         />
         <ContextMenu />
+        <Resizing />
         <ChangeEmitter onChange={onChange} />
       </Context.Provider>
     </GridSheetLayout>

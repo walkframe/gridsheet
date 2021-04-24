@@ -7,8 +7,8 @@ import {
   drag,
   selectCols,
   setResizingRect,
-  setEditorRect,
   setContextMenuPosition,
+  setResizingPositionX,
 } from "../store/actions";
 import {
   DUMMY_IMG,
@@ -36,7 +36,8 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
       horizontalHeadersSelecting,
       sheetHeight,
       headerHeight,
-      gridOuterRef,
+      sheetRef,
+      editorRef,
     } = store;
 
     const defaultWidth = cellsOption.default?.width || DEFAULT_WIDTH;
@@ -69,29 +70,12 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
           }
           dispatch(selectCols({ range: [startX, x], numRows }));
           dispatch(setContextMenuPosition([-1, -1]));
-          const rect = e.currentTarget.getBoundingClientRect();
-          dispatch(
-            setEditorRect([
-              rect.top + rect.height,
-              rect.left,
-              cellsOption[1]?.height || DEFAULT_HEIGHT,
-              rect.width,
-            ])
-          );
+          editorRef.current?.focus();
           return false;
         }}
         onDragStart={(e) => {
           e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
           dispatch(selectCols({ range: [x, x], numRows }));
-          const rect = e.currentTarget.getBoundingClientRect();
-          dispatch(
-            setEditorRect([
-              rect.top + rect.height,
-              rect.left,
-              cellsOption[1]?.height || DEFAULT_HEIGHT,
-              rect.width,
-            ])
-          );
           return false;
         }}
         onDragEnter={() => {
@@ -115,30 +99,9 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
         <div
           className="gs-resizer"
           style={{ height: headerHeight }}
-          draggable={true}
-          onDragStart={(e) => {
-            dispatch(setResizingRect([-1, x, -1, e.screenX]));
-            e.currentTarget.classList.add("gs-dragging");
-            e.stopPropagation();
-            return false;
-          }}
-          onDragEnd={(e) => {
-            e.currentTarget.classList.remove("gs-dragging");
-            e.preventDefault();
-            const [_y, x, _h, screenX] = resizingRect;
-            const c = x2c(x);
-            const nextWidth = width + (e.screenX - screenX);
-            dispatch(
-              setCellOption({
-                cell: c,
-                option: {
-                  ...colOption,
-                  width: nextWidth > 0 ? nextWidth : MIN_WIDTH,
-                },
-              })
-            );
-            dispatch(setResizingRect([-1, -1, -1, -1]));
-            return true;
+          onMouseDown={(e) => {
+            const { x: offsetX } = sheetRef.current.getBoundingClientRect();
+            dispatch(setResizingPositionX([x, e.clientX - offsetX, -1]));
           }}
         >
           <i />

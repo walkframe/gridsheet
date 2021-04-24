@@ -23,7 +23,7 @@ export const GridTableLayout = styled.div`
       position: absolute;
       border-color: transparent;
       box-sizing: border-box;
-      border-width: 3px;
+      border-width: 2px;
       z-index: 2;
       &:hover {
         border-color: #0077ff;

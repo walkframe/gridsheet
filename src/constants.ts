@@ -13,6 +13,7 @@ export const SHEET_WIDTH = 1000;
 export const HEADER_HEIGHT = 20;
 export const HEADER_WIDTH = 50;
 
-export const MIN_WIDTH = 3;
+export const MIN_WIDTH = 5;
+export const MIN_HEIGHT = 5;
 
 export const DEFAULT_ALPHA_CACHE_SIZE = 1000;

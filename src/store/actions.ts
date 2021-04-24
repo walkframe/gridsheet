@@ -159,6 +159,32 @@ class SetContextMenuPositionAction<
 }
 export const setContextMenuPosition = new SetContextMenuPositionAction().bind();
 
+class SetResizingPositionYAction<
+  T extends [number, number, number]
+> extends CoreAction<T> {
+  code = "SET_RESIZING_POSITION_Y";
+  reduce(store: StoreType, payload: T): StoreType {
+    return {
+      ...store,
+      resizingPositionY: payload,
+    };
+  }
+}
+export const setResizingPositionY = new SetResizingPositionYAction().bind();
+
+class SetResizingPositionXAction<
+  T extends [number, number, number]
+> extends CoreAction<T> {
+  code = "SET_RESIZING_POSITION_X";
+  reduce(store: StoreType, payload: T): StoreType {
+    return {
+      ...store,
+      resizingPositionX: payload,
+    };
+  }
+}
+export const setResizingPositionX = new SetResizingPositionXAction().bind();
+
 class SetOnSaveAction<T extends Feedback> extends CoreAction<T> {
   code = "SET_ON_SAVE";
   reduce(store: StoreType, payload: T): StoreType {
