@@ -29,7 +29,6 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
       resizingRect,
       headerWidth,
       editorRef,
-      sheetRef,
     } = store;
 
     const defaultHeight = cellsOption.default?.height || DEFAULT_HEIGHT;
@@ -89,8 +88,9 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
           className="gs-resizer"
           style={{ width: headerWidth }}
           onMouseDown={(e) => {
-            const { y: offsetY } = sheetRef.current.getBoundingClientRect();
-            dispatch(setResizingPositionY([y, e.clientY - offsetY, -1]));
+            dispatch(setResizingPositionY([y, e.clientY, e.clientY]));
+            e.preventDefault();
+            e.stopPropagation();
           }}
         >
           <i />

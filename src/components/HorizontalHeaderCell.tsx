@@ -28,7 +28,6 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
       resizingRect,
       horizontalHeadersSelecting,
       headerHeight,
-      sheetRef,
       editorRef,
     } = store;
 
@@ -49,7 +48,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
             : "gs-selecting"
           : ""
       }`}
-        draggable
+        //draggable
         onContextMenu={(e) => {
           e.preventDefault();
           dispatch(setContextMenuPosition([e.pageY, e.pageX]));
@@ -92,8 +91,9 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
           className="gs-resizer"
           style={{ height: headerHeight }}
           onMouseDown={(e) => {
-            const { x: offsetX } = sheetRef.current.getBoundingClientRect();
-            dispatch(setResizingPositionX([x, e.clientX - offsetX, -1]));
+            dispatch(setResizingPositionX([x, e.clientX, e.clientX]));
+            e.preventDefault();
+            e.stopPropagation();
           }}
         >
           <i />
