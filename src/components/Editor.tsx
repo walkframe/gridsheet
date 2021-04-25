@@ -103,6 +103,9 @@ export const Editor: React.FC = () => {
         ref={editorRef}
         style={{ height, width }}
         rows={typeof value === "string" ? value.split("\n").length : 1}
+        onFocus={(e) => {
+          e.currentTarget.value = "";
+        }}
         onDoubleClick={(e) => {
           const input = e.currentTarget;
           if (!editing) {
@@ -292,6 +295,7 @@ export const Editor: React.FC = () => {
               if (e.ctrlKey || e.metaKey) {
                 if (!editing) {
                   dispatch(redo(null));
+                  setTimeout(() => (input.value = ""), 100); // resetting textarea
                   return false;
                 }
               }
@@ -335,6 +339,7 @@ export const Editor: React.FC = () => {
                 if (!editing) {
                   if (e.shiftKey) {
                     dispatch(redo(null));
+                    setTimeout(() => (input.value = ""), 100); // resetting textarea
                   } else {
                     dispatch(undo(null));
                   }

@@ -159,6 +159,32 @@ class SetContextMenuPositionAction<
 }
 export const setContextMenuPosition = new SetContextMenuPositionAction().bind();
 
+class SetResizingPositionYAction<
+  T extends [number, number, number]
+> extends CoreAction<T> {
+  code = "SET_RESIZING_POSITION_Y";
+  reduce(store: StoreType, payload: T): StoreType {
+    return {
+      ...store,
+      resizingPositionY: payload,
+    };
+  }
+}
+export const setResizingPositionY = new SetResizingPositionYAction().bind();
+
+class SetResizingPositionXAction<
+  T extends [number, number, number]
+> extends CoreAction<T> {
+  code = "SET_RESIZING_POSITION_X";
+  reduce(store: StoreType, payload: T): StoreType {
+    return {
+      ...store,
+      resizingPositionX: payload,
+    };
+  }
+}
+export const setResizingPositionX = new SetResizingPositionXAction().bind();
+
 class SetOnSaveAction<T extends Feedback> extends CoreAction<T> {
   code = "SET_ON_SAVE";
   reduce(store: StoreType, payload: T): StoreType {
@@ -291,12 +317,37 @@ class SetResizingRectAction<T extends RectType> extends CoreAction<T> {
 }
 export const setResizingRect = new SetResizingRectAction().bind();
 
-class SetCellsOptionAction<T extends CellsOptionType> extends CoreAction<T> {
-  code = "SET_CELLS_OPTION";
+class InitCellsOptionAction<T extends CellsOptionType> extends CoreAction<T> {
+  code = "INIT_CELLS_OPTION";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
-      cellsOption: payload,
+      cellsOption: { ...store.cellsOption, ...payload },
+    };
+  }
+}
+export const initCellsOption = new InitCellsOptionAction().bind();
+
+class SetCellsOptionAction<T extends CellsOptionType> extends CoreAction<T> {
+  code = "SET_CELLS_OPTION";
+  reduce(store: StoreType, payload: T): StoreType {
+    const options: CellsOptionType = { ...payload };
+    Object.keys(options).map((key) => {
+      options[`-${key}`] = store.cellsOption[key] || {};
+    });
+
+    const history = histories.pushHistory(store.history, {
+      command: "styling",
+      src: [-1, -1, -1, -1],
+      dst: [-1, -1, -1, -1],
+      before: [],
+      after: [],
+      options,
+    });
+    return {
+      ...store,
+      history,
+      cellsOption: { ...store.cellsOption, ...payload },
     };
   }
 }

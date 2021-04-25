@@ -1,21 +1,14 @@
 import React from "react";
 import { x2c } from "../api/converters";
-import { between, rerenderCells } from "../api/arrays";
+import { between } from "../api/arrays";
 import { Context } from "../store";
 import {
-  setCellOption,
   drag,
   selectCols,
-  setResizingRect,
-  setEditorRect,
   setContextMenuPosition,
+  setResizingPositionX,
 } from "../store/actions";
-import {
-  DUMMY_IMG,
-  DEFAULT_WIDTH,
-  DEFAULT_HEIGHT,
-  MIN_WIDTH,
-} from "../constants";
+import { DUMMY_IMG, DEFAULT_WIDTH } from "../constants";
 
 type Props = {
   index: number;
@@ -34,9 +27,8 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
       selectingZone,
       resizingRect,
       horizontalHeadersSelecting,
-      sheetHeight,
       headerHeight,
-      gridOuterRef,
+      editorRef,
     } = store;
 
     const defaultWidth = cellsOption.default?.width || DEFAULT_WIDTH;
@@ -56,7 +48,6 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
             : "gs-selecting"
           : ""
       }`}
-        draggable
         onContextMenu={(e) => {
           e.preventDefault();
           dispatch(setContextMenuPosition([e.pageY, e.pageX]));
@@ -69,29 +60,12 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
           }
           dispatch(selectCols({ range: [startX, x], numRows }));
           dispatch(setContextMenuPosition([-1, -1]));
-          const rect = e.currentTarget.getBoundingClientRect();
-          dispatch(
-            setEditorRect([
-              rect.top + rect.height,
-              rect.left,
-              cellsOption[1]?.height || DEFAULT_HEIGHT,
-              rect.width,
-            ])
-          );
+          editorRef.current?.focus();
           return false;
         }}
         onDragStart={(e) => {
           e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
           dispatch(selectCols({ range: [x, x], numRows }));
-          const rect = e.currentTarget.getBoundingClientRect();
-          dispatch(
-            setEditorRect([
-              rect.top + rect.height,
-              rect.left,
-              cellsOption[1]?.height || DEFAULT_HEIGHT,
-              rect.width,
-            ])
-          );
           return false;
         }}
         onDragEnter={() => {
@@ -115,30 +89,10 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
         <div
           className="gs-resizer"
           style={{ height: headerHeight }}
-          draggable={true}
-          onDragStart={(e) => {
-            dispatch(setResizingRect([-1, x, -1, e.screenX]));
-            e.currentTarget.classList.add("gs-dragging");
-            e.stopPropagation();
-            return false;
-          }}
-          onDragEnd={(e) => {
-            e.currentTarget.classList.remove("gs-dragging");
+          onMouseDown={(e) => {
+            dispatch(setResizingPositionX([x, e.clientX, e.clientX]));
             e.preventDefault();
-            const [_y, x, _h, screenX] = resizingRect;
-            const c = x2c(x);
-            const nextWidth = width + (e.screenX - screenX);
-            dispatch(
-              setCellOption({
-                cell: c,
-                option: {
-                  ...colOption,
-                  width: nextWidth > 0 ? nextWidth : MIN_WIDTH,
-                },
-              })
-            );
-            dispatch(setResizingRect([-1, -1, -1, -1]));
-            return true;
+            e.stopPropagation();
           }}
         >
           <i />

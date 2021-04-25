@@ -2,6 +2,7 @@ import styled from "styled-components";
 
 export const GridSheetLayout = styled.div`
   overflow: hidden;
+  position: relative;
 
   font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN",
     "Hiragino Sans", Meiryo, sans-serif;

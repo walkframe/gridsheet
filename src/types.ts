@@ -96,6 +96,7 @@ export type Writer = (value: string) => void;
 export type FlattenedType = { [s: string]: any };
 
 export type StoreType = {
+  sheetRef: React.MutableRefObject<HTMLDivElement>;
   editorRef: React.MutableRefObject<HTMLTextAreaElement>;
   gridOuterRef: React.MutableRefObject<HTMLDivElement>;
   searchInputRef: React.MutableRefObject<HTMLInputElement>;
@@ -126,7 +127,9 @@ export type StoreType = {
   parsers: Parsers;
   editingOnEnter: boolean;
   cellLabel: boolean;
-  contextMenuPosition: [number, number];
+  contextMenuPosition: [Y, X];
+  resizingPositionY: [Y, Y, Y]; // indexY, startY, endY
+  resizingPositionX: [X, X, X]; // indexX, startX, endX
   onChange?: Feedback;
   onSave?: Feedback;
 };

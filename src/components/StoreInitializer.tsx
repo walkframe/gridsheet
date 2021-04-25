@@ -5,7 +5,7 @@ import { MatrixType, OptionsType } from "../types";
 import { Context } from "../store";
 import {
   setMatrix,
-  setCellsOption,
+  initCellsOption,
   initHistory,
   setSheetHeight,
   setSheetWidth,
@@ -48,7 +48,7 @@ export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
   }, [data]);
   React.useEffect(() => {
     if (typeof cells !== "undefined") {
-      dispatch(setCellsOption(cells));
+      dispatch(initCellsOption(cells));
     }
   }, [cells]);
   React.useEffect(() => {
