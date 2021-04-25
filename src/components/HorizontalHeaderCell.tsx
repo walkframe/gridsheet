@@ -1,21 +1,14 @@
 import React from "react";
 import { x2c } from "../api/converters";
-import { between, rerenderCells } from "../api/arrays";
+import { between } from "../api/arrays";
 import { Context } from "../store";
 import {
-  setCellOption,
   drag,
   selectCols,
-  setResizingRect,
   setContextMenuPosition,
   setResizingPositionX,
 } from "../store/actions";
-import {
-  DUMMY_IMG,
-  DEFAULT_WIDTH,
-  DEFAULT_HEIGHT,
-  MIN_WIDTH,
-} from "../constants";
+import { DUMMY_IMG, DEFAULT_WIDTH } from "../constants";
 
 type Props = {
   index: number;
@@ -34,7 +27,6 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
       selectingZone,
       resizingRect,
       horizontalHeadersSelecting,
-      sheetHeight,
       headerHeight,
       sheetRef,
       editorRef,

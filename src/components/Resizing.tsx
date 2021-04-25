@@ -6,7 +6,7 @@ import { Context } from "../store";
 import {
   setResizingPositionY,
   setResizingPositionX,
-  setCellOption,
+  setCellsOption,
 } from "../store/actions";
 
 import {
@@ -16,6 +16,7 @@ import {
   MIN_HEIGHT,
 } from "../constants";
 import { zoneToArea, makeSequence, between } from "../api/arrays";
+import { CellsOptionType } from "../types";
 
 const Line = styled.div`
   position: absolute;
@@ -34,6 +35,7 @@ export const Resizing: React.FC = React.memo(() => {
     horizontalHeadersSelecting,
     verticalHeadersSelecting,
     selectingZone,
+    editorRef,
   } = store;
 
   const [y, startY, endY] = posY;
@@ -41,7 +43,7 @@ export const Resizing: React.FC = React.memo(() => {
   if (y === -1 && x === -1) {
     return null;
   }
-  const [rowId, colId] = [`${y2r(y)}`, x2c(x)];
+  const [resizingRowId, resizingColId] = [`${y2r(y)}`, x2c(x)];
 
   return (
     <div
@@ -57,9 +59,11 @@ export const Resizing: React.FC = React.memo(() => {
       onMouseUp={(e) => {
         const selectingArea = zoneToArea(selectingZone);
         const [top, left, bottom, right] = selectingArea;
+        const newCellsOption: CellsOptionType = {};
         if (x !== -1) {
           let width =
-            (cellsOption[colId]?.width || DEFAULT_WIDTH) + (endX - startX);
+            (cellsOption[resizingColId]?.width || DEFAULT_WIDTH) +
+            (endX - startX);
           if (width < MIN_WIDTH) {
             width = MIN_WIDTH;
           }
@@ -68,21 +72,16 @@ export const Resizing: React.FC = React.memo(() => {
             xs = makeSequence(left, right + 1);
           }
           xs.map((x) => {
-            const colId = x2c(x);
-            dispatch(
-              setCellOption({
-                cell: colId,
-                option: {
-                  ...cellsOption[colId],
-                  width,
-                },
-              })
-            );
+            newCellsOption[x2c(x)] = {
+              ...cellsOption[x2c(x)],
+              width,
+            };
           });
         }
         if (y !== -1) {
           let height =
-            (cellsOption[rowId]?.height || DEFAULT_HEIGHT) + (endY - startY);
+            (cellsOption[resizingRowId]?.height || DEFAULT_HEIGHT) +
+            (endY - startY);
           if (height < MIN_HEIGHT) {
             height = MIN_HEIGHT;
           }
@@ -91,20 +90,16 @@ export const Resizing: React.FC = React.memo(() => {
             ys = makeSequence(top, bottom + 1);
           }
           ys.map((y) => {
-            const rowId = `${y2r(y)}`;
-            dispatch(
-              setCellOption({
-                cell: rowId,
-                option: {
-                  ...cellsOption[rowId],
-                  height,
-                },
-              })
-            );
+            newCellsOption[y2r(y)] = {
+              ...cellsOption[y2r(y)],
+              height,
+            };
           });
         }
+        dispatch(setCellsOption(newCellsOption));
         dispatch(setResizingPositionY([-1, -1, -1]));
         dispatch(setResizingPositionX([-1, -1, -1]));
+        editorRef.current?.focus();
       }}
       onMouseMove={(e) => {
         const {

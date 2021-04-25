@@ -3,19 +3,12 @@ import { y2r } from "../api/converters";
 import { between } from "../api/arrays";
 import { Context } from "../store";
 import {
-  setCellOption,
   drag,
   selectRows,
-  setResizingRect,
   setContextMenuPosition,
   setResizingPositionY,
 } from "../store/actions";
-import {
-  DUMMY_IMG,
-  DEFAULT_HEIGHT,
-  DEFAULT_WIDTH,
-  MIN_WIDTH,
-} from "../constants";
+import { DUMMY_IMG, DEFAULT_HEIGHT } from "../constants";
 
 type Props = {
   index: number;
