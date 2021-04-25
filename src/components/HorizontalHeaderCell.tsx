@@ -48,7 +48,6 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
             : "gs-selecting"
           : ""
       }`}
-        //draggable
         onContextMenu={(e) => {
           e.preventDefault();
           dispatch(setContextMenuPosition([e.pageY, e.pageX]));
