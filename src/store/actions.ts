@@ -1018,7 +1018,7 @@ class RemoveColsAction<
     x: number;
   }
 > extends CoreAction<T> {
-  code = "ADD_ROWS";
+  code = "REMOVE_COLS";
   reduce(store: StoreType, payload: T): StoreType {
     const { numCols, x } = payload;
     const numRows = store.matrix.length;

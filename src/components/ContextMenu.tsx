@@ -40,6 +40,7 @@ export const ContextMenu: React.FC = () => {
     parsers,
     editorRef,
     contextMenuPosition,
+    sheetRef,
   } = store;
 
   const [y, x] = choosing;
@@ -87,11 +88,13 @@ export const ContextMenu: React.FC = () => {
     return null;
   }
 
+  const { y: offsetY, x: offsetX } = sheetRef.current.getBoundingClientRect();
+
   return (
     <ContextMenuLayout
       style={{
-        top,
-        left,
+        top: top - offsetY,
+        left: left - offsetX,
       }}
     >
       <ul>

@@ -29,6 +29,7 @@ const Line = styled.div`
     font-size: 10px;
     padding: 3px;
     background-color: #0077ff;
+    color: #ffffff;
     margin: 0;
     position: absolute;
     top: 0;
