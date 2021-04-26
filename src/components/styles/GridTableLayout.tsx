@@ -41,7 +41,7 @@ export const GridTableLayout = styled.div`
       .gs-resizer {
         top: 0;
         right: 0;
-        width: 8px;
+        width: 3px;
         cursor: e-resize;
         border-right-style: solid;
 
@@ -64,7 +64,7 @@ export const GridTableLayout = styled.div`
       .gs-resizer {
         left: 0;
         bottom: 0;
-        height: 8px;
+        height: 3px;
         cursor: n-resize;
         border-bottom-style: solid;
 
