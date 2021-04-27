@@ -1,7 +1,7 @@
-
 ## Installation
 
 [![NPM](https://nodei.co/npm/react-gridsheet.png)](https://nodei.co/npm/react-gridsheet/)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet?ref=badge_shield)
 
 ```sh
 $ npm install react-gridsheet --save
@@ -31,3 +31,6 @@ $ yarn add react-gridsheet
 
 # Image
 <img src="https://github.com/walkframe/react-gridsheet/raw/master/gridsheet.png" alt="gridsheet image" />
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet?ref=badge_large)
