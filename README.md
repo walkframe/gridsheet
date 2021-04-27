@@ -1,7 +1,7 @@
 
 ## Installation
 
-[![NPM](https://nodei.co/npm/react-gridsheet.png)](https://nodei.co/npm/react-gridsheet/)
+[![NPM](https://nodei.co/npm/react-gridsheet.png?mini=true)](https://www.npmjs.com/package/react-gridsheet)
 
 ```sh
 $ npm install react-gridsheet --save
