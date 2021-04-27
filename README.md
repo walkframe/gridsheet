@@ -1,7 +1,8 @@
 ## Installation
 
-[![NPM](https://nodei.co/npm/react-gridsheet.png)](https://nodei.co/npm/react-gridsheet/)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet?ref=badge_shield)
+[![NPM](https://nodei.co/npm/react-gridsheet.png?mini=true)](https://www.npmjs.com/package/react-gridsheet)
+
 
 ```sh
 $ npm install react-gridsheet --save
