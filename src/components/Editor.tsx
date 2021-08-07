@@ -303,7 +303,11 @@ export const Editor: React.FC = () => {
               if (e.ctrlKey || e.metaKey) {
                 if (!editing) {
                   e.preventDefault();
-                  onSave && onSave(matrix, cellsOption);
+                  onSave && onSave(matrix, cellsOption, {
+                    pointing: choosing,
+                    selectingFrom: [selectingZone[0], selectingZone[1]],
+                    selectingTo: [selectingZone[2], selectingZone[3]],
+                  });
                   return false;
                 }
               }

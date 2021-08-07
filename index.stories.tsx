@@ -175,11 +175,12 @@ export const showIndex = () => {
               },
             },
           },
-          onSave: (matrix, options) => {
+          onSave: (matrix, options, positions) => {
             console.log(
               "matrix on save:",
               aa2oa(matrix || [], ["A", "B", "C", "D", "E", "F"])
             );
+            console.log("positions on save", positions);
           },
           onChange: (matrix, options, positions) => {
             if (typeof matrix !== "undefined") {

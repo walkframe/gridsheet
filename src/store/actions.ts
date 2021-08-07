@@ -212,7 +212,7 @@ class SetOnSelectAction<T extends Feedback> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
-      onSave: payload,
+      onSelect: payload,
     };
   }
 }
