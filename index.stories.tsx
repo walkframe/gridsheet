@@ -181,13 +181,19 @@ export const showIndex = () => {
               aa2oa(matrix || [], ["A", "B", "C", "D", "E", "F"])
             );
           },
-          onChange: (matrix, options) => {
+          onChange: (matrix, options, positions) => {
             if (typeof matrix !== "undefined") {
               console.log("matrix on change:", matrix);
             }
             if (typeof options !== "undefined") {
               console.log("options on change", options);
             }
+            if (typeof positions !== "undefined") {
+              console.log("positions on change", positions);
+            }
+          },
+          onSelect: (matrix, options, positions) => {
+            console.log("positions on select", positions)
           },
           renderers: {
             kanji: new KanjiRenderer(),

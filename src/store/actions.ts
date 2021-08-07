@@ -207,6 +207,18 @@ class SetOnChangeAction<T extends Feedback> extends CoreAction<T> {
 }
 export const setOnChange = new SetOnChangeAction().bind();
 
+class SetOnSelectAction<T extends Feedback> extends CoreAction<T> {
+  code = "SET_ON_SELECT";
+  reduce(store: StoreType, payload: T): StoreType {
+    return {
+      ...store,
+      onSave: payload,
+    };
+  }
+}
+export const setOnSelect = new SetOnSelectAction().bind();
+
+
 class SetRenderersAction<T extends Renderers> extends CoreAction<T> {
   code = "SET_RENDERERS";
   reduce(store: StoreType, payload: T): StoreType {

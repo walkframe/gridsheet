@@ -17,6 +17,7 @@ import {
   setCellLabel,
   setOnSave,
   setOnChange,
+  setOnSelect,
 } from "../store/actions";
 
 import { HISTORY_SIZE, HEADER_HEIGHT, HEADER_WIDTH } from "../constants";
@@ -40,6 +41,7 @@ export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
     parsers,
     onSave,
     onChange,
+    onSelect,
   } = options;
 
   const { store, dispatch } = React.useContext(Context);
@@ -101,6 +103,11 @@ export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
       dispatch(setOnChange(onChange));
     }
   }, [onChange]);
+  React.useEffect(() => {
+    if (typeof onSelect !== "undefined") {
+      dispatch(setOnSelect(onSelect));
+    }
+  }, [onSelect]);
   React.useEffect(() => {
     dispatch(initHistory(historySize));
   }, []);

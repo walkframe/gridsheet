@@ -14,7 +14,7 @@ import { GridTableWrapper } from "./GridTableWrapper";
 import { StoreInitializer } from "./StoreInitializer";
 import { Resizing } from "./Resizing";
 
-import { ChangeEmitter } from "./ChangeEmitter";
+import { Emitter } from "./Emitter";
 import { ContextMenu } from "./ContextMenu";
 import { GridSheetLayout } from "./styles/GridSheetLayout";
 
@@ -108,7 +108,7 @@ export const GridSheet: React.FC<Props> = ({
     }, 700);
   }, []);
 
-  const { onChange, mode } = options;
+  const { onChange, onSelect, mode } = options;
   return (
     <GridSheetLayout
       ref={sheetRef}
@@ -123,7 +123,7 @@ export const GridSheet: React.FC<Props> = ({
         />
         <ContextMenu />
         <Resizing />
-        <ChangeEmitter onChange={onChange} />
+        <Emitter onChange={onChange} onSelect={onSelect} />
       </Context.Provider>
     </GridSheetLayout>
   );

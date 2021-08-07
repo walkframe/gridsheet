@@ -36,7 +36,8 @@ export type CellsOptionType = { [s: string]: CellOptionType };
 
 export type Feedback = (
   matrix?: MatrixType,
-  cellOptions?: CellsOptionType
+  cellOptions?: CellsOptionType,
+  positions?: {pointing: PositionType, selectingFrom: PositionType, selectingTo: PositionType},
 ) => void;
 
 export type Mode = "light" | "dark";
@@ -57,6 +58,7 @@ export type OptionsType = {
   parsers?: Parsers;
   onSave?: Feedback;
   onChange?: Feedback;
+  onSelect?: Feedback;
 };
 
 export type RangeType = [number, number]; // [start, end]
@@ -132,4 +134,5 @@ export type StoreType = {
   resizingPositionX: [X, X, X]; // indexX, startX, endX
   onChange?: Feedback;
   onSave?: Feedback;
+  onSelect?: Feedback;
 };

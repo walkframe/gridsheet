@@ -7,11 +7,12 @@ import { rerenderCells } from "../api/arrays";
 
 type Props = {
   onChange?: Feedback;
+  onSelect?: Feedback;
 };
 
-export const ChangeEmitter: React.FC<Props> = ({ onChange }) => {
+export const Emitter: React.FC<Props> = ({ onChange, onSelect }) => {
   const { store, dispatch } = React.useContext(Context);
-  const { matrix, cellsOption } = store;
+  const { matrix, cellsOption, choosing: pointing, selectingZone: zone } = store;
   React.useEffect(() => {
     rerenderCells({
       ...store,
@@ -20,8 +21,10 @@ export const ChangeEmitter: React.FC<Props> = ({ onChange }) => {
     });
   }, [matrix, cellsOption]);
   React.useEffect(() => {
-    onChange && onChange(matrix, cellsOption);
+    onChange && onChange(matrix, cellsOption, {pointing, selectingFrom: [zone[0], zone[1]], selectingTo: [zone[2], zone[3]]});
   }, [onChange, matrix, cellsOption]);
-
+  React.useEffect(() => {
+    onSelect && onSelect(matrix, cellsOption, {pointing, selectingFrom: [zone[0], zone[1]], selectingTo: [zone[2], zone[3]]});
+  }, [onSelect, pointing, zone]);
   return <></>;
 };
