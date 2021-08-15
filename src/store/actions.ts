@@ -466,7 +466,7 @@ class PasteAction<
         after = tsv2matrix(text);
         [height, width] = [after.length - 1, after[0].length - 1];
       } else {
-        after = stringifyMatrix(y, x, after, cellsOption, renderers);
+        after = stringifyMatrix(copyingTop, copyingLeft, after, cellsOption, renderers);
       }
       dst = [y, x, y + height, x + width];
       before = cropMatrix(matrix, dst);
@@ -487,7 +487,7 @@ class PasteAction<
       } else {
         // selecting source
         [height, width] = superposeArea(copyingArea, selectingArea);
-        after = stringifyMatrix(y, x, after, cellsOption, renderers);
+        after = stringifyMatrix(copyingTop, copyingLeft, after, cellsOption, renderers);
       }
       dst = selectingArea;
       after = spreadMatrix(after, height, width);
