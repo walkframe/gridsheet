@@ -1,5 +1,5 @@
 import React from "react";
-import { GridSheet, Renderer, aa2oa, MatrixType, Writer, Parser } from "./src";
+import { GridSheet, Renderer, aa2oa, MatrixType, Parser } from "./src";
 import { defaultParser } from "./src/parsers/core";
 import { defaultRenderer } from "./src/renderers/core";
 // import { GridSheet, Renderer, aa2oa } from "../dist";

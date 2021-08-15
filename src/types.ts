@@ -5,7 +5,6 @@ import {
 
 import { RendererType } from "./renderers/core";
 import { ParserType } from "./parsers/core";
-import { WriterType } from "writers/core";
 
 export type Y = number;
 export type X = number;
@@ -20,7 +19,6 @@ export type MatrixType = CellType[][];
 
 export type Renderers = { [s: string]: RendererType };
 export type Parsers = { [s: string]: ParserType };
-export type Writers = { [s: string]: WriterType};
 
 // All fields have to be primitive types.
 export type CellOptionType = {
