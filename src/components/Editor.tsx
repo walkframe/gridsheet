@@ -262,7 +262,8 @@ export const Editor: React.FC = () => {
                     choosing,
                     matrix,
                     editorRef,
-                    renderer
+                    cellsOption,
+                    renderers,
                   );
                   dispatch(copy(area));
                   input.focus(); // refocus
@@ -322,7 +323,8 @@ export const Editor: React.FC = () => {
                     choosing,
                     matrix,
                     editorRef,
-                    renderer
+                    cellsOption,
+                    renderers,
                   );
                   dispatch(cut(area));
                   input.focus(); // refocus

@@ -1,7 +1,8 @@
-import { MatrixType } from "../types";
-import { Renderer as DefaultRenderer } from "../renderers/core";
+import { CellsOptionType, MatrixType, Parsers, Renderers } from "../types";
+import { defaultRenderer, Renderer as DefaultRenderer, RendererType } from "../renderers/core";
 import { Parser as DefaultParser } from "../parsers/core";
 import { DEFAULT_ALPHA_CACHE_SIZE } from "../constants";
+import { stackOption } from "./arrays";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -85,12 +86,20 @@ export const r2y = (row: number | string) => {
   return row - 1;
 };
 
-const _renderer = new DefaultRenderer();
-export const matrix2tsv = (rows: MatrixType, renderer = _renderer): string => {
+export const matrix2tsv = (
+  y: number,
+  x: number,
+  rows: MatrixType,
+  cellsOption: CellsOptionType,
+  renderers: Renderers,
+): string => {
   const lines: string[] = [];
-  rows.map((row) => {
+  rows.map((row, i) => {
     const cols: string[] = [];
-    row.map((col) => {
+    row.map((col, j) => {
+      const key = stackOption(cellsOption, y + i, x + j).renderer;
+      console.log("DEBUG", key, renderers)
+      const renderer = renderers[key || ""] || defaultRenderer;
       const value = renderer.stringify(col);
       if (value.indexOf("\n") !== -1) {
         cols.push(`"${value.replace(/"/g, '""')}"`);

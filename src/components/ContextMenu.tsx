@@ -105,7 +105,8 @@ export const ContextMenu: React.FC = () => {
               choosing,
               matrix,
               editorRef,
-              renderer
+              cellsOption,
+              renderers,
             );
             dispatch(cut(area));
             dispatch(setContextMenuPosition([-1, -1]));
@@ -123,7 +124,8 @@ export const ContextMenu: React.FC = () => {
               choosing,
               matrix,
               editorRef,
-              renderer
+              cellsOption,
+              renderers,
             );
             dispatch(copy(area));
             dispatch(setContextMenuPosition([-1, -1]));
