@@ -1,6 +1,6 @@
 import React from "react";
 import { x2c, y2r } from "../api/converters";
-import { zoneToArea, among, zoneShape } from "../api/arrays";
+import { zoneToArea, among, zoneShape, stackOption } from "../api/arrays";
 import {
   choose,
   select,
@@ -37,6 +37,7 @@ export const Cell: React.FC<Props> = React.memo(
       matrix,
       renderers,
       parsers,
+      writers,
       cellsOption,
       editingCell,
       choosing,
@@ -87,32 +88,19 @@ export const Cell: React.FC<Props> = React.memo(
       ...cellOption.style,
     };
 
-    const rendererKey =
-      cellOption.renderer ||
-      colOption.renderer ||
-      rowOption.renderer ||
-      defaultOption.renderer;
-    const parserKey =
-      cellOption.parser ||
-      colOption.parser ||
-      rowOption.parser ||
-      defaultOption.parser;
+    const rendererKey = stackOption(cellsOption, y, x).renderer;
+    const parserKey = stackOption(cellsOption, y, x).parser;
+    const writerKey = stackOption(cellsOption, y, x).writer;
 
     const renderer = renderers[rendererKey || ""] || new DefaultRenderer();
     const parser = parsers[parserKey || ""] || new DefaultParser();
     const height = rowOption.height || DEFAULT_HEIGHT;
     const width = colOption.width || DEFAULT_WIDTH;
-    const verticalAlign =
-      cellOption.verticalAlign ||
-      colOption.verticalAlign ||
-      rowOption.verticalAlign ||
-      defaultOption.verticalAlign ||
-      "middle";
 
+    const verticalAlign = stackOption(cellsOption, y, x).verticalAlign || "middle";
     const writeCell = (value: string) => {
       if (before !== value) {
-        const parsed = parser.parse(value);
-        dispatch(write(parsed));
+        dispatch(write(value));
       }
       setBefore("");
     };
@@ -164,7 +152,7 @@ export const Cell: React.FC<Props> = React.memo(
           const dblclick = document.createEvent("MouseEvents");
           dblclick.initEvent("dblclick", true, true);
           editorRef.current?.dispatchEvent(dblclick);
-          setTimeout(() => (editorRef.current.value = value), 100);
+          setTimeout(() => (editorRef.current.value = renderer.stringify(value)), 100);
           return false;
         }}
         draggable

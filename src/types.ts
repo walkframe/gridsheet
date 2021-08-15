@@ -5,6 +5,7 @@ import {
 
 import { RendererType } from "./renderers/core";
 import { ParserType } from "./parsers/core";
+import { WriterType } from "writers/core";
 
 export type Y = number;
 export type X = number;
@@ -19,6 +20,7 @@ export type MatrixType = CellType[][];
 
 export type Renderers = { [s: string]: RendererType };
 export type Parsers = { [s: string]: ParserType };
+export type Writers = { [s: string]: WriterType};
 
 // All fields have to be primitive types.
 export type CellOptionType = {
@@ -29,6 +31,7 @@ export type CellOptionType = {
   verticalAlign?: string;
   renderer?: string;
   parser?: string;
+  writer?: string;
   fixed?: boolean;
 };
 
@@ -56,6 +59,7 @@ export type OptionsType = {
   mode?: Mode;
   renderers?: Renderers;
   parsers?: Parsers;
+  writers?: Writers;
   onSave?: Feedback;
   onChange?: Feedback;
   onSelect?: Feedback;
@@ -93,7 +97,7 @@ export type OperationType = {
 
 export type ReactionsType = { [s: string]: boolean };
 
-export type Writer = (value: string) => void;
+export type CommitterType = (value: string) => void;
 
 export type FlattenedType = { [s: string]: any };
 
@@ -127,6 +131,7 @@ export type StoreType = {
   matchingCellIndex: number;
   renderers: Renderers;
   parsers: Parsers;
+  writers: Writers;
   editingOnEnter: boolean;
   cellLabel: boolean;
   contextMenuPosition: [Y, X];

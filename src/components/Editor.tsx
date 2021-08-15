@@ -25,6 +25,7 @@ import { Parser as DefaultParser } from "../parsers/core";
 import { EditorLayout } from "./styles/EditorLayout";
 
 import { Context } from "../store";
+import { stackOption } from "../api/arrays";
 
 export const Editor: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);
@@ -40,6 +41,7 @@ export const Editor: React.FC = () => {
     entering,
     renderers,
     parsers,
+    writers,
     searchQuery,
     editorRef,
     searchInputRef,
@@ -68,16 +70,8 @@ export const Editor: React.FC = () => {
   const cellOption: CellOptionType = cellsOption[cellId] || {};
   // defaultOption < rowOption < colOption < cellOption
 
-  const rendererKey =
-    cellOption.renderer ||
-    colOption.renderer ||
-    rowOption.renderer ||
-    defaultOption.renderer;
-  const parserKey =
-    cellOption.parser ||
-    colOption.parser ||
-    rowOption.parser ||
-    defaultOption.parser;
+  const rendererKey = stackOption(cellsOption, y, x).renderer;
+  const parserKey = stackOption(cellsOption, y, x).parser;
 
   const renderer = renderers[rendererKey || ""] || new DefaultRenderer();
   const parser = parsers[parserKey || ""] || new DefaultParser();
@@ -85,8 +79,7 @@ export const Editor: React.FC = () => {
 
   const writeCell = (value: string) => {
     if (before !== value) {
-      const parsed = parser.parse(value);
-      dispatch(write(parsed));
+      dispatch(write(value));
     }
     setBefore("");
   };

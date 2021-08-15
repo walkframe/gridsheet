@@ -13,6 +13,7 @@ import {
   setHeaderWidth,
   setRenderers,
   setParsers,
+  setWriters,
   setEditingOnEnter,
   setCellLabel,
   setOnSave,
@@ -39,6 +40,7 @@ export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
     cellLabel,
     renderers,
     parsers,
+    writers,
     onSave,
     onChange,
     onSelect,
@@ -93,6 +95,11 @@ export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
       dispatch(setParsers(parsers));
     }
   }, [parsers]);
+  React.useEffect(() => {
+    if (typeof writers !== "undefined") {
+      dispatch(setWriters(writers));
+    }
+  }, [writers]);
   React.useEffect(() => {
     if (typeof onSave !== "undefined") {
       dispatch(setOnSave(onSave));

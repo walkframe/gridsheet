@@ -27,7 +27,11 @@ export class Parser {
     this.complement = complement;
   }
 
-  public parse (value: string): any {
+  public callback(parsed: any, before?: any): any {
+    return parsed;
+  }
+
+  public parse (value: string, before?: any): any {
     if (this.condition && !this.condition(value)) {
       return this.complement ? this.complement(value) : value;
     }
@@ -41,7 +45,7 @@ export class Parser {
         return result;
       }
     }
-    return value;
+    return this.callback(value, before);
   }
 
   protected bool (value: string): boolean | undefined {
@@ -74,3 +78,5 @@ export class Parser {
 };
 
 export type ParserType = Parser;
+
+export const defaultParser = new Parser();

@@ -14,9 +14,15 @@ import {
   X,
   Height,
   Width,
+  CellsOptionType,
+  CellOptionType,
+  Parsers,
+  Renderers,
 } from "../types";
 
-import { a2n, x2c, c2x, r2y } from "./converters";
+import { a2n, x2c, c2x, r2y, y2r } from "./converters";
+import { defaultParser } from "../parsers/core";
+import { defaultRenderer } from "../renderers/core";
 
 export const cropMatrix = (matrix: MatrixType, area: AreaType): MatrixType => {
   const [top, left, bottom, right] = area;
@@ -25,11 +31,34 @@ export const cropMatrix = (matrix: MatrixType, area: AreaType): MatrixType => {
     .map((cols) => cols.slice(left, right + 1));
 };
 
+export const stringifyMatrix = (
+  y: number,
+  x: number,
+  matrix: MatrixType,
+  cellsOption: CellsOptionType,
+  renderers: Renderers,
+): MatrixType => {
+  const result: MatrixType = [];
+  matrix.map((row, i) => {
+    const cols: any[] = [];
+    row.map((col, j) => {
+      const key = stackOption(cellsOption, y + i, x + j).parser;
+      const renderer = renderers[key || ""] || defaultRenderer;
+      cols.push(renderer.stringify(col));
+    });
+    result.push(cols);
+  });
+  return result;
+}
+
+
 export const writeMatrix = (
   y: number,
   x: number,
   src: MatrixType,
-  dst: MatrixType
+  dst: MatrixType,
+  cellsOption: CellsOptionType,
+  parsers: Parsers,
 ): MatrixType => {
   dst = dst.map((cols) => [...cols]); // unfasten immutable
   src.map((row, i) => {
@@ -40,7 +69,9 @@ export const writeMatrix = (
       if (x + j >= dst[0].length) {
         return;
       }
-      dst[y + i][x + j] = col;
+      const parserKey = stackOption(cellsOption, y + i, x + j).parser;
+      const parser = parsers[parserKey || ""] || defaultParser;
+      dst[y + i][x + j] = parser.callback(col, dst[y + i][x + j]);
     });
   });
   return dst;
@@ -311,4 +342,20 @@ export const rerenderCells = ({
     horizontalHeadersRef.current?.resetAfterIndex(index);
     gridRef.current?.resetAfterColumnIndex(index);
   }
+};
+
+export const stackOption = (cellsOption: CellsOptionType, y: number, x: number, ): CellOptionType => {
+  const rowId = y2r(y);
+  const colId = x2c(x);
+  const cellId = `${colId}${rowId}`;
+  const defaultOption: CellOptionType = cellsOption.default || {};
+  const rowOption: CellOptionType = cellsOption[rowId] || {};
+  const colOption: CellOptionType = cellsOption[colId] || {};
+  const cellOption: CellOptionType = cellsOption[cellId] || {};
+  return {
+    ...defaultOption,
+    ...rowOption,
+    ...colOption,
+    ...cellOption,
+  };
 };

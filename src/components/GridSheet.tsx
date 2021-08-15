@@ -82,6 +82,7 @@ export const GridSheet: React.FC<Props> = ({
     matchingCellIndex: 0,
     renderers: {},
     parsers: {},
+    writers: {},
     editingOnEnter: true,
     cellLabel: true,
     contextMenuPosition: [-1, -1],
