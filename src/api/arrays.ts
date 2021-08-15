@@ -71,7 +71,7 @@ export const writeMatrix = (
       }
       const parserKey = stackOption(cellsOption, y + i, x + j).parser;
       const parser = parsers[parserKey || ""] || defaultParser;
-      dst[y + i][x + j] = parser.callback(col, dst[y + i][x + j]);
+      dst[y + i][x + j] = parser.parse(col, dst[y + i][x + j]);
     });
   });
   return dst;

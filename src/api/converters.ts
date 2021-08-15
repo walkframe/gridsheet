@@ -98,7 +98,6 @@ export const matrix2tsv = (
     const cols: string[] = [];
     row.map((col, j) => {
       const key = stackOption(cellsOption, y + i, x + j).renderer;
-      console.log("DEBUG", key, renderers)
       const renderer = renderers[key || ""] || defaultRenderer;
       const value = renderer.stringify(col);
       if (value.indexOf("\n") !== -1) {

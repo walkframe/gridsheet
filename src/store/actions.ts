@@ -630,7 +630,7 @@ export const search = new SearchAction().bind();
 class WriteAction<T extends any> extends CoreAction<T> {
   code = "WRITE";
   reduce(store: StoreType, payload: T): StoreType {
-    const { choosing, parsers, cellsOption} = store;
+    const { choosing, parsers, cellsOption } = store;
     const [y, x] = choosing;
     const value = payload;
     const matrix = writeMatrix(y, x, [[value]], store.matrix, cellsOption, parsers);
