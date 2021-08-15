@@ -1,5 +1,7 @@
 import React from "react";
 import { GridSheet, Renderer, aa2oa, MatrixType, Writer, Parser } from "./src";
+import { defaultParser } from "./src/parsers/core";
+import { defaultRenderer } from "./src/renderers/core";
 // import { GridSheet, Renderer, aa2oa } from "../dist";
 
 type Obj = {v: any};
@@ -15,7 +17,7 @@ class ObjectRenderer extends Renderer {
 
 class ObjectParser<T extends Obj> extends Parser {
   callback(value: any, old: T): T {
-    console.log("callback", old, value)
+    console.log("callback", old, value, "=>", {...old, v: value});
     return {...old, v: value};
   }
 };
@@ -287,7 +289,7 @@ export const showIndex = () => {
           [{v: 1}, {v: 2}],
           [{v: 3}, {v: 4}],
           [{v: 5}, {v: 6}],
-          [{v: 7}, {v: 8}],
+          [{v: 7}, 8],
         ]}
         options={{
           cells: {
@@ -295,12 +297,18 @@ export const showIndex = () => {
               renderer: "obj",
               parser: "obj",
             },
+            B4: {
+              renderer: "default",
+              parser: "default",
+            },
           },
           renderers: {
             obj: new ObjectRenderer(),
+            default: defaultRenderer,
           },
           parsers: {
             obj: new ObjectParser(),
+            default: defaultParser,
           },
           onChange: (matrix, options, positions) => {
             if (typeof matrix !== "undefined") {

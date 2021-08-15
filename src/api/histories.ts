@@ -70,7 +70,6 @@ export const redoCopy = (
   const selectingZone: ZoneType =
     h === 1 && w === 1 ? [-1, -1, -1, -1] : [y, x, y + h - 1, x + w - 1];
   const copyingZone = [-1, -1, -1, -1] as ZoneType;
-  //after = stringifyMatrix(y, x, after, cellsOption, renderers);
   const matrix = writeMatrix(y, x, after, store.matrix, cellsOption, parsers);
   return {
     ...store,
@@ -172,7 +171,7 @@ export const redoWrite = (
   const selectingZone: ZoneType =
     h === 1 && w === 1 ? [-1, -1, -1, -1] : [y, x, y + h - 1, x + w - 1];
   const copyingZone = [-1, -1, -1, -1] as ZoneType;
-  after = stringifyMatrix(y, x, after, cellsOption, renderers);
+  //after = stringifyMatrix(y, x, after, cellsOption, renderers);
   const matrix = writeMatrix(y, x, after, store.matrix, cellsOption, parsers);
   return {
     ...store,

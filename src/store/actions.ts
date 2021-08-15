@@ -459,7 +459,7 @@ class PasteAction<
     const [copyingTop, copyingLeft] = copyingArea;
     const [selectingHeight, selectingWidth] = zoneShape(selectingArea);
     const [copyingHeight, copyingWidth] = zoneShape(copyingArea);
-    const { text, parser } = payload;
+    const { text } = payload;
 
     let before: MatrixType = [];
     let after = cropMatrix(matrix, copyingArea);
@@ -475,8 +475,7 @@ class PasteAction<
       // unselecting destination
       if (copyingTop === -1) {
         // unselecting source
-        after = tsv2matrix(text, parser);
-        console.log("after", after);
+        after = tsv2matrix(text);
         [height, width] = [after.length - 1, after[0].length - 1];
       } else {
         after = stringifyMatrix(y, x, after, cellsOption, renderers);
@@ -492,7 +491,7 @@ class PasteAction<
       // selecting destination
       if (copyingTop === -1) {
         // unselecting source
-        after = tsv2matrix(text, parser);
+        after = tsv2matrix(text);
         [height, width] = superposeArea(
           [0, 0, after.length - 1, after[0].length - 1],
           [0, 0, selectingHeight, selectingWidth]

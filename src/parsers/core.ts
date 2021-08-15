@@ -32,19 +32,24 @@ export class Parser {
   }
 
   public parse (value: string, before?: any): any {
+    console.log(0, value);
     if (this.condition && !this.condition(value)) {
-      return this.complement ? this.complement(value) : value;
+      const result = this.complement ? this.complement(value) : value;
+      return this.callback(result, before);
     }
+    console.log(1, value);
 
     if (value[0] === "'") {
-      return value;
+      return this.callback(value, before);
     }
+    console.log(2, value);
     for (let i = 0; i < this.parseFunctions.length; i++) {
       const result = this.parseFunctions[i](value);
       if (result != null) {
-        return result;
+        return this.callback(result, before);
       }
     }
+    console.log(3, value);
     return this.callback(value, before);
   }
 

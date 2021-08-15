@@ -267,7 +267,6 @@ export const Editor: React.FC = () => {
                   );
                   dispatch(copy(area));
                   input.focus(); // refocus
-
                   return false;
                 }
               }
@@ -275,18 +274,19 @@ export const Editor: React.FC = () => {
             case "f": // F
               if (e.ctrlKey || e.metaKey) {
                 if (!editing) {
+                  e.preventDefault();
                   if (typeof searchQuery === "undefined") {
                     dispatch(setSearchQuery(""));
                   }
                   dispatch(setEntering(false));
                   setTimeout(() => searchInputRef.current?.focus(), 100);
-                  e.preventDefault();
                   return false;
                 }
               }
             case "r": // R
               if (e.ctrlKey || e.metaKey) {
                 if (!editing) {
+                  e.preventDefault();
                   dispatch(redo(null));
                   setTimeout(() => (input.value = ""), 100); // resetting textarea
                   return false;
@@ -334,6 +334,7 @@ export const Editor: React.FC = () => {
             case "z": // Z
               if (e.ctrlKey || e.metaKey) {
                 if (!editing) {
+                  e.preventDefault();
                   if (e.shiftKey) {
                     dispatch(redo(null));
                     setTimeout(() => (input.value = ""), 100); // resetting textarea
@@ -346,6 +347,7 @@ export const Editor: React.FC = () => {
             case ";": // semicolon
               if (e.ctrlKey || e.metaKey) {
                 if (!editing) {
+                  e.preventDefault();
                   // MAYBE: need to aware timezone.
                   writeCell(new Date().toDateString());
                 }

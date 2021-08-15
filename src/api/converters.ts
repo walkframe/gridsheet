@@ -103,8 +103,7 @@ export const matrix2tsv = (rows: MatrixType, renderer = _renderer): string => {
   return lines.join("\n");
 };
 
-const _parser = new DefaultParser();
-export const tsv2matrix = (tsv: string, parser = _parser): any[][] => {
+export const tsv2matrix = (tsv: string): any[][] => {
   tsv = tsv.replace(/""/g, "\x00");
   const restoreDoubleQuote = (text: string) => text.replace(/\x00/g, '"');
   const rows: any[][] = [];
@@ -129,27 +128,27 @@ export const tsv2matrix = (tsv: string, parser = _parser): any[][] => {
         cols.push(val);
       }
     });
-    return cols.map((col) => [parser.parse(restoreDoubleQuote(col))]);
+    return cols.map((col) => [restoreDoubleQuote(col)]);
   }
   tsv.split("\t").map((col) => {
     if (col[0] === '"' && col[col.length - 1] === '"') {
       // escaping
       const cell = restoreDoubleQuote(col.substring(1, col.length - 1));
-      row.push(parser.parse(cell));
+      row.push(cell);
     } else {
       const enterIndex = col.indexOf("\n");
       if (enterIndex === -1) {
         const cell = restoreDoubleQuote(col);
-        row.push(parser.parse(cell));
+        row.push(cell);
       } else {
         const cell = restoreDoubleQuote(col.substring(0, enterIndex));
-        row.push(parser.parse(cell));
+        row.push(cell);
         rows.push(row);
         row = [];
         const nextCol = col.substring(enterIndex + 1, col.length);
         if (nextCol) {
           const nextCell = restoreDoubleQuote(nextCol);
-          row.push(parser.parse(nextCell));
+          row.push(nextCell);
         }
       }
     }
