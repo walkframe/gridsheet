@@ -57,7 +57,6 @@ export type OptionsType = {
   mode?: Mode;
   renderers?: Renderers;
   parsers?: Parsers;
-  writers?: Writers;
   onSave?: Feedback;
   onChange?: Feedback;
   onSelect?: Feedback;
@@ -129,7 +128,6 @@ export type StoreType = {
   matchingCellIndex: number;
   renderers: Renderers;
   parsers: Parsers;
-  writers: Writers;
   editingOnEnter: boolean;
   cellLabel: boolean;
   contextMenuPosition: [Y, X];

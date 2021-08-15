@@ -41,7 +41,6 @@ export const Editor: React.FC = () => {
     entering,
     renderers,
     parsers,
-    writers,
     searchQuery,
     editorRef,
     searchInputRef,

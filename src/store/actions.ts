@@ -11,7 +11,6 @@ import {
   Parsers,
   RangeType,
   Feedback,
-  Writers,
 } from "../types";
 import {
   makeSequence,
@@ -242,17 +241,6 @@ class SetParsersAction<T extends Parsers> extends CoreAction<T> {
   }
 }
 export const setParsers = new SetParsersAction().bind();
-
-class SetWritersAction<T extends Writers> extends CoreAction<T> {
-  code = "SET_WRITERS";
-  reduce(store: StoreType, payload: T): StoreType {
-    return {
-      ...store,
-      writers: payload,
-    };
-  }
-}
-export const setWriters = new SetWritersAction().bind();
 
 class SetEnteringAction<T extends boolean> extends CoreAction<T> {
   code = "SET_ENTERING";

@@ -37,7 +37,6 @@ export const Cell: React.FC<Props> = React.memo(
       matrix,
       renderers,
       parsers,
-      writers,
       cellsOption,
       editingCell,
       choosing,
