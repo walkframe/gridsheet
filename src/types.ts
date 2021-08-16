@@ -29,7 +29,6 @@ export type CellOptionType = {
   verticalAlign?: string;
   renderer?: string;
   parser?: string;
-  writer?: string;
   fixed?: boolean;
 };
 
