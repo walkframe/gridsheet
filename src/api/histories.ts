@@ -204,11 +204,13 @@ export const redoAddRows = (
   { dst, options }: OperationType
 ): StoreType => {
   let matrix = [...store.matrix];
+  const { cellsOption, parsers } = store;
   const [top, left, bottom, right] = [...dst];
   const width = right - left + 1;
-  const blanks = makeSequence(0, bottom - top + 1).map(() =>
+  let blanks = makeSequence(0, bottom - top + 1).map(() =>
     makeSequence(0, width).map(() => "")
   );
+  blanks = writeMatrix(0, 0, blanks, blanks, cellsOption, parsers);
   matrix.splice(top, 0, ...blanks);
   return {
     ...store,
@@ -243,13 +245,16 @@ export const redoAddCols = (
   { dst, options }: OperationType
 ): StoreType => {
   let matrix = [...store.matrix];
-  const [_top, left, _, right] = [...dst];
+  const [top, left, _, right] = [...dst];
   matrix = [...store.matrix].map((cols) => {
     const blanks = makeSequence(0, right - left + 1).map(() => "");
     cols = [...cols];
     cols.splice(left, 0, ...blanks);
     return cols;
   });
+  const { cellsOption, parsers } = store;
+  let blanks = matrix.map(() => makeSequence(0, right - left + 1).map(() => ""));
+  matrix = writeMatrix(top, left, blanks, matrix, cellsOption, parsers);
   return {
     ...store,
     matrix: [...matrix],

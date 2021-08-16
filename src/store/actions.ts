@@ -932,12 +932,14 @@ class AddRowsAction<
   code = "ADD_ROWS";
   reduce(store: StoreType, payload: T): StoreType {
     const matrix = [...store.matrix];
+    const { cellsOption, parsers } = store;
     const numCols = matrix[0]?.length || 0;
     const { numRows, y } = payload;
     const diff = slideFlattened(store.cellsOption, numRows, null, y, null);
-    const blanks = makeSequence(0, numRows).map(() =>
+    let blanks = makeSequence(0, numRows).map(() =>
       makeSequence(0, numCols).map(() => "")
     );
+    blanks = writeMatrix(0, 0, blanks, blanks, cellsOption, parsers);
     matrix.splice(y, 0, ...blanks);
     const history = histories.pushHistory(store.history, {
       command: "addRows",
@@ -966,12 +968,15 @@ class AddColsAction<
   code = "ADD_COLS";
   reduce(store: StoreType, payload: T): StoreType {
     const { numCols, x } = payload;
-    const matrix = [...store.matrix].map((cols) => {
+    let matrix = [...store.matrix].map((cols) => {
       const blanks = makeSequence(0, numCols).map(() => "");
       cols = [...cols];
       cols.splice(x, 0, ...blanks);
       return cols;
     });
+    let blanks = matrix.map(() => makeSequence(0, numCols).map(() => ""));
+    const { cellsOption, parsers } = store;
+    matrix = writeMatrix(0, x, blanks, matrix, cellsOption, parsers);
     const numRows = matrix.length;
     const diff = slideFlattened(
       { ...store.cellsOption },
