@@ -1,5 +1,5 @@
 import React from "react";
-import { CommitterType } from "../types";
+import { WriterType } from "../types";
 
 type Condition = (value: any) => boolean;
 type Stringify = (value: any) => string;
@@ -22,7 +22,7 @@ export class Renderer {
     this.complement = complement;
   }
 
-  public render (value: any, committer?: CommitterType): any {
+  public render (value: any, writer?: WriterType): any {
     if (this.condition && !this.condition(value)) {
       return this.complement ? this.complement(value) : this.stringify(value);
     }
@@ -30,25 +30,25 @@ export class Renderer {
     switch (typeof value) {
       case "object":
         if (value instanceof Date) {
-          return this.date(value, committer);
+          return this.date(value, writer);
         }
         if (value == null) {
-          return this.null(value, committer);
+          return this.null(value, writer);
         }
         if (Array.isArray(value)) {
-          return this.array(value, committer);
+          return this.array(value, writer);
         }
-        return this.object(value, committer);
+        return this.object(value, writer);
       case "string":
-        return this.string(value, committer);
+        return this.string(value, writer);
       case "number":
-        return this.number(value, committer);
+        return this.number(value, writer);
       case "function":
         return value() as string;
       case "boolean":
-        return this.bool(value, committer);
+        return this.bool(value, writer);
       case "undefined":
-        return this.undefined(value, committer);
+        return this.undefined(value, writer);
     }
     return "";
   }
@@ -63,27 +63,27 @@ export class Renderer {
     return value.toString();
   }
 
-  protected string (value: string, committer?: CommitterType): any {
+  protected string (value: string, writer?: WriterType): any {
     if (value[0] === "'") {
       return value.substring(1);
     }
     return value;
   }
 
-  protected bool (value: boolean, committer?: CommitterType): any {
+  protected bool (value: boolean, writer?: WriterType): any {
     return (
       <input 
         type="checkbox"
         checked={value}
         onChange={(e) => {
-          committer && committer(e.currentTarget.checked.toString());
+          writer && writer(e.currentTarget.checked.toString());
           e.currentTarget.blur();
         }}
       />
     );
   }
 
-  protected number (value: number, committer?: CommitterType): any {
+  protected number (value: number, writer?: WriterType): any {
     if (isNaN(value)) {
       return "NaN";
     }
@@ -95,25 +95,25 @@ export class Renderer {
     return `${result}.${fraction}`;
   }
 
-  protected date (value: Date, committer?: CommitterType): any {
+  protected date (value: Date, writer?: WriterType): any {
     if (value.getHours() + value.getMinutes() + value.getSeconds() === 0) {
       return value.toLocaleDateString();
     }
     return value.toLocaleString();
   }
 
-  protected array (value: any[], committer?: CommitterType): any {
+  protected array (value: any[], writer?: WriterType): any {
     return  value.map((v) => this.stringify(v)).join(",");
   }
   
-  protected object (value: any, committer?: CommitterType): any {
+  protected object (value: any, writer?: WriterType): any {
     return "{}";
   }
 
-  protected null (value: null, committer?: CommitterType): any {
+  protected null (value: null, writer?: WriterType): any {
     return "";
   }
-  protected undefined (value: undefined, committer?: CommitterType): any {
+  protected undefined (value: undefined, writer?: WriterType): any {
     return "";
   }
 };

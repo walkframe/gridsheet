@@ -94,7 +94,7 @@ export type OperationType = {
 
 export type ReactionsType = { [s: string]: boolean };
 
-export type CommitterType = (value: string) => void;
+export type WriterType = (value: string) => void;
 
 export type FlattenedType = { [s: string]: any };
 
