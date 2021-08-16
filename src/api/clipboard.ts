@@ -2,7 +2,6 @@ import { ZoneType, MatrixType, PositionType, CellsOptionType, Renderers } from "
 
 import { cropMatrix, zoneToArea } from "./arrays";
 import { matrix2tsv } from "./converters";
-import { RendererType } from "../renderers/core";
 
 export const clip = (
   selecting: ZoneType,

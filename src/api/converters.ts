@@ -1,6 +1,5 @@
-import { CellsOptionType, MatrixType, Parsers, Renderers } from "../types";
-import { defaultRenderer, Renderer as DefaultRenderer, RendererType } from "../renderers/core";
-import { Parser as DefaultParser } from "../parsers/core";
+import { CellsOptionType, MatrixType, Renderers } from "../types";
+import { defaultRenderer } from "../renderers/core";
 import { DEFAULT_ALPHA_CACHE_SIZE } from "../constants";
 import { stackOption } from "./arrays";
 

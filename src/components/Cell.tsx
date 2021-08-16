@@ -35,7 +35,6 @@ export const Cell: React.FC<Props> = React.memo(
     const {
       matrix,
       renderers,
-      parsers,
       cellsOption,
       editingCell,
       choosing,
@@ -108,18 +107,12 @@ export const Cell: React.FC<Props> = React.memo(
       <CellLayout
         key={x}
         ref={cellRef}
-        className={`gs-cell ${among(copyingArea, [y, x]) ? "gs-copying" : ""} ${
-          y === 0
-            ? "gs-cell-top-end"
-            : y === numRows - 1
-            ? "gs-cell-lower-end"
-            : ""
-        } ${
-          x === 0
-            ? "gs-cell-left-end"
-            : x === numCols - 1
-            ? "gs-cell-right-end"
-            : ""
+        className={`gs-cell ${
+          among(copyingArea, [y, x]) ? "gs-copying" : ""} ${
+          y === 0 ? "gs-cell-top-end" : ""} ${
+          x === 0 ? "gs-cell-left-end" : ""} ${
+          y === numRows - 1 ? "gs-cell-bottom-end" : ""} ${
+          x === numCols - 1 ? "gs-cell-right-end" : ""
         }`}
         style={{
           ...outerStyle,
