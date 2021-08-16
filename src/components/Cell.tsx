@@ -12,8 +12,7 @@ import {
 
 import { DUMMY_IMG, DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
 import { AreaType, CellOptionType } from "../types";
-import { Renderer as DefaultRenderer } from "../renderers/core";
-import { Parser as DefaultParser } from "../parsers/core";
+import { defaultRenderer } from "../renderers/core";
 import { CellLayout } from "./styles/CellLayout";
 
 import { Context } from "../store";
@@ -88,11 +87,7 @@ export const Cell: React.FC<Props> = React.memo(
     };
 
     const rendererKey = stackOption(cellsOption, y, x).renderer;
-    const parserKey = stackOption(cellsOption, y, x).parser;
-    const writerKey = stackOption(cellsOption, y, x).writer;
-
-    const renderer = renderers[rendererKey || ""] || new DefaultRenderer();
-    const parser = parsers[parserKey || ""] || new DefaultParser();
+    const renderer = renderers[rendererKey || ""] || defaultRenderer;
     const height = rowOption.height || DEFAULT_HEIGHT;
     const width = colOption.width || DEFAULT_WIDTH;
 
