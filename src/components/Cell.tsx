@@ -1,6 +1,6 @@
 import React from "react";
 import { x2c, y2r } from "../api/converters";
-import { zoneToArea, among, zoneShape } from "../api/arrays";
+import { zoneToArea, among, zoneShape, stackOption } from "../api/arrays";
 import {
   choose,
   select,
@@ -12,8 +12,7 @@ import {
 
 import { DUMMY_IMG, DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
 import { AreaType, CellOptionType } from "../types";
-import { Renderer as DefaultRenderer } from "../renderers/core";
-import { Parser as DefaultParser } from "../parsers/core";
+import { defaultRenderer } from "../renderers/core";
 import { CellLayout } from "./styles/CellLayout";
 
 import { Context } from "../store";
@@ -36,7 +35,6 @@ export const Cell: React.FC<Props> = React.memo(
     const {
       matrix,
       renderers,
-      parsers,
       cellsOption,
       editingCell,
       choosing,
@@ -87,32 +85,15 @@ export const Cell: React.FC<Props> = React.memo(
       ...cellOption.style,
     };
 
-    const rendererKey =
-      cellOption.renderer ||
-      colOption.renderer ||
-      rowOption.renderer ||
-      defaultOption.renderer;
-    const parserKey =
-      cellOption.parser ||
-      colOption.parser ||
-      rowOption.parser ||
-      defaultOption.parser;
-
-    const renderer = renderers[rendererKey || ""] || new DefaultRenderer();
-    const parser = parsers[parserKey || ""] || new DefaultParser();
+    const rendererKey = stackOption(cellsOption, y, x).renderer;
+    const renderer = renderers[rendererKey || ""] || defaultRenderer;
     const height = rowOption.height || DEFAULT_HEIGHT;
     const width = colOption.width || DEFAULT_WIDTH;
-    const verticalAlign =
-      cellOption.verticalAlign ||
-      colOption.verticalAlign ||
-      rowOption.verticalAlign ||
-      defaultOption.verticalAlign ||
-      "middle";
 
+    const verticalAlign = stackOption(cellsOption, y, x).verticalAlign || "middle";
     const writeCell = (value: string) => {
       if (before !== value) {
-        const parsed = parser.parse(value);
-        dispatch(write(parsed));
+        dispatch(write(value));
       }
       setBefore("");
     };
@@ -126,18 +107,12 @@ export const Cell: React.FC<Props> = React.memo(
       <CellLayout
         key={x}
         ref={cellRef}
-        className={`gs-cell ${among(copyingArea, [y, x]) ? "gs-copying" : ""} ${
-          y === 0
-            ? "gs-cell-top-end"
-            : y === numRows - 1
-            ? "gs-cell-lower-end"
-            : ""
-        } ${
-          x === 0
-            ? "gs-cell-left-end"
-            : x === numCols - 1
-            ? "gs-cell-right-end"
-            : ""
+        className={`gs-cell ${
+          among(copyingArea, [y, x]) ? "gs-copying" : ""} ${
+          y === 0 ? "gs-cell-top-end" : ""} ${
+          x === 0 ? "gs-cell-left-end" : ""} ${
+          y === numRows - 1 ? "gs-cell-bottom-end" : ""} ${
+          x === numCols - 1 ? "gs-cell-right-end" : ""
         }`}
         style={{
           ...outerStyle,
@@ -164,7 +139,7 @@ export const Cell: React.FC<Props> = React.memo(
           const dblclick = document.createEvent("MouseEvents");
           dblclick.initEvent("dblclick", true, true);
           editorRef.current?.dispatchEvent(dblclick);
-          setTimeout(() => (editorRef.current.value = value), 100);
+          setTimeout(() => (editorRef.current.value = renderer.stringify(value)), 100);
           return false;
         }}
         draggable

@@ -24,6 +24,7 @@ import {
   applyFlattened,
   slideFlattened,
   matrixShape,
+  stringifyMatrix,
 } from "../api/arrays";
 import { ParserType } from "../parsers/core";
 
@@ -437,7 +438,7 @@ class PasteAction<
 > extends CoreAction<T> {
   code = "PASTE";
   reduce(store: StoreType, payload: T): StoreType {
-    const { choosing, copyingZone, cutting } = store;
+    const { choosing, copyingZone, cutting, cellsOption, parsers, renderers } = store;
     let { matrix, selectingZone } = store;
     const [y, x] = choosing;
     const selectingArea = zoneToArea(selectingZone);
@@ -446,27 +447,30 @@ class PasteAction<
     const [copyingTop, copyingLeft] = copyingArea;
     const [selectingHeight, selectingWidth] = zoneShape(selectingArea);
     const [copyingHeight, copyingWidth] = zoneShape(copyingArea);
-    const { text, parser } = payload;
+    const { text } = payload;
 
     let before: MatrixType = [];
     let after = cropMatrix(matrix, copyingArea);
     let height = copyingHeight;
     let width = copyingWidth;
     let dst: AreaType;
+
     if (cutting) {
       const blank = spreadMatrix([[""]], copyingHeight, copyingWidth);
-      matrix = writeMatrix(copyingTop, copyingLeft, blank, matrix);
+      matrix = writeMatrix(copyingTop, copyingLeft, blank, matrix, cellsOption, parsers);
     }
     if (selectingTop === -1) {
       // unselecting destination
       if (copyingTop === -1) {
         // unselecting source
-        after = tsv2matrix(text, parser);
+        after = tsv2matrix(text);
         [height, width] = [after.length - 1, after[0].length - 1];
+      } else {
+        after = stringifyMatrix(copyingTop, copyingLeft, after, cellsOption, renderers);
       }
       dst = [y, x, y + height, x + width];
       before = cropMatrix(matrix, dst);
-      matrix = writeMatrix(y, x, after, matrix);
+      matrix = writeMatrix(y, x, after, matrix, cellsOption, parsers);
       selectingZone =
         height === 0 && width === 0
           ? [-1, -1, -1, -1]
@@ -475,7 +479,7 @@ class PasteAction<
       // selecting destination
       if (copyingTop === -1) {
         // unselecting source
-        after = tsv2matrix(text, parser);
+        after = tsv2matrix(text);
         [height, width] = superposeArea(
           [0, 0, after.length - 1, after[0].length - 1],
           [0, 0, selectingHeight, selectingWidth]
@@ -483,6 +487,7 @@ class PasteAction<
       } else {
         // selecting source
         [height, width] = superposeArea(copyingArea, selectingArea);
+        after = stringifyMatrix(copyingTop, copyingLeft, after, cellsOption, renderers);
       }
       dst = selectingArea;
       after = spreadMatrix(after, height, width);
@@ -490,7 +495,7 @@ class PasteAction<
         matrix,
         slideArea([0, 0, height, width], selectingTop, selectingLeft)
       );
-      matrix = writeMatrix(selectingTop, selectingLeft, after, matrix);
+      matrix = writeMatrix(selectingTop, selectingLeft, after, matrix, cellsOption, parsers);
       selectingZone = slideArea(
         [0, 0, height, width],
         selectingTop,
@@ -625,9 +630,10 @@ export const search = new SearchAction().bind();
 class WriteAction<T extends any> extends CoreAction<T> {
   code = "WRITE";
   reduce(store: StoreType, payload: T): StoreType {
-    const [y, x] = store.choosing;
+    const { choosing, parsers, cellsOption } = store;
+    const [y, x] = choosing;
     const value = payload;
-    const matrix = writeMatrix(y, x, [[value]], store.matrix);
+    const matrix = writeMatrix(y, x, [[value]], store.matrix, cellsOption, parsers);
     const pointedArea = [y, x, y, x] as AreaType;
     const history = histories.pushHistory(store.history, {
       command: "write",
@@ -649,7 +655,7 @@ export const write = new WriteAction().bind();
 class ClearAction<T extends null> extends CoreAction<T> {
   code = "CLEAR";
   reduce(store: StoreType, payload: T): StoreType {
-    const { choosing, selectingZone, matrix } = store;
+    const { choosing, selectingZone, matrix, parsers, cellsOption } = store;
 
     let selectingArea = zoneToArea(selectingZone);
     const [top, left, bottom, right] = selectingArea;
@@ -659,7 +665,7 @@ class ClearAction<T extends null> extends CoreAction<T> {
       selectingArea = [y, x, y, x];
     }
     const after = spreadMatrix([[""]], bottom - top, right - left);
-    const written = writeMatrix(y, x, after, matrix);
+    const written = writeMatrix(y, x, after, matrix, cellsOption, parsers);
     const history = histories.pushHistory(store.history, {
       command: "write",
       dst: [y, x, y, x] as AreaType,
@@ -926,12 +932,14 @@ class AddRowsAction<
   code = "ADD_ROWS";
   reduce(store: StoreType, payload: T): StoreType {
     const matrix = [...store.matrix];
+    const { cellsOption, parsers } = store;
     const numCols = matrix[0]?.length || 0;
     const { numRows, y } = payload;
     const diff = slideFlattened(store.cellsOption, numRows, null, y, null);
-    const blanks = makeSequence(0, numRows).map(() =>
+    let blanks = makeSequence(0, numRows).map(() =>
       makeSequence(0, numCols).map(() => "")
     );
+    blanks = writeMatrix(0, 0, blanks, blanks, cellsOption, parsers);
     matrix.splice(y, 0, ...blanks);
     const history = histories.pushHistory(store.history, {
       command: "addRows",
@@ -960,12 +968,15 @@ class AddColsAction<
   code = "ADD_COLS";
   reduce(store: StoreType, payload: T): StoreType {
     const { numCols, x } = payload;
-    const matrix = [...store.matrix].map((cols) => {
+    let matrix = [...store.matrix].map((cols) => {
       const blanks = makeSequence(0, numCols).map(() => "");
       cols = [...cols];
       cols.splice(x, 0, ...blanks);
       return cols;
     });
+    let blanks = matrix.map(() => makeSequence(0, numCols).map(() => ""));
+    const { cellsOption, parsers } = store;
+    matrix = writeMatrix(0, x, blanks, matrix, cellsOption, parsers);
     const numRows = matrix.length;
     const diff = slideFlattened(
       { ...store.cellsOption },

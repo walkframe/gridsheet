@@ -30,7 +30,7 @@ export const GridSheetLayout = styled.div`
       &.gs-cell-left-end {
         border-left: none;
       }
-      &.gs-cell-lower-end {
+      &.gs-cell-bottom-end {
         border-bottom: solid 1px #bbbbbb;
       }
       &.gs-cell-right-end {
@@ -79,7 +79,7 @@ export const GridSheetLayout = styled.div`
       &.gs-cell-left-end {
         border-left: none;
       }
-      &.gs-cell-lower-end {
+      &.gs-cell-bottom-end {
         border-bottom: solid 1px #666666;
       }
       &.gs-cell-right-end {

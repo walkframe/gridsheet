@@ -1,5 +1,5 @@
 import React from "react";
-import { Writer } from "../types";
+import { WriterType } from "../types";
 
 type Condition = (value: any) => boolean;
 type Stringify = (value: any) => string;
@@ -22,7 +22,7 @@ export class Renderer {
     this.complement = complement;
   }
 
-  public render (value: any, writer?: Writer): any {
+  public render (value: any, writer?: WriterType): any {
     if (this.condition && !this.condition(value)) {
       return this.complement ? this.complement(value) : this.stringify(value);
     }
@@ -63,14 +63,14 @@ export class Renderer {
     return value.toString();
   }
 
-  protected string (value: string, writer?: Writer): any {
+  protected string (value: string, writer?: WriterType): any {
     if (value[0] === "'") {
       return value.substring(1);
     }
     return value;
   }
 
-  protected bool (value: boolean, writer?: Writer): any {
+  protected bool (value: boolean, writer?: WriterType): any {
     return (
       <input 
         type="checkbox"
@@ -83,7 +83,7 @@ export class Renderer {
     );
   }
 
-  protected number (value: number, writer?: Writer): any {
+  protected number (value: number, writer?: WriterType): any {
     if (isNaN(value)) {
       return "NaN";
     }
@@ -95,27 +95,28 @@ export class Renderer {
     return `${result}.${fraction}`;
   }
 
-  protected date (value: Date, writer?: Writer): any {
+  protected date (value: Date, writer?: WriterType): any {
     if (value.getHours() + value.getMinutes() + value.getSeconds() === 0) {
       return value.toLocaleDateString();
     }
     return value.toLocaleString();
   }
 
-  protected array (value: any[], writer?: Writer): any {
+  protected array (value: any[], writer?: WriterType): any {
     return  value.map((v) => this.stringify(v)).join(",");
   }
   
-  protected object (value: any, writer?: Writer): any {
+  protected object (value: any, writer?: WriterType): any {
     return "{}";
   }
 
-  protected null (value: null, writer?: Writer): any {
+  protected null (value: null, writer?: WriterType): any {
     return "";
   }
-  protected undefined (value: undefined, writer?: Writer): any {
+  protected undefined (value: undefined, writer?: WriterType): any {
     return "";
   }
 };
 
 export type RendererType = Renderer;
+export const defaultRenderer = new Renderer();

@@ -27,21 +27,25 @@ export class Parser {
     this.complement = complement;
   }
 
-  public parse (value: string): any {
-    if (this.condition && !this.condition(value)) {
-      return this.complement ? this.complement(value) : value;
-    }
+  public callback(parsed: any, before?: any): any {
+    return parsed;
+  }
 
+  public parse (value: string, before?: any): any {
+    if (this.condition && !this.condition(value)) {
+      const result = this.complement ? this.complement(value) : value;
+      return this.callback(result, before);
+    }
     if (value[0] === "'") {
-      return value;
+      return this.callback(value, before);
     }
     for (let i = 0; i < this.parseFunctions.length; i++) {
       const result = this.parseFunctions[i](value);
       if (result != null) {
-        return result;
+        return this.callback(result, before);
       }
     }
-    return value;
+    return this.callback(value, before);
   }
 
   protected bool (value: string): boolean | undefined {
@@ -74,3 +78,5 @@ export class Parser {
 };
 
 export type ParserType = Parser;
+
+export const defaultParser = new Parser();

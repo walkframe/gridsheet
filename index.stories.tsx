@@ -1,6 +1,26 @@
 import React from "react";
-import { GridSheet, Renderer, aa2oa, MatrixType } from "./src";
+import { GridSheet, Renderer, aa2oa, MatrixType, Parser } from "./src";
+import { defaultParser } from "./src/parsers/core";
+import { defaultRenderer } from "./src/renderers/core";
 // import { GridSheet, Renderer, aa2oa } from "../dist";
+
+type Obj = {v: any};
+
+class ObjectRenderer extends Renderer {
+  object(value: Obj): any {
+    return value.v;
+  }
+  stringify(value: Obj): string {
+    return "" + value.v;
+  }
+}
+
+class ObjectParser<T extends Obj> extends Parser {
+  callback(value: any, old: T): T {
+    console.log("callback", old, value, "=>", {...old, v: value});
+    return {...old, v: value};
+  }
+};
 
 class KanjiRenderer extends Renderer {
   protected kanjiMap: { [s: string]: string } = {
@@ -263,6 +283,46 @@ export const showIndex = () => {
           </tbody>
         </table>
       )}
+      <div>object value</div>
+      <GridSheet
+        data={[
+          [{v: 1}, {v: 2}],
+          [{v: 3}, {v: 4}],
+          [{v: 5}, {v: 6}],
+          [{v: 7}, 8],
+        ]}
+        options={{
+          cells: {
+            default: {
+              renderer: "obj",
+              parser: "obj",
+            },
+            B4: {
+              renderer: "default",
+              parser: "default",
+            },
+          },
+          renderers: {
+            obj: new ObjectRenderer(),
+            default: defaultRenderer,
+          },
+          parsers: {
+            obj: new ObjectParser(),
+            default: defaultParser,
+          },
+          onChange: (matrix, options, positions) => {
+            if (typeof matrix !== "undefined") {
+              console.log("matrix on change:", matrix);
+            }
+            if (typeof options !== "undefined") {
+              console.log("options on change", options);
+            }
+            if (typeof positions !== "undefined") {
+              console.log("positions on change", positions);
+            }
+          },
+        }}
+      />
     </>
   );
 };

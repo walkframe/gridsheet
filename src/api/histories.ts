@@ -14,6 +14,7 @@ import {
   matrixShape,
   applyFlattened,
   inverseFlattened,
+  stringifyMatrix,
 } from "../api/arrays";
 
 export const pushHistory = (
@@ -36,6 +37,7 @@ export const undoCopy = (
   store: StoreType,
   { dst, src, before }: OperationType
 ): StoreType => {
+  const { renderers, parsers, cellsOption } = store;
   let matrix = [...store.matrix];
   const [top, left] = dst;
   const [h, w] = matrixShape(before);
@@ -43,7 +45,9 @@ export const undoCopy = (
     h === 1 && w === 1
       ? [-1, -1, -1, -1]
       : [top, left, top + h - 1, left + w - 1];
-  matrix = writeMatrix(top, left, before, matrix);
+  
+  before = stringifyMatrix(top, left, before, cellsOption, renderers);
+  matrix = writeMatrix(top, left, before, matrix, cellsOption, parsers);
 
   return {
     ...store,
@@ -59,13 +63,14 @@ export const redoCopy = (
   store: StoreType,
   { src, dst, after }: OperationType
 ): StoreType => {
+  const { renderers, parsers, cellsOption } = store;
   const [y, x] = dst;
   const choosing = [y, x] as PositionType;
   const [h, w] = matrixShape(after);
   const selectingZone: ZoneType =
     h === 1 && w === 1 ? [-1, -1, -1, -1] : [y, x, y + h - 1, x + w - 1];
   const copyingZone = [-1, -1, -1, -1] as ZoneType;
-  const matrix = writeMatrix(y, x, after, store.matrix);
+  const matrix = writeMatrix(y, x, after, store.matrix, cellsOption, parsers);
   return {
     ...store,
     matrix,
@@ -79,6 +84,7 @@ export const undoCut = (
   store: StoreType,
   { dst, src, before, after }: OperationType
 ): StoreType => {
+  const { renderers, parsers, cellsOption } = store;
   let matrix = [...store.matrix];
   const [top, left] = dst;
   const [h, w] = matrixShape(before);
@@ -86,10 +92,12 @@ export const undoCut = (
     h === 1 && w === 1
       ? [-1, -1, -1, -1]
       : [top, left, top + h - 1, left + w - 1];
-  matrix = writeMatrix(top, left, before, matrix);
+
+  before = stringifyMatrix(top, left, before, cellsOption, renderers);
+  matrix = writeMatrix(top, left, before, matrix, cellsOption, parsers);
 
   const [y, x] = src;
-  matrix = writeMatrix(y, x, cropMatrix(after, slideArea(src, -y, -x)), matrix);
+  matrix = writeMatrix(y, x, cropMatrix(after, slideArea(src, -y, -x)), matrix, cellsOption, parsers);
 
   return {
     ...store,
@@ -105,17 +113,18 @@ export const redoCut = (
   store: StoreType,
   { src, dst, after }: OperationType
 ): StoreType => {
+  const { renderers, parsers, cellsOption } = store;
   const [y, x] = dst;
   const choosing = [y, x] as PositionType;
   const [h, w] = matrixShape(after);
   const selectingZone: ZoneType =
     h === 1 && w === 1 ? [-1, -1, -1, -1] : [y, x, y + h - 1, x + w - 1];
   const copyingZone = [-1, -1, -1, -1] as ZoneType;
-  let matrix = writeMatrix(y, x, after, store.matrix);
+  let matrix = writeMatrix(y, x, after, store.matrix, cellsOption, parsers);
   const [top, left, bottom, right] = src;
   const blank = spreadMatrix([[""]], bottom - top, right - left);
-  matrix = writeMatrix(top, left, blank, matrix);
-  matrix = writeMatrix(y, x, after, matrix);
+  matrix = writeMatrix(top, left, blank, matrix, cellsOption, parsers);
+  matrix = writeMatrix(y, x, after, matrix, cellsOption, parsers);
 
   return {
     ...store,
@@ -130,6 +139,7 @@ export const undoWrite = (
   store: StoreType,
   { dst, src, before }: OperationType
 ): StoreType => {
+  const { renderers, parsers, cellsOption } = store;
   let matrix = [...store.matrix];
   const [top, left] = dst;
   const [h, w] = matrixShape(before);
@@ -137,7 +147,8 @@ export const undoWrite = (
     h === 1 && w === 1
       ? [-1, -1, -1, -1]
       : [top, left, top + h - 1, left + w - 1];
-  matrix = writeMatrix(top, left, before, matrix);
+  before = stringifyMatrix(top, left, before, cellsOption, renderers);
+  matrix = writeMatrix(top, left, before, matrix, cellsOption, parsers);
   return {
     ...store,
     matrix,
@@ -152,13 +163,14 @@ export const redoWrite = (
   store: StoreType,
   { src, dst, after }: OperationType
 ): StoreType => {
+  const { renderers, parsers, cellsOption } = store;
   const [y, x] = dst;
   const choosing = [y, x] as PositionType;
   const [h, w] = matrixShape(after);
   const selectingZone: ZoneType =
     h === 1 && w === 1 ? [-1, -1, -1, -1] : [y, x, y + h - 1, x + w - 1];
   const copyingZone = [-1, -1, -1, -1] as ZoneType;
-  const matrix = writeMatrix(y, x, after, store.matrix);
+  const matrix = writeMatrix(y, x, after, store.matrix, cellsOption, parsers);
   return {
     ...store,
     matrix,
@@ -190,11 +202,13 @@ export const redoAddRows = (
   { dst, options }: OperationType
 ): StoreType => {
   let matrix = [...store.matrix];
+  const { cellsOption, parsers } = store;
   const [top, left, bottom, right] = [...dst];
   const width = right - left + 1;
-  const blanks = makeSequence(0, bottom - top + 1).map(() =>
+  let blanks = makeSequence(0, bottom - top + 1).map(() =>
     makeSequence(0, width).map(() => "")
   );
+  blanks = writeMatrix(0, 0, blanks, blanks, cellsOption, parsers);
   matrix.splice(top, 0, ...blanks);
   return {
     ...store,
@@ -229,13 +243,16 @@ export const redoAddCols = (
   { dst, options }: OperationType
 ): StoreType => {
   let matrix = [...store.matrix];
-  const [_top, left, _, right] = [...dst];
+  const [top, left, _, right] = [...dst];
   matrix = [...store.matrix].map((cols) => {
     const blanks = makeSequence(0, right - left + 1).map(() => "");
     cols = [...cols];
     cols.splice(left, 0, ...blanks);
     return cols;
   });
+  const { cellsOption, parsers } = store;
+  let blanks = matrix.map(() => makeSequence(0, right - left + 1).map(() => ""));
+  matrix = writeMatrix(top, left, blanks, matrix, cellsOption, parsers);
   return {
     ...store,
     matrix: [...matrix],

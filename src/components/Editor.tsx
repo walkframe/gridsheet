@@ -25,6 +25,7 @@ import { Parser as DefaultParser } from "../parsers/core";
 import { EditorLayout } from "./styles/EditorLayout";
 
 import { Context } from "../store";
+import { stackOption } from "../api/arrays";
 
 export const Editor: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);
@@ -68,16 +69,8 @@ export const Editor: React.FC = () => {
   const cellOption: CellOptionType = cellsOption[cellId] || {};
   // defaultOption < rowOption < colOption < cellOption
 
-  const rendererKey =
-    cellOption.renderer ||
-    colOption.renderer ||
-    rowOption.renderer ||
-    defaultOption.renderer;
-  const parserKey =
-    cellOption.parser ||
-    colOption.parser ||
-    rowOption.parser ||
-    defaultOption.parser;
+  const rendererKey = stackOption(cellsOption, y, x).renderer;
+  const parserKey = stackOption(cellsOption, y, x).parser;
 
   const renderer = renderers[rendererKey || ""] || new DefaultRenderer();
   const parser = parsers[parserKey || ""] || new DefaultParser();
@@ -85,8 +78,7 @@ export const Editor: React.FC = () => {
 
   const writeCell = (value: string) => {
     if (before !== value) {
-      const parsed = parser.parse(value);
-      dispatch(write(parsed));
+      dispatch(write(value));
     }
     setBefore("");
   };
@@ -270,11 +262,11 @@ export const Editor: React.FC = () => {
                     choosing,
                     matrix,
                     editorRef,
-                    renderer
+                    cellsOption,
+                    renderers,
                   );
                   dispatch(copy(area));
                   input.focus(); // refocus
-
                   return false;
                 }
               }
@@ -282,18 +274,19 @@ export const Editor: React.FC = () => {
             case "f": // F
               if (e.ctrlKey || e.metaKey) {
                 if (!editing) {
+                  e.preventDefault();
                   if (typeof searchQuery === "undefined") {
                     dispatch(setSearchQuery(""));
                   }
                   dispatch(setEntering(false));
                   setTimeout(() => searchInputRef.current?.focus(), 100);
-                  e.preventDefault();
                   return false;
                 }
               }
             case "r": // R
               if (e.ctrlKey || e.metaKey) {
                 if (!editing) {
+                  e.preventDefault();
                   dispatch(redo(null));
                   setTimeout(() => (input.value = ""), 100); // resetting textarea
                   return false;
@@ -330,7 +323,8 @@ export const Editor: React.FC = () => {
                     choosing,
                     matrix,
                     editorRef,
-                    renderer
+                    cellsOption,
+                    renderers,
                   );
                   dispatch(cut(area));
                   input.focus(); // refocus
@@ -341,6 +335,7 @@ export const Editor: React.FC = () => {
             case "z": // Z
               if (e.ctrlKey || e.metaKey) {
                 if (!editing) {
+                  e.preventDefault();
                   if (e.shiftKey) {
                     dispatch(redo(null));
                     setTimeout(() => (input.value = ""), 100); // resetting textarea
@@ -353,6 +348,7 @@ export const Editor: React.FC = () => {
             case ";": // semicolon
               if (e.ctrlKey || e.metaKey) {
                 if (!editing) {
+                  e.preventDefault();
                   // MAYBE: need to aware timezone.
                   writeCell(new Date().toDateString());
                 }
