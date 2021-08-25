@@ -1,38 +1,31 @@
 import React from "react";
 
-import { MatrixType, OptionsType } from "../types";
+import { CellsType, Props } from "../types";
 
 import { Context } from "../store";
 import {
-  setMatrix,
-  initCellsOption,
   initHistory,
   setSheetHeight,
   setSheetWidth,
   setHeaderHeight,
   setHeaderWidth,
-  setRenderers,
-  setParsers,
   setEditingOnEnter,
   setCellLabel,
   setOnSave,
-  setOnChange,
-  setOnSelect,
+  setTable,
 } from "../store/actions";
 
 import { HISTORY_SIZE, HEADER_HEIGHT, HEADER_WIDTH } from "../constants";
+import { cellToIndexes } from "../api/converters";
+import { Table } from "../api/tables";
 
-type Props = {
-  data: MatrixType;
-  options: OptionsType;
-};
-
-export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
+export const StoreInitializer: React.FC<Props> = ({ cells = {}, options = {} }) => {
   const {
     historySize = HISTORY_SIZE,
     headerHeight = HEADER_HEIGHT,
     headerWidth = HEADER_WIDTH,
-    cells,
+    numRows = 0,
+    numCols = 0,
     sheetHeight,
     sheetWidth,
     editingOnEnter,
@@ -40,19 +33,15 @@ export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
     renderers,
     parsers,
     onSave,
-    onChange,
-    onSelect,
   } = options;
 
   const { store, dispatch } = React.useContext(Context);
+
   React.useEffect(() => {
-    dispatch(setMatrix(data));
-  }, [data]);
-  React.useEffect(() => {
-    if (typeof cells !== "undefined") {
-      dispatch(initCellsOption(cells));
-    }
-  }, [cells]);
+    const auto = getMaxSizeFromCells(numRows, numCols, cells);
+    const table = new Table(auto.numRows, auto.numCols, cells, parsers, renderers);
+    dispatch(setTable(table));
+  }, []);
   React.useEffect(() => {
     if (sheetHeight) {
       dispatch(setSheetHeight(sheetHeight));
@@ -84,33 +73,23 @@ export const StoreInitializer: React.FC<Props> = ({ data, options }) => {
     }
   }, [cellLabel]);
   React.useEffect(() => {
-    if (typeof renderers !== "undefined") {
-      dispatch(setRenderers(renderers));
-    }
-  }, [renderers]);
-  React.useEffect(() => {
-    if (typeof parsers !== "undefined") {
-      dispatch(setParsers(parsers));
-    }
-  }, [parsers]);
-  React.useEffect(() => {
     if (typeof onSave !== "undefined") {
       dispatch(setOnSave(onSave));
     }
   }, [onSave]);
   React.useEffect(() => {
-    if (typeof onChange !== "undefined") {
-      dispatch(setOnChange(onChange));
-    }
-  }, [onChange]);
-  React.useEffect(() => {
-    if (typeof onSelect !== "undefined") {
-      dispatch(setOnSelect(onSelect));
-    }
-  }, [onSelect]);
-  React.useEffect(() => {
     dispatch(initHistory(historySize));
   }, []);
-
-  return <></>;
+  return <></>
 };
+
+const getMaxSizeFromCells = (sizeY=0, sizeX=0, cells: CellsType = {}) => {
+  let lastY = sizeY, lastX = sizeX;
+  Object.keys(cells).map((cellId) => {
+    const [y, x] = cellToIndexes(cellId);
+    if (lastY < y) { lastY = y; }
+    if (lastX < x) { lastX = x; }
+  });
+  return { numRows: lastY, numCols: lastX };
+};
+

@@ -1,7 +1,5 @@
-import { CellsOptionType, MatrixType, Renderers } from "../types";
-import { defaultRenderer } from "../renderers/core";
-import { DEFAULT_ALPHA_CACHE_SIZE } from "../constants";
-import { stackOption } from "./arrays";
+import { MatrixType, StoreType, X, Y } from "../types";
+import { DEFAULT_ALPHABET_CACHE_SIZE } from "../constants";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -10,9 +8,9 @@ const A2N_CACHE = new Map<string, number>();
 
 export const n2a = (
   key: number,
-  cacheSize = DEFAULT_ALPHA_CACHE_SIZE
+  cacheSize = DEFAULT_ALPHABET_CACHE_SIZE
 ): string => {
-  const cached = N2A_CACHE.get(key);
+  const cached = N2A_CACHE.get(--key);
   if (cached != null) {
     return cached;
   }
@@ -36,7 +34,7 @@ export const n2a = (
 
 export const a2n = (
   key: string,
-  cacheSize = DEFAULT_ALPHA_CACHE_SIZE
+  cacheSize = DEFAULT_ALPHABET_CACHE_SIZE
 ): number => {
   const cached = A2N_CACHE.get(key);
   if (cached != null) {
@@ -62,43 +60,45 @@ export const a2n = (
 
 export const x2c = (
   x: number,
-  cacheSize = DEFAULT_ALPHA_CACHE_SIZE
+  cacheSize = DEFAULT_ALPHABET_CACHE_SIZE,
 ): string => {
   return n2a(x + 1, cacheSize);
 };
 
 export const c2x = (
   col: string,
-  cacheSize = DEFAULT_ALPHA_CACHE_SIZE
+  cacheSize = DEFAULT_ALPHABET_CACHE_SIZE,
 ): number => {
-  return a2n(col, cacheSize) - 1;
+  return a2n(col, cacheSize);
 };
 
 export const y2r = (y: number) => {
-  return y + 1;
+  return String(y);
 };
 
 export const r2y = (row: number | string) => {
   if (typeof row === "string") {
     row = parseInt(row, 10);
   }
-  return row - 1;
+  return row;
+};
+
+export const xy2cell = (x: number, y: number) => {
+  return `${x2c(x)}${y2r(y)}`
 };
 
 export const matrix2tsv = (
+  store: StoreType,
   y: number,
   x: number,
-  rows: MatrixType,
-  cellsOption: CellsOptionType,
-  renderers: Renderers,
+  matrix: MatrixType,
 ): string => {
+  const { table } = store;
   const lines: string[] = [];
-  rows.map((row, i) => {
+  matrix.map((row, i) => {
     const cols: string[] = [];
     row.map((col, j) => {
-      const key = stackOption(cellsOption, y + i, x + j).renderer;
-      const renderer = renderers[key || ""] || defaultRenderer;
-      const value = renderer.stringify(col);
+      const value = table.stringify(y + i, x + j, col || null);
       if (value.indexOf("\n") !== -1) {
         cols.push(`"${value.replace(/"/g, '""')}"`);
       } else {
@@ -110,58 +110,49 @@ export const matrix2tsv = (
   return lines.join("\n");
 };
 
-export const tsv2matrix = (tsv: string): any[][] => {
+const restoreDoubleQuote = (text: string) => text.replace(/\x00/g, '"');
+
+export const tsv2matrix = (tsv: string): string[][] => {
   tsv = tsv.replace(/""/g, "\x00");
-  const restoreDoubleQuote = (text: string) => text.replace(/\x00/g, '"');
-  const rows: any[][] = [];
-  let row: any[] = [];
-  if (tsv.indexOf("\t") === -1) {
-    // 1col
-    const cols: any[] = [];
-    const vals = tsv.split("\n");
-    let enter = false;
-    vals.map((val) => {
-      if (enter) {
-        if (val[val.length - 1] === '"') {
-          enter = false;
-          val = val.substring(0, val.length - 1);
-        }
-        cols[cols.length - 1] += `\n${val}`;
-      } else {
-        if (val.match(/^(\x00)*"/)) {
-          enter = true;
-          val = val.substring(1);
-        }
-        cols.push(val);
-      }
-    });
-    return cols.map((col) => [restoreDoubleQuote(col)]);
-  }
-  tsv.split("\t").map((col) => {
-    if (col[0] === '"' && col[col.length - 1] === '"') {
-      // escaping
-      const cell = restoreDoubleQuote(col.substring(1, col.length - 1));
-      row.push(cell);
-    } else {
-      const enterIndex = col.indexOf("\n");
-      if (enterIndex === -1) {
-        const cell = restoreDoubleQuote(col);
-        row.push(cell);
-      } else {
-        const cell = restoreDoubleQuote(col.substring(0, enterIndex));
-        row.push(cell);
-        rows.push(row);
-        row = [];
-        const nextCol = col.substring(enterIndex + 1, col.length);
-        if (nextCol) {
-          const nextCell = restoreDoubleQuote(nextCol);
-          row.push(nextCell);
-        }
-      }
+  const rows: string[][] = [[]];
+  let row = rows[0];
+  let entering = false;
+  let word = "";
+  for (let i = 0; i < tsv.length; i++) {
+    const s = tsv[i];
+    if (s === "\n" && !entering) {
+      row.push(restoreDoubleQuote(word));
+      word = "";
+      row = [];
+      rows.push(row);
+      continue;
     }
-  });
-  if (row.length > 0) {
-    rows.push(row);
+    if (s === "\t") {
+      row.push(restoreDoubleQuote(word));
+      word = "";
+      continue;
+    }
+    if (s === '"' && !entering && word === "") {
+      entering = true;
+      continue;
+    }
+    if (s === '"' && entering) {
+      entering = false;
+      continue;
+    }
+    word += s;
+  }
+  if (word) {
+    row.push(restoreDoubleQuote(word));
   }
   return rows;
+};
+
+export const cellToIndexes = (cellId: string): [Y, X] => {
+  const m = cellId.match(/([A-Z]*)([0-9]*)/);
+  if (m == null) {
+    return [0, 0];
+  }
+  const [_, col, row] = m.slice();
+  return [r2y(row) || 0, c2x(col) || 0];
 };

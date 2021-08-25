@@ -2,7 +2,9 @@ import styled from "styled-components";
 
 export const EditorLayout = styled.div`
   position: fixed;
+  opacity: 0;
   z-index: -1;
+  background-color: #aaaaaa;
   textarea {
     width: 100%;
     position: absolute;
@@ -24,6 +26,7 @@ export const EditorLayout = styled.div`
   }
   &.gs-editing {
     z-index: 2;
+    opacity: 1;
 
     textarea {
       cursor: text;

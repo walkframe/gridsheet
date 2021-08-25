@@ -1,6 +1,7 @@
 import React from "react";
 import { x2c, y2r } from "../api/converters";
 import { clip } from "../api/clipboard";
+import { UserTable } from "../api/tables";
 import {
   blur,
   clear,
@@ -19,61 +20,42 @@ import {
   setEntering,
 } from "../store/actions";
 
-import { CellOptionType } from "../types";
-import { Renderer as DefaultRenderer } from "../renderers/core";
-import { Parser as DefaultParser } from "../parsers/core";
 import { EditorLayout } from "./styles/EditorLayout";
 
 import { Context } from "../store";
-import { stackOption } from "../api/arrays";
 
 export const Editor: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);
 
   const {
-    matrix,
     editorRect,
-    cellsOption,
     editingCell,
     choosing,
     selectingZone,
-
     entering,
-    renderers,
-    parsers,
     searchQuery,
     editorRef,
     searchInputRef,
     editingOnEnter,
     onSave,
+    table,
   } = store;
 
-  const [y, x] = choosing;
+  let [y, x] = choosing;
 
   const rowId = `${y2r(y)}`;
   const colId = x2c(x);
   const cellId = `${colId}${rowId}`;
 
   const [before, setBefore] = React.useState("");
+  if (y === -1 || x === -1) {
+    return <></>;
+  }
 
   const editing = editingCell === cellId;
 
-  if ((matrix && matrix[y] == null) || matrix[y][x] == null) {
-    return <div />;
-  }
-  const value = matrix[y][x];
-  const [numRows, numCols] = [matrix.length, matrix[0].length];
-  const defaultOption: CellOptionType = cellsOption.default || {};
-  const rowOption: CellOptionType = cellsOption[rowId] || {};
-  const colOption: CellOptionType = cellsOption[colId] || {};
-  const cellOption: CellOptionType = cellsOption[cellId] || {};
-  // defaultOption < rowOption < colOption < cellOption
-
-  const rendererKey = stackOption(cellsOption, y, x).renderer;
-  const parserKey = stackOption(cellsOption, y, x).parser;
-
-  const renderer = renderers[rendererKey || ""] || new DefaultRenderer();
-  const parser = parsers[parserKey || ""] || new DefaultParser();
+  const cell = table.get(y, x) || {};
+  const value = cell.data;
   const [top, left, height, width] = editorRect;
 
   const writeCell = (value: string) => {
@@ -93,7 +75,7 @@ export const Editor: React.FC = () => {
         autoFocus
         draggable={false}
         ref={editorRef}
-        style={{ height, width }}
+        style={{ ...cell?.style, height, width }}
         rows={typeof value === "string" ? value.split("\n").length : 1}
         onFocus={(e) => {
           e.currentTarget.value = "";
@@ -101,7 +83,7 @@ export const Editor: React.FC = () => {
         onDoubleClick={(e) => {
           const input = e.currentTarget;
           if (!editing) {
-            input.value = renderer.stringify(value);
+            input.value = table.stringify(y, x, value || null);
             setBefore(input.value);
             dispatch(setEditingCell(cellId));
             setTimeout(() => {
@@ -132,8 +114,8 @@ export const Editor: React.FC = () => {
               }
               dispatch(
                 walk({
-                  numRows,
-                  numCols,
+                  numRows: table.numRows(),
+                  numCols: table.numCols(),
                   deltaY: 0,
                   deltaX: shiftKey ? -1 : 1,
                 })
@@ -163,8 +145,8 @@ export const Editor: React.FC = () => {
               }
               dispatch(
                 walk({
-                  numRows,
-                  numCols,
+                  numRows: table.numRows(),
+                  numCols: table.numCols(),
                   deltaY: shiftKey ? -1 : 1,
                   deltaX: 0,
                 })
@@ -198,8 +180,8 @@ export const Editor: React.FC = () => {
                 dispatch(
                   arrow({
                     shiftKey,
-                    numRows,
-                    numCols,
+                    numRows: table.numRows(),
+                    numCols: table.numCols(),
                     deltaY: 0,
                     deltaX: -1,
                   })
@@ -211,8 +193,8 @@ export const Editor: React.FC = () => {
                 dispatch(
                   arrow({
                     shiftKey,
-                    numRows,
-                    numCols,
+                    numRows: table.numRows(),
+                    numCols: table.numCols(),
                     deltaY: -1,
                     deltaX: 0,
                   })
@@ -224,8 +206,8 @@ export const Editor: React.FC = () => {
                 dispatch(
                   arrow({
                     shiftKey,
-                    numRows,
-                    numCols,
+                    numRows: table.numRows(),
+                    numCols: table.numCols(),
                     deltaY: 0,
                     deltaX: 1,
                   })
@@ -237,8 +219,8 @@ export const Editor: React.FC = () => {
                 dispatch(
                   arrow({
                     shiftKey,
-                    numRows,
-                    numCols,
+                    numRows: table.numRows(),
+                    numCols: table.numCols(),
                     deltaY: 1,
                     deltaX: 0,
                   })
@@ -249,7 +231,7 @@ export const Editor: React.FC = () => {
               if (e.ctrlKey || e.metaKey) {
                 if (!editing) {
                   e.preventDefault();
-                  dispatch(select([0, 0, numRows - 1, numCols - 1]));
+                  dispatch(select([0, 0, table.numRows() - 1, table.numCols() - 1]));
                   return false;
                 }
               }
@@ -257,14 +239,7 @@ export const Editor: React.FC = () => {
               if (e.ctrlKey || e.metaKey) {
                 if (!editing) {
                   e.preventDefault();
-                  const area = clip(
-                    selectingZone,
-                    choosing,
-                    matrix,
-                    editorRef,
-                    cellsOption,
-                    renderers,
-                  );
+                  const area = clip(store);
                   dispatch(copy(area));
                   input.focus(); // refocus
                   return false;
@@ -296,7 +271,7 @@ export const Editor: React.FC = () => {
               if (e.ctrlKey || e.metaKey) {
                 if (!editing) {
                   e.preventDefault();
-                  onSave && onSave(matrix, cellsOption, {
+                  onSave && onSave(table as UserTable, {
                     pointing: choosing,
                     selectingFrom: [selectingZone[0], selectingZone[1]],
                     selectingTo: [selectingZone[2], selectingZone[3]],
@@ -308,7 +283,7 @@ export const Editor: React.FC = () => {
               if (e.ctrlKey || e.metaKey) {
                 if (!editing) {
                   setTimeout(() => {
-                    dispatch(paste({ text: input.value, parser }));
+                    dispatch(paste({ text: input.value }));
                     input.value = "";
                   }, 50);
                   return false;
@@ -318,14 +293,7 @@ export const Editor: React.FC = () => {
               if (e.ctrlKey || e.metaKey) {
                 if (!editing) {
                   e.preventDefault();
-                  const area = clip(
-                    selectingZone,
-                    choosing,
-                    matrix,
-                    editorRef,
-                    cellsOption,
-                    renderers,
-                  );
+                  const area = clip(store);
                   dispatch(cut(area));
                   input.focus(); // refocus
 

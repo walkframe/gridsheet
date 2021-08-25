@@ -1,6 +1,6 @@
 import React from "react";
 import { x2c, y2r } from "../api/converters";
-import { zoneToArea, among, zoneShape, stackOption } from "../api/arrays";
+import { zoneToArea, among, zoneShape } from "../api/matrix";
 import {
   choose,
   select,
@@ -11,8 +11,7 @@ import {
 } from "../store/actions";
 
 import { DUMMY_IMG, DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
-import { AreaType, CellOptionType } from "../types";
-import { defaultRenderer } from "../renderers/core";
+import { AreaType } from "../types";
 import { CellLayout } from "./styles/CellLayout";
 
 import { Context } from "../store";
@@ -25,17 +24,15 @@ type Props = {
 
 export const Cell: React.FC<Props> = React.memo(
   ({ rowIndex: y, columnIndex: x, style: outerStyle }) => {
-    const rowId = y2r(y);
-    const colId = x2c(x);
+    const rowId = y2r(++y);
+    const colId = x2c(++x);
     const cellId = `${colId}${rowId}`;
     const { store, dispatch } = React.useContext(Context);
 
     const cellRef = React.useRef<HTMLDivElement>(document.createElement("div"));
 
     const {
-      matrix,
-      renderers,
-      cellsOption,
+      table,
       editingCell,
       choosing,
       selectingZone,
@@ -58,7 +55,6 @@ export const Cell: React.FC<Props> = React.memo(
     const copyingArea = zoneToArea(copyingZone); // (top, left) -> (bottom, right)
     const editing = editingCell === cellId;
     const pointed = choosing[0] === y && choosing[1] === x;
-    const value = matrix[y][x];
 
     React.useEffect(() => {
       if (editing) {
@@ -67,30 +63,14 @@ export const Cell: React.FC<Props> = React.memo(
         //editorRef.current?.focus();
       }
     }, [editing]);
-
-    if ((matrix && matrix[y] == null) || matrix[y][x] == null) {
-      return <div />;
+    if (table.numRows() === 0) {
+        return null;
     }
+    const cell = table.get(y, x) || {};
+    const height = table.get(y, 0)?.height || DEFAULT_HEIGHT;
+    const width = table.get(0, x)?.width || DEFAULT_WIDTH;
 
-    const [numRows, numCols] = [matrix.length, matrix[0].length || 0];
-    const defaultOption: CellOptionType = cellsOption.default || {};
-    const rowOption: CellOptionType = cellsOption[rowId] || {};
-    const colOption: CellOptionType = cellsOption[colId] || {};
-    const cellOption: CellOptionType = cellsOption[cellId] || {};
-    // defaultOption < rowOption < colOption < cellOption
-    const style = {
-      ...defaultOption.style,
-      ...rowOption.style,
-      ...colOption.style,
-      ...cellOption.style,
-    };
-
-    const rendererKey = stackOption(cellsOption, y, x).renderer;
-    const renderer = renderers[rendererKey || ""] || defaultRenderer;
-    const height = rowOption.height || DEFAULT_HEIGHT;
-    const width = colOption.width || DEFAULT_WIDTH;
-
-    const verticalAlign = stackOption(cellsOption, y, x).verticalAlign || "middle";
+    const verticalAlign = cell.verticalAlign || "middle";
     const writeCell = (value: string) => {
       if (before !== value) {
         dispatch(write(value));
@@ -99,7 +79,7 @@ export const Cell: React.FC<Props> = React.memo(
     };
 
     let matching = false;
-    if (searchQuery && renderer.stringify(value).indexOf(searchQuery) !== -1) {
+    if (searchQuery && table.stringify(y, x).indexOf(searchQuery) !== -1) {
       matching = true;
     }
 
@@ -111,12 +91,12 @@ export const Cell: React.FC<Props> = React.memo(
           among(copyingArea, [y, x]) ? "gs-copying" : ""} ${
           y === 0 ? "gs-cell-top-end" : ""} ${
           x === 0 ? "gs-cell-left-end" : ""} ${
-          y === numRows - 1 ? "gs-cell-bottom-end" : ""} ${
-          x === numCols - 1 ? "gs-cell-right-end" : ""
+          y === table.numRows() ? "gs-cell-bottom-end" : ""} ${
+          x === table.numCols() ? "gs-cell-right-end" : ""
         }`}
         style={{
           ...outerStyle,
-          ...style,
+          ...cell.style,
           ...getCellStyle(y, x, copyingArea, cutting),
         }}
         onContextMenu={(e) => {
@@ -139,7 +119,7 @@ export const Cell: React.FC<Props> = React.memo(
           const dblclick = document.createEvent("MouseEvents");
           dblclick.initEvent("dblclick", true, true);
           editorRef.current?.dispatchEvent(dblclick);
-          setTimeout(() => (editorRef.current.value = renderer.stringify(value)), 100);
+          setTimeout(() => (editorRef.current.value = table.stringify(y, x)), 100);
           return false;
         }}
         draggable
@@ -156,11 +136,11 @@ export const Cell: React.FC<Props> = React.memo(
         }}
         onDragEnter={() => {
           if (horizontalHeadersSelecting) {
-            dispatch(drag([numRows - 1, x]));
+            dispatch(drag([table.numRows(), x]));
             return false;
           }
           if (verticalHeadersSelecting) {
-            dispatch(drag([y, numCols - 1]));
+            dispatch(drag([y, table.numCols()]));
             return false;
           }
           dispatch(drag([y, x]));
@@ -168,11 +148,11 @@ export const Cell: React.FC<Props> = React.memo(
         }}
       >
         <div
-          className={`gs-cell-rendered-wrapper-outer ${
-            among(selectingArea, [y, x]) ? "gs-selected" : ""
-          } ${pointed ? "gs-pointed" : ""} ${editing ? "gs-editing" : ""} ${
-            matching ? "gs-matching" : ""
-          } ${matchingCell === cellId ? "gs-searching" : ""}`}
+          className={`
+          gs-cell-rendered-wrapper-outer ${among(selectingArea, [y, x]) ? "gs-selected" : ""}
+          ${pointed ? "gs-pointed" : ""} ${editing ? "gs-editing" : ""}
+          ${matching ? "gs-matching" : ""}
+          ${matchingCell === cellId ? "gs-searching" : ""}`}
         >
           <div
             className={`gs-cell-rendered-wrapper-inner`}
@@ -183,9 +163,8 @@ export const Cell: React.FC<Props> = React.memo(
             }}
           >
             {cellLabel && <div className="gs-cell-label">{cellId}</div>}
-
             <div className="gs-cell-rendered">
-              {renderer.render(value, writeCell)}
+              {table.render(y, x, writeCell)}
             </div>
           </div>
         </div>

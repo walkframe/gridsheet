@@ -1,12 +1,11 @@
 import React from "react";
 import styled from "styled-components";
 
-import { y2r, x2c } from "../api/converters";
 import { Context } from "../store";
 import {
   setResizingPositionY,
   setResizingPositionX,
-  setCellsOption,
+  updateTable,
 } from "../store/actions";
 
 import {
@@ -15,8 +14,8 @@ import {
   MIN_WIDTH,
   MIN_HEIGHT,
 } from "../constants";
-import { zoneToArea, makeSequence, between } from "../api/arrays";
-import { CellsOptionType } from "../types";
+import { zoneToArea, makeSequence, between } from "../api/matrix";
+import { Table } from "../api/tables";
 
 const Line = styled.div`
   position: relative;
@@ -37,12 +36,12 @@ const Line = styled.div`
   }
 `;
 
-export const Resizing: React.FC = React.memo(() => {
+export const Resizer: React.FC = React.memo(() => {
   const { store, dispatch } = React.useContext(Context);
   const {
     resizingPositionY: posY,
     resizingPositionX: posX,
-    cellsOption,
+    table,
     horizontalHeadersSelecting,
     verticalHeadersSelecting,
     selectingZone,
@@ -55,33 +54,28 @@ export const Resizing: React.FC = React.memo(() => {
   if (y === -1 && x === -1) {
     return null;
   }
-  const [resizingRowId, resizingColId] = [`${y2r(y)}`, x2c(x)];
+  const cell = table.get(y === -1 ? 0 : y, x === -1 ? 0 : x);
   const { y: offsetY, x: offsetX } = sheetRef.current.getBoundingClientRect();
 
-  const baseWidth =
-    cellsOption[resizingColId]?.width ||
-    cellsOption.default?.width ||
-    DEFAULT_WIDTH;
-
-  const baseHeight =
-    cellsOption[resizingRowId]?.height ||
-    cellsOption.default?.height ||
-    DEFAULT_HEIGHT;
+  const baseWidth = cell?.width || DEFAULT_WIDTH;
+  const baseHeight = cell?.height || DEFAULT_HEIGHT;
 
   const width = baseWidth + (endX - startX);
   const height = baseHeight + (endY - startY);
+  let diff: Table;
 
   const handleResizeEnd = () => {
     const selectingArea = zoneToArea(selectingZone);
     const [top, left, bottom, right] = selectingArea;
-    const newCellsOption: CellsOptionType = {};
     if (x !== -1) {
       let xs = [x];
       if (horizontalHeadersSelecting && between([left, right], x)) {
         xs = makeSequence(left, right + 1);
       }
-      xs.map((x) => {
-        newCellsOption[x2c(x)] = { ...cellsOption[x2c(x)], width };
+      diff = table.copy([0, xs[0], 0, xs[xs.length - 1]]);
+      xs.map((x, i) => {
+        const cell = diff.get(0, i);
+        diff.put(0, i, {...cell, width});
       });
     }
     if (y !== -1) {
@@ -89,11 +83,13 @@ export const Resizing: React.FC = React.memo(() => {
       if (verticalHeadersSelecting && between([top, bottom], y)) {
         ys = makeSequence(top, bottom + 1);
       }
-      ys.map((y) => {
-        newCellsOption[y2r(y)] = { ...cellsOption[y2r(y)], height };
+      diff = table.copy([ys[0], 0, ys[ys.length - 1], 0]);
+      ys.map((y, i) => {
+        const cell = diff.get(i, 0);
+        diff.put(i, 0, {...cell, height});
       });
     }
-    dispatch(setCellsOption(newCellsOption));
+    dispatch(updateTable(diff));
     dispatch(setResizingPositionY([-1, -1, -1]));
     dispatch(setResizingPositionX([-1, -1, -1]));
     editorRef.current?.focus();

@@ -1,6 +1,6 @@
+import { cellToIndexes } from "../api/converters";
 import React from "react";
 
-import { cellToIndexes } from "../api/arrays";
 import { Context } from "../store";
 import { setSearchQuery, search } from "../store/actions";
 
@@ -69,7 +69,7 @@ export const SearchBox: React.FC = () => {
             input?.nodeName === "INPUT" && input.focus();
           }}
         >
-          {matchingCellIndex + 1} / {matchingCells.length}
+          {matchingCells.length === 0 ? 0 : matchingCellIndex + 1} / {matchingCells.length}
         </div>
       </div>
       <div className="gs-search-close">
