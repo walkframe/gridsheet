@@ -3,6 +3,9 @@ import styled from "styled-components";
 export const GridSheetLayout = styled.div`
   overflow: hidden;
   position: relative;
+  box-sizing: content-box;
+  -webkit-box-sizing: content-box;
+  -moz-box-sizing: content-box;
 
   font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN",
     "Hiragino Sans", Meiryo, sans-serif;
