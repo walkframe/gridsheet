@@ -1,25 +1,24 @@
-import { ZoneType, MatrixType, PositionType, CellsOptionType, Renderers } from "../types";
+import { ZoneType, StoreType } from "../types";
 
-import { cropMatrix, zoneToArea } from "./arrays";
+import { zoneToArea } from "./matrix";
 import { matrix2tsv } from "./converters";
 
-export const clip = (
-  selecting: ZoneType,
-  choosing: PositionType,
-  matrix: MatrixType,
-  clipboardRef: React.RefObject<HTMLTextAreaElement>,
-  cellsOption: CellsOptionType,
-  renderers: Renderers,
-): ZoneType => {
+export const clip = (store: StoreType): ZoneType => {
+  const {
+    selectingZone,
+    choosing,
+    editorRef,
+    table,
+  } = store;
   const [y, x] = choosing;
-  let selectingArea = zoneToArea(selecting);
+  let selectingArea = zoneToArea(selectingZone);
   let area = selectingArea;
   if (area[0] === -1) {
     area = [y, x, y, x];
   }
-  const input = clipboardRef.current;
-  const copyingRows = cropMatrix(matrix, area);
-  const tsv = matrix2tsv(y, x, copyingRows, cellsOption, renderers);
+  const input = editorRef.current;
+  const matrix = table.matrixFlatten(area);
+  const tsv = matrix2tsv(store, y, x, matrix);
   if (input != null) {
     input.value = tsv;
     input.focus();

@@ -2,8 +2,6 @@ import React from "react";
 
 import { x2c, y2r } from "../api/converters";
 import { clip } from "../api/clipboard";
-import { Renderer as DefaultRenderer } from "../renderers/core";
-import { Parser as DefaultParser } from "../parsers/core";
 
 import {
   choose,
@@ -20,24 +18,20 @@ import {
   setContextMenuPosition,
 } from "../store/actions";
 import { ContextMenuLayout } from "./styles/ContextMenuLayout";
-import { zoneShape, zoneToArea } from "../api/arrays";
+import { zoneShape, zoneToArea } from "../api/matrix";
 
-import { CellOptionType } from "../types";
 import { Context } from "../store";
 
 export const ContextMenu: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);
 
   const {
-    matrix,
-    cellsOption,
+    table,
     choosing,
     selectingZone,
     horizontalHeadersSelecting,
     verticalHeadersSelecting,
     history,
-    renderers,
-    parsers,
     editorRef,
     contextMenuPosition,
     sheetRef,
@@ -64,25 +58,6 @@ export const ContextMenu: React.FC = () => {
 
   const [height, width] = zoneShape(selectingZone);
 
-  const defaultOption: CellOptionType = cellsOption.default || {};
-  const rowOption: CellOptionType = cellsOption[rowId] || {};
-  const colOption: CellOptionType = cellsOption[colId] || {};
-  const cellOption: CellOptionType = cellsOption[cellId] || {};
-
-  const rendererKey =
-    cellOption.renderer ||
-    colOption.renderer ||
-    rowOption.renderer ||
-    defaultOption.renderer;
-  const parserKey =
-    cellOption.parser ||
-    colOption.parser ||
-    rowOption.parser ||
-    defaultOption.parser;
-
-  const renderer = renderers[rendererKey || ""] || new DefaultRenderer();
-  const parser = parsers[parserKey || ""] || new DefaultParser();
-
   const [top, left] = contextMenuPosition;
   if (top === -1) {
     return null;
@@ -100,14 +75,7 @@ export const ContextMenu: React.FC = () => {
       <ul>
         <li
           onClick={() => {
-            const area = clip(
-              selectingZone,
-              choosing,
-              matrix,
-              editorRef,
-              cellsOption,
-              renderers,
-            );
+            const area = clip(store);
             dispatch(cut(area));
             dispatch(setContextMenuPosition([-1, -1]));
           }}
@@ -119,14 +87,7 @@ export const ContextMenu: React.FC = () => {
         </li>
         <li
           onClick={() => {
-            const area = clip(
-              selectingZone,
-              choosing,
-              matrix,
-              editorRef,
-              cellsOption,
-              renderers,
-            );
+            const area = clip(store);
             dispatch(copy(area));
             dispatch(setContextMenuPosition([-1, -1]));
           }}
@@ -139,7 +100,7 @@ export const ContextMenu: React.FC = () => {
         <li
           onClick={async () => {
             const text = editorRef.current?.value || "";
-            dispatch(paste({ text, parser }));
+            dispatch(paste({ text }));
             dispatch(setContextMenuPosition([-1, -1]));
           }}
         >
@@ -154,13 +115,13 @@ export const ContextMenu: React.FC = () => {
         {!horizontalHeadersSelecting && (
           <li
             onClick={() => {
-              dispatch(addRows({ numRows: height + 1, y: selectingTop }));
+              dispatch(addRows({ numRows: height + 1, y: selectingTop, base: selectingTop }));
               dispatch(
                 select([
                   selectingTop,
-                  0,
+                  1,
                   selectingTop + height,
-                  matrix[0].length,
+                  table.numCols(),
                 ])
               );
               dispatch(choose([selectingTop, 0]));
@@ -176,14 +137,14 @@ export const ContextMenu: React.FC = () => {
           <li
             onClick={() => {
               dispatch(
-                addRows({ numRows: height + 1, y: selectingBottom + 1 })
+                addRows({ numRows: height + 1, y: selectingBottom + 1, base: selectingBottom })
               );
               dispatch(
                 select([
                   selectingBottom + 1,
-                  0,
+                  1,
                   selectingBottom + height + 1,
-                  matrix[0].length,
+                  table.numCols(),
                 ])
               );
               dispatch(choose([selectingBottom + 1, 0]));
@@ -199,9 +160,9 @@ export const ContextMenu: React.FC = () => {
         {!verticalHeadersSelecting && (
           <li
             onClick={() => {
-              dispatch(addCols({ numCols: width + 1, x: selectingLeft }));
+              dispatch(addCols({ numCols: width + 1, x: selectingLeft, base: selectingLeft }));
               dispatch(
-                select([0, selectingLeft, matrix.length, selectingLeft + width])
+                select([0, selectingLeft, table.numRows(), selectingLeft + width])
               );
               dispatch(choose([0, selectingLeft]));
               dispatch(setContextMenuPosition([-1, -1]));
@@ -215,12 +176,12 @@ export const ContextMenu: React.FC = () => {
         {!verticalHeadersSelecting && (
           <li
             onClick={() => {
-              dispatch(addCols({ numCols: width + 1, x: selectingRight + 1 }));
+              dispatch(addCols({ numCols: width + 1, x: selectingRight + 1, base: selectingRight }));
               dispatch(
                 select([
-                  0,
+                  1,
                   selectingRight + 1,
-                  matrix.length,
+                  table.numRows(),
                   selectingRight + width + 1,
                 ])
               );

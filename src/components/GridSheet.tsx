@@ -4,41 +4,30 @@ import {
   VariableSizeList as List,
 } from "react-window";
 
-import { MatrixType, OptionsType, StoreType } from "../types";
+import { Props, StoreType } from "../types";
 import { SHEET_HEIGHT, SHEET_WIDTH } from "../constants";
 import { Context } from "../store";
 import { reducer } from "../store/actions";
 
-import { GridTableWrapper } from "./GridTableWrapper";
-
 import { StoreInitializer } from "./StoreInitializer";
-import { Resizing } from "./Resizing";
+import { Resizer } from "./Resizer";
 
 import { Emitter } from "./Emitter";
 import { ContextMenu } from "./ContextMenu";
 import { GridSheetLayout } from "./styles/GridSheetLayout";
-
-type Props = {
-  data: MatrixType;
-  options?: OptionsType;
-  className?: string;
-  style?: React.CSSProperties;
-};
+import { Table } from "../api/tables";
+import { GridTable } from "./GridTable";
 
 export const GridSheet: React.FC<Props> = ({
-  data,
-  options,
+  cells,
+  options = {},
   className,
   style,
 }) => {
-  if (typeof data === "undefined") {
-    data = [];
-  }
-  if (typeof options === "undefined") {
-    options = {};
-  }
-
-  const { sheetResize: resize = "both" } = options;
+  const {
+    numRows = 0, numCols = 0,
+    sheetResize: resize = "both",
+  } = options;
 
   const sheetRef = React.useRef<HTMLDivElement>(document.createElement("div"));
   const searchInputRef = React.useRef<HTMLInputElement>(
@@ -54,6 +43,7 @@ export const GridSheet: React.FC<Props> = ({
   const verticalHeadersRef = React.useRef<List>(null);
   const horizontalHeadersRef = React.useRef<List>(null);
   const initialState: StoreType = {
+    table: new Table(numRows, numCols),
     sheetRef,
     searchInputRef,
     editorRef,
@@ -61,8 +51,6 @@ export const GridSheet: React.FC<Props> = ({
     gridRef,
     verticalHeadersRef,
     horizontalHeadersRef,
-    matrix: [],
-    cellsOption: {},
     choosing: [-1, -1],
     cutting: false,
     selectingZone: [-1, -1, -1, -1],
@@ -80,8 +68,6 @@ export const GridSheet: React.FC<Props> = ({
     entering: false,
     matchingCells: [],
     matchingCellIndex: 0,
-    renderers: {},
-    parsers: {},
     editingOnEnter: true,
     cellLabel: true,
     contextMenuPosition: [-1, -1],
@@ -108,7 +94,7 @@ export const GridSheet: React.FC<Props> = ({
     }, 700);
   }, []);
 
-  const { onChange, onSelect, mode } = options;
+  const { onChange, onChangeDiff, onSelect, mode } = options;
   return (
     <GridSheetLayout
       ref={sheetRef}
@@ -116,14 +102,14 @@ export const GridSheet: React.FC<Props> = ({
       style={{ ...style, resize, height: sheetHeight, width: sheetWidth }}
     >
       <Context.Provider value={{ store, dispatch }}>
-        <GridTableWrapper />
+        <GridTable />
         <StoreInitializer
-          data={data}
+          cells={cells}
           options={{ ...options, sheetHeight, sheetWidth }}
         />
         <ContextMenu />
-        <Resizing />
-        <Emitter onChange={onChange} onSelect={onSelect} />
+        <Resizer />
+        <Emitter onChange={onChange} onChangeDiff={onChangeDiff} onSelect={onSelect} />
       </Context.Provider>
     </GridSheetLayout>
   );

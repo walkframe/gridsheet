@@ -1,8 +1,9 @@
 import React from "react";
 import { y2r } from "../api/converters";
-import { between } from "../api/arrays";
+import { between } from "../api/matrix";
 import { Context } from "../store";
 import {
+  choose,
   drag,
   selectRows,
   setContextMenuPosition,
@@ -17,24 +18,24 @@ type Props = {
 
 export const VerticalHeaderCell: React.FC<Props> = React.memo(
   ({ index: y, style: outerStyle }) => {
-    const rowId = `${y2r(y)}`;
+    const rowId = `${y2r(++y)}`;
     const { store, dispatch } = React.useContext(Context);
 
     const {
-      matrix,
-      cellsOption,
       choosing,
       selectingZone,
       verticalHeadersSelecting,
       resizingRect,
       headerWidth,
       editorRef,
+      table,
     } = store;
 
-    const defaultHeight = cellsOption.default?.height || DEFAULT_HEIGHT;
-    const rowOption = cellsOption[rowId] || {};
-    const height = rowOption.height || defaultHeight;
-    const numCols = matrix[0]?.length || 0;
+    if (table.numRows() === 0) {
+      return null;
+    }
+    const row = table.get(y, 0) || {};
+    const height = row.height || DEFAULT_HEIGHT;
 
     return (
       <div
@@ -54,8 +55,9 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
           if (startY === -1) {
             startY = choosing[0];
           }
-          dispatch(selectRows({ range: [startY, y], numCols }));
+          dispatch(selectRows({ range: [startY, y], numCols: table.numCols() }));
           dispatch(setContextMenuPosition([-1, -1]));
+          dispatch(choose([startY, 1]))
           editorRef.current?.focus();
           return false;
         }}
@@ -67,12 +69,13 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
         }}
         onDragStart={(e) => {
           e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
-          dispatch(selectRows({ range: [y, y], numCols }));
+          dispatch(selectRows({ range: [y, y], numCols: table.numCols() }));
+          dispatch(choose([y, 1]));
           return false;
         }}
         onDragEnter={() => {
           if (resizingRect[0] === -1) {
-            dispatch(drag([y, numCols - 1]));
+            dispatch(drag([y, table.numCols()]));
           }
           return false;
         }}
@@ -82,7 +85,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
         }}
       >
         <div className="gs-header-inner" style={{ height, width: headerWidth }}>
-          {rowOption.label || rowId}
+          {row.label ? typeof row.label === "function" ? row.label(y) : row.label : rowId}
         </div>
         <div
           className="gs-resizer"

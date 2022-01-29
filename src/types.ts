@@ -5,43 +5,43 @@ import {
 
 import { RendererType } from "./renderers/core";
 import { ParserType } from "./parsers/core";
+import { UserTable, Table } from "./api/tables";
 
 export type Y = number;
 export type X = number;
+export type Point = [Y, X];
 
 export type Height = number;
 export type Width = number;
 
 export type RectType = [Y, X, Height, Width];
 
-export type CellType = any;
-export type MatrixType = CellType[][];
+export type MatrixType = any[][];
 
 export type Renderers = { [s: string]: RendererType };
 export type Parsers = { [s: string]: ParserType };
 
-// All fields have to be primitive types.
-export type CellOptionType = {
-  label?: string;
-  width?: number;
-  height?: number;
-  style?: React.CSSProperties;
-  verticalAlign?: string;
-  renderer?: string;
-  parser?: string;
-  fixed?: boolean;
-};
-
-export type CellsOptionType = { [s: string]: CellOptionType };
-
 export type Feedback = (
-  matrix?: MatrixType,
-  cellOptions?: CellsOptionType,
+  table: UserTable,
   positions?: {pointing: PositionType, selectingFrom: PositionType, selectingTo: PositionType},
 ) => void;
 
 export type Mode = "light" | "dark";
 export type Headers = "both" | "vertical" | "horizontal" | "none";
+
+export type Labeling = (n: number) => string;
+
+export type CellType = {
+  data?: any;
+  style?: React.CSSProperties;
+  verticalAlign?: string;
+  label?: string | Labeling;
+  width?: number;
+  height?: number;
+  renderer?: string;
+  parser?: string;
+};
+export type CellsType = {[s: string]: CellType};
 
 export type OptionsType = {
   sheetHeight?: number;
@@ -52,12 +52,14 @@ export type OptionsType = {
   headerWidth?: number;
   editingOnEnter?: boolean;
   cellLabel?: boolean;
-  cells?: CellsOptionType;
+  numRows?: number;
+  numCols?: number;
   mode?: Mode;
   renderers?: Renderers;
   parsers?: Parsers;
   onSave?: Feedback;
   onChange?: Feedback;
+  onChangeDiff?: Feedback;
   onSelect?: Feedback;
 };
 
@@ -73,31 +75,29 @@ export type HistoryType = {
 };
 
 export type OperationCommandType =
-  | "write"
-  | "copy"
-  | "cut"
-  | "addRows"
-  | "delRows"
-  | "addCols"
-  | "delCols"
-  | "styling";
+  | "SET_TABLE"
+  | "ADD_ROWS"
+  | "REMOVE_ROWS"
+  | "ADD_COLS"
+  | "REMOVE_COLS"
 
 export type OperationType = {
   command: OperationCommandType;
-  src: AreaType;
-  dst: AreaType;
-  before: MatrixType;
-  after: MatrixType;
-  options?: CellsOptionType;
+  before: any;
+  after: any;
+  choosing?: PositionType;
+  selectingZone?: ZoneType;
+  copyingZone?: ZoneType;
+  cutting?: boolean;
 };
 
-export type ReactionsType = { [s: string]: boolean };
+export type Address = bigint;
+export type AddressTable = (string | null)[][];
 
 export type WriterType = (value: string) => void;
 
-export type FlattenedType = { [s: string]: any };
-
 export type StoreType = {
+  table: Table;
   sheetRef: React.MutableRefObject<HTMLDivElement>;
   editorRef: React.MutableRefObject<HTMLTextAreaElement>;
   gridOuterRef: React.MutableRefObject<HTMLDivElement>;
@@ -106,8 +106,6 @@ export type StoreType = {
   verticalHeadersRef: React.MutableRefObject<List | null>;
   horizontalHeadersRef: React.MutableRefObject<List | null>;
   entering: boolean;
-  matrix: MatrixType;
-  cellsOption: { [s: string]: CellOptionType };
   choosing: PositionType;
   cutting: boolean;
   copyingZone: ZoneType;
@@ -125,14 +123,18 @@ export type StoreType = {
   searchQuery?: string;
   matchingCells: string[];
   matchingCellIndex: number;
-  renderers: Renderers;
-  parsers: Parsers;
   editingOnEnter: boolean;
   cellLabel: boolean;
   contextMenuPosition: [Y, X];
   resizingPositionY: [Y, Y, Y]; // indexY, startY, endY
   resizingPositionX: [X, X, X]; // indexX, startX, endX
-  onChange?: Feedback;
   onSave?: Feedback;
-  onSelect?: Feedback;
 };
+
+export type Props = {
+  cells?: CellsType;
+  options?: OptionsType;
+  className?: string;
+  style?: React.CSSProperties;
+};
+

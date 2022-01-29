@@ -1,5 +1,6 @@
 import React from "react";
 import { GridSheet, Renderer, aa2oa, MatrixType, Parser } from "./src";
+import { createMatrix, matrixIntoCells } from "./src/api/matrix";
 import { defaultParser } from "./src/parsers/core";
 import { defaultRenderer } from "./src/renderers/core";
 // import { GridSheet, Renderer, aa2oa } from "../dist";
@@ -11,7 +12,7 @@ class ObjectRenderer extends Renderer {
     return value.v;
   }
   stringify(value: Obj): string {
-    return "" + value.v;
+    return "" + (value?.v || "");
   }
 }
 
@@ -134,86 +135,90 @@ const initialData = [
   [false, "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
 ];
 
-export const showIndex = () => {
-  const [data, setData] = React.useState<MatrixType>(initialData);
+const initialCells = matrixIntoCells(createMatrix(1000, 50), {})
 
-  React.useEffect(() => {
-    setData([...initialData]);
-  }, []);
+export const showIndex = () => {
 
   return (
     <>
       <div>aaaaa</div>
 
       <GridSheet
-        data={data}
+        cells={matrixIntoCells(initialData, {
+          default: { style: { fontStyle: "italic" } },
+          A1: { data: 1, style: { color: "#008888" } },
+          B: { label: "ビー" },
+          D: { width: 300, style: { textAlign: "right" } },
+          "2": {
+            label: "二",
+            style: { borderBottom: "double 4px #000000" },
+            renderer: "kanji",
+          },
+          "3": {
+            height: 100,
+            label: (row) => `${row}行目`,
+            style: {
+              fontWeight: "bold",
+              color: "#ff0000",
+              backgroundColor: "rgba(255, 200, 200, 0.5)",
+            },
+          },
+          "4": {
+            label: "よん",
+            height: 50,
+            verticalAlign: "bottom",
+          },
+          "5": {
+            height: 100,
+            style: {
+              fontWeight: "bold",
+              color: "#000fff",
+              backgroundColor: "rgba(0, 200, 200, 0.5)",
+            },
+          },
+          "6": {
+            height: 100,
+            style: {
+              fontWeight: "bold",
+              color: "#ff0000",
+              backgroundColor: "rgba(255, 200, 200, 0.5)",
+            },
+          },
+        })}
         options={{
           // cellLabel: false,
           // headerWidth: 50,
+          numCols: 10,
+          numRows: 10,
           headerHeight: 40,
           historySize: 100,
           mode: "dark",
           //stickyHeaders: "horizontal",
-          cells: {
-            default: { style: { fontStyle: "italic" } },
-            A1: { style: { color: "#008888" } },
-            B: { fixed: true, label: "ビー" },
-            D: { width: 300, style: { textAlign: "right" } },
-            "2": {
-              label: "二",
-              style: { borderBottom: "double 4px #000000" },
-              renderer: "kanji",
-            },
-            "3": {
-              height: 100,
-              style: {
-                fontWeight: "bold",
-                color: "#ff0000",
-                backgroundColor: "rgba(255, 200, 200, 0.5)",
-              },
-            },
-            "4": {
-              fixed: true,
-              label: "よん",
-              height: 50,
-              verticalAlign: "bottom",
-            },
-            "5": {
-              height: 100,
-              style: {
-                fontWeight: "bold",
-                color: "#000fff",
-                backgroundColor: "rgba(0, 200, 200, 0.5)",
-              },
-            },
-            "6": {
-              height: 100,
-              style: {
-                fontWeight: "bold",
-                color: "#ff0000",
-                backgroundColor: "rgba(255, 200, 200, 0.5)",
-              },
-            },
-          },
-          onSave: (matrix, options, positions) => {
+          onSave: (table, positions) => {
             console.log(
               "matrix on save:",
-              aa2oa(matrix || [], ["A", "B", "C", "D", "E", "F"])
+              aa2oa(table.matrix() || [], ["A", "B", "C", "D", "E", "F"])
             );
             console.log("positions on save", positions);
           },
-          onChange: (matrix, options, positions) => {
-            if (typeof matrix !== "undefined") {
-              console.log("matrix on change:", matrix);
-            }
-            if (typeof options !== "undefined") {
-              console.log("options on change", options);
-            }
+          onChange: (table, positions) => {
+            console.log(
+              "matrix on change:",
+              table.matrixFlatten()
+            );
             if (typeof positions !== "undefined") {
               console.log("positions on change", positions);
             }
           },
-          onSelect: (matrix, options, positions) => {
+          onChangeDiff: (table, positions) => {
+            console.log(
+              "matrix on change diff:",
+              table.top(),
+              //table.rows(),
+              table.rowsFlatten(),
+            );
+          },
+          onSelect: (table, positions) => {
             console.log("positions on select", positions)
           },
           renderers: {
@@ -233,11 +238,7 @@ export const showIndex = () => {
                 {" "}
                 <GridSheet
                   style={{ maxWidth: "100%", maxHeight: "150px" }}
-                  data={[
-                    [1, 2, 3, 4],
-                    [5, 6, 7, 8],
-                    [9, 10, 11, "both"],
-                  ]}
+                  cells={matrixIntoCells([["resizable", "both", "!"], [1, 2, 3], [undefined, 5, 6]], {A3: {data: "four"}})}
                   options={{ sheetResize: "both" }}
                 />
               </td>
@@ -245,11 +246,7 @@ export const showIndex = () => {
                 {" "}
                 <GridSheet
                   style={{ maxWidth: "100%", maxHeight: "150px" }}
-                  data={[
-                    [1, 2, 3, 4],
-                    [5, 6, 7, 8],
-                    [9, 10, 11, "vertical"],
-                  ]}
+                  cells={matrixIntoCells([["resizable", "vertically", "!"], [1, 2, 3], [4, undefined, 6]], {B3: {data: "five"}})}
                   options={{ sheetResize: "vertical" }}
                 />
               </td>
@@ -259,11 +256,7 @@ export const showIndex = () => {
                 {" "}
                 <GridSheet
                   style={{ maxWidth: "100%", maxHeight: "150px" }}
-                  data={[
-                    [1, 2, 3, 4],
-                    [5, 6, 7, 8],
-                    [9, 10, 11, "horizontal"],
-                  ]}
+                  cells={matrixIntoCells([["resizable", "horizontally", "!"], [1, 2, 3], [4, 5, undefined]], {C3: {data: "six"}})}
                   options={{ sheetResize: "horizontal" }}
                 />
               </td>
@@ -271,11 +264,7 @@ export const showIndex = () => {
                 {" "}
                 <GridSheet
                   style={{ maxWidth: "100%", maxHeight: "150px" }}
-                  data={[
-                    [1, 2, 3, 4],
-                    [5, 6, 7, 8],
-                    [9, 10, 11, "none"],
-                  ]}
+                  cells={matrixIntoCells([["not", "resizable", "!!!"], [1, 2, 3], [4, 5, 6]], {A3: {data: "four"}})}
                   options={{ sheetResize: "none" }}
                 />
               </td>
@@ -285,23 +274,17 @@ export const showIndex = () => {
       )}
       <div>object value</div>
       <GridSheet
-        data={[
-          [{v: 1}, {v: 2}],
-          [{v: 3}, {v: 4}],
-          [{v: 5}, {v: 6}],
-          [{v: 7}, 8],
-        ]}
-        options={{
-          cells: {
-            default: {
-              renderer: "obj",
-              parser: "obj",
-            },
-            B4: {
-              renderer: "default",
-              parser: "default",
-            },
+        cells={{
+          default: {
+            renderer: "obj",
+            parser: "obj",
           },
+          B4: {
+            renderer: "default",
+            parser: "default",
+          },
+        }}
+        options={{
           renderers: {
             obj: new ObjectRenderer(),
             default: defaultRenderer,
@@ -310,18 +293,26 @@ export const showIndex = () => {
             obj: new ObjectParser(),
             default: defaultParser,
           },
-          onChange: (matrix, options, positions) => {
-            if (typeof matrix !== "undefined") {
-              console.log("matrix on change:", matrix);
-            }
-            if (typeof options !== "undefined") {
-              console.log("options on change", options);
-            }
+          onChange: (table, positions) => {
             if (typeof positions !== "undefined") {
               console.log("positions on change", positions);
             }
           },
+          onChangeDiff: (table, positions) => {
+            console.log(
+              "matrix on change diff:",
+              table.objectFlatten(),
+            );
+          },
         }}
+      />
+
+
+
+      <GridSheet
+        style={{ maxWidth: "100%", maxHeight: "150px" }}
+        cells={initialCells}
+        options={{ sheetResize: "both" }}
       />
     </>
   );

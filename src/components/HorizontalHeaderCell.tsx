@@ -1,8 +1,9 @@
 import React from "react";
 import { x2c } from "../api/converters";
-import { between } from "../api/arrays";
+import { between } from "../api/matrix";
 import { Context } from "../store";
 import {
+  choose,
   drag,
   selectCols,
   setContextMenuPosition,
@@ -18,12 +19,11 @@ type Props = {
 export const HorizontalHeaderCell: React.FC<Props> = React.memo(
   ({ index: x, style: outerStyle }) => {
     const { store, dispatch } = React.useContext(Context);
-    const colId = x2c(x);
+    const colId = x2c(++x);
 
     const {
-      matrix,
+      table,
       choosing,
-      cellsOption,
       selectingZone,
       resizingRect,
       horizontalHeadersSelecting,
@@ -31,16 +31,17 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
       editorRef,
     } = store;
 
-    const defaultWidth = cellsOption.default?.width || DEFAULT_WIDTH;
-    const colOption = cellsOption[colId] || {};
-    const width = colOption.width || defaultWidth;
-    const numRows = matrix.length;
+    if (table.numRows() === 0) {
+      return null;
+    }
+    const col = table.get(0, x) || {};
+    const width = col.width || DEFAULT_WIDTH;
     return (
       <div
         style={outerStyle}
         className={`
       gs-header gs-horizontal
-      ${choosing[1] === x ? "gs-choosing" : ""} 
+      ${choosing[1] === x ? "gs-choosing" : ""}
       ${
         between([selectingZone[1], selectingZone[3]], x)
           ? horizontalHeadersSelecting
@@ -58,19 +59,21 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
           if (startX === -1) {
             startX = choosing[1];
           }
-          dispatch(selectCols({ range: [startX, x], numRows }));
+          dispatch(selectCols({ range: [startX, x], numRows: table.numRows() }));
           dispatch(setContextMenuPosition([-1, -1]));
+          dispatch(choose([1, startX]));
           editorRef.current?.focus();
           return false;
         }}
         onDragStart={(e) => {
           e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
-          dispatch(selectCols({ range: [x, x], numRows }));
+          dispatch(selectCols({ range: [x, x], numRows: table.numRows() }));
+          dispatch(choose([1, x]));
           return false;
         }}
         onDragEnter={() => {
           if (resizingRect[1] === -1) {
-            dispatch(drag([numRows - 1, x]));
+            dispatch(drag([table.numRows(), x]));
           }
           return false;
         }}
@@ -84,7 +87,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
           style={{ width, height: headerHeight }}
           draggable
         >
-          {colOption.label || colId}
+          {col.label ? typeof col.label === "function" ? col.label(x) : col.label : colId}
         </div>
         <div
           className="gs-resizer"
