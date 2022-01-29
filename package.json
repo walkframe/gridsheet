@@ -6,7 +6,7 @@
   "module": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc --project ./src/index.ts -p ./tsconfig.json",
+    "build": "rm -rf ./dist || true && tsc --project ./src/index.ts -p ./tsconfig.json",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
   },
