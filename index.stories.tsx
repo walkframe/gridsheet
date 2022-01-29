@@ -135,21 +135,16 @@ const initialData = [
   [false, "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
 ];
 
-const initialCells = matrixIntoCells(createMatrix(1000, 1000), {})
+const initialCells = matrixIntoCells(createMatrix(1000, 50), {})
 
 export const showIndex = () => {
-  const [data, setData] = React.useState<MatrixType>(initialData);
-
-  React.useEffect(() => {
-    setData([...initialData]);
-  }, []);
 
   return (
     <>
       <div>aaaaa</div>
 
       <GridSheet
-        cells={{
+        cells={matrixIntoCells(initialData, {
           default: { style: { fontStyle: "italic" } },
           A1: { data: 1, style: { color: "#008888" } },
           B: { label: "ビー" },
@@ -189,7 +184,7 @@ export const showIndex = () => {
               backgroundColor: "rgba(255, 200, 200, 0.5)",
             },
           },
-        }}
+        })}
         options={{
           // cellLabel: false,
           // headerWidth: 50,
