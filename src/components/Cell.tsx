@@ -66,11 +66,11 @@ export const Cell: React.FC<Props> = React.memo(
     if (table.numRows() === 0) {
         return null;
     }
-    const cell = table.get(y, x) || {};
+    const cell = table.get(y, x);
     const height = table.get(y, 0)?.height || DEFAULT_HEIGHT;
     const width = table.get(0, x)?.width || DEFAULT_WIDTH;
 
-    const verticalAlign = cell.verticalAlign || "middle";
+    const verticalAlign = cell?.verticalAlign || "middle";
     const writeCell = (value: string) => {
       if (before !== value) {
         dispatch(write(value));
@@ -96,7 +96,7 @@ export const Cell: React.FC<Props> = React.memo(
         }`}
         style={{
           ...outerStyle,
-          ...cell.style,
+          ...cell?.style,
           ...getCellStyle(y, x, copyingArea, cutting),
         }}
         onContextMenu={(e) => {

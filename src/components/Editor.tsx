@@ -54,8 +54,8 @@ export const Editor: React.FC = () => {
 
   const editing = editingCell === cellId;
 
-  const cell = table.get(y, x) || {};
-  const value = cell.data;
+  const cell = table.get(y, x);
+  const value = cell?.value;
   const [top, left, height, width] = editorRect;
 
   const writeCell = (value: string) => {

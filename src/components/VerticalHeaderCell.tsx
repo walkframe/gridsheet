@@ -34,15 +34,15 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
     if (table.numRows() === 0) {
       return null;
     }
-    const row = table.get(y, 0) || {};
-    const height = row.height || DEFAULT_HEIGHT;
+    const row = table.get(y, 0);
+    const height = row?.height || DEFAULT_HEIGHT;
 
     return (
       <div
         style={outerStyle}
         className={`
       gs-header gs-vertical
-      ${choosing[0] === y ? "gs-choosing" : ""} 
+      ${choosing[0] === y ? "gs-choosing" : ""}
       ${
         between([selectingZone[0], selectingZone[2]], y)
           ? verticalHeadersSelecting
@@ -85,7 +85,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
         }}
       >
         <div className="gs-header-inner" style={{ height, width: headerWidth }}>
-          {row.label ? typeof row.label === "function" ? row.label(y) : row.label : rowId}
+          {row?.label ? typeof row?.label === "function" ? row?.label(y) : row?.label : rowId}
         </div>
         <div
           className="gs-resizer"

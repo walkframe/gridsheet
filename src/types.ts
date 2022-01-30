@@ -26,13 +26,19 @@ export type Feedback = (
   positions?: {pointing: PositionType, selectingFrom: PositionType, selectingTo: PositionType},
 ) => void;
 
+export type FeedbackForMatrix = (coordinate: {
+  y?: number;
+  x?: number;
+  num: number;
+}) => void;
+
 export type Mode = "light" | "dark";
 export type Headers = "both" | "vertical" | "horizontal" | "none";
 
 export type Labeling = (n: number) => string;
 
 export type CellType = {
-  data?: any;
+  value?: any;
   style?: React.CSSProperties;
   verticalAlign?: string;
   label?: string | Labeling;
@@ -60,6 +66,7 @@ export type OptionsType = {
   onSave?: Feedback;
   onChange?: Feedback;
   onChangeDiff?: Feedback;
+  onChangeDiffNumMatrix?: FeedbackForMatrix;
   onSelect?: Feedback;
 };
 
@@ -68,10 +75,12 @@ export type PositionType = [Y, X]; // [y, x]
 export type ZoneType = [Y, X, Y, X]; // [startY, startX, endY, endX]
 export type AreaType = ZoneType; // [top, left, bottom, right] (subtype of ZoneType)
 
+export type Direction = "FORWARD" | "BACKWARD";
 export type HistoryType = {
   index: number;
   size: number;
   operations: OperationType[];
+  direction: Direction;
 };
 
 export type OperationCommandType =
@@ -132,9 +141,8 @@ export type StoreType = {
 };
 
 export type Props = {
-  cells?: CellsType;
+  initial?: CellsType;
   options?: OptionsType;
   className?: string;
   style?: React.CSSProperties;
 };
-

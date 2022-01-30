@@ -19,7 +19,7 @@ import { HISTORY_SIZE, HEADER_HEIGHT, HEADER_WIDTH } from "../constants";
 import { cellToIndexes } from "../api/converters";
 import { Table } from "../api/tables";
 
-export const StoreInitializer: React.FC<Props> = ({ cells = {}, options = {} }) => {
+export const StoreInitializer: React.FC<Props> = ({ initial = {}, options = {} }) => {
   const {
     historySize = HISTORY_SIZE,
     headerHeight = HEADER_HEIGHT,
@@ -38,9 +38,10 @@ export const StoreInitializer: React.FC<Props> = ({ cells = {}, options = {} }) 
   const { store, dispatch } = React.useContext(Context);
 
   React.useEffect(() => {
-    const auto = getMaxSizeFromCells(numRows, numCols, cells);
-    const table = new Table(auto.numRows, auto.numCols, cells, parsers, renderers);
+    const auto = getMaxSizeFromCells(numRows, numCols, initial);
+    const table = new Table(auto.numRows, auto.numCols, initial, parsers, renderers);
     dispatch(setTable(table));
+    dispatch(initHistory(historySize));
   }, []);
   React.useEffect(() => {
     if (sheetHeight) {
@@ -77,9 +78,6 @@ export const StoreInitializer: React.FC<Props> = ({ cells = {}, options = {} }) 
       dispatch(setOnSave(onSave));
     }
   }, [onSave]);
-  React.useEffect(() => {
-    dispatch(initHistory(historySize));
-  }, []);
   return <></>
 };
 

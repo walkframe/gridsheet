@@ -28,6 +28,11 @@ $ yarn add react-gridsheet
 - 0.5.x:
   - Quit using redux.
 
+- 0.6.x:
+
+  - Change data structure.
+
+    - data prop was dropped.
 
 
 # Image

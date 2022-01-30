@@ -5,17 +5,18 @@ import {
 } from "react-window";
 
 import { Context } from "../store";
-import { Feedback } from "../types";
+import { Feedback, FeedbackForMatrix } from "../types";
 
 import { UserTable, Table } from "../api/tables";
 
 type Props = {
   onChange?: Feedback;
   onChangeDiff?: Feedback;
+  onChangeDiffNumMatrix?: FeedbackForMatrix;
   onSelect?: Feedback;
 };
 
-export const Emitter: React.FC<Props> = ({ onChange, onChangeDiff, onSelect }) => {
+export const Emitter: React.FC<Props> = ({ onChange, onChangeDiff, onChangeDiffNumMatrix, onSelect }) => {
   const { store, dispatch } = React.useContext(Context);
   const {
     choosing: pointing, selectingZone: zone,
@@ -35,14 +36,82 @@ export const Emitter: React.FC<Props> = ({ onChange, onChangeDiff, onSelect }) =
     onChange && onChange(table as UserTable, {pointing, selectingFrom: [zone[0], zone[1]], selectingTo: [zone[2], zone[3]]});
   }, [onChange, table]);
   React.useEffect(() => {
-    const { operations } = history;
-    const last = operations[operations.length - 1];
-    if (onChangeDiff == null || last == null || last.command != "SET_TABLE") {
+    if (onChangeDiff == null) {
       return;
     }
-    const diff = last.after as UserTable;
-    onChangeDiff(diff, {pointing, selectingFrom: [zone[0], zone[1]], selectingTo: [zone[2], zone[3]]});
+    const { operations } = history;
+    let diffs: Table[] = [];
+    if (history.direction === "BACKWARD") {
+      const operation = operations[history.index + 1];
+      if (operation == null) {
+        return;
+      }
+      if (operation.command === "SET_TABLE") {
+        diffs = operation.before as Table[];
+      }
+    } else {
+      const operation = operations[history.index];
+      if (operation == null) {
+        return;
+      }
+      if (operation.command === "SET_TABLE") {
+        diffs = operation.after as Table[];
+      }
+    }
+    onChangeDiff(table.joinDiffs(diffs) as UserTable, {pointing, selectingFrom: [zone[0], zone[1]], selectingTo: [zone[2], zone[3]]});
   }, [onChangeDiff, history]);
+
+  React.useEffect(() => {
+    if (onChangeDiffNumMatrix == null) {
+      return;
+    }
+    const { operations } = history;
+    if (history.direction === "BACKWARD") {
+      const operation = operations[history.index + 1];
+      if (operation == null) {
+        return;
+      }
+      if (operation.command === "ADD_ROWS") {
+        const {y, numRows} = operation.after as { y: number, numRows: number};
+        onChangeDiffNumMatrix({y: y, num: -numRows});
+      }
+      if (operation.command === "REMOVE_ROWS") {
+        const {y, numRows} = operation.after as { y: number, numRows: number};
+        onChangeDiffNumMatrix({y: y, num: numRows});
+      }
+      if (operation.command === "ADD_COLS") {
+        const {x, numCols} = operation.after as { x: number, numCols: number};
+        onChangeDiffNumMatrix({x: x, num: -numCols});
+      }
+      if (operation.command === "REMOVE_COLS") {
+        const {x, numCols} = operation.after as { x: number, numCols: number};
+        onChangeDiffNumMatrix({x: x, num: numCols});
+      }
+    } else {
+      const operation = operations[history.index];
+      if (operation == null) {
+        return;
+      }
+      if (operation.command === "ADD_ROWS") {
+        const {y, numRows} = operation.after as { y: number, numRows: number};
+        onChangeDiffNumMatrix({y: y, num: numRows});
+      }
+      if (operation.command === "REMOVE_ROWS") {
+        const {y, numRows} = operation.after as { y: number, numRows: number};
+        onChangeDiffNumMatrix({y: y, num: -numRows});
+      }
+      if (operation.command === "ADD_COLS") {
+        const {x, numCols} = operation.after as { x: number, numCols: number};
+        onChangeDiffNumMatrix({x: x, num: numCols});
+      }
+      if (operation.command === "REMOVE_COLS") {
+        const {x, numCols} = operation.after as { x: number, numCols: number};
+        onChangeDiffNumMatrix({x: x, num: -numCols});
+      }
+    }
+    
+  }, [onChangeDiffNumMatrix, history]);
+
   React.useEffect(() => {
     onSelect && onSelect(table as UserTable, {pointing, selectingFrom: [zone[0], zone[1]], selectingTo: [zone[2], zone[3]]});
   }, [onSelect, pointing, zone]);
@@ -52,7 +121,7 @@ export const Emitter: React.FC<Props> = ({ onChange, onChangeDiff, onSelect }) =
 export const rerenderCells = ({
   rows,
   cols,
-  gridRef,
+  gridRef, 
   verticalHeadersRef,
   horizontalHeadersRef,
 }: {

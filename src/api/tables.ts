@@ -1,15 +1,13 @@
 import { defaultParser } from "../parsers/core";
 import { defaultRenderer } from "../renderers/core";
-import { matrixShape, zoneShape } from "./matrix";
-import { AreaType, WriterType } from "../types";
+import { cropMatrix, matrixShape, zoneShape } from "./matrix";
+import { AreaType, Direction, WriterType } from "../types";
 import { AddressTable, CellsType, CellType, Parsers, Renderers } from "../types";
 import { createMatrix, writeMatrix } from "./matrix";
 import { cellToIndexes, x2c, xy2cell, y2r } from "./converters";
 
 export class UserTable {
-  protected addresses: AddressTable;
-  protected cells: CellsType;
-  protected next: bigint;
+  protected cells: (CellType | null)[][];
   protected area: AreaType;
   protected parsers: Parsers;
   protected renderers: Renderers;
@@ -21,53 +19,39 @@ export class UserTable {
     parsers: Parsers = {},
     renderers: Renderers = {},
   ) {
-    this.addresses = createMatrix(numRows + 1, numCols + 1);
-    this.cells = {};
-    this.next = BigInt(0);
+    this.cells = createMatrix(numRows + 1, numCols + 1);
     this.area = [0, 0, numRows, numCols];
     this.parsers = parsers;
     this.renderers = renderers;
 
     Object.entries(cells).map(([cellId, cell]) => {
       const [y, x] = cellToIndexes(cellId);
-      const address = this.nextAddress();
-      this.addresses[y][x] = address;
-      this.cells[address] = cell;
+      this.cells[y][x] = cell;
     });
-    this.addresses.map((row, y) => {
-      row.map((address, x) => {
-        const common = this.cells[this.addresses[0][0] || ""];
-        const row = this.cells[this.addresses[y][0] || ""];
-        const col = this.cells[this.addresses[0][x] || ""];
-        const cell = this.cells[this.addresses[y][x] || ""];
+    const common = this.cells[0][0];
+    this.cells.map((row, y) => {
+      row.map((cell, x) => {
+        const row = this.cells[y][0];
+        const col = this.cells[0][x];
         const stacked = {
           ...common, ...row, ...col, ...cell,
           style: {...common?.style, ...row?.style, ...col?.style, ...cell?.style},
-        };
-        if (address == null) {
-          address = this.nextAddress();
-          this.addresses[y][x] = address;
-        }
+        }  as CellType;
         if (y > 0 && x > 0) {
           delete stacked.height;
           delete stacked.width;
           delete stacked.label;
         }
-        this.cells[address] = stacked;
-      })
+        this.cells[y][x] = stacked;
+      });
     });
-  }
-
-  protected nextAddress() {
-    return (this.next++).toString(36);
   }
 
   public get(y: number, x: number) {
     if (y === -1 || x === -1) {
       return null;
     }
-    const address = this.addresses[y % this.numRows(1)][x % this.numCols(1)];
-    return address ? this.cells[address] : null;
+    return this.cells[y % this.numRows(1)][x % this.numCols(1)];
   }
 
   public numRows(base=0) {
@@ -80,7 +64,7 @@ export class UserTable {
     return base + right - left;
   }
 
-  public matrixFlatten(area?: AreaType, key: keyof CellType = "data") {
+  public matrixFlatten(area?: AreaType, key: keyof CellType = "value") {
     const [top, left, bottom, right] = area || [1, 1, this.area[2], this.area[3]];
     const matrix = createMatrix(bottom - top + 1, right - left + 1);
     for (let y = top; y <= bottom; y++) {
@@ -91,39 +75,45 @@ export class UserTable {
     }
     return matrix;
   }
-  public objectFlatten(key: keyof CellType = "data") {
+  public objectFlatten(key: keyof CellType = "value") {
     const result: CellsType = {};
     const [top, left, bottom, right] = this.area;
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        const cell = this.get(y - top, x - left) || {};
-        result[xy2cell(x, y)] = cell[key] || null;
+        const cell = this.get(y - top, x - left);
+        if (cell != null) {
+          result[xy2cell(x, y)] = cell[key] || null;
+        }
       }
     }
     return result;
   }
-  public rowsFlatten(key: keyof CellType = "data") {
+  public rowsFlatten(key: keyof CellType = "value") {
     const result: CellsType[] = [];
     const [top, left, bottom, right] = this.area;
     for (let y = top; y <= bottom; y++) {
       const row: CellsType = {};
       result.push(row);
       for (let x = left; x <= right; x++) {
-        const cell = this.get(y - top, x - left) || {};
-        row[x2c(x) || y2r(y)] = cell[key] || null;
+        const cell = this.get(y - top, x - left);
+        if (cell != null) {
+          row[x2c(x) || y2r(y)] = cell[key] || null;
+        }
       }
     }
     return result;
   }
-  public colsFlatten(key: keyof CellType = "data") {
+  public colsFlatten(key: keyof CellType = "value") {
     const result: CellsType[] = [];
     const [top, left, bottom, right] = this.area;
     for (let x = left; x <= right; x++) {
       const col: CellsType = {};
       result.push(col);
       for (let y = top; y <= bottom; y++) {
-        const cell = this.get(y - top, x - left) || {};
-        col[y2r(y) || x2c(x)] = cell[key] || null;
+        const cell = this.get(y - top, x - left);
+        if (cell != null) {
+          col[y2r(y) || x2c(x)] = cell[key] || null;
+        }
       }
     }
     return result;
@@ -133,7 +123,7 @@ export class UserTable {
     const matrix = createMatrix(bottom - top + 1, right - left + 1);
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        const cell = this.get(y, x) || {};
+        const cell = this.get(y, x);
         matrix[y - top][x - left] = cell;
       }
     }
@@ -145,7 +135,9 @@ export class UserTable {
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
         const cell = this.get(y - top, x - left);
-        result[xy2cell(x, y)] = cell || {};
+        if (cell != null) {
+          result[xy2cell(x, y)] = cell;
+        }
       }
     }
     return result;
@@ -158,7 +150,9 @@ export class UserTable {
       result.push(row);
       for (let x = left; x <= right; x++) {
         const cell = this.get(y - top, x - left);
-        row[x2c(x) || y2r(y)] = cell || {};
+        if (cell != null) {
+          row[x2c(x) || y2r(y)] = cell;
+        }
       }
     }
     return result;
@@ -171,7 +165,9 @@ export class UserTable {
       result.push(col);
       for (let y = top; y <= bottom; y++) {
         const cell = this.get(y - top, x - left);
-        col[y2r(y) || x2c(x)] = cell || {};
+        if (cell != null) {
+          col[y2r(y) || x2c(x)] = cell || {};
+        }
       }
     }
     return result;
@@ -192,17 +188,17 @@ export class UserTable {
   public parse(y: number, x: number, value: string) {
     const cell = this.get(y, x) || {};
     const parser = this.parsers[cell.parser || ""] || defaultParser;
-    return parser.parse(value, cell.data);
+    return parser.parse(value, cell.value);
   }
   public render(y: number, x: number, writer?: WriterType) {
     const cell = this.get(y, x) || {};
     const renderer = this.renderers[cell.renderer || ""] || defaultRenderer;
-    return renderer.render(cell.data, writer);
+    return renderer.render(cell.value, writer);
   }
   public stringify(y: number, x: number, data?: any) {
     const cell = this.get(y, x) || {};
     const renderer = this.renderers[cell.renderer || ""] || defaultRenderer;
-    return renderer.stringify(typeof data === "undefined" ? cell.data : data);
+    return renderer.stringify(typeof data === "undefined" ? cell.value : data);
   }
 }
 
@@ -214,28 +210,19 @@ export class Table extends UserTable {
     if (area != null) {
       const [top, left, bottom, right] = area;
       const [numRows, numCols] = zoneShape(area, 1);
-      const addresses: AddressTable = createMatrix(numRows, numCols);
-      const cells: CellsType = {};
+      const cells: (CellType | null)[][] = createMatrix(numRows, numCols);
       for (let i = 0; i < numRows; i++) {
         const y = top + i;
         for (let j = 0; j < numCols; j++) {
           const x = left + j;
-          const address = this.addresses[y][x];
-          if (address != null) {
-            addresses[i][j] = address;
-            cells[address] = {...this.cells[address]};
-          }
+          cells[i][j] = this.cells[y][x];
         }
       }
       copied.cells = cells;
-      copied.addresses = addresses;
       copied.area = area;
-      copied.next = this.next;
     } else {
-      copied.cells = {...this.cells};
-      copied.addresses = [...this.addresses];
+      copied.cells = this.cells.map((row) => row.map((col) => col));
       copied.area = [...this.area];
-      copied.next = this.next;
     }
     copied.parsers = this.parsers;
     copied.renderers = this.renderers;
@@ -244,92 +231,90 @@ export class Table extends UserTable {
   public shallowCopy() {
     const copied = new Table(0, 0);
     copied.cells = this.cells;
-    copied.addresses = this.addresses;
     copied.area = this.area;
-    copied.next = this.next;
     copied.parsers = this.parsers;
     copied.renderers = this.renderers;
     return copied;
   }
-  public merge(diff: Table) {
-    // spread operator is slow
-    Object.assign(this.cells, diff.cells);
-    this.addresses = writeMatrix(this.addresses, diff.addresses, diff.area);
-    this.next = diff.next > this.next ? diff.next : this.next;
+  public merge(diffs: Table[]) {
+    diffs.map((diff) => {
+      this.cells = writeMatrix(this.cells, diff.cells, diff.area);
+    });
     return this.shallowCopy();
+  }
+  public joinDiffs(diffs: Table[]) {
+    const table = new Table(0, 0);
+    table.cells = createMatrix(this.numRows(1), this.numCols(1));
+    table.area = [...this.area];
+    table.merge(diffs);
+    let [bottom, right, top, left] = table.area;
+    diffs.map((diff) => {
+      const [_top, _left, _bottom, _right] = diff.area;
+      if (top > _top) {top = _top;}
+      if (left > _left) {left = _left;}
+      if (bottom < _bottom) {bottom = _bottom;}
+      if (right < _right) {right = _right;}
+    })
+    table.area = [top, left, bottom, right];
+    table.cells = cropMatrix(table.cells, table.area);
+    return table;
   }
   public put(y: number, x: number, cell: CellType) {
     const [numRows, numCols] = [this.numRows(1), this.numCols(1)];
-    let address = this.addresses[y % numRows][x % numCols];
-    if (address == null) {
-      address = this.nextAddress();
-      this.addresses[y % numRows][x % numCols] = address;
-    }
-    this.cells[address] = cell;
+    this.cells[y % numRows][x % numCols] = cell;
   }
-  public write(y: number, x: number, value: any, key: keyof CellType = "data") {
-    let address = this.addresses[y][x];
-    if (address == null) {
-      address = this.nextAddress();
-      this.addresses[y][x] = address;
-      this.cells = {...this.cells, [key]: value};
-    } else {
-      this.cells = {...this.cells, [address]: {...this.cells[address], [key]: value}};
-    }
+  public write(y: number, x: number, value: any, key: keyof CellType = "value") {
+    this.cells[y][x] = {...this.cells[y][x], [key]: value};
   }
   public addRows(y: number, numRows: number, baseRow?: Table) {
     const numCols = this.numCols(1);
-    this.addresses.splice(y, 0, ...createMatrix(numRows, numCols));
+    this.cells.splice(y, 0, ...createMatrix(numRows, numCols));
     this.area[2] += numRows;
     if (baseRow != null) {
-      const diff = this.diffByFitting([y, 0, y + numRows - 1, numCols - 1], baseRow, ["data"]);
+      const diff = this.diffByFitting([y, 0, y + numRows - 1, numCols - 1], baseRow, ["value"]);
       this.merge(diff);
     }
   }
   public removeRows(y: number, numRows: number) {
-    this.addresses.splice(y, numRows);
+    this.cells.splice(y, numRows);
     this.area[2] -= numRows;
   }
   public addCols(x: number, numCols: number, baseCol?: Table) {
-    const addresses = this.addresses.map((row) => {
+    const cells = this.cells.map((row) => {
       const newRows = [...row];
       newRows.splice(x, 0, ...Array(numCols).fill(null));
       return newRows;
     });
-    this.addresses = addresses;
+    this.cells = cells;
     this.area[3] += numCols;
     if (baseCol != null) {
-      const diff = this.diffByFitting([0, x, this.numRows(), x + numCols - 1], baseCol, ["data"]);
+      const diff = this.diffByFitting([0, x, this.numRows(), x + numCols - 1], baseCol, ["value"]);
       this.merge(diff);
     }
   }
   public removeCols(x: number, numCols: number) {
-    const addresses = this.addresses.map((row) => {
+    const cells = this.cells.map((row) => {
       const newRows = [...row];
       newRows.splice(x, numCols);
       return newRows;
     });
-    this.addresses = addresses;
+    this.cells = cells;
     this.area[3] -= numCols;
   }
 
   public diffByMoving(from: AreaType, to: AreaType, cutting=false, ignoringKeys:(keyof CellType)[] = []) {
-    const diff = this.copy(to);
     const [maxHeight, maxWidth] = zoneShape(from, 1);
 
     const [topTo, leftTo, bottomTo, rightTo] = to;
     const [topFrom, leftFrom, bottomFrom, rightFrom] = from;
+    const diffs: Table[] = [];
 
     if (cutting) {
-      for (let y = topFrom; y <= bottomFrom; y++) {
-        for (let x = leftFrom; x <= rightFrom; x++) {
-          const addressFrom = this.addresses[y][x];
-          if (addressFrom != null) {
-            diff.cells[addressFrom] = {};
-          }
-        }
-      }
+      const diff = new Table(bottomFrom - topFrom + 1, rightFrom - leftFrom + 1);
+      diff.area = from;
+      diffs.push(diff);
     }
+    const diff = this.copy(to);
     for (let i = 0; i <= bottomTo - topTo; i++) {
       const y = topTo + i;
       if (y > this.numRows()) {
@@ -340,15 +325,13 @@ export class Table extends UserTable {
         if (x > this.numCols()) {
           continue;
         }
-        const addressFrom = this.addresses[topFrom + (i % maxHeight)][leftFrom + (j % maxWidth)];
-        const cell = addressFrom ? {...this.cells[addressFrom]} : {};
-        const addressTo = this.addresses[y][x] || diff.nextAddress();
+        const cell = {...this.cells[topFrom + (i % maxHeight)][leftFrom + (j % maxWidth)]};
+        diff.cells[i][j] = cell;
         ignoringKeys.map((key) => delete cell[key]);
-        diff.cells[addressTo] = cell;
-        diff.addresses[i][j] = addressTo;
       }
     }
-    return diff;
+    diffs.push(diff);
+    return diffs;
   }
 
   public diffByPasting(to: AreaType, matrix: string[][]) {
@@ -364,15 +347,13 @@ export class Table extends UserTable {
           continue;
         }
         const [y, x] = [top + i, left + j];
-        const addressTo = this.addresses[y][x] || diff.nextAddress();
-        const cell = {...this.cells[addressTo]};
+        const cell = {...this.cells[y][x]};
         const parsed = this.parse(y, x, matrix[i % maxHeight][j % maxWidth] || "");
-        cell.data = parsed || null;
-        diff.cells[addressTo] = cell;
-        diff.addresses[i][j] = addressTo;
+        cell.value = parsed || null;
+        diff.cells[i][j] = cell;
       }
     }
-    return diff;
+    return [diff];
   }
   public diffByFitting(to: AreaType, rect: Table, ignoringKeys:(keyof CellType)[] = []) {
     const diff = this.copy(to);
@@ -388,14 +369,23 @@ export class Table extends UserTable {
         diff.put(y, x, cell);
       }
     }
-    return diff;
+    return [diff];
   }
 
-  public backDiffWithTable(target: Table) {
-    const diff = target.copy();
-    Object.keys(target.cells).map((address) => {
-      diff.cells[address] = this.cells[address];
-    });
-    return diff;
+  public backDiffWithTable(targets: Table[]) {
+    const diffs: Table[] = [];
+    [...targets].reverse().map((target) => {
+      const diff = target.copy();
+      const [top, left, bottom, right] = diff.area;
+      for (let i = 0; i <= bottom - top; i++) {
+        for (let j = 0; j <= right - left; j++) {
+          const [y, x] = [top + i, left + j];
+          diff.put(i, j, {...this.cells[y][x]});
+        }
+      }
+      diffs.push(diff);
+    })
+
+    return diffs;
   }
 };

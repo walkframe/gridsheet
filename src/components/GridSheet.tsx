@@ -19,7 +19,7 @@ import { Table } from "../api/tables";
 import { GridTable } from "./GridTable";
 
 export const GridSheet: React.FC<Props> = ({
-  cells,
+  initial,
   options = {},
   className,
   style,
@@ -58,7 +58,7 @@ export const GridSheet: React.FC<Props> = ({
     horizontalHeadersSelecting: false,
     verticalHeadersSelecting: false,
     editingCell: "",
-    history: { index: -1, size: 0, operations: [] },
+    history: { index: -1, size: 0, operations: [], direction: "FORWARD" },
     editorRect: [0, 0, 0, 0],
     resizingRect: [-1, -1, -1, -1],
     sheetHeight: 0,
@@ -94,7 +94,7 @@ export const GridSheet: React.FC<Props> = ({
     }, 700);
   }, []);
 
-  const { onChange, onChangeDiff, onSelect, mode } = options;
+  const { onChange, onChangeDiff, onChangeDiffNumMatrix, onSelect, mode } = options;
   return (
     <GridSheetLayout
       ref={sheetRef}
@@ -104,12 +104,12 @@ export const GridSheet: React.FC<Props> = ({
       <Context.Provider value={{ store, dispatch }}>
         <GridTable />
         <StoreInitializer
-          cells={cells}
+          initial={initial}
           options={{ ...options, sheetHeight, sheetWidth }}
         />
         <ContextMenu />
         <Resizer />
-        <Emitter onChange={onChange} onChangeDiff={onChangeDiff} onSelect={onSelect} />
+        <Emitter onChange={onChange} onChangeDiff={onChangeDiff} onChangeDiffNumMatrix={onChangeDiffNumMatrix} onSelect={onSelect} />
       </Context.Provider>
     </GridSheetLayout>
   );

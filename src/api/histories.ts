@@ -19,7 +19,7 @@ export const pushHistory = (
     operations.splice(0, 1);
     history.index--;
   }
-  return { ...history, operations };
+  return { ...history, operations, direction: "FORWARD" };
 };
 
 export const undoSetTable = (
@@ -35,7 +35,7 @@ export const undoSetTable = (
   const { table } = store;
   return {
     ...store,
-    table: table.merge(before),
+    table: table.merge(before as Table[]),
     choosing: choosing || store.choosing,
     selectingZone: selectingZone || store.selectingZone,
     copyingZone: copyingZone || store.copyingZone,
@@ -56,7 +56,7 @@ export const redoSetTable = (
   const { table } = store;
   return {
     ...store,
-    table: table.merge(after),
+    table: table.merge(after as Table[]),
     choosing: choosing || store.choosing,
     selectingZone: selectingZone || store.selectingZone,
     copyingZone: copyingZone || store.copyingZone,
@@ -125,7 +125,7 @@ export const undoRemoveRows = (
   const { table } = store;
   const { y, numRows } = after as { y: number, numRows: number};
   table.addRows(y, numRows);
-  table.merge(before as Table);
+  table.merge(before as Table[]);
   return {
     ...store,
     table: table.copy(),
@@ -152,7 +152,7 @@ export const undoRemoveCols = (
   const { table } = store;
   const { x, numCols } = after as { x: number, numCols: number};
   table.addCols(x, numCols);
-  table.merge(before as Table);
+  table.merge(before as Table[]);
   return {
     ...store,
     table: table.copy(),
@@ -161,7 +161,7 @@ export const undoRemoveCols = (
 
 export const redoRemoveCols = (
   store: StoreType,
-  { after }: OperationType
+  { after }: OperationType,
 ): StoreType => {
   const { table } = store;
   const { x, numCols } = after as { x: number, numCols: number};

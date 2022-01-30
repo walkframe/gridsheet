@@ -3,7 +3,6 @@ import { GridSheet, Renderer, aa2oa, MatrixType, Parser } from "./src";
 import { createMatrix, matrixIntoCells } from "./src/api/matrix";
 import { defaultParser } from "./src/parsers/core";
 import { defaultRenderer } from "./src/renderers/core";
-// import { GridSheet, Renderer, aa2oa } from "../dist";
 
 type Obj = {v: any};
 
@@ -144,9 +143,9 @@ export const showIndex = () => {
       <div>aaaaa</div>
 
       <GridSheet
-        cells={matrixIntoCells(initialData, {
+        initial={matrixIntoCells(initialData, {
           default: { style: { fontStyle: "italic" } },
-          A1: { data: 1, style: { color: "#008888" } },
+          A1: { value: 1, style: { color: "#008888" } },
           B: { label: "ビー" },
           D: { width: 300, style: { textAlign: "right" } },
           "2": {
@@ -215,8 +214,11 @@ export const showIndex = () => {
               "matrix on change diff:",
               table.top(),
               //table.rows(),
-              table.rowsFlatten(),
+              table.objectFlatten(),
             );
+          },
+          onChangeDiffNumMatrix: (coordinate) => {
+            console.log("add or remove", coordinate);
           },
           onSelect: (table, positions) => {
             console.log("positions on select", positions)
@@ -238,7 +240,7 @@ export const showIndex = () => {
                 {" "}
                 <GridSheet
                   style={{ maxWidth: "100%", maxHeight: "150px" }}
-                  cells={matrixIntoCells([["resizable", "both", "!"], [1, 2, 3], [undefined, 5, 6]], {A3: {data: "four"}})}
+                  initial={matrixIntoCells([["resizable", "both", "!"], [1, 2, 3], [undefined, 5, 6]], {A3: {value: "four"}})}
                   options={{ sheetResize: "both" }}
                 />
               </td>
@@ -246,7 +248,7 @@ export const showIndex = () => {
                 {" "}
                 <GridSheet
                   style={{ maxWidth: "100%", maxHeight: "150px" }}
-                  cells={matrixIntoCells([["resizable", "vertically", "!"], [1, 2, 3], [4, undefined, 6]], {B3: {data: "five"}})}
+                  initial={matrixIntoCells([["resizable", "vertically", "!"], [1, 2, 3], [4, undefined, 6]], {B3: {value: "five"}})}
                   options={{ sheetResize: "vertical" }}
                 />
               </td>
@@ -256,7 +258,7 @@ export const showIndex = () => {
                 {" "}
                 <GridSheet
                   style={{ maxWidth: "100%", maxHeight: "150px" }}
-                  cells={matrixIntoCells([["resizable", "horizontally", "!"], [1, 2, 3], [4, 5, undefined]], {C3: {data: "six"}})}
+                  initial={matrixIntoCells([["resizable", "horizontally", "!"], [1, 2, 3], [4, 5, undefined]], {C3: {value: "six"}})}
                   options={{ sheetResize: "horizontal" }}
                 />
               </td>
@@ -264,7 +266,7 @@ export const showIndex = () => {
                 {" "}
                 <GridSheet
                   style={{ maxWidth: "100%", maxHeight: "150px" }}
-                  cells={matrixIntoCells([["not", "resizable", "!!!"], [1, 2, 3], [4, 5, 6]], {A3: {data: "four"}})}
+                  initial={matrixIntoCells([["not", "resizable", "!!!"], [1, 2, 3], [4, 5, 6]], {A3: {value: "four"}})}
                   options={{ sheetResize: "none" }}
                 />
               </td>
@@ -274,7 +276,7 @@ export const showIndex = () => {
       )}
       <div>object value</div>
       <GridSheet
-        cells={{
+        initial={{
           default: {
             renderer: "obj",
             parser: "obj",
@@ -311,7 +313,7 @@ export const showIndex = () => {
 
       <GridSheet
         style={{ maxWidth: "100%", maxHeight: "150px" }}
-        cells={initialCells}
+        initial={initialCells}
         options={{ sheetResize: "both" }}
       />
     </>

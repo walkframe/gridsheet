@@ -5,6 +5,7 @@ import {
   PositionType,
   RangeType,
   Feedback,
+  HistoryType,
 
 } from "../types";
 import {
@@ -56,7 +57,7 @@ class InitHistoryAction<T extends number> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
-      history: { operations: [], index: -1, size: payload },
+      history: { operations: [], index: -1, size: payload, direction: "FORWARD" },
     };
   }
 }
@@ -236,15 +237,15 @@ class UpdateTableAction<T extends Table> extends CoreAction<T> {
   code = "UPDATE_TABLE";
   reduce(store: StoreType, payload: T): StoreType {
     const { table, history } = store;
-    const diff = payload;
-    const before = table.backDiffWithTable(diff);
+    const diffs = [payload];
+    const before = table.backDiffWithTable(diffs);
     return {
       ...store,
-      table: table.merge(diff),
+      table: table.merge(diffs),
       history: histories.pushHistory(history, {
         command: "SET_TABLE",
         before,
-        after: diff,
+        after: diffs,
       })
     };
   }
@@ -320,7 +321,7 @@ class PasteAction<
     const copyingArea = zoneToArea(copyingZone);
     const { text } = payload;
 
-    let diff: Table;
+    let diffs: Table[];
     if (copyingArea[0] === -1) {
       const matrixFrom = tsv2matrix(text);
       let [height, width] = matrixShape(matrixFrom, -1);
@@ -328,23 +329,23 @@ class PasteAction<
         [y, x] = selectingArea;
         [height, width] = superposeArea(selectingArea, [0, 0, height, width]);
       }
-      diff = table.diffByPasting([y, x, y + height, x + width], matrixFrom);
+      diffs = table.diffByPasting([y, x, y + height, x + width], matrixFrom);
     } else {
       let [height, width] = zoneShape(copyingArea);
       if (selectingArea[0] !== -1) {
         [y, x] = selectingArea;
         [height, width] = superposeArea(selectingArea, copyingArea);
       }
-      diff = table.diffByMoving(copyingArea, [y, x, y + height, x + width], cutting);
+      diffs = table.diffByMoving(copyingArea, [y, x, y + height, x + width], cutting);
     }
-    const before = table.backDiffWithTable(diff);
+    const before = table.backDiffWithTable(diffs);
     return {
       ...store,
-      table: table.merge(diff),
+      table: table.merge(diffs),
       history: pushHistory(history, {
         command: "SET_TABLE",
         before,
-        after: diff,
+        after: diffs,
         choosing,
         selectingZone,
         copyingZone,
@@ -468,15 +469,15 @@ class WriteAction<T extends string> extends CoreAction<T> {
     const data = table.parse(y, x, payload);
     const diff = table.copy([y, x, y, x]);
     diff.write(0, 0, data);
-    const before = table.backDiffWithTable(diff);
+    const before = table.backDiffWithTable([diff]);
     return {
       ...store,
-      table: table.merge(diff),
+      table: table.merge([diff]),
       history: pushHistory(history, {
         command: "SET_TABLE",
         choosing,
         before,
-        after: diff,
+        after: [diff],
       }),
       copyingZone: [-1, -1, -1, -1] as ZoneType,
     };
@@ -500,14 +501,14 @@ class ClearAction<T extends null> extends CoreAction<T> {
         diff.write(i, j, null);
       }
     }
-    const before = table.backDiffWithTable(diff);
+    const before = table.backDiffWithTable([diff]);
     return {
       ...store,
-      table: table.merge(diff),
+      table: table.merge([diff]),
       history: pushHistory(history, {
         command: "SET_TABLE",
         before,
-        after: diff,
+        after: [diff],
         choosing,
         selectingZone,
       }),
@@ -519,7 +520,7 @@ export const clear = new ClearAction().bind();
 class UndoAction<T extends null> extends CoreAction<T> {
   code = "UNDO";
   reduce(store: StoreType, payload: T): StoreType {
-    const history = { ...store.history };
+    const history = {...store.history, direction: "BACKWARD"} as HistoryType;
     if (history.index < 0) {
       return store;
     }
@@ -547,7 +548,7 @@ export const undo = new UndoAction().bind();
 class RedoAction<T extends null> extends CoreAction<T> {
   code = "REDO";
   reduce(store: StoreType, payload: T): StoreType {
-    const history = { ...store.history };
+    const history = {...store.history, direction: "FORWARD"} as HistoryType;
     if (history.index + 1 >= history.operations.length) {
       return store;
     }
@@ -626,9 +627,9 @@ class ArrowAction<
         editorLeft -= table.get(0, i)?.width || DEFAULT_WIDTH;
       }
     }
-    const cell = table.get(nextY, nextX) || {};
-    height = cell.height || DEFAULT_HEIGHT;
-    width = cell.width || DEFAULT_WIDTH;
+    const cell = table.get(nextY, nextX);
+    height = cell?.height || DEFAULT_HEIGHT;
+    width = cell?.width || DEFAULT_WIDTH;
     return {
       ...store,
       selectingZone: [-1, -1, -1, -1] as ZoneType,
@@ -721,9 +722,9 @@ class WalkAction<
         editorLeft -= table.get(0, i)?.width || DEFAULT_WIDTH;
       }
     }
-    const cell = table.get(nextY, nextX) || {};
-    height = cell.height || DEFAULT_HEIGHT;
-    width = cell.width || DEFAULT_WIDTH;
+    const cell = table.get(nextY, nextX);
+    height = cell?.height || DEFAULT_HEIGHT;
+    width = cell?.width || DEFAULT_WIDTH;
     return {
       ...store,
       choosing: [nextY, nextX] as PositionType,

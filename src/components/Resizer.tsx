@@ -16,6 +16,7 @@ import {
 } from "../constants";
 import { zoneToArea, makeSequence, between } from "../api/matrix";
 import { Table } from "../api/tables";
+import { CellType } from "../types";
 
 const Line = styled.div`
   position: relative;
@@ -75,7 +76,7 @@ export const Resizer: React.FC = React.memo(() => {
       diff = table.copy([0, xs[0], 0, xs[xs.length - 1]]);
       xs.map((x, i) => {
         const cell = diff.get(0, i);
-        diff.put(0, i, {...cell, width});
+        diff.put(0, i, {...cell, width} as CellType);
       });
     }
     if (y !== -1) {
@@ -86,7 +87,7 @@ export const Resizer: React.FC = React.memo(() => {
       diff = table.copy([ys[0], 0, ys[ys.length - 1], 0]);
       ys.map((y, i) => {
         const cell = diff.get(i, 0);
-        diff.put(i, 0, {...cell, height});
+        diff.put(i, 0, {...cell, height} as CellType);
       });
     }
     dispatch(updateTable(diff));

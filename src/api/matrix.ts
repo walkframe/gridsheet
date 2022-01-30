@@ -149,11 +149,11 @@ export const cropMatrix = (matrix: MatrixType, area: AreaType): MatrixType => {
 
 export const matrixIntoCells = (matrix: MatrixType, cells: CellsType) => {
   matrix.map((row, y) => {
-    row.map((data, x) => {
+    row.map((value, x) => {
       const id = xy2cell(x + 1, y + 1);
-      if (typeof data !== "undefined") {
+      if (typeof value !== "undefined") {
         const cell = cells[id];
-        cells[id] = {...cell, data};
+        cells[id] = {...cell, value};
       }
     });
   });
