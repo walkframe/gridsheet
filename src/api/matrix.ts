@@ -11,7 +11,7 @@ import {
   Width,
   CellsType,
 } from "../types";
-import { xy2cell } from "./converters";
+import { cellToIndexes, xy2cell } from "./converters";
 
 export const slideArea = (area: AreaType, y: Y, x: X): AreaType => {
   const [top, left, bottom, right] = area;
@@ -147,10 +147,11 @@ export const cropMatrix = (matrix: MatrixType, area: AreaType): MatrixType => {
     .map((cols) => cols.slice(left, right + 1));
 };
 
-export const matrixIntoCells = (matrix: MatrixType, cells: CellsType) => {
+export const matrixIntoCells = (matrix: MatrixType, cells: CellsType, origin="A1") => {
+  const [baseY, baseX] = cellToIndexes(origin);
   matrix.map((row, y) => {
     row.map((value, x) => {
-      const id = xy2cell(x + 1, y + 1);
+      const id = xy2cell(baseX + x, baseY + y);
       if (typeof value !== "undefined") {
         const cell = cells[id];
         cells[id] = {...cell, value};

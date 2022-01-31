@@ -32,8 +32,8 @@ export class Parser {
     return parsed;
   }
   public parse (value: string, cell: CellType): CellType {
-    value = this._parse(value, cell);
-    return {...cell, value };
+    const parsed = this._parse(value, cell);
+    return {...cell, value: parsed };
   }
   protected _parse (value: string, cell: CellType): any {
     if (this.condition && !this.condition(value)) {
