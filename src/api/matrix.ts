@@ -157,5 +157,5 @@ export const matrixIntoCells = (matrix: MatrixType, cells: CellsType) => {
       }
     });
   });
-  return {...cells};
+  return cells;
 };
