@@ -222,16 +222,17 @@ class SetSheetWidthAction<T extends number> extends CoreAction<T> {
 }
 export const setSheetWidth = new SetSheetWidthAction().bind();
 
-class SetTableAction<T extends Table> extends CoreAction<T> {
-  code = "SET_TABLE";
+class InitializeTableAction<T extends Table> extends CoreAction<T> {
+  code = "INITIALIZE_TABLE";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
       table: payload,
+      tableInitialized: true,
     };
   }
 }
-export const setTable = new SetTableAction().bind();
+export const initializeTable = new InitializeTableAction().bind();
 
 class UpdateTableAction<T extends Table> extends CoreAction<T> {
   code = "UPDATE_TABLE";
@@ -317,7 +318,7 @@ class PasteAction<
     const { choosing, copyingZone, cutting, table } = store;
     let { selectingZone, history } = store;
     let [y, x] = choosing;
-    const selectingArea = zoneToArea(selectingZone);
+    let selectingArea = zoneToArea(selectingZone);
     const copyingArea = zoneToArea(copyingZone);
     const { text } = payload;
 
@@ -329,14 +330,16 @@ class PasteAction<
         [y, x] = selectingArea;
         [height, width] = superposeArea(selectingArea, [0, 0, height, width]);
       }
-      diffs = table.diffByPasting([y, x, y + height, x + width], matrixFrom);
+      selectingArea = [y, x, y + height, x + width]
+      diffs = table.diffByPasting(selectingArea, matrixFrom);
     } else {
       let [height, width] = zoneShape(copyingArea);
       if (selectingArea[0] !== -1) {
         [y, x] = selectingArea;
         [height, width] = superposeArea(selectingArea, copyingArea);
       }
-      diffs = table.diffByMoving(copyingArea, [y, x, y + height, x + width], cutting);
+      selectingArea = [y, x, y + height, x + width]
+      diffs = table.diffByMoving(copyingArea, selectingArea, cutting);
     }
     const before = table.backDiffWithTable(diffs);
     return {
@@ -351,6 +354,7 @@ class PasteAction<
         copyingZone,
         cutting,
       }),
+      selectingZone: selectingArea,
       copyingZone: [-1, -1, -1, -1] as ZoneType,
     };
   }
@@ -466,9 +470,9 @@ class WriteAction<T extends string> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     const { choosing, history, table } = store;
     const [y, x] = choosing;
-    const data = table.parse(y, x, payload);
+    const cell = table.parse(y, x, payload);
     const diff = table.copy([y, x, y, x]);
-    diff.write(0, 0, data);
+    diff.put(0, 0, cell);
     const before = table.backDiffWithTable([diff]);
     return {
       ...store,
@@ -498,7 +502,7 @@ class ClearAction<T extends null> extends CoreAction<T> {
     const diff = table.copy(selectingArea);
     for (let i = 0; i < numRows; i++) {
       for (let j = 0; j < numCols; j++) {
-        diff.write(i, j, null);
+        diff.write(i, j, "");
       }
     }
     const before = table.backDiffWithTable([diff]);

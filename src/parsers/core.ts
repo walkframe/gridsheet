@@ -1,4 +1,5 @@
 import { parseFromTimeZone } from "date-fns-timezone";
+import { CellType } from "../types";
 
 type Condition = (value: string) => boolean;
 type Stringify = (value: string) => any;
@@ -9,7 +10,7 @@ type Props = {
 }
 
 export class Parser {
-  protected parseFunctions: ((value: string) => any)[] = [
+  protected parseFunctions: ((value: string, cell: CellType) => any)[] = [
     this.number,
     this.date,
     this.bool,
@@ -27,28 +28,34 @@ export class Parser {
     this.complement = complement;
   }
 
-  public callback(parsed: any, before?: any): any {
+  public callback (parsed: any, cell: CellType) {
     return parsed;
   }
-
-  public parse (value: string, before?: any): any {
+  public parse (value: string, cell: CellType): CellType {
+    value = this._parse(value, cell);
+    return {...cell, value };
+  }
+  protected _parse (value: string, cell: CellType): any {
     if (this.condition && !this.condition(value)) {
       const result = this.complement ? this.complement(value) : value;
-      return this.callback(result, before);
+      return this.callback(result, cell);
     }
     if (value[0] === "'") {
-      return this.callback(value, before);
+      return this.callback(value, cell);
     }
     for (let i = 0; i < this.parseFunctions.length; i++) {
-      const result = this.parseFunctions[i](value);
+      const result = this.parseFunctions[i](value, cell);
       if (result != null) {
-        return this.callback(result, before);
+        return this.callback(result, cell);
       }
     }
-    return this.callback(value, before);
+    if (value === "") {
+      return this.callback(null, cell);
+    }
+    return this.callback(value, cell);
   }
 
-  protected bool (value: string): boolean | undefined {
+  protected bool (value: string, cell: CellType): boolean | undefined {
     if (value.match(/^true$/i)) {
       return true;
     }
@@ -57,14 +64,14 @@ export class Parser {
     }
   }
 
-  protected number (value: string): number | undefined {
+  protected number (value: string, cell: CellType): number | undefined {
     const m = value.match(/^-?[\d.]+$/);
     if (m != null && value.match(/\.$/) == null && (value.match(/\./g) || []).length <= 1) {
       return parseFloat(value);
     }
   }
 
-  protected date (value: string): Date | undefined {
+  protected date (value: string, cell: CellType): Date | undefined {
     let timeZone = "UTC";
     try {
       timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;

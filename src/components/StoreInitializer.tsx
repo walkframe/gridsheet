@@ -12,14 +12,19 @@ import {
   setEditingOnEnter,
   setCellLabel,
   setOnSave,
-  setTable,
+  initializeTable,
+  updateTable
 } from "../store/actions";
 
 import { HISTORY_SIZE, HEADER_HEIGHT, HEADER_WIDTH } from "../constants";
 import { cellToIndexes } from "../api/converters";
 import { Table } from "../api/tables";
 
-export const StoreInitializer: React.FC<Props> = ({ initial = {}, options = {} }) => {
+export const StoreInitializer: React.FC<Props> = ({
+  initial = {},
+  difference,
+  options = {}
+}) => {
   const {
     historySize = HISTORY_SIZE,
     headerHeight = HEADER_HEIGHT,
@@ -40,9 +45,20 @@ export const StoreInitializer: React.FC<Props> = ({ initial = {}, options = {} }
   React.useEffect(() => {
     const auto = getMaxSizeFromCells(numRows, numCols, initial);
     const table = new Table(auto.numRows, auto.numCols, initial, parsers, renderers);
-    dispatch(setTable(table));
+    dispatch(initializeTable(table));
     dispatch(initHistory(historySize));
   }, []);
+  React.useEffect(() => {
+    if (difference == null) {
+      return;
+    }
+    const { table, tableInitialized } = store;
+    if (!tableInitialized) {
+      return;
+    }
+    const diff = table.diffWithCells(difference);
+    dispatch(updateTable(diff))
+  }, [difference]);
   React.useEffect(() => {
     if (sheetHeight) {
       dispatch(setSheetHeight(sheetHeight));

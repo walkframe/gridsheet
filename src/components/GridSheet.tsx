@@ -20,6 +20,7 @@ import { GridTable } from "./GridTable";
 
 export const GridSheet: React.FC<Props> = ({
   initial,
+  difference,
   options = {},
   className,
   style,
@@ -44,6 +45,7 @@ export const GridSheet: React.FC<Props> = ({
   const horizontalHeadersRef = React.useRef<List>(null);
   const initialState: StoreType = {
     table: new Table(numRows, numCols),
+    tableInitialized: false,
     sheetRef,
     searchInputRef,
     editorRef,
@@ -105,6 +107,7 @@ export const GridSheet: React.FC<Props> = ({
         <GridTable />
         <StoreInitializer
           initial={initial}
+          difference={difference}
           options={{ ...options, sheetHeight, sheetWidth }}
         />
         <ContextMenu />

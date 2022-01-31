@@ -3,22 +3,25 @@ import { GridSheet, Renderer, aa2oa, MatrixType, Parser } from "./src";
 import { createMatrix, matrixIntoCells } from "./src/api/matrix";
 import { defaultParser } from "./src/parsers/core";
 import { defaultRenderer } from "./src/renderers/core";
+import { CellType } from "./src/types";
 
 type Obj = {v: any};
 
 class ObjectRenderer extends Renderer {
-  object(value: Obj): any {
+  object(cell: CellType): any {
+    const { value } = cell;
     return value.v;
   }
-  stringify(value: Obj): string {
+  stringify(cell: CellType): string {
+    const { value } = cell;
     return "" + (value?.v || "");
   }
 }
 
 class ObjectParser<T extends Obj> extends Parser {
-  callback(value: any, old: T): T {
-    console.log("callback", old, value, "=>", {...old, v: value});
-    return {...old, v: value};
+  callback(value: any, cell: CellType): T {
+    console.log("callback", value, "=>", {v: value});
+    return value;
   }
 };
 
@@ -137,6 +140,12 @@ const initialData = [
 const initialCells = matrixIntoCells(createMatrix(1000, 50), {})
 
 export const showIndex = () => {
+  let [num, setNum] = React.useState(1);
+  React.useEffect(() => {
+    setInterval(() => {
+      setNum(++num);
+    }, 3000);
+  });
 
   return (
     <>
@@ -309,11 +318,12 @@ export const showIndex = () => {
         }}
       />
 
-
-
       <GridSheet
         style={{ maxWidth: "100%", maxHeight: "150px" }}
         initial={initialCells}
+        difference={{
+          B2: { value: num },
+        }}
         options={{ sheetResize: "both" }}
       />
     </>

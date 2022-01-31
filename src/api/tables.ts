@@ -1,13 +1,13 @@
 import { defaultParser } from "../parsers/core";
 import { defaultRenderer } from "../renderers/core";
 import { cropMatrix, matrixShape, zoneShape } from "./matrix";
-import { AreaType, Direction, WriterType } from "../types";
-import { AddressTable, CellsType, CellType, Parsers, Renderers } from "../types";
+import { AreaType, WriterType } from "../types";
+import { CellsType, CellType, Parsers, Renderers, DataType } from "../types";
 import { createMatrix, writeMatrix } from "./matrix";
 import { cellToIndexes, x2c, xy2cell, y2r } from "./converters";
 
 export class UserTable {
-  protected cells: (CellType | null)[][];
+  protected data: DataType;
   protected area: AreaType;
   protected parsers: Parsers;
   protected renderers: Renderers;
@@ -19,20 +19,20 @@ export class UserTable {
     parsers: Parsers = {},
     renderers: Renderers = {},
   ) {
-    this.cells = createMatrix(numRows + 1, numCols + 1);
+    this.data = createMatrix(numRows + 1, numCols + 1);
     this.area = [0, 0, numRows, numCols];
     this.parsers = parsers;
     this.renderers = renderers;
 
     Object.entries(cells).map(([cellId, cell]) => {
       const [y, x] = cellToIndexes(cellId);
-      this.cells[y][x] = cell;
+      this.data[y][x] = cell;
     });
-    const common = this.cells[0][0];
-    this.cells.map((row, y) => {
+    const common = this.data[0][0];
+    this.data.map((row, y) => {
       row.map((cell, x) => {
-        const row = this.cells[y][0];
-        const col = this.cells[0][x];
+        const row = this.data[y][0];
+        const col = this.data[0][x];
         const stacked = {
           ...common, ...row, ...col, ...cell,
           style: {...common?.style, ...row?.style, ...col?.style, ...cell?.style},
@@ -42,7 +42,7 @@ export class UserTable {
           delete stacked.width;
           delete stacked.label;
         }
-        this.cells[y][x] = stacked;
+        this.data[y][x] = stacked;
       });
     });
   }
@@ -51,7 +51,7 @@ export class UserTable {
     if (y === -1 || x === -1) {
       return null;
     }
-    return this.cells[y % this.numRows(1)][x % this.numCols(1)];
+    return this.data[y % this.numRows(1)][x % this.numCols(1)];
   }
 
   public numRows(base=0) {
@@ -188,17 +188,20 @@ export class UserTable {
   public parse(y: number, x: number, value: string) {
     const cell = this.get(y, x) || {};
     const parser = this.parsers[cell.parser || ""] || defaultParser;
-    return parser.parse(value, cell.value);
+    return parser.parse(value, cell);
   }
   public render(y: number, x: number, writer?: WriterType) {
     const cell = this.get(y, x) || {};
     const renderer = this.renderers[cell.renderer || ""] || defaultRenderer;
-    return renderer.render(cell.value, writer);
+    return renderer.render(cell || {}, writer);
   }
-  public stringify(y: number, x: number, data?: any) {
-    const cell = this.get(y, x) || {};
-    const renderer = this.renderers[cell.renderer || ""] || defaultRenderer;
-    return renderer.stringify(typeof data === "undefined" ? cell.value : data);
+  public stringify(y: number, x: number, value?: any) {
+    const cell = this.get(y, x);
+    const renderer = this.renderers[cell?.renderer || ""] || defaultRenderer;
+    if (typeof value === "undefined") {
+      return renderer.stringify(cell || {});
+    }
+    return renderer.stringify({...cell, value});
   }
 }
 
@@ -210,18 +213,18 @@ export class Table extends UserTable {
     if (area != null) {
       const [top, left, bottom, right] = area;
       const [numRows, numCols] = zoneShape(area, 1);
-      const cells: (CellType | null)[][] = createMatrix(numRows, numCols);
+      const data: DataType = createMatrix(numRows, numCols);
       for (let i = 0; i < numRows; i++) {
         const y = top + i;
         for (let j = 0; j < numCols; j++) {
           const x = left + j;
-          cells[i][j] = this.cells[y][x];
+          data[i][j] = this.data[y][x];
         }
       }
-      copied.cells = cells;
+      copied.data = data;
       copied.area = area;
     } else {
-      copied.cells = this.cells.map((row) => row.map((col) => col));
+      copied.data = this.data.map((row) => row.map((col) => col));
       copied.area = [...this.area];
     }
     copied.parsers = this.parsers;
@@ -230,7 +233,7 @@ export class Table extends UserTable {
   }
   public shallowCopy() {
     const copied = new Table(0, 0);
-    copied.cells = this.cells;
+    copied.data = this.data;
     copied.area = this.area;
     copied.parsers = this.parsers;
     copied.renderers = this.renderers;
@@ -238,13 +241,13 @@ export class Table extends UserTable {
   }
   public merge(diffs: Table[]) {
     diffs.map((diff) => {
-      this.cells = writeMatrix(this.cells, diff.cells, diff.area);
+      this.data = writeMatrix(this.data, diff.data, diff.area);
     });
     return this.shallowCopy();
   }
   public joinDiffs(diffs: Table[]) {
     const table = new Table(0, 0);
-    table.cells = createMatrix(this.numRows(1), this.numCols(1));
+    table.data = createMatrix(this.numRows(1), this.numCols(1));
     table.area = [...this.area];
     table.merge(diffs);
     let [bottom, right, top, left] = table.area;
@@ -256,19 +259,20 @@ export class Table extends UserTable {
       if (right < _right) {right = _right;}
     })
     table.area = [top, left, bottom, right];
-    table.cells = cropMatrix(table.cells, table.area);
+    table.data = cropMatrix(table.data, table.area);
     return table;
   }
   public put(y: number, x: number, cell: CellType) {
     const [numRows, numCols] = [this.numRows(1), this.numCols(1)];
-    this.cells[y % numRows][x % numCols] = cell;
+    this.data[y % numRows][x % numCols] = cell;
   }
-  public write(y: number, x: number, value: any, key: keyof CellType = "value") {
-    this.cells[y][x] = {...this.cells[y][x], [key]: value};
+  public write(y: number, x: number, value: any) {
+    const cell = this.parse(y, x, value);
+    this.put(y, x, cell);
   }
   public addRows(y: number, numRows: number, baseRow?: Table) {
     const numCols = this.numCols(1);
-    this.cells.splice(y, 0, ...createMatrix(numRows, numCols));
+    this.data.splice(y, 0, ...createMatrix(numRows, numCols));
     this.area[2] += numRows;
     if (baseRow != null) {
       const diff = this.diffByFitting([y, 0, y + numRows - 1, numCols - 1], baseRow, ["value"]);
@@ -276,16 +280,16 @@ export class Table extends UserTable {
     }
   }
   public removeRows(y: number, numRows: number) {
-    this.cells.splice(y, numRows);
+    this.data.splice(y, numRows);
     this.area[2] -= numRows;
   }
   public addCols(x: number, numCols: number, baseCol?: Table) {
-    const cells = this.cells.map((row) => {
+    const data = this.data.map((row) => {
       const newRows = [...row];
       newRows.splice(x, 0, ...Array(numCols).fill(null));
       return newRows;
     });
-    this.cells = cells;
+    this.data = data;
     this.area[3] += numCols;
     if (baseCol != null) {
       const diff = this.diffByFitting([0, x, this.numRows(), x + numCols - 1], baseCol, ["value"]);
@@ -293,12 +297,12 @@ export class Table extends UserTable {
     }
   }
   public removeCols(x: number, numCols: number) {
-    const cells = this.cells.map((row) => {
+    const data = this.data.map((row) => {
       const newRows = [...row];
       newRows.splice(x, numCols);
       return newRows;
     });
-    this.cells = cells;
+    this.data = data;
     this.area[3] -= numCols;
   }
 
@@ -325,8 +329,8 @@ export class Table extends UserTable {
         if (x > this.numCols()) {
           continue;
         }
-        const cell = {...this.cells[topFrom + (i % maxHeight)][leftFrom + (j % maxWidth)]};
-        diff.cells[i][j] = cell;
+        const cell = {...this.data[topFrom + (i % maxHeight)][leftFrom + (j % maxWidth)]};
+        diff.data[i][j] = cell;
         ignoringKeys.map((key) => delete cell[key]);
       }
     }
@@ -347,10 +351,9 @@ export class Table extends UserTable {
           continue;
         }
         const [y, x] = [top + i, left + j];
-        const cell = {...this.cells[y][x]};
+        const cell = this.data[y][x];
         const parsed = this.parse(y, x, matrix[i % maxHeight][j % maxWidth] || "");
-        cell.value = parsed || null;
-        diff.cells[i][j] = cell;
+        diff.data[i][j] = {...cell, ...parsed};
       }
     }
     return [diff];
@@ -380,12 +383,36 @@ export class Table extends UserTable {
       for (let i = 0; i <= bottom - top; i++) {
         for (let j = 0; j <= right - left; j++) {
           const [y, x] = [top + i, left + j];
-          diff.put(i, j, {...this.cells[y][x]});
+          diff.put(i, j, {...this.data[y][x]});
         }
       }
       diffs.push(diff);
     })
 
     return diffs;
+  }
+  public diffWithCells(cells: CellsType) {
+    let [bottom, right, top, left] = this.area;
+    Object.entries(cells).map(([cellId, cell]) => {
+      const [y, x] = cellToIndexes(cellId);
+      if (top > y) {top = y;}
+      if (left > x) {left = x;}
+      if (bottom < y) {bottom = y;}
+      if (right < x) {right = x;}
+    });
+
+    const [numRows, numCols] = [bottom - top, right - left];
+    const diff = new Table(numRows, numCols);
+    diff.area = [top, left, bottom, right];
+
+    Object.entries(cells).map(([cellId, b]) => {
+      const [y, x] = cellToIndexes(cellId);
+      const a = this.get(y, x);
+      const cell = {...a, ...b,
+        style: {...a?.style, ...b?.style},
+      }
+      diff.put(y - top, x - left, cell);
+    });
+    return diff;
   }
 };

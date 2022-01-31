@@ -1,5 +1,5 @@
 import React from "react";
-import { WriterType } from "../types";
+import { CellType, WriterType } from "../types";
 
 type Condition = (value: any) => boolean;
 type Stringify = (value: any) => string;
@@ -22,7 +22,8 @@ export class Renderer {
     this.complement = complement;
   }
 
-  public render (value: any, writer?: WriterType): any {
+  public render (cell: CellType, writer?: WriterType): any {
+    const { value } = cell;
     if (this.condition && !this.condition(value)) {
       return this.complement ? this.complement(value) : this.stringify(value);
     }
@@ -53,7 +54,8 @@ export class Renderer {
     return "";
   }
 
-  public stringify(value: any): string {
+  public stringify(cell: CellType): string {
+    const { value } = cell;
     if (value instanceof Date) {
       return this.date(value);
     }
@@ -72,7 +74,7 @@ export class Renderer {
 
   protected bool (value: boolean, writer?: WriterType): any {
     return (
-      <input 
+      <input
         type="checkbox"
         checked={value}
         onChange={(e) => {
@@ -87,12 +89,7 @@ export class Renderer {
     if (isNaN(value)) {
       return "NaN";
     }
-    const [int, fraction] = String(value).split(".");
-    const result = int.replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
-    if (fraction == null) {
-      return result;
-    }
-    return `${result}.${fraction}`;
+    return value;
   }
 
   protected date (value: Date, writer?: WriterType): any {
@@ -103,11 +100,11 @@ export class Renderer {
   }
 
   protected array (value: any[], writer?: WriterType): any {
-    return  value.map((v) => this.stringify(v)).join(",");
+    return  value.map((v) => this.stringify({value: v})).join(",");
   }
-  
+
   protected object (value: any, writer?: WriterType): any {
-    return "{}";
+    return JSON.stringify(value);
   }
 
   protected null (value: null, writer?: WriterType): any {

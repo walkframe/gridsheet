@@ -46,7 +46,9 @@ export type CellType = {
   height?: number;
   renderer?: string;
   parser?: string;
+  custom?: any;
 };
+export type DataType = (CellType | null)[][];
 export type CellsType = {[s: string]: CellType};
 
 export type OptionsType = {
@@ -100,13 +102,11 @@ export type OperationType = {
   cutting?: boolean;
 };
 
-export type Address = bigint;
-export type AddressTable = (string | null)[][];
-
 export type WriterType = (value: string) => void;
 
 export type StoreType = {
   table: Table;
+  tableInitialized: boolean;
   sheetRef: React.MutableRefObject<HTMLDivElement>;
   editorRef: React.MutableRefObject<HTMLTextAreaElement>;
   gridOuterRef: React.MutableRefObject<HTMLDivElement>;
@@ -142,6 +142,7 @@ export type StoreType = {
 
 export type Props = {
   initial?: CellsType;
+  difference?: CellsType;
   options?: OptionsType;
   className?: string;
   style?: React.CSSProperties;
