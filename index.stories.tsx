@@ -142,9 +142,10 @@ const initialCells = matrixIntoCells(createMatrix(1000, 50), {})
 export const showIndex = () => {
   let [num, setNum] = React.useState(1);
   React.useEffect(() => {
-    setInterval(() => {
+    const id = setInterval(() => {
       setNum(++num);
     }, 3000);
+    return () => clearInterval(id);
   });
 
   return (
