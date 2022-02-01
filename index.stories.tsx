@@ -321,7 +321,7 @@ export const showIndex = () => {
       <GridSheet
         style={{ maxWidth: "100%", maxHeight: "150px" }}
         initial={initialCells}
-        difference={{
+        changes={{
           B2: { value: num },
         }}
         options={{ sheetResize: "both" }}

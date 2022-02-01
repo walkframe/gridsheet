@@ -20,7 +20,7 @@ import { GridTable } from "./GridTable";
 
 export const GridSheet: React.FC<Props> = ({
   initial,
-  difference,
+  changes,
   options = {},
   className,
   style,
@@ -107,7 +107,7 @@ export const GridSheet: React.FC<Props> = ({
         <GridTable />
         <StoreInitializer
           initial={initial}
-          difference={difference}
+          changes={changes}
           options={{ ...options, sheetHeight, sheetWidth }}
         />
         <ContextMenu />

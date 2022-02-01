@@ -22,7 +22,7 @@ import { Table } from "../api/tables";
 
 export const StoreInitializer: React.FC<Props> = ({
   initial = {},
-  difference,
+  changes,
   options = {}
 }) => {
   const {
@@ -49,16 +49,16 @@ export const StoreInitializer: React.FC<Props> = ({
     dispatch(initHistory(historySize));
   }, []);
   React.useEffect(() => {
-    if (difference == null) {
+    if (changes == null) {
       return;
     }
     const { table, tableInitialized } = store;
     if (!tableInitialized) {
       return;
     }
-    const diff = table.diffWithCells(difference);
+    const diff = table.diffWithCells(changes);
     dispatch(updateTable(diff))
-  }, [difference]);
+  }, [changes]);
   React.useEffect(() => {
     if (sheetHeight) {
       dispatch(setSheetHeight(sheetHeight));

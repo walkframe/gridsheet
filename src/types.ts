@@ -142,7 +142,7 @@ export type StoreType = {
 
 export type Props = {
   initial?: CellsType;
-  difference?: CellsType;
+  changes?: CellsType;
   options?: OptionsType;
   className?: string;
   style?: React.CSSProperties;
