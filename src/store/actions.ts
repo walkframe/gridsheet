@@ -800,15 +800,14 @@ class RemoveRowsAction<
   reduce(store: StoreType, payload: T): StoreType {
     const { table, history } = store;
     const { numRows, y } = payload;
-    const before = table.copy([y, 0, y + numRows - 1, table.numCols()]);
+    const deleted = table.copy([y, 0, y + numRows - 1, table.numCols()]);
     table.removeRows(y, numRows);
     return {
       ...store,
       table: table.copy(),
-
       history: pushHistory(history, {
         command: "REMOVE_ROWS",
-        before,
+        before: [deleted],
         after: {y, numRows},
       }),
     };
@@ -826,14 +825,14 @@ class RemoveColsAction<
   reduce(store: StoreType, payload: T): StoreType {
     const { table, history } = store;
     const { numCols, x } = payload;
-    const before = table.copy([0, x, table.numRows(), x + numCols - 1]);
+    const deleted = table.copy([0, x, table.numRows(), x + numCols - 1]);
     table.removeCols(x, numCols);
     return {
       ...store,
       table: table.copy(),
       history: pushHistory(history, {
         command: "REMOVE_COLS",
-        before,
+        before: [deleted],
         after: {x, numCols},
       }),
     };
