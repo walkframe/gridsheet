@@ -52,7 +52,7 @@ export const CellLayout = styled.div`
       background-color: rgba(0, 255, 128, 0.2);
     }
     &.gs-searching {
-      border: solid 2px #00ff77;
+      border: solid 2px rgb(0, 180, 100);
     }
   }
   .gs-cell-rendered-wrapper-inner {
