@@ -15,8 +15,7 @@ export class Parser {
       if (token == null) {
         return exprs;
       } else if (token instanceof Operator) {
-        const left = exprs.pop();
-        const call = [token.toFunction(), left];
+        const call = [token.toFunction(), exprs.pop()];
         exprs.push(call);
         const next2 = tokens[1];
         if (next2 instanceof Operator && token.precedence >= next2.precedence) {
@@ -29,6 +28,7 @@ export class Parser {
         } else {
           const rights = this.parse(tokens);
           call.push(rights.shift());
+          exprs.push(...rights);
         }
       } else if (Array.isArray(token)) {
         const expr = this.parse(token);
