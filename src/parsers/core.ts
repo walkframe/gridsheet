@@ -73,7 +73,10 @@ export class Parser {
 
   protected date (value: string, cell: CellType): Date | undefined {
     const first = value[0];
-    if (first == null || !first.match(/[JFMSOND0-9]/)) {
+    if (first == null || first.match(/[JFMASOND0-9]/) == null) {
+      return;
+    }
+    if (value[value.length - 1].match(/[0-9]/) == null) {
       return;
     }
     let timeZone = "UTC";
