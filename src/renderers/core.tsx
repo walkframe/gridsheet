@@ -1,3 +1,6 @@
+import { Lexer } from "../formula/lexer";
+import { Parser  } from "../formula/parser";
+import { call } from "../formula/caller";
 import React from "react";
 import { CellType, WriterType } from "../types";
 
@@ -68,6 +71,13 @@ export class Renderer {
   protected string (value: string, writer?: WriterType): any {
     if (value[0] === "'") {
       return value.substring(1);
+    }
+    if (value[0] === "=") {
+      const lexer = new Lexer(value.substring(1));
+      const tokens = lexer.tokenize();
+      const parser = new Parser(tokens);
+      const expr = parser.parse();
+      return call(expr);
     }
     return value;
   }

@@ -9,10 +9,7 @@ export const
   LT = "lt",
   GTE = "gte",
   LTE = "lte",
-  NE = "ne",
-  COMMA = ",",
-  LPAREN = "(",
-  RPAREN = ")"
+  NE = "ne"
 ;
 
 export class Variable {
@@ -85,7 +82,7 @@ export class Lexer {
           this.tokenize(tokens[tokens.length - 1]);
           continue;
         case ")":
-          return;
+          return tokens;
         case ",":
           continue;
         case "+":

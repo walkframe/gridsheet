@@ -4,11 +4,19 @@ export class FormulaError {
 
 }
 
+const flatten = (a: any[]) => {
+  return a.length === 1 && Array.isArray(a[0]) ? a[0] : a;
+}
+
 export class Parser {
   constructor(public tokens: any[]) {
     this.tokens = tokens;
   }
-  public parse(tokens: any[]) {
+  public parse() {
+    return this._parse(this.tokens)[0];
+  }
+
+  private _parse(tokens: any[]) {
     const exprs: any[] = [];
     while (tokens.length) {
       const token = tokens.shift();
@@ -21,23 +29,22 @@ export class Parser {
         if (next2 instanceof Operator && token.precedence >= next2.precedence) {
           const next1 = tokens.shift();
           if (Array.isArray(next1)) {
-            call.push(this.parse(next1));
+            call.push(flatten(this._parse(next1)));
           } else {
             call.push(next1);
           }
         } else {
-          const rights = this.parse(tokens);
+          const rights = this._parse(tokens);
           call.push(rights.shift());
           exprs.push(...rights);
         }
       } else if (Array.isArray(token)) {
-        const expr = this.parse(token);
-        exprs.push(expr);
+        const expr = this._parse(token);
+        exprs.push(flatten(expr));
       } else {
         exprs.push(token);
       }
     }
-
     return exprs;
   }
 }
