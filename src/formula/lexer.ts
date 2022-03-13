@@ -10,25 +10,37 @@ export const
   GTE = "gte",
   LTE = "lte",
   NE = "ne",
-  COMMA = "comma"
+  COMMA = ",",
+  LPAREN = "(",
+  RPAREN = ")"
 ;
 
-export class Function {
-  constructor(public name: string, public expr?: string) {
+export class Variable {
+  constructor(public data?: string | number, public ref?: string) {
+    this.data = data;
+    this.ref = ref;
+  }
+  public get() {
+    if (this.data) {
+      return this.data;
+    }
+  }
+}
+
+export class Operator {
+  constructor(public name: string, public symbol?: string, public precedence: number = 0) {
     this.name = name;
-    this.expr = expr;
+    this.symbol = symbol;
+    this.precedence = precedence;
+  }
+  public toFunction() {
+    return new Function(this.name);
   }
 }
 
-export class Reference {
-  constructor(public scope: string) {
-    this.scope = scope;
-  }
-}
-
-export class Block {
-  constructor(public type: "lparen" | "rparen") {
-    this.type = type;
+export class Function {
+  constructor(public name: string) {
+    this.name = name;
   }
 }
 
@@ -38,23 +50,12 @@ const isWhiteSpace = (char: string) => {
 
 export class Lexer {
   private index: number;
-  public tokens: any[];
   public whitespaces: {[s: string]: string} = {};
 
   constructor(private formula: string) {
     this.formula = formula;
     this.index = 0;
-    this.tokens = [];
     this.whitespaces = {};
-  }
-  public tokenize() {
-    while (this.index <= this.formula.length) {
-      const token = this.getToken();
-      if (token != null) {
-        this.tokens.push(token);
-      }
-    }
-    return this.tokens;
   }
 
   private isWhiteSpace() {
@@ -65,97 +66,123 @@ export class Lexer {
     this.index += base;
   }
 
-  private getAndNext(base = 1) {
-    const c = this.formula[this.index];
-    this.index += base;
-    return c;
-  }
-
-  private getChar(base = 0, next=false) {
+  private get(base = 0) {
     const c = this.formula[this.index + base];
-    if (next) {
-      this.index += base;
-    }
     return c;
   }
 
-  private getToken() {
-    let space: string = ""
+  public tokenize(tokens: any[] = []) {
+    while (this.index <= this.formula.length) {
+      this.skipSpaces();
+
+      const char = this.get();
+      this.next();
+      switch (char) {
+        case undefined:
+          return tokens;
+        case "(":
+          tokens.push([]);
+          this.tokenize(tokens[tokens.length - 1]);
+          continue;
+        case ")":
+          return;
+        case ",":
+          continue;
+        case "+":
+          tokens.push(new Operator(ADD, "+", 3));
+          continue;
+        case "-":
+          tokens.push(new Operator(MINUS, "-", 3));
+          continue;
+        case "/":
+          tokens.push(new Operator(DIVIDE, "/", 4));
+          continue;
+        case "*":
+          tokens.push(new Operator(MULTIPLY, "*", 4));
+          continue;
+        case "&":
+          tokens.push(new Operator(CONCATENATE, "&", 3));
+          continue;
+        case "=":
+          tokens.push(new Operator(EQ, "=", 1));
+          continue;
+        case ">":
+          if (this.get() === "=") {
+            this.next();
+            tokens.push(new Operator(GTE, ">=", 2));
+            continue;
+          }
+          tokens.push(new Operator(GT, ">", 2));
+          continue;
+        case "<":
+          if (this.get() === "=") {
+            this.next();
+            tokens.push(new Operator(LTE, "<=", 2));
+            continue;
+          }
+          if (this.get() === ">") {
+            this.next();
+            tokens.push(new Operator(NE, "<>", 1));
+            continue;
+          }
+          tokens.push(new Operator(LT, "<", 2));
+          continue;
+        case '"':
+          this.next();
+          const buf = this.getString();
+          tokens.push(new Variable(buf));
+          continue;
+        default:
+          {
+            let buf = char;
+            while (true) {
+              const c = this.get();
+              if (c === "(") {
+                tokens.push([new Function(buf)]);
+                this.next();
+                this.tokenize(tokens[tokens.length - 1]);
+                break;
+              }
+              if (c == null || c.match(/[ +-/*&=<>),]/)) {
+                if (buf) {
+                  const n = parseInt(buf, 10);
+                  tokens.push(isNaN(n) ? new Variable(undefined, buf) : new Variable(n));
+                }
+                break;
+              }
+              buf += c;
+              this.next();
+            }
+          }
+      }
+    }
+    return tokens;
+  }
+  private skipSpaces() {
+    let space: string = "";
     while (this.isWhiteSpace()) {
       space += this.formula[this.index++];
     }
     if (space !== "") {
       this.whitespaces[this.index - space.length] = space;
     }
-    const char = this.getAndNext();
-    switch (char) {
-      case "(":
-        return new Block("lparen");
-      case ")":
-        return new Block("rparen");
-      case ",":
-        return;
-      case "+":
-        return new Function(ADD, "+");
-      case "-":
-        return new Function(MINUS, "-");
-      case "/":
-        return new Function(DIVIDE, "/");
-      case "*":
-        return new Function(MULTIPLY, "*");
-      case "&":
-        return new Function(CONCATENATE, "&");
-      case "=":
-        return new Function(EQ, "=");
-      case ">":
-        if (this.getChar(1) === "=") {
-          this.next();
-          return new Function(GTE, ">=");
-        }
-        return new Function(GT, ">");
-      case "<":
-        if (this.getChar(1) === "=") {
-          this.next();
-          return new Function(LTE, "<=");
-        }
-        if (this.getChar(1) === ">") {
-          this.next();
-          return new Function(NE, "<>");
-        }
-        return new Function(LT, "<");
-      case '"':
-        let buf = this.getAndNext();
-        while (true) {
-          if (this.getChar() === '"') {
-            if (this.getChar(1) === '"') {
-              // escape
-              buf += '"';
-              this.next(2);
-              continue;
-            } else {
-              this.next();
-              break;
-            }
-          }
-          buf += this.getAndNext();
-        }
-        return buf;
-    }
-    let buf = char;
+  }
+
+  private getString() {
+    let buf = "";
     while (true) {
-      const c = this.getChar();
-      if (c === "(") {
-        return new Function(buf);
-      }
-      if (c == null || c.match(/[ +-/*&=<>),]/)) {
-        if (!buf) {
-          return;
+      if (this.get() === '"') {
+        if (this.get(1) === '"') {
+          // escape
+          buf += '"';
+          this.next(2);
+          continue;
+        } else {
+          this.next();
+          break;
         }
-        const n = parseInt(buf, 10);
-        return isNaN(n) ? new Reference(buf) : n;
       }
-      buf += c;
-      this.next();
     }
+    return buf;
   }
 }
