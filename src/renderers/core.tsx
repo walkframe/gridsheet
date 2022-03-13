@@ -3,6 +3,7 @@ import { Parser  } from "../formula/parser";
 import { call } from "../formula/caller";
 import React from "react";
 import { CellType, WriterType } from "../types";
+import { UserTable } from "api/tables";
 
 type Condition = (value: any) => boolean;
 type Stringify = (value: any) => string;
@@ -25,8 +26,9 @@ export class Renderer {
     this.complement = complement;
   }
 
-  public render (cell: CellType, writer?: WriterType): any {
-    const { value } = cell;
+  public render (table: UserTable, y: number, x: number, writer?: WriterType): any {
+    const cell = table.get(y, x);
+    const { value } = cell || {};
     if (this.condition && !this.condition(value)) {
       return this.complement ? this.complement(value) : this.stringify(value);
     }
@@ -44,7 +46,7 @@ export class Renderer {
         }
         return this.object(value, writer);
       case "string":
-        return this.string(value, writer);
+        return this.string(value, table, writer);
       case "number":
         return this.number(value, writer);
       case "function":
@@ -68,7 +70,7 @@ export class Renderer {
     return value.toString();
   }
 
-  protected string (value: string, writer?: WriterType): any {
+  protected string (value: string, table: UserTable, writer?: WriterType): any {
     if (value[0] === "'") {
       return value.substring(1);
     }
@@ -77,7 +79,7 @@ export class Renderer {
       const tokens = lexer.tokenize();
       const parser = new Parser(tokens);
       const expr = parser.parse();
-      return call(expr);
+      return call(expr, table);
     }
     return value;
   }

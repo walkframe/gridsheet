@@ -1,4 +1,4 @@
-import { Operator } from "./lexer";
+import { Operator, Variable } from "./lexer";
 
 export class FormulaError {
 
@@ -23,7 +23,7 @@ export class Parser {
       if (token == null) {
         return exprs;
       } else if (token instanceof Operator) {
-        const call = [token.toFunction(), exprs.pop()];
+        const call = [token.toFunction(), exprs.pop() || new Variable(0)];
         exprs.push(call);
         const next2 = tokens[1];
         if (next2 instanceof Operator && token.precedence >= next2.precedence) {

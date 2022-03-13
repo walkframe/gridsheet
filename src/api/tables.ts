@@ -193,7 +193,7 @@ export class UserTable {
   public render(y: number, x: number, writer?: WriterType) {
     const cell = this.get(y, x) || {};
     const renderer = this.renderers[cell.renderer || ""] || defaultRenderer;
-    return renderer.render(cell || {}, writer);
+    return renderer.render(this, y, x, writer);
   }
   public stringify(y: number, x: number, value?: any) {
     const cell = this.get(y, x);

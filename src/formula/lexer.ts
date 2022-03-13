@@ -1,3 +1,6 @@
+import { cellToIndexes } from "../api/converters";
+import { UserTable } from "../api/tables";
+
 export const
   ADD = "add",
   MINUS = "minus",
@@ -17,9 +20,13 @@ export class Variable {
     this.data = data;
     this.ref = ref;
   }
-  public get() {
-    if (this.data) {
+  public get(table: UserTable) {
+    if (this.data != null) {
       return this.data;
+    }
+    if (this.ref != null) {
+      const [y, x] = cellToIndexes(this.ref.toUpperCase());
+      return table.get(y, x)?.value || 0;
     }
   }
 }
