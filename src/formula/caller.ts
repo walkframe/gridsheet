@@ -11,11 +11,12 @@ export const call = (vs: any[], table: UserTable) => {
       return v.get(table);
     }
   });
+  const name = f.name.toLocaleLowerCase();
   // @ts-ignore
-  if (functions[f.name] == null) {
+  if (functions[name] == null) {
     // TODO: error
     return 0;
   }
   // @ts-ignore
-  return functions[f.name](...args);
+  return functions[name](...args);
 };

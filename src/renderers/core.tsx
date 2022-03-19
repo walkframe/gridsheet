@@ -3,7 +3,7 @@ import { Parser  } from "../formula/parser";
 import { call } from "../formula/caller";
 import React from "react";
 import { CellType, WriterType } from "../types";
-import { UserTable } from "api/tables";
+import { UserTable } from "../api/tables";
 
 type Condition = (value: any) => boolean;
 type Stringify = (value: any) => string;
