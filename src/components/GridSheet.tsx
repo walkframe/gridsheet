@@ -25,10 +25,7 @@ export const GridSheet: React.FC<Props> = ({
   className,
   style,
 }) => {
-  const {
-    numRows = 0, numCols = 0,
-    sheetResize: resize = "both",
-  } = options;
+  const { numRows = 0, numCols = 0, sheetResize: resize = "both" } = options;
 
   const sheetRef = React.useRef<HTMLDivElement>(document.createElement("div"));
   const searchInputRef = React.useRef<HTMLInputElement>(
@@ -93,10 +90,16 @@ export const GridSheet: React.FC<Props> = ({
       if (sheetRef.current?.clientWidth) {
         setSheetWidth(sheetRef.current?.clientWidth);
       }
-    }, 700);
+    }, 700000);
   }, []);
 
-  const { onChange, onChangeDiff, onChangeDiffNumMatrix, onSelect, mode } = options;
+  const {
+    onChange,
+    onChangeDiff,
+    onChangeDiffNumMatrix,
+    onSelect,
+    mode,
+  } = options;
   return (
     <GridSheetLayout
       ref={sheetRef}
@@ -112,7 +115,12 @@ export const GridSheet: React.FC<Props> = ({
         />
         <ContextMenu />
         <Resizer />
-        <Emitter onChange={onChange} onChangeDiff={onChangeDiff} onChangeDiffNumMatrix={onChangeDiffNumMatrix} onSelect={onSelect} />
+        <Emitter
+          onChange={onChange}
+          onChangeDiff={onChangeDiff}
+          onChangeDiffNumMatrix={onChangeDiffNumMatrix}
+          onSelect={onSelect}
+        />
       </Context.Provider>
     </GridSheetLayout>
   );

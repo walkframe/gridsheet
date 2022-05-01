@@ -1,8 +1,7 @@
 import { cellToIndexes } from "../api/converters";
 import { UserTable } from "../api/tables";
 
-export const
-  ADD = "add",
+export const ADD = "add",
   MINUS = "minus",
   DIVIDE = "divide",
   MULTIPLY = "multiply",
@@ -12,29 +11,56 @@ export const
   LT = "lt",
   GTE = "gte",
   LTE = "lte",
-  NE = "ne"
-;
+  NE = "ne";
 
-export class Variable {
-  constructor(public data?: string | number, public ref?: string) {
+export type TokenType =
+  | "VALUE"
+  | "REF"
+  | "FUNCTION"
+  | "OPERATOR"
+  | "PAREN_S"
+  | "PAREN_E"
+  | "COMMA";
+
+const FUNCTION_NAME_MAP = {
+  "+": "add",
+  "-": "minus",
+  "/": "divide",
+  "*": "multiply",
+  "&": "concatenate",
+  "=": "eq",
+  ">": "gt",
+  ">=": "gte",
+  "<": "lt",
+  "<=": "lte",
+  "<>": "ne",
+};
+
+export class Value {
+  constructor(public data?: string | number) {
     this.data = data;
+  }
+  public get() {
+    return this.data;
+  }
+}
+
+export class Ref {
+  constructor(public ref: string) {
     this.ref = ref;
   }
   public get(table: UserTable) {
-    if (this.data != null) {
-      return this.data;
-    }
-    if (this.ref != null) {
-      const [y, x] = cellToIndexes(this.ref.toUpperCase());
-      return table.get(y, x)?.value || 0;
-    }
+    const [y, x] = cellToIndexes(this.ref.toUpperCase());
+    return table.get(y, x)?.value || 0;
   }
 }
 
 export class Operator {
-  constructor(public name: string, public symbol?: string, public precedence: number = 0) {
+  public left?: any;
+  public right?: any;
+
+  constructor(public name: string, public precedence: number) {
     this.name = name;
-    this.symbol = symbol;
     this.precedence = precedence;
   }
   public toFunction() {
@@ -48,18 +74,49 @@ export class Function {
   }
 }
 
+export class Token {
+  type: TokenType;
+  entity: any;
+  precedence: number;
+
+  constructor(type: TokenType, entity: any, precedence = 0) {
+    this.type = type;
+    this.entity = entity;
+    this.precedence = precedence;
+  }
+
+  public convert() {
+    switch (this.type) {
+      case "VALUE":
+        return new Value(this.entity);
+      case "FUNCTION":
+        return new Ref(this.entity);
+      case "OPERATOR": {
+        const name =
+          FUNCTION_NAME_MAP[this.entity as keyof typeof FUNCTION_NAME_MAP];
+
+        return new Operator(name, this.precedence);
+      }
+      case "FUNCTION":
+        return new Function(this.entity);
+    }
+  }
+}
+
 const isWhiteSpace = (char: string) => {
   return char === " " || char === "\n" || char === "\t";
-}
+};
 
 export class Lexer {
   private index: number;
-  public whitespaces: {[s: string]: string} = {};
+  public whitespaces: { [s: string]: string } = {};
+  public tokens: Token[] = [];
 
   constructor(private formula: string) {
     this.formula = formula;
     this.index = 0;
     this.whitespaces = {};
+    this.tokens = [];
   }
 
   private isWhiteSpace() {
@@ -75,92 +132,96 @@ export class Lexer {
     return c;
   }
 
-  public tokenize(tokens: any[] = []) {
+  public tokenize() {
     while (this.index <= this.formula.length) {
       this.skipSpaces();
-
       const char = this.get();
       this.next();
       switch (char) {
         case undefined:
-          return tokens;
+          return;
         case "(":
-          tokens.push([]);
-          this.tokenize(tokens[tokens.length - 1]);
+          this.tokens.push(new Token("PAREN_S", char));
           continue;
         case ")":
-          return tokens;
+          this.tokens.push(new Token("PAREN_E", char));
+          continue;
         case ",":
+          this.tokens.push(new Token("COMMA", char));
           continue;
         case "+":
-          tokens.push(new Operator(ADD, "+", 3));
+          this.tokens.push(new Token("OPERATOR", char, 3));
           continue;
         case "-":
-          tokens.push(new Operator(MINUS, "-", 3));
+          this.tokens.push(new Token("OPERATOR", char, 3));
           continue;
         case "/":
-          tokens.push(new Operator(DIVIDE, "/", 4));
+          this.tokens.push(new Token("OPERATOR", char, 4));
           continue;
         case "*":
-          tokens.push(new Operator(MULTIPLY, "*", 4));
+          this.tokens.push(new Token("OPERATOR", char, 4));
           continue;
         case "&":
-          tokens.push(new Operator(CONCATENATE, "&", 3));
+          this.tokens.push(new Token("OPERATOR", char, 4));
           continue;
         case "=":
-          tokens.push(new Operator(EQ, "=", 1));
+          this.tokens.push(new Token("OPERATOR", char, 1));
           continue;
         case ">":
           if (this.get() === "=") {
             this.next();
-            tokens.push(new Operator(GTE, ">=", 2));
+            this.tokens.push(new Token("OPERATOR", ">=", 2));
             continue;
           }
-          tokens.push(new Operator(GT, ">", 2));
+          this.tokens.push(new Token("OPERATOR", ">", 2));
           continue;
         case "<":
           if (this.get() === "=") {
             this.next();
-            tokens.push(new Operator(LTE, "<=", 2));
+            this.tokens.push(new Token("OPERATOR", "<=", 2));
             continue;
           }
           if (this.get() === ">") {
             this.next();
-            tokens.push(new Operator(NE, "<>", 1));
+            this.tokens.push(new Token("OPERATOR", "<>", 1));
             continue;
           }
-          tokens.push(new Operator(LT, "<", 2));
+          this.tokens.push(new Token("OPERATOR", "<", 2));
           continue;
         case '"':
           this.next();
           const buf = this.getString();
-          tokens.push(new Variable(buf));
+          this.tokens.push(new Token("VALUE", buf));
           continue;
-        default:
-          {
-            let buf = char;
-            while (true) {
-              const c = this.get();
-              if (c === "(") {
-                tokens.push([new Function(buf)]);
-                this.next();
-                this.tokenize(tokens[tokens.length - 1]);
-                break;
-              }
-              if (c == null || c.match(/[ +-/*&=<>),]/)) {
-                if (buf) {
-                  const n = parseInt(buf, 10);
-                  tokens.push(isNaN(n) ? new Variable(undefined, buf) : new Variable(n));
-                }
-                break;
-              }
-              buf += c;
+        default: {
+          let buf = char;
+          while (true) {
+            const c = this.get();
+            if (c === "(") {
+              this.tokens.push(
+                new Token("FUNCTION", buf),
+                new Token("PAREN_S", "(")
+              );
               this.next();
+              break;
             }
+            if (c == null || c.match(/[ +-/*&=<>),]/)) {
+              if (buf) {
+                const n = parseInt(buf, 10);
+                if (isNaN(n)) {
+                  this.tokens.push(new Token("REF", buf));
+                } else {
+                  this.tokens.push(new Token("VALUE", n));
+                }
+              }
+              break;
+            }
+            buf += c;
+            this.next();
           }
+        }
       }
     }
-    return tokens;
   }
   private skipSpaces() {
     let space: string = "";

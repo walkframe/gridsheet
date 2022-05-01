@@ -1,5 +1,5 @@
 import { Lexer } from "../formula/lexer";
-import { Parser  } from "../formula/parser";
+import { Parser } from "../formula/parser";
 import { call } from "../formula/caller";
 import React from "react";
 import { CellType, WriterType } from "../types";
@@ -11,7 +11,7 @@ type Stringify = (value: any) => string;
 type Props = {
   condition?: Condition;
   complement?: Stringify;
-}
+};
 
 export class Renderer {
   private condition?: Condition;
@@ -26,7 +26,12 @@ export class Renderer {
     this.complement = complement;
   }
 
-  public render (table: UserTable, y: number, x: number, writer?: WriterType): any {
+  public render(
+    table: UserTable,
+    y: number,
+    x: number,
+    writer?: WriterType
+  ): any {
     const cell = table.get(y, x);
     const { value } = cell || {};
     if (this.condition && !this.condition(value)) {
@@ -70,21 +75,22 @@ export class Renderer {
     return value.toString();
   }
 
-  protected string (value: string, table: UserTable, writer?: WriterType): any {
+  protected string(value: string, table: UserTable, writer?: WriterType): any {
     if (value[0] === "'") {
       return value.substring(1);
     }
     if (value[0] === "=") {
       const lexer = new Lexer(value.substring(1));
-      const tokens = lexer.tokenize();
-      const parser = new Parser(tokens);
-      const expr = parser.parse();
-      return call(expr, table);
+      lexer.tokenize();
+      console.log([...lexer.tokens]);
+      const parser = new Parser(lexer.tokens);
+      const parsed = parser.parse();
+      console.log(parsed);
     }
     return value;
   }
 
-  protected bool (value: boolean, writer?: WriterType): any {
+  protected bool(value: boolean, writer?: WriterType): any {
     return (
       <input
         type="checkbox"
@@ -97,35 +103,35 @@ export class Renderer {
     );
   }
 
-  protected number (value: number, writer?: WriterType): any {
+  protected number(value: number, writer?: WriterType): any {
     if (isNaN(value)) {
       return "NaN";
     }
     return value;
   }
 
-  protected date (value: Date, writer?: WriterType): any {
+  protected date(value: Date, writer?: WriterType): any {
     if (value.getHours() + value.getMinutes() + value.getSeconds() === 0) {
       return value.toLocaleDateString();
     }
     return value.toLocaleString();
   }
 
-  protected array (value: any[], writer?: WriterType): any {
-    return  value.map((v) => this.stringify({value: v})).join(",");
+  protected array(value: any[], writer?: WriterType): any {
+    return value.map((v) => this.stringify({ value: v })).join(",");
   }
 
-  protected object (value: any, writer?: WriterType): any {
+  protected object(value: any, writer?: WriterType): any {
     return JSON.stringify(value);
   }
 
-  protected null (value: null, writer?: WriterType): any {
+  protected null(value: null, writer?: WriterType): any {
     return "";
   }
-  protected undefined (value: undefined, writer?: WriterType): any {
+  protected undefined(value: undefined, writer?: WriterType): any {
     return "";
   }
-};
+}
 
 export type RendererType = Renderer;
 export const defaultRenderer = new Renderer();

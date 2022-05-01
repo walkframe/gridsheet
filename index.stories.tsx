@@ -5,7 +5,7 @@ import { defaultParser } from "./src/parsers/core";
 import { defaultRenderer } from "./src/renderers/core";
 import { CellType } from "./src/types";
 
-type Obj = {v: any};
+type Obj = { v: any };
 
 class ObjectRenderer extends Renderer {
   object(cell: CellType): any {
@@ -20,10 +20,10 @@ class ObjectRenderer extends Renderer {
 
 class ObjectParser<T extends Obj> extends Parser {
   callback(value: any, cell: CellType): T {
-    console.log("callback", value, "=>", {v: value});
+    console.log("callback", value, "=>", { v: value });
     return value;
   }
-};
+}
 
 class KanjiRenderer extends Renderer {
   protected kanjiMap: { [s: string]: string } = {
@@ -137,16 +137,10 @@ const initialData = [
   [false, "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
 ];
 
-const initialCells = matrixIntoCells(createMatrix(1000, 50), {})
+const initialCells = matrixIntoCells(createMatrix(1000, 50), {});
 
 export const showIndex = () => {
   let [num, setNum] = React.useState(1);
-  React.useEffect(() => {
-    const id = setInterval(() => {
-      setNum(++num);
-    }, 3000);
-    return () => clearInterval(id);
-  });
 
   return (
     <>
@@ -203,6 +197,7 @@ export const showIndex = () => {
           historySize: 100,
           mode: "dark",
           //stickyHeaders: "horizontal",
+          /*
           onSave: (table, positions) => {
             console.log(
               "matrix on save:",
@@ -233,6 +228,7 @@ export const showIndex = () => {
           onSelect: (table, positions) => {
             console.log("positions on select", positions)
           },
+          */
           renderers: {
             kanji: new KanjiRenderer(),
           },
@@ -250,7 +246,14 @@ export const showIndex = () => {
                 {" "}
                 <GridSheet
                   style={{ maxWidth: "100%", maxHeight: "150px" }}
-                  initial={matrixIntoCells([["resizable", "both", "!"], [1, 2, 3], [undefined, 5, 6]], {A3: {value: "four"}})}
+                  initial={matrixIntoCells(
+                    [
+                      ["resizable", "both", "!"],
+                      [1, 2, 3],
+                      [undefined, 5, 6],
+                    ],
+                    { A3: { value: "four" } }
+                  )}
                   options={{ sheetResize: "both" }}
                 />
               </td>
@@ -258,7 +261,14 @@ export const showIndex = () => {
                 {" "}
                 <GridSheet
                   style={{ maxWidth: "100%", maxHeight: "150px" }}
-                  initial={matrixIntoCells([["resizable", "vertically", "!"], [1, 2, 3], [4, undefined, 6]], {B3: {value: "five"}})}
+                  initial={matrixIntoCells(
+                    [
+                      ["resizable", "vertically", "!"],
+                      [1, 2, 3],
+                      [4, undefined, 6],
+                    ],
+                    { B3: { value: "five" } }
+                  )}
                   options={{ sheetResize: "vertical" }}
                 />
               </td>
@@ -268,7 +278,14 @@ export const showIndex = () => {
                 {" "}
                 <GridSheet
                   style={{ maxWidth: "100%", maxHeight: "150px" }}
-                  initial={matrixIntoCells([["resizable", "horizontally", "!"], [1, 2, 3], [4, 5, undefined]], {C3: {value: "six"}})}
+                  initial={matrixIntoCells(
+                    [
+                      ["resizable", "horizontally", "!"],
+                      [1, 2, 3],
+                      [4, 5, undefined],
+                    ],
+                    { C3: { value: "six" } }
+                  )}
                   options={{ sheetResize: "horizontal" }}
                 />
               </td>
@@ -276,7 +293,14 @@ export const showIndex = () => {
                 {" "}
                 <GridSheet
                   style={{ maxWidth: "100%", maxHeight: "150px" }}
-                  initial={matrixIntoCells([["not", "resizable", "!!!"], [1, 2, 3], [4, 5, 6]], {A3: {value: "four"}})}
+                  initial={matrixIntoCells(
+                    [
+                      ["not", "resizable", "!!!"],
+                      [1, 2, 3],
+                      [4, 5, 6],
+                    ],
+                    { A3: { value: "four" } }
+                  )}
                   options={{ sheetResize: "none" }}
                 />
               </td>
@@ -311,10 +335,7 @@ export const showIndex = () => {
             }
           },
           onChangeDiff: (table, positions) => {
-            console.log(
-              "matrix on change diff:",
-              table.objectFlatten(),
-            );
+            console.log("matrix on change diff:", table.objectFlatten());
           },
         }}
       />
