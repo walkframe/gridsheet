@@ -89,7 +89,7 @@ export class Token {
     switch (this.type) {
       case "VALUE":
         return new Value(this.entity);
-      case "FUNCTION":
+      case "REF":
         return new Ref(this.entity);
       case "OPERATOR": {
         const name =

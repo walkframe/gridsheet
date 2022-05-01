@@ -44,68 +44,55 @@ export class Parser {
     let lastOperator: undefined | Operator = undefined;
     while (this.tokens.length) {
       const token = this.get(this.index++);
-      switch (token?.type) {
-        case undefined:
-          if (stack.length) {
-            if (lastOperator) {
-              lastOperator.right = stack.pop();
-            }
-          }
-          return result;
-        case "COMMA":
-          continue;
-        case "VALUE":
-          const value = token.convert();
-          if (result == null) {
-            result = value;
-          }
-          stack.push(value);
-          break;
-        case "REF":
-          stack.push(token.convert());
-          break;
-        case "FUNCTION": {
-          const block = this._parse(depth + 1);
-          break;
-        }
 
-        case "PAREN_S": {
-          const block = this._parse(depth + 1);
-          stack.push(block);
-          break;
+      if (token == null) {
+        if (stack.length) {
+          if (lastOperator) {
+            lastOperator.right = stack.pop();
+          }
         }
-
-        case "PAREN_E":
-          if (depth === 0) {
-            throw new FormulaError("不正なカッコ");
+        return result;
+      } else if (token.type === "COMMA") {
+        continue;
+      } else if (token.type === "VALUE" || token.type === "REF") {
+        const value = token.convert();
+        if (result == null) {
+          result = value;
+        }
+        stack.push(value);
+      } else if (token.type === "FUNCTION") {
+      } else if (token.type === "PAREN_S") {
+        const block = this._parse(depth + 1);
+        stack.push(block);
+      } else if (token.type === "PAREN_E") {
+        if (depth === 0) {
+          throw new FormulaError("不正なカッコ");
+        }
+        if (stack.length) {
+          if (lastOperator) {
+            lastOperator.right = stack.pop();
           }
-          if (stack.length) {
-            if (lastOperator) {
-              lastOperator.right = stack.pop();
-            }
-          }
-          return result;
-        case "OPERATOR": {
-          const left = stack.pop();
-          if (left == null) {
-            throw new FormulaError("aaa");
-          }
-          const operator = token.convert() as Operator;
-          const prevOperator = lastOperator;
-          lastOperator = operator;
-          if (prevOperator == null) {
-            operator.left = left;
-            result = operator;
-          } else if (operator.precedence > prevOperator.precedence) {
-            operator.left = left;
-            prevOperator.right = operator;
-            result = prevOperator;
-          } else {
-            operator.left = result;
-            prevOperator.right = left;
-            result = operator;
-          }
-          break;
+        }
+        return result;
+      } else if (token.type === "OPERATOR") {
+        const left = stack.pop();
+        if (left == null) {
+          throw new FormulaError("aaa");
+        }
+        const operator = token.convert() as Operator;
+        const prevOperator = lastOperator;
+        lastOperator = operator;
+        if (prevOperator == null) {
+          operator.left = left;
+          result = operator;
+        } else if (operator.precedence > prevOperator.precedence) {
+          operator.left = left;
+          prevOperator.right = operator;
+          result = prevOperator;
+        } else {
+          operator.left = result;
+          prevOperator.right = left;
+          result = operator;
         }
       }
     }
