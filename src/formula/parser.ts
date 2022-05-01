@@ -26,24 +26,24 @@ const flatten = (a: any[]) => {
 };
 
 export class Parser {
+  public index = 0;
   constructor(public tokens: Token[]) {
     this.tokens = tokens;
   }
   public parse() {
-    return this._parse([], 0, 0);
+    return this._parse(0);
   }
 
   private get(index: number) {
     return this.tokens[index];
   }
 
-  private _parse(exprs: any[], index: number, depth: number) {
+  private _parse(depth: number) {
     const stack: any[] = [];
-    const start = index;
     let result: any;
     let lastOperator: undefined | Operator = undefined;
     while (this.tokens.length) {
-      const token = this.get(index++);
+      const token = this.get(this.index++);
       switch (token?.type) {
         case undefined:
           if (stack.length) {
@@ -65,18 +65,13 @@ export class Parser {
           stack.push(token.convert());
           break;
         case "FUNCTION": {
-          const block = this._parse(
-            [new Function(token.entity)],
-            ++index,
-            depth + 1
-          );
-          exprs.push(block);
+          const block = this._parse(depth + 1);
           break;
         }
 
         case "PAREN_S": {
-          const block = this._parse([], index + 1, depth + 1);
-          exprs.push(block);
+          const block = this._parse(depth + 1);
+          stack.push(block);
           break;
         }
 
@@ -84,8 +79,12 @@ export class Parser {
           if (depth === 0) {
             throw new FormulaError("不正なカッコ");
           }
-          this.tokens.splice(start, index - start);
-          return exprs;
+          if (stack.length) {
+            if (lastOperator) {
+              lastOperator.right = stack.pop();
+            }
+          }
+          return result;
         case "OPERATOR": {
           const left = stack.pop();
           if (left == null) {
