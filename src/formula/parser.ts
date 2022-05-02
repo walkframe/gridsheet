@@ -7,20 +7,6 @@ export class FormulaError {
   }
 }
 
-const FUNCTION_NAME_MAP = {
-  "+": "add",
-  "-": "minus",
-  "/": "divide",
-  "*": "multiply",
-  "&": "concatenate",
-  "=": "eq",
-  ">": "gt",
-  ">=": "gte",
-  "<": "lt",
-  "<=": "lte",
-  "<>": "ne",
-};
-
 const flatten = (a: any[]) => {
   return a.length === 1 && Array.isArray(a[0]) ? a[0] : a;
 };
@@ -76,7 +62,6 @@ export class Parser {
         stack.push(func);
         while (true) {
           let { result: block, hasNext } = this._parse(depth + 1, true);
-          console.log({ block, hasNext });
           if (block) {
             func.args.push(block);
           }
@@ -84,16 +69,14 @@ export class Parser {
             break;
           }
         }
-      } else if (token.type === "PAREN_S") {
+      } else if (token.type === "OPEN") {
         const { result: block } = this._parse(depth + 1, false);
         stack.push(block);
-      } else if (token.type === "PAREN_E") {
+      } else if (token.type === "CLOSE") {
         if (depth === 0) {
           throw new FormulaError("不正なカッコ");
         }
-        console.log("stack", [...stack], result, lastOperator);
         pickup();
-        console.log("stack2", [...stack], result, lastOperator);
 
         return { result, hasNext: false };
       } else if (token.type === "OPERATOR") {

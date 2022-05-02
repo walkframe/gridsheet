@@ -18,8 +18,8 @@ export type TokenType =
   | "REF"
   | "FUNCTION"
   | "OPERATOR"
-  | "PAREN_S"
-  | "PAREN_E"
+  | "OPEN"
+  | "CLOSE"
   | "COMMA";
 
 const FUNCTION_NAME_MAP = {
@@ -143,10 +143,10 @@ export class Lexer {
         case undefined:
           return;
         case "(":
-          this.tokens.push(new Token("PAREN_S", char));
+          this.tokens.push(new Token("OPEN", char));
           continue;
         case ")":
-          this.tokens.push(new Token("PAREN_E", char));
+          this.tokens.push(new Token("CLOSE", char));
           continue;
         case ",":
           this.tokens.push(new Token("COMMA", char));
@@ -202,7 +202,7 @@ export class Lexer {
             if (c === "(") {
               this.tokens.push(
                 new Token("FUNCTION", buf),
-                new Token("PAREN_S", "(")
+                new Token("OPEN", "(")
               );
               this.next();
               break;
