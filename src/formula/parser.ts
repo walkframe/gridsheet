@@ -1,6 +1,6 @@
 import { cellToIndexes } from "../api/converters";
 import { UserTable } from "../api/tables";
-import { Operator, Token } from "./lexer";
+import { Function, Operator, Token } from "./lexer";
 export class FormulaError {
   constructor(public message: string) {
     this.message = message;
@@ -31,29 +31,39 @@ export class Parser {
     this.tokens = tokens;
   }
   public parse() {
-    return this._parse(0);
+    const { result } = this._parse(0, false);
+    return result;
   }
 
   private get(index: number) {
     return this.tokens[index];
   }
 
-  private _parse(depth: number) {
+  private _parse(depth: number, underFunction: boolean) {
     const stack: any[] = [];
     let result: any;
     let lastOperator: undefined | Operator = undefined;
+    const pickup = () => {
+      if (stack.length) {
+        if (lastOperator) {
+          lastOperator.right = stack.pop();
+        } else if (result == null) {
+          result = stack.pop();
+        }
+      }
+    };
     while (this.tokens.length) {
       const token = this.get(this.index++);
 
       if (token == null) {
-        if (stack.length) {
-          if (lastOperator) {
-            lastOperator.right = stack.pop();
-          }
-        }
-        return result;
+        pickup();
+        return { result };
       } else if (token.type === "COMMA") {
-        continue;
+        if (!underFunction) {
+          throw new FormulaError("不正なカンマ");
+        }
+        pickup();
+        return { result, hasNext: true };
       } else if (token.type === "VALUE" || token.type === "REF") {
         const value = token.convert();
         if (result == null) {
@@ -61,19 +71,31 @@ export class Parser {
         }
         stack.push(value);
       } else if (token.type === "FUNCTION") {
+        this.index++;
+        const func = token.convert() as Function;
+        stack.push(func);
+        while (true) {
+          let { result: block, hasNext } = this._parse(depth + 1, true);
+          console.log({ block, hasNext });
+          if (block) {
+            func.args.push(block);
+          }
+          if (!hasNext) {
+            break;
+          }
+        }
       } else if (token.type === "PAREN_S") {
-        const block = this._parse(depth + 1);
+        const { result: block } = this._parse(depth + 1, false);
         stack.push(block);
       } else if (token.type === "PAREN_E") {
         if (depth === 0) {
           throw new FormulaError("不正なカッコ");
         }
-        if (stack.length) {
-          if (lastOperator) {
-            lastOperator.right = stack.pop();
-          }
-        }
-        return result;
+        console.log("stack", [...stack], result, lastOperator);
+        pickup();
+        console.log("stack2", [...stack], result, lastOperator);
+
+        return { result, hasNext: false };
       } else if (token.type === "OPERATOR") {
         const left = stack.pop();
         if (left == null) {
@@ -96,6 +118,6 @@ export class Parser {
         }
       }
     }
-    return result;
+    return { result };
   }
 }

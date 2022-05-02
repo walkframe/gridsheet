@@ -69,8 +69,10 @@ export class Operator {
 }
 
 export class Function {
+  public args: any[];
   constructor(public name: string) {
     this.name = name;
+    this.args = [];
   }
 }
 
