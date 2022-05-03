@@ -1,4 +1,4 @@
-import { FormulaError } from "../evaluator";
+import { FormulaError } from "../parser";
 
 export const forceNumber = (value: any) => {
   if (!value) {

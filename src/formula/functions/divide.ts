@@ -1,4 +1,4 @@
-import { FormulaError } from "../evaluator";
+import { FormulaError } from "../parser";
 import { BaseFunction } from "./__base";
 import { forceNumber } from "./__utils";
 

@@ -1,8 +1,7 @@
-import { Lexer } from "../formula/lexer";
-import { Parser } from "../formula/parser";
 import React from "react";
 import { CellType, WriterType } from "../types";
 import { UserTable } from "../api/tables";
+import { evaluate } from "../formula/parser";
 
 type Condition = (value: any) => boolean;
 type Stringify = (value: any) => string;
@@ -79,24 +78,17 @@ export class Renderer {
       return value.substring(1);
     }
     if (value[0] === "=") {
-      const lexer = new Lexer(value.substring(1));
-      lexer.tokenize();
-      const parser = new Parser(lexer.tokens);
-      const expr = parser.build();
-      if (expr) {
-        const result = expr.eval(table);
-        if (result == null) {
-          return "";
-        }
-        if (result.constructor.name === "Boolean") {
-          return String(result).toUpperCase();
-        }
-        if (result.constructor.name === "Date") {
-          return this.date(result);
-        }
-        return result;
+      const result = evaluate(value.substring(1), table);
+      if (result == null) {
+        return "";
       }
-      return "";
+      if (result.constructor.name === "Boolean") {
+        return String(result).toUpperCase();
+      }
+      if (result.constructor.name === "Date") {
+        return this.date(result);
+      }
+      return result;
     }
     return value;
   }
