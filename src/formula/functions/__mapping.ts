@@ -1,7 +1,13 @@
-import { add } from "./add";
-import { minus } from "./minus";
-import { multiply } from "./multiply";
-import { divide } from "./divide";
-import { sum } from "./sum";
+import { AddFunction } from "./add";
+import { MinusFunction } from "./minus";
+import { MultiplyFunction } from "./multiply";
+import { DivideFunction } from "./divide";
+import { SumFunction } from "./sum";
 
-export const mapping = { add, divide, minus, multiply, sum };
+export const mapping = {
+  add: AddFunction,
+  divide: DivideFunction,
+  minus: MinusFunction,
+  multiply: MultiplyFunction,
+  sum: SumFunction,
+};

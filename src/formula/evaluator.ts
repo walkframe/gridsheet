@@ -39,12 +39,12 @@ export class Function {
   public eval(table: UserTable): any {
     const args = this.args.map((a) => a.eval(table));
     const name = this.name.toLowerCase() as keyof typeof mapping;
-    const func = mapping[name];
-    if (func == null) {
-      throw new FormulaError("NAME?", "Unknown function");
+    const Func = mapping[name];
+    if (Func == null) {
+      throw new FormulaError("NAME?", `Unknown function: ${name}`);
     }
-    // @ts-ignore
-    return func(...args);
+    const func = new Func(args);
+    return func.call();
   }
 }
 
