@@ -8,6 +8,7 @@ export class FormulaError {
 
 export class Parser {
   public index = 0;
+  public depth = 0;
   constructor(public tokens: Token[]) {
     this.tokens = tokens;
   }
@@ -51,9 +52,13 @@ export class Parser {
           }
         }
       } else if (token.type === "OPEN") {
+        this.depth++;
         const { expr } = this.parse(false);
         stack.push(expr);
       } else if (token.type === "CLOSE") {
+        if (this.depth-- === 0) {
+          throw new FormulaError("ERROR!", "Unexpected end paren");
+        }
         return complement();
       } else if (token.type === "OPERATOR") {
         const left = stack.pop();
