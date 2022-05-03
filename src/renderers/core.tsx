@@ -84,7 +84,17 @@ export class Renderer {
       const parser = new Parser(lexer.tokens);
       const expr = parser.build();
       if (expr) {
-        return expr.eval(table);
+        const result = expr.eval(table);
+        if (result == null) {
+          return "";
+        }
+        if (result.constructor.name === "Boolean") {
+          return String(result).toUpperCase();
+        }
+        if (result.constructor.name === "Date") {
+          return this.date(result);
+        }
+        return result;
       }
       return "";
     }

@@ -28,13 +28,13 @@ const FUNCTION_NAME_MAP = {
   "-": "minus",
   "/": "divide",
   "*": "multiply",
-  "&": "concatenate",
+  "&": "concat",
   "=": "eq",
+  "<>": "ne",
   ">": "gt",
   ">=": "gte",
   "<": "lt",
   "<=": "lte",
-  "<>": "ne",
 };
 
 export class Token {

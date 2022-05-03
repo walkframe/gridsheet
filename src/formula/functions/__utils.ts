@@ -14,3 +14,18 @@ export const forceNumber = (value: any) => {
   }
   return num;
 };
+
+export const forceString = (value: any): string => {
+  if (!value) {
+    return "";
+  }
+  switch (value.constructor.name) {
+    case "Date":
+      if (value.getHours() + value.getMinutes() + value.getSeconds() === 0) {
+        return value.toLocaleDateString();
+      }
+      return value.toLocaleString();
+    default:
+      return String(value);
+  }
+};
