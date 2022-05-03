@@ -1,10 +1,7 @@
-import { Function, Token } from "./lexer";
-export class FormulaError {
-  constructor(public code: string, public message: string) {
-    this.code = code;
-    this.message = message;
-  }
-}
+import { Token } from "./lexer";
+import { Value, Function, Expression, FormulaError } from "./evaluator";
+
+const ZERO = new Value(0);
 
 export class Parser {
   public index = 0;
@@ -18,12 +15,13 @@ export class Parser {
   }
 
   private parse(underFunction: boolean) {
-    const stack: any[] = [];
+    const stack: Expression[] = [];
     let lastOperator: undefined | Function;
 
     const complement = (hasNext = false) => {
       if (lastOperator) {
-        lastOperator.args.push(stack.pop());
+        const outer = stack.pop();
+        lastOperator.args.push(outer!);
       }
       return { hasNext, expr: stack.shift() };
     };
@@ -38,7 +36,7 @@ export class Parser {
         return complement(true);
       } else if (token.type === "VALUE" || token.type === "REF") {
         const expr = token.convert();
-        stack.push(expr);
+        stack.push(expr!);
       } else if (token.type === "FUNCTION") {
         this.index++;
         this.depth++;
@@ -56,18 +54,23 @@ export class Parser {
       } else if (token.type === "OPEN") {
         this.depth++;
         const { expr } = this.parse(false);
-        stack.push(expr);
+        stack.push(expr!);
       } else if (token.type === "CLOSE") {
         if (this.depth-- === 0) {
           throw new FormulaError("ERROR!", "Unexpected end paren");
         }
         return complement();
       } else if (token.type === "OPERATOR") {
-        const left = stack.pop();
-        if (left == null) {
-          throw new FormulaError("ERROR!", "Missing left expression");
-        }
         const operator = token.convert() as Function;
+        let left = stack.pop();
+        if (left == null) {
+          if (operator.name === "minus" || operator.name === "add") {
+            left = ZERO;
+          } else {
+            throw new FormulaError("ERROR!", "Missing left expression");
+          }
+        }
+
         if (lastOperator == null) {
           operator.args.push(left);
           stack.unshift(operator);
@@ -76,7 +79,8 @@ export class Parser {
           lastOperator.args.push(operator);
           stack.unshift(lastOperator);
         } else {
-          operator.args.push(stack.shift());
+          const outer = stack.shift();
+          operator.args.push(outer!);
           lastOperator.args.push(left);
           stack.unshift(operator);
         }

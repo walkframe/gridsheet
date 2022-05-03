@@ -15,6 +15,7 @@ import { AreaType } from "../types";
 import { CellLayout } from "./styles/CellLayout";
 
 import { Context } from "../store";
+import { FormulaError } from "formula/evaluator";
 
 type Props = {
   rowIndex: number;
@@ -64,7 +65,7 @@ export const Cell: React.FC<Props> = React.memo(
       }
     }, [editing]);
     if (table.numRows() === 0) {
-        return null;
+      return null;
     }
     const cell = table.get(y, x);
     const height = table.get(y, 0)?.height || DEFAULT_HEIGHT;
@@ -83,17 +84,24 @@ export const Cell: React.FC<Props> = React.memo(
       matching = true;
     }
 
+    let formulaError: FormulaError | undefined;
+    let rendered;
+    try {
+      rendered = table.render(y, x, writeCell);
+    } catch (e) {
+      formulaError = e as FormulaError;
+      rendered = `#${formulaError.code}`;
+    }
+
     return (
       <CellLayout
         key={x}
         ref={cellRef}
-        className={`gs-cell ${
-          among(copyingArea, [y, x]) ? "gs-copying" : ""} ${
-          y === 0 ? "gs-cell-top-end" : ""} ${
-          x === 0 ? "gs-cell-left-end" : ""} ${
-          y === table.numRows() ? "gs-cell-bottom-end" : ""} ${
-          x === table.numCols() ? "gs-cell-right-end" : ""
-        }`}
+        className={`gs-cell ${among(copyingArea, [y, x]) ? "gs-copying" : ""} ${
+          y === 0 ? "gs-cell-top-end" : ""
+        } ${x === 0 ? "gs-cell-left-end" : ""} ${
+          y === table.numRows() ? "gs-cell-bottom-end" : ""
+        } ${x === table.numCols() ? "gs-cell-right-end" : ""}`}
         style={{
           ...outerStyle,
           ...cell?.style,
@@ -119,7 +127,10 @@ export const Cell: React.FC<Props> = React.memo(
           const dblclick = document.createEvent("MouseEvents");
           dblclick.initEvent("dblclick", true, true);
           editorRef.current?.dispatchEvent(dblclick);
-          setTimeout(() => (editorRef.current.value = table.stringify(y, x)), 100);
+          setTimeout(
+            () => (editorRef.current.value = table.stringify(y, x)),
+            100
+          );
           return false;
         }}
         draggable
@@ -149,11 +160,19 @@ export const Cell: React.FC<Props> = React.memo(
       >
         <div
           className={`
-          gs-cell-rendered-wrapper-outer ${among(selectingArea, [y, x]) ? "gs-selected" : ""}
+          gs-cell-rendered-wrapper-outer ${
+            among(selectingArea, [y, x]) ? "gs-selected" : ""
+          }
           ${pointed ? "gs-pointed" : ""} ${editing ? "gs-editing" : ""}
           ${matching ? "gs-matching" : ""}
           ${matchingCell === cellId ? "gs-searching" : ""}`}
         >
+          {formulaError && (
+            <div
+              className="formula-error-triangle"
+              title={formulaError.message}
+            />
+          )}
           <div
             className={`gs-cell-rendered-wrapper-inner`}
             style={{
@@ -163,9 +182,7 @@ export const Cell: React.FC<Props> = React.memo(
             }}
           >
             {cellLabel && <div className="gs-cell-label">{cellId}</div>}
-            <div className="gs-cell-rendered">
-              {table.render(y, x, writeCell)}
-            </div>
+            <div className="gs-cell-rendered">{rendered}</div>
           </div>
         </div>
       </CellLayout>

@@ -1,6 +1,5 @@
 import { Lexer } from "../formula/lexer";
 import { Parser } from "../formula/parser";
-import { call } from "../formula/caller";
 import React from "react";
 import { CellType, WriterType } from "../types";
 import { UserTable } from "../api/tables";
@@ -83,8 +82,11 @@ export class Renderer {
       const lexer = new Lexer(value.substring(1));
       lexer.tokenize();
       const parser = new Parser(lexer.tokens);
-      const parsed = parser.build();
-      console.log(parsed);
+      const expr = parser.build();
+      if (expr) {
+        return expr.eval(table);
+      }
+      return "";
     }
     return value;
   }

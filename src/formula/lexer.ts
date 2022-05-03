@@ -1,5 +1,6 @@
 import { cellToIndexes } from "../api/converters";
 import { UserTable } from "../api/tables";
+import { Function, Ref, Value } from "./evaluator";
 
 export const ADD = "add",
   MINUS = "minus",
@@ -35,34 +36,6 @@ const FUNCTION_NAME_MAP = {
   "<=": "lte",
   "<>": "ne",
 };
-
-export class Value {
-  constructor(public data?: string | number) {
-    this.data = data;
-  }
-  public get() {
-    return this.data;
-  }
-}
-
-export class Ref {
-  constructor(public ref: string) {
-    this.ref = ref;
-  }
-  public get(table: UserTable) {
-    const [y, x] = cellToIndexes(this.ref.toUpperCase());
-    return table.get(y, x)?.value || 0;
-  }
-}
-
-export class Function {
-  public args: any[];
-  constructor(public name: string, public precedence = 0) {
-    this.name = name;
-    this.precedence = precedence;
-    this.args = [];
-  }
-}
 
 export class Token {
   type: TokenType;

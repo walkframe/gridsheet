@@ -10,6 +10,16 @@ export const CellLayout = styled.div`
       outline: solid 1px #0077ff;
     }
   }
+  .formula-error-triangle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    border-top: 3px solid rgba(200, 0, 0, 0.9);
+    border-right: 3px solid rgba(200, 0, 0, 0.9);
+    border-bottom: 3px solid transparent;
+    border-left: 3px solid transparent;
+    z-index: 1;
+  }
   .gs-cell-label {
     font-family: mono, serif;
     position: absolute;
