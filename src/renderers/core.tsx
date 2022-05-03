@@ -82,9 +82,8 @@ export class Renderer {
     if (value[0] === "=") {
       const lexer = new Lexer(value.substring(1));
       lexer.tokenize();
-      console.log([...lexer.tokens]);
       const parser = new Parser(lexer.tokens);
-      const parsed = parser.parse();
+      const parsed = parser.build();
       console.log(parsed);
     }
     return value;

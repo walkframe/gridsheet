@@ -1,8 +1,7 @@
-import { cellToIndexes } from "../api/converters";
-import { UserTable } from "../api/tables";
 import { Function, Operator, Token } from "./lexer";
 export class FormulaError {
-  constructor(public message: string) {
+  constructor(public code: string, public message: string) {
+    this.code = code;
     this.message = message;
   }
 }
@@ -12,89 +11,71 @@ export class Parser {
   constructor(public tokens: Token[]) {
     this.tokens = tokens;
   }
-  public parse() {
-    const { result } = this._parse(0, false);
-    return result;
+  public build() {
+    const { expr } = this.parse(false);
+    return expr;
   }
 
-  private get(index: number) {
-    return this.tokens[index];
-  }
-
-  private _parse(depth: number, underFunction: boolean) {
+  private parse(underFunction: boolean) {
     const stack: any[] = [];
-    let result: any;
-    let lastOperator: undefined | Operator = undefined;
-    const pickup = () => {
-      if (stack.length) {
-        if (lastOperator) {
-          lastOperator.right = stack.pop();
-        } else if (result == null) {
-          result = stack.pop();
-        }
+    let lastOperator: undefined | Operator;
+
+    const complement = (hasNext = false) => {
+      if (lastOperator) {
+        lastOperator.right = stack.pop();
       }
+      return { hasNext, expr: stack.shift() };
     };
     while (this.tokens.length > this.index) {
-      const token = this.get(this.index++);
+      const token = this.tokens[this.index++];
 
       if (token.type === "COMMA") {
         if (!underFunction) {
-          throw new FormulaError("不正なカンマ");
+          throw new FormulaError("ERROR!", "Invalid comma");
         }
-        pickup();
-        return { result, hasNext: true };
+        return complement(true);
       } else if (token.type === "VALUE" || token.type === "REF") {
-        const value = token.convert();
-        if (result == null) {
-          result = value;
-        }
-        stack.push(value);
+        const expr = token.convert();
+        stack.push(expr);
       } else if (token.type === "FUNCTION") {
         this.index++;
         const func = token.convert() as Function;
         stack.push(func);
         while (true) {
-          const { result: block, hasNext } = this._parse(depth + 1, true);
-          if (block) {
-            func.args.push(block);
+          const { expr, hasNext } = this.parse(true);
+          if (expr) {
+            func.args.push(expr);
           }
           if (!hasNext) {
             break;
           }
         }
       } else if (token.type === "OPEN") {
-        const { result: block } = this._parse(depth + 1, false);
-        stack.push(block);
+        const { expr } = this.parse(false);
+        stack.push(expr);
       } else if (token.type === "CLOSE") {
-        if (depth === 0) {
-          throw new FormulaError("不正なカッコ");
-        }
-        pickup();
-
-        return { result, hasNext: false };
+        return complement();
       } else if (token.type === "OPERATOR") {
         const left = stack.pop();
         if (left == null) {
-          throw new FormulaError("aaa");
+          throw new FormulaError("ERROR!", "Missing left expression");
         }
         const operator = token.convert() as Operator;
-        const prevOperator = lastOperator;
-        lastOperator = operator;
-        if (prevOperator == null) {
+        if (lastOperator == null) {
           operator.left = left;
-          result = operator;
-        } else if (operator.precedence > prevOperator.precedence) {
+          stack.unshift(operator);
+        } else if (operator.precedence > lastOperator.precedence) {
           operator.left = left;
-          prevOperator.right = operator;
-          result = prevOperator;
+          lastOperator.right = operator;
+          stack.unshift(lastOperator);
         } else {
-          operator.left = result;
-          prevOperator.right = left;
-          result = operator;
+          operator.left = stack.shift();
+          lastOperator.right = left;
+          stack.unshift(operator);
         }
+        lastOperator = operator;
       }
     }
-    pickup();
-    return { result };
+    return complement();
   }
 }

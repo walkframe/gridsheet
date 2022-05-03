@@ -96,7 +96,6 @@ export class Token {
       case "OPERATOR": {
         const name =
           FUNCTION_NAME_MAP[this.entity as keyof typeof FUNCTION_NAME_MAP];
-
         return new Operator(name, this.precedence);
       }
       case "FUNCTION":
