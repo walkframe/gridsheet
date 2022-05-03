@@ -1,4 +1,4 @@
-import { Function, Operator, Token } from "./lexer";
+import { Function, Token } from "./lexer";
 export class FormulaError {
   constructor(public code: string, public message: string) {
     this.code = code;
@@ -19,14 +19,15 @@ export class Parser {
 
   private parse(underFunction: boolean) {
     const stack: any[] = [];
-    let lastOperator: undefined | Operator;
+    let lastOperator: undefined | Function;
 
     const complement = (hasNext = false) => {
       if (lastOperator) {
-        lastOperator.right = stack.pop();
+        lastOperator.args.push(stack.pop());
       }
       return { hasNext, expr: stack.shift() };
     };
+
     while (this.tokens.length > this.index) {
       const token = this.tokens[this.index++];
 
@@ -40,6 +41,7 @@ export class Parser {
         stack.push(expr);
       } else if (token.type === "FUNCTION") {
         this.index++;
+        this.depth++;
         const func = token.convert() as Function;
         stack.push(func);
         while (true) {
@@ -65,17 +67,17 @@ export class Parser {
         if (left == null) {
           throw new FormulaError("ERROR!", "Missing left expression");
         }
-        const operator = token.convert() as Operator;
+        const operator = token.convert() as Function;
         if (lastOperator == null) {
-          operator.left = left;
+          operator.args.push(left);
           stack.unshift(operator);
         } else if (operator.precedence > lastOperator.precedence) {
-          operator.left = left;
-          lastOperator.right = operator;
+          operator.args.push(left);
+          lastOperator.args.push(operator);
           stack.unshift(lastOperator);
         } else {
-          operator.left = stack.shift();
-          lastOperator.right = left;
+          operator.args.push(stack.shift());
+          lastOperator.args.push(left);
           stack.unshift(operator);
         }
         lastOperator = operator;

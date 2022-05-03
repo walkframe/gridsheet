@@ -55,23 +55,11 @@ export class Ref {
   }
 }
 
-export class Operator {
-  public left?: any;
-  public right?: any;
-
-  constructor(public name: string, public precedence: number) {
-    this.name = name;
-    this.precedence = precedence;
-  }
-  public toFunction() {
-    return new Function(this.name);
-  }
-}
-
 export class Function {
   public args: any[];
-  constructor(public name: string) {
+  constructor(public name: string, public precedence = 0) {
     this.name = name;
+    this.precedence = precedence;
     this.args = [];
   }
 }
@@ -96,7 +84,7 @@ export class Token {
       case "OPERATOR": {
         const name =
           FUNCTION_NAME_MAP[this.entity as keyof typeof FUNCTION_NAME_MAP];
-        return new Operator(name, this.precedence);
+        return new Function(name, this.precedence);
       }
       case "FUNCTION":
         return new Function(this.entity);
