@@ -7,10 +7,6 @@ export class FormulaError {
   }
 }
 
-const flatten = (a: any[]) => {
-  return a.length === 1 && Array.isArray(a[0]) ? a[0] : a;
-};
-
 export class Parser {
   public index = 0;
   constructor(public tokens: Token[]) {
@@ -38,13 +34,10 @@ export class Parser {
         }
       }
     };
-    while (this.tokens.length) {
+    while (this.tokens.length > this.index) {
       const token = this.get(this.index++);
 
-      if (token == null) {
-        pickup();
-        return { result };
-      } else if (token.type === "COMMA") {
+      if (token.type === "COMMA") {
         if (!underFunction) {
           throw new FormulaError("不正なカンマ");
         }
@@ -61,7 +54,7 @@ export class Parser {
         const func = token.convert() as Function;
         stack.push(func);
         while (true) {
-          let { result: block, hasNext } = this._parse(depth + 1, true);
+          const { result: block, hasNext } = this._parse(depth + 1, true);
           if (block) {
             func.args.push(block);
           }
@@ -101,6 +94,7 @@ export class Parser {
         }
       }
     }
+    pickup();
     return { result };
   }
 }
