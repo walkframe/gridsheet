@@ -16,6 +16,7 @@ import { NowFunction } from "./now";
 import { AndFunction } from "./and";
 import { OrFunction } from "./or";
 import { IfFunction } from "./if";
+import { NotFunction } from "./not";
 
 export const mapping = {
   add: AddFunction,
@@ -35,5 +36,6 @@ export const mapping = {
   and: AndFunction,
   or: OrFunction,
   if: IfFunction,
+  not: NotFunction,
   now: NowFunction,
 };
