@@ -204,7 +204,6 @@ export class Lexer {
           this.tokens.push(new Token("OPERATOR", "<", 2));
           continue;
         case '"':
-          this.next();
           const buf = this.getString();
           this.tokens.push(new Token("VALUE", buf));
           continue;
@@ -251,16 +250,22 @@ export class Lexer {
   private getString() {
     let buf = "";
     while (true) {
-      if (this.get() === '"') {
-        if (this.get(1) === '"') {
+      const c = this.get();
+      this.next();
+      if (c == null) {
+        break;
+      }
+      if (c === '"') {
+        if (this.get() === '"') {
           // escape
           buf += '"';
-          this.next(2);
+          this.next();
           continue;
         } else {
-          this.next();
           break;
         }
+      } else {
+        buf += c;
       }
     }
     return buf;
