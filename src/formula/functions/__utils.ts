@@ -29,3 +29,20 @@ export const forceString = (value: any): string => {
       return String(value);
   }
 };
+
+export const forceBoolean = (value: any): boolean => {
+  if (value == null) {
+    return false;
+  }
+  if (typeof value === "string" || value instanceof String) {
+    const bool = { true: true, false: false }[value.toLowerCase()];
+    if (bool == null) {
+      throw new FormulaError(
+        "VALUE!",
+        `text '${value}' cannot be converted to a boolean`
+      );
+    }
+    return bool;
+  }
+  return Boolean(value);
+};

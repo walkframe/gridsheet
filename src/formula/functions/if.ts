@@ -1,0 +1,38 @@
+import { FormulaError } from "../evaluator";
+import { BaseFunction } from "./__base";
+import { forceBoolean } from "./__utils";
+
+export class IfFunction extends BaseFunction {
+  example = 'IF(A2 = "Human", "Hello", "World")';
+  helpText = [
+    "If the logical expression is TRUE, the second argument is returned.",
+    "If FALSE, the third argument is returned.",
+  ];
+  helpArgs = [
+    { name: "condition", description: "An expression as a condition" },
+    {
+      name: "value1",
+      description: "value to be returned if the condition is true.",
+    },
+    {
+      name: "value2",
+      description: "value to be returned if the condition is false.",
+      optional: true,
+    },
+  ];
+
+  protected validate() {
+    if (this.args.length === 2 || this.args.length === 3) {
+      this.args[0] = forceBoolean(this.args[0]);
+      return;
+    }
+    throw new FormulaError(
+      "N/A",
+      "Number of arguments for IF is incorrect. 2 or 3 arguments must be specified."
+    );
+  }
+  // @ts-ignore
+  protected main(condition: boolean, v1: any, v2: any = false) {
+    return condition ? v1 : v2;
+  }
+}

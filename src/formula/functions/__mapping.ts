@@ -13,6 +13,9 @@ import { GteFunction } from "./gte";
 import { LtFunction } from "./lt";
 import { LteFunction } from "./lte";
 import { NowFunction } from "./now";
+import { AndFunction } from "./and";
+import { OrFunction } from "./or";
+import { IfFunction } from "./if";
 
 export const mapping = {
   add: AddFunction,
@@ -29,5 +32,8 @@ export const mapping = {
   gte: GteFunction,
   lt: LtFunction,
   lte: LteFunction,
+  and: AndFunction,
+  or: OrFunction,
+  if: IfFunction,
   now: NowFunction,
 };
