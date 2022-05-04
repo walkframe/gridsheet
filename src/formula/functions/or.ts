@@ -2,7 +2,7 @@ import { BaseFunction } from "./__base";
 import { forceBoolean } from "./__utils";
 
 export class OrFunction extends BaseFunction {
-  example = "Or(A1=1, A2=2)";
+  example = "OR(A1=1, A2=2)";
   helpText = [
     "Returns TRUE if any argument is logically true.",
     "Returns FALSE if all arguments are logically false.",

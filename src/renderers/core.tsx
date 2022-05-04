@@ -24,14 +24,7 @@ export class Renderer {
     this.complement = complement;
   }
 
-  public render(
-    table: UserTable,
-    y: number,
-    x: number,
-    writer?: WriterType
-  ): any {
-    const cell = table.get(y, x);
-    const { value } = cell || {};
+  public _render(value: any, table: UserTable, writer?: WriterType): any {
     if (this.condition && !this.condition(value)) {
       return this.complement ? this.complement(value) : this.stringify(value);
     }
@@ -43,6 +36,9 @@ export class Renderer {
         }
         if (value == null) {
           return this.null(value, writer);
+        }
+        if (value instanceof UserTable) {
+          return this._render(value.get(0, 0)?.value, table, writer);
         }
         if (Array.isArray(value)) {
           return this.array(value, writer);
@@ -60,6 +56,17 @@ export class Renderer {
         return this.undefined(value, writer);
     }
     return "";
+  }
+
+  public render(
+    table: UserTable,
+    y: number,
+    x: number,
+    writer?: WriterType
+  ): any {
+    const cell = table.get(y, x);
+    const { value } = cell || {};
+    return this._render(value, table, writer);
   }
 
   public stringify(cell: CellType): string {
@@ -88,7 +95,7 @@ export class Renderer {
       if (result.constructor.name === "Date") {
         return this.date(result);
       }
-      return result;
+      return this._render(result, table, writer);
     }
     return value;
   }

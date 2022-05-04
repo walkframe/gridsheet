@@ -84,13 +84,18 @@ export const Cell: React.FC<Props> = React.memo(
       matching = true;
     }
 
-    let formulaError: FormulaError | undefined;
+    let errorMessage = "";
     let rendered;
     try {
       rendered = table.render(y, x, writeCell);
     } catch (e) {
-      formulaError = e as FormulaError;
-      rendered = `#${formulaError.code}`;
+      if (e instanceof FormulaError) {
+        errorMessage = e.message;
+        rendered = `#${e.code}`;
+      } else if (e instanceof RangeError) {
+        errorMessage = "References are circulating.";
+        rendered = `#REF!`;
+      }
     }
 
     return (
@@ -167,11 +172,8 @@ export const Cell: React.FC<Props> = React.memo(
           ${matching ? "gs-matching" : ""}
           ${matchingCell === cellId ? "gs-searching" : ""}`}
         >
-          {formulaError && (
-            <div
-              className="formula-error-triangle"
-              title={formulaError.message}
-            />
+          {errorMessage && (
+            <div className="formula-error-triangle" title={errorMessage} />
           )}
           <div
             className={`gs-cell-rendered-wrapper-inner`}

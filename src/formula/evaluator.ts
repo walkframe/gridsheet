@@ -1,6 +1,8 @@
+import { rangeToArea } from "../api/matrix";
 import { cellToIndexes } from "../api/converters";
 import { UserTable } from "../api/tables";
 import { mapping } from "./functions/__mapping";
+import { MatrixType } from "../types";
 
 export class FormulaError {
   constructor(public code: string, public message: string) {
@@ -20,7 +22,7 @@ export class Value {
 
 export class Ref {
   constructor(public ref: string) {
-    this.ref = ref;
+    this.ref = ref.toUpperCase();
   }
   public evaluate(table: UserTable): any {
     const [y, x] = cellToIndexes(this.ref.toUpperCase());
@@ -32,6 +34,16 @@ export class Ref {
       return evaluate(result.substring(1), table);
     }
     return result;
+  }
+}
+
+export class Range {
+  constructor(public range: string) {
+    this.range = range.toUpperCase();
+  }
+  public evaluate(table: UserTable): UserTable {
+    const area = rangeToArea(this.range);
+    return table.copy(area);
   }
 }
 
@@ -50,7 +62,7 @@ export class Function {
     if (Func == null) {
       throw new FormulaError("NAME?", `Unknown function: ${name}`);
     }
-    const func = new Func(args);
+    const func = new Func(args, table);
     return func.call();
   }
 }
@@ -63,13 +75,30 @@ export const evaluate = (formula: string, table: UserTable) => {
   return expr?.evaluate?.(table);
 };
 
-type Expression = Value | Ref | Function;
+export const evaluateTable = (
+  table: UserTable,
+  base: UserTable
+): MatrixType => {
+  return table.matrixFlatten().map((row) => {
+    return row.map((col) => {
+      if (typeof col === "string" || col instanceof String) {
+        if (col.charAt(0) === "=") {
+          return evaluate(col.substring(1), base);
+        }
+      }
+      return col;
+    });
+  });
+};
+
+type Expression = Value | Ref | Range | Function;
 
 const ZERO = new Value(0);
 
 export type TokenType =
   | "VALUE"
   | "REF"
+  | "RANGE"
   | "FUNCTION"
   | "OPERATOR"
   | "OPEN"
@@ -107,6 +136,8 @@ export class Token {
         return new Value(this.entity);
       case "REF":
         return new Ref(this.entity);
+      case "RANGE":
+        return new Range(this.entity);
       case "OPERATOR": {
         const name =
           FUNCTION_NAME_MAP[this.entity as keyof typeof FUNCTION_NAME_MAP];
@@ -223,7 +254,11 @@ export class Lexer {
               if (buf) {
                 const n = parseInt(buf, 10);
                 if (isNaN(n)) {
-                  this.tokens.push(new Token("REF", buf));
+                  if (buf.indexOf(":") !== -1) {
+                    this.tokens.push(new Token("RANGE", buf));
+                  } else {
+                    this.tokens.push(new Token("REF", buf));
+                  }
                 } else {
                   this.tokens.push(new Token("VALUE", n));
                 }
@@ -303,7 +338,11 @@ export class Parser {
           throw new FormulaError("ERROR!", "Invalid comma");
         }
         return complement(true);
-      } else if (token.type === "VALUE" || token.type === "REF") {
+      } else if (
+        token.type === "VALUE" ||
+        token.type === "REF" ||
+        token.type === "RANGE"
+      ) {
         const expr = token.convert();
         stack.push(expr!);
       } else if (token.type === "FUNCTION") {
