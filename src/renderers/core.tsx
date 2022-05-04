@@ -1,7 +1,7 @@
 import React from "react";
 import { CellType, WriterType } from "../types";
 import { UserTable } from "../api/tables";
-import { evaluate } from "../formula/parser";
+import { evaluate } from "../formula/evaluator";
 
 type Condition = (value: any) => boolean;
 type Stringify = (value: any) => string;

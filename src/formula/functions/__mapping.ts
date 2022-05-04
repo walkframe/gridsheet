@@ -2,6 +2,7 @@ import { AddFunction } from "./add";
 import { MinusFunction } from "./minus";
 import { MultiplyFunction } from "./multiply";
 import { DivideFunction } from "./divide";
+import { ModFunction } from "./mod";
 import { SumFunction } from "./sum";
 import { ConcatFunction } from "./concat";
 import { ConcatenateFunction } from "./concatenate";
@@ -16,6 +17,7 @@ import { NowFunction } from "./now";
 export const mapping = {
   add: AddFunction,
   divide: DivideFunction,
+  mod: ModFunction,
   minus: MinusFunction,
   multiply: MultiplyFunction,
   sum: SumFunction,

@@ -25,7 +25,11 @@ export class Ref {
   public evaluate(table: UserTable): any {
     const [y, x] = cellToIndexes(this.ref.toUpperCase());
     const result = table.get(y, x)?.value || 0;
-    if (result?.constructor?.name === "String" && result.charAt(0) === "=") {
+    if (
+      (typeof result === "string" || result instanceof String) &&
+      result.charAt(0) === "="
+    ) {
+      return evaluate(result.substring(1), table);
     }
     return result;
   }

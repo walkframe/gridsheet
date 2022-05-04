@@ -2,12 +2,9 @@ import { FormulaError } from "../evaluator";
 import { BaseFunction } from "./__base";
 import { forceNumber } from "./__utils";
 
-export class DivideFunction extends BaseFunction {
-  example = "DIVIDE(4, 2)";
-  helpText = [
-    "Returns the result of dividing one number by another.",
-    "This is the same as the '/' operator.",
-  ];
+export class ModFunction extends BaseFunction {
+  example = "MOD(10, 4)";
+  helpText = ["Returns the result of the modulo operation."];
   helpArgs = [
     {
       name: "dividend",
@@ -20,7 +17,7 @@ export class DivideFunction extends BaseFunction {
     if (this.args.length !== 2) {
       throw new FormulaError(
         "N/A",
-        "Number of arguments for DIVIDE is incorrect."
+        "Number of arguments for MOD is incorrect."
       );
     }
     this.args = this.args.map((arg) => forceNumber(arg));
@@ -30,6 +27,6 @@ export class DivideFunction extends BaseFunction {
   }
   // @ts-ignore
   protected main(v1: number, v2: number) {
-    return v1 / v2;
+    return v1 % v2;
   }
 }

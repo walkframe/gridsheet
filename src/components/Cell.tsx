@@ -15,7 +15,7 @@ import { AreaType } from "../types";
 import { CellLayout } from "./styles/CellLayout";
 
 import { Context } from "../store";
-import { FormulaError } from "../formula/parser";
+import { FormulaError } from "../formula/evaluator";
 
 type Props = {
   rowIndex: number;
