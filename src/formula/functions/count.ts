@@ -20,11 +20,7 @@ export class CountFunction extends BaseFunction {
     const spreaded: any[] = [];
     this.args.map((arg) => {
       if (arg instanceof UserTable) {
-        evaluateTable(arg, this.table).map((row) => {
-          row.map((col) => {
-            spreaded.push(col);
-          });
-        });
+        spreaded.push(...evaluateTable(arg, this.table).flat());
         return;
       }
       spreaded.push(forceNumber(arg));

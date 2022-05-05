@@ -20,13 +20,11 @@ export class SumFunction extends BaseFunction {
     const spreaded: number[] = [];
     this.args.map((arg) => {
       if (arg instanceof UserTable) {
-        evaluateTable(arg, this.table).map((row) => {
-          row.map((col) => {
-            if (typeof col === "number") {
-              spreaded.push(col);
-            }
-          });
-        });
+        spreaded.push(
+          ...evaluateTable(arg, this.table)
+            .flat()
+            .filter((v) => typeof v === "number")
+        );
         return;
       }
       spreaded.push(forceNumber(arg));

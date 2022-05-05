@@ -61,6 +61,9 @@ export class UserTable {
     }
     return this.data[y % this.numRows(1)][x % this.numCols(1)];
   }
+  public firstValue() {
+    return this.data?.[0]?.[0]?.value;
+  }
 
   public numRows(base = 0) {
     const [top, left, bottom, right] = this.area;

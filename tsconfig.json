@@ -18,6 +18,6 @@
     "baseUrl": "./src/",
     "forceConsistentCasingInFileNames": true
   },
-  "exclude": ["node_modules", "src/stories", "*.stories.tsx"],
+  "exclude": ["node_modules", "src/stories", "*.stories.tsx", "dist"],
   "include": ["**/*.ts", "**/*.tsx"]
 }

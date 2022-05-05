@@ -18,6 +18,7 @@ import { OrFunction } from "./or";
 import { IfFunction } from "./if";
 import { NotFunction } from "./not";
 import { CountFunction } from "./count";
+import { CountifFunction } from "./countif";
 
 export const mapping = {
   add: AddFunction,
@@ -27,6 +28,7 @@ export const mapping = {
   multiply: MultiplyFunction,
   sum: SumFunction,
   count: CountFunction,
+  countif: CountifFunction,
   concat: ConcatFunction,
   concatenate: ConcatenateFunction,
   eq: EqFunction,
