@@ -27,7 +27,7 @@ export class SumFunction extends BaseFunction {
         );
         return;
       }
-      spreaded.push(forceNumber(arg));
+      spreaded.push(forceNumber(arg, this.table));
     });
     this.args = spreaded;
   }

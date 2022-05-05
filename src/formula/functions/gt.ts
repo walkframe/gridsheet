@@ -17,7 +17,7 @@ export class GtFunction extends BaseFunction {
     if (this.args.length !== 2) {
       throw new FormulaError("N/A", "Number of arguments for GT is incorrect.");
     }
-    this.args = this.args.map((arg) => forceNumber(arg));
+    this.args = this.args.map((arg) => forceNumber(arg, this.table));
   }
   // @ts-ignore
   protected main(v1: number, v2: number) {

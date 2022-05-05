@@ -16,7 +16,7 @@ export class ConcatenateFunction extends BaseFunction {
   ];
 
   protected validate() {
-    this.args = this.args.map((arg) => forceString(arg));
+    this.args = this.args.map((arg) => forceString(arg, this.table));
   }
   // @ts-ignore
   protected main(...values: string[]) {

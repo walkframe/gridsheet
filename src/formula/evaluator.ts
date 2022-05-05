@@ -15,7 +15,7 @@ export class Value {
   constructor(public data?: any) {
     this.data = data;
   }
-  public evaluate(table: UserTable) {
+  public evaluate(base: UserTable) {
     return this.data;
   }
 }
@@ -24,16 +24,9 @@ export class Ref {
   constructor(public ref: string) {
     this.ref = ref.toUpperCase();
   }
-  public evaluate(table: UserTable): any {
-    const [y, x] = cellToIndexes(this.ref.toUpperCase());
-    const result = table.get(y, x)?.value || 0;
-    if (
-      (typeof result === "string" || result instanceof String) &&
-      result.charAt(0) === "="
-    ) {
-      return evaluate(result.substring(1), table);
-    }
-    return result;
+  public evaluate(base: UserTable): UserTable {
+    const [y, x] = cellToIndexes(this.ref);
+    return base.copy([y, x, y, x]);
   }
 }
 
@@ -41,9 +34,9 @@ export class Range {
   constructor(public range: string) {
     this.range = range.toUpperCase();
   }
-  public evaluate(table: UserTable): UserTable {
+  public evaluate(base: UserTable): UserTable {
     const area = rangeToArea(this.range);
-    return table.copy(area);
+    return base.copy(area);
   }
 }
 
@@ -55,24 +48,24 @@ export class Function {
     this.args = [];
   }
 
-  public evaluate(table: UserTable): any {
-    const args = this.args.map((a) => a.evaluate(table));
+  public evaluate(base: UserTable): any {
+    const args = this.args.map((a) => a.evaluate(base));
     const name = this.name.toLowerCase() as keyof typeof mapping;
     const Func = mapping[name];
     if (Func == null) {
       throw new FormulaError("NAME?", `Unknown function: ${name}`);
     }
-    const func = new Func(args, table);
+    const func = new Func(args, base);
     return func.call();
   }
 }
 
-export const evaluate = (formula: string, table: UserTable) => {
+export const evaluate = (formula: string, base: UserTable) => {
   const lexer = new Lexer(formula);
   lexer.tokenize();
   const parser = new Parser(lexer.tokens);
   const expr = parser.build();
-  return expr?.evaluate?.(table);
+  return expr?.evaluate?.(base);
 };
 
 export const evaluateTable = (

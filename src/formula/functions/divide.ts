@@ -23,7 +23,7 @@ export class DivideFunction extends BaseFunction {
         "Number of arguments for DIVIDE is incorrect."
       );
     }
-    this.args = this.args.map((arg) => forceNumber(arg));
+    this.args = this.args.map((arg) => forceNumber(arg, this.table));
     if (this.args[1] === 0) {
       throw new FormulaError("DIV/0!", "The second argument must be non-zero.");
     }

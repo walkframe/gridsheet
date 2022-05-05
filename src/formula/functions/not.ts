@@ -17,7 +17,7 @@ export class NotFunction extends BaseFunction {
 
   protected validate() {
     if (this.args.length === 1) {
-      this.args[0] = forceBoolean(this.args[0]);
+      this.args[0] = forceBoolean(this.args[0], this.table);
       return;
     }
     throw new FormulaError(

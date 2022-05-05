@@ -23,7 +23,7 @@ export class CountFunction extends BaseFunction {
         spreaded.push(...evaluateTable(arg, this.table).flat());
         return;
       }
-      spreaded.push(forceNumber(arg));
+      spreaded.push(forceNumber(arg, this.table));
     });
     this.args = spreaded;
   }

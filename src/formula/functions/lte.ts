@@ -20,7 +20,7 @@ export class LteFunction extends BaseFunction {
         "Number of arguments for LTE is incorrect."
       );
     }
-    this.args = this.args.map((arg) => forceNumber(arg));
+    this.args = this.args.map((arg) => forceNumber(arg, this.table));
   }
   // @ts-ignore
   protected main(v1: number, v2: number) {

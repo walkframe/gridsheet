@@ -1,9 +1,14 @@
-import { FormulaError } from "../evaluator";
+import { UserTable } from "../../api/tables";
+import { evaluateTable, FormulaError } from "../evaluator";
 
-export const forceNumber = (value: any) => {
+export const forceNumber = (value: any, base: UserTable): number => {
   if (!value) {
     // falsy is 0
     return 0;
+  }
+  if (value instanceof UserTable) {
+    const v = evaluateTable(value, base)[0][0];
+    return forceNumber(v, base);
   }
   const num = parseInt(value, 10);
   if (isNaN(num)) {
@@ -15,9 +20,13 @@ export const forceNumber = (value: any) => {
   return num;
 };
 
-export const forceString = (value: any): string => {
+export const forceString = (value: any, base: UserTable): string => {
   if (!value) {
     return "";
+  }
+  if (value instanceof UserTable) {
+    const v = evaluateTable(value, base)[0][0];
+    return forceString(v, base);
   }
   switch (value.constructor.name) {
     case "Date":
@@ -30,9 +39,13 @@ export const forceString = (value: any): string => {
   }
 };
 
-export const forceBoolean = (value: any): boolean => {
+export const forceBoolean = (value: any, base: UserTable): boolean => {
   if (value == null) {
     return false;
+  }
+  if (value instanceof UserTable) {
+    const v = evaluateTable(value, base)[0][0];
+    return forceBoolean(v, base);
   }
   if (typeof value === "string" || value instanceof String) {
     const bool = { true: true, false: false }[value.toLowerCase()];

@@ -23,7 +23,7 @@ export class IfFunction extends BaseFunction {
 
   protected validate() {
     if (this.args.length === 2 || this.args.length === 3) {
-      this.args[0] = forceBoolean(this.args[0]);
+      this.args[0] = forceBoolean(this.args[0], this.table);
       return;
     }
     throw new FormulaError(
