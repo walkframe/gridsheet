@@ -35,7 +35,7 @@ export class Range {
     this.range = range.toUpperCase();
   }
   public evaluate(base: UserTable): UserTable {
-    const area = rangeToArea(this.range);
+    const area = rangeToArea(base.complementRange(this.range));
     return base.copy(area);
   }
 }
@@ -246,8 +246,9 @@ export class Lexer {
             }
             if (c == null || c.match(/[ +\-/*&=<>),]/)) {
               if (buf) {
-                const n = parseFloat(buf);
-                if (isNaN(n)) {
+                if (buf.match(/^[+-]?(\d*[.])?\d+$/)) {
+                  this.tokens.push(new Token("VALUE", parseFloat(buf)));
+                } else {
                   const bool = { true: true, false: false }[buf.toLowerCase()];
                   if (bool != null) {
                     this.tokens.push(new Token("VALUE", bool));
@@ -256,8 +257,6 @@ export class Lexer {
                   } else {
                     this.tokens.push(new Token("REF", buf));
                   }
-                } else {
-                  this.tokens.push(new Token("VALUE", n));
                 }
               }
               break;

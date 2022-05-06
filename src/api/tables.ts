@@ -4,7 +4,7 @@ import { cropMatrix, matrixShape, zoneShape } from "./matrix";
 import { AreaType, WriterType } from "../types";
 import { CellsType, CellType, Parsers, Renderers, DataType } from "../types";
 import { createMatrix, writeMatrix } from "./matrix";
-import { cellToIndexes, x2c, xy2cell, y2r } from "./converters";
+import { cellToIndexes, n2a, x2c, xy2cell, y2r } from "./converters";
 
 export class UserTable {
   protected data: DataType;
@@ -192,6 +192,23 @@ export class UserTable {
       }
     }
     return result;
+  }
+  public complementRange(range: string) {
+    const cells = range.split(":");
+    let [start = "", end = ""] = cells;
+    if (!start.match(/[1-9]\d*/)) {
+      start += "1";
+    }
+    if (!start.match(/[a-zA-Z]/)) {
+      start = "A" + start;
+    }
+    if (!end.match(/[1-9]\d*/)) {
+      end += this.numRows();
+    }
+    if (!end.match(/[a-zA-Z]/)) {
+      end = n2a(this.numCols() + 1) + end;
+    }
+    return `${start}:${end}`;
   }
   public top() {
     return this.area[0];
