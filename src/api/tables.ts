@@ -5,20 +5,31 @@ import { AreaType, WriterType } from "../types";
 import { CellsType, CellType, Parsers, Renderers, DataType } from "../types";
 import { createMatrix, writeMatrix } from "./matrix";
 import { cellToIndexes, n2a, x2c, xy2cell, y2r } from "./converters";
+import { FunctionMapping } from "../formula/functions/__base";
+import { functions } from "../formula/mapping";
+
+type Props = {
+  numRows: number;
+  numCols: number;
+  cells?: CellsType;
+  parsers?: Parsers;
+  renderers?: Renderers;
+};
 
 export class UserTable {
   protected data: DataType;
   protected area: AreaType;
   protected parsers: Parsers;
   protected renderers: Renderers;
+  public functions: FunctionMapping = {};
 
-  constructor(
-    numRows: number,
-    numCols: number,
-    cells: CellsType = {},
-    parsers: Parsers = {},
-    renderers: Renderers = {}
-  ) {
+  constructor({
+    numRows,
+    numCols,
+    cells = {},
+    parsers = {},
+    renderers = {},
+  }: Props) {
     this.data = createMatrix(numRows + 1, numCols + 1);
     this.area = [0, 0, numRows, numCols];
     this.parsers = parsers;
@@ -252,7 +263,7 @@ export class UserTable {
   }
 
   public copy(area?: AreaType) {
-    const copied = new Table(0, 0);
+    const copied = new Table({ numRows: 0, numCols: 0 });
     if (area != null) {
       const [top, left, bottom, right] = area;
       const [numRows, numCols] = zoneShape(area, 1);
@@ -272,17 +283,24 @@ export class UserTable {
     }
     copied.parsers = this.parsers;
     copied.renderers = this.renderers;
+    copied.functions = this.functions;
     return copied;
   }
 }
 
 export class Table extends UserTable {
+  public setFunctions(additionalFunctions: FunctionMapping) {
+    // @ts-ignore
+    this.functions = { ...functions, ...additionalFunctions };
+  }
+
   public shallowCopy() {
-    const copied = new Table(0, 0);
+    const copied = new Table({ numRows: 0, numCols: 0 });
     copied.data = this.data;
     copied.area = this.area;
     copied.parsers = this.parsers;
     copied.renderers = this.renderers;
+    copied.functions = this.functions;
     return copied;
   }
   public merge(diffs: Table[]) {
@@ -292,7 +310,7 @@ export class Table extends UserTable {
     return this.shallowCopy();
   }
   public joinDiffs(diffs: Table[]) {
-    const table = new Table(0, 0);
+    const table = new Table({ numRows: 0, numCols: 0 });
     table.data = createMatrix(this.numRows(1), this.numCols(1));
     table.area = [...this.area];
     table.merge(diffs);
@@ -381,10 +399,10 @@ export class Table extends UserTable {
     const diffs: Table[] = [];
 
     if (cutting) {
-      const diff = new Table(
-        bottomFrom - topFrom + 1,
-        rightFrom - leftFrom + 1
-      );
+      const diff = new Table({
+        numRows: bottomFrom - topFrom + 1,
+        numCols: rightFrom - leftFrom + 1,
+      });
       diff.area = from;
       diffs.push(diff);
     }
@@ -490,7 +508,7 @@ export class Table extends UserTable {
     });
 
     const [numRows, numCols] = [bottom - top, right - left];
-    const diff = new Table(numRows, numCols);
+    const diff = new Table({ numRows, numCols });
     diff.area = [top, left, bottom, right];
 
     Object.entries(cells).map(([cellId, b]) => {

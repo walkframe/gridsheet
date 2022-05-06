@@ -1,7 +1,6 @@
 import { rangeToArea } from "../api/matrix";
 import { cellToIndexes } from "../api/converters";
 import { UserTable } from "../api/tables";
-import { mapping } from "./functions/__mapping";
 import { AreaType, MatrixType } from "../types";
 
 export class FormulaError {
@@ -50,8 +49,8 @@ export class Function {
 
   public evaluate(base: UserTable): any {
     const args = this.args.map((a) => a.evaluate(base));
-    const name = this.name.toLowerCase() as keyof typeof mapping;
-    const Func = mapping[name];
+    const name = this.name.toLowerCase();
+    const Func = base.functions[name];
     if (Func == null) {
       throw new FormulaError("NAME?", `Unknown function: ${name}`);
     }

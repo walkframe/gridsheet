@@ -18,3 +18,5 @@ export class BaseFunction {
     return this.main(...this.args);
   }
 }
+
+export type FunctionMapping = { [s: string]: typeof BaseFunction };

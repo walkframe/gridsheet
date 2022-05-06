@@ -13,17 +13,19 @@ import {
   setCellLabel,
   setOnSave,
   initializeTable,
-  updateTable
+  updateTable,
 } from "../store/actions";
 
 import { HISTORY_SIZE, HEADER_HEIGHT, HEADER_WIDTH } from "../constants";
 import { cellToIndexes } from "../api/converters";
 import { Table } from "../api/tables";
+import { functions } from "../formula/mapping";
 
 export const StoreInitializer: React.FC<Props> = ({
   initial = {},
   changes,
-  options = {}
+  options = {},
+  additionalFunctions = {},
 }) => {
   const {
     historySize = HISTORY_SIZE,
@@ -44,7 +46,15 @@ export const StoreInitializer: React.FC<Props> = ({
 
   React.useEffect(() => {
     const auto = getMaxSizeFromCells(numRows, numCols, initial);
-    const table = new Table(auto.numRows, auto.numCols, initial, parsers, renderers);
+    const table = new Table({
+      numRows: auto.numRows,
+      numCols: auto.numCols,
+      cells: initial,
+      parsers,
+      renderers,
+    });
+    // @ts-ignore
+    table.setFunctions({ ...functions, ...additionalFunctions });
     dispatch(initializeTable(table));
     dispatch(initHistory(historySize));
   }, []);
@@ -57,7 +67,7 @@ export const StoreInitializer: React.FC<Props> = ({
       return;
     }
     const diff = table.diffWithCells(changes);
-    dispatch(updateTable(diff))
+    dispatch(updateTable(diff));
   }, [changes]);
   React.useEffect(() => {
     if (sheetHeight) {
@@ -94,16 +104,20 @@ export const StoreInitializer: React.FC<Props> = ({
       dispatch(setOnSave(onSave));
     }
   }, [onSave]);
-  return <></>
+  return <></>;
 };
 
-const getMaxSizeFromCells = (sizeY=0, sizeX=0, cells: CellsType = {}) => {
-  let lastY = sizeY, lastX = sizeX;
+const getMaxSizeFromCells = (sizeY = 0, sizeX = 0, cells: CellsType = {}) => {
+  let lastY = sizeY,
+    lastX = sizeX;
   Object.keys(cells).map((cellId) => {
     const [y, x] = cellToIndexes(cellId);
-    if (lastY < y) { lastY = y; }
-    if (lastX < x) { lastX = x; }
+    if (lastY < y) {
+      lastY = y;
+    }
+    if (lastX < x) {
+      lastX = x;
+    }
   });
   return { numRows: lastY, numCols: lastX };
 };
-

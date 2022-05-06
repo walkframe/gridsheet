@@ -4,6 +4,13 @@ import { createMatrix, matrixIntoCells } from "./src/api/matrix";
 import { defaultParser } from "./src/parsers/core";
 import { defaultRenderer } from "./src/renderers/core";
 import { CellType } from "./src/types";
+import { BaseFunction } from "./src";
+
+class TestFunction extends BaseFunction {
+  main() {
+    return "てすとだよ";
+  }
+}
 
 type Obj = { v: any };
 
@@ -147,6 +154,9 @@ export const showIndex = () => {
       <div>aaaaa</div>
 
       <GridSheet
+        additionalFunctions={{
+          test: TestFunction,
+        }}
         initial={matrixIntoCells(initialData, {
           default: { style: { fontStyle: "italic" } },
           A1: { value: 1, style: { color: "#008888" } },
