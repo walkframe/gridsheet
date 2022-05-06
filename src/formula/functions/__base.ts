@@ -1,9 +1,9 @@
 import { UserTable } from "../../api/tables";
 
 export class BaseFunction {
-  example = "_BASE()";
-  helpTexts = ["Function's description."];
-  helpArgs = [{ name: "value1", description: "" }];
+  public example = "_BASE()";
+  public helpTexts = ["Function's description."];
+  public helpArgs = [{ name: "value1", description: "" }];
 
   constructor(public args: any[], public table: UserTable) {
     this.args = args;

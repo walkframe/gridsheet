@@ -19,6 +19,8 @@ import { IfFunction } from "./if";
 import { NotFunction } from "./not";
 import { CountFunction } from "./count";
 import { CountifFunction } from "./countif";
+import { SumifFunction } from "./sumif";
+import { VlookupFunction } from "./vlookup";
 
 export const mapping = {
   add: AddFunction,
@@ -27,6 +29,7 @@ export const mapping = {
   minus: MinusFunction,
   multiply: MultiplyFunction,
   sum: SumFunction,
+  sumif: SumifFunction,
   count: CountFunction,
   countif: CountifFunction,
   concat: ConcatFunction,
@@ -41,5 +44,6 @@ export const mapping = {
   or: OrFunction,
   if: IfFunction,
   not: NotFunction,
+  vlookup: VlookupFunction,
   now: NowFunction,
 };

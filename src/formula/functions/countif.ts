@@ -10,7 +10,7 @@ export class CountifFunction extends BaseFunction {
     { name: "range", description: "Target range." },
     {
       name: "condition",
-      description: "A condition to be counted",
+      description: "A condition for count.",
     },
   ];
 

@@ -243,11 +243,14 @@ export class Lexer {
               this.next();
               break;
             }
-            if (c == null || c.match(/[ +-/*&=<>),]/)) {
+            if (c == null || c.match(/[ +\-/*&=<>),]/)) {
               if (buf) {
-                const n = parseInt(buf, 10);
+                const n = parseFloat(buf);
                 if (isNaN(n)) {
-                  if (buf.indexOf(":") !== -1) {
+                  const bool = { true: true, false: false }[buf.toLowerCase()];
+                  if (bool != null) {
+                    this.tokens.push(new Token("VALUE", bool));
+                  } else if (buf.indexOf(":") !== -1) {
                     this.tokens.push(new Token("RANGE", buf));
                   } else {
                     this.tokens.push(new Token("REF", buf));
