@@ -75,7 +75,7 @@ export class Parser {
     if (first == null || first.match(/[JFMASOND0-9]/) == null) {
       return;
     }
-    if (value[value.length - 1].match(/[0-9]/) == null) {
+    if (value[value.length - 1].match(/[0-9Z]/) == null) {
       return;
     }
     let timeZone = "UTC";

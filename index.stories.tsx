@@ -72,10 +72,21 @@ export default {
 };
 
 const initialData = [
-  [123456, "b", "c", "d", "e", "aa", "bb", "cc", [1, 2, 3], "ee"],
+  [
+    123456,
+    "'=1+2+3+4",
+    "=1+2+3+4",
+    "d",
+    "e",
+    "aa",
+    "bb",
+    "cc",
+    [1, 2, 3],
+    "ee",
+  ],
   ["a", "b", 789, "d", "e", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
+  ["a", "b", "c", "d", "=test()", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
@@ -207,7 +218,7 @@ export const showIndex = () => {
           historySize: 100,
           mode: "dark",
           //stickyHeaders: "horizontal",
-          /*
+
           onSave: (table, positions) => {
             console.log(
               "matrix on save:",
@@ -216,10 +227,7 @@ export const showIndex = () => {
             console.log("positions on save", positions);
           },
           onChange: (table, positions) => {
-            console.log(
-              "matrix on change:",
-              table.matrixFlatten()
-            );
+            console.log("matrix on change:", table.matrixFlatten());
             if (typeof positions !== "undefined") {
               console.log("positions on change", positions);
             }
@@ -229,16 +237,16 @@ export const showIndex = () => {
               "matrix on change diff:",
               table.top(),
               //table.rows(),
-              table.objectFlatten(),
+              table.objectFlatten()
             );
           },
           onChangeDiffNumMatrix: (coordinate) => {
             console.log("add or remove", coordinate);
           },
           onSelect: (table, positions) => {
-            console.log("positions on select", positions)
+            console.log("positions on select", positions);
           },
-          */
+
           renderers: {
             kanji: new KanjiRenderer(),
           },

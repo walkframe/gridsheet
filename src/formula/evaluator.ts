@@ -59,34 +59,19 @@ export class Function {
   }
 }
 
-export const evaluate = (formula: string, base: UserTable) => {
+export const evaluate = (formula: string, base: UserTable, raise = true) => {
   const lexer = new Lexer(formula);
   lexer.tokenize();
   const parser = new Parser(lexer.tokens);
   const expr = parser.build();
-  return expr?.evaluate?.(base);
-};
-
-export const solveFormula = (value: any, base: UserTable) => {
-  if (typeof value === "string" || value instanceof String) {
-    if (value.charAt(0) === "=") {
-      return evaluate(value.substring(1), base);
+  try {
+    return expr?.evaluate?.(base);
+  } catch (e) {
+    if (raise) {
+      throw e;
     }
+    console.error(e);
   }
-  return value;
-};
-
-export const solveMatrix = (
-  target: UserTable,
-  base: UserTable,
-  area?: AreaType
-): MatrixType => {
-  if (area == null) {
-    area = target.getWholeArea();
-  }
-  return target.matrixFlatten(area).map((row) => {
-    return row.map((col) => solveFormula(col, base));
-  });
 };
 
 type Expression = Value | Ref | Range | Function;
@@ -398,3 +383,25 @@ export class Parser {
     return complement();
   }
 }
+
+export const solveFormula = (value: any, base: UserTable, raise = true) => {
+  if (typeof value === "string" || value instanceof String) {
+    if (value.charAt(0) === "=") {
+      return evaluate(value.substring(1), base, raise);
+    }
+  }
+  return value;
+};
+
+export const solveMatrix = (
+  target: UserTable,
+  base: UserTable,
+  area?: AreaType
+): MatrixType => {
+  if (area == null) {
+    area = target.getWholeArea();
+  }
+  return target.matrixFlatten(area).map((row) => {
+    return row.map((col) => solveFormula(col, base));
+  });
+};
