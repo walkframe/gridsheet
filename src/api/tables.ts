@@ -76,7 +76,12 @@ export class UserTable {
   }
 
   public matrixFlatten(area?: AreaType, key: keyof CellType = "value") {
-    const [top, left, bottom, right] = area || this.area;
+    const [top, left, bottom, right] = area || [
+      1,
+      1,
+      this.area[2],
+      this.area[3],
+    ];
     const matrix = createMatrix(bottom - top + 1, right - left + 1);
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
@@ -199,6 +204,15 @@ export class UserTable {
   }
   public right() {
     return this.area[3];
+  }
+  public getWholeArea(): AreaType {
+    if (this.isBase()) {
+      return [...this.area];
+    }
+    return [0, 0, this.numRows(), this.numCols()];
+  }
+  public isBase() {
+    return this.top() === 0 && this.left() === 0;
   }
 
   public parse(y: number, x: number, value: string) {

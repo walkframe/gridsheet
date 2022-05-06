@@ -3,10 +3,10 @@ import { UserTable } from "../../api/tables";
 import { BaseFunction } from "./__base";
 import { check, forceBoolean, forceNumber, forceScalar } from "./__utils";
 
-export class VlookupFunction extends BaseFunction {
-  example = "VLOOKUP(10003, A2:B26, 2, FALSE)";
+export class HlookupFunction extends BaseFunction {
+  example = "HLOOKUP(10003, A2:Z6, 2, FALSE)";
   helpText = [
-    "Searches vertically for the specified key in the first column of the range and returns the value of the specified cell in the same row.",
+    "Searches horizontally for the specified key in the first row of the range and returns the value of the specified cell in the same column.",
   ];
   helpArgs = [
     { name: "key", description: "Search key." },
@@ -16,7 +16,7 @@ export class VlookupFunction extends BaseFunction {
     },
     {
       name: "index",
-      description: "The index of the column in the range.",
+      description: "The index of the row in the range.",
     },
     {
       name: "is_sorted",
@@ -30,7 +30,7 @@ export class VlookupFunction extends BaseFunction {
     if (this.args.length !== 3 && this.args.length !== 4) {
       throw new FormulaError(
         "N/A",
-        "Number of arguments for VLOOKUP is incorrect."
+        "Number of arguments for HLOOKUP is incorrect."
       );
     }
     if (this.args[0] instanceof UserTable) {
@@ -41,27 +41,26 @@ export class VlookupFunction extends BaseFunction {
     }
     this.args[2] = forceNumber(this.args[2], this.table);
     this.args[3] = forceBoolean(this.args[3], this.table, true);
-    console.log(this.args);
   }
   // @ts-ignore
   protected main(key: any, range: UserTable, index: number, isSorted: boolean) {
     const matrix = evaluateTable(range, this.table);
     if (isSorted) {
       let last = -1;
-      for (let y = 0; y <= range.numRows(); y++) {
-        if (matrix[y]?.[0] <= key) {
-          last = y;
+      for (let x = 0; x <= range.numCols(); x++) {
+        if (matrix[0]?.[x] <= key) {
+          last = x;
         } else {
           break;
         }
       }
       if (last !== -1) {
-        return matrix[last]?.[index - 1];
+        return matrix[index - 1]?.[last];
       }
     } else {
-      for (let y = 0; y <= range.numRows(); y++) {
-        if (matrix[y]?.[0]?.value === key) {
-          return matrix[y]?.[index - 1];
+      for (let x = 0; x <= range.numCols(); x++) {
+        if (matrix[0]?.[x] === key) {
+          return matrix[index - 1]?.[x];
         }
       }
     }

@@ -2,7 +2,7 @@ import { rangeToArea } from "../api/matrix";
 import { cellToIndexes } from "../api/converters";
 import { UserTable } from "../api/tables";
 import { mapping } from "./functions/__mapping";
-import { MatrixType } from "../types";
+import { AreaType, MatrixType } from "../types";
 
 export class FormulaError {
   constructor(public code: string, public message: string) {
@@ -72,7 +72,8 @@ export const evaluateTable = (
   table: UserTable,
   base: UserTable
 ): MatrixType => {
-  return table.matrixFlatten().map((row) => {
+  const area: AreaType = table.getWholeArea();
+  return table.matrixFlatten(area).map((row) => {
     return row.map((col) => {
       if (typeof col === "string" || col instanceof String) {
         if (col.charAt(0) === "=") {

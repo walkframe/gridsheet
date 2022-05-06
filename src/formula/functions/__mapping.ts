@@ -21,6 +21,7 @@ import { CountFunction } from "./count";
 import { CountifFunction } from "./countif";
 import { SumifFunction } from "./sumif";
 import { VlookupFunction } from "./vlookup";
+import { HlookupFunction } from "./hlookup";
 
 export const mapping = {
   add: AddFunction,
@@ -45,5 +46,6 @@ export const mapping = {
   if: IfFunction,
   not: NotFunction,
   vlookup: VlookupFunction,
+  hlookup: HlookupFunction,
   now: NowFunction,
 };

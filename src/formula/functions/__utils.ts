@@ -4,8 +4,11 @@ import { evaluateTable, FormulaError } from "../evaluator";
 export const forceNumber = (
   value: any,
   base: UserTable,
-  raise = true
+  alternative?: number
 ): number => {
+  if (typeof value === "undefined" && typeof alternative !== "undefined") {
+    return alternative;
+  }
   if (!value) {
     // falsy is 0
     return 0;
@@ -16,13 +19,10 @@ export const forceNumber = (
   }
   const num = parseFloat(value);
   if (isNaN(num)) {
-    if (raise) {
-      throw new FormulaError(
-        "VALUE!",
-        `${value} cannot be converted to a number`
-      );
-    }
-    return 0;
+    throw new FormulaError(
+      "VALUE!",
+      `${value} cannot be converted to a number`
+    );
   }
   return num;
 };
@@ -49,9 +49,12 @@ export const forceString = (value: any, base: UserTable): string => {
 export const forceBoolean = (
   value: any,
   base: UserTable,
-  raise = true
+  alternative?: boolean
 ): boolean => {
-  if (value == null) {
+  if (typeof value === "undefined" && typeof alternative !== "undefined") {
+    return alternative;
+  }
+  if (value === null) {
     return false;
   }
   if (value instanceof UserTable) {
@@ -61,13 +64,10 @@ export const forceBoolean = (
   if (typeof value === "string" || value instanceof String) {
     const bool = { true: true, false: false }[value.toLowerCase()];
     if (bool == null) {
-      if (raise) {
-        throw new FormulaError(
-          "VALUE!",
-          `text '${value}' cannot be converted to a boolean`
-        );
-      }
-      return false;
+      throw new FormulaError(
+        "VALUE!",
+        `text '${value}' cannot be converted to a boolean`
+      );
     }
     return bool;
   }
