@@ -20,7 +20,7 @@ export class GteFunction extends BaseFunction {
         "Number of arguments for GTE is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.table));
+    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
   }
   // @ts-ignore
   protected main(v1: number, v2: number) {

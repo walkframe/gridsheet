@@ -21,13 +21,13 @@ export class AverageFunction extends BaseFunction {
     this.args.map((arg) => {
       if (arg instanceof UserTable) {
         spreaded.push(
-          ...evaluateTable(arg, this.table)
+          ...evaluateTable(arg, this.base)
             .flat()
             .filter((v) => typeof v === "number")
         );
         return;
       }
-      spreaded.push(ensureNumber(arg, this.table));
+      spreaded.push(ensureNumber(arg, this.base));
     });
     if (spreaded.length === 0) {
       throw new FormulaError(

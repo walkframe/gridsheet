@@ -19,7 +19,7 @@ export class TanFunction extends BaseFunction {
         "Number of arguments for TAN is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.table));
+    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
   }
   // @ts-ignore
   protected main(angle: number) {

@@ -19,7 +19,7 @@ export class AsinFunction extends BaseFunction {
         "Number of arguments for ASIN is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.table));
+    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
     if (-1 > this.args[0] || this.args[0] > 1) {
       throw new FormulaError("NUM!", "value must be between -1 and 1");
     }

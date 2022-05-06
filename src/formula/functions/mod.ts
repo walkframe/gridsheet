@@ -20,7 +20,7 @@ export class ModFunction extends BaseFunction {
         "Number of arguments for MOD is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.table));
+    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
     if (this.args[1] === 0) {
       throw new FormulaError("DIV/0!", "The second argument must be non-zero.");
     }

@@ -19,7 +19,7 @@ export class LenFunction extends BaseFunction {
         "Number of arguments for LEN is incorrect."
       );
     }
-    this.args = [ensureString(this.args[0], this.table)];
+    this.args = [ensureString(this.args[0], this.base)];
   }
   // @ts-ignore
   protected main(text: string) {

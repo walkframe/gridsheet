@@ -20,7 +20,7 @@ export class ConcatFunction extends BaseFunction {
         "Number of arguments for CONCAT is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureString(arg, this.table));
+    this.args = this.args.map((arg) => ensureString(arg, this.base));
   }
   // @ts-ignore
   protected main(v1: string, v2: string) {

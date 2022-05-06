@@ -5,9 +5,9 @@ export class BaseFunction {
   public helpTexts = ["Function's description."];
   public helpArgs = [{ name: "value1", description: "" }];
 
-  constructor(public args: any[], public table: UserTable) {
+  constructor(public args: any[], public base: UserTable) {
     this.args = args;
-    this.table = table;
+    this.base = base;
   }
   protected validate() {}
 

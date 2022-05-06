@@ -26,7 +26,7 @@ export class RoundFunction extends BaseFunction {
         "Number of arguments for ROUND is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.table));
+    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
   }
   // @ts-ignore
   protected main(value: number, digit = 0) {

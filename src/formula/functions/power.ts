@@ -17,7 +17,7 @@ export class PowerFunction extends BaseFunction {
         "Number of arguments for POWER is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.table));
+    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
   }
   // @ts-ignore
   protected main(base: number, exponent: number) {

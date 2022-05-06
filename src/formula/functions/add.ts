@@ -20,7 +20,7 @@ export class AddFunction extends BaseFunction {
         "Number of arguments for ADD is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.table));
+    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
   }
   // @ts-ignore
   protected main(v1: number, v2: number) {

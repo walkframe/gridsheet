@@ -24,7 +24,7 @@ export class CountifFunction extends BaseFunction {
   }
   // @ts-ignore
   protected main(table: UserTable, condition: string) {
-    const matrix = evaluateTable(table, this.table);
+    const matrix = evaluateTable(table, this.base);
     return matrix.flat().filter((v) => check(v, condition)).length;
   }
 }

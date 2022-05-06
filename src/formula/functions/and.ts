@@ -18,7 +18,7 @@ export class AndFunction extends BaseFunction {
   ];
 
   protected validate() {
-    this.args = this.args.map((arg) => ensureBoolean(arg, this.table));
+    this.args = this.args.map((arg) => ensureBoolean(arg, this.base));
   }
   // @ts-ignore
   protected main(...values: boolean[]) {
