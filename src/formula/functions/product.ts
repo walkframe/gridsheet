@@ -3,9 +3,9 @@ import { UserTable } from "../../api/tables";
 import { BaseFunction } from "./__base";
 import { ensureNumber } from "./__utils";
 
-export class CountFunction extends BaseFunction {
-  example = "COUNT(A2:A100,B2:B100,4,26)";
-  helpText = ["Returns the count of a series of numbers or cells."];
+export class ProductFunction extends BaseFunction {
+  example = "PRODUCT(A2:A100)";
+  helpText = ["Returns the product of a series of numbers or cells."];
   helpArgs = [
     { name: "value1", description: "First number or range." },
     {
@@ -17,10 +17,14 @@ export class CountFunction extends BaseFunction {
   ];
 
   protected validate() {
-    const spreaded: any[] = [];
+    const spreaded: number[] = [];
     this.args.map((arg) => {
       if (arg instanceof UserTable) {
-        spreaded.push(...evaluateTable(arg, this.table).flat());
+        spreaded.push(
+          ...evaluateTable(arg, this.table)
+            .flat()
+            .filter((v) => typeof v === "number")
+        );
         return;
       }
       spreaded.push(ensureNumber(arg, this.table));
@@ -28,7 +32,7 @@ export class CountFunction extends BaseFunction {
     this.args = spreaded;
   }
   // @ts-ignore
-  protected main(...values: any[]) {
-    return values.filter((v) => typeof v === "number").length;
+  protected main(...values: number[]) {
+    return values.reduce((a, b) => a * b);
   }
 }

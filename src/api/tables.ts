@@ -86,7 +86,7 @@ export class UserTable {
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
         const cell = this.get(y, x) || {};
-        matrix[y - top][x - left] = cell[key] || null;
+        matrix[y - top][x - left] = cell[key];
       }
     }
     return matrix;
