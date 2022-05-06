@@ -26,7 +26,7 @@ export class SqrtFunction extends BaseFunction {
     }
   }
   // @ts-ignore
-  protected main(v1: number) {
-    return Math.sqrt(v1);
+  protected main(value: number) {
+    return Math.sqrt(value);
   }
 }

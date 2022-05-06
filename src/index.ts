@@ -14,3 +14,6 @@ export {
 } from "./types";
 export { ThousandSeparatorRenderer } from "./renderers/thousand_separator";
 export { BaseFunction } from "./formula/functions/__base";
+
+import pkg from "../package.json";
+console.debug(`react-gridsheet@${pkg.version} is working.`);

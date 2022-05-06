@@ -5,7 +5,7 @@ import { ensureNumber } from "./__utils";
 export class AbsFunction extends BaseFunction {
   example = "ABS(-2)";
   helpText = ["Returns the absolute value of a number"];
-  helpArgs = [{ name: "value1", description: "target number" }];
+  helpArgs = [{ name: "value", description: "target number" }];
 
   protected validate() {
     if (this.args.length !== 1) {
@@ -17,7 +17,7 @@ export class AbsFunction extends BaseFunction {
     this.args = this.args.map((arg) => ensureNumber(arg, this.table));
   }
   // @ts-ignore
-  protected main(v1: number) {
-    return Math.abs(v1);
+  protected main(value: number) {
+    return Math.abs(value);
   }
 }

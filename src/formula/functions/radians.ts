@@ -22,7 +22,7 @@ export class RadiansFunction extends BaseFunction {
     this.args = this.args.map((arg) => ensureNumber(arg, this.table));
   }
   // @ts-ignore
-  protected main(v1: number) {
-    return (v1 / 180) * Math.PI;
+  protected main(angle: number) {
+    return (angle / 180) * Math.PI;
   }
 }

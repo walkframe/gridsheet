@@ -29,7 +29,7 @@ export class DivideFunction extends BaseFunction {
     }
   }
   // @ts-ignore
-  protected main(v1: number, v2: number) {
-    return v1 / v2;
+  protected main(divided: number, divisor: number) {
+    return divided / divisor;
   }
 }

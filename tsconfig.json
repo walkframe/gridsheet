@@ -15,6 +15,7 @@
     "strictNullChecks": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "resolveJsonModule": true,
     "baseUrl": "./src/",
     "forceConsistentCasingInFileNames": true
   },

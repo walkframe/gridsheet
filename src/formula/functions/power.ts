@@ -20,7 +20,7 @@ export class PowerFunction extends BaseFunction {
     this.args = this.args.map((arg) => ensureNumber(arg, this.table));
   }
   // @ts-ignore
-  protected main(v1: number, v2: number) {
-    return Math.pow(v1, v2);
+  protected main(base: number, exponent: number) {
+    return Math.pow(base, exponent);
   }
 }
