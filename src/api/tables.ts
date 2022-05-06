@@ -72,9 +72,6 @@ export class UserTable {
     }
     return this.data[y % this.numRows(1)][x % this.numCols(1)];
   }
-  public firstValue() {
-    return this.data?.[0]?.[0]?.value;
-  }
 
   public numRows(base = 0) {
     const [top, left, bottom, right] = this.area;
@@ -109,7 +106,7 @@ export class UserTable {
       for (let x = left; x <= right; x++) {
         const cell = this.get(y - top, x - left);
         if (cell != null) {
-          result[xy2cell(x, y)] = cell[key] || null;
+          result[xy2cell(x, y)] = cell[key];
         }
       }
     }
@@ -124,7 +121,7 @@ export class UserTable {
       for (let x = left; x <= right; x++) {
         const cell = this.get(y - top, x - left);
         if (cell != null) {
-          row[x2c(x) || y2r(y)] = cell[key] || null;
+          row[x2c(x) || y2r(y)] = cell[key];
         }
       }
     }
@@ -139,7 +136,7 @@ export class UserTable {
       for (let y = top; y <= bottom; y++) {
         const cell = this.get(y - top, x - left);
         if (cell != null) {
-          col[y2r(y) || x2c(x)] = cell[key] || null;
+          col[y2r(y) || x2c(x)] = cell[key];
         }
       }
     }

@@ -1,4 +1,4 @@
-import { evaluateTable, FormulaError } from "../evaluator";
+import { solveMatrix, FormulaError } from "../evaluator";
 import { UserTable } from "../../api/tables";
 import { BaseFunction } from "./__base";
 import { ensureNumber } from "./__utils";
@@ -27,7 +27,7 @@ export class MinFunction extends BaseFunction {
     this.args.map((arg) => {
       if (arg instanceof UserTable) {
         spreaded.push(
-          ...evaluateTable(arg, this.base)
+          ...solveMatrix(arg, this.base)
             .flat()
             .filter((v) => typeof v === "number")
         );

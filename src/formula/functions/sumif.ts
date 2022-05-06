@@ -1,4 +1,4 @@
-import { evaluateTable, FormulaError } from "../evaluator";
+import { solveMatrix, FormulaError } from "../evaluator";
 import { UserTable } from "../../api/tables";
 import { BaseFunction } from "./__base";
 import { check, ensureNumber } from "./__utils";
@@ -36,7 +36,7 @@ export class SumifFunction extends BaseFunction {
     if (!(range instanceof UserTable)) {
       return check(range, condition) ? range : 0;
     }
-    const conditionMatrix = evaluateTable(range, this.base);
+    const conditionMatrix = solveMatrix(range, this.base);
     let sumMatrix = conditionMatrix;
     if (sumRange) {
       const [top, left] = [sumRange.top(), sumRange.left()];
@@ -46,7 +46,7 @@ export class SumifFunction extends BaseFunction {
         top + sumRange.numRows(),
         left + sumRange.numCols(),
       ];
-      sumMatrix = evaluateTable(this.base.copy(area), this.base);
+      sumMatrix = solveMatrix(this.base.copy(area), this.base);
     }
     let total = 0;
     conditionMatrix.map((row, y) =>

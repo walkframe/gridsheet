@@ -1,4 +1,4 @@
-import { evaluateTable, FormulaError } from "../evaluator";
+import { solveMatrix, FormulaError } from "../evaluator";
 import { UserTable } from "../../api/tables";
 import { BaseFunction } from "./__base";
 import { ensureBoolean, ensureNumber, stripTable } from "./__utils";
@@ -44,7 +44,7 @@ export class HlookupFunction extends BaseFunction {
   }
   // @ts-ignore
   protected main(key: any, range: UserTable, index: number, isSorted: boolean) {
-    const matrix = evaluateTable(range, this.base);
+    const matrix = solveMatrix(range, this.base);
     if (isSorted) {
       let last = -1;
       for (let x = 0; x <= range.numCols(); x++) {

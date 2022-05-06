@@ -1,4 +1,4 @@
-import { evaluateTable, FormulaError } from "../evaluator";
+import { solveMatrix, FormulaError } from "../evaluator";
 import { UserTable } from "../../api/tables";
 import { BaseFunction } from "./__base";
 import { check } from "./__utils";
@@ -24,7 +24,7 @@ export class CountifFunction extends BaseFunction {
   }
   // @ts-ignore
   protected main(table: UserTable, condition: string) {
-    const matrix = evaluateTable(table, this.base);
+    const matrix = solveMatrix(table, this.base);
     return matrix.flat().filter((v) => check(v, condition)).length;
   }
 }

@@ -1,5 +1,5 @@
 import { UserTable } from "../../api/tables";
-import { evaluateTable, FormulaError } from "../evaluator";
+import { solveMatrix, FormulaError } from "../evaluator";
 
 export const ensureNumber = (
   value: any,
@@ -76,7 +76,7 @@ export const ensureBoolean = (
 
 export const stripTable = (value: any, base: UserTable, y = 0, x = 0) => {
   if (value instanceof UserTable) {
-    return evaluateTable(value, base)[y][x];
+    return solveMatrix(value, base)[y][x];
   }
   return value;
 };

@@ -67,20 +67,25 @@ export const evaluate = (formula: string, base: UserTable) => {
   return expr?.evaluate?.(base);
 };
 
-export const evaluateTable = (
-  table: UserTable,
-  base: UserTable
+export const solveFormula = (value: any, base: UserTable) => {
+  if (typeof value === "string" || value instanceof String) {
+    if (value.charAt(0) === "=") {
+      return evaluate(value.substring(1), base);
+    }
+  }
+  return value;
+};
+
+export const solveMatrix = (
+  target: UserTable,
+  base: UserTable,
+  area?: AreaType
 ): MatrixType => {
-  const area = table.getWholeArea();
-  return table.matrixFlatten(area).map((row) => {
-    return row.map((col) => {
-      if (typeof col === "string" || col instanceof String) {
-        if (col.charAt(0) === "=") {
-          return evaluate(col.substring(1), base);
-        }
-      }
-      return col;
-    });
+  if (area == null) {
+    area = target.getWholeArea();
+  }
+  return target.matrixFlatten(area).map((row) => {
+    return row.map((col) => solveFormula(col, base));
   });
 };
 
