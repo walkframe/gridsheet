@@ -4,8 +4,15 @@ import { createMatrix, matrixIntoCells } from "./src/api/matrix";
 import { defaultParser } from "./src/parsers/core";
 import { defaultRenderer } from "./src/renderers/core";
 import { CellType } from "./src/types";
+import { BaseFunction } from "./src";
 
-type Obj = {v: any};
+class TestFunction extends BaseFunction {
+  main() {
+    return "てすとだよ";
+  }
+}
+
+type Obj = { v: any };
 
 class ObjectRenderer extends Renderer {
   object(cell: CellType): any {
@@ -20,10 +27,10 @@ class ObjectRenderer extends Renderer {
 
 class ObjectParser<T extends Obj> extends Parser {
   callback(value: any, cell: CellType): T {
-    console.log("callback", value, "=>", {v: value});
+    console.log("callback", value, "=>", { v: value });
     return value;
   }
-};
+}
 
 class KanjiRenderer extends Renderer {
   protected kanjiMap: { [s: string]: string } = {
@@ -65,10 +72,21 @@ export default {
 };
 
 const initialData = [
-  [123456, "b", "c", "d", "e", "aa", "bb", "cc", [1, 2, 3], "ee"],
+  [
+    123456,
+    "'=1+2+3+4",
+    "=1+2+3+4",
+    "d",
+    "e",
+    "aa",
+    "bb",
+    "cc",
+    [1, 2, 3],
+    "ee",
+  ],
   ["a", "b", 789, "d", "e", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
+  ["a", "b", "c", "d", "=test()", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
@@ -137,22 +155,19 @@ const initialData = [
   [false, "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
 ];
 
-const initialCells = matrixIntoCells(createMatrix(1000, 50), {})
+const initialCells = matrixIntoCells(createMatrix(1000, 50), {});
 
 export const showIndex = () => {
   let [num, setNum] = React.useState(1);
-  React.useEffect(() => {
-    const id = setInterval(() => {
-      setNum(++num);
-    }, 3000);
-    return () => clearInterval(id);
-  });
 
   return (
     <>
       <div>aaaaa</div>
 
       <GridSheet
+        additionalFunctions={{
+          test: TestFunction,
+        }}
         initial={matrixIntoCells(initialData, {
           default: { style: { fontStyle: "italic" } },
           A1: { value: 1, style: { color: "#008888" } },
@@ -203,6 +218,7 @@ export const showIndex = () => {
           historySize: 100,
           mode: "dark",
           //stickyHeaders: "horizontal",
+
           onSave: (table, positions) => {
             console.log(
               "matrix on save:",
@@ -211,10 +227,7 @@ export const showIndex = () => {
             console.log("positions on save", positions);
           },
           onChange: (table, positions) => {
-            console.log(
-              "matrix on change:",
-              table.matrixFlatten()
-            );
+            console.log("matrix on change:", table.matrixFlatten());
             if (typeof positions !== "undefined") {
               console.log("positions on change", positions);
             }
@@ -224,15 +237,16 @@ export const showIndex = () => {
               "matrix on change diff:",
               table.top(),
               //table.rows(),
-              table.objectFlatten(),
+              table.objectFlatten()
             );
           },
           onChangeDiffNumMatrix: (coordinate) => {
             console.log("add or remove", coordinate);
           },
           onSelect: (table, positions) => {
-            console.log("positions on select", positions)
+            console.log("positions on select", positions);
           },
+
           renderers: {
             kanji: new KanjiRenderer(),
           },
@@ -250,7 +264,14 @@ export const showIndex = () => {
                 {" "}
                 <GridSheet
                   style={{ maxWidth: "100%", maxHeight: "150px" }}
-                  initial={matrixIntoCells([["resizable", "both", "!"], [1, 2, 3], [undefined, 5, 6]], {A3: {value: "four"}})}
+                  initial={matrixIntoCells(
+                    [
+                      ["resizable", "both", "!"],
+                      [1, 2, 3],
+                      [undefined, 5, 6],
+                    ],
+                    { A3: { value: "four" } }
+                  )}
                   options={{ sheetResize: "both" }}
                 />
               </td>
@@ -258,7 +279,14 @@ export const showIndex = () => {
                 {" "}
                 <GridSheet
                   style={{ maxWidth: "100%", maxHeight: "150px" }}
-                  initial={matrixIntoCells([["resizable", "vertically", "!"], [1, 2, 3], [4, undefined, 6]], {B3: {value: "five"}})}
+                  initial={matrixIntoCells(
+                    [
+                      ["resizable", "vertically", "!"],
+                      [1, 2, 3],
+                      [4, undefined, 6],
+                    ],
+                    { B3: { value: "five" } }
+                  )}
                   options={{ sheetResize: "vertical" }}
                 />
               </td>
@@ -268,7 +296,14 @@ export const showIndex = () => {
                 {" "}
                 <GridSheet
                   style={{ maxWidth: "100%", maxHeight: "150px" }}
-                  initial={matrixIntoCells([["resizable", "horizontally", "!"], [1, 2, 3], [4, 5, undefined]], {C3: {value: "six"}})}
+                  initial={matrixIntoCells(
+                    [
+                      ["resizable", "horizontally", "!"],
+                      [1, 2, 3],
+                      [4, 5, undefined],
+                    ],
+                    { C3: { value: "six" } }
+                  )}
                   options={{ sheetResize: "horizontal" }}
                 />
               </td>
@@ -276,7 +311,14 @@ export const showIndex = () => {
                 {" "}
                 <GridSheet
                   style={{ maxWidth: "100%", maxHeight: "150px" }}
-                  initial={matrixIntoCells([["not", "resizable", "!!!"], [1, 2, 3], [4, 5, 6]], {A3: {value: "four"}})}
+                  initial={matrixIntoCells(
+                    [
+                      ["not", "resizable", "!!!"],
+                      [1, 2, 3],
+                      [4, 5, 6],
+                    ],
+                    { A3: { value: "four" } }
+                  )}
                   options={{ sheetResize: "none" }}
                 />
               </td>
@@ -311,10 +353,7 @@ export const showIndex = () => {
             }
           },
           onChangeDiff: (table, positions) => {
-            console.log(
-              "matrix on change diff:",
-              table.objectFlatten(),
-            );
+            console.log("matrix on change diff:", table.objectFlatten());
           },
         }}
       />

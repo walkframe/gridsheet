@@ -24,11 +24,9 @@ export const GridSheet: React.FC<Props> = ({
   options = {},
   className,
   style,
+  additionalFunctions = {},
 }) => {
-  const {
-    numRows = 0, numCols = 0,
-    sheetResize: resize = "both",
-  } = options;
+  const { numRows = 0, numCols = 0, sheetResize: resize = "both" } = options;
 
   const sheetRef = React.useRef<HTMLDivElement>(document.createElement("div"));
   const searchInputRef = React.useRef<HTMLInputElement>(
@@ -44,7 +42,7 @@ export const GridSheet: React.FC<Props> = ({
   const verticalHeadersRef = React.useRef<List>(null);
   const horizontalHeadersRef = React.useRef<List>(null);
   const initialState: StoreType = {
-    table: new Table(numRows, numCols),
+    table: new Table({ numRows, numCols }),
     tableInitialized: false,
     sheetRef,
     searchInputRef,
@@ -93,10 +91,16 @@ export const GridSheet: React.FC<Props> = ({
       if (sheetRef.current?.clientWidth) {
         setSheetWidth(sheetRef.current?.clientWidth);
       }
-    }, 700);
+    }, 1000);
   }, []);
 
-  const { onChange, onChangeDiff, onChangeDiffNumMatrix, onSelect, mode } = options;
+  const {
+    onChange,
+    onChangeDiff,
+    onChangeDiffNumMatrix,
+    onSelect,
+    mode,
+  } = options;
   return (
     <GridSheetLayout
       ref={sheetRef}
@@ -109,10 +113,16 @@ export const GridSheet: React.FC<Props> = ({
           initial={initial}
           changes={changes}
           options={{ ...options, sheetHeight, sheetWidth }}
+          additionalFunctions={additionalFunctions}
         />
         <ContextMenu />
         <Resizer />
-        <Emitter onChange={onChange} onChangeDiff={onChangeDiff} onChangeDiffNumMatrix={onChangeDiffNumMatrix} onSelect={onSelect} />
+        <Emitter
+          onChange={onChange}
+          onChangeDiff={onChangeDiff}
+          onChangeDiffNumMatrix={onChangeDiffNumMatrix}
+          onSelect={onSelect}
+        />
       </Context.Provider>
     </GridSheetLayout>
   );

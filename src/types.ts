@@ -6,6 +6,7 @@ import {
 import { RendererType } from "./renderers/core";
 import { ParserType } from "./parsers/core";
 import { UserTable, Table } from "./api/tables";
+import { FunctionMapping } from "./formula/functions/__base";
 
 export type Y = number;
 export type X = number;
@@ -23,7 +24,11 @@ export type Parsers = { [s: string]: ParserType };
 
 export type Feedback = (
   table: UserTable,
-  positions?: {pointing: PositionType, selectingFrom: PositionType, selectingTo: PositionType},
+  positions?: {
+    pointing: PositionType;
+    selectingFrom: PositionType;
+    selectingTo: PositionType;
+  }
 ) => void;
 
 export type FeedbackForMatrix = (coordinate: {
@@ -49,7 +54,7 @@ export type CellType = {
   custom?: any;
 };
 export type DataType = (CellType | null)[][];
-export type CellsType = {[s: string]: CellType};
+export type CellsType = { [s: string]: CellType };
 
 export type OptionsType = {
   sheetHeight?: number;
@@ -90,7 +95,7 @@ export type OperationCommandType =
   | "ADD_ROWS"
   | "REMOVE_ROWS"
   | "ADD_COLS"
-  | "REMOVE_COLS"
+  | "REMOVE_COLS";
 
 export type OperationType = {
   command: OperationCommandType;
@@ -146,4 +151,5 @@ export type Props = {
   options?: OptionsType;
   className?: string;
   style?: React.CSSProperties;
+  additionalFunctions?: FunctionMapping;
 };

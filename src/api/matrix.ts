@@ -1,4 +1,3 @@
-
 import {
   MatrixType,
   AreaType,
@@ -49,6 +48,17 @@ export const zoneToArea = (zone: ZoneType): AreaType => {
   return [top, left, bottom, right];
 };
 
+export const areaToRange = (area: AreaType): string => {
+  const [top, left, bottom, right] = area;
+  return `${xy2cell(left, top)}${xy2cell(right, bottom)}`;
+};
+
+export const rangeToArea = (range: string): AreaType => {
+  const cells = range.split(":");
+  const [start, end] = cells;
+  return [...cellToIndexes(start), ...cellToIndexes(end)];
+};
+
 export const between = (range: RangeType, index: number) => {
   if (range[0] === -1 || range[1] === -1) {
     return false;
@@ -68,11 +78,14 @@ export const among = (area: AreaType, position: PositionType) => {
   return top <= y && y <= bottom && left <= x && x <= right;
 };
 
-export const zoneShape = (zone: ZoneType, base=0): [Height, Width] => {
-  return [base + Math.abs(zone[0] - zone[2]), base + Math.abs(zone[1] - zone[3])];
+export const zoneShape = (zone: ZoneType, base = 0): [Height, Width] => {
+  return [
+    base + Math.abs(zone[0] - zone[2]),
+    base + Math.abs(zone[1] - zone[3]),
+  ];
 };
 
-export const matrixShape = (matrix: MatrixType, base=0): [Height, Width] => {
+export const matrixShape = (matrix: MatrixType, base = 0): [Height, Width] => {
   const h = matrix.length;
   if (h === 0) {
     return [0, 0];
@@ -121,7 +134,11 @@ export const aa2oa = (
   return oa;
 };
 
-export const writeMatrix = <T = any>(base: T[][], target: T[][], area: AreaType) => {
+export const writeMatrix = <T = any>(
+  base: T[][],
+  target: T[][],
+  area: AreaType
+) => {
   const result: T[][] = [];
   const [top, left, bottom, right] = area;
   base.map((rowFrom, y) => {
@@ -131,12 +148,12 @@ export const writeMatrix = <T = any>(base: T[][], target: T[][], area: AreaType)
         col = target[y - top][x - left];
       }
       result[y].push(col);
-    })
+    });
   });
   return result;
 };
 
-export const createMatrix = (numRows: number, numCols: number, fill=null) => {
+export const createMatrix = (numRows: number, numCols: number, fill = null) => {
   return [...Array(numRows)].map(() => Array(numCols).fill(fill));
 };
 
@@ -147,14 +164,18 @@ export const cropMatrix = (matrix: MatrixType, area: AreaType): MatrixType => {
     .map((cols) => cols.slice(left, right + 1));
 };
 
-export const matrixIntoCells = (matrix: MatrixType, cells: CellsType, origin="A1") => {
+export const matrixIntoCells = (
+  matrix: MatrixType,
+  cells: CellsType,
+  origin = "A1"
+) => {
   const [baseY, baseX] = cellToIndexes(origin);
   matrix.map((row, y) => {
     row.map((value, x) => {
       const id = xy2cell(baseX + x, baseY + y);
       if (typeof value !== "undefined") {
         const cell = cells[id];
-        cells[id] = {...cell, value};
+        cells[id] = { ...cell, value };
       }
     });
   });
