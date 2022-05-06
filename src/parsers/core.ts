@@ -56,6 +56,7 @@ export class Parser {
   }
 
   protected bool(value: string, cell: CellType): boolean | undefined {
+    // @ts-ignore
     return { true: true, false: false }[value];
   }
 
