@@ -238,6 +238,7 @@ export class Lexer {
                 if (buf.match(/^[+-]?(\d*[.])?\d+$/)) {
                   this.tokens.push(new Token("VALUE", parseFloat(buf)));
                 } else {
+                  // @ts-ignore
                   const bool = { true: true, false: false }[buf.toLowerCase()];
                   if (bool != null) {
                     this.tokens.push(new Token("VALUE", bool));

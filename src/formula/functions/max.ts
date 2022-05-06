@@ -28,8 +28,8 @@ export class MaxFunction extends BaseFunction {
       if (arg instanceof UserTable) {
         spreaded.push(
           ...solveMatrix(arg, this.base)
-            .flat()
-            .filter((v) => typeof v === "number")
+            .reduce((a, b) => a.concat(b))
+            .filter((v: any) => typeof v === "number")
         );
         return;
       }

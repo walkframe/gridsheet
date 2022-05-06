@@ -62,6 +62,7 @@ export const ensureBoolean = (
     return ensureBoolean(v, base, alternative);
   }
   if (typeof value === "string" || value instanceof String) {
+    // @ts-ignore
     const bool = { true: true, false: false }[value.toLowerCase()];
     if (bool == null) {
       throw new FormulaError(

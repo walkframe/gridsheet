@@ -20,7 +20,9 @@ export class CountFunction extends BaseFunction {
     const spreaded: any[] = [];
     this.args.map((arg) => {
       if (arg instanceof UserTable) {
-        spreaded.push(...solveMatrix(arg, this.base).flat());
+        spreaded.push(
+          ...solveMatrix(arg, this.base).reduce((a, b) => a.concat(b))
+        );
         return;
       }
       spreaded.push(ensureNumber(arg, this.base));
