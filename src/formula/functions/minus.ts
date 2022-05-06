@@ -1,6 +1,6 @@
 import { FormulaError } from "../evaluator";
 import { BaseFunction } from "./__base";
-import { forceNumber } from "./__utils";
+import { ensureNumber } from "./__utils";
 
 export class MinusFunction extends BaseFunction {
   example = "MINUS(8, 3)";
@@ -20,7 +20,7 @@ export class MinusFunction extends BaseFunction {
         "Number of arguments for MINUS is incorrect."
       );
     }
-    this.args = this.args.map((arg) => forceNumber(arg, this.table));
+    this.args = this.args.map((arg) => ensureNumber(arg, this.table));
   }
   // @ts-ignore
   protected main(v1: number, v2: number) {

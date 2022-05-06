@@ -1,7 +1,7 @@
 import { evaluateTable, FormulaError } from "../evaluator";
 import { UserTable } from "../../api/tables";
 import { BaseFunction } from "./__base";
-import { check, forceNumber } from "./__utils";
+import { check, ensureNumber } from "./__utils";
 import { AreaType } from "../../types";
 
 export class SumifFunction extends BaseFunction {

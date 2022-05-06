@@ -1,7 +1,7 @@
 import { evaluateTable, FormulaError } from "../evaluator";
 import { UserTable } from "../../api/tables";
 import { BaseFunction } from "./__base";
-import { check, forceBoolean, forceNumber, forceScalar } from "./__utils";
+import { ensureBoolean, ensureNumber, stripTable } from "./__utils";
 
 export class HlookupFunction extends BaseFunction {
   example = "HLOOKUP(10003, A2:Z6, 2, FALSE)";
@@ -34,13 +34,13 @@ export class HlookupFunction extends BaseFunction {
       );
     }
     if (this.args[0] instanceof UserTable) {
-      this.args[0] = forceScalar(this.args[0], this.table);
+      this.args[0] = stripTable(this.args[0], this.table);
     }
     if (!(this.args[1] instanceof UserTable)) {
       throw new FormulaError("REF!", "2nd argument must be range");
     }
-    this.args[2] = forceNumber(this.args[2], this.table);
-    this.args[3] = forceBoolean(this.args[3], this.table, true);
+    this.args[2] = ensureNumber(this.args[2], this.table);
+    this.args[3] = ensureBoolean(this.args[3], this.table, true);
   }
   // @ts-ignore
   protected main(key: any, range: UserTable, index: number, isSorted: boolean) {
@@ -48,7 +48,8 @@ export class HlookupFunction extends BaseFunction {
     if (isSorted) {
       let last = -1;
       for (let x = 0; x <= range.numCols(); x++) {
-        if (matrix[0]?.[x] <= key) {
+        const v = matrix[0]?.[x];
+        if (v != null && v <= key) {
           last = x;
         } else {
           break;

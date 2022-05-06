@@ -1,6 +1,6 @@
 import { FormulaError } from "../evaluator";
 import { BaseFunction } from "./__base";
-import { forceNumber } from "./__utils";
+import { ensureNumber } from "./__utils";
 
 export class ModFunction extends BaseFunction {
   example = "MOD(10, 4)";
@@ -20,7 +20,7 @@ export class ModFunction extends BaseFunction {
         "Number of arguments for MOD is incorrect."
       );
     }
-    this.args = this.args.map((arg) => forceNumber(arg, this.table));
+    this.args = this.args.map((arg) => ensureNumber(arg, this.table));
     if (this.args[1] === 0) {
       throw new FormulaError("DIV/0!", "The second argument must be non-zero.");
     }

@@ -1,7 +1,7 @@
 import { UserTable } from "../../api/tables";
 import { evaluateTable, FormulaError } from "../evaluator";
 
-export const forceNumber = (
+export const ensureNumber = (
   value: any,
   base: UserTable,
   alternative?: number
@@ -14,8 +14,8 @@ export const forceNumber = (
     return 0;
   }
   if (value instanceof UserTable) {
-    const v = evaluateTable(value, base)[0][0];
-    return forceNumber(v, base);
+    const v = stripTable(value, base, 0, 0);
+    return ensureNumber(v, base, alternative);
   }
   const num = parseFloat(value);
   if (isNaN(num)) {
@@ -27,13 +27,13 @@ export const forceNumber = (
   return num;
 };
 
-export const forceString = (value: any, base: UserTable): string => {
+export const ensureString = (value: any, base: UserTable): string => {
   if (!value) {
     return "";
   }
   if (value instanceof UserTable) {
-    const v = evaluateTable(value, base)[0][0];
-    return forceString(v, base);
+    const v = stripTable(value, base, 0, 0);
+    return ensureString(v, base);
   }
   switch (value.constructor.name) {
     case "Date":
@@ -46,7 +46,7 @@ export const forceString = (value: any, base: UserTable): string => {
   }
 };
 
-export const forceBoolean = (
+export const ensureBoolean = (
   value: any,
   base: UserTable,
   alternative?: boolean
@@ -58,8 +58,8 @@ export const forceBoolean = (
     return false;
   }
   if (value instanceof UserTable) {
-    const v = evaluateTable(value, base)[0][0];
-    return forceBoolean(v, base);
+    const v = stripTable(value, base, 0, 0);
+    return ensureBoolean(v, base, alternative);
   }
   if (typeof value === "string" || value instanceof String) {
     const bool = { true: true, false: false }[value.toLowerCase()];
@@ -74,9 +74,9 @@ export const forceBoolean = (
   return Boolean(value);
 };
 
-export const forceScalar = (value: any, base: UserTable) => {
+export const stripTable = (value: any, base: UserTable, y = 0, x = 0) => {
   if (value instanceof UserTable) {
-    return evaluateTable(value, base)[0][0];
+    return evaluateTable(value, base)[y][x];
   }
   return value;
 };

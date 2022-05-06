@@ -1,5 +1,5 @@
 import { BaseFunction } from "./__base";
-import { forceBoolean } from "./__utils";
+import { ensureBoolean } from "./__utils";
 
 export class AndFunction extends BaseFunction {
   example = "AND(A1=1, A2=2)";
@@ -18,7 +18,7 @@ export class AndFunction extends BaseFunction {
   ];
 
   protected validate() {
-    this.args = this.args.map((arg) => forceBoolean(arg, this.table));
+    this.args = this.args.map((arg) => ensureBoolean(arg, this.table));
   }
   // @ts-ignore
   protected main(...values: boolean[]) {

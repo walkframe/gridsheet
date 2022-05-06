@@ -72,7 +72,7 @@ export const evaluateTable = (
   table: UserTable,
   base: UserTable
 ): MatrixType => {
-  const area: AreaType = table.getWholeArea();
+  const area = table.getWholeArea();
   return table.matrixFlatten(area).map((row) => {
     return row.map((col) => {
       if (typeof col === "string" || col instanceof String) {

@@ -1,5 +1,5 @@
 import { BaseFunction } from "./__base";
-import { forceString } from "./__utils";
+import { ensureString } from "./__utils";
 
 export class ConcatenateFunction extends BaseFunction {
   example = 'CONCATENATE("Hello", "World")';
@@ -16,7 +16,7 @@ export class ConcatenateFunction extends BaseFunction {
   ];
 
   protected validate() {
-    this.args = this.args.map((arg) => forceString(arg, this.table));
+    this.args = this.args.map((arg) => ensureString(arg, this.table));
   }
   // @ts-ignore
   protected main(...values: string[]) {

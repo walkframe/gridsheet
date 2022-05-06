@@ -1,6 +1,6 @@
 import { FormulaError } from "../evaluator";
 import { BaseFunction } from "./__base";
-import { forceString } from "./__utils";
+import { ensureString } from "./__utils";
 
 export class ConcatFunction extends BaseFunction {
   example = 'CONCAT("Hello", "World")';
@@ -20,7 +20,7 @@ export class ConcatFunction extends BaseFunction {
         "Number of arguments for CONCAT is incorrect."
       );
     }
-    this.args = this.args.map((arg) => forceString(arg, this.table));
+    this.args = this.args.map((arg) => ensureString(arg, this.table));
   }
   // @ts-ignore
   protected main(v1: string, v2: string) {

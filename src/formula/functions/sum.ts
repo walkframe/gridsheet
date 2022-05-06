@@ -1,7 +1,7 @@
 import { evaluateTable } from "../evaluator";
 import { UserTable } from "../../api/tables";
 import { BaseFunction } from "./__base";
-import { forceNumber } from "./__utils";
+import { ensureNumber } from "./__utils";
 
 export class SumFunction extends BaseFunction {
   example = "SUM(A2:A100, 101)";
@@ -27,7 +27,7 @@ export class SumFunction extends BaseFunction {
         );
         return;
       }
-      spreaded.push(forceNumber(arg, this.table));
+      spreaded.push(ensureNumber(arg, this.table));
     });
     this.args = spreaded;
   }

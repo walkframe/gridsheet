@@ -1,6 +1,6 @@
 import { FormulaError } from "../evaluator";
 import { BaseFunction } from "./__base";
-import { forceBoolean } from "./__utils";
+import { ensureBoolean } from "./__utils";
 
 export class NotFunction extends BaseFunction {
   example = "NOT(TRUE)";
@@ -17,7 +17,7 @@ export class NotFunction extends BaseFunction {
 
   protected validate() {
     if (this.args.length === 1) {
-      this.args[0] = forceBoolean(this.args[0], this.table);
+      this.args[0] = ensureBoolean(this.args[0], this.table);
       return;
     }
     throw new FormulaError(

@@ -1,6 +1,6 @@
 import { FormulaError } from "../evaluator";
 import { BaseFunction } from "./__base";
-import { forceBoolean } from "./__utils";
+import { ensureBoolean } from "./__utils";
 
 export class IfFunction extends BaseFunction {
   example = 'IF(A2 = "Human", "Hello", "World")';
@@ -23,7 +23,7 @@ export class IfFunction extends BaseFunction {
 
   protected validate() {
     if (this.args.length === 2 || this.args.length === 3) {
-      this.args[0] = forceBoolean(this.args[0], this.table);
+      this.args[0] = ensureBoolean(this.args[0], this.table);
       return;
     }
     throw new FormulaError(
