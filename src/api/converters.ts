@@ -60,14 +60,14 @@ export const a2n = (
 
 export const x2c = (
   x: number,
-  cacheSize = DEFAULT_ALPHABET_CACHE_SIZE,
+  cacheSize = DEFAULT_ALPHABET_CACHE_SIZE
 ): string => {
   return n2a(x + 1, cacheSize);
 };
 
 export const c2x = (
   col: string,
-  cacheSize = DEFAULT_ALPHABET_CACHE_SIZE,
+  cacheSize = DEFAULT_ALPHABET_CACHE_SIZE
 ): number => {
   return a2n(col, cacheSize);
 };
@@ -84,21 +84,21 @@ export const r2y = (row: number | string) => {
 };
 
 export const xy2cell = (x: number, y: number) => {
-  return `${x2c(x)}${y2r(y)}`
+  return `${x2c(x)}${y2r(y)}`;
 };
 
 export const matrix2tsv = (
   store: StoreType,
   y: number,
   x: number,
-  matrix: MatrixType,
+  matrix: MatrixType
 ): string => {
   const { table } = store;
   const lines: string[] = [];
   matrix.map((row, i) => {
     const cols: string[] = [];
     row.map((col, j) => {
-      const value = table.stringify(y + i, x + j, col || null);
+      const value = table.stringify(y + i, x + j, col);
       if (value.indexOf("\n") !== -1) {
         cols.push(`"${value.replace(/"/g, '""')}"`);
       } else {
