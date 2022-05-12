@@ -34,6 +34,8 @@ $ yarn add react-gridsheet
 
     - data prop was dropped.
 
+- 0.7.x
+  - Support formula.
 
 # Image
 <img src="https://github.com/walkframe/react-gridsheet/raw/master/gridsheet.png" alt="gridsheet image" />
