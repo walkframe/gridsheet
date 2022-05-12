@@ -36,6 +36,7 @@ $ yarn add react-gridsheet
 
 - 0.7.x
   - Support formula.
+    - Example: https://codesandbox.io/s/react-gridsheet-with-formula-fohcyk
 
 # Image
 <img src="https://github.com/walkframe/react-gridsheet/raw/master/gridsheet.png" alt="gridsheet image" />
