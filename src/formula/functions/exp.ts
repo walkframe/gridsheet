@@ -17,7 +17,7 @@ export class ExpFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 1) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for EXP is incorrect."
       );
     }

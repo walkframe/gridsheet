@@ -17,7 +17,7 @@ export class CountifFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 2) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for COUNTIF is incorrect."
       );
     }

@@ -6,7 +6,6 @@ import {
   RangeType,
   Feedback,
   HistoryType,
-
 } from "../types";
 import {
   zoneToArea,
@@ -57,7 +56,12 @@ class InitHistoryAction<T extends number> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
-      history: { operations: [], index: -1, size: payload, direction: "FORWARD" },
+      history: {
+        operations: [],
+        index: -1,
+        size: payload,
+        direction: "FORWARD",
+      },
     };
   }
 }
@@ -247,7 +251,7 @@ class UpdateTableAction<T extends Table> extends CoreAction<T> {
         command: "SET_TABLE",
         before,
         after: diffs,
-      })
+      }),
     };
   }
 }
@@ -310,9 +314,7 @@ class CutAction<T extends ZoneType> extends CoreAction<T> {
 }
 export const cut = new CutAction().bind();
 
-class PasteAction<
-  T extends { text: string; }
-> extends CoreAction<T> {
+class PasteAction<T extends { text: string }> extends CoreAction<T> {
   code = "PASTE";
   reduce(store: StoreType, payload: T): StoreType {
     const { choosing, copyingZone, cutting, table } = store;
@@ -330,7 +332,7 @@ class PasteAction<
         [y, x] = selectingArea;
         [height, width] = superposeArea(selectingArea, [0, 0, height, width]);
       }
-      selectingArea = [y, x, y + height, x + width]
+      selectingArea = [y, x, y + height, x + width];
       diffs = table.diffByPasting(selectingArea, matrixFrom);
     } else {
       let [height, width] = zoneShape(copyingArea);
@@ -338,7 +340,7 @@ class PasteAction<
         [y, x] = selectingArea;
         [height, width] = superposeArea(selectingArea, copyingArea);
       }
-      selectingArea = [y, x, y + height, x + width]
+      selectingArea = [y, x, y + height, x + width];
       diffs = table.diffByMoving(copyingArea, selectingArea, cutting);
     }
     const before = table.backDiffWithTable(diffs);
@@ -470,19 +472,10 @@ class WriteAction<T extends string> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     const { choosing, history, table } = store;
     const [y, x] = choosing;
-    const cell = table.parse(y, x, payload);
-    const diff = table.copy([y, x, y, x]);
-    diff.put(0, 0, cell);
-    const before = table.backDiffWithTable([diff]);
+    table.write(y, x, payload);
     return {
       ...store,
-      table: table.merge([diff]),
-      history: pushHistory(history, {
-        command: "SET_TABLE",
-        choosing,
-        before,
-        after: [diff],
-      }),
+      table: table.shallowCopy(),
       copyingZone: [-1, -1, -1, -1] as ZoneType,
     };
   }
@@ -524,7 +517,7 @@ export const clear = new ClearAction().bind();
 class UndoAction<T extends null> extends CoreAction<T> {
   code = "UNDO";
   reduce(store: StoreType, payload: T): StoreType {
-    const history = {...store.history, direction: "BACKWARD"} as HistoryType;
+    const history = { ...store.history, direction: "BACKWARD" } as HistoryType;
     if (history.index < 0) {
       return store;
     }
@@ -552,7 +545,7 @@ export const undo = new UndoAction().bind();
 class RedoAction<T extends null> extends CoreAction<T> {
   code = "REDO";
   reduce(store: StoreType, payload: T): StoreType {
-    const history = {...store.history, direction: "FORWARD"} as HistoryType;
+    const history = { ...store.history, direction: "FORWARD" } as HistoryType;
     if (history.index + 1 >= history.operations.length) {
       return store;
     }
@@ -749,15 +742,14 @@ class AddRowsAction<
   reduce(store: StoreType, payload: T): StoreType {
     const { table, history } = store;
     const { numRows, y, base } = payload;
-    const baseRow = table.copy([base, 0, base, table.numCols()]);
-    table.addRows(y, numRows, baseRow);
+    table.addRows(y, numRows, base);
     return {
       ...store,
       table: table.copy(),
       history: pushHistory(history, {
         command: "ADD_ROWS",
         before: null,
-        after: {y, numRows, base},
+        after: { y, numRows, base },
       }),
     };
   }
@@ -783,7 +775,7 @@ class AddColsAction<
       history: pushHistory(history, {
         command: "ADD_COLS",
         before: null,
-        after: {x, numCols, base},
+        after: { x, numCols, base },
       }),
     };
   }
@@ -808,7 +800,7 @@ class RemoveRowsAction<
       history: pushHistory(history, {
         command: "REMOVE_ROWS",
         before: [deleted],
-        after: {y, numRows},
+        after: { y, numRows },
       }),
     };
   }
@@ -833,7 +825,7 @@ class RemoveColsAction<
       history: pushHistory(history, {
         command: "REMOVE_COLS",
         before: [deleted],
-        after: {x, numCols},
+        after: { x, numCols },
       }),
     };
   }

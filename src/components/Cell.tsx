@@ -91,10 +91,10 @@ export const Cell: React.FC<Props> = React.memo(
     } catch (e) {
       if (e instanceof FormulaError) {
         errorMessage = e.message;
-        rendered = `#${e.code}`;
+        rendered = e.code;
       } else if (e instanceof RangeError) {
         errorMessage = "References are circulating.";
-        rendered = `#REF!`;
+        rendered = "#REF!";
       }
     }
 

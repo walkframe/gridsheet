@@ -14,7 +14,10 @@ export class LnFunction extends BaseFunction {
 
   protected validate() {
     if (this.args.length !== 1) {
-      throw new FormulaError("N/A", "Number of arguments for LN is incorrect.");
+      throw new FormulaError(
+        "#N/A",
+        "Number of arguments for LN is incorrect."
+      );
     }
     this.args = this.args.map((arg) => ensureNumber(arg, this.base));
     if (this.args[0] <= 0) {

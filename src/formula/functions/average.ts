@@ -31,7 +31,7 @@ export class AverageFunction extends BaseFunction {
     });
     if (spreaded.length === 0) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments must be greater than 0."
       );
     }

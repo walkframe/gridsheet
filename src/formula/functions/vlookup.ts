@@ -29,7 +29,7 @@ export class VlookupFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 3 && this.args.length !== 4) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for VLOOKUP is incorrect."
       );
     }
@@ -37,7 +37,7 @@ export class VlookupFunction extends BaseFunction {
       this.args[0] = stripTable(this.args[0], this.base);
     }
     if (!(this.args[1] instanceof UserTable)) {
-      throw new FormulaError("REF!", "2nd argument must be range");
+      throw new FormulaError("#REF!", "2nd argument must be range");
     }
     this.args[2] = ensureNumber(this.args[2], this.base);
     this.args[3] = ensureBoolean(this.args[3], this.base, true);
@@ -65,6 +65,6 @@ export class VlookupFunction extends BaseFunction {
         }
       }
     }
-    throw new FormulaError("N/A", `No values found for '${key}'.`);
+    throw new FormulaError("#N/A", `No values found for '${key}'.`);
   }
 }

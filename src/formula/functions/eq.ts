@@ -14,7 +14,10 @@ export class EqFunction extends BaseFunction {
 
   protected validate() {
     if (this.args.length !== 2) {
-      throw new FormulaError("N/A", "Number of arguments for EQ is incorrect.");
+      throw new FormulaError(
+        "#N/A",
+        "Number of arguments for EQ is incorrect."
+      );
     }
   }
   // @ts-ignore

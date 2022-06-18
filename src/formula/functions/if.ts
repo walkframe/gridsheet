@@ -27,7 +27,7 @@ export class IfFunction extends BaseFunction {
       return;
     }
     throw new FormulaError(
-      "N/A",
+      "#N/A",
       "Number of arguments for IF is incorrect. 2 or 3 arguments must be specified."
     );
   }

@@ -23,12 +23,12 @@ export class SumifFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 2 && this.args.length !== 3) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for SUMIF is incorrect."
       );
     }
     if (this.args[2] != undefined && this.args[2] instanceof UserTable) {
-      throw new FormulaError("N/A", "3rd argument must be range.");
+      throw new FormulaError("#N/A", "3rd argument must be range.");
     }
   }
   // @ts-ignore

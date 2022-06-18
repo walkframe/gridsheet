@@ -1,7 +1,15 @@
 import { defaultParser } from "../parsers/core";
 import { defaultRenderer } from "../renderers/core";
 import { cropMatrix, matrixShape, zoneShape } from "./matrix";
-import { AreaType, WriterType } from "../types";
+import {
+  Address,
+  AddressRow,
+  AddressTable,
+  AreaType,
+  CellsMapType,
+  PositionType,
+  WriterType,
+} from "../types";
 import { CellsType, CellType, Parsers, Renderers, DataType } from "../types";
 import { createMatrix, writeMatrix } from "./matrix";
 import { cellToIndexes, n2a, x2c, xy2cell, y2r } from "./converters";
@@ -15,15 +23,42 @@ type Props = {
   cells?: CellsType;
   parsers?: Parsers;
   renderers?: Renderers;
+  useBigInt?: boolean;
+  historySize?: number;
 };
 
+type HistoryType =
+  | "WRITE"
+  | "COPY"
+  | "CUT"
+  | "ADD_ROW"
+  | "ADD_COL"
+  | "REMOVE_ROW"
+  | "REMOVE_COL";
+
+export class History {
+  public operation: HistoryType;
+  public diffBefore?: CellsMapType;
+  public diffAfter?: CellsMapType;
+  public addressTable?: AddressTable;
+  public position?: PositionType;
+
+  constructor(operation: HistoryType) {
+    this.operation = operation;
+  }
+}
+
 export class UserTable {
-  protected data: DataType;
+  protected head: Address;
+  protected addressTable: AddressTable;
+  protected cells: CellsMapType;
   protected area: AreaType;
   protected parsers: Parsers;
   protected renderers: Renderers;
   public functions: FunctionMapping = {};
   protected base: UserTable;
+  protected histories: History[];
+  public historySize: number;
 
   constructor({
     numRows,
@@ -31,31 +66,41 @@ export class UserTable {
     cells = {},
     parsers = {},
     renderers = {},
+    useBigInt = false,
+    historySize = 10,
   }: Props) {
-    this.data = createMatrix(numRows + 1, numCols + 1);
+    this.head = useBigInt ? BigInt(0) : 0;
+    this.cells = new Map();
     this.area = [0, 0, numRows, numCols];
     this.parsers = parsers;
     this.renderers = renderers;
     this.base = this;
+    this.addressTable = [];
+    this.histories = [];
+    this.historySize = historySize;
 
-    Object.entries(cells).map(([cellId, cell]) => {
-      const [y, x] = cellToIndexes(cellId);
-      this.data[y][x] = cell;
-    });
-    const common = this.data[0][0];
-    this.data.map((row, y) => {
-      row.map((cell, x) => {
-        const row = this.data[y][0];
-        const col = this.data[0][x];
+    const common = cells.default;
+    for (let y = 0; y < numRows + 1; y++) {
+      const addresses: AddressRow = [];
+      const rowId = y2r(y);
+      const rowDefault = cells[rowId];
+      this.addressTable.push(addresses);
+      for (let x = 0; x < numRows + 1; x++) {
+        const address = this.head++;
+        addresses.push(address);
+        const cellId = xy2cell(x, y);
+        const colId = x2c(x);
+        const colDefault = cells[colId];
+        const cell = cells[cellId];
         const stacked = {
           ...common,
-          ...row,
-          ...col,
+          ...rowDefault,
+          ...colDefault,
           ...cell,
           style: {
             ...common?.style,
-            ...row?.style,
-            ...col?.style,
+            ...rowDefault?.style,
+            ...colDefault?.style,
             ...cell?.style,
           },
         } as CellType;
@@ -64,16 +109,30 @@ export class UserTable {
           delete stacked.width;
           delete stacked.label;
         }
-        this.data[y][x] = stacked;
-      });
-    });
+        this.cells.set(address, stacked);
+      }
+    }
+  }
+
+  public getAddress(y: number, x: number) {
+    return this.addressTable[y][x];
   }
 
   public get(y: number, x: number) {
     if (y === -1 || x === -1) {
-      return null;
+      return undefined;
     }
-    return this.data[y % this.numRows(1)][x % this.numCols(1)];
+    const address = this.addressTable[y % this.numRows(1)][x % this.numCols(1)];
+    return this.cells.get(address);
+  }
+
+  public getByAddress(address: Address) {
+    return this.cells.get(address);
+  }
+
+  public getById(id: string) {
+    const [y, x] = cellToIndexes(id);
+    return this.get(y, x);
   }
 
   public numRows(base = 0) {
@@ -297,27 +356,19 @@ export class UserTable {
   public copy(area?: AreaType) {
     const copied = new Table({ numRows: 0, numCols: 0 });
     if (area != null) {
-      const [top, left, bottom, right] = area;
-      const [numRows, numCols] = zoneShape(area, 1);
-      const data: DataType = createMatrix(numRows, numCols);
-      for (let i = 0; i < numRows; i++) {
-        const y = top + i;
-        for (let j = 0; j < numCols; j++) {
-          const x = left + j;
-          data[i][j] = this.data[y][x];
-        }
-      }
-      copied.data = data;
       copied.area = area;
       copied.base = this.base;
     } else {
-      copied.data = this.data.map((row) => row.map((col) => col));
       copied.area = [...this.area];
       copied.base = this;
     }
+    copied.addressTable = this.addressTable;
+    copied.cells = this.cells;
     copied.parsers = this.parsers;
     copied.renderers = this.renderers;
     copied.functions = this.functions;
+    copied.histories = this.histories;
+    copied.historySize = this.historySize;
     return copied;
   }
 }
@@ -330,230 +381,148 @@ export class Table extends UserTable {
 
   public shallowCopy() {
     const copied = new Table({ numRows: 0, numCols: 0 });
-    copied.data = this.data;
+    copied.head = this.head;
+    copied.addressTable = this.addressTable;
+    copied.cells = this.cells;
     copied.area = this.area;
     copied.parsers = this.parsers;
     copied.renderers = this.renderers;
     copied.functions = this.functions;
+    copied.histories = this.histories;
+    copied.historySize = this.historySize;
     copied.base = this;
     return copied;
   }
-  public merge(diffs: Table[]) {
-    diffs.map((diff) => {
-      this.data = writeMatrix(this.data, diff.data, diff.area);
-    });
-    return this.shallowCopy();
+
+  public pushHistory(history: History) {
+    this.histories.push(history);
   }
-  public joinDiffs(diffs: Table[]) {
-    const table = new Table({ numRows: 0, numCols: 0 });
-    table.data = createMatrix(this.numRows(1), this.numCols(1));
-    table.area = [...this.area];
-    table.functions = this.functions;
-    table.base = this;
-    table.merge(diffs);
-    let [bottom, right, top, left] = table.area;
-    diffs.map((diff) => {
-      const [_top, _left, _bottom, _right] = diff.area;
-      if (top > _top) {
-        top = _top;
-      }
-      if (left > _left) {
-        left = _left;
-      }
-      if (bottom < _bottom) {
-        bottom = _bottom;
-      }
-      if (right < _right) {
-        right = _right;
-      }
+
+  public update(operation: HistoryType, diff: CellsMapType) {
+    const before: CellsMapType = new Map();
+    const after: CellsMapType = new Map();
+    diff.forEach((cell, address) => {
+      const current = this.getByAddress(address);
+      before.set(address, current);
+      const changed = { ...current, ...cell };
+      this.cells.set(address, changed);
+      after.set(address, changed);
     });
-    table.area = [top, left, bottom, right];
-    table.data = cropMatrix(table.data, table.area);
-    return table;
+    this.createHistoryByDiff(operation, before, after);
   }
+
+  public createHistoryByDiff(
+    operation: HistoryType,
+    before: CellsMapType,
+    after: CellsMapType
+  ) {
+    const history = new History(operation);
+    history.diffBefore = before;
+    history.diffAfter = after;
+    this.pushHistory(history);
+  }
+
+  public getDiffByPos(y: number, x: number, cell: CellType) {
+    const diff: CellsMapType = new Map();
+    const address = this.getAddress(y, x);
+    diff.set(address, cell);
+    return diff;
+  }
+
+  public createBackDiff(area: AreaType) {
+    const backdiff: CellsMapType = new Map();
+    const [top, left, bottom, right] = area;
+    for (let y = top; y <= bottom; y++) {
+      for (let x = left; x <= right; x++) {
+        const address = this.getAddress(y, x);
+        backdiff.set(address, this.get(y, x));
+      }
+    }
+    return backdiff;
+  }
+
   public put(y: number, x: number, cell: CellType) {
     const [numRows, numCols] = [this.numRows(1), this.numCols(1)];
-    this.data[y % numRows][x % numCols] = cell;
+    const modY = y % numRows;
+    const modX = x % numCols;
+    const address = this.getAddress(modY, modX);
+    this.cells.set(address, cell);
   }
+
   public write(y: number, x: number, value: any) {
+    const before = this.createBackDiff([y, x, y, x]);
     const cell = this.parse(y, x, value);
+    const after = this.getDiffByPos(y, x, cell);
+    this.createHistoryByDiff("WRITE", before, after);
     this.put(y, x, cell);
   }
-  public addRows(y: number, numRows: number, baseRow?: Table) {
-    const numCols = this.numCols(1);
-    this.data.splice(y, 0, ...createMatrix(numRows, numCols));
-    this.area[2] += numRows;
-    if (baseRow != null) {
-      const diff = this.diffByFitting(
-        [y, 0, y + numRows - 1, numCols - 1],
-        baseRow,
-        ["value"]
-      );
-      this.merge(diff);
+  public copyCell(cell: CellType | undefined, base: number) {
+    if (cell == null) {
+      return undefined;
     }
+    const newCell: CellType = {};
+    if (cell.style != null) {
+      newCell.style = cell.style;
+    }
+    if (cell.verticalAlign != null) {
+      newCell.verticalAlign = cell.verticalAlign;
+    }
+    if (cell.renderer != null) {
+      newCell.renderer = cell.renderer;
+    }
+    if (cell.parser != null) {
+      newCell.parser = cell.parser;
+    }
+    if (cell.width != null && base === 0) {
+      newCell.width = cell.width;
+    }
+    if (cell.height != null && base === 0) {
+      newCell.height = cell.height;
+    }
+    return newCell;
+  }
+  public addRows(y: number, numRows: number, base: number) {
+    const numCols = this.numCols(1);
+    const rows: AddressTable = [];
+    for (let i = 0; i < numRows; i++) {
+      const row: AddressRow = [];
+      for (let j = 0; j < numCols; j++) {
+        const address = this.head++;
+        row.push(address);
+        const cell = this.get(base, j);
+        const copied = this.copyCell(cell, base);
+        this.cells.set(address, copied);
+      }
+      rows.push(row);
+    }
+    this.addressTable.splice(y, 0, ...rows);
+    this.area[2] += numRows;
   }
   public removeRows(y: number, numRows: number) {
-    this.data.splice(y, numRows);
+    this.addressTable.splice(y, numRows);
     this.area[2] -= numRows;
   }
-  public addCols(x: number, numCols: number, baseCol?: Table) {
-    const data = this.data.map((row) => {
-      const newRows = [...row];
-      newRows.splice(x, 0, ...Array(numCols).fill(null));
-      return newRows;
-    });
-    this.data = data;
-    this.area[3] += numCols;
-    if (baseCol != null) {
-      const diff = this.diffByFitting(
-        [0, x, this.numRows(), x + numCols - 1],
-        baseCol,
-        ["value"]
-      );
-      this.merge(diff);
+  public addCols(x: number, numCols: number, base: number) {
+    const numRows = this.numRows(1);
+    const rows: AddressTable = [];
+    for (let i = 0; i < numRows; i++) {
+      const row: AddressRow = [];
+      for (let j = 0; j < numCols; j++) {
+        const address = this.head++;
+        row.push(address);
+        const cell = this.get(i, base);
+        const copied = this.copyCell(cell, base);
+        this.cells.set(address, copied);
+      }
+      rows.push(row);
     }
+    this.addressTable.splice(0, x, ...rows);
+    this.area[3] += numCols;
   }
   public removeCols(x: number, numCols: number) {
-    const data = this.data.map((row) => {
-      const newRows = [...row];
-      newRows.splice(x, numCols);
-      return newRows;
+    this.addressTable.map((row) => {
+      row.splice(x, numCols);
     });
-    this.data = data;
     this.area[3] -= numCols;
-  }
-
-  public diffByMoving(
-    from: AreaType,
-    to: AreaType,
-    cutting = false,
-    ignoringKeys: (keyof CellType)[] = []
-  ) {
-    const [maxHeight, maxWidth] = zoneShape(from, 1);
-
-    const [topTo, leftTo, bottomTo, rightTo] = to;
-    const [topFrom, leftFrom, bottomFrom, rightFrom] = from;
-    const diffs: Table[] = [];
-
-    if (cutting) {
-      const diff = new Table({
-        numRows: bottomFrom - topFrom + 1,
-        numCols: rightFrom - leftFrom + 1,
-      });
-      diff.area = from;
-      diffs.push(diff);
-    }
-    const diff = this.copy(to);
-    for (let i = 0; i <= bottomTo - topTo; i++) {
-      const y = topTo + i;
-      if (y > this.numRows()) {
-        continue;
-      }
-      for (let j = 0; j <= rightTo - leftTo; j++) {
-        const x = leftTo + j;
-        if (x > this.numCols()) {
-          continue;
-        }
-        const cell = {
-          ...this.data[topFrom + (i % maxHeight)][leftFrom + (j % maxWidth)],
-        };
-        diff.data[i][j] = cell;
-        ignoringKeys.map((key) => delete cell[key]);
-      }
-    }
-    diffs.push(diff);
-    return diffs;
-  }
-
-  public diffByPasting(to: AreaType, matrix: string[][]) {
-    const diff = this.copy(to);
-    const [maxHeight, maxWidth] = matrixShape(matrix);
-    const [top, left, bottom, right] = to;
-    for (let i = 0; i <= bottom - top; i++) {
-      if (top + i > this.numRows()) {
-        continue;
-      }
-      for (let j = 0; j <= right - left; j++) {
-        if (left + j > this.numCols()) {
-          continue;
-        }
-        const [y, x] = [top + i, left + j];
-        const cell = this.data[y][x];
-        const parsed = this.parse(
-          y,
-          x,
-          matrix[i % maxHeight][j % maxWidth] || ""
-        );
-        diff.data[i][j] = { ...cell, ...parsed };
-      }
-    }
-    return [diff];
-  }
-  public diffByFitting(
-    to: AreaType,
-    rect: Table,
-    ignoringKeys: (keyof CellType)[] = []
-  ) {
-    const diff = this.copy(to);
-    const [top, left, bottom, right] = to;
-    for (let i = 0; i <= bottom - top; i++) {
-      for (let j = 0; j <= right - left; j++) {
-        const [y, x] = [top + i, left + j];
-        if (y === 0 && x === 0) {
-          continue;
-        }
-        const cell = { ...rect.get(i, j) };
-        ignoringKeys.map((key) => delete cell[key]);
-        diff.put(y, x, cell);
-      }
-    }
-    return [diff];
-  }
-
-  public backDiffWithTable(targets: Table[]) {
-    const diffs: Table[] = [];
-    [...targets].reverse().map((target) => {
-      const diff = target.copy();
-      const [top, left, bottom, right] = diff.area;
-      for (let i = 0; i <= bottom - top; i++) {
-        for (let j = 0; j <= right - left; j++) {
-          const [y, x] = [top + i, left + j];
-          diff.put(i, j, { ...this.data[y][x] });
-        }
-      }
-      diffs.push(diff);
-    });
-
-    return diffs;
-  }
-  public diffWithCells(cells: CellsType) {
-    let [bottom, right, top, left] = this.area;
-    Object.entries(cells).map(([cellId, cell]) => {
-      const [y, x] = cellToIndexes(cellId);
-      if (top > y) {
-        top = y;
-      }
-      if (left > x) {
-        left = x;
-      }
-      if (bottom < y) {
-        bottom = y;
-      }
-      if (right < x) {
-        right = x;
-      }
-    });
-
-    const [numRows, numCols] = [bottom - top, right - left];
-    const diff = new Table({ numRows, numCols });
-    diff.area = [top, left, bottom, right];
-
-    Object.entries(cells).map(([cellId, b]) => {
-      const [y, x] = cellToIndexes(cellId);
-      const a = this.get(y, x);
-      const cell = { ...a, ...b, style: { ...a?.style, ...b?.style } };
-      diff.put(y - top, x - left, cell);
-    });
-    return diff;
   }
 }

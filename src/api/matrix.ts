@@ -157,7 +157,7 @@ export const createMatrix = (numRows: number, numCols: number, fill = null) => {
   return [...Array(numRows)].map(() => Array(numCols).fill(fill));
 };
 
-export const cropMatrix = (matrix: MatrixType, area: AreaType): MatrixType => {
+export const cropMatrix = <T = any>(matrix: T[][], area: AreaType): T[][] => {
   const [top, left, bottom, right] = area;
   return matrix
     .slice(top, bottom + 1)

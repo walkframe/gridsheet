@@ -15,7 +15,7 @@ export class SinFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 1) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for SIN is incorrect."
       );
     }

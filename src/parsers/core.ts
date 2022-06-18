@@ -9,6 +9,8 @@ type Props = {
   complement?: Stringify;
 };
 
+const BOOLS = { true: true, false: false } as { [s: string]: boolean };
+
 export class Parser {
   protected parseFunctions: ((value: string, cell: CellType) => any)[] = [
     this.number,
@@ -56,8 +58,7 @@ export class Parser {
   }
 
   protected bool(value: string, cell: CellType): boolean | undefined {
-    // @ts-ignore
-    return { true: true, false: false }[value];
+    return BOOLS[value.toLowerCase()];
   }
 
   protected number(value: string, cell: CellType): number | undefined {

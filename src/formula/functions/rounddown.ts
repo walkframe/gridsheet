@@ -22,7 +22,7 @@ export class RounddownFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 1 && this.args.length !== 2) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for ROUNDDOWN is incorrect."
       );
     }

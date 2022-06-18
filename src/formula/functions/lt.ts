@@ -15,7 +15,10 @@ export class LtFunction extends BaseFunction {
 
   protected validate() {
     if (this.args.length !== 2) {
-      throw new FormulaError("N/A", "Number of arguments for LT is incorrect.");
+      throw new FormulaError(
+        "#N/A",
+        "Number of arguments for LT is incorrect."
+      );
     }
     this.args = this.args.map((arg) => ensureNumber(arg, this.base));
   }

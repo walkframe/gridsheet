@@ -52,9 +52,11 @@ export type CellType = {
   renderer?: string;
   parser?: string;
   custom?: any;
+  changedAt?: Date;
 };
 export type DataType = (CellType | null)[][];
 export type CellsType = { [s: string]: CellType };
+export type CellsMapType = Map<Address, CellType | undefined>;
 
 export type OptionsType = {
   sheetHeight?: number;
@@ -153,3 +155,7 @@ export type Props = {
   style?: React.CSSProperties;
   additionalFunctions?: FunctionMapping;
 };
+
+export type Address = number | bigint;
+export type AddressRow = Address[];
+export type AddressTable = AddressRow[];

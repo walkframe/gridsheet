@@ -20,7 +20,7 @@ export const ensureNumber = (
   const num = parseFloat(value);
   if (isNaN(num)) {
     throw new FormulaError(
-      "VALUE!",
+      "#VALUE!",
       `${value} cannot be converted to a number`
     );
   }
@@ -66,7 +66,7 @@ export const ensureBoolean = (
     const bool = { true: true, false: false }[value.toLowerCase()];
     if (bool == null) {
       throw new FormulaError(
-        "VALUE!",
+        "#VALUE!",
         `text '${value}' cannot be converted to a boolean`
       );
     }

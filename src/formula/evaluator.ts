@@ -52,7 +52,7 @@ export class Function {
     const name = this.name.toLowerCase();
     const Func = base.functions[name];
     if (Func == null) {
-      throw new FormulaError("NAME?", `Unknown function: ${name}`);
+      throw new FormulaError("#NAME?", `Unknown function: ${name}`);
     }
     const func = new Func(args, base);
     return func.call();
@@ -86,7 +86,8 @@ export type TokenType =
   | "OPERATOR"
   | "OPEN"
   | "CLOSE"
-  | "COMMA";
+  | "COMMA"
+  | "SPACE";
 
 const FUNCTION_NAME_MAP = {
   "+": "add",
@@ -136,16 +137,31 @@ const isWhiteSpace = (char: string) => {
   return char === " " || char === "\n" || char === "\t";
 };
 
+const TOKEN_OPEN = new Token("OPEN", "("),
+  TOKEN_CLOSE = new Token("CLOSE", ")"),
+  TOKEN_COMMA = new Token("COMMA", ","),
+  TOKEN_ADD = new Token("OPERATOR", "+", 3),
+  TOKEN_MINUS = new Token("OPERATOR", "-", 3),
+  TOKEN_DIVIDE = new Token("OPERATOR", "/", 4),
+  TOKEN_MULTIPLY = new Token("OPERATOR", "*", 4),
+  TOKEN_CONCAT = new Token("OPERATOR", "&", 4),
+  TOKEN_GTE = new Token("OPERATOR", ">=", 2),
+  TOKEN_GT = new Token("OPERATOR", ">", 2),
+  TOKEN_LTE = new Token("OPERATOR", "<=", 2),
+  TOKEN_LT = new Token("OPERATOR", "<", 2),
+  TOKEN_NE = new Token("OPERATOR", "<>", 1),
+  TOKEN_EQ = new Token("OPERATOR", "=", 1);
+
+const BOOLS = { true: true, false: false };
 export class Lexer {
   private index: number;
-  public whitespaces: { [s: string]: string } = {};
   public tokens: Token[] = [];
 
-  constructor(private formula: string) {
+  constructor(private formula: string, public base=UserTable) {
     this.formula = formula;
     this.index = 0;
-    this.whitespaces = {};
     this.tokens = [];
+    this.base = base;
   }
 
   private isWhiteSpace() {
@@ -170,52 +186,52 @@ export class Lexer {
         case undefined:
           return;
         case "(":
-          this.tokens.push(new Token("OPEN", char));
+          this.tokens.push(TOKEN_OPEN);
           continue;
         case ")":
-          this.tokens.push(new Token("CLOSE", char));
+          this.tokens.push(TOKEN_CLOSE);
           continue;
         case ",":
-          this.tokens.push(new Token("COMMA", char));
+          this.tokens.push(TOKEN_COMMA);
           continue;
         case "+":
-          this.tokens.push(new Token("OPERATOR", char, 3));
+          this.tokens.push(TOKEN_ADD);
           continue;
         case "-":
-          this.tokens.push(new Token("OPERATOR", char, 3));
+          this.tokens.push(TOKEN_MINUS);
           continue;
         case "/":
-          this.tokens.push(new Token("OPERATOR", char, 4));
+          this.tokens.push(TOKEN_DIVIDE);
           continue;
         case "*":
-          this.tokens.push(new Token("OPERATOR", char, 4));
+          this.tokens.push(TOKEN_MULTIPLY);
           continue;
         case "&":
-          this.tokens.push(new Token("OPERATOR", char, 4));
+          this.tokens.push(TOKEN_CONCAT);
           continue;
         case "=":
-          this.tokens.push(new Token("OPERATOR", char, 1));
+          this.tokens.push(TOKEN_EQ);
           continue;
         case ">":
           if (this.get() === "=") {
             this.next();
-            this.tokens.push(new Token("OPERATOR", ">=", 2));
+            this.tokens.push(TOKEN_GTE);
             continue;
           }
-          this.tokens.push(new Token("OPERATOR", ">", 2));
+          this.tokens.push(TOKEN_GT);
           continue;
         case "<":
           if (this.get() === "=") {
             this.next();
-            this.tokens.push(new Token("OPERATOR", "<=", 2));
+            this.tokens.push(TOKEN_LTE);
             continue;
           }
           if (this.get() === ">") {
             this.next();
-            this.tokens.push(new Token("OPERATOR", "<>", 1));
+            this.tokens.push(TOKEN_NE);
             continue;
           }
-          this.tokens.push(new Token("OPERATOR", "<", 2));
+          this.tokens.push(TOKEN_LT);
           continue;
         case '"':
           const buf = this.getString();
@@ -226,10 +242,7 @@ export class Lexer {
           while (true) {
             const c = this.get();
             if (c === "(") {
-              this.tokens.push(
-                new Token("FUNCTION", buf),
-                new Token("OPEN", "(")
-              );
+              this.tokens.push(new Token("FUNCTION", buf), TOKEN_OPEN);
               this.next();
               break;
             }
@@ -239,7 +252,7 @@ export class Lexer {
                   this.tokens.push(new Token("VALUE", parseFloat(buf)));
                 } else {
                   // @ts-ignore
-                  const bool = { true: true, false: false }[buf.toLowerCase()];
+                  const bool = BOOLS[buf.toLowerCase()];
                   if (bool != null) {
                     this.tokens.push(new Token("VALUE", bool));
                   } else if (buf.indexOf(":") !== -1) {
@@ -264,7 +277,7 @@ export class Lexer {
       space += this.formula[this.index++];
     }
     if (space !== "") {
-      this.whitespaces[this.index - space.length] = space;
+      this.tokens.push(new Token("SPACE", space));
     }
   }
 
@@ -296,8 +309,9 @@ export class Lexer {
 export class Parser {
   public index = 0;
   public depth = 0;
-  constructor(public tokens: Token[]) {
+  constructor(public tokens: Token[], public base=UserTable) {
     this.tokens = tokens;
+    this.base = base;
   }
   public build() {
     const { expr } = this.parse(false);
@@ -318,10 +332,13 @@ export class Parser {
 
     while (this.tokens.length > this.index) {
       const token = this.tokens[this.index++];
+      if (token.type === "SPACE") {
+        continue;
+      }
 
       if (token.type === "COMMA") {
         if (!underFunction) {
-          throw new FormulaError("ERROR!", "Invalid comma");
+          throw new FormulaError("#ERROR!", "Invalid comma");
         }
         return complement(true);
       } else if (
@@ -351,7 +368,7 @@ export class Parser {
         stack.push(expr!);
       } else if (token.type === "CLOSE") {
         if (this.depth-- === 0) {
-          throw new FormulaError("ERROR!", "Unexpected end paren");
+          throw new FormulaError("#ERROR!", "Unexpected end paren");
         }
         return complement();
       } else if (token.type === "OPERATOR") {
@@ -361,7 +378,7 @@ export class Parser {
           if (operator.name === "minus" || operator.name === "add") {
             left = ZERO;
           } else {
-            throw new FormulaError("ERROR!", "Missing left expression");
+            throw new FormulaError("#ERROR!", "Missing left expression");
           }
         }
 

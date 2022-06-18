@@ -16,7 +16,7 @@ export class LteFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 2) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for LTE is incorrect."
       );
     }

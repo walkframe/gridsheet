@@ -16,7 +16,7 @@ export class ConcatFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 2) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for CONCAT is incorrect."
       );
     }

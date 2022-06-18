@@ -21,7 +21,7 @@ export class NotFunction extends BaseFunction {
       return;
     }
     throw new FormulaError(
-      "N/A",
+      "#N/A",
       "Number of arguments for NOT is incorrect. 1 argument must be specified."
     );
   }
