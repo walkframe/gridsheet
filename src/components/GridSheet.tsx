@@ -15,7 +15,7 @@ import { Resizer } from "./Resizer";
 import { Emitter } from "./Emitter";
 import { ContextMenu } from "./ContextMenu";
 import { GridSheetLayout } from "./styles/GridSheetLayout";
-import { Table } from "../api/tables";
+import { Table } from "../api/table";
 import { GridTable } from "./GridTable";
 
 export const GridSheet: React.FC<Props> = ({

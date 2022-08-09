@@ -1,5 +1,5 @@
 import { solveMatrix, FormulaError } from "../evaluator";
-import { UserTable } from "../../api/tables";
+import { UserTable } from "../../api/table";
 import { BaseFunction } from "./__base";
 import { check } from "./__utils";
 

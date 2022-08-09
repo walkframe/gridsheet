@@ -1,6 +1,6 @@
 import { rangeToArea } from "../api/matrix";
 import { cellToIndexes } from "../api/converters";
-import { UserTable } from "../api/tables";
+import { UserTable } from "../api/table";
 import { AreaType, MatrixType } from "../types";
 
 export class FormulaError {

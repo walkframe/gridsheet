@@ -6,6 +6,8 @@ import {
   RangeType,
   Feedback,
   HistoryType,
+  CellType,
+  DiffType,
 } from "../types";
 import {
   zoneToArea,
@@ -13,12 +15,10 @@ import {
   superposeArea,
   matrixShape,
 } from "../api/matrix";
-import { Table } from "../api/tables";
+import { Table } from "../api/table";
 
-import * as histories from "../api/histories";
-import { tsv2matrix, x2c, y2r } from "../api/converters";
+import { tsv2matrix, x2c, xy2cell, y2r } from "../api/converters";
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
-import { pushHistory } from "../api/histories";
 
 const actions: { [s: string]: CoreAction<any> } = {};
 
@@ -243,15 +243,15 @@ class UpdateTableAction<T extends Table> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     const { table, history } = store;
     const diffs = [payload];
-    const before = table.backDiffWithTable(diffs);
+    //const before = table.backDiffWithTable(diffs);
     return {
       ...store,
-      table: table.merge(diffs),
-      history: histories.pushHistory(history, {
+      table: payload,
+      /*history: histories.pushHistory(history, {
         command: "SET_TABLE",
         before,
         after: diffs,
-      }),
+      }),*/
     };
   }
 }
@@ -324,7 +324,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
     const copyingArea = zoneToArea(copyingZone);
     const { text } = payload;
 
-    let diffs: Table[];
+    const diff: DiffType = {};
     if (copyingArea[0] === -1) {
       const matrixFrom = tsv2matrix(text);
       let [height, width] = matrixShape(matrixFrom, -1);
@@ -333,7 +333,16 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
         [height, width] = superposeArea(selectingArea, [0, 0, height, width]);
       }
       selectingArea = [y, x, y + height, x + width];
-      diffs = table.diffByPasting(selectingArea, matrixFrom);
+      const [top, left, bottom, right] = selectingArea;
+      for (let y = top; y <= bottom; y++) {
+        for (let x = left; x <= right; x++) {
+          diff[xy2cell(x, y)] = { value: matrixFrom[y - top][x - left] };
+        }
+      }
+      table.applyDiff(diff, true, {
+        selectingZone,
+        choosing,
+      });
     } else {
       let [height, width] = zoneShape(copyingArea);
       if (selectingArea[0] !== -1) {
@@ -341,21 +350,47 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
         [height, width] = superposeArea(selectingArea, copyingArea);
       }
       selectingArea = [y, x, y + height, x + width];
-      diffs = table.diffByMoving(copyingArea, selectingArea, cutting);
+      if (cutting) {
+        const [top, left, bottom, right] = copyingArea;
+        for (let y = top; y <= bottom; y++) {
+          for (let x = left; x <= right; x++) {
+            diff[xy2cell(x, y)] = {};
+          }
+        }
+      }
+      {
+        const [maxHeight, maxWidth] = zoneShape(copyingArea, 1);
+        const [topTo, leftTo, bottomTo, rightTo] = selectingArea;
+        const [topFrom, leftFrom, bottomFrom, rightFrom] = copyingArea;
+        for (let i = 0; i <= bottomTo - topTo; i++) {
+          const y = topTo + i;
+          if (y > table.numRows()) {
+            continue;
+          }
+          for (let j = 0; j <= rightTo - leftTo; j++) {
+            const x = leftTo + j;
+            if (x > table.numCols()) {
+              continue;
+            }
+            const cell = table.get(
+              topFrom + (i % maxHeight),
+              leftFrom + (j % maxWidth)
+            );
+            diff[xy2cell(x, y)] = cell || {};
+          }
+        }
+      }
+      table.applyDiff(diff, false, {
+        copyingZone,
+        selectingZone,
+        choosing,
+        cutting,
+      });
     }
-    const before = table.backDiffWithTable(diffs);
+
     return {
       ...store,
-      table: table.merge(diffs),
-      history: pushHistory(history, {
-        command: "SET_TABLE",
-        before,
-        after: diffs,
-        choosing,
-        selectingZone,
-        copyingZone,
-        cutting,
-      }),
+      table: table.shallowCopy(),
       selectingZone: selectingArea,
       copyingZone: [-1, -1, -1, -1] as ZoneType,
     };
@@ -470,9 +505,12 @@ export const search = new SearchAction().bind();
 class WriteAction<T extends string> extends CoreAction<T> {
   code = "WRITE";
   reduce(store: StoreType, payload: T): StoreType {
-    const { choosing, history, table } = store;
+    const { choosing, selectingZone, table } = store;
     const [y, x] = choosing;
-    table.write(y, x, payload);
+    table.write(y, x, payload, {
+      selectingZone,
+      choosing,
+    });
     return {
       ...store,
       table: table.shallowCopy(),
@@ -491,24 +529,27 @@ class ClearAction<T extends null> extends CoreAction<T> {
     if (selectingArea[0] === -1) {
       selectingArea = [...choosing, ...choosing];
     }
-    const [numRows, numCols] = zoneShape(selectingArea, 1);
-    const diff = table.copy(selectingArea);
-    for (let i = 0; i < numRows; i++) {
-      for (let j = 0; j < numCols; j++) {
-        diff.write(i, j, "");
+    const [top, left, bottom, right] = selectingArea;
+    const diff: DiffType = {};
+    for (let y = top; y <= bottom; y++) {
+      for (let x = left; x <= right; x++) {
+        diff[xy2cell(x, y)] = { value: null };
       }
     }
-    const before = table.backDiffWithTable([diff]);
+    table.applyDiff(diff, true, {
+      selectingZone,
+      choosing,
+    });
     return {
       ...store,
-      table: table.merge([diff]),
-      history: pushHistory(history, {
+      table: table.shallowCopy(),
+      /*history: pushHistory(history, {
         command: "SET_TABLE",
         before,
         after: [diff],
         choosing,
         selectingZone,
-      }),
+      }),*/
     };
   }
 }
@@ -517,27 +558,13 @@ export const clear = new ClearAction().bind();
 class UndoAction<T extends null> extends CoreAction<T> {
   code = "UNDO";
   reduce(store: StoreType, payload: T): StoreType {
-    const history = { ...store.history, direction: "BACKWARD" } as HistoryType;
-    if (history.index < 0) {
-      return store;
-    }
-    const operation = history.operations[history.index--];
-    switch (operation.command) {
-      case "SET_TABLE":
-        return { ...histories.undoSetTable(store, operation), history };
-      case "ADD_ROWS":
-        return { ...histories.undoAddRows(store, operation), history };
-
-      case "ADD_COLS":
-        return { ...histories.undoAddCols(store, operation), history };
-
-      case "REMOVE_ROWS":
-        return { ...histories.undoRemoveRows(store, operation), history };
-
-      case "REMOVE_COLS":
-        return { ...histories.undoRemoveCols(store, operation), history };
-    }
-    return store;
+    const { table } = store;
+    const feedback = table.undo();
+    return {
+      ...store,
+      ...feedback,
+      table: table.shallowCopy(),
+    };
   }
 }
 export const undo = new UndoAction().bind();
@@ -545,28 +572,13 @@ export const undo = new UndoAction().bind();
 class RedoAction<T extends null> extends CoreAction<T> {
   code = "REDO";
   reduce(store: StoreType, payload: T): StoreType {
-    const history = { ...store.history, direction: "FORWARD" } as HistoryType;
-    if (history.index + 1 >= history.operations.length) {
-      return store;
-    }
-    const operation = history.operations[++history.index];
-    switch (operation.command) {
-      case "SET_TABLE":
-        return { ...histories.redoSetTable(store, operation), history };
-
-      case "ADD_ROWS":
-        return { ...histories.redoAddRows(store, operation), history };
-
-      case "ADD_COLS":
-        return { ...histories.redoAddCols(store, operation), history };
-
-      case "REMOVE_ROWS":
-        return { ...histories.redoRemoveRows(store, operation), history };
-
-      case "REMOVE_COLS":
-        return { ...histories.redoRemoveCols(store, operation), history };
-    }
-    return store;
+    const { table } = store;
+    const feedback = table.redo();
+    return {
+      ...store,
+      ...feedback,
+      table: table.shallowCopy(),
+    };
   }
 }
 export const redo = new RedoAction().bind();
@@ -730,104 +742,3 @@ class WalkAction<
   }
 }
 export const walk = new WalkAction().bind();
-
-class AddRowsAction<
-  T extends {
-    numRows: number;
-    y: number;
-    base: number;
-  }
-> extends CoreAction<T> {
-  code = "ADD_ROWS";
-  reduce(store: StoreType, payload: T): StoreType {
-    const { table, history } = store;
-    const { numRows, y, base } = payload;
-    table.addRows(y, numRows, base);
-    return {
-      ...store,
-      table: table.copy(),
-      history: pushHistory(history, {
-        command: "ADD_ROWS",
-        before: null,
-        after: { y, numRows, base },
-      }),
-    };
-  }
-}
-export const addRows = new AddRowsAction().bind();
-
-class AddColsAction<
-  T extends {
-    numCols: number;
-    x: number;
-    base: number;
-  }
-> extends CoreAction<T> {
-  code = "ADD_COLS";
-  reduce(store: StoreType, payload: T): StoreType {
-    const { table, history } = store;
-    const { numCols, x, base } = payload;
-    const baseCol = table.copy([0, base, table.numRows(), base]);
-    table.addCols(x, numCols, baseCol);
-    return {
-      ...store,
-      table: table.copy(),
-      history: pushHistory(history, {
-        command: "ADD_COLS",
-        before: null,
-        after: { x, numCols, base },
-      }),
-    };
-  }
-}
-export const addCols = new AddColsAction().bind();
-
-class RemoveRowsAction<
-  T extends {
-    numRows: number;
-    y: number;
-  }
-> extends CoreAction<T> {
-  code = "REMOVE_ROWS";
-  reduce(store: StoreType, payload: T): StoreType {
-    const { table, history } = store;
-    const { numRows, y } = payload;
-    const deleted = table.copy([y, 0, y + numRows - 1, table.numCols()]);
-    table.removeRows(y, numRows);
-    return {
-      ...store,
-      table: table.copy(),
-      history: pushHistory(history, {
-        command: "REMOVE_ROWS",
-        before: [deleted],
-        after: { y, numRows },
-      }),
-    };
-  }
-}
-export const removeRows = new RemoveRowsAction().bind();
-
-class RemoveColsAction<
-  T extends {
-    numCols: number;
-    x: number;
-  }
-> extends CoreAction<T> {
-  code = "REMOVE_COLS";
-  reduce(store: StoreType, payload: T): StoreType {
-    const { table, history } = store;
-    const { numCols, x } = payload;
-    const deleted = table.copy([0, x, table.numRows(), x + numCols - 1]);
-    table.removeCols(x, numCols);
-    return {
-      ...store,
-      table: table.copy(),
-      history: pushHistory(history, {
-        command: "REMOVE_COLS",
-        before: [deleted],
-        after: { x, numCols },
-      }),
-    };
-  }
-}
-export const removeCols = new RemoveColsAction().bind();

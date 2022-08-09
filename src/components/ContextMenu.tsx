@@ -11,11 +11,8 @@ import {
   copy,
   cut,
   paste,
-  addRows,
-  removeRows,
-  addCols,
-  removeCols,
   setContextMenuPosition,
+  updateTable,
 } from "../store/actions";
 import { ContextMenuLayout } from "./styles/ContextMenuLayout";
 import { zoneShape, zoneToArea } from "../api/matrix";
@@ -115,7 +112,11 @@ export const ContextMenu: React.FC = () => {
         {!horizontalHeadersSelecting && (
           <li
             onClick={() => {
-              dispatch(addRows({ numRows: height + 1, y: selectingTop, base: selectingTop }));
+              table.addRows(selectingTop, height + 1, selectingTop, {
+                selectingZone,
+                choosing,
+              });
+              dispatch(updateTable(table.shallowCopy()));
               dispatch(
                 select([
                   selectingTop,
@@ -136,9 +137,11 @@ export const ContextMenu: React.FC = () => {
         {!horizontalHeadersSelecting && (
           <li
             onClick={() => {
-              dispatch(
-                addRows({ numRows: height + 1, y: selectingBottom + 1, base: selectingBottom })
-              );
+              table.addRows(selectingBottom + 1, height + 1, selectingBottom, {
+                selectingZone,
+                choosing,
+              });
+              dispatch(updateTable(table.shallowCopy()));
               dispatch(
                 select([
                   selectingBottom + 1,
@@ -160,9 +163,18 @@ export const ContextMenu: React.FC = () => {
         {!verticalHeadersSelecting && (
           <li
             onClick={() => {
-              dispatch(addCols({ numCols: width + 1, x: selectingLeft, base: selectingLeft }));
+              table.addCols(selectingLeft, width + 1, selectingLeft, {
+                selectingZone,
+                choosing,
+              });
+              dispatch(updateTable(table.shallowCopy()));
               dispatch(
-                select([0, selectingLeft, table.numRows(), selectingLeft + width])
+                select([
+                  0,
+                  selectingLeft,
+                  table.numRows(),
+                  selectingLeft + width,
+                ])
               );
               dispatch(choose([0, selectingLeft]));
               dispatch(setContextMenuPosition([-1, -1]));
@@ -176,7 +188,11 @@ export const ContextMenu: React.FC = () => {
         {!verticalHeadersSelecting && (
           <li
             onClick={() => {
-              dispatch(addCols({ numCols: width + 1, x: selectingRight + 1, base: selectingRight }));
+              table.addCols(selectingRight + 1, width + 1, selectingRight, {
+                selectingZone,
+                choosing,
+              });
+              dispatch(updateTable(table.shallowCopy()));
               dispatch(
                 select([
                   1,
@@ -198,7 +214,11 @@ export const ContextMenu: React.FC = () => {
         {!horizontalHeadersSelecting && (
           <li
             onClick={() => {
-              dispatch(removeRows({ numRows: height + 1, y: selectingTop }));
+              table.removeRows(selectingTop, height + 1, {
+                selectingZone,
+                choosing,
+              });
+              dispatch(updateTable(table.shallowCopy()));
               dispatch(setContextMenuPosition([-1, -1]));
               dispatch(choose([-1, -1]));
               setTimeout(() => {
@@ -215,7 +235,11 @@ export const ContextMenu: React.FC = () => {
         {!verticalHeadersSelecting && (
           <li
             onClick={() => {
-              dispatch(removeCols({ numCols: width + 1, x: selectingLeft }));
+              table.removeCols(selectingLeft, width + 1, {
+                selectingZone,
+                choosing,
+              });
+              dispatch(updateTable(table.shallowCopy()));
               dispatch(setContextMenuPosition([-1, -1]));
               dispatch(choose([-1, -1]));
               setTimeout(() => {

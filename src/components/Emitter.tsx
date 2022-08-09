@@ -7,7 +7,7 @@ import {
 import { Context } from "../store";
 import { Feedback, FeedbackForMatrix } from "../types";
 
-import { UserTable, Table } from "../api/tables";
+import { UserTable, Table } from "../api/table";
 
 type Props = {
   onChange?: Feedback;

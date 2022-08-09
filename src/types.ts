@@ -5,7 +5,7 @@ import {
 
 import { RendererType } from "./renderers/core";
 import { ParserType } from "./parsers/core";
-import { UserTable, Table } from "./api/tables";
+import { UserTable, Table } from "./api/table";
 import { FunctionMapping } from "./formula/functions/__base";
 
 export type Y = number;
@@ -55,6 +55,7 @@ export type CellType = {
   changedAt?: Date;
 };
 export type DataType = (CellType | null)[][];
+export type DiffType = { [s: string]: CellType };
 export type CellsType = { [s: string]: CellType };
 export type CellsMapType = Map<Address, CellType | undefined>;
 

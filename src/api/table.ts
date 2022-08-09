@@ -1,14 +1,15 @@
 import { defaultParser } from "../parsers/core";
 import { defaultRenderer } from "../renderers/core";
-import { cropMatrix, matrixShape, zoneShape } from "./matrix";
 import {
   Address,
   AddressRow,
   AddressTable,
   AreaType,
   CellsMapType,
+  DiffType,
   PositionType,
   WriterType,
+  ZoneType,
 } from "../types";
 import { CellsType, CellType, Parsers, Renderers, DataType } from "../types";
 import { createMatrix, writeMatrix } from "./matrix";
@@ -27,7 +28,7 @@ type Props = {
   historySize?: number;
 };
 
-type HistoryType =
+type HistoryOperationType =
   | "WRITE"
   | "COPY"
   | "CUT"
@@ -36,14 +37,84 @@ type HistoryType =
   | "REMOVE_ROW"
   | "REMOVE_COL";
 
+type StoreFeedbackType = {
+  choosing?: PositionType;
+  cutting?: boolean;
+  copyingZone?: ZoneType;
+  selectingZone?: ZoneType | undefined;
+};
+
+type HistoryUpdateType = {
+  operation: "UPDATE";
+  diffBefore: CellsMapType;
+  diffAfter: CellsMapType;
+  partial: boolean;
+  feedback?: StoreFeedbackType;
+};
+
+type HistoryCopyType = {
+  operation: "COPY";
+  diffBefore: CellsMapType;
+  diffAfter: CellsMapType;
+  area: AreaType;
+};
+
+type HistoryCutType = {
+  operation: "CUT";
+  diffBefore: CellsMapType;
+  diffAfter: CellsMapType;
+  area: AreaType;
+};
+
+type HistoryAddRowType = {
+  operation: "ADD_ROW";
+  y: number;
+  numRows: number;
+  addressTable: AddressTable;
+  feedback?: StoreFeedbackType;
+};
+
+type HistoryRemoveRowType = {
+  operation: "REMOVE_ROW";
+  y: number;
+  numRows: number;
+  addressTable: AddressTable;
+  feedback?: StoreFeedbackType;
+};
+
+type HistoryAddColType = {
+  operation: "ADD_COL";
+  x: number;
+  numCols: number;
+  addressTable: AddressTable;
+  feedback?: StoreFeedbackType;
+};
+
+type HistoryRemoveColType = {
+  operation: "REMOVE_COL";
+  x: number;
+  numCols: number;
+  addressTable: AddressTable;
+  feedback?: StoreFeedbackType;
+};
+
+type HistoryType =
+  | HistoryUpdateType
+  | HistoryCutType
+  | HistoryCopyType
+  | HistoryAddRowType
+  | HistoryRemoveRowType
+  | HistoryAddColType
+  | HistoryRemoveColType;
+
 export class History {
-  public operation: HistoryType;
+  public operation: HistoryOperationType;
   public diffBefore?: CellsMapType;
   public diffAfter?: CellsMapType;
   public addressTable?: AddressTable;
   public position?: PositionType;
 
-  constructor(operation: HistoryType) {
+  constructor(operation: HistoryOperationType) {
     this.operation = operation;
   }
 }
@@ -57,7 +128,8 @@ export class UserTable {
   protected renderers: Renderers;
   public functions: FunctionMapping = {};
   protected base: UserTable;
-  protected histories: History[];
+  protected histories: HistoryType[];
+  protected historyIndex: number;
   public historySize: number;
 
   constructor({
@@ -77,6 +149,7 @@ export class UserTable {
     this.base = this;
     this.addressTable = [];
     this.histories = [];
+    this.historyIndex = -1;
     this.historySize = historySize;
 
     const common = cells.default;
@@ -85,7 +158,7 @@ export class UserTable {
       const rowId = y2r(y);
       const rowDefault = cells[rowId];
       this.addressTable.push(addresses);
-      for (let x = 0; x < numRows + 1; x++) {
+      for (let x = 0; x < numCols + 1; x++) {
         const address = this.head++;
         addresses.push(address);
         const cellId = xy2cell(x, y);
@@ -369,6 +442,7 @@ export class UserTable {
     copied.functions = this.functions;
     copied.histories = this.histories;
     copied.historySize = this.historySize;
+    copied.historyIndex = this.historyIndex;
     return copied;
   }
 }
@@ -390,36 +464,29 @@ export class Table extends UserTable {
     copied.functions = this.functions;
     copied.histories = this.histories;
     copied.historySize = this.historySize;
+    copied.historyIndex = this.historyIndex;
     copied.base = this;
     return copied;
   }
 
-  public pushHistory(history: History) {
-    this.histories.push(history);
-  }
-
-  public update(operation: HistoryType, diff: CellsMapType) {
-    const before: CellsMapType = new Map();
-    const after: CellsMapType = new Map();
+  public update(diff: CellsMapType, partial = true) {
     diff.forEach((cell, address) => {
-      const current = this.getByAddress(address);
-      before.set(address, current);
-      const changed = { ...current, ...cell };
-      this.cells.set(address, changed);
-      after.set(address, changed);
+      if (partial) {
+        this.cells.set(address, { ...this.getByAddress(address), ...cell });
+      } else {
+        this.cells.set(address, cell);
+      }
     });
-    this.createHistoryByDiff(operation, before, after);
   }
 
-  public createHistoryByDiff(
-    operation: HistoryType,
-    before: CellsMapType,
-    after: CellsMapType
-  ) {
-    const history = new History(operation);
-    history.diffBefore = before;
-    history.diffAfter = after;
-    this.pushHistory(history);
+  public pushHistory(history: HistoryType) {
+    this.histories.splice(this.historyIndex + 1, this.histories.length);
+    this.histories.push(history);
+    if (this.histories.length > this.historySize) {
+      this.histories.splice(0, 1);
+    } else {
+      this.historyIndex++;
+    }
   }
 
   public getDiffByPos(y: number, x: number, cell: CellType) {
@@ -449,13 +516,18 @@ export class Table extends UserTable {
     this.cells.set(address, cell);
   }
 
-  public write(y: number, x: number, value: any) {
-    const before = this.createBackDiff([y, x, y, x]);
+  public write(y: number, x: number, value: any, feedback: StoreFeedbackType) {
     const cell = this.parse(y, x, value);
-    const after = this.getDiffByPos(y, x, cell);
-    this.createHistoryByDiff("WRITE", before, after);
+    this.pushHistory({
+      operation: "UPDATE",
+      diffBefore: this.createBackDiff([y, x, y, x]),
+      diffAfter: this.getDiffByPos(y, x, cell),
+      partial: true,
+      feedback,
+    });
     this.put(y, x, cell);
   }
+
   public copyCell(cell: CellType | undefined, base: number) {
     if (cell == null) {
       return undefined;
@@ -481,7 +553,43 @@ export class Table extends UserTable {
     }
     return newCell;
   }
-  public addRows(y: number, numRows: number, base: number) {
+
+  public applyDiff(
+    diff: DiffType,
+    partial = true,
+    feedback: StoreFeedbackType = {}
+  ) {
+    const diffBefore = new Map();
+    const diffAfter = new Map();
+    Object.keys(diff).map((cellId) => {
+      const value = diff[cellId];
+      const [y, x] = cellToIndexes(cellId);
+      const address = this.getAddress(y, x);
+      diffBefore.set(address, this.get(y, x));
+      diffAfter.set(address, value);
+      if (partial) {
+        this.cells.set(address, { ...this.cells.get(address), ...value });
+      } else {
+        this.cells.set(address, value);
+      }
+    });
+    if (feedback) {
+      this.pushHistory({
+        operation: "UPDATE",
+        diffBefore,
+        diffAfter,
+        partial,
+        feedback,
+      });
+    }
+  }
+
+  public addRows(
+    y: number,
+    numRows: number,
+    base: number,
+    feedback: StoreFeedbackType
+  ) {
     const numCols = this.numCols(1);
     const rows: AddressTable = [];
     for (let i = 0; i < numRows; i++) {
@@ -497,12 +605,31 @@ export class Table extends UserTable {
     }
     this.addressTable.splice(y, 0, ...rows);
     this.area[2] += numRows;
+    this.pushHistory({
+      operation: "ADD_ROW",
+      y,
+      numRows,
+      addressTable: rows,
+      feedback,
+    });
   }
-  public removeRows(y: number, numRows: number) {
-    this.addressTable.splice(y, numRows);
+  public removeRows(y: number, numRows: number, feedback: StoreFeedbackType) {
+    const rows = this.addressTable.splice(y, numRows);
     this.area[2] -= numRows;
+    this.pushHistory({
+      operation: "REMOVE_ROW",
+      y,
+      numRows,
+      addressTable: rows,
+      feedback,
+    });
   }
-  public addCols(x: number, numCols: number, base: number) {
+  public addCols(
+    x: number,
+    numCols: number,
+    base: number,
+    feedback: StoreFeedbackType
+  ) {
     const numRows = this.numRows(1);
     const rows: AddressTable = [];
     for (let i = 0; i < numRows; i++) {
@@ -518,11 +645,91 @@ export class Table extends UserTable {
     }
     this.addressTable.splice(0, x, ...rows);
     this.area[3] += numCols;
+    this.pushHistory({
+      operation: "ADD_COL",
+      x,
+      numCols,
+      addressTable: rows,
+      feedback,
+    });
   }
-  public removeCols(x: number, numCols: number) {
+  public removeCols(x: number, numCols: number, feedback: StoreFeedbackType) {
+    const rows: AddressTable = [];
     this.addressTable.map((row) => {
-      row.splice(x, numCols);
+      const deleted = row.splice(x, numCols);
+      rows.push(deleted);
     });
     this.area[3] -= numCols;
+    this.pushHistory({
+      operation: "REMOVE_COL",
+      x,
+      numCols,
+      addressTable: rows,
+      feedback,
+    });
+  }
+
+  public undo() {
+    if (this.historyIndex < 0) {
+      return;
+    }
+    const history = this.histories[this.historyIndex--];
+    switch (history.operation) {
+      case "UPDATE":
+        this.update(history.diffBefore!, history.partial);
+        return history.feedback;
+      case "ADD_ROW":
+        this.addressTable.splice(history.y, history.numRows);
+        this.area[2] -= history.numRows;
+        return history.feedback;
+      case "ADD_COL":
+        this.addressTable.map((row) => {
+          row.splice(history.x, history.numCols);
+        });
+        this.area[3] -= history.numCols;
+        return history.feedback;
+      case "REMOVE_ROW":
+        this.addressTable.splice(history.y, 0, ...history.addressTable);
+        this.area[2] += history.numRows;
+        return history.feedback;
+      case "REMOVE_COL":
+        this.addressTable.map((row, i) => {
+          row.splice(history.x, 0, ...history.addressTable[i]);
+        });
+        this.area[3] += history.numCols;
+        return history.feedback;
+    }
+  }
+
+  public redo() {
+    if (this.historyIndex + 1 >= this.histories.length) {
+      return;
+    }
+    const history = this.histories[++this.historyIndex];
+    switch (history.operation) {
+      case "UPDATE":
+        this.update(history.diffAfter!, history.partial);
+        return history.feedback;
+      case "ADD_ROW":
+        this.addressTable.splice(history.y, 0, ...history.addressTable);
+        this.area[2] += history.numRows;
+        return history.feedback;
+      case "ADD_COL":
+        this.addressTable.map((row, i) => {
+          row.splice(history.x, 0, ...history.addressTable[i]);
+        });
+        this.area[3] += history.numCols;
+        return history.feedback;
+      case "REMOVE_ROW":
+        this.addressTable.splice(history.y, history.numRows);
+        this.area[2] -= history.numRows;
+        return history.feedback;
+      case "REMOVE_COL":
+        this.addressTable.map((row) => {
+          row.splice(history.x, history.numCols);
+        });
+        this.area[3] -= history.numCols;
+        return history.feedback;
+    }
   }
 }

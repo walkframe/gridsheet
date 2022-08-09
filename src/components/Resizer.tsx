@@ -15,8 +15,8 @@ import {
   MIN_HEIGHT,
 } from "../constants";
 import { zoneToArea, makeSequence, between } from "../api/matrix";
-import { Table } from "../api/tables";
-import { CellType } from "../types";
+import { CellType, DiffType } from "../types";
+import { xy2cell } from "../api/converters";
 
 const Line = styled.div`
   position: relative;
@@ -63,20 +63,19 @@ export const Resizer: React.FC = React.memo(() => {
 
   const width = baseWidth + (endX - startX);
   const height = baseHeight + (endY - startY);
-  let diff: Table;
 
   const handleResizeEnd = () => {
     const selectingArea = zoneToArea(selectingZone);
     const [top, left, bottom, right] = selectingArea;
+    const diff: DiffType = {};
     if (x !== -1) {
       let xs = [x];
       if (horizontalHeadersSelecting && between([left, right], x)) {
         xs = makeSequence(left, right + 1);
       }
-      diff = table.copy([0, xs[0], 0, xs[xs.length - 1]]);
+      //diff = table.copy([0, xs[0], 0, xs[xs.length - 1]]);
       xs.map((x, i) => {
-        const cell = diff.get(0, i);
-        diff.put(0, i, {...cell, width} as CellType);
+        diff[xy2cell(x, 0)] = { width };
       });
     }
     if (y !== -1) {
@@ -84,13 +83,13 @@ export const Resizer: React.FC = React.memo(() => {
       if (verticalHeadersSelecting && between([top, bottom], y)) {
         ys = makeSequence(top, bottom + 1);
       }
-      diff = table.copy([ys[0], 0, ys[ys.length - 1], 0]);
+      //diff = table.copy([ys[0], 0, ys[ys.length - 1], 0]);
       ys.map((y, i) => {
-        const cell = diff.get(i, 0);
-        diff.put(i, 0, {...cell, height} as CellType);
+        diff[xy2cell(0, y)] = { height };
       });
     }
-    dispatch(updateTable(diff));
+    table.applyDiff(diff, true, { selectingZone });
+    dispatch(updateTable(table.shallowCopy()));
     dispatch(setResizingPositionY([-1, -1, -1]));
     dispatch(setResizingPositionX([-1, -1, -1]));
     editorRef.current?.focus();

@@ -1,4 +1,4 @@
-import { UserTable } from "../../api/tables";
+import { UserTable } from "../../api/table";
 import { solveMatrix, FormulaError } from "../evaluator";
 
 export const ensureNumber = (

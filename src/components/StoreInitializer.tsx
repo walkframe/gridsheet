@@ -18,7 +18,7 @@ import {
 
 import { HISTORY_SIZE, HEADER_HEIGHT, HEADER_WIDTH } from "../constants";
 import { cellToIndexes } from "../api/converters";
-import { Table } from "../api/tables";
+import { Table } from "../api/table";
 import { functions } from "../formula/mapping";
 
 export const StoreInitializer: React.FC<Props> = ({

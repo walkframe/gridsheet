@@ -1,4 +1,4 @@
-import { UserTable } from "../../api/tables";
+import { UserTable } from "../../api/table";
 
 export class BaseFunction {
   public example = "_BASE()";

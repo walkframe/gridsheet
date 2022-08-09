@@ -1,6 +1,6 @@
 import React from "react";
 import { CellType, WriterType } from "../types";
-import { UserTable } from "../api/tables";
+import { UserTable } from "../api/table";
 import { evaluate } from "../formula/evaluator";
 
 type Condition = (value: any) => boolean;
