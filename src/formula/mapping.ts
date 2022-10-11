@@ -49,6 +49,7 @@ import { MaxFunction } from "./functions/max";
 import { MinFunction } from "./functions/min";
 import { LenFunction } from "./functions/len";
 import { LenbFunction } from "./functions/lenb";
+import { UminusFunction } from "./functions/uminus";
 
 export const functions = {
   abs: AbsFunction,
@@ -56,6 +57,7 @@ export const functions = {
   divide: DivideFunction,
   mod: ModFunction,
   minus: MinusFunction,
+  uminus: UminusFunction,
   multiply: MultiplyFunction,
   power: PowerFunction,
   sqrt: SqrtFunction,

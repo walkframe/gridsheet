@@ -195,7 +195,7 @@ export class UserTable {
     if (y === -1 || x === -1) {
       return undefined;
     }
-    const address = this.addressTable[y % this.numRows(1)][x % this.numCols(1)];
+    const address = this.addressTable[y][x];
     return this.cells.get(address);
   }
 
@@ -410,7 +410,7 @@ export class UserTable {
   public parse(y: number, x: number, value: string) {
     const cell = this.get(y, x) || {};
     const parser = this.parsers[cell.parser || ""] || defaultParser;
-    return parser.parse(value, cell);
+    return parser.parse(value, cell, this);
   }
   public render(y: number, x: number, writer?: WriterType) {
     const cell = this.get(y, x) || {};

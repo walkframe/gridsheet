@@ -27,6 +27,11 @@ export class Ref {
     const [y, x] = cellToIndexes(this.ref);
     return base.copy([y, x, y, x]);
   }
+  public id(base: UserTable) {
+    const [y, x] = cellToIndexes(this.ref);
+    const _id = base.getAddress(y, x);
+    return `#${_id}`;
+  }
 }
 
 export class Range {
@@ -83,17 +88,19 @@ export type TokenType =
   | "REF"
   | "RANGE"
   | "FUNCTION"
-  | "OPERATOR"
+  | "PREFIX_OPERATOR"
+  | "INFIX_OPERATOR"
   | "OPEN"
   | "CLOSE"
   | "COMMA"
   | "SPACE";
 
-const FUNCTION_NAME_MAP = {
+const INFIX_FUNCTION_NAME_MAP = {
   "+": "add",
   "-": "minus",
   "/": "divide",
   "*": "multiply",
+  "^": "power",
   "&": "concat",
   "=": "eq",
   "<>": "ne",
@@ -101,6 +108,10 @@ const FUNCTION_NAME_MAP = {
   ">=": "gte",
   "<": "lt",
   "<=": "lte",
+};
+
+const PREFIX_FUNCTION_NAME_MAP = {
+  "-": "uminus",
 };
 
 export class Token {
@@ -122,9 +133,18 @@ export class Token {
         return new Ref(this.entity);
       case "RANGE":
         return new Range(this.entity);
-      case "OPERATOR": {
+      case "INFIX_OPERATOR": {
         const name =
-          FUNCTION_NAME_MAP[this.entity as keyof typeof FUNCTION_NAME_MAP];
+          INFIX_FUNCTION_NAME_MAP[
+            this.entity as keyof typeof INFIX_FUNCTION_NAME_MAP
+          ];
+        return new Function(name, this.precedence);
+      }
+      case "PREFIX_OPERATOR": {
+        const name =
+          PREFIX_FUNCTION_NAME_MAP[
+            this.entity as keyof typeof PREFIX_FUNCTION_NAME_MAP
+          ];
         return new Function(name, this.precedence);
       }
       case "FUNCTION":
@@ -140,24 +160,26 @@ const isWhiteSpace = (char: string) => {
 const TOKEN_OPEN = new Token("OPEN", "("),
   TOKEN_CLOSE = new Token("CLOSE", ")"),
   TOKEN_COMMA = new Token("COMMA", ","),
-  TOKEN_ADD = new Token("OPERATOR", "+", 3),
-  TOKEN_MINUS = new Token("OPERATOR", "-", 3),
-  TOKEN_DIVIDE = new Token("OPERATOR", "/", 4),
-  TOKEN_MULTIPLY = new Token("OPERATOR", "*", 4),
-  TOKEN_CONCAT = new Token("OPERATOR", "&", 4),
-  TOKEN_GTE = new Token("OPERATOR", ">=", 2),
-  TOKEN_GT = new Token("OPERATOR", ">", 2),
-  TOKEN_LTE = new Token("OPERATOR", "<=", 2),
-  TOKEN_LT = new Token("OPERATOR", "<", 2),
-  TOKEN_NE = new Token("OPERATOR", "<>", 1),
-  TOKEN_EQ = new Token("OPERATOR", "=", 1);
+  TOKEN_ADD = new Token("INFIX_OPERATOR", "+", 3),
+  TOKEN_MINUS = new Token("INFIX_OPERATOR", "-", 3),
+  TOKEN_UMINUS = new Token("PREFIX_OPERATOR", "-", 6),
+  TOKEN_DIVIDE = new Token("INFIX_OPERATOR", "/", 4),
+  TOKEN_MULTIPLY = new Token("INFIX_OPERATOR", "*", 4),
+  TOKEN_POWER = new Token("INFIX_OPERATOR", "^", 5),
+  TOKEN_CONCAT = new Token("INFIX_OPERATOR", "&", 4),
+  TOKEN_GTE = new Token("INFIX_OPERATOR", ">=", 2),
+  TOKEN_GT = new Token("INFIX_OPERATOR", ">", 2),
+  TOKEN_LTE = new Token("INFIX_OPERATOR", "<=", 2),
+  TOKEN_LT = new Token("INFIX_OPERATOR", "<", 2),
+  TOKEN_NE = new Token("INFIX_OPERATOR", "<>", 1),
+  TOKEN_EQ = new Token("INFIX_OPERATOR", "=", 1);
 
 const BOOLS = { true: true, false: false };
 export class Lexer {
   private index: number;
   public tokens: Token[] = [];
 
-  constructor(private formula: string, public base=UserTable) {
+  constructor(private formula: string, public base = UserTable) {
     this.formula = formula;
     this.index = 0;
     this.tokens = [];
@@ -175,6 +197,18 @@ export class Lexer {
   private get(base = 0) {
     const c = this.formula[this.index + base];
     return c;
+  }
+
+  public stringify(table: UserTable) {
+    return this.tokens
+      .map((t) => {
+        switch (t.type) {
+          case "REF":
+            return new Ref(t.entity).id(table);
+        }
+        return t.entity;
+      })
+      .join("");
   }
 
   public tokenize() {
@@ -198,13 +232,24 @@ export class Lexer {
           this.tokens.push(TOKEN_ADD);
           continue;
         case "-":
-          this.tokens.push(TOKEN_MINUS);
+          if (
+            this.tokens[this.tokens.length - 1]?.type === "INFIX_OPERATOR" ||
+            (this.tokens[this.tokens.length - 1]?.type === "SPACE" &&
+              this.tokens[this.tokens.length - 2]?.type === "INFIX_OPERATOR")
+          ) {
+            this.tokens.push(TOKEN_UMINUS);
+          } else {
+            this.tokens.push(TOKEN_MINUS);
+          }
           continue;
         case "/":
           this.tokens.push(TOKEN_DIVIDE);
           continue;
         case "*":
           this.tokens.push(TOKEN_MULTIPLY);
+          continue;
+        case "^":
+          this.tokens.push(TOKEN_POWER);
           continue;
         case "&":
           this.tokens.push(TOKEN_CONCAT);
@@ -246,7 +291,7 @@ export class Lexer {
               this.next();
               break;
             }
-            if (c == null || c.match(/[ +\-/*&=<>),]/)) {
+            if (c == null || c.match(/[ +\-/*^&=<>),]/)) {
               if (buf) {
                 if (buf.match(/^[+-]?(\d*[.])?\d+$/)) {
                   this.tokens.push(new Token("VALUE", parseFloat(buf)));
@@ -257,7 +302,7 @@ export class Lexer {
                     this.tokens.push(new Token("VALUE", bool));
                   } else if (buf.indexOf(":") !== -1) {
                     this.tokens.push(new Token("RANGE", buf));
-                  } else {
+                  } else if (buf.startsWith("#")) {
                     this.tokens.push(new Token("REF", buf));
                   }
                 }
@@ -309,7 +354,7 @@ export class Lexer {
 export class Parser {
   public index = 0;
   public depth = 0;
-  constructor(public tokens: Token[], public base=UserTable) {
+  constructor(public tokens: Token[], public base = UserTable) {
     this.tokens = tokens;
     this.base = base;
   }
@@ -371,7 +416,7 @@ export class Parser {
           throw new FormulaError("#ERROR!", "Unexpected end paren");
         }
         return complement();
-      } else if (token.type === "OPERATOR") {
+      } else if (token.type === "INFIX_OPERATOR") {
         const operator = token.convert() as Function;
         let left = stack.pop();
         if (left == null) {
@@ -393,6 +438,14 @@ export class Parser {
           const outer = stack.shift();
           operator.args.push(outer!);
           lastOperator.args.push(left);
+          stack.unshift(operator);
+        }
+        lastOperator = operator;
+      } else if (token.type === "PREFIX_OPERATOR") {
+        const operator = token.convert() as Function;
+        if (lastOperator) {
+          lastOperator.args.push(operator);
+        } else {
           stack.unshift(operator);
         }
         lastOperator = operator;

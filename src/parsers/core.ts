@@ -1,4 +1,6 @@
+import { UserTable } from "api/table";
 import { parseFromTimeZone } from "date-fns-timezone";
+import { Lexer } from "../formula/evaluator";
 import { CellType } from "../types";
 
 type Condition = (value: string) => boolean;
@@ -33,11 +35,11 @@ export class Parser {
   public callback(parsed: any, cell: CellType) {
     return parsed;
   }
-  public parse(value: string, cell: CellType): CellType {
-    const parsed = this._parse(value, cell);
+  public parse(value: string, cell: CellType, table: UserTable): CellType {
+    const parsed = this._parse(value, cell, table);
     return { ...cell, value: parsed };
   }
-  protected _parse(value: string, cell: CellType): any {
+  protected _parse(value: string, cell: CellType, table: UserTable): any {
     if (this.condition && !this.condition(value)) {
       const result = this.complement ? this.complement(value) : value;
       return this.callback(result, cell);
@@ -53,6 +55,12 @@ export class Parser {
     }
     if (value === "") {
       return this.callback(null, cell);
+    }
+    if (value[0] === "=") {
+      const lexer = new Lexer(value.substring(1));
+      lexer.tokenize();
+      console.log("tokens:", lexer.tokens);
+      console.log("lexer", lexer.stringify(table));
     }
     return this.callback(value, cell);
   }
