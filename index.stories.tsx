@@ -218,7 +218,7 @@ export const showIndex = () => {
           historySize: 100,
           mode: "dark",
           //stickyHeaders: "horizontal",
-
+          /*
           onSave: (table, positions) => {
             console.log(
               "matrix on save:",
@@ -246,7 +246,7 @@ export const showIndex = () => {
           onSelect: (table, positions) => {
             console.log("positions on select", positions);
           },
-
+          */
           renderers: {
             kanji: new KanjiRenderer(),
           },

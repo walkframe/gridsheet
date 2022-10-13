@@ -429,16 +429,9 @@ export class UserTable {
   public right() {
     return this.area[3];
   }
-  public getWholeArea(): AreaType {
-    if (this.isBase()) {
-      return [...this.area];
-    }
-    return [0, 0, this.numRows(), this.numCols()];
+  public getArea(): AreaType {
+    return [...this.area];
   }
-  public isBase() {
-    return this.top() === 0 && this.left() === 0;
-  }
-
   public parse(y: number, x: number, value: string) {
     const cell = this.get(y, x) || {};
     const parser = this.parsers[cell.parser || ""] || defaultParser;
@@ -665,7 +658,7 @@ export class Table extends UserTable {
   public addCols(
     x: number,
     numCols: number,
-    base: number,
+    baseX: number,
     feedback: StoreFeedbackType
   ) {
     const numRows = this.numRows(1);
@@ -675,13 +668,13 @@ export class Table extends UserTable {
       for (let j = 0; j < numCols; j++) {
         const address = this.head++;
         row.push(address);
-        const cell = this.get(i, base);
-        const copied = this.copyCell(cell, base);
+        const cell = this.get(i, baseX);
+        const copied = this.copyCell(cell, baseX);
+        this.addressTable[i].splice(x, 0, address);
         this.cells.set(address, copied);
       }
       rows.push(row);
     }
-    this.addressTable.splice(0, x, ...rows);
     this.area[3] += numCols;
     this.pushHistory({
       operation: "ADD_COL",

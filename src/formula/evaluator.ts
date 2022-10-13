@@ -545,14 +545,8 @@ export const solveFormula = (value: any, base: UserTable, raise = true) => {
   return value;
 };
 
-export const solveMatrix = (
-  target: UserTable,
-  base: UserTable,
-  area?: AreaType
-): MatrixType => {
-  if (area == null) {
-    area = target.getWholeArea();
-  }
+export const solveMatrix = (target: UserTable, base: UserTable): MatrixType => {
+  const area = target.getArea();
   return target.matrixFlatten(area).map((row) => {
     return row.map((col) => solveFormula(col, base));
   });
