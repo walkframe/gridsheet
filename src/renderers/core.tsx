@@ -38,12 +38,6 @@ export class Renderer {
           return this.null(value, writer);
         }
         if (value instanceof UserTable) {
-          console.log(
-            "aaaaaa",
-            value.top(),
-            value.left(),
-            value.get(value.top(), value.left())
-          );
           return this._render(
             value.get(value.top(), value.left())?.value,
             table,

@@ -231,7 +231,9 @@ export const Editor: React.FC = () => {
               if (e.ctrlKey || e.metaKey) {
                 if (!editing) {
                   e.preventDefault();
-                  dispatch(select([0, 0, table.numRows() - 1, table.numCols() - 1]));
+                  dispatch(
+                    select([0, 0, table.numRows() - 1, table.numCols() - 1])
+                  );
                   return false;
                 }
               }
@@ -271,11 +273,12 @@ export const Editor: React.FC = () => {
               if (e.ctrlKey || e.metaKey) {
                 if (!editing) {
                   e.preventDefault();
-                  onSave && onSave(table as UserTable, {
-                    pointing: choosing,
-                    selectingFrom: [selectingZone[0], selectingZone[1]],
-                    selectingTo: [selectingZone[2], selectingZone[3]],
-                  });
+                  onSave &&
+                    onSave(table as UserTable, {
+                      pointing: choosing,
+                      selectingFrom: [selectingZone[0], selectingZone[1]],
+                      selectingTo: [selectingZone[2], selectingZone[3]],
+                    });
                   return false;
                 }
               }

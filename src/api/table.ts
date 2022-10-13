@@ -16,7 +16,7 @@ import { createMatrix, writeMatrix } from "./matrix";
 import { cellToIndexes, n2a, x2c, xy2cell, y2r } from "./converters";
 import { FunctionMapping } from "../formula/functions/__base";
 import { functions } from "../formula/mapping";
-import { solveFormula } from "../formula/evaluator";
+import { Lexer, solveFormula } from "../formula/evaluator";
 
 type Props = {
   numRows: number;
@@ -130,6 +130,7 @@ export class UserTable {
   protected base: UserTable;
   protected histories: HistoryType[];
   protected historyIndex: number;
+  protected idCache: Map<Address, string>;
   public historySize: number;
 
   constructor({
@@ -150,6 +151,7 @@ export class UserTable {
     this.addressTable = [];
     this.histories = [];
     this.historyIndex = -1;
+    this.idCache = new Map();
     this.historySize = historySize;
 
     const common = cells.default;
@@ -187,6 +189,35 @@ export class UserTable {
     }
   }
 
+  public getAddressByCellId(cellId: string) {
+    const [y, x] = cellToIndexes(cellId);
+    const id = this.getAddress(y, x);
+    this.idCache.set(id, cellId);
+  }
+  public getCellIdByAddress(address: Address) {
+    const cellId = this.idCache.get(address);
+    if (cellId) {
+      return cellId;
+    }
+    for (let y = 0; y < this.addressTable.length; y++) {
+      const cols = this.addressTable[y];
+      for (let x = 0; x < cols.length; x++) {
+        const a = cols[x];
+        const cellId = xy2cell(x, y);
+        this.idCache.set(a, cellId);
+        if (a === address) {
+          return cellId;
+        }
+      }
+    }
+  }
+  public getPointByAddress(address: Address) {
+    const cellId = this.getCellIdByAddress(address);
+    if (cellId) {
+      return cellToIndexes(cellId);
+    }
+    return [0, 0];
+  }
   public getAddress(y: number, x: number) {
     return this.addressTable[y][x];
   }
@@ -196,7 +227,8 @@ export class UserTable {
       return undefined;
     }
     const address = this.addressTable[y][x];
-    return this.cells.get(address);
+    const value = this.cells.get(address);
+    return value;
   }
 
   public getByAddress(address: Address) {
@@ -417,13 +449,19 @@ export class UserTable {
     const renderer = this.renderers[cell.renderer || ""] || defaultRenderer;
     return renderer.render(this, y, x, writer);
   }
-  public stringify(y: number, x: number, value?: any) {
+  public stringify(y: number, x: number, value?: any, replaceRef = true) {
     const cell = this.get(y, x);
     const renderer = this.renderers[cell?.renderer || ""] || defaultRenderer;
     if (typeof value === "undefined") {
       return renderer.stringify(cell || {});
     }
-    return renderer.stringify({ ...cell, value });
+    const s = renderer.stringify({ ...cell, value });
+    if (s[0] === "=") {
+      const lexer = new Lexer(s.substring(1));
+      lexer.tokenize();
+      return "=" + lexer.stringify("REF", this);
+    }
+    return s;
   }
 
   public copy(area?: AreaType) {

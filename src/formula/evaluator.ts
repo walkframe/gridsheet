@@ -1,6 +1,6 @@
 import { rangeToArea } from "../api/matrix";
 import { cellToIndexes } from "../api/converters";
-import { UserTable } from "../api/table";
+import { Table, UserTable } from "../api/table";
 import { AreaType, MatrixType } from "../types";
 
 export class FormulaError {
@@ -34,6 +34,48 @@ export class Ref {
   }
 }
 
+export class Id {
+  constructor(public id: string) {
+    this.id = id;
+  }
+  public evaluate(base: UserTable) {
+    const [y, x] = base.getPointByAddress(this.ID);
+    return base.copy([y, x, y, x]);
+  }
+  public ref(base: UserTable) {
+    return base.getCellIdByAddress(this.ID);
+  }
+  get ID() {
+    const id = Number(this.id.startsWith("#") ? this.id.substring(1) : this.id);
+    if (isNaN(id)) {
+      throw new FormulaError("#ERROR!", `Formula parsing error.`);
+    }
+    return id;
+  }
+}
+
+export class IdRange {
+  constructor(public idRange: string) {
+    this.idRange = idRange;
+  }
+  public evaluate(base: UserTable): UserTable {
+    const [y, x] = base.getByAddress(this.id);
+    return base.copy([y, x, y, x]);
+  }
+  public range(base: UserTable) {
+    return this.idRange
+      .split(":")
+      .map((id) => {
+        const _id = Number(id.startsWith("#") ? id.substring(1) : id);
+        if (isNaN(_id)) {
+          throw new FormulaError("#ERROR!", `Formula parsing error.`);
+        }
+        return base.getCellIdByAddress(_id);
+      })
+      .join(":");
+  }
+}
+
 export class Range {
   constructor(public range: string) {
     this.range = range.toUpperCase();
@@ -41,6 +83,16 @@ export class Range {
   public evaluate(base: UserTable): UserTable {
     const area = rangeToArea(base.complementRange(this.range));
     return base.copy(area);
+  }
+  public idRange(base: UserTable) {
+    return this.range
+      .split(":")
+      .map((ref) => {
+        const [y, x] = cellToIndexes(ref);
+        const _id = base.getAddress(y, x);
+        return `#${_id}`;
+      })
+      .join(":");
   }
 }
 
@@ -87,6 +139,8 @@ export type TokenType =
   | "VALUE"
   | "REF"
   | "RANGE"
+  | "ID"
+  | "ID_RANGE"
   | "FUNCTION"
   | "PREFIX_OPERATOR"
   | "INFIX_OPERATOR"
@@ -129,6 +183,10 @@ export class Token {
     switch (this.type) {
       case "VALUE":
         return new Value(this.entity);
+      case "ID":
+        return new Id(this.entity);
+      case "ID_RANGE":
+        return new IdRange(this.entity);
       case "REF":
         return new Ref(this.entity);
       case "RANGE":
@@ -199,12 +257,27 @@ export class Lexer {
     return c;
   }
 
-  public stringify(table: UserTable) {
+  public stringify(to: "REF" | "ID", table: UserTable) {
+    if (to === "ID") {
+      return this.tokens
+        .map((t) => {
+          switch (t.type) {
+            case "REF":
+              return new Ref(t.entity).id(table);
+            case "RANGE":
+              return new Range(t.entity).idRange(table);
+          }
+          return t.entity;
+        })
+        .join("");
+    }
     return this.tokens
       .map((t) => {
         switch (t.type) {
-          case "REF":
-            return new Ref(t.entity).id(table);
+          case "ID":
+            return new Id(t.entity).ref(table);
+          case "ID_RANGE":
+            return new IdRange(t.entity).range(table);
         }
         return t.entity;
       })
@@ -300,9 +373,15 @@ export class Lexer {
                   const bool = BOOLS[buf.toLowerCase()];
                   if (bool != null) {
                     this.tokens.push(new Token("VALUE", bool));
+                  } else if (buf.startsWith("#")) {
+                    if (buf.indexOf(":") !== -1) {
+                      this.tokens.push(new Token("ID_RANGE", buf));
+                    } else {
+                      this.tokens.push(new Token("ID", buf));
+                    }
                   } else if (buf.indexOf(":") !== -1) {
                     this.tokens.push(new Token("RANGE", buf));
-                  } else if (buf.startsWith("#")) {
+                  } else {
                     this.tokens.push(new Token("REF", buf));
                   }
                 }
@@ -388,6 +467,8 @@ export class Parser {
         return complement(true);
       } else if (
         token.type === "VALUE" ||
+        token.type === "ID" ||
+        token.type === "ID_RANGE" ||
         token.type === "REF" ||
         token.type === "RANGE"
       ) {
