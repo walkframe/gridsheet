@@ -27,7 +27,10 @@ export class SumifFunction extends BaseFunction {
         "Number of arguments for SUMIF is incorrect."
       );
     }
-    if (this.args[2] != undefined && this.args[2] instanceof UserTable) {
+    if (
+      this.args[Area.Bottom] != undefined &&
+      this.args[Area.Bottom] instanceof UserTable
+    ) {
       throw new FormulaError("#N/A", "3rd argument must be range.");
     }
   }

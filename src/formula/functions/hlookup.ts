@@ -2,6 +2,7 @@ import { solveMatrix, FormulaError } from "../evaluator";
 import { UserTable } from "../../api/table";
 import { BaseFunction } from "./__base";
 import { ensureBoolean, ensureNumber, stripTable } from "./__utils";
+import { Area } from "../../constants";
 
 export class HlookupFunction extends BaseFunction {
   example = "HLOOKUP(10003, A2:Z6, 2, FALSE)";
@@ -39,8 +40,12 @@ export class HlookupFunction extends BaseFunction {
     if (!(this.args[1] instanceof UserTable)) {
       throw new FormulaError("#REF!", "2nd argument must be range");
     }
-    this.args[2] = ensureNumber(this.args[2], this.base);
-    this.args[3] = ensureBoolean(this.args[3], this.base, true);
+    this.args[Area.Bottom] = ensureNumber(this.args[Area.Bottom], this.base);
+    this.args[Area.Right] = ensureBoolean(
+      this.args[Area.Right],
+      this.base,
+      true
+    );
   }
   // @ts-ignore
   protected main(key: any, range: UserTable, index: number, isSorted: boolean) {

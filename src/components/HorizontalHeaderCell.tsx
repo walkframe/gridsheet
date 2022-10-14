@@ -9,7 +9,7 @@ import {
   setContextMenuPosition,
   setResizingPositionX,
 } from "../store/actions";
-import { DUMMY_IMG, DEFAULT_WIDTH } from "../constants";
+import { DUMMY_IMG, DEFAULT_WIDTH, Area } from "../constants";
 
 type Props = {
   index: number;
@@ -43,7 +43,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
       gs-header gs-horizontal
       ${choosing[1] === x ? "gs-choosing" : ""}
       ${
-        between([selectingZone[1], selectingZone[3]], x)
+        between([selectingZone[1], selectingZone[Area.Right]], x)
           ? horizontalHeadersSelecting
             ? "gs-header-selecting"
             : "gs-selecting"
@@ -59,7 +59,9 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
           if (startX === -1) {
             startX = choosing[1];
           }
-          dispatch(selectCols({ range: [startX, x], numRows: table.numRows() }));
+          dispatch(
+            selectCols({ range: [startX, x], numRows: table.numRows() })
+          );
           dispatch(setContextMenuPosition([-1, -1]));
           dispatch(choose([1, startX]));
           editorRef.current?.focus();
@@ -87,7 +89,11 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
           style={{ width, height: headerHeight }}
           draggable
         >
-          {col?.label ? typeof col?.label === "function" ? col?.label(x) : col?.label : colId}
+          {col?.label
+            ? typeof col?.label === "function"
+              ? col?.label(x)
+              : col?.label
+            : colId}
         </div>
         <div
           className="gs-resizer"

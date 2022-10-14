@@ -19,7 +19,7 @@ import {
 import { Table } from "../api/table";
 
 import { tsv2matrix, x2c, pointoToAddress, y2r } from "../api/converters";
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
+import { Area, DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
 
 const actions: { [s: string]: CoreAction<any> } = {};
 
@@ -624,8 +624,8 @@ class ArrowAction<
     const [y, x] = choosing;
     if (shiftKey) {
       let [dragEndY, dragEndX] = [
-        selectingZone[2] === -1 ? y : selectingZone[2],
-        selectingZone[3] === -1 ? x : selectingZone[3],
+        selectingZone[Area.Bottom] === -1 ? y : selectingZone[Area.Bottom],
+        selectingZone[Area.Right] === -1 ? x : selectingZone[Area.Right],
       ];
       const [nextY, nextX] = [dragEndY + deltaY, dragEndX + deltaX];
       if (nextY < 1 || numRows < nextY || nextX < 1 || numCols < nextX) {

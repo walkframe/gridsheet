@@ -9,7 +9,7 @@ import {
   setContextMenuPosition,
   setResizingPositionY,
 } from "../store/actions";
-import { DUMMY_IMG, DEFAULT_HEIGHT } from "../constants";
+import { DUMMY_IMG, DEFAULT_HEIGHT, Area } from "../constants";
 
 type Props = {
   index: number;
@@ -44,7 +44,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
       gs-header gs-vertical
       ${choosing[0] === y ? "gs-choosing" : ""}
       ${
-        between([selectingZone[0], selectingZone[2]], y)
+        between([selectingZone[0], selectingZone[Area.Bottom]], y)
           ? verticalHeadersSelecting
             ? "gs-header-selecting"
             : "gs-selecting"
@@ -55,9 +55,11 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
           if (startY === -1) {
             startY = choosing[0];
           }
-          dispatch(selectRows({ range: [startY, y], numCols: table.numCols() }));
+          dispatch(
+            selectRows({ range: [startY, y], numCols: table.numCols() })
+          );
           dispatch(setContextMenuPosition([-1, -1]));
-          dispatch(choose([startY, 1]))
+          dispatch(choose([startY, 1]));
           editorRef.current?.focus();
           return false;
         }}
@@ -85,7 +87,11 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
         }}
       >
         <div className="gs-header-inner" style={{ height, width: headerWidth }}>
-          {row?.label ? typeof row?.label === "function" ? row?.label(y) : row?.label : rowId}
+          {row?.label
+            ? typeof row?.label === "function"
+              ? row?.label(y)
+              : row?.label
+            : rowId}
         </div>
         <div
           className="gs-resizer"

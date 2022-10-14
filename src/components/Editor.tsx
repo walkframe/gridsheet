@@ -23,6 +23,7 @@ import {
 import { EditorLayout } from "./styles/EditorLayout";
 
 import { Context } from "../store";
+import { Area } from "../constants";
 
 export const Editor: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);
@@ -277,7 +278,10 @@ export const Editor: React.FC = () => {
                     onSave(table as UserTable, {
                       pointing: choosing,
                       selectingFrom: [selectingZone[0], selectingZone[1]],
-                      selectingTo: [selectingZone[2], selectingZone[3]],
+                      selectingTo: [
+                        selectingZone[Area.Bottom],
+                        selectingZone[Area.Right],
+                      ],
                     });
                   return false;
                 }

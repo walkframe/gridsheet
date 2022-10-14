@@ -1,3 +1,4 @@
+import { Area } from "../constants";
 import {
   MatrixType,
   AreaType,
@@ -70,7 +71,12 @@ export const between = (range: RangeType, index: number) => {
 };
 
 export const among = (area: AreaType, position: PositionType) => {
-  if (area[0] === -1 || area[1] === -1 || area[2] === -1 || area[3] === -1) {
+  if (
+    area[Area.Top] === -1 ||
+    area[Area.Left] === -1 ||
+    area[Area.Bottom] === -1 ||
+    area[Area.Right] === -1
+  ) {
     return false;
   }
   const [y, x] = position;
@@ -80,8 +86,8 @@ export const among = (area: AreaType, position: PositionType) => {
 
 export const zoneShape = (zone: ZoneType, base = 0): [Height, Width] => {
   return [
-    base + Math.abs(zone[0] - zone[2]),
-    base + Math.abs(zone[1] - zone[3]),
+    base + Math.abs(zone[Area.Top] - zone[Area.Bottom]),
+    base + Math.abs(zone[Area.Left] - zone[Area.Right]),
   ];
 };
 

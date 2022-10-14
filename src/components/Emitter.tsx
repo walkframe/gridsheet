@@ -8,6 +8,7 @@ import { Context } from "../store";
 import { Feedback, FeedbackForMatrix } from "../types";
 
 import { UserTable, Table } from "../api/table";
+import { Area } from "../constants";
 
 type Props = {
   onChange?: Feedback;
@@ -38,7 +39,7 @@ export const Emitter: React.FC<Props> = ({
       onChange(table as UserTable, {
         pointing,
         selectingFrom: [zone[0], zone[1]],
-        selectingTo: [zone[2], zone[3]],
+        selectingTo: [zone[Area.Bottom], zone[Area.Right]],
       });
   }, [onChange, table]);
   React.useEffect(() => {
@@ -64,7 +65,7 @@ export const Emitter: React.FC<Props> = ({
         diffs = operation.after as Table[];
       }
     }
-    //onChangeDiff(table.joinDiffs(diffs) as UserTable, {pointing, selectingFrom: [zone[0], zone[1]], selectingTo: [zone[2], zone[3]]});
+    //onChangeDiff(table.joinDiffs(diffs) as UserTable, {pointing, selectingFrom: [zone[0], zone[1]], selectingTo: [zone[Area.Bottom], zone[Area.Right]]});
   }, [onChangeDiff, history]);
 
   React.useEffect(() => {
@@ -146,7 +147,7 @@ export const Emitter: React.FC<Props> = ({
       onSelect(table as UserTable, {
         pointing,
         selectingFrom: [zone[0], zone[1]],
-        selectingTo: [zone[2], zone[3]],
+        selectingTo: [zone[Area.Bottom], zone[Area.Right]],
       });
   }, [onSelect, pointing, zone]);
   return <></>;
