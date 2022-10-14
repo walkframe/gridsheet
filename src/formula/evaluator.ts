@@ -3,6 +3,16 @@ import { addressToPoint } from "../api/converters";
 import { Table, UserTable } from "../api/table";
 import { AreaType, MatrixType } from "../types";
 
+const getId = (idString: string) => {
+  const id = Number(
+    idString.startsWith("#") ? idString.substring(1) : idString
+  );
+  if (isNaN(id)) {
+    throw new FormulaError("#ERROR!", `Formula parsing error.`);
+  }
+  return id;
+};
+
 export class FormulaError {
   constructor(public code: string, public message: string) {
     this.code = code;
@@ -11,67 +21,57 @@ export class FormulaError {
 }
 
 export class Value {
-  constructor(public data?: any) {
-    this.data = data;
+  constructor(public value?: any) {
+    this.value = value;
   }
   public evaluate(base: UserTable) {
-    return this.data;
+    return this.value;
   }
 }
 
 export class Ref {
-  constructor(public ref: string) {
-    this.ref = ref.toUpperCase();
+  constructor(public value: string) {
+    this.value = value.toUpperCase();
   }
   public evaluate(base: UserTable): UserTable {
-    const [y, x] = addressToPoint(this.ref);
+    const [y, x] = addressToPoint(this.value);
     return base.copy([y, x, y, x]);
   }
   public id(base: UserTable) {
-    const [y, x] = addressToPoint(this.ref);
-    const _id = base.getId(y, x);
-    return `#${_id}`;
+    const id = base.getIdByAddress(this.value);
+    return `#${id}`;
   }
 }
 
 export class Id {
-  constructor(public id: string) {
-    this.id = id;
+  constructor(public value: string) {
+    this.value = value;
   }
   public evaluate(base: UserTable) {
-    const [y, x] = base.getPointById(this.ID);
+    const [y, x] = base.getPointById(getId(this.value));
     return base.copy([y, x, y, x]);
   }
   public ref(base: UserTable) {
-    return base.getAddressById(this.ID);
-  }
-  get ID() {
-    const id = Number(this.id.startsWith("#") ? this.id.substring(1) : this.id);
-    if (isNaN(id)) {
-      throw new FormulaError("#ERROR!", `Formula parsing error.`);
-    }
-    return id;
+    return base.getAddressById(getId(this.value));
   }
 }
 
 export class IdRange {
-  constructor(public idRange: string) {
-    this.idRange = idRange;
+  constructor(public value: string) {
+    this.value = value;
   }
   public evaluate(base: UserTable): UserTable {
-    const [y, x] = base.getById(this.id);
-    return base.copy([y, x, y, x]);
+    const ids = this.value.split(":");
+    console.log({ ids });
+    const [ys, xs] = ids.map(getId).map((id) => base.getPointById(id));
+    console.log({ ys, xs });
+    return base.copy([ys[0], xs[0], ys[1], xs[1]]);
   }
   public range(base: UserTable) {
-    return this.idRange
+    return this.value
       .split(":")
-      .map((id) => {
-        const _id = Number(id.startsWith("#") ? id.substring(1) : id);
-        if (isNaN(_id)) {
-          throw new FormulaError("#ERROR!", `Formula parsing error.`);
-        }
-        return base.getAddressById(_id);
-      })
+      .map(getId)
+      .map((id) => base.getAddressById(id))
       .join(":");
   }
 }
@@ -87,11 +87,7 @@ export class Range {
   public idRange(base: UserTable) {
     return this.range
       .split(":")
-      .map((ref) => {
-        const [y, x] = addressToPoint(ref);
-        const _id = base.getId(y, x);
-        return `#${_id}`;
-      })
+      .map((ref) => "#" + base.getIdByAddress(ref))
       .join(":");
   }
 }

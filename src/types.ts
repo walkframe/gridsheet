@@ -42,7 +42,7 @@ export type Headers = "both" | "vertical" | "horizontal" | "none";
 
 export type Labeling = (n: number) => string;
 
-export type CellType = {
+export type CellType<Custom = any> = {
   value?: any;
   style?: React.CSSProperties;
   verticalAlign?: string;
@@ -51,7 +51,7 @@ export type CellType = {
   height?: number;
   renderer?: string;
   parser?: string;
-  custom?: any;
+  custom?: Custom;
   changedAt?: Date;
 };
 

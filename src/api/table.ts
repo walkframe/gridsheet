@@ -10,6 +10,7 @@ import {
   PositionType,
   WriterType,
   ZoneType,
+  Address,
 } from "../types";
 import { CellsType, CellType, Parsers, Renderers } from "../types";
 import { createMatrix, writeMatrix } from "./matrix";
@@ -189,10 +190,11 @@ export class UserTable {
     }
   }
 
-  public getIdByAddress(address: string) {
+  public getIdByAddress(address: Address) {
     const [y, x] = addressToPoint(address);
     const id = this.getId(y, x);
     this.idCache.set(id, address);
+    return id;
   }
   public getAddressById(id: Id) {
     const address = this.idCache.get(id);
