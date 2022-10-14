@@ -46,7 +46,7 @@ export class SumifFunction extends BaseFunction {
         top + sumRange.numRows(),
         left + sumRange.numCols(),
       ];
-      sumMatrix = solveMatrix(this.base.copy(area), this.base);
+      sumMatrix = solveMatrix(this.base.trim(area), this.base);
     }
     let total = 0;
     conditionMatrix.map((row, y) =>

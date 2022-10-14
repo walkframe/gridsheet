@@ -8,6 +8,7 @@ import {
   HistoryType,
   CellType,
   DiffType,
+  HistoryOperationType,
 } from "../types";
 import {
   zoneToArea,
@@ -557,15 +558,33 @@ class ClearAction<T extends null> extends CoreAction<T> {
 }
 export const clear = new ClearAction().bind();
 
+const isDeformation = (operation: string) => {
+  switch (operation) {
+    case "ADD_ROW":
+      return true;
+    case "ADD_COL":
+      return true;
+    case "REMOVE_ROW":
+      return true;
+    case "REMOVE_COL":
+      return true;
+  }
+  return false;
+};
+
 class UndoAction<T extends null> extends CoreAction<T> {
   code = "UNDO";
   reduce(store: StoreType, payload: T): StoreType {
     const { table } = store;
-    const feedback = table.undo();
+    const history = table.undo();
+    if (history == null) {
+      return store;
+    }
+    const { feedback, operation } = history;
     return {
       ...store,
       ...feedback,
-      table: table.shallowCopy(),
+      table: table.shallowCopy(isDeformation(operation)),
     };
   }
 }
@@ -575,11 +594,15 @@ class RedoAction<T extends null> extends CoreAction<T> {
   code = "REDO";
   reduce(store: StoreType, payload: T): StoreType {
     const { table } = store;
-    const feedback = table.redo();
+    const history = table.redo();
+    if (history == null) {
+      return store;
+    }
+    const { feedback, operation } = history;
     return {
       ...store,
       ...feedback,
-      table: table.shallowCopy(),
+      table: table.shallowCopy(isDeformation(operation)),
     };
   }
 }

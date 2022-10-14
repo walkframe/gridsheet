@@ -22,6 +22,15 @@ export type MatrixType = any[][];
 export type Renderers = { [s: string]: RendererType };
 export type Parsers = { [s: string]: ParserType };
 
+export type HistoryOperationType =
+  | "WRITE"
+  | "COPY"
+  | "CUT"
+  | "ADD_ROW"
+  | "ADD_COL"
+  | "REMOVE_ROW"
+  | "REMOVE_COL";
+
 export type Feedback = (
   table: UserTable,
   positions?: {

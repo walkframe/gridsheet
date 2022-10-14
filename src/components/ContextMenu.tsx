@@ -116,7 +116,7 @@ export const ContextMenu: React.FC = () => {
                 selectingZone,
                 choosing,
               });
-              dispatch(updateTable(table.shallowCopy()));
+              dispatch(updateTable(table.shallowCopy(false)));
               dispatch(
                 select([
                   selectingTop,
@@ -141,7 +141,7 @@ export const ContextMenu: React.FC = () => {
                 selectingZone,
                 choosing,
               });
-              dispatch(updateTable(table.shallowCopy()));
+              dispatch(updateTable(table.shallowCopy(false)));
               dispatch(
                 select([
                   selectingBottom + 1,
@@ -167,7 +167,7 @@ export const ContextMenu: React.FC = () => {
                 selectingZone,
                 choosing,
               });
-              dispatch(updateTable(table.shallowCopy()));
+              dispatch(updateTable(table.shallowCopy(false)));
               dispatch(
                 select([
                   0,
@@ -192,7 +192,7 @@ export const ContextMenu: React.FC = () => {
                 selectingZone,
                 choosing,
               });
-              dispatch(updateTable(table.shallowCopy()));
+              dispatch(updateTable(table.shallowCopy(false)));
               dispatch(
                 select([
                   1,
@@ -218,7 +218,7 @@ export const ContextMenu: React.FC = () => {
                 selectingZone,
                 choosing,
               });
-              dispatch(updateTable(table.shallowCopy()));
+              dispatch(updateTable(table.shallowCopy(false)));
               dispatch(setContextMenuPosition([-1, -1]));
               dispatch(choose([-1, -1]));
               setTimeout(() => {
@@ -239,7 +239,7 @@ export const ContextMenu: React.FC = () => {
                 selectingZone,
                 choosing,
               });
-              dispatch(updateTable(table.shallowCopy()));
+              dispatch(updateTable(table.shallowCopy(false)));
               dispatch(setContextMenuPosition([-1, -1]));
               dispatch(choose([-1, -1]));
               setTimeout(() => {

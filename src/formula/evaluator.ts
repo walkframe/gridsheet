@@ -35,7 +35,7 @@ export class Ref {
   }
   public evaluate(base: UserTable): UserTable {
     const [y, x] = addressToPoint(this.value);
-    return base.copy([y, x, y, x]);
+    return base.trim([y, x, y, x]);
   }
   public id(base: UserTable) {
     const id = base.getIdByAddress(this.value);
@@ -49,7 +49,7 @@ export class Id {
   }
   public evaluate(base: UserTable) {
     const [y, x] = base.getPointById(getId(this.value));
-    return base.copy([y, x, y, x]);
+    return base.trim([y, x, y, x]);
   }
   public ref(base: UserTable) {
     return base.getAddressById(getId(this.value));
@@ -63,7 +63,7 @@ export class IdRange {
   public evaluate(base: UserTable): UserTable {
     const ids = this.value.split(":");
     const [p1, p2] = ids.map(getId).map((id) => base.getPointById(id));
-    return base.copy([p1[0], p1[1], p2[0], p2[1]]);
+    return base.trim([p1[0], p1[1], p2[0], p2[1]]);
   }
   public range(base: UserTable) {
     return this.value
@@ -80,7 +80,7 @@ export class Range {
   }
   public evaluate(base: UserTable): UserTable {
     const area = rangeToArea(base.complementRange(this.range));
-    return base.copy(area);
+    return base.trim(area);
   }
   public idRange(base: UserTable) {
     return this.range

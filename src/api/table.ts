@@ -11,6 +11,7 @@ import {
   WriterType,
   ZoneType,
   Address,
+  HistoryOperationType,
 } from "../types";
 import { CellsType, CellType, Parsers, Renderers } from "../types";
 import { createMatrix, writeMatrix } from "./matrix";
@@ -18,6 +19,7 @@ import { addressToPoint, n2a, x2c, pointoToAddress, y2r } from "./converters";
 import { FunctionMapping } from "../formula/functions/__base";
 import { functions } from "../formula/mapping";
 import { Lexer, solveFormula } from "../formula/evaluator";
+import { Area } from "../constants";
 
 type Props = {
   numRows: number;
@@ -28,15 +30,6 @@ type Props = {
   useBigInt?: boolean;
   historySize?: number;
 };
-
-type HistoryOperationType =
-  | "WRITE"
-  | "COPY"
-  | "CUT"
-  | "ADD_ROW"
-  | "ADD_COL"
-  | "REMOVE_ROW"
-  | "REMOVE_COL";
 
 type StoreFeedbackType = {
   choosing?: PositionType;
@@ -58,6 +51,7 @@ type HistoryCopyType = {
   diffBefore: DataType;
   diffAfter: DataType;
   area: AreaType;
+  feedback?: StoreFeedbackType;
 };
 
 type HistoryCutType = {
@@ -65,6 +59,7 @@ type HistoryCutType = {
   diffBefore: DataType;
   diffAfter: DataType;
   area: AreaType;
+  feedback?: StoreFeedbackType;
 };
 
 type HistoryAddRowType = {
@@ -255,8 +250,8 @@ export class UserTable {
     const [top, left, bottom, right] = area || [
       1,
       1,
-      this.area[2],
-      this.area[3],
+      this.area[Area.Bottom],
+      this.area[Area.Right],
     ];
     const matrix = createMatrix(bottom - top + 1, right - left + 1);
     for (let y = top; y <= bottom; y++) {
@@ -322,8 +317,8 @@ export class UserTable {
     const [top, left, bottom, right] = area || [
       1,
       1,
-      this.area[2],
-      this.area[3],
+      this.area[Area.Bottom],
+      this.area[Area.Right],
     ];
     const matrix = createMatrix(bottom - top + 1, right - left + 1);
     for (let y = top; y <= bottom; y++) {
@@ -415,16 +410,16 @@ export class UserTable {
     return `${start}:${end}`;
   }
   public top() {
-    return this.area[0];
+    return this.area[Area.Top];
   }
   public left() {
-    return this.area[1];
+    return this.area[Area.Left];
   }
   public bottom() {
-    return this.area[2];
+    return this.area[Area.Bottom];
   }
   public right() {
-    return this.area[3];
+    return this.area[Area.Right];
   }
   public getArea(): AreaType {
     return [...this.area];
@@ -439,7 +434,7 @@ export class UserTable {
     const renderer = this.renderers[cell.renderer || ""] || defaultRenderer;
     return renderer.render(this, y, x, writer);
   }
-  public stringify(y: number, x: number, value?: any, replaceRef = true) {
+  public stringify(y: number, x: number, value?: any) {
     const cell = this.get(y, x);
     const renderer = this.renderers[cell?.renderer || ""] || defaultRenderer;
     if (typeof value === "undefined") {
@@ -454,7 +449,7 @@ export class UserTable {
     return s;
   }
 
-  public copy(area?: AreaType, copyCache = true) {
+  public trim(area?: AreaType) {
     const copied = new Table({ numRows: 0, numCols: 0 });
     if (area != null) {
       copied.area = area;
@@ -471,9 +466,7 @@ export class UserTable {
     copied.histories = this.histories;
     copied.historySize = this.historySize;
     copied.historyIndex = this.historyIndex;
-    if (copyCache) {
-      copied.idCache = this.idCache;
-    }
+    copied.idCache = this.idCache;
     return copied;
   }
 }
@@ -638,7 +631,7 @@ export class Table extends UserTable {
       rows.push(row);
     }
     this.idMatrix.splice(y, 0, ...rows);
-    this.area[2] += numRows;
+    this.area[Area.Bottom] += numRows;
     this.pushHistory({
       operation: "ADD_ROW",
       y,
@@ -649,7 +642,7 @@ export class Table extends UserTable {
   }
   public removeRows(y: number, numRows: number, feedback: StoreFeedbackType) {
     const rows = this.idMatrix.splice(y, numRows);
-    this.area[2] -= numRows;
+    this.area[Area.Bottom] -= numRows;
     this.pushHistory({
       operation: "REMOVE_ROW",
       y,
@@ -678,7 +671,7 @@ export class Table extends UserTable {
       }
       rows.push(row);
     }
-    this.area[3] += numCols;
+    this.area[Area.Right] += numCols;
     this.pushHistory({
       operation: "ADD_COL",
       x,
@@ -693,7 +686,7 @@ export class Table extends UserTable {
       const deleted = row.splice(x, numCols);
       rows.push(deleted);
     });
-    this.area[3] -= numCols;
+    this.area[Area.Right] -= numCols;
     this.pushHistory({
       operation: "REMOVE_COL",
       x,
@@ -711,28 +704,29 @@ export class Table extends UserTable {
     switch (history.operation) {
       case "UPDATE":
         this.update(history.diffBefore!, history.partial);
-        return history.feedback;
+        break;
       case "ADD_ROW":
         this.idMatrix.splice(history.y, history.numRows);
-        this.area[2] -= history.numRows;
-        return history.feedback;
+        this.area[Area.Bottom] -= history.numRows;
+        break;
       case "ADD_COL":
         this.idMatrix.map((row) => {
           row.splice(history.x, history.numCols);
         });
-        this.area[3] -= history.numCols;
-        return history.feedback;
+        this.area[Area.Right] -= history.numCols;
+        break;
       case "REMOVE_ROW":
         this.idMatrix.splice(history.y, 0, ...history.idMatrix);
-        this.area[2] += history.numRows;
-        return history.feedback;
+        this.area[Area.Bottom] += history.numRows;
+        break;
       case "REMOVE_COL":
         this.idMatrix.map((row, i) => {
           row.splice(history.x, 0, ...history.idMatrix[i]);
         });
-        this.area[3] += history.numCols;
-        return history.feedback;
+        this.area[Area.Right] += history.numCols;
+        break;
     }
+    return history;
   }
 
   public redo() {
@@ -743,27 +737,28 @@ export class Table extends UserTable {
     switch (history.operation) {
       case "UPDATE":
         this.update(history.diffAfter!, history.partial);
-        return history.feedback;
+        break;
       case "ADD_ROW":
         this.idMatrix.splice(history.y, 0, ...history.idMatrix);
-        this.area[2] += history.numRows;
-        return history.feedback;
+        this.area[Area.Bottom] += history.numRows;
+        break;
       case "ADD_COL":
         this.idMatrix.map((row, i) => {
           row.splice(history.x, 0, ...history.idMatrix[i]);
         });
-        this.area[3] += history.numCols;
-        return history.feedback;
+        this.area[Area.Right] += history.numCols;
+        break;
       case "REMOVE_ROW":
         this.idMatrix.splice(history.y, history.numRows);
-        this.area[2] -= history.numRows;
-        return history.feedback;
+        this.area[Area.Bottom] -= history.numRows;
+        break;
       case "REMOVE_COL":
         this.idMatrix.map((row) => {
           row.splice(history.x, history.numCols);
         });
-        this.area[3] -= history.numCols;
-        return history.feedback;
+        this.area[Area.Right] -= history.numCols;
+        break;
     }
+    return history;
   }
 }
