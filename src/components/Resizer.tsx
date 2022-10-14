@@ -16,7 +16,7 @@ import {
 } from "../constants";
 import { zoneToArea, makeSequence, between } from "../api/matrix";
 import { CellType, DiffType } from "../types";
-import { xy2cell } from "../api/converters";
+import { pointoToAddress } from "../api/converters";
 
 const Line = styled.div`
   position: relative;
@@ -75,7 +75,7 @@ export const Resizer: React.FC = React.memo(() => {
       }
       //diff = table.copy([0, xs[0], 0, xs[xs.length - 1]]);
       xs.map((x, i) => {
-        diff[xy2cell(x, 0)] = { width };
+        diff[pointoToAddress([0, x])] = { width };
       });
     }
     if (y !== -1) {
@@ -85,7 +85,7 @@ export const Resizer: React.FC = React.memo(() => {
       }
       //diff = table.copy([ys[0], 0, ys[ys.length - 1], 0]);
       ys.map((y, i) => {
-        diff[xy2cell(0, y)] = { height };
+        diff[pointoToAddress([y, 0])] = { height };
       });
     }
     table.applyDiff(diff, true, { selectingZone });

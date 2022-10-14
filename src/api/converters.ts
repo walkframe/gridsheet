@@ -1,4 +1,4 @@
-import { Address, MatrixType, StoreType, X, Y } from "../types";
+import { Address, MatrixType, Point, StoreType, X, Y } from "../types";
 import { DEFAULT_ALPHABET_CACHE_SIZE } from "../constants";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -83,7 +83,7 @@ export const r2y = (row: number | string) => {
   return row;
 };
 
-export const xy2cell = (x: number, y: number) => {
+export const pointoToAddress = ([y, x]: Point) => {
   return `${x2c(x)}${y2r(y)}`;
 };
 

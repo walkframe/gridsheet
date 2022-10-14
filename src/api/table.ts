@@ -14,7 +14,7 @@ import {
 } from "../types";
 import { CellsType, CellType, Parsers, Renderers } from "../types";
 import { createMatrix, writeMatrix } from "./matrix";
-import { addressToPoint, n2a, x2c, xy2cell, y2r } from "./converters";
+import { addressToPoint, n2a, x2c, pointoToAddress, y2r } from "./converters";
 import { FunctionMapping } from "../formula/functions/__base";
 import { functions } from "../formula/mapping";
 import { Lexer, solveFormula } from "../formula/evaluator";
@@ -164,7 +164,7 @@ export class UserTable {
       for (let x = 0; x < numCols + 1; x++) {
         const id = this.head++;
         ids.push(id);
-        const address = xy2cell(x, y);
+        const address = pointoToAddress([y, x]);
         const colId = x2c(x);
         const colDefault = cells[colId];
         const cell = cells[address];
@@ -205,7 +205,7 @@ export class UserTable {
       const ids = this.idMatrix[y];
       for (let x = 0; x < ids.length; x++) {
         const existing = ids[x];
-        const address = xy2cell(x, y);
+        const address = pointoToAddress([y, x]);
         this.idCache.set(existing, address);
         if (existing === id) {
           return address;
@@ -276,7 +276,7 @@ export class UserTable {
       for (let x = left; x <= right; x++) {
         const cell = this.get(y - top, x - left);
         if (cell != null) {
-          result[xy2cell(x, y)] = evaluates
+          result[pointoToAddress([y, x])] = evaluates
             ? solveFormula(cell[key], this.base, false)
             : cell[key];
         }
@@ -346,7 +346,7 @@ export class UserTable {
       for (let x = left; x <= right; x++) {
         const cell = this.get(y - top, x - left);
         if (cell != null) {
-          result[xy2cell(x, y)] = {
+          result[pointoToAddress([y, x])] = {
             ...cell,
             value: evaluates
               ? solveFormula(cell?.value, this.base, false)

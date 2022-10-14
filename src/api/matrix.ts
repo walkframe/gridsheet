@@ -10,7 +10,7 @@ import {
   Width,
   CellsType,
 } from "../types";
-import { addressToPoint, xy2cell } from "./converters";
+import { addressToPoint, pointoToAddress } from "./converters";
 
 export const slideArea = (area: AreaType, y: Y, x: X): AreaType => {
   const [top, left, bottom, right] = area;
@@ -50,7 +50,7 @@ export const zoneToArea = (zone: ZoneType): AreaType => {
 
 export const areaToRange = (area: AreaType): string => {
   const [top, left, bottom, right] = area;
-  return `${xy2cell(left, top)}${xy2cell(right, bottom)}`;
+  return `${pointoToAddress([top, left])}${pointoToAddress([bottom, right])}`;
 };
 
 export const rangeToArea = (range: string): AreaType => {
@@ -172,7 +172,7 @@ export const matrixIntoCells = (
   const [baseY, baseX] = addressToPoint(origin);
   matrix.map((row, y) => {
     row.map((value, x) => {
-      const id = xy2cell(baseX + x, baseY + y);
+      const id = pointoToAddress([baseY + y, baseX + x]);
       if (typeof value !== "undefined") {
         const cell = cells[id];
         cells[id] = { ...cell, value };

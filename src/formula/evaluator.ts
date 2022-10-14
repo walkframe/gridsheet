@@ -62,10 +62,8 @@ export class IdRange {
   }
   public evaluate(base: UserTable): UserTable {
     const ids = this.value.split(":");
-    console.log({ ids });
-    const [ys, xs] = ids.map(getId).map((id) => base.getPointById(id));
-    console.log({ ys, xs });
-    return base.copy([ys[0], xs[0], ys[1], xs[1]]);
+    const [p1, p2] = ids.map(getId).map((id) => base.getPointById(id));
+    return base.copy([p1[0], p1[1], p2[0], p2[1]]);
   }
   public range(base: UserTable) {
     return this.value
@@ -361,25 +359,26 @@ export class Lexer {
               break;
             }
             if (c == null || c.match(/[ +\-/*^&=<>),]/)) {
-              if (buf) {
-                if (buf.match(/^[+-]?(\d*[.])?\d+$/)) {
-                  this.tokens.push(new Token("VALUE", parseFloat(buf)));
-                } else {
-                  // @ts-ignore
-                  const bool = BOOLS[buf.toLowerCase()];
-                  if (bool != null) {
-                    this.tokens.push(new Token("VALUE", bool));
-                  } else if (buf.startsWith("#")) {
-                    if (buf.indexOf(":") !== -1) {
-                      this.tokens.push(new Token("ID_RANGE", buf));
-                    } else {
-                      this.tokens.push(new Token("ID", buf));
-                    }
-                  } else if (buf.indexOf(":") !== -1) {
-                    this.tokens.push(new Token("RANGE", buf));
+              if (buf.length === 0) {
+                break;
+              }
+              if (buf.match(/^[+-]?(\d*[.])?\d+$/)) {
+                this.tokens.push(new Token("VALUE", parseFloat(buf)));
+              } else {
+                // @ts-ignore
+                const bool = BOOLS[buf.toLowerCase()];
+                if (bool != null) {
+                  this.tokens.push(new Token("VALUE", bool));
+                } else if (buf.startsWith("#")) {
+                  if (buf.indexOf(":") !== -1) {
+                    this.tokens.push(new Token("ID_RANGE", buf));
                   } else {
-                    this.tokens.push(new Token("REF", buf));
+                    this.tokens.push(new Token("ID", buf));
                   }
+                } else if (buf.indexOf(":") !== -1) {
+                  this.tokens.push(new Token("RANGE", buf));
+                } else {
+                  this.tokens.push(new Token("REF", buf));
                 }
               }
               break;

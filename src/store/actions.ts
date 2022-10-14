@@ -17,7 +17,7 @@ import {
 } from "../api/matrix";
 import { Table } from "../api/table";
 
-import { tsv2matrix, x2c, xy2cell, y2r } from "../api/converters";
+import { tsv2matrix, x2c, pointoToAddress, y2r } from "../api/converters";
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
 
 const actions: { [s: string]: CoreAction<any> } = {};
@@ -336,7 +336,9 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
       const [top, left, bottom, right] = selectingArea;
       for (let y = top; y <= bottom; y++) {
         for (let x = left; x <= right; x++) {
-          diff[xy2cell(x, y)] = { value: matrixFrom[y - top][x - left] };
+          diff[pointoToAddress([y, x])] = {
+            value: matrixFrom[y - top][x - left],
+          };
         }
       }
       table.applyDiff(diff, true, {
@@ -354,7 +356,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
         const [top, left, bottom, right] = copyingArea;
         for (let y = top; y <= bottom; y++) {
           for (let x = left; x <= right; x++) {
-            diff[xy2cell(x, y)] = {};
+            diff[pointoToAddress([y, x])] = {};
           }
         }
       }
@@ -376,7 +378,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
               topFrom + (i % maxHeight),
               leftFrom + (j % maxWidth)
             );
-            diff[xy2cell(x, y)] = cell || {};
+            diff[pointoToAddress([y, x])] = cell || {};
           }
         }
       }
@@ -533,7 +535,7 @@ class ClearAction<T extends null> extends CoreAction<T> {
     const diff: DiffType = {};
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        diff[xy2cell(x, y)] = { value: null };
+        diff[pointoToAddress([y, x])] = { value: null };
       }
     }
     table.applyDiff(diff, true, {

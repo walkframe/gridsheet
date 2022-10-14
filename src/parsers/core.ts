@@ -59,7 +59,6 @@ export class Parser {
     if (value[0] === "=") {
       const lexer = new Lexer(value.substring(1));
       lexer.tokenize();
-      console.log("tokens", lexer.tokens, lexer.stringify("ID", table));
       return "=" + lexer.stringify("ID", table);
     }
     return this.callback(value, cell);
