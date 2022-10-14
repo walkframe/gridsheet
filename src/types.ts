@@ -54,10 +54,10 @@ export type CellType = {
   custom?: any;
   changedAt?: Date;
 };
-export type DataType = (CellType | null)[][];
-export type DiffType = { [s: string]: CellType };
-export type CellsType = { [s: string]: CellType };
-export type CellsMapType = Map<Address, CellType | undefined>;
+
+export type CellsType = { [address: string]: CellType };
+export type DiffType = CellsType;
+export type DataType = Map<Address, CellType | undefined>;
 
 export type OptionsType = {
   sheetHeight?: number;
@@ -158,5 +158,5 @@ export type Props = {
 };
 
 export type Address = number | bigint;
-export type AddressRow = Address[];
-export type AddressTable = AddressRow[];
+export type Ids = Address[];
+export type IdMatrix = Ids[];

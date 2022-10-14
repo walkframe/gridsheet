@@ -5,7 +5,6 @@ export { oa2aa, aa2oa, matrixIntoCells } from "./api/matrix";
 export { n2a, a2n, x2c, y2r, xy2cell, tsv2matrix } from "./api/converters";
 export {
   MatrixType,
-  DataType,
   CellType,
   Feedback,
   OptionsType,
