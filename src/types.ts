@@ -25,7 +25,7 @@ export type Parsers = { [s: string]: ParserType };
 export type HistoryOperationType =
   | "WRITE"
   | "COPY"
-  | "CUT"
+  | "MOVE"
   | "ADD_ROW"
   | "ADD_COL"
   | "REMOVE_ROW"

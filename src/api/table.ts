@@ -54,11 +54,12 @@ type HistoryCopyType = {
   feedback?: StoreFeedbackType;
 };
 
-type HistoryCutType = {
-  operation: "CUT";
-  diffBefore: DataType;
-  diffAfter: DataType;
-  area: AreaType;
+type HistoryMoveType = {
+  operation: "MOVE";
+  matrixBefore: IdMatrix;
+  matrixAfter: IdMatrix;
+  positionBefore: PositionType;
+  positionAfter: PositionType;
   feedback?: StoreFeedbackType;
 };
 
@@ -96,7 +97,7 @@ type HistoryRemoveColType = {
 
 type HistoryType =
   | HistoryUpdateType
-  | HistoryCutType
+  | HistoryMoveType
   | HistoryCopyType
   | HistoryAddRowType
   | HistoryRemoveRowType
@@ -503,6 +504,45 @@ export class Table extends UserTable {
       } else {
         this.data.set(id, cell);
       }
+    });
+  }
+
+  public getIdMatrixFromArea(area: AreaType) {
+    const matrix: IdMatrix = [];
+    const [top, left, bottom, right] = area;
+    for (let y = top; y <= bottom; y++) {
+      const ids: Ids = [];
+      matrix.push(ids);
+      for (let x = left; x <= right; x++) {
+        ids.push(this.idMatrix[y][x]);
+      }
+    }
+    return matrix;
+  }
+
+  public getNewIdMatrix(area: AreaType) {
+    const matrix: IdMatrix = [];
+    const [top, left, bottom, right] = area;
+    for (let y = top; y <= bottom; y++) {
+      const ids: Ids = [];
+      matrix.push(ids);
+      for (let x = left; x <= right; x++) {
+        ids.push(this.head++);
+      }
+    }
+    return matrix;
+  }
+  public move(before: AreaType, after: AreaType) {
+    const matrixBefore = this.getIdMatrixFromArea(before);
+    const matrixAfter = this.getIdMatrixFromArea(after);
+    writeMatrix(this.idMatrix, this.getNewIdMatrix(before), before);
+    writeMatrix(this.idMatrix, matrixBefore, after);
+    this.pushHistory({
+      operation: "MOVE",
+      matrixBefore,
+      matrixAfter,
+      positionBefore: [before[0], before[1]],
+      positionAfter: [after[0], after[1]],
     });
   }
 

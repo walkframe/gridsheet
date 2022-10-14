@@ -101,9 +101,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
             e.preventDefault();
             e.stopPropagation();
           }}
-        >
-          <i />
-        </div>
+        ></div>
       </div>
     );
   }

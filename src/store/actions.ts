@@ -9,6 +9,7 @@ import {
   CellType,
   DiffType,
   HistoryOperationType,
+  AreaType,
 } from "../types";
 import {
   zoneToArea,
@@ -354,12 +355,30 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
       }
       selectingArea = [y, x, y + height, x + width];
       if (cutting) {
-        const [top, left, bottom, right] = copyingArea;
-        for (let y = top; y <= bottom; y++) {
-          for (let x = left; x <= right; x++) {
-            diff[pointoToAddress([y, x])] = {};
-          }
-        }
+        const src = copyingArea;
+        const [h, w] = zoneShape(copyingArea);
+        const dst: AreaType =
+          selectingArea[0] !== -1
+            ? [
+                selectingArea[Area.Top],
+                selectingArea[Area.Left],
+                selectingArea[Area.Top] + h,
+                selectingArea[Area.Left] + w,
+              ]
+            : [
+                choosing[Area.Top],
+                choosing[Area.Left],
+                choosing[Area.Top] + h,
+                choosing[Area.Left] + w,
+              ];
+        table.move(src, dst);
+        console.log(src, dst);
+        return {
+          ...store,
+          table: table.shallowCopy(),
+          selectingZone: selectingArea,
+          copyingZone: [-1, -1, -1, -1] as ZoneType,
+        };
       }
       {
         const [maxHeight, maxWidth] = zoneShape(copyingArea, 1);

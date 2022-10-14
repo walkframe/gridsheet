@@ -145,18 +145,12 @@ export const writeMatrix = <T = any>(
   target: T[][],
   area: AreaType
 ) => {
-  const result: T[][] = [];
   const [top, left, bottom, right] = area;
-  base.map((rowFrom, y) => {
-    result.push([]);
-    rowFrom.map((col, x) => {
-      if (top <= y && y <= bottom && left <= x && x <= right) {
-        col = target[y - top][x - left];
-      }
-      result[y].push(col);
-    });
-  });
-  return result;
+  for (let y = top; y <= bottom; y++) {
+    for (let x = left; x <= right; x++) {
+      base[y][x] = target[y - top][x - left];
+    }
+  }
 };
 
 export const createMatrix = (numRows: number, numCols: number, fill = null) => {
