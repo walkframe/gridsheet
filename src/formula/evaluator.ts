@@ -1,5 +1,5 @@
 import { rangeToArea } from "../api/matrix";
-import { cellToIndexes } from "../api/converters";
+import { addressToPoint } from "../api/converters";
 import { Table, UserTable } from "../api/table";
 import { AreaType, MatrixType } from "../types";
 
@@ -24,12 +24,12 @@ export class Ref {
     this.ref = ref.toUpperCase();
   }
   public evaluate(base: UserTable): UserTable {
-    const [y, x] = cellToIndexes(this.ref);
+    const [y, x] = addressToPoint(this.ref);
     return base.copy([y, x, y, x]);
   }
   public id(base: UserTable) {
-    const [y, x] = cellToIndexes(this.ref);
-    const _id = base.getAddress(y, x);
+    const [y, x] = addressToPoint(this.ref);
+    const _id = base.getId(y, x);
     return `#${_id}`;
   }
 }
@@ -39,11 +39,11 @@ export class Id {
     this.id = id;
   }
   public evaluate(base: UserTable) {
-    const [y, x] = base.getPointByAddress(this.ID);
+    const [y, x] = base.getPointById(this.ID);
     return base.copy([y, x, y, x]);
   }
   public ref(base: UserTable) {
-    return base.getCellIdByAddress(this.ID);
+    return base.getAddressById(this.ID);
   }
   get ID() {
     const id = Number(this.id.startsWith("#") ? this.id.substring(1) : this.id);
@@ -59,7 +59,7 @@ export class IdRange {
     this.idRange = idRange;
   }
   public evaluate(base: UserTable): UserTable {
-    const [y, x] = base.getByAddress(this.id);
+    const [y, x] = base.getById(this.id);
     return base.copy([y, x, y, x]);
   }
   public range(base: UserTable) {
@@ -70,7 +70,7 @@ export class IdRange {
         if (isNaN(_id)) {
           throw new FormulaError("#ERROR!", `Formula parsing error.`);
         }
-        return base.getCellIdByAddress(_id);
+        return base.getAddressById(_id);
       })
       .join(":");
   }
@@ -88,8 +88,8 @@ export class Range {
     return this.range
       .split(":")
       .map((ref) => {
-        const [y, x] = cellToIndexes(ref);
-        const _id = base.getAddress(y, x);
+        const [y, x] = addressToPoint(ref);
+        const _id = base.getId(y, x);
         return `#${_id}`;
       })
       .join(":");

@@ -1,7 +1,7 @@
 import { defaultParser } from "../parsers/core";
 import { defaultRenderer } from "../renderers/core";
 import {
-  Address,
+  Id,
   Ids,
   IdMatrix,
   AreaType,
@@ -13,7 +13,7 @@ import {
 } from "../types";
 import { CellsType, CellType, Parsers, Renderers } from "../types";
 import { createMatrix, writeMatrix } from "./matrix";
-import { cellToIndexes, n2a, x2c, xy2cell, y2r } from "./converters";
+import { addressToPoint, n2a, x2c, xy2cell, y2r } from "./converters";
 import { FunctionMapping } from "../formula/functions/__base";
 import { functions } from "../formula/mapping";
 import { Lexer, solveFormula } from "../formula/evaluator";
@@ -120,7 +120,7 @@ export class History {
 }
 
 export class UserTable {
-  protected head: Address;
+  protected head: Id;
   protected idMatrix: IdMatrix;
   protected data: DataType;
   protected area: AreaType;
@@ -130,7 +130,7 @@ export class UserTable {
   protected base: UserTable;
   protected histories: HistoryType[];
   protected historyIndex: number;
-  protected idCache: Map<Address, string>;
+  protected idCache: Map<Id, string>;
   public historySize: number;
 
   constructor({
@@ -163,10 +163,10 @@ export class UserTable {
       for (let x = 0; x < numCols + 1; x++) {
         const id = this.head++;
         ids.push(id);
-        const cellId = xy2cell(x, y);
+        const address = xy2cell(x, y);
         const colId = x2c(x);
         const colDefault = cells[colId];
-        const cell = cells[cellId];
+        const cell = cells[address];
         const stacked = {
           ...common,
           ...rowDefault,
@@ -189,36 +189,36 @@ export class UserTable {
     }
   }
 
-  public getAddressByCellId(cellId: string) {
-    const [y, x] = cellToIndexes(cellId);
-    const id = this.getAddress(y, x);
-    this.idCache.set(id, cellId);
+  public getIdByAddress(address: string) {
+    const [y, x] = addressToPoint(address);
+    const id = this.getId(y, x);
+    this.idCache.set(id, address);
   }
-  public getCellIdByAddress(id: Address) {
-    const cellId = this.idCache.get(id);
-    if (cellId) {
-      return cellId;
+  public getAddressById(id: Id) {
+    const address = this.idCache.get(id);
+    if (address) {
+      return address;
     }
     for (let y = 0; y < this.idMatrix.length; y++) {
-      const cols = this.idMatrix[y];
-      for (let x = 0; x < cols.length; x++) {
-        const a = cols[x];
-        const cellId = xy2cell(x, y);
-        this.idCache.set(a, cellId);
-        if (a === id) {
-          return cellId;
+      const ids = this.idMatrix[y];
+      for (let x = 0; x < ids.length; x++) {
+        const existing = ids[x];
+        const address = xy2cell(x, y);
+        this.idCache.set(existing, address);
+        if (existing === id) {
+          return address;
         }
       }
     }
   }
-  public getPointByAddress(id: Address) {
-    const cellId = this.getCellIdByAddress(id);
-    if (cellId) {
-      return cellToIndexes(cellId);
+  public getPointById(id: Id) {
+    const address = this.getAddressById(id);
+    if (address) {
+      return addressToPoint(address);
     }
     return [0, 0];
   }
-  public getAddress(y: number, x: number) {
+  public getId(y: number, x: number) {
     return this.idMatrix[y][x];
   }
 
@@ -231,13 +231,8 @@ export class UserTable {
     return value;
   }
 
-  public getByAddress(id: Address) {
+  public getById(id: Id) {
     return this.data.get(id);
-  }
-
-  public getById(id: string) {
-    const [y, x] = cellToIndexes(id);
-    return this.get(y, x);
   }
 
   public numRows(base = 0) {
@@ -503,7 +498,7 @@ export class Table extends UserTable {
   public update(diff: DataType, partial = true) {
     diff.forEach((cell, id) => {
       if (partial) {
-        this.data.set(id, { ...this.getByAddress(id), ...cell });
+        this.data.set(id, { ...this.getById(id), ...cell });
       } else {
         this.data.set(id, cell);
       }
@@ -522,7 +517,7 @@ export class Table extends UserTable {
 
   public getDiffByPos(y: number, x: number, cell: CellType) {
     const diff: DataType = new Map();
-    const id = this.getAddress(y, x);
+    const id = this.getId(y, x);
     diff.set(id, cell);
     return diff;
   }
@@ -532,7 +527,7 @@ export class Table extends UserTable {
     const [top, left, bottom, right] = area;
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        const id = this.getAddress(y, x);
+        const id = this.getId(y, x);
         backdiff.set(id, this.get(y, x));
       }
     }
@@ -543,7 +538,7 @@ export class Table extends UserTable {
     const [numRows, numCols] = [this.numRows(1), this.numCols(1)];
     const modY = y % numRows;
     const modX = x % numCols;
-    const id = this.getAddress(modY, modX);
+    const id = this.getId(modY, modX);
     this.data.set(id, cell);
   }
 
@@ -592,10 +587,10 @@ export class Table extends UserTable {
   ) {
     const diffBefore = new Map();
     const diffAfter = new Map();
-    Object.keys(diff).map((cellId) => {
-      const value = diff[cellId];
-      const [y, x] = cellToIndexes(cellId);
-      const id = this.getAddress(y, x);
+    Object.keys(diff).map((address) => {
+      const value = diff[address];
+      const [y, x] = addressToPoint(address);
+      const id = this.getId(y, x);
       diffBefore.set(id, this.get(y, x));
       diffAfter.set(id, value);
       if (partial) {

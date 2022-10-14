@@ -51,7 +51,7 @@ export const ContextMenu: React.FC = () => {
   }
   const rowId = y2r(y);
   const colId = x2c(x);
-  const cellId = `${colId}${rowId}`;
+  const address = `${colId}${rowId}`;
 
   const [height, width] = zoneShape(selectingZone);
 

@@ -1,4 +1,4 @@
-import { MatrixType, StoreType, X, Y } from "../types";
+import { Address, MatrixType, StoreType, X, Y } from "../types";
 import { DEFAULT_ALPHABET_CACHE_SIZE } from "../constants";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -148,8 +148,8 @@ export const tsv2matrix = (tsv: string): string[][] => {
   return rows;
 };
 
-export const cellToIndexes = (cellId: string): [Y, X] => {
-  const m = cellId.match(/([A-Z]*)([0-9]*)/);
+export const addressToPoint = (address: Address): [Y, X] => {
+  const m = address.match(/([A-Z]*)([0-9]*)/);
   if (m == null) {
     return [0, 0];
   }

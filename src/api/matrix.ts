@@ -10,7 +10,7 @@ import {
   Width,
   CellsType,
 } from "../types";
-import { cellToIndexes, xy2cell } from "./converters";
+import { addressToPoint, xy2cell } from "./converters";
 
 export const slideArea = (area: AreaType, y: Y, x: X): AreaType => {
   const [top, left, bottom, right] = area;
@@ -56,7 +56,7 @@ export const areaToRange = (area: AreaType): string => {
 export const rangeToArea = (range: string): AreaType => {
   const cells = range.split(":");
   const [start, end] = cells;
-  return [...cellToIndexes(start), ...cellToIndexes(end)];
+  return [...addressToPoint(start), ...addressToPoint(end)];
 };
 
 export const between = (range: RangeType, index: number) => {
@@ -169,7 +169,7 @@ export const matrixIntoCells = (
   cells: CellsType,
   origin = "A1"
 ) => {
-  const [baseY, baseX] = cellToIndexes(origin);
+  const [baseY, baseX] = addressToPoint(origin);
   matrix.map((row, y) => {
     row.map((value, x) => {
       const id = xy2cell(baseX + x, baseY + y);

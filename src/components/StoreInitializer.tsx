@@ -17,7 +17,7 @@ import {
 } from "../store/actions";
 
 import { HISTORY_SIZE, HEADER_HEIGHT, HEADER_WIDTH } from "../constants";
-import { cellToIndexes } from "../api/converters";
+import { addressToPoint } from "../api/converters";
 import { Table } from "../api/table";
 import { functions } from "../formula/mapping";
 
@@ -110,8 +110,8 @@ export const StoreInitializer: React.FC<Props> = ({
 const getMaxSizeFromCells = (sizeY = 0, sizeX = 0, cells: CellsType = {}) => {
   let lastY = sizeY,
     lastX = sizeX;
-  Object.keys(cells).map((cellId) => {
-    const [y, x] = cellToIndexes(cellId);
+  Object.keys(cells).map((address) => {
+    const [y, x] = addressToPoint(address);
     if (lastY < y) {
       lastY = y;
     }

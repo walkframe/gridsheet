@@ -45,14 +45,14 @@ export const Editor: React.FC = () => {
 
   const rowId = `${y2r(y)}`;
   const colId = x2c(x);
-  const cellId = `${colId}${rowId}`;
+  const address = `${colId}${rowId}`;
 
   const [before, setBefore] = React.useState("");
   if (y === -1 || x === -1) {
     return <></>;
   }
 
-  const editing = editingCell === cellId;
+  const editing = editingCell === address;
 
   const cell = table.get(y, x);
   const value = cell?.value;
@@ -70,7 +70,7 @@ export const Editor: React.FC = () => {
       className={`gs-editor ${editing ? "gs-editing" : ""}`}
       style={editing ? { top, left, height, width } : {}}
     >
-      <div className="gs-cell-label">{cellId}</div>
+      <div className="gs-cell-label">{address}</div>
       <textarea
         autoFocus
         draggable={false}
@@ -85,7 +85,7 @@ export const Editor: React.FC = () => {
           if (!editing) {
             input.value = table.stringify(y, x, value || null);
             setBefore(input.value);
-            dispatch(setEditingCell(cellId));
+            dispatch(setEditingCell(address));
             setTimeout(() => {
               input.style.width = `${input.scrollWidth}px`;
               const length = new String(input.value).length;
@@ -329,7 +329,7 @@ export const Editor: React.FC = () => {
             return false;
           }
           input.style.width = `${input.scrollWidth}px`;
-          dispatch(setEditingCell(cellId));
+          dispatch(setEditingCell(address));
           return false;
         }}
       />

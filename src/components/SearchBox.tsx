@@ -1,4 +1,4 @@
-import { cellToIndexes } from "../api/converters";
+import { addressToPoint } from "../api/converters";
 import React from "react";
 
 import { Context } from "../store";
@@ -21,7 +21,7 @@ export const SearchBox: React.FC = () => {
     if (!matchingCell) {
       return;
     }
-    const indexes = cellToIndexes(matchingCell);
+    const indexes = addressToPoint(matchingCell);
     if (typeof indexes === "undefined") {
       return;
     }
@@ -69,7 +69,8 @@ export const SearchBox: React.FC = () => {
             input?.nodeName === "INPUT" && input.focus();
           }}
         >
-          {matchingCells.length === 0 ? 0 : matchingCellIndex + 1} / {matchingCells.length}
+          {matchingCells.length === 0 ? 0 : matchingCellIndex + 1} /{" "}
+          {matchingCells.length}
         </div>
       </div>
       <div className="gs-search-close">

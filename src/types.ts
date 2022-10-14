@@ -55,9 +55,9 @@ export type CellType = {
   changedAt?: Date;
 };
 
-export type CellsType = { [address: string]: CellType };
+export type CellsType = { [address: Address]: CellType };
 export type DiffType = CellsType;
-export type DataType = Map<Address, CellType | undefined>;
+export type DataType = Map<Id, CellType | undefined>;
 
 export type OptionsType = {
   sheetHeight?: number;
@@ -157,6 +157,7 @@ export type Props = {
   additionalFunctions?: FunctionMapping;
 };
 
-export type Address = number | bigint;
-export type Ids = Address[];
+export type Id = number | bigint;
+export type Ids = Id[];
 export type IdMatrix = Ids[];
+export type Address = string;

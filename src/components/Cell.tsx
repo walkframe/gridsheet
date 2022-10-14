@@ -27,7 +27,7 @@ export const Cell: React.FC<Props> = React.memo(
   ({ rowIndex: y, columnIndex: x, style: outerStyle }) => {
     const rowId = y2r(++y);
     const colId = x2c(++x);
-    const cellId = `${colId}${rowId}`;
+    const address = `${colId}${rowId}`;
     const { store, dispatch } = React.useContext(Context);
 
     const cellRef = React.useRef<HTMLDivElement>(document.createElement("div"));
@@ -54,7 +54,7 @@ export const Cell: React.FC<Props> = React.memo(
 
     const selectingArea = zoneToArea(selectingZone); // (top, left) -> (bottom, right)
     const copyingArea = zoneToArea(copyingZone); // (top, left) -> (bottom, right)
-    const editing = editingCell === cellId;
+    const editing = editingCell === address;
     const pointed = choosing[0] === y && choosing[1] === x;
 
     React.useEffect(() => {
@@ -172,7 +172,7 @@ export const Cell: React.FC<Props> = React.memo(
           }
           ${pointed ? "gs-pointed" : ""} ${editing ? "gs-editing" : ""}
           ${matching ? "gs-matching" : ""}
-          ${matchingCell === cellId ? "gs-searching" : ""}`}
+          ${matchingCell === address ? "gs-searching" : ""}`}
         >
           {errorMessage && (
             <div className="formula-error-triangle" title={errorMessage} />
@@ -185,7 +185,7 @@ export const Cell: React.FC<Props> = React.memo(
               verticalAlign,
             }}
           >
-            {cellLabel && <div className="gs-cell-label">{cellId}</div>}
+            {cellLabel && <div className="gs-cell-label">{address}</div>}
             <div className="gs-cell-rendered">{rendered}</div>
           </div>
         </div>
