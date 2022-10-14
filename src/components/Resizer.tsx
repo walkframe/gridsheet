@@ -73,7 +73,6 @@ export const Resizer: React.FC = React.memo(() => {
       if (horizontalHeadersSelecting && between([left, right], x)) {
         xs = makeSequence(left, right + 1);
       }
-      //diff = table.copy([0, xs[0], 0, xs[xs.length - 1]]);
       xs.map((x, i) => {
         diff[pointoToAddress([0, x])] = { width };
       });
@@ -83,7 +82,6 @@ export const Resizer: React.FC = React.memo(() => {
       if (verticalHeadersSelecting && between([top, bottom], y)) {
         ys = makeSequence(top, bottom + 1);
       }
-      //diff = table.copy([ys[0], 0, ys[ys.length - 1], 0]);
       ys.map((y, i) => {
         diff[pointoToAddress([y, 0])] = { height };
       });

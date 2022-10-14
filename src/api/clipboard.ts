@@ -13,7 +13,8 @@ export const clip = (store: StoreType): ZoneType => {
     area = [y, x, y, x];
   }
   const input = editorRef.current;
-  const matrix = solveMatrix(table, table, area);
+  const target = table.copy(area);
+  const matrix = solveMatrix(target, table);
   const tsv = matrix2tsv(store, y, x, matrix);
   if (input != null) {
     input.value = tsv;

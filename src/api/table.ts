@@ -454,7 +454,7 @@ export class UserTable {
     return s;
   }
 
-  public copy(area?: AreaType) {
+  public copy(area?: AreaType, copyCache = true) {
     const copied = new Table({ numRows: 0, numCols: 0 });
     if (area != null) {
       copied.area = area;
@@ -471,6 +471,9 @@ export class UserTable {
     copied.histories = this.histories;
     copied.historySize = this.historySize;
     copied.historyIndex = this.historyIndex;
+    if (copyCache) {
+      copied.idCache = this.idCache;
+    }
     return copied;
   }
 }
@@ -481,7 +484,7 @@ export class Table extends UserTable {
     this.functions = { ...functions, ...additionalFunctions };
   }
 
-  public shallowCopy() {
+  public shallowCopy(copyCache = true) {
     const copied = new Table({ numRows: 0, numCols: 0 });
     copied.head = this.head;
     copied.idMatrix = this.idMatrix;
@@ -494,6 +497,9 @@ export class Table extends UserTable {
     copied.historySize = this.historySize;
     copied.historyIndex = this.historyIndex;
     copied.base = this;
+    if (copyCache) {
+      copied.idCache = this.idCache;
+    }
     return copied;
   }
 
