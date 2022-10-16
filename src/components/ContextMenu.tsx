@@ -114,7 +114,7 @@ export const ContextMenu: React.FC = () => {
         {!horizontalHeadersSelecting && (
           <li
             className={
-              maxNumRows === -1 && tableHeight + height > maxNumRows
+              maxNumRows !== -1 && tableHeight + height > maxNumRows
                 ? "disabled"
                 : "enabled"
             }
