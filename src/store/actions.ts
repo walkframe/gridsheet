@@ -372,7 +372,6 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
                 choosing[Area.Left] + w,
               ];
         table.move(src, dst);
-        console.log(src, dst);
         return {
           ...store,
           table: table.shallowCopy(),
@@ -577,7 +576,7 @@ class ClearAction<T extends null> extends CoreAction<T> {
 }
 export const clear = new ClearAction().bind();
 
-const isDeformation = (operation: string) => {
+const shouldTracking = (operation: string) => {
   switch (operation) {
     case "ADD_ROW":
       return true;
@@ -586,6 +585,8 @@ const isDeformation = (operation: string) => {
     case "REMOVE_ROW":
       return true;
     case "REMOVE_COL":
+      return true;
+    case "MOVE":
       return true;
   }
   return false;
@@ -603,7 +604,7 @@ class UndoAction<T extends null> extends CoreAction<T> {
     return {
       ...store,
       ...feedback,
-      table: table.shallowCopy(isDeformation(operation)),
+      table: table.shallowCopy(shouldTracking(operation)),
     };
   }
 }
@@ -621,7 +622,7 @@ class RedoAction<T extends null> extends CoreAction<T> {
     return {
       ...store,
       ...feedback,
-      table: table.shallowCopy(isDeformation(operation)),
+      table: table.shallowCopy(shouldTracking(operation)),
     };
   }
 }

@@ -14,7 +14,7 @@ import {
   HistoryOperationType,
 } from "../types";
 import { CellsType, CellType, Parsers, Renderers } from "../types";
-import { createMatrix, writeMatrix } from "./matrix";
+import { createMatrix, matrixShape, writeMatrix } from "./matrix";
 import { addressToPoint, n2a, x2c, pointoToAddress, y2r } from "./converters";
 import { FunctionMapping } from "../formula/functions/__base";
 import { functions } from "../formula/mapping";
@@ -56,10 +56,11 @@ type HistoryCopyType = {
 
 type HistoryMoveType = {
   operation: "MOVE";
-  matrixBefore: IdMatrix;
-  matrixAfter: IdMatrix;
-  positionBefore: PositionType;
-  positionAfter: PositionType;
+  matrixFrom: IdMatrix;
+  matrixTo: IdMatrix;
+  matrixNew: IdMatrix;
+  positionFrom: PositionType;
+  positionTo: PositionType;
   feedback?: StoreFeedbackType;
 };
 
@@ -492,7 +493,7 @@ export class Table extends UserTable {
     copied.historyIndex = this.historyIndex;
     copied.base = this;
     if (copyCache) {
-      copied.idCache = this.idCache;
+      //copied.idCache = this.idCache;
     }
     return copied;
   }
@@ -532,17 +533,19 @@ export class Table extends UserTable {
     }
     return matrix;
   }
-  public move(before: AreaType, after: AreaType) {
-    const matrixBefore = this.getIdMatrixFromArea(before);
-    const matrixAfter = this.getIdMatrixFromArea(after);
-    writeMatrix(this.idMatrix, this.getNewIdMatrix(before), before);
-    writeMatrix(this.idMatrix, matrixBefore, after);
+  public move(from: AreaType, to: AreaType) {
+    const matrixFrom = this.getIdMatrixFromArea(from);
+    const matrixTo = this.getIdMatrixFromArea(to);
+    const matrixNew = this.getNewIdMatrix(from);
+    writeMatrix(this.idMatrix, matrixNew, from);
+    writeMatrix(this.idMatrix, matrixFrom, to);
     this.pushHistory({
       operation: "MOVE",
-      matrixBefore,
-      matrixAfter,
-      positionBefore: [before[0], before[1]],
-      positionAfter: [after[0], after[1]],
+      matrixFrom,
+      matrixTo,
+      matrixNew,
+      positionFrom: [from[0], from[1]],
+      positionTo: [to[0], to[1]],
     });
   }
 
@@ -765,6 +768,23 @@ export class Table extends UserTable {
         });
         this.area[Area.Right] += history.numCols;
         break;
+      case "MOVE":
+        const [yFrom, xFrom] = history.positionFrom;
+        const [yTo, xTo] = history.positionTo;
+        const [rows, cols] = matrixShape(history.matrixFrom, -1);
+        writeMatrix(this.idMatrix, history.matrixFrom, [
+          yFrom,
+          xFrom,
+          yFrom + rows,
+          xFrom + cols,
+        ]);
+        writeMatrix(this.idMatrix, history.matrixTo, [
+          yTo,
+          xTo,
+          yTo + rows,
+          xTo + cols,
+        ]);
+        break;
     }
     return history;
   }
@@ -798,6 +818,22 @@ export class Table extends UserTable {
         });
         this.area[Area.Right] -= history.numCols;
         break;
+      case "MOVE":
+        const [yFrom, xFrom] = history.positionFrom;
+        const [yTo, xTo] = history.positionTo;
+        const [rows, cols] = matrixShape(history.matrixFrom, -1);
+        writeMatrix(this.idMatrix, history.matrixNew, [
+          yFrom,
+          xFrom,
+          yFrom + rows,
+          xFrom + cols,
+        ]);
+        writeMatrix(this.idMatrix, history.matrixFrom, [
+          yTo,
+          xTo,
+          yTo + rows,
+          xTo + cols,
+        ]);
     }
     return history;
   }
