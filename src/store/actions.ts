@@ -78,8 +78,8 @@ class SetSearchQueryAction<T extends string | undefined> extends CoreAction<T> {
       return { ...store, searchQuery, matchingCells, matchingCellIndex: 0 };
     }
     const { table } = store;
-    for (let x = 1; x <= table.numCols(); x++) {
-      for (let y = 1; y <= table.numRows(); y++) {
+    for (let x = 1; x <= table.getNumCols(); x++) {
+      for (let y = 1; y <= table.getNumRows(); y++) {
         if (table.stringify([y, x]).indexOf(searchQuery as string) !== -1) {
           matchingCells.push(`${x2c(x)}${y2r(y)}`);
         }
@@ -385,12 +385,12 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
         const [topFrom, leftFrom, bottomFrom, rightFrom] = copyingArea;
         for (let i = 0; i <= bottomTo - topTo; i++) {
           const y = topTo + i;
-          if (y > table.numRows()) {
+          if (y > table.getNumRows()) {
             continue;
           }
           for (let j = 0; j <= rightTo - leftTo; j++) {
             const x = leftTo + j;
-            if (x > table.numCols()) {
+            if (x > table.getNumCols()) {
               continue;
             }
             const cell = table.getByPosition([

@@ -163,7 +163,7 @@ export type RefType = {
 
 export type Props = {
   initial?: CellsType;
-  tableRef?: React.MutableRefObject<Table | null>;
+  tableRef?: React.MutableRefObject<UserTable | null>;
   options?: OptionsType;
   className?: string;
   style?: React.CSSProperties;

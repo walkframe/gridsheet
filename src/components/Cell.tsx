@@ -64,7 +64,7 @@ export const Cell: React.FC<Props> = React.memo(
         //editorRef.current?.focus();
       }
     }, [editing]);
-    if (table.numRows() === 0) {
+    if (table.getNumRows() === 0) {
       return null;
     }
     const cell = table.getByPosition([y, x]);
@@ -105,8 +105,8 @@ export const Cell: React.FC<Props> = React.memo(
         className={`gs-cell ${among(copyingArea, [y, x]) ? "gs-copying" : ""} ${
           y === 0 ? "gs-cell-top-end" : ""
         } ${x === 0 ? "gs-cell-left-end" : ""} ${
-          y === table.numRows() ? "gs-cell-bottom-end" : ""
-        } ${x === table.numCols() ? "gs-cell-right-end" : ""}`}
+          y === table.getNumRows() ? "gs-cell-bottom-end" : ""
+        } ${x === table.getNumCols() ? "gs-cell-right-end" : ""}`}
         style={{
           ...outerStyle,
           ...cell?.style,
@@ -154,11 +154,11 @@ export const Cell: React.FC<Props> = React.memo(
         }}
         onDragEnter={() => {
           if (horizontalHeadersSelecting) {
-            dispatch(drag([table.numRows(), x]));
+            dispatch(drag([table.getNumRows(), x]));
             return false;
           }
           if (verticalHeadersSelecting) {
-            dispatch(drag([y, table.numCols()]));
+            dispatch(drag([y, table.getNumCols()]));
             return false;
           }
           dispatch(drag([y, x]));

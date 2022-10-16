@@ -1,5 +1,5 @@
 import { solveMatrix, FormulaError } from "../evaluator";
-import { UserTable } from "../../api/table";
+import { Table } from "../../api/table";
 import { BaseFunction } from "./__base";
 import { ensureNumber } from "./__utils";
 
@@ -25,7 +25,7 @@ export class MinFunction extends BaseFunction {
     }
     const spreaded: number[] = [];
     this.args.map((arg) => {
-      if (arg instanceof UserTable) {
+      if (arg instanceof Table) {
         spreaded.push(
           ...solveMatrix(arg, this.base)
             .reduce((a, b) => a.concat(b))

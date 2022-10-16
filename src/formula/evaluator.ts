@@ -1,6 +1,6 @@
 import { rangeToArea } from "../api/matrix";
 import { addressToPosition, n2a } from "../api/converters";
-import { Table, UserTable } from "../api/table";
+import { Table } from "../api/table";
 import { AreaType, MatrixType } from "../types";
 
 const getId = (idString: string) => {
@@ -24,7 +24,7 @@ export class Value {
   constructor(public value?: any) {
     this.value = value;
   }
-  public evaluate(base: UserTable) {
+  public evaluate(base: Table) {
     return this.value;
   }
 }
@@ -33,11 +33,11 @@ export class Ref {
   constructor(public value: string) {
     this.value = value.toUpperCase();
   }
-  public evaluate(base: UserTable): UserTable {
+  public evaluate(base: Table): Table {
     const [y, x] = addressToPosition(this.value);
     return base.trim([y, x, y, x]);
   }
-  public id(base: UserTable) {
+  public id(base: Table) {
     const id = base.getIdByAddress(this.value);
     return `#${id}`;
   }
@@ -47,11 +47,11 @@ export class Id {
   constructor(public value: string) {
     this.value = value;
   }
-  public evaluate(base: UserTable) {
+  public evaluate(base: Table) {
     const [y, x] = base.getPositionById(getId(this.value));
     return base.trim([y, x, y, x]);
   }
-  public ref(base: UserTable) {
+  public ref(base: Table) {
     return base.getAddressById(getId(this.value));
   }
 }
@@ -60,12 +60,12 @@ export class IdRange {
   constructor(public value: string) {
     this.value = value;
   }
-  public evaluate(base: UserTable): UserTable {
+  public evaluate(base: Table): Table {
     const ids = this.value.split(":");
     const [p1, p2] = ids.map(getId).map((id) => base.getPositionById(id));
     return base.trim([p1[0], p1[1], p2[0], p2[1]]);
   }
-  public range(base: UserTable) {
+  public range(base: Table) {
     return this.value
       .split(":")
       .map(getId)
@@ -78,17 +78,17 @@ export class Range {
   constructor(public value: string) {
     this.value = value.toUpperCase();
   }
-  public evaluate(base: UserTable): UserTable {
+  public evaluate(base: Table): Table {
     const area = rangeToArea(this.complementRange(base));
     return base.trim(area);
   }
-  public idRange(base: UserTable) {
+  public idRange(base: Table) {
     return this.value
       .split(":")
       .map((ref) => "#" + base.getIdByAddress(ref))
       .join(":");
   }
-  private complementRange(base: UserTable) {
+  private complementRange(base: Table) {
     const cells = this.value.split(":");
     let [start = "", end = ""] = cells;
     if (!start.match(/[1-9]\d*/)) {
@@ -98,10 +98,10 @@ export class Range {
       start = "A" + start;
     }
     if (!end.match(/[1-9]\d*/)) {
-      end += base.numRows();
+      end += base.getNumRows();
     }
     if (!end.match(/[a-zA-Z]/)) {
-      end = n2a(base.numCols() + 1) + end;
+      end = n2a(base.getNumCols() + 1) + end;
     }
     return `${start}:${end}`;
   }
@@ -115,7 +115,7 @@ export class Function {
     this.args = [];
   }
 
-  public evaluate(base: UserTable): any {
+  public evaluate(base: Table): any {
     const args = this.args.map((a) => a.evaluate(base));
     const name = this.name.toLowerCase();
     const Func = base.functions[name];
@@ -127,7 +127,7 @@ export class Function {
   }
 }
 
-export const evaluate = (formula: string, base: UserTable, raise = true) => {
+export const evaluate = (formula: string, base: Table, raise = true) => {
   const lexer = new Lexer(formula);
   lexer.tokenize();
   const parser = new Parser(lexer.tokens);
@@ -248,7 +248,7 @@ export class Lexer {
   private index: number;
   public tokens: Token[] = [];
 
-  constructor(private formula: string, public base = UserTable) {
+  constructor(private formula: string, public base = Table) {
     this.formula = formula;
     this.index = 0;
     this.tokens = [];
@@ -268,7 +268,7 @@ export class Lexer {
     return c;
   }
 
-  public stringify(to: "REF" | "ID", table: UserTable) {
+  public stringify(to: "REF" | "ID", table: Table) {
     if (to === "ID") {
       return this.tokens
         .map((t) => {
@@ -445,7 +445,7 @@ export class Lexer {
 export class Parser {
   public index = 0;
   public depth = 0;
-  constructor(public tokens: Token[], public base = UserTable) {
+  constructor(public tokens: Token[], public base = Table) {
     this.tokens = tokens;
     this.base = base;
   }
@@ -548,7 +548,7 @@ export class Parser {
   }
 }
 
-export const solveFormula = (value: any, base: UserTable, raise = true) => {
+export const solveFormula = (value: any, base: Table, raise = true) => {
   if (typeof value === "string" || value instanceof String) {
     if (value.charAt(0) === "=") {
       return evaluate(value.substring(1), base, raise);
@@ -557,9 +557,9 @@ export const solveFormula = (value: any, base: UserTable, raise = true) => {
   return value;
 };
 
-export const solveMatrix = (target: UserTable, base: UserTable): MatrixType => {
+export const solveMatrix = (target: Table, base: Table): MatrixType => {
   const area = target.getArea();
-  return target.matrixFlatten(area).map((row) => {
+  return target.getMatrixFlatten(area).map((row) => {
     return row.map((col) => solveFormula(col, base));
   });
 };

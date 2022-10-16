@@ -1,11 +1,11 @@
-import { UserTable } from "../../api/table";
+import { Table } from "../../api/table";
 
 export class BaseFunction {
   public example = "_BASE()";
   public helpTexts = ["Function's description."];
   public helpArgs = [{ name: "value1", description: "" }];
 
-  constructor(public args: any[], public base: UserTable) {
+  constructor(public args: any[], public base: Table) {
     this.args = args;
     this.base = base;
   }

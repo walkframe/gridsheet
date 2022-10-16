@@ -1,5 +1,5 @@
 import { solveMatrix, FormulaError } from "../evaluator";
-import { UserTable } from "../../api/table";
+import { Table } from "../../api/table";
 import { BaseFunction } from "./__base";
 import { ensureBoolean, ensureNumber, stripTable } from "./__utils";
 import { Area } from "../../constants";
@@ -34,25 +34,28 @@ export class HlookupFunction extends BaseFunction {
         "Number of arguments for HLOOKUP is incorrect."
       );
     }
-    if (this.args[0] instanceof UserTable) {
-      this.args[0] = stripTable(this.args[0], this.base);
+    if (this.args[0] instanceof Table) {
+      this.args[0] = stripTable(this.args[0], this.base as Table);
     }
-    if (!(this.args[1] instanceof UserTable)) {
+    if (!(this.args[1] instanceof Table)) {
       throw new FormulaError("#REF!", "2nd argument must be range");
     }
-    this.args[Area.Bottom] = ensureNumber(this.args[Area.Bottom], this.base);
+    this.args[Area.Bottom] = ensureNumber(
+      this.args[Area.Bottom],
+      this.base as Table
+    );
     this.args[Area.Right] = ensureBoolean(
       this.args[Area.Right],
-      this.base,
+      this.base as Table,
       true
     );
   }
   // @ts-ignore
-  protected main(key: any, range: UserTable, index: number, isSorted: boolean) {
-    const matrix = solveMatrix(range, this.base);
+  protected main(key: any, range: Table, index: number, isSorted: boolean) {
+    const matrix = solveMatrix(range, this.base as Table);
     if (isSorted) {
       let last = -1;
-      for (let x = 0; x <= range.numCols(); x++) {
+      for (let x = 0; x <= range.getNumCols(); x++) {
         const v = matrix[0]?.[x];
         if (v != null && v <= key) {
           last = x;
@@ -64,7 +67,7 @@ export class HlookupFunction extends BaseFunction {
         return matrix[index - 1]?.[last];
       }
     } else {
-      for (let x = 0; x <= range.numCols(); x++) {
+      for (let x = 0; x <= range.getNumCols(); x++) {
         if (matrix[0]?.[x] === key) {
           return matrix[index - 1]?.[x];
         }

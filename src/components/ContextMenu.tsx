@@ -122,7 +122,7 @@ export const ContextMenu: React.FC = () => {
                   selectingTop,
                   1,
                   selectingTop + height,
-                  table.numCols(),
+                  table.getNumCols(),
                 ])
               );
               dispatch(choose([selectingTop, 0]));
@@ -147,7 +147,7 @@ export const ContextMenu: React.FC = () => {
                   selectingBottom + 1,
                   1,
                   selectingBottom + height + 1,
-                  table.numCols(),
+                  table.getNumCols(),
                 ])
               );
               dispatch(choose([selectingBottom + 1, 0]));
@@ -172,7 +172,7 @@ export const ContextMenu: React.FC = () => {
                 select([
                   0,
                   selectingLeft,
-                  table.numRows(),
+                  table.getNumRows(),
                   selectingLeft + width,
                 ])
               );
@@ -197,7 +197,7 @@ export const ContextMenu: React.FC = () => {
                 select([
                   1,
                   selectingRight + 1,
-                  table.numRows(),
+                  table.getNumRows(),
                   selectingRight + width + 1,
                 ])
               );

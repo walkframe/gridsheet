@@ -1,7 +1,8 @@
 import { solveMatrix, FormulaError } from "../evaluator";
-import { UserTable } from "../../api/table";
+import { Table } from "../../api/table";
 import { BaseFunction } from "./__base";
 import { ensureBoolean, ensureNumber, stripTable } from "./__utils";
+import { Area } from "../../constants";
 
 export class VlookupFunction extends BaseFunction {
   example = "VLOOKUP(10003, A2:B26, 2, FALSE)";
@@ -33,10 +34,10 @@ export class VlookupFunction extends BaseFunction {
         "Number of arguments for VLOOKUP is incorrect."
       );
     }
-    if (this.args[0] instanceof UserTable) {
+    if (this.args[0] instanceof Table) {
       this.args[0] = stripTable(this.args[0], this.base);
     }
-    if (!(this.args[1] instanceof UserTable)) {
+    if (!(this.args[1] instanceof Table)) {
       throw new FormulaError("#REF!", "2nd argument must be range");
     }
     this.args[Area.Bottom] = ensureNumber(this.args[Area.Bottom], this.base);
@@ -47,11 +48,11 @@ export class VlookupFunction extends BaseFunction {
     );
   }
   // @ts-ignore
-  protected main(key: any, range: UserTable, index: number, isSorted: boolean) {
+  protected main(key: any, range: Table, index: number, isSorted: boolean) {
     const matrix = solveMatrix(range, this.base);
     if (isSorted) {
       let last = -1;
-      for (let y = 0; y <= range.numRows(); y++) {
+      for (let y = 0; y <= range.getNumRows(); y++) {
         const v = matrix[y]?.[0];
         if (v != null && v <= key) {
           last = y;
@@ -63,7 +64,7 @@ export class VlookupFunction extends BaseFunction {
         return matrix[last]?.[index - 1];
       }
     } else {
-      for (let y = 0; y <= range.numRows(); y++) {
+      for (let y = 0; y <= range.getNumRows(); y++) {
         if (matrix[y]?.[0] === key) {
           return matrix[y]?.[index - 1];
         }

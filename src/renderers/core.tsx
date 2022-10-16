@@ -1,6 +1,6 @@
 import React from "react";
 import { CellType, PositionType, WriterType } from "../types";
-import { UserTable } from "../api/table";
+import { Table } from "../api/table";
 import { evaluate } from "../formula/evaluator";
 
 type Condition = (value: any) => boolean;
@@ -24,7 +24,7 @@ export class Renderer {
     this.complement = complement;
   }
 
-  public _render(value: any, table: UserTable, writer?: WriterType): any {
+  public _render(value: any, table: Table, writer?: WriterType): any {
     if (this.condition && !this.condition(value)) {
       return this.complement ? this.complement(value) : this.stringify(value);
     }
@@ -37,9 +37,9 @@ export class Renderer {
         if (value == null) {
           return this.null(value, writer);
         }
-        if (value instanceof UserTable) {
+        if (value instanceof Table) {
           return this._render(
-            value.getByPosition([value.top(), value.left()])?.value,
+            value.getByPosition([value.getTop(), value.getLeft()])?.value,
             table,
             writer
           );
@@ -63,7 +63,7 @@ export class Renderer {
   }
 
   public render(
-    table: UserTable,
+    table: Table,
     position: PositionType,
     writer?: WriterType
   ): any {
@@ -83,7 +83,7 @@ export class Renderer {
     return value.toString();
   }
 
-  protected string(value: string, table: UserTable, writer?: WriterType): any {
+  protected string(value: string, table: Table, writer?: WriterType): any {
     if (value[0] === "'") {
       return value.substring(1);
     }

@@ -16,13 +16,13 @@ import { choose, select, setEntering } from "../store/actions";
 import { GridTableLayout } from "./styles/GridTableLayout";
 
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
-import { Table } from "../api/table";
+import { Table, UserTable } from "../api/table";
 
 type Props = {
-  tableRef?: React.MutableRefObject<Table | null>;
+  tableRef?: React.MutableRefObject<UserTable | null>;
 };
 
-export const createTableRef = () => React.useRef<Table>(null);
+export const createTableRef = () => React.useRef<UserTable>(null);
 
 export const GridTable = ({ tableRef }: Props) => {
   const { store, dispatch } = React.useContext(Context);
@@ -45,7 +45,7 @@ export const GridTable = ({ tableRef }: Props) => {
     }
   }, [table]);
 
-  if (table.numRows() === 0) {
+  if (table.getNumRows() === 0) {
     return null;
   }
 
@@ -72,14 +72,16 @@ export const GridTable = ({ tableRef }: Props) => {
               dispatch(choose([-1, -1]));
               setTimeout(() => {
                 dispatch(choose([1, 1]));
-                dispatch(select([1, 1, table.numRows(), table.numCols()]));
+                dispatch(
+                  select([1, 1, table.getNumRows(), table.getNumCols()])
+                );
               }, 100);
             }}
           ></div>
           <div className="gs-tabular-col">
             <List
               ref={horizontalHeadersRef}
-              itemCount={table.numCols() || 0}
+              itemCount={table.getNumCols() || 0}
               itemSize={(x) =>
                 table.getByPosition([0, x + 1])?.width || DEFAULT_WIDTH
               }
@@ -98,7 +100,7 @@ export const GridTable = ({ tableRef }: Props) => {
           <div className="gs-tabular-col" style={{ verticalAlign: "top" }}>
             <List
               ref={verticalHeadersRef}
-              itemCount={table.numRows() || 0}
+              itemCount={table.getNumRows() || 0}
               itemSize={(y) =>
                 table.getByPosition([y + 1, 0])?.height || DEFAULT_HEIGHT
               }
@@ -113,8 +115,8 @@ export const GridTable = ({ tableRef }: Props) => {
             <Grid
               ref={gridRef}
               outerRef={gridOuterRef}
-              columnCount={table.numCols() || 0}
-              rowCount={table.numRows() || 0}
+              columnCount={table.getNumCols() || 0}
+              rowCount={table.getNumRows() || 0}
               width={sheetWidth - headerWidth}
               height={sheetHeight - headerHeight}
               columnWidth={(x) =>

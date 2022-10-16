@@ -1,4 +1,4 @@
-import { UserTable } from "api/table";
+import { Table } from "api/table";
 import { parseFromTimeZone } from "date-fns-timezone";
 import { Lexer } from "../formula/evaluator";
 import { CellType } from "../types";
@@ -35,11 +35,11 @@ export class Parser {
   public callback(parsed: any, cell: CellType) {
     return parsed;
   }
-  public parse(value: string, cell: CellType, table: UserTable): CellType {
+  public parse(value: string, cell: CellType, table: Table): CellType {
     const parsed = this._parse(value, cell, table);
     return { ...cell, value: parsed };
   }
-  protected _parse(value: string, cell: CellType, table: UserTable): any {
+  protected _parse(value: string, cell: CellType, table: Table): any {
     if (this.condition && !this.condition(value)) {
       const result = this.complement ? this.complement(value) : value;
       return this.callback(result, cell);

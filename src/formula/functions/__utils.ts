@@ -1,9 +1,9 @@
-import { UserTable } from "../../api/table";
+import { Table } from "../../api/table";
 import { solveMatrix, FormulaError } from "../evaluator";
 
 export const ensureNumber = (
   value: any,
-  base: UserTable,
+  base: Table,
   alternative?: number
 ): number => {
   if (typeof value === "undefined" && typeof alternative !== "undefined") {
@@ -13,7 +13,7 @@ export const ensureNumber = (
     // falsy is 0
     return 0;
   }
-  if (value instanceof UserTable) {
+  if (value instanceof Table) {
     const v = stripTable(value, base, 0, 0);
     return ensureNumber(v, base, alternative);
   }
@@ -27,11 +27,11 @@ export const ensureNumber = (
   return num;
 };
 
-export const ensureString = (value: any, base: UserTable): string => {
+export const ensureString = (value: any, base: Table): string => {
   if (!value) {
     return "";
   }
-  if (value instanceof UserTable) {
+  if (value instanceof Table) {
     const v = stripTable(value, base, 0, 0);
     return ensureString(v, base);
   }
@@ -48,7 +48,7 @@ export const ensureString = (value: any, base: UserTable): string => {
 
 export const ensureBoolean = (
   value: any,
-  base: UserTable,
+  base: Table,
   alternative?: boolean
 ): boolean => {
   if (typeof value === "undefined" && typeof alternative !== "undefined") {
@@ -57,7 +57,7 @@ export const ensureBoolean = (
   if (value === null) {
     return false;
   }
-  if (value instanceof UserTable) {
+  if (value instanceof Table) {
     const v = stripTable(value, base, 0, 0);
     return ensureBoolean(v, base, alternative);
   }
@@ -75,8 +75,8 @@ export const ensureBoolean = (
   return Boolean(value);
 };
 
-export const stripTable = (value: any, base: UserTable, y = 0, x = 0) => {
-  if (value instanceof UserTable) {
+export const stripTable = (value: any, base: Table, y = 0, x = 0) => {
+  if (value instanceof Table) {
     return solveMatrix(value, base)[y][x];
   }
   return value;

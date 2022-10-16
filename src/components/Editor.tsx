@@ -1,7 +1,6 @@
 import React from "react";
 import { x2c, y2r } from "../api/converters";
 import { clip } from "../api/clipboard";
-import { UserTable } from "../api/table";
 import {
   blur,
   clear,
@@ -115,8 +114,8 @@ export const Editor: React.FC = () => {
               }
               dispatch(
                 walk({
-                  numRows: table.numRows(),
-                  numCols: table.numCols(),
+                  numRows: table.getNumRows(),
+                  numCols: table.getNumCols(),
                   deltaY: 0,
                   deltaX: shiftKey ? -1 : 1,
                 })
@@ -146,8 +145,8 @@ export const Editor: React.FC = () => {
               }
               dispatch(
                 walk({
-                  numRows: table.numRows(),
-                  numCols: table.numCols(),
+                  numRows: table.getNumRows(),
+                  numCols: table.getNumCols(),
                   deltaY: shiftKey ? -1 : 1,
                   deltaX: 0,
                 })
@@ -181,8 +180,8 @@ export const Editor: React.FC = () => {
                 dispatch(
                   arrow({
                     shiftKey,
-                    numRows: table.numRows(),
-                    numCols: table.numCols(),
+                    numRows: table.getNumRows(),
+                    numCols: table.getNumCols(),
                     deltaY: 0,
                     deltaX: -1,
                   })
@@ -194,8 +193,8 @@ export const Editor: React.FC = () => {
                 dispatch(
                   arrow({
                     shiftKey,
-                    numRows: table.numRows(),
-                    numCols: table.numCols(),
+                    numRows: table.getNumRows(),
+                    numCols: table.getNumCols(),
                     deltaY: -1,
                     deltaX: 0,
                   })
@@ -207,8 +206,8 @@ export const Editor: React.FC = () => {
                 dispatch(
                   arrow({
                     shiftKey,
-                    numRows: table.numRows(),
-                    numCols: table.numCols(),
+                    numRows: table.getNumRows(),
+                    numCols: table.getNumCols(),
                     deltaY: 0,
                     deltaX: 1,
                   })
@@ -220,8 +219,8 @@ export const Editor: React.FC = () => {
                 dispatch(
                   arrow({
                     shiftKey,
-                    numRows: table.numRows(),
-                    numCols: table.numCols(),
+                    numRows: table.getNumRows(),
+                    numCols: table.getNumCols(),
                     deltaY: 1,
                     deltaX: 0,
                   })
@@ -233,7 +232,12 @@ export const Editor: React.FC = () => {
                 if (!editing) {
                   e.preventDefault();
                   dispatch(
-                    select([0, 0, table.numRows() - 1, table.numCols() - 1])
+                    select([
+                      0,
+                      0,
+                      table.getNumRows() - 1,
+                      table.getNumCols() - 1,
+                    ])
                   );
                   return false;
                 }
@@ -275,7 +279,7 @@ export const Editor: React.FC = () => {
                 if (!editing) {
                   e.preventDefault();
                   onSave &&
-                    onSave(table as UserTable, {
+                    onSave(table, {
                       pointing: choosing,
                       selectingFrom: [selectingZone[0], selectingZone[1]],
                       selectingTo: [

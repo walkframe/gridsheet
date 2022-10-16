@@ -31,7 +31,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
       editorRef,
     } = store;
 
-    if (table.numRows() === 0) {
+    if (table.getNumRows() === 0) {
       return null;
     }
     const col = table.getByPosition([0, x]);
@@ -60,7 +60,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
             startX = choosing[1];
           }
           dispatch(
-            selectCols({ range: [startX, x], numRows: table.numRows() })
+            selectCols({ range: [startX, x], numRows: table.getNumRows() })
           );
           dispatch(setContextMenuPosition([-1, -1]));
           dispatch(choose([1, startX]));
@@ -69,13 +69,13 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
         }}
         onDragStart={(e) => {
           e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
-          dispatch(selectCols({ range: [x, x], numRows: table.numRows() }));
+          dispatch(selectCols({ range: [x, x], numRows: table.getNumRows() }));
           dispatch(choose([1, x]));
           return false;
         }}
         onDragEnter={() => {
           if (resizingRect[1] === -1) {
-            dispatch(drag([table.numRows(), x]));
+            dispatch(drag([table.getNumRows(), x]));
           }
           return false;
         }}

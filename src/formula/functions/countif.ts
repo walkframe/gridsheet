@@ -1,5 +1,5 @@
 import { solveMatrix, FormulaError } from "../evaluator";
-import { UserTable } from "../../api/table";
+import { Table } from "../../api/table";
 import { BaseFunction } from "./__base";
 import { check } from "./__utils";
 
@@ -23,7 +23,7 @@ export class CountifFunction extends BaseFunction {
     }
   }
   // @ts-ignore
-  protected main(table: UserTable, condition: string) {
+  protected main(table: Table, condition: string) {
     const matrix = solveMatrix(table, this.base);
     return matrix
       .reduce((a, b) => a.concat(b))

@@ -1,5 +1,5 @@
 import { solveMatrix, FormulaError } from "../evaluator";
-import { UserTable } from "../../api/table";
+import { Table } from "../../api/table";
 import { BaseFunction } from "./__base";
 import { check, ensureNumber } from "./__utils";
 import { AreaType } from "../../types";
@@ -27,24 +27,24 @@ export class SumifFunction extends BaseFunction {
         "Number of arguments for SUMIF is incorrect."
       );
     }
-    if (this.args[2] != undefined && this.args[2] instanceof UserTable) {
+    if (this.args[2] != undefined && this.args[2] instanceof Table) {
       throw new FormulaError("#N/A", "3rd argument must be range.");
     }
   }
   // @ts-ignore
-  protected main(range: UserTable, condition: string, sumRange: UserTable) {
-    if (!(range instanceof UserTable)) {
+  protected main(range: Table, condition: string, sumRange: Table) {
+    if (!(range instanceof Table)) {
       return check(range, condition) ? range : 0;
     }
     const conditionMatrix = solveMatrix(range, this.base);
     let sumMatrix = conditionMatrix;
     if (sumRange) {
-      const [top, left] = [sumRange.top(), sumRange.left()];
+      const [top, left] = [sumRange.getTop(), sumRange.getLeft()];
       const area: AreaType = [
         top,
         left,
-        top + sumRange.numRows(),
-        left + sumRange.numCols(),
+        top + sumRange.getNumRows(),
+        left + sumRange.getNumCols(),
       ];
       sumMatrix = solveMatrix(this.base.trim(area), this.base);
     }

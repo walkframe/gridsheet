@@ -31,7 +31,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
       table,
     } = store;
 
-    if (table.numRows() === 0) {
+    if (table.getNumRows() === 0) {
       return null;
     }
     const row = table.getByPosition([y, 0]);
@@ -56,7 +56,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
             startY = choosing[0];
           }
           dispatch(
-            selectRows({ range: [startY, y], numCols: table.numCols() })
+            selectRows({ range: [startY, y], numCols: table.getNumCols() })
           );
           dispatch(setContextMenuPosition([-1, -1]));
           dispatch(choose([startY, 1]));
@@ -71,13 +71,13 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
         }}
         onDragStart={(e) => {
           e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
-          dispatch(selectRows({ range: [y, y], numCols: table.numCols() }));
+          dispatch(selectRows({ range: [y, y], numCols: table.getNumCols() }));
           dispatch(choose([y, 1]));
           return false;
         }}
         onDragEnter={() => {
           if (resizingRect[0] === -1) {
-            dispatch(drag([y, table.numCols()]));
+            dispatch(drag([y, table.getNumCols()]));
           }
           return false;
         }}

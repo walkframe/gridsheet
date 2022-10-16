@@ -7,7 +7,7 @@ import {
 import { Context } from "../store";
 import { Feedback, FeedbackForMatrix } from "../types";
 
-import { UserTable, Table } from "../api/table";
+import { Table } from "../api/table";
 import { Area } from "../constants";
 
 type Props = {
@@ -29,14 +29,14 @@ export const Emitter: React.FC<Props> = ({
   React.useEffect(() => {
     rerenderCells({
       ...store,
-      rows: [0, table.numRows()],
-      cols: [0, table.numCols()],
+      rows: [0, table.getNumRows()],
+      cols: [0, table.getNumCols()],
     });
   }, [table]);
 
   React.useEffect(() => {
     onChange &&
-      onChange(table as UserTable, {
+      onChange(table, {
         pointing,
         selectingFrom: [zone[0], zone[1]],
         selectingTo: [zone[Area.Bottom], zone[Area.Right]],
@@ -65,7 +65,7 @@ export const Emitter: React.FC<Props> = ({
         diffs = operation.after as Table[];
       }
     }
-    //onChangeDiff(table.joinDiffs(diffs) as UserTable, {pointing, selectingFrom: [zone[0], zone[1]], selectingTo: [zone[Area.Bottom], zone[Area.Right]]});
+    //onChangeDiff(table.joinDiffs(diffs) as Table, {pointing, selectingFrom: [zone[0], zone[1]], selectingTo: [zone[Area.Bottom], zone[Area.Right]]});
   }, [onChangeDiff, history]);
 
   React.useEffect(() => {
@@ -144,7 +144,7 @@ export const Emitter: React.FC<Props> = ({
 
   React.useEffect(() => {
     onSelect &&
-      onSelect(table as UserTable, {
+      onSelect(table as Table, {
         pointing,
         selectingFrom: [zone[0], zone[1]],
         selectingTo: [zone[Area.Bottom], zone[Area.Right]],
