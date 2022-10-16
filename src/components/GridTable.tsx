@@ -16,11 +16,15 @@ import { choose, select, setEntering } from "../store/actions";
 import { GridTableLayout } from "./styles/GridTableLayout";
 
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
+import { Table } from "../api/table";
 
 type Props = {
+  tableRef?: React.MutableRefObject<Table | null>;
 };
 
-export const GridTable: React.FC<Props> = ({}) => {
+export const createTableRef = () => React.useRef<Table>(null);
+
+export const GridTable = ({ tableRef }: Props) => {
   const { store, dispatch } = React.useContext(Context);
 
   const {
@@ -34,6 +38,12 @@ export const GridTable: React.FC<Props> = ({}) => {
     headerWidth,
     table,
   } = store;
+
+  React.useEffect(() => {
+    if (tableRef) {
+      tableRef.current = table;
+    }
+  }, [table]);
 
   if (table.numRows() === 0) {
     return null;

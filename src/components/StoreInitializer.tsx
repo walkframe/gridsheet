@@ -16,6 +16,8 @@ import {
   updateTable,
 } from "../store/actions";
 
+const gridRef = React.createRef<{}>();
+
 import { HISTORY_SIZE, HEADER_HEIGHT, HEADER_WIDTH } from "../constants";
 import { addressToPoint } from "../api/converters";
 import { Table } from "../api/table";
@@ -23,7 +25,6 @@ import { functions } from "../formula/mapping";
 
 export const StoreInitializer: React.FC<Props> = ({
   initial = {},
-  changes,
   options = {},
   additionalFunctions = {},
 }) => {
@@ -58,17 +59,6 @@ export const StoreInitializer: React.FC<Props> = ({
     dispatch(initializeTable(table));
     dispatch(initHistory(historySize));
   }, []);
-  React.useEffect(() => {
-    if (changes == null) {
-      return;
-    }
-    const { table, tableInitialized } = store;
-    if (!tableInitialized) {
-      return;
-    }
-    const diff = table.diffWithCells(changes);
-    dispatch(updateTable(diff));
-  }, [changes]);
   React.useEffect(() => {
     if (sheetHeight) {
       dispatch(setSheetHeight(sheetHeight));

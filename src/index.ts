@@ -1,4 +1,5 @@
 export { GridSheet } from "./components/GridSheet";
+export { createTableRef } from "./components/GridTable";
 export { Renderer } from "./renderers/core";
 export { Parser } from "./parsers/core";
 export { oa2aa, aa2oa, matrixIntoCells } from "./api/matrix";

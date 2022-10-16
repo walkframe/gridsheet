@@ -5,6 +5,7 @@ import { defaultParser } from "./src/parsers/core";
 import { defaultRenderer } from "./src/renderers/core";
 import { CellType } from "./src/types";
 import { BaseFunction } from "./src";
+import { createTableRef } from "./src/components/GridTable";
 
 class TestFunction extends BaseFunction {
   main() {
@@ -158,13 +159,17 @@ const initialData = [
 const initialCells = matrixIntoCells(createMatrix(1000, 50), {});
 
 export const showIndex = () => {
-  let [num, setNum] = React.useState(1);
+  const ref = createTableRef();
+  setInterval(() => {
+    console.log(ref.current?.rowsFlatten());
+  }, 30000);
 
   return (
     <>
       <div>aaaaa</div>
 
       <GridSheet
+        tableRef={ref}
         additionalFunctions={{
           test: TestFunction,
         }}
@@ -361,9 +366,6 @@ export const showIndex = () => {
       <GridSheet
         style={{ maxWidth: "100%", maxHeight: "150px" }}
         initial={initialCells}
-        changes={{
-          B2: { value: num },
-        }}
         options={{ sheetResize: "both" }}
       />
     </>

@@ -7,6 +7,7 @@ import { RendererType } from "./renderers/core";
 import { ParserType } from "./parsers/core";
 import { UserTable, Table } from "./api/table";
 import { FunctionMapping } from "./formula/functions/__base";
+import React from "react";
 
 export type Y = number;
 export type X = number;
@@ -157,9 +158,13 @@ export type StoreType = {
   onSave?: Feedback;
 };
 
+export type RefType = {
+  update?: (cells: CellsType) => void;
+};
+
 export type Props = {
   initial?: CellsType;
-  changes?: CellsType;
+  tableRef?: React.MutableRefObject<Table | null>;
   options?: OptionsType;
   className?: string;
   style?: React.CSSProperties;

@@ -4,7 +4,7 @@ import {
   VariableSizeList as List,
 } from "react-window";
 
-import { Props, StoreType } from "../types";
+import { Props, RefType, StoreType } from "../types";
 import { SHEET_HEIGHT, SHEET_WIDTH } from "../constants";
 import { Context } from "../store";
 import { reducer } from "../store/actions";
@@ -20,14 +20,13 @@ import { GridTable } from "./GridTable";
 
 export const GridSheet: React.FC<Props> = ({
   initial,
-  changes,
+  tableRef,
   options = {},
   className,
   style,
   additionalFunctions = {},
 }) => {
   const { numRows = 0, numCols = 0, sheetResize: resize = "both" } = options;
-
   const sheetRef = React.useRef<HTMLDivElement>(document.createElement("div"));
   const searchInputRef = React.useRef<HTMLInputElement>(
     document.createElement("input")
@@ -108,10 +107,9 @@ export const GridSheet: React.FC<Props> = ({
       style={{ ...style, resize, height: sheetHeight, width: sheetWidth }}
     >
       <Context.Provider value={{ store, dispatch }}>
-        <GridTable />
+        <GridTable tableRef={tableRef} />
         <StoreInitializer
           initial={initial}
-          changes={changes}
           options={{ ...options, sheetHeight, sheetWidth }}
           additionalFunctions={additionalFunctions}
         />
