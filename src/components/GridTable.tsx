@@ -80,7 +80,7 @@ export const GridTable = ({ tableRef }: Props) => {
             <List
               ref={horizontalHeadersRef}
               itemCount={table.numCols() || 0}
-              itemSize={(x) => table.get(0, x + 1)?.width || DEFAULT_WIDTH}
+              itemSize={(x) => table.get([0, x + 1])?.width || DEFAULT_WIDTH}
               layout="horizontal"
               width={gridOuterRef.current?.clientWidth || sheetInnerWidth}
               height={headerHeight}
@@ -97,7 +97,7 @@ export const GridTable = ({ tableRef }: Props) => {
             <List
               ref={verticalHeadersRef}
               itemCount={table.numRows() || 0}
-              itemSize={(y) => table.get(y + 1, 0)?.height || DEFAULT_HEIGHT}
+              itemSize={(y) => table.get([y + 1, 0])?.height || DEFAULT_HEIGHT}
               height={gridOuterRef.current?.clientHeight || sheetInnerHeight}
               width={headerWidth}
               style={{ overflow: "hidden" }}
@@ -113,8 +113,8 @@ export const GridTable = ({ tableRef }: Props) => {
               rowCount={table.numRows() || 0}
               width={sheetWidth - headerWidth}
               height={sheetHeight - headerHeight}
-              columnWidth={(x) => table.get(0, x + 1)?.width || DEFAULT_WIDTH}
-              rowHeight={(y) => table.get(y + 1, 0)?.height || DEFAULT_HEIGHT}
+              columnWidth={(x) => table.get([0, x + 1])?.width || DEFAULT_WIDTH}
+              rowHeight={(y) => table.get([y + 1, 0])?.height || DEFAULT_HEIGHT}
               onScroll={(e) => {
                 verticalHeadersRef.current?.scrollTo(e.scrollTop);
                 horizontalHeadersRef.current?.scrollTo(e.scrollLeft);

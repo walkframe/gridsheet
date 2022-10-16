@@ -80,7 +80,7 @@ class SetSearchQueryAction<T extends string | undefined> extends CoreAction<T> {
     const { table } = store;
     for (let x = 1; x <= table.numCols(); x++) {
       for (let y = 1; y <= table.numRows(); y++) {
-        if (table.stringify(y, x).indexOf(searchQuery as string) !== -1) {
+        if (table.stringify([y, x]).indexOf(searchQuery as string) !== -1) {
           matchingCells.push(`${x2c(x)}${y2r(y)}`);
         }
       }
@@ -343,7 +343,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
           };
         }
       }
-      table.applyDiff(diff, true, {
+      table.update(diff, true, {
         selectingZone,
         choosing,
       });
@@ -393,15 +393,15 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
             if (x > table.numCols()) {
               continue;
             }
-            const cell = table.get(
+            const cell = table.get([
               topFrom + (i % maxHeight),
-              leftFrom + (j % maxWidth)
-            );
+              leftFrom + (j % maxWidth),
+            ]);
             diff[pointoToAddress([y, x])] = cell || {};
           }
         }
       }
-      table.applyDiff(diff, false, {
+      table.update(diff, false, {
         copyingZone,
         selectingZone,
         choosing,
@@ -527,8 +527,7 @@ class WriteAction<T extends string> extends CoreAction<T> {
   code = "WRITE";
   reduce(store: StoreType, payload: T): StoreType {
     const { choosing, selectingZone, table } = store;
-    const [y, x] = choosing;
-    table.write(y, x, payload, {
+    table.write(choosing, payload, {
       selectingZone,
       choosing,
     });
@@ -557,7 +556,7 @@ class ClearAction<T extends null> extends CoreAction<T> {
         diff[pointoToAddress([y, x])] = { value: null };
       }
     }
-    table.applyDiff(diff, true, {
+    table.update(diff, true, {
       selectingZone,
       choosing,
     });
@@ -665,23 +664,23 @@ class ArrowAction<
     let [editorTop, editorLeft, height, width] = store.editorRect;
     if (deltaY > 0) {
       for (let i = y; i < nextY; i++) {
-        editorTop += table.get(i, 0)?.height || DEFAULT_HEIGHT;
+        editorTop += table.get([i, 0])?.height || DEFAULT_HEIGHT;
       }
     } else if (deltaY < 0) {
       for (let i = y - 1; i >= nextY; i--) {
-        editorTop -= table.get(i, 0)?.height || DEFAULT_HEIGHT;
+        editorTop -= table.get([i, 0])?.height || DEFAULT_HEIGHT;
       }
     }
     if (deltaX > 0) {
       for (let i = x; i < nextX; i++) {
-        editorLeft += table.get(0, i)?.width || DEFAULT_WIDTH;
+        editorLeft += table.get([0, i])?.width || DEFAULT_WIDTH;
       }
     } else if (deltaX < 0) {
       for (let i = x - 1; i >= nextX; i--) {
-        editorLeft -= table.get(0, i)?.width || DEFAULT_WIDTH;
+        editorLeft -= table.get([0, i])?.width || DEFAULT_WIDTH;
       }
     }
-    const cell = table.get(nextY, nextX);
+    const cell = table.get([nextY, nextX]);
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
     return {
@@ -760,23 +759,23 @@ class WalkAction<
     }
     if (deltaY > 0) {
       for (let i = y; i < nextY; i++) {
-        editorTop += table.get(i, 0)?.height || DEFAULT_HEIGHT;
+        editorTop += table.get([i, 0])?.height || DEFAULT_HEIGHT;
       }
     } else if (deltaY < 0) {
       for (let i = y - 1; i >= nextY; i--) {
-        editorTop -= table.get(i, 0)?.height || DEFAULT_HEIGHT;
+        editorTop -= table.get([i, 0])?.height || DEFAULT_HEIGHT;
       }
     }
     if (deltaX > 0) {
       for (let i = x; i < nextX; i++) {
-        editorLeft += table.get(0, i)?.width || DEFAULT_WIDTH;
+        editorLeft += table.get([0, i])?.width || DEFAULT_WIDTH;
       }
     } else if (deltaX < 0) {
       for (let i = x - 1; i >= nextX; i--) {
-        editorLeft -= table.get(0, i)?.width || DEFAULT_WIDTH;
+        editorLeft -= table.get([0, i])?.width || DEFAULT_WIDTH;
       }
     }
-    const cell = table.get(nextY, nextX);
+    const cell = table.get([nextY, nextX]);
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
     return {

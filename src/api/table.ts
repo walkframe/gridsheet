@@ -189,7 +189,7 @@ export class UserTable {
 
   public getIdByAddress(address: Address) {
     const [y, x] = addressToPoint(address);
-    const id = this.getId(y, x);
+    const id = this.getId([y, x]);
     this.idCache.set(id, address);
     return id;
   }
@@ -217,11 +217,13 @@ export class UserTable {
     }
     return [0, 0];
   }
-  public getId(y: number, x: number) {
+  protected getId(position: PositionType) {
+    const [y, x] = position;
     return this.idMatrix[y][x];
   }
 
-  public get(y: number, x: number) {
+  public get(position: PositionType) {
+    const [y, x] = position;
     if (y === -1 || x === -1) {
       return undefined;
     }
@@ -258,7 +260,7 @@ export class UserTable {
     const matrix = createMatrix(bottom - top + 1, right - left + 1);
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        const cell = this.get(y, x) || {};
+        const cell = this.get([y, x]) || {};
         matrix[y - top][x - left] = evaluates
           ? solveFormula(cell[key], this.base, false)
           : cell[key];
@@ -271,7 +273,7 @@ export class UserTable {
     const [top, left, bottom, right] = this.area;
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        const cell = this.get(y - top, x - left);
+        const cell = this.get([y - top, x - left]);
         if (cell != null) {
           result[pointoToAddress([y, x])] = evaluates
             ? solveFormula(cell[key], this.base, false)
@@ -288,7 +290,7 @@ export class UserTable {
       const row: CellsType = {};
       result.push(row);
       for (let x = left; x <= right; x++) {
-        const cell = this.get(y - top, x - left);
+        const cell = this.get([y - top, x - left]);
         if (cell != null) {
           row[x2c(x) || y2r(y)] = evaluates
             ? solveFormula(cell[key], this.base, false)
@@ -305,7 +307,7 @@ export class UserTable {
       const col: CellsType = {};
       result.push(col);
       for (let y = top; y <= bottom; y++) {
-        const cell = this.get(y - top, x - left);
+        const cell = this.get([y - top, x - left]);
         if (cell != null) {
           col[y2r(y) || x2c(x)] = evaluates
             ? solveFormula(cell[key], this.base, false)
@@ -325,7 +327,7 @@ export class UserTable {
     const matrix = createMatrix(bottom - top + 1, right - left + 1);
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        const cell = this.get(y, x);
+        const cell = this.get([y, x]);
         matrix[y - top][x - left] = {
           ...cell,
           value: evaluates
@@ -341,7 +343,7 @@ export class UserTable {
     const [top, left, bottom, right] = this.area;
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        const cell = this.get(y - top, x - left);
+        const cell = this.get([y - top, x - left]);
         if (cell != null) {
           result[pointoToAddress([y, x])] = {
             ...cell,
@@ -361,7 +363,7 @@ export class UserTable {
       const row: CellsType = {};
       result.push(row);
       for (let x = left; x <= right; x++) {
-        const cell = this.get(y - top, x - left);
+        const cell = this.get([y - top, x - left]);
         if (cell != null) {
           row[x2c(x) || y2r(y)] = {
             ...cell,
@@ -381,7 +383,7 @@ export class UserTable {
       const col: CellsType = {};
       result.push(col);
       for (let y = top; y <= bottom; y++) {
-        const cell = this.get(y - top, x - left);
+        const cell = this.get([y - top, x - left]);
         if (cell != null) {
           col[y2r(y) || x2c(x)] = {
             ...cell,
@@ -426,18 +428,18 @@ export class UserTable {
   public getArea(): AreaType {
     return [...this.area];
   }
-  public parse(y: number, x: number, value: string) {
-    const cell = this.get(y, x) || {};
+  public parse(position: PositionType, value: string) {
+    const cell = this.get(position) || {};
     const parser = this.parsers[cell.parser || ""] || defaultParser;
     return parser.parse(value, cell, this);
   }
-  public render(y: number, x: number, writer?: WriterType) {
-    const cell = this.get(y, x) || {};
+  public render(position: PositionType, writer?: WriterType) {
+    const cell = this.get(position) || {};
     const renderer = this.renderers[cell.renderer || ""] || defaultRenderer;
-    return renderer.render(this, y, x, writer);
+    return renderer.render(this, position, writer);
   }
-  public stringify(y: number, x: number, value?: any) {
-    const cell = this.get(y, x);
+  public stringify(position: PositionType, value?: any) {
+    const cell = this.get(position);
     const renderer = this.renderers[cell?.renderer || ""] || defaultRenderer;
     if (typeof value === "undefined") {
       return renderer.stringify(cell || {});
@@ -493,12 +495,12 @@ export class Table extends UserTable {
     copied.historyIndex = this.historyIndex;
     copied.base = this;
     if (copyCache) {
-      //copied.idCache = this.idCache;
+      copied.idCache = this.idCache;
     }
     return copied;
   }
 
-  public update(diff: DataType, partial = true) {
+  private updateData(diff: DataType, partial = true) {
     diff.forEach((cell, id) => {
       if (partial) {
         this.data.set(id, { ...this.getById(id), ...cell });
@@ -549,7 +551,7 @@ export class Table extends UserTable {
     });
   }
 
-  public pushHistory(history: HistoryType) {
+  private pushHistory(history: HistoryType) {
     this.histories.splice(this.historyIndex + 1, this.histories.length);
     this.histories.push(history);
     if (this.histories.length > this.historySize) {
@@ -559,46 +561,52 @@ export class Table extends UserTable {
     }
   }
 
-  public getDiffByPos(y: number, x: number, cell: CellType) {
+  private getDiffByPos(position: PositionType, cell: CellType) {
     const diff: DataType = new Map();
-    const id = this.getId(y, x);
+    const id = this.getId(position);
     diff.set(id, cell);
     return diff;
   }
 
-  public createBackDiff(area: AreaType) {
+  private createBackDiff(area: AreaType) {
     const backdiff: DataType = new Map();
     const [top, left, bottom, right] = area;
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        const id = this.getId(y, x);
-        backdiff.set(id, this.get(y, x));
+        const id = this.getId([y, x]);
+        backdiff.set(id, this.get([y, x]));
       }
     }
     return backdiff;
   }
 
-  public put(y: number, x: number, cell: CellType) {
+  private put(position: PositionType, cell: CellType) {
+    const [y, x] = position;
     const [numRows, numCols] = [this.numRows(1), this.numCols(1)];
     const modY = y % numRows;
     const modX = x % numCols;
-    const id = this.getId(modY, modX);
+    const id = this.getId([modY, modX]);
     this.data.set(id, cell);
   }
 
-  public write(y: number, x: number, value: any, feedback: StoreFeedbackType) {
-    const cell = this.parse(y, x, value);
+  public write(
+    position: PositionType,
+    value: any,
+    feedback: StoreFeedbackType
+  ) {
+    const [y, x] = position;
+    const cell = this.parse([y, x], value);
     this.pushHistory({
       operation: "UPDATE",
       diffBefore: this.createBackDiff([y, x, y, x]),
-      diffAfter: this.getDiffByPos(y, x, cell),
+      diffAfter: this.getDiffByPos([y, x], cell),
       partial: true,
       feedback,
     });
-    this.put(y, x, cell);
+    this.put([y, x], cell);
   }
 
-  public copyCell(cell: CellType | undefined, base: number) {
+  private copyCell(cell: CellType | undefined, base: number) {
     if (cell == null) {
       return undefined;
     }
@@ -624,18 +632,19 @@ export class Table extends UserTable {
     return newCell;
   }
 
-  public applyDiff(
+  public update(
     diff: DiffType,
     partial = true,
     feedback: StoreFeedbackType = {}
   ) {
-    const diffBefore = new Map();
-    const diffAfter = new Map();
+    const diffBefore: DataType = new Map();
+    const diffAfter: DataType = new Map();
     Object.keys(diff).map((address) => {
       const value = diff[address];
-      const [y, x] = addressToPoint(address);
-      const id = this.getId(y, x);
-      diffBefore.set(id, this.get(y, x));
+      const point = addressToPoint(address);
+      const [y, x] = point;
+      const id = this.getId(point);
+      diffBefore.set(id, this.get(point));
       diffAfter.set(id, value);
       if (partial) {
         this.data.set(id, { ...this.data.get(id), ...value });
@@ -657,7 +666,7 @@ export class Table extends UserTable {
   public addRows(
     y: number,
     numRows: number,
-    base: number,
+    baseY: number,
     feedback: StoreFeedbackType
   ) {
     const numCols = this.numCols(1);
@@ -667,8 +676,8 @@ export class Table extends UserTable {
       for (let j = 0; j < numCols; j++) {
         const id = this.head++;
         row.push(id);
-        const cell = this.get(base, j);
-        const copied = this.copyCell(cell, base);
+        const cell = this.get([baseY, j]);
+        const copied = this.copyCell(cell, baseY);
         this.data.set(id, copied);
       }
       rows.push(row);
@@ -707,7 +716,7 @@ export class Table extends UserTable {
       for (let j = 0; j < numCols; j++) {
         const id = this.head++;
         row.push(id);
-        const cell = this.get(i, baseX);
+        const cell = this.get([i, baseX]);
         const copied = this.copyCell(cell, baseX);
         this.idMatrix[i].splice(x, 0, id);
         this.data.set(id, copied);
@@ -746,7 +755,7 @@ export class Table extends UserTable {
     const history = this.histories[this.historyIndex--];
     switch (history.operation) {
       case "UPDATE":
-        this.update(history.diffBefore!, history.partial);
+        this.updateData(history.diffBefore!, history.partial);
         break;
       case "ADD_ROW":
         this.idMatrix.splice(history.y, history.numRows);
@@ -796,7 +805,7 @@ export class Table extends UserTable {
     const history = this.histories[++this.historyIndex];
     switch (history.operation) {
       case "UPDATE":
-        this.update(history.diffAfter!, history.partial);
+        this.updateData(history.diffAfter!, history.partial);
         break;
       case "ADD_ROW":
         this.idMatrix.splice(history.y, 0, ...history.idMatrix);

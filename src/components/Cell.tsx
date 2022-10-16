@@ -67,9 +67,9 @@ export const Cell: React.FC<Props> = React.memo(
     if (table.numRows() === 0) {
       return null;
     }
-    const cell = table.get(y, x);
-    const height = table.get(y, 0)?.height || DEFAULT_HEIGHT;
-    const width = table.get(0, x)?.width || DEFAULT_WIDTH;
+    const cell = table.get([y, x]);
+    const height = table.get([y, 0])?.height || DEFAULT_HEIGHT;
+    const width = table.get([0, x])?.width || DEFAULT_WIDTH;
 
     const verticalAlign = cell?.verticalAlign || "middle";
     const writeCell = (value: string) => {
@@ -80,14 +80,14 @@ export const Cell: React.FC<Props> = React.memo(
     };
 
     let matching = false;
-    if (searchQuery && table.stringify(y, x).indexOf(searchQuery) !== -1) {
+    if (searchQuery && table.stringify([y, x]).indexOf(searchQuery) !== -1) {
       matching = true;
     }
 
     let errorMessage = "";
     let rendered;
     try {
-      rendered = table.render(y, x, writeCell);
+      rendered = table.render([y, x], writeCell);
     } catch (e) {
       if (e instanceof FormulaError) {
         errorMessage = e.message;

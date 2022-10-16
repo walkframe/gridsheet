@@ -1,5 +1,5 @@
 import React from "react";
-import { CellType, WriterType } from "../types";
+import { CellType, PositionType, WriterType } from "../types";
 import { UserTable } from "../api/table";
 import { evaluate } from "../formula/evaluator";
 
@@ -39,7 +39,7 @@ export class Renderer {
         }
         if (value instanceof UserTable) {
           return this._render(
-            value.get(value.top(), value.left())?.value,
+            value.get([value.top(), value.left()])?.value,
             table,
             writer
           );
@@ -64,11 +64,10 @@ export class Renderer {
 
   public render(
     table: UserTable,
-    y: number,
-    x: number,
+    position: PositionType,
     writer?: WriterType
   ): any {
-    const cell = table.get(y, x);
+    const cell = table.get(position);
     const { value } = cell || {};
     return this._render(value, table, writer);
   }

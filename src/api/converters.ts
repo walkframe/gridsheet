@@ -98,7 +98,7 @@ export const matrix2tsv = (
   matrix.map((row, i) => {
     const cols: string[] = [];
     row.map((col, j) => {
-      const value = table.stringify(y + i, x + j, col);
+      const value = table.stringify([y + i, x + j], col);
       if (value.indexOf("\n") !== -1) {
         cols.push(`"${value.replace(/"/g, '""')}"`);
       } else {

@@ -55,7 +55,7 @@ export const Resizer: React.FC = React.memo(() => {
   if (y === -1 && x === -1) {
     return null;
   }
-  const cell = table.get(y === -1 ? 0 : y, x === -1 ? 0 : x);
+  const cell = table.get([y === -1 ? 0 : y, x === -1 ? 0 : x]);
   const { y: offsetY, x: offsetX } = sheetRef.current.getBoundingClientRect();
 
   const baseWidth = cell?.width || DEFAULT_WIDTH;
@@ -86,7 +86,7 @@ export const Resizer: React.FC = React.memo(() => {
         diff[pointoToAddress([y, 0])] = { height };
       });
     }
-    table.applyDiff(diff, true, { selectingZone });
+    table.update(diff, true, { selectingZone });
     dispatch(updateTable(table.shallowCopy()));
     dispatch(setResizingPositionY([-1, -1, -1]));
     dispatch(setResizingPositionX([-1, -1, -1]));

@@ -55,7 +55,7 @@ export const Editor: React.FC = () => {
 
   const editing = editingCell === address;
 
-  const cell = table.get(y, x);
+  const cell = table.get([y, x]);
   const value = cell?.value;
   const [top, left, height, width] = editorRect;
 
@@ -84,7 +84,7 @@ export const Editor: React.FC = () => {
         onDoubleClick={(e) => {
           const input = e.currentTarget;
           if (!editing) {
-            input.value = table.stringify(y, x, value || null);
+            input.value = table.stringify([y, x], value || null);
             setBefore(input.value);
             dispatch(setEditingCell(address));
             setTimeout(() => {
