@@ -51,7 +51,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
       }`}
         onContextMenu={(e) => {
           e.preventDefault();
-          dispatch(setContextMenuPosition([e.clientY, e.clientX]));
+          dispatch(setContextMenuPosition([e.pageY, e.pageX]));
           return false;
         }}
         onClick={(e) => {

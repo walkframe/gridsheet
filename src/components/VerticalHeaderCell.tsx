@@ -66,7 +66,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
         draggable
         onContextMenu={(e) => {
           e.preventDefault();
-          dispatch(setContextMenuPosition([e.clientY, e.clientX]));
+          dispatch(setContextMenuPosition([e.pageY, e.pageX]));
           return false;
         }}
         onDragStart={(e) => {

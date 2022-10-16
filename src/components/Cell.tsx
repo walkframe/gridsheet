@@ -115,6 +115,7 @@ export const Cell: React.FC<Props> = React.memo(
         }}
         onContextMenu={(e) => {
           e.preventDefault();
+          console.log({ e });
           dispatch(setContextMenuPosition([e.clientY, e.clientX]));
           return false;
         }}

@@ -1,8 +1,17 @@
 import styled from "styled-components";
 
+export const ContextMenuModalLayout = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 3;
+`;
+
 export const ContextMenuLayout = styled.div`
   z-index: 3;
-  position: absolute;
+  position: fixed;
   background-color: #ffffff;
   padding: 5px 0;
   border-radius: 5px;
