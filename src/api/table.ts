@@ -216,7 +216,7 @@ export class UserTable {
       }
     }
   }
-  public getPointById(id: Id) {
+  public getPositionById(id: Id) {
     const address = this.getAddressById(id);
     if (address) {
       return addressToPosition(address);

@@ -48,7 +48,7 @@ export class Id {
     this.value = value;
   }
   public evaluate(base: UserTable) {
-    const [y, x] = base.getPointById(getId(this.value));
+    const [y, x] = base.getPositionById(getId(this.value));
     return base.trim([y, x, y, x]);
   }
   public ref(base: UserTable) {
@@ -62,7 +62,7 @@ export class IdRange {
   }
   public evaluate(base: UserTable): UserTable {
     const ids = this.value.split(":");
-    const [p1, p2] = ids.map(getId).map((id) => base.getPointById(id));
+    const [p1, p2] = ids.map(getId).map((id) => base.getPositionById(id));
     return base.trim([p1[0], p1[1], p2[0], p2[1]]);
   }
   public range(base: UserTable) {
