@@ -32,6 +32,10 @@ export const ContextMenu: React.FC = () => {
     editorRef,
     contextMenuPosition,
     sheetRef,
+    minNumRows,
+    maxNumRows,
+    minNumCols,
+    maxNumCols,
   } = store;
 
   const [y, x] = choosing;
@@ -49,11 +53,9 @@ export const ContextMenu: React.FC = () => {
       x,
     ];
   }
-  const rowId = y2r(y);
-  const colId = x2c(x);
-  const address = `${colId}${rowId}`;
 
-  const [height, width] = zoneShape(selectingZone);
+  const [tableHeight, tableWidth] = [table.getNumRows(), table.getNumCols()];
+  const [height, width] = zoneShape(selectingZone, 1);
 
   const [top, left] = contextMenuPosition;
   if (top === -1) {
@@ -111,8 +113,16 @@ export const ContextMenu: React.FC = () => {
 
         {!horizontalHeadersSelecting && (
           <li
-            onClick={() => {
-              table.addRows(selectingTop, height + 1, selectingTop, {
+            className={
+              maxNumRows === -1 && tableHeight + height > maxNumRows
+                ? "disabled"
+                : "enabled"
+            }
+            onClick={(e) => {
+              if (e.currentTarget.classList.contains("disabled")) {
+                return false;
+              }
+              table.addRows(selectingTop, height, selectingTop, {
                 selectingZone,
                 choosing,
               });
@@ -130,14 +140,22 @@ export const ContextMenu: React.FC = () => {
             }}
           >
             <div className="gs-menu-name">
-              Insert {height + 1} row{height > 0 && "s"} above
+              Insert {height} row{height > 0 && "s"} above
             </div>
           </li>
         )}
         {!horizontalHeadersSelecting && (
           <li
-            onClick={() => {
-              table.addRows(selectingBottom + 1, height + 1, selectingBottom, {
+            className={
+              maxNumRows !== -1 && tableHeight + height > maxNumRows
+                ? "disabled"
+                : "enabled"
+            }
+            onClick={(e) => {
+              if (e.currentTarget.classList.contains("disabled")) {
+                return false;
+              }
+              table.addRows(selectingBottom + 1, height, selectingBottom, {
                 selectingZone,
                 choosing,
               });
@@ -146,7 +164,7 @@ export const ContextMenu: React.FC = () => {
                 select([
                   selectingBottom + 1,
                   1,
-                  selectingBottom + height + 1,
+                  selectingBottom + height,
                   table.getNumCols(),
                 ])
               );
@@ -155,15 +173,23 @@ export const ContextMenu: React.FC = () => {
             }}
           >
             <div className="gs-menu-name">
-              Insert {height + 1} row{height > 0 && "s"} below
+              Insert {height} row{height > 0 && "s"} below
             </div>
           </li>
         )}
 
         {!verticalHeadersSelecting && (
           <li
-            onClick={() => {
-              table.addCols(selectingLeft, width + 1, selectingLeft, {
+            className={
+              maxNumCols !== -1 && tableWidth + width > maxNumCols
+                ? "disabled"
+                : "enabled"
+            }
+            onClick={(e) => {
+              if (e.currentTarget.classList.contains("disabled")) {
+                return false;
+              }
+              table.addCols(selectingLeft, width, selectingLeft, {
                 selectingZone,
                 choosing,
               });
@@ -181,14 +207,22 @@ export const ContextMenu: React.FC = () => {
             }}
           >
             <div className="gs-menu-name">
-              Insert {width + 1} column{width > 0 && "s"} left
+              Insert {width} column{width > 0 && "s"} left
             </div>
           </li>
         )}
         {!verticalHeadersSelecting && (
           <li
-            onClick={() => {
-              table.addCols(selectingRight + 1, width + 1, selectingRight, {
+            className={
+              maxNumCols !== -1 && tableWidth + width > maxNumCols
+                ? "disabled"
+                : "enabled"
+            }
+            onClick={(e) => {
+              if (e.currentTarget.classList.contains("disabled")) {
+                return false;
+              }
+              table.addCols(selectingRight + 1, width, selectingRight, {
                 selectingZone,
                 choosing,
               });
@@ -198,7 +232,7 @@ export const ContextMenu: React.FC = () => {
                   1,
                   selectingRight + 1,
                   table.getNumRows(),
-                  selectingRight + width + 1,
+                  selectingRight + width,
                 ])
               );
               dispatch(choose([0, selectingRight + 1]));
@@ -206,15 +240,23 @@ export const ContextMenu: React.FC = () => {
             }}
           >
             <div className="gs-menu-name">
-              Insert {width + 1} column{width > 0 && "s"} right
+              Insert {width} column{width > 0 && "s"} right
             </div>
           </li>
         )}
 
         {!horizontalHeadersSelecting && (
           <li
-            onClick={() => {
-              table.removeRows(selectingTop, height + 1, {
+            className={
+              minNumRows !== -1 && tableHeight - height < minNumRows
+                ? "disabled"
+                : "enabled"
+            }
+            onClick={(e) => {
+              if (e.currentTarget.classList.contains("disabled")) {
+                return false;
+              }
+              table.removeRows(selectingTop, height, {
                 selectingZone,
                 choosing,
               });
@@ -227,15 +269,23 @@ export const ContextMenu: React.FC = () => {
             }}
           >
             <div className="gs-menu-name">
-              Remove {height + 1} row{height > 0 && "s"}
+              Remove {height} row{height > 0 && "s"}
             </div>
           </li>
         )}
 
         {!verticalHeadersSelecting && (
           <li
-            onClick={() => {
-              table.removeCols(selectingLeft, width + 1, {
+            className={
+              minNumCols !== -1 && tableWidth - width < minNumCols
+                ? "disabled"
+                : "enabled"
+            }
+            onClick={(e) => {
+              if (e.currentTarget.classList.contains("disabled")) {
+                return false;
+              }
+              table.removeCols(selectingLeft, width, {
                 selectingZone,
                 choosing,
               });
@@ -248,7 +298,7 @@ export const ContextMenu: React.FC = () => {
             }}
           >
             <div className="gs-menu-name">
-              Remove {width + 1} column{width > 0 && "s"}
+              Remove {width} column{width > 0 && "s"}
             </div>
           </li>
         )}

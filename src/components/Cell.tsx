@@ -96,6 +96,7 @@ export const Cell: React.FC<Props> = React.memo(
         errorMessage = "References are circulating.";
         rendered = "#REF!";
       }
+      // TODO: debug flag
     }
 
     return (

@@ -18,9 +18,16 @@ export const ContextMenuLayout = styled.div`
     li {
       padding: 5px 10px;
       list-style-type: none;
-      cursor: pointer;
-      &:hover {
-        background-color: #eeeeee;
+
+      &.enabled {
+        cursor: pointer;
+        &:hover {
+          background-color: #eeeeee;
+        }
+      }
+      &.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
       }
 
       &.gs-menu-divider {

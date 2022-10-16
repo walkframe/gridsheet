@@ -4,7 +4,7 @@ import {
   ZoneType,
   PositionType,
   RangeType,
-  Feedback,
+  FeedbackType,
   HistoryType,
   CellType,
   DiffType,
@@ -162,7 +162,7 @@ class SetResizingPositionXAction<
 }
 export const setResizingPositionX = new SetResizingPositionXAction().bind();
 
-class SetOnSaveAction<T extends Feedback> extends CoreAction<T> {
+class SetOnSaveAction<T extends FeedbackType> extends CoreAction<T> {
   code = "SET_ON_SAVE";
   reduce(store: StoreType, payload: T): StoreType {
     return {
@@ -281,6 +281,50 @@ class SetResizingRectAction<T extends RectType> extends CoreAction<T> {
 }
 export const setResizingRect = new SetResizingRectAction().bind();
 
+class SetMinNumRows<T extends number> extends CoreAction<T> {
+  code = "SET_MIN_NUM_ROWS";
+  reduce(store: StoreType, payload: T): StoreType {
+    return {
+      ...store,
+      minNumRows: payload,
+    };
+  }
+}
+export const setMinNumRows = new SetMinNumRows().bind();
+
+class SetMaxNumRows<T extends number> extends CoreAction<T> {
+  code = "SET_MAX_NUM_ROWS";
+  reduce(store: StoreType, payload: T): StoreType {
+    return {
+      ...store,
+      maxNumRows: payload,
+    };
+  }
+}
+export const setMaxNumRows = new SetMaxNumRows().bind();
+
+class SetMinNumCols<T extends number> extends CoreAction<T> {
+  code = "SET_MIN_NUM_COLS";
+  reduce(store: StoreType, payload: T): StoreType {
+    return {
+      ...store,
+      minNumCols: payload,
+    };
+  }
+}
+export const setMinNumCols = new SetMinNumCols().bind();
+
+class SetMaxNumCols<T extends number> extends CoreAction<T> {
+  code = "SET_MAX_NUM_COLS";
+  reduce(store: StoreType, payload: T): StoreType {
+    return {
+      ...store,
+      maxNumCols: payload,
+    };
+  }
+}
+export const setMaxNumCols = new SetMaxNumCols().bind();
+
 class BlurAction<T extends null> extends CoreAction<T> {
   code = "BLUR";
   reduce(store: StoreType, payload: T): StoreType {
@@ -371,11 +415,11 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
                 choosing[Area.Top] + h,
                 choosing[Area.Left] + w,
               ];
-        table.move(src, dst);
+        table.move(src, dst, { selectingZone: dst });
         return {
           ...store,
           table: table.shallowCopy(),
-          selectingZone: selectingArea,
+          selectingZone: dst,
           copyingZone: [-1, -1, -1, -1] as ZoneType,
         };
       }
@@ -599,11 +643,11 @@ class UndoAction<T extends null> extends CoreAction<T> {
     if (history == null) {
       return store;
     }
-    const { feedback, operation } = history;
+    const { reflection, operation } = history;
     return {
       ...store,
-      ...feedback,
-      table: table.shallowCopy(shouldTracking(operation)),
+      ...reflection,
+      table: table.shallowCopy(!shouldTracking(operation)),
     };
   }
 }
@@ -617,11 +661,11 @@ class RedoAction<T extends null> extends CoreAction<T> {
     if (history == null) {
       return store;
     }
-    const { feedback, operation } = history;
+    const { reflection, operation } = history;
     return {
       ...store,
-      ...feedback,
-      table: table.shallowCopy(shouldTracking(operation)),
+      ...reflection,
+      table: table.shallowCopy(!shouldTracking(operation)),
     };
   }
 }

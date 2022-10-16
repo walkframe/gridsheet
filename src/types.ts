@@ -31,7 +31,7 @@ export type HistoryOperationType =
   | "REMOVE_ROW"
   | "REMOVE_COL";
 
-export type Feedback = (
+export type FeedbackType = (
   table: UserTable,
   positions?: {
     pointing: PositionType;
@@ -40,7 +40,7 @@ export type Feedback = (
   }
 ) => void;
 
-export type FeedbackForMatrix = (coordinate: {
+export type FeedbackTypeForMatrix = (coordinate: {
   y?: number;
   x?: number;
   num: number;
@@ -79,14 +79,18 @@ export type OptionsType = {
   cellLabel?: boolean;
   numRows?: number;
   numCols?: number;
+  minNumRows?: number;
+  maxNumRows?: number;
+  minNumCols?: number;
+  maxNumCols?: number;
   mode?: Mode;
   renderers?: Renderers;
   parsers?: Parsers;
-  onSave?: Feedback;
-  onChange?: Feedback;
-  onChangeDiff?: Feedback;
-  onChangeDiffNumMatrix?: FeedbackForMatrix;
-  onSelect?: Feedback;
+  onSave?: FeedbackType;
+  onChange?: FeedbackType;
+  onChangeDiff?: FeedbackType;
+  onChangeDiffNumMatrix?: FeedbackTypeForMatrix;
+  onSelect?: FeedbackType;
 };
 
 export type RangeType = [number, number]; // [start, end]
@@ -146,6 +150,10 @@ export type StoreType = {
   sheetWidth: number;
   headerHeight: number;
   headerWidth: number;
+  minNumRows: number;
+  maxNumRows: number;
+  minNumCols: number;
+  maxNumCols: number;
   searchQuery?: string;
   matchingCells: string[];
   matchingCellIndex: number;
@@ -154,7 +162,7 @@ export type StoreType = {
   contextMenuPosition: [Y, X];
   resizingPositionY: [Y, Y, Y]; // indexY, startY, endY
   resizingPositionX: [X, X, X]; // indexX, startX, endX
-  onSave?: Feedback;
+  onSave?: FeedbackType;
 };
 
 export type RefType = {

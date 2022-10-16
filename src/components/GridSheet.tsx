@@ -72,6 +72,10 @@ export const GridSheet: React.FC<Props> = ({
     contextMenuPosition: [-1, -1],
     resizingPositionY: [-1, -1, -1],
     resizingPositionX: [-1, -1, -1],
+    minNumRows: 1,
+    maxNumRows: -1,
+    minNumCols: 1,
+    maxNumCols: -1,
   };
 
   const [store, dispatch] = React.useReducer(reducer, initialState);

@@ -14,7 +14,7 @@ export {
 export {
   MatrixType,
   CellType,
-  Feedback,
+  FeedbackType as Feedback,
   OptionsType,
   WriterType,
   CellsType,

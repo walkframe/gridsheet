@@ -14,9 +14,14 @@ const getId = (idString: string) => {
 };
 
 export class FormulaError {
-  constructor(public code: string, public message: string) {
+  constructor(
+    public code: string,
+    public message: string,
+    public error?: Error
+  ) {
     this.code = code;
     this.message = message;
+    this.error = error;
   }
 }
 

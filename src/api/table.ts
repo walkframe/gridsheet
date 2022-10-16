@@ -37,7 +37,7 @@ type Props = {
   historySize?: number;
 };
 
-type StoreFeedbackType = {
+type StoreReflectionType = {
   choosing?: PositionType;
   cutting?: boolean;
   copyingZone?: ZoneType;
@@ -46,60 +46,60 @@ type StoreFeedbackType = {
 
 type HistoryUpdateType = {
   operation: "UPDATE";
+  reflection?: StoreReflectionType;
   diffBefore: DataType;
   diffAfter: DataType;
   partial: boolean;
-  feedback?: StoreFeedbackType;
 };
 
 type HistoryCopyType = {
   operation: "COPY";
+  reflection?: StoreReflectionType;
   diffBefore: DataType;
   diffAfter: DataType;
   area: AreaType;
-  feedback?: StoreFeedbackType;
 };
 
 type HistoryMoveType = {
   operation: "MOVE";
+  reflection?: StoreReflectionType;
   matrixFrom: IdMatrix;
   matrixTo: IdMatrix;
   matrixNew: IdMatrix;
   positionFrom: PositionType;
   positionTo: PositionType;
-  feedback?: StoreFeedbackType;
 };
 
 type HistoryAddRowType = {
   operation: "ADD_ROW";
+  reflection?: StoreReflectionType;
   y: number;
   numRows: number;
   idMatrix: IdMatrix;
-  feedback?: StoreFeedbackType;
 };
 
 type HistoryRemoveRowType = {
   operation: "REMOVE_ROW";
+  reflection?: StoreReflectionType;
   y: number;
   numRows: number;
   idMatrix: IdMatrix;
-  feedback?: StoreFeedbackType;
 };
 
 type HistoryAddColType = {
   operation: "ADD_COL";
+  reflection?: StoreReflectionType;
   x: number;
   numCols: number;
   idMatrix: IdMatrix;
-  feedback?: StoreFeedbackType;
 };
 
 type HistoryRemoveColType = {
   operation: "REMOVE_COL";
+  reflection?: StoreReflectionType;
   x: number;
   numCols: number;
   idMatrix: IdMatrix;
-  feedback?: StoreFeedbackType;
 };
 
 type HistoryType =
@@ -475,7 +475,11 @@ export class UserTable {
     return newCell;
   }
 
-  public move(from: AreaType, to: AreaType) {
+  public move(
+    from: AreaType,
+    to: AreaType,
+    reflection: StoreReflectionType = {}
+  ) {
     const matrixFrom = this.getIdMatrixFromArea(from);
     const matrixTo = this.getIdMatrixFromArea(to);
     const matrixNew = this.getNewIdMatrix(from);
@@ -483,6 +487,7 @@ export class UserTable {
     writeMatrix(this.idMatrix, matrixFrom, to);
     this.pushHistory({
       operation: "MOVE",
+      reflection,
       matrixFrom,
       matrixTo,
       matrixNew,
@@ -494,7 +499,7 @@ export class UserTable {
   public update(
     diff: DiffType,
     partial = true,
-    feedback: StoreFeedbackType = {}
+    reflection: StoreReflectionType = {}
   ) {
     const diffBefore: DataType = new Map();
     const diffAfter: DataType = new Map();
@@ -511,22 +516,20 @@ export class UserTable {
         this.data.set(id, value);
       }
     });
-    if (feedback) {
-      this.pushHistory({
-        operation: "UPDATE",
-        diffBefore,
-        diffAfter,
-        partial,
-        feedback,
-      });
-    }
+    this.pushHistory({
+      operation: "UPDATE",
+      reflection,
+      diffBefore,
+      diffAfter,
+      partial,
+    });
   }
 
   public addRows(
     y: number,
     numRows: number,
     baseY: number,
-    feedback: StoreFeedbackType
+    reflection: StoreReflectionType = {}
   ) {
     const numCols = this.getNumCols(1);
     const rows: IdMatrix = [];
@@ -545,28 +548,32 @@ export class UserTable {
     this.area[Area.Bottom] += numRows;
     this.pushHistory({
       operation: "ADD_ROW",
+      reflection,
       y,
       numRows,
       idMatrix: rows,
-      feedback,
     });
   }
-  public removeRows(y: number, numRows: number, feedback: StoreFeedbackType) {
+  public removeRows(
+    y: number,
+    numRows: number,
+    reflection: StoreReflectionType = {}
+  ) {
     const rows = this.idMatrix.splice(y, numRows);
     this.area[Area.Bottom] -= numRows;
     this.pushHistory({
       operation: "REMOVE_ROW",
+      reflection,
       y,
       numRows,
       idMatrix: rows,
-      feedback,
     });
   }
   public addCols(
     x: number,
     numCols: number,
     baseX: number,
-    feedback: StoreFeedbackType
+    reflection: StoreReflectionType = {}
   ) {
     const numRows = this.getNumRows(1);
     const rows: IdMatrix = [];
@@ -585,13 +592,17 @@ export class UserTable {
     this.area[Area.Right] += numCols;
     this.pushHistory({
       operation: "ADD_COL",
+      reflection,
       x,
       numCols,
       idMatrix: rows,
-      feedback,
     });
   }
-  public removeCols(x: number, numCols: number, feedback: StoreFeedbackType) {
+  public removeCols(
+    x: number,
+    numCols: number,
+    reflection: StoreReflectionType = {}
+  ) {
     const rows: IdMatrix = [];
     this.idMatrix.map((row) => {
       const deleted = row.splice(x, numCols);
@@ -600,10 +611,10 @@ export class UserTable {
     this.area[Area.Right] -= numCols;
     this.pushHistory({
       operation: "REMOVE_COL",
+      reflection,
       x,
       numCols,
       idMatrix: rows,
-      feedback,
     });
   }
 }
@@ -729,16 +740,16 @@ export class Table extends UserTable {
   public write(
     position: PositionType,
     value: any,
-    feedback: StoreFeedbackType
+    reflection: StoreReflectionType = {}
   ) {
     const [y, x] = position;
     const cell = this.parse([y, x], value);
     this.pushHistory({
       operation: "UPDATE",
+      reflection,
       diffBefore: this.createBackDiff([y, x, y, x]),
       diffAfter: this.getDiffByPos([y, x], cell),
       partial: true,
-      feedback,
     });
     this.put([y, x], cell);
   }

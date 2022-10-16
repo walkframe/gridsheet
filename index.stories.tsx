@@ -160,9 +160,11 @@ const initialCells = matrixIntoCells(createMatrix(1000, 50), {});
 
 export const showIndex = () => {
   const ref = createTableRef();
+  /*
   setInterval(() => {
-    console.log(ref.current?.rowsFlatten());
+    //ref.current?.update({ A1: { value: new Date() } }, true);
   }, 30000);
+  */
 
   return (
     <>
@@ -358,7 +360,7 @@ export const showIndex = () => {
             }
           },
           onChangeDiff: (table, positions) => {
-            console.log("matrix on change diff:", table.objectFlatten());
+            console.log("matrix on change diff:", table.getObjectFlatten());
           },
         }}
       />

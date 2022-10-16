@@ -5,16 +5,16 @@ import {
 } from "react-window";
 
 import { Context } from "../store";
-import { Feedback, FeedbackForMatrix } from "../types";
+import { FeedbackType, FeedbackTypeForMatrix } from "../types";
 
 import { Table } from "../api/table";
 import { Area } from "../constants";
 
 type Props = {
-  onChange?: Feedback;
-  onChangeDiff?: Feedback;
-  onChangeDiffNumMatrix?: FeedbackForMatrix;
-  onSelect?: Feedback;
+  onChange?: FeedbackType;
+  onChangeDiff?: FeedbackType;
+  onChangeDiffNumMatrix?: FeedbackTypeForMatrix;
+  onSelect?: FeedbackType;
 };
 
 export const Emitter: React.FC<Props> = ({
@@ -65,7 +65,6 @@ export const Emitter: React.FC<Props> = ({
         diffs = operation.after as Table[];
       }
     }
-    //onChangeDiff(table.joinDiffs(diffs) as Table, {pointing, selectingFrom: [zone[0], zone[1]], selectingTo: [zone[Area.Bottom], zone[Area.Right]]});
   }, [onChangeDiff, history]);
 
   React.useEffect(() => {
