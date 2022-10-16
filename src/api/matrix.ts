@@ -11,7 +11,7 @@ import {
   Width,
   CellsType,
 } from "../types";
-import { addressToPoint, pointoToAddress } from "./converters";
+import { addressToPosition, positionToAddress } from "./converters";
 
 export const slideArea = (area: AreaType, y: Y, x: X): AreaType => {
   const [top, left, bottom, right] = area;
@@ -51,13 +51,16 @@ export const zoneToArea = (zone: ZoneType): AreaType => {
 
 export const areaToRange = (area: AreaType): string => {
   const [top, left, bottom, right] = area;
-  return `${pointoToAddress([top, left])}${pointoToAddress([bottom, right])}`;
+  return `${positionToAddress([top, left])}${positionToAddress([
+    bottom,
+    right,
+  ])}`;
 };
 
 export const rangeToArea = (range: string): AreaType => {
   const cells = range.split(":");
   const [start, end] = cells;
-  return [...addressToPoint(start), ...addressToPoint(end)];
+  return [...addressToPosition(start), ...addressToPosition(end)];
 };
 
 export const between = (range: RangeType, index: number) => {
@@ -169,10 +172,10 @@ export const matrixIntoCells = (
   cells: CellsType,
   origin = "A1"
 ) => {
-  const [baseY, baseX] = addressToPoint(origin);
+  const [baseY, baseX] = addressToPosition(origin);
   matrix.map((row, y) => {
     row.map((value, x) => {
-      const id = pointoToAddress([baseY + y, baseX + x]);
+      const id = positionToAddress([baseY + y, baseX + x]);
       if (typeof value !== "undefined") {
         const cell = cells[id];
         cells[id] = { ...cell, value };

@@ -11,7 +11,6 @@ import React from "react";
 
 export type Y = number;
 export type X = number;
-export type Point = [Y, X];
 
 export type Height = number;
 export type Width = number;

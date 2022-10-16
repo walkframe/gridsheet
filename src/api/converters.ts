@@ -1,4 +1,4 @@
-import { Address, MatrixType, Point, StoreType, X, Y } from "../types";
+import { Address, MatrixType, PositionType, StoreType, X, Y } from "../types";
 import { DEFAULT_ALPHABET_CACHE_SIZE } from "../constants";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -83,7 +83,7 @@ export const r2y = (row: number | string) => {
   return row;
 };
 
-export const pointoToAddress = ([y, x]: Point) => {
+export const positionToAddress = ([y, x]: PositionType) => {
   return `${x2c(x)}${y2r(y)}`;
 };
 
@@ -148,7 +148,7 @@ export const tsv2matrix = (tsv: string): string[][] => {
   return rows;
 };
 
-export const addressToPoint = (address: Address): [Y, X] => {
+export const addressToPosition = (address: Address): PositionType => {
   const m = address.match(/([A-Z]*)([0-9]*)/);
   if (m == null) {
     return [0, 0];

@@ -1,5 +1,5 @@
 import { rangeToArea } from "../api/matrix";
-import { addressToPoint } from "../api/converters";
+import { addressToPosition } from "../api/converters";
 import { Table, UserTable } from "../api/table";
 import { AreaType, MatrixType } from "../types";
 
@@ -34,7 +34,7 @@ export class Ref {
     this.value = value.toUpperCase();
   }
   public evaluate(base: UserTable): UserTable {
-    const [y, x] = addressToPoint(this.value);
+    const [y, x] = addressToPosition(this.value);
     return base.trim([y, x, y, x]);
   }
   public id(base: UserTable) {

@@ -19,7 +19,7 @@ import {
 const gridRef = React.createRef<{}>();
 
 import { HISTORY_SIZE, HEADER_HEIGHT, HEADER_WIDTH } from "../constants";
-import { addressToPoint } from "../api/converters";
+import { addressToPosition } from "../api/converters";
 import { Table } from "../api/table";
 import { functions } from "../formula/mapping";
 
@@ -101,7 +101,7 @@ const getMaxSizeFromCells = (sizeY = 0, sizeX = 0, cells: CellsType = {}) => {
   let lastY = sizeY,
     lastX = sizeX;
   Object.keys(cells).map((address) => {
-    const [y, x] = addressToPoint(address);
+    const [y, x] = addressToPosition(address);
     if (lastY < y) {
       lastY = y;
     }

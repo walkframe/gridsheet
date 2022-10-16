@@ -8,7 +8,7 @@ export {
   a2n,
   x2c,
   y2r,
-  pointoToAddress,
+  positionToAddress,
   tsv2matrix,
 } from "./api/converters";
 export {

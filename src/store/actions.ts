@@ -19,7 +19,7 @@ import {
 } from "../api/matrix";
 import { Table } from "../api/table";
 
-import { tsv2matrix, x2c, pointoToAddress, y2r } from "../api/converters";
+import { tsv2matrix, x2c, positionToAddress, y2r } from "../api/converters";
 import { Area, DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
 
 const actions: { [s: string]: CoreAction<any> } = {};
@@ -338,7 +338,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
       const [top, left, bottom, right] = selectingArea;
       for (let y = top; y <= bottom; y++) {
         for (let x = left; x <= right; x++) {
-          diff[pointoToAddress([y, x])] = {
+          diff[positionToAddress([y, x])] = {
             value: matrixFrom[y - top][x - left],
           };
         }
@@ -397,7 +397,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
               topFrom + (i % maxHeight),
               leftFrom + (j % maxWidth),
             ]);
-            diff[pointoToAddress([y, x])] = cell || {};
+            diff[positionToAddress([y, x])] = cell || {};
           }
         }
       }
@@ -553,7 +553,7 @@ class ClearAction<T extends null> extends CoreAction<T> {
     const diff: DiffType = {};
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        diff[pointoToAddress([y, x])] = { value: null };
+        diff[positionToAddress([y, x])] = { value: null };
       }
     }
     table.update(diff, true, {

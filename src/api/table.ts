@@ -15,7 +15,13 @@ import {
 } from "../types";
 import { CellsType, CellType, Parsers, Renderers } from "../types";
 import { createMatrix, matrixShape, writeMatrix } from "./matrix";
-import { addressToPoint, n2a, x2c, pointoToAddress, y2r } from "./converters";
+import {
+  addressToPosition,
+  n2a,
+  x2c,
+  positionToAddress,
+  y2r,
+} from "./converters";
 import { FunctionMapping } from "../formula/functions/__base";
 import { functions } from "../formula/mapping";
 import { Lexer, solveFormula } from "../formula/evaluator";
@@ -161,7 +167,7 @@ export class UserTable {
       for (let x = 0; x < numCols + 1; x++) {
         const id = this.head++;
         ids.push(id);
-        const address = pointoToAddress([y, x]);
+        const address = positionToAddress([y, x]);
         const colId = x2c(x);
         const colDefault = cells[colId];
         const cell = cells[address];
@@ -188,7 +194,7 @@ export class UserTable {
   }
 
   public getIdByAddress(address: Address) {
-    const [y, x] = addressToPoint(address);
+    const [y, x] = addressToPosition(address);
     const id = this.getId([y, x]);
     this.idCache.set(id, address);
     return id;
@@ -202,7 +208,7 @@ export class UserTable {
       const ids = this.idMatrix[y];
       for (let x = 0; x < ids.length; x++) {
         const existing = ids[x];
-        const address = pointoToAddress([y, x]);
+        const address = positionToAddress([y, x]);
         this.idCache.set(existing, address);
         if (existing === id) {
           return address;
@@ -213,7 +219,7 @@ export class UserTable {
   public getPointById(id: Id) {
     const address = this.getAddressById(id);
     if (address) {
-      return addressToPoint(address);
+      return addressToPosition(address);
     }
     return [0, 0];
   }
@@ -275,7 +281,7 @@ export class UserTable {
       for (let x = left; x <= right; x++) {
         const cell = this.get([y - top, x - left]);
         if (cell != null) {
-          result[pointoToAddress([y, x])] = evaluates
+          result[positionToAddress([y, x])] = evaluates
             ? solveFormula(cell[key], this.base, false)
             : cell[key];
         }
@@ -345,7 +351,7 @@ export class UserTable {
       for (let x = left; x <= right; x++) {
         const cell = this.get([y - top, x - left]);
         if (cell != null) {
-          result[pointoToAddress([y, x])] = {
+          result[positionToAddress([y, x])] = {
             ...cell,
             value: evaluates
               ? solveFormula(cell?.value, this.base, false)
@@ -641,10 +647,10 @@ export class Table extends UserTable {
     const diffAfter: DataType = new Map();
     Object.keys(diff).map((address) => {
       const value = diff[address];
-      const point = addressToPoint(address);
-      const [y, x] = point;
-      const id = this.getId(point);
-      diffBefore.set(id, this.get(point));
+      const pos = addressToPosition(address);
+      const [y, x] = pos;
+      const id = this.getId(pos);
+      diffBefore.set(id, this.get(pos));
       diffAfter.set(id, value);
       if (partial) {
         this.data.set(id, { ...this.data.get(id), ...value });
