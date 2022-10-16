@@ -1,5 +1,5 @@
 import { rangeToArea } from "../api/matrix";
-import { addressToPosition } from "../api/converters";
+import { addressToPosition, n2a } from "../api/converters";
 import { Table, UserTable } from "../api/table";
 import { AreaType, MatrixType } from "../types";
 
@@ -75,18 +75,35 @@ export class IdRange {
 }
 
 export class Range {
-  constructor(public range: string) {
-    this.range = range.toUpperCase();
+  constructor(public value: string) {
+    this.value = value.toUpperCase();
   }
   public evaluate(base: UserTable): UserTable {
-    const area = rangeToArea(base.complementRange(this.range));
+    const area = rangeToArea(this.complementRange(base));
     return base.trim(area);
   }
   public idRange(base: UserTable) {
-    return this.range
+    return this.value
       .split(":")
       .map((ref) => "#" + base.getIdByAddress(ref))
       .join(":");
+  }
+  private complementRange(base: UserTable) {
+    const cells = this.value.split(":");
+    let [start = "", end = ""] = cells;
+    if (!start.match(/[1-9]\d*/)) {
+      start += "1";
+    }
+    if (!start.match(/[a-zA-Z]/)) {
+      start = "A" + start;
+    }
+    if (!end.match(/[1-9]\d*/)) {
+      end += base.numRows();
+    }
+    if (!end.match(/[a-zA-Z]/)) {
+      end = n2a(base.numCols() + 1) + end;
+    }
+    return `${start}:${end}`;
   }
 }
 

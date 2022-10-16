@@ -228,7 +228,7 @@ export class UserTable {
     return this.idMatrix[y][x];
   }
 
-  public get(position: PositionType) {
+  public getByPosition(position: PositionType) {
     const [y, x] = position;
     if (y === -1 || x === -1) {
       return undefined;
@@ -266,7 +266,7 @@ export class UserTable {
     const matrix = createMatrix(bottom - top + 1, right - left + 1);
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        const cell = this.get([y, x]) || {};
+        const cell = this.getByPosition([y, x]) || {};
         matrix[y - top][x - left] = evaluates
           ? solveFormula(cell[key], this.base, false)
           : cell[key];
@@ -279,7 +279,7 @@ export class UserTable {
     const [top, left, bottom, right] = this.area;
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        const cell = this.get([y - top, x - left]);
+        const cell = this.getByPosition([y - top, x - left]);
         if (cell != null) {
           result[positionToAddress([y, x])] = evaluates
             ? solveFormula(cell[key], this.base, false)
@@ -296,7 +296,7 @@ export class UserTable {
       const row: CellsType = {};
       result.push(row);
       for (let x = left; x <= right; x++) {
-        const cell = this.get([y - top, x - left]);
+        const cell = this.getByPosition([y - top, x - left]);
         if (cell != null) {
           row[x2c(x) || y2r(y)] = evaluates
             ? solveFormula(cell[key], this.base, false)
@@ -313,7 +313,7 @@ export class UserTable {
       const col: CellsType = {};
       result.push(col);
       for (let y = top; y <= bottom; y++) {
-        const cell = this.get([y - top, x - left]);
+        const cell = this.getByPosition([y - top, x - left]);
         if (cell != null) {
           col[y2r(y) || x2c(x)] = evaluates
             ? solveFormula(cell[key], this.base, false)
@@ -333,7 +333,7 @@ export class UserTable {
     const matrix = createMatrix(bottom - top + 1, right - left + 1);
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        const cell = this.get([y, x]);
+        const cell = this.getByPosition([y, x]);
         matrix[y - top][x - left] = {
           ...cell,
           value: evaluates
@@ -349,7 +349,7 @@ export class UserTable {
     const [top, left, bottom, right] = this.area;
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        const cell = this.get([y - top, x - left]);
+        const cell = this.getByPosition([y - top, x - left]);
         if (cell != null) {
           result[positionToAddress([y, x])] = {
             ...cell,
@@ -369,7 +369,7 @@ export class UserTable {
       const row: CellsType = {};
       result.push(row);
       for (let x = left; x <= right; x++) {
-        const cell = this.get([y - top, x - left]);
+        const cell = this.getByPosition([y - top, x - left]);
         if (cell != null) {
           row[x2c(x) || y2r(y)] = {
             ...cell,
@@ -389,7 +389,7 @@ export class UserTable {
       const col: CellsType = {};
       result.push(col);
       for (let y = top; y <= bottom; y++) {
-        const cell = this.get([y - top, x - left]);
+        const cell = this.getByPosition([y - top, x - left]);
         if (cell != null) {
           col[y2r(y) || x2c(x)] = {
             ...cell,
@@ -402,23 +402,7 @@ export class UserTable {
     }
     return result;
   }
-  public complementRange(range: string) {
-    const cells = range.split(":");
-    let [start = "", end = ""] = cells;
-    if (!start.match(/[1-9]\d*/)) {
-      start += "1";
-    }
-    if (!start.match(/[a-zA-Z]/)) {
-      start = "A" + start;
-    }
-    if (!end.match(/[1-9]\d*/)) {
-      end += this.numRows();
-    }
-    if (!end.match(/[a-zA-Z]/)) {
-      end = n2a(this.numCols() + 1) + end;
-    }
-    return `${start}:${end}`;
-  }
+
   public top() {
     return this.area[Area.Top];
   }
@@ -435,17 +419,17 @@ export class UserTable {
     return [...this.area];
   }
   public parse(position: PositionType, value: string) {
-    const cell = this.get(position) || {};
+    const cell = this.getByPosition(position) || {};
     const parser = this.parsers[cell.parser || ""] || defaultParser;
     return parser.parse(value, cell, this);
   }
   public render(position: PositionType, writer?: WriterType) {
-    const cell = this.get(position) || {};
+    const cell = this.getByPosition(position) || {};
     const renderer = this.renderers[cell.renderer || ""] || defaultRenderer;
     return renderer.render(this, position, writer);
   }
   public stringify(position: PositionType, value?: any) {
-    const cell = this.get(position);
+    const cell = this.getByPosition(position);
     const renderer = this.renderers[cell?.renderer || ""] || defaultRenderer;
     if (typeof value === "undefined") {
       return renderer.stringify(cell || {});
@@ -580,7 +564,7 @@ export class Table extends UserTable {
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
         const id = this.getId([y, x]);
-        backdiff.set(id, this.get([y, x]));
+        backdiff.set(id, this.getByPosition([y, x]));
       }
     }
     return backdiff;
@@ -650,7 +634,7 @@ export class Table extends UserTable {
       const pos = addressToPosition(address);
       const [y, x] = pos;
       const id = this.getId(pos);
-      diffBefore.set(id, this.get(pos));
+      diffBefore.set(id, this.getByPosition(pos));
       diffAfter.set(id, value);
       if (partial) {
         this.data.set(id, { ...this.data.get(id), ...value });
@@ -682,7 +666,7 @@ export class Table extends UserTable {
       for (let j = 0; j < numCols; j++) {
         const id = this.head++;
         row.push(id);
-        const cell = this.get([baseY, j]);
+        const cell = this.getByPosition([baseY, j]);
         const copied = this.copyCell(cell, baseY);
         this.data.set(id, copied);
       }
@@ -722,7 +706,7 @@ export class Table extends UserTable {
       for (let j = 0; j < numCols; j++) {
         const id = this.head++;
         row.push(id);
-        const cell = this.get([i, baseX]);
+        const cell = this.getByPosition([i, baseX]);
         const copied = this.copyCell(cell, baseX);
         this.idMatrix[i].splice(x, 0, id);
         this.data.set(id, copied);

@@ -393,7 +393,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
             if (x > table.numCols()) {
               continue;
             }
-            const cell = table.get([
+            const cell = table.getByPosition([
               topFrom + (i % maxHeight),
               leftFrom + (j % maxWidth),
             ]);
@@ -664,23 +664,23 @@ class ArrowAction<
     let [editorTop, editorLeft, height, width] = store.editorRect;
     if (deltaY > 0) {
       for (let i = y; i < nextY; i++) {
-        editorTop += table.get([i, 0])?.height || DEFAULT_HEIGHT;
+        editorTop += table.getByPosition([i, 0])?.height || DEFAULT_HEIGHT;
       }
     } else if (deltaY < 0) {
       for (let i = y - 1; i >= nextY; i--) {
-        editorTop -= table.get([i, 0])?.height || DEFAULT_HEIGHT;
+        editorTop -= table.getByPosition([i, 0])?.height || DEFAULT_HEIGHT;
       }
     }
     if (deltaX > 0) {
       for (let i = x; i < nextX; i++) {
-        editorLeft += table.get([0, i])?.width || DEFAULT_WIDTH;
+        editorLeft += table.getByPosition([0, i])?.width || DEFAULT_WIDTH;
       }
     } else if (deltaX < 0) {
       for (let i = x - 1; i >= nextX; i--) {
-        editorLeft -= table.get([0, i])?.width || DEFAULT_WIDTH;
+        editorLeft -= table.getByPosition([0, i])?.width || DEFAULT_WIDTH;
       }
     }
-    const cell = table.get([nextY, nextX]);
+    const cell = table.getByPosition([nextY, nextX]);
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
     return {
@@ -759,23 +759,23 @@ class WalkAction<
     }
     if (deltaY > 0) {
       for (let i = y; i < nextY; i++) {
-        editorTop += table.get([i, 0])?.height || DEFAULT_HEIGHT;
+        editorTop += table.getByPosition([i, 0])?.height || DEFAULT_HEIGHT;
       }
     } else if (deltaY < 0) {
       for (let i = y - 1; i >= nextY; i--) {
-        editorTop -= table.get([i, 0])?.height || DEFAULT_HEIGHT;
+        editorTop -= table.getByPosition([i, 0])?.height || DEFAULT_HEIGHT;
       }
     }
     if (deltaX > 0) {
       for (let i = x; i < nextX; i++) {
-        editorLeft += table.get([0, i])?.width || DEFAULT_WIDTH;
+        editorLeft += table.getByPosition([0, i])?.width || DEFAULT_WIDTH;
       }
     } else if (deltaX < 0) {
       for (let i = x - 1; i >= nextX; i--) {
-        editorLeft -= table.get([0, i])?.width || DEFAULT_WIDTH;
+        editorLeft -= table.getByPosition([0, i])?.width || DEFAULT_WIDTH;
       }
     }
-    const cell = table.get([nextY, nextX]);
+    const cell = table.getByPosition([nextY, nextX]);
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
     return {

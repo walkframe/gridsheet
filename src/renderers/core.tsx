@@ -39,7 +39,7 @@ export class Renderer {
         }
         if (value instanceof UserTable) {
           return this._render(
-            value.get([value.top(), value.left()])?.value,
+            value.getByPosition([value.top(), value.left()])?.value,
             table,
             writer
           );
@@ -67,7 +67,7 @@ export class Renderer {
     position: PositionType,
     writer?: WriterType
   ): any {
-    const cell = table.get(position);
+    const cell = table.getByPosition(position);
     const { value } = cell || {};
     return this._render(value, table, writer);
   }
