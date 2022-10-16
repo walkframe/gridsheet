@@ -232,12 +232,7 @@ export const Editor: React.FC = () => {
                 if (!editing) {
                   e.preventDefault();
                   dispatch(
-                    select([
-                      0,
-                      0,
-                      table.getNumRows() - 1,
-                      table.getNumCols() - 1,
-                    ])
+                    select([0, 0, table.getNumRows(), table.getNumCols()])
                   );
                   return false;
                 }

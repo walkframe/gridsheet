@@ -73,6 +73,7 @@ export const ContextMenu: React.FC = () => {
     >
       <ul>
         <li
+          className="enabled"
           onClick={() => {
             const area = clip(store);
             dispatch(cut(area));
@@ -85,6 +86,7 @@ export const ContextMenu: React.FC = () => {
           </div>
         </li>
         <li
+          className="enabled"
           onClick={() => {
             const area = clip(store);
             dispatch(copy(area));
@@ -97,6 +99,7 @@ export const ContextMenu: React.FC = () => {
           </div>
         </li>
         <li
+          className="enabled"
           onClick={async () => {
             const text = editorRef.current?.value || "";
             dispatch(paste({ text }));
