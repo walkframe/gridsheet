@@ -4,7 +4,6 @@ import { CellsType, Props } from "../types";
 
 import { Context } from "../store";
 import {
-  initHistory,
   setSheetHeight,
   setSheetWidth,
   setHeaderHeight,
@@ -13,12 +12,11 @@ import {
   setCellLabel,
   setOnSave,
   initializeTable,
-  updateTable,
 } from "../store/actions";
 
 const gridRef = React.createRef<{}>();
 
-import { HISTORY_SIZE, HEADER_HEIGHT, HEADER_WIDTH } from "../constants";
+import { HEADER_HEIGHT, HEADER_WIDTH } from "../constants";
 import { addressToPosition } from "../api/converters";
 import { Table } from "../api/table";
 import { functions } from "../formula/mapping";
@@ -29,7 +27,6 @@ export const StoreInitializer: React.FC<Props> = ({
   additionalFunctions = {},
 }) => {
   const {
-    historySize = HISTORY_SIZE,
     headerHeight = HEADER_HEIGHT,
     headerWidth = HEADER_WIDTH,
     numRows = 0,
@@ -57,7 +54,6 @@ export const StoreInitializer: React.FC<Props> = ({
     // @ts-ignore
     table.setFunctions({ ...functions, ...additionalFunctions });
     dispatch(initializeTable(table));
-    dispatch(initHistory(historySize));
   }, []);
   React.useEffect(() => {
     if (sheetHeight) {

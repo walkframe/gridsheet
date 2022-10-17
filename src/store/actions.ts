@@ -54,22 +54,6 @@ export class CoreAction<T> {
   }
 }
 
-class InitHistoryAction<T extends number> extends CoreAction<T> {
-  code = "INIT_HISTORY";
-  reduce(store: StoreType, payload: T): StoreType {
-    return {
-      ...store,
-      history: {
-        operations: [],
-        index: -1,
-        size: payload,
-        direction: "FORWARD",
-      },
-    };
-  }
-}
-export const initHistory = new InitHistoryAction().bind();
-
 class SetSearchQueryAction<T extends string | undefined> extends CoreAction<T> {
   code = "SET_SEARCH_QUERY";
   reduce(store: StoreType, payload: T): StoreType {
@@ -246,6 +230,7 @@ class UpdateTableAction<T extends Table> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
+      table: payload,
       ...restrictPositions(store, payload),
     };
   }
@@ -600,13 +585,6 @@ class ClearAction<T extends null> extends CoreAction<T> {
     return {
       ...store,
       table: table.shallowCopy(),
-      /*history: pushHistory(history, {
-        command: "SET_TABLE",
-        before,
-        after: [diff],
-        choosing,
-        selectingZone,
-      }),*/
     };
   }
 }
