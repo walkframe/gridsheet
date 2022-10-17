@@ -268,10 +268,6 @@ export const ContextMenu: React.FC = () => {
                   choosing,
                 });
                 dispatch(updateTable(table.shallowCopy(false)));
-                dispatch(choose([-1, -1]));
-                setTimeout(() => {
-                  dispatch(choose([y, 0]));
-                }, 200);
               }}
             >
               <div className="gs-menu-name">

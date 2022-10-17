@@ -21,6 +21,7 @@ import { Table } from "../api/table";
 
 import { tsv2matrix, x2c, positionToAddress, y2r } from "../api/converters";
 import { Area, DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
+import { restrictPositions } from "./utils";
 
 const actions: { [s: string]: CoreAction<any> } = {};
 
@@ -243,17 +244,9 @@ export const initializeTable = new InitializeTableAction().bind();
 class UpdateTableAction<T extends Table> extends CoreAction<T> {
   code = "UPDATE_TABLE";
   reduce(store: StoreType, payload: T): StoreType {
-    const { table, history } = store;
-    const diffs = [payload];
-    //const before = table.backDiffWithTable(diffs);
     return {
       ...store,
-      table: payload,
-      /*history: histories.pushHistory(history, {
-        command: "SET_TABLE",
-        before,
-        after: diffs,
-      }),*/
+      ...restrictPositions(store, payload),
     };
   }
 }
@@ -646,6 +639,7 @@ class UndoAction<T extends null> extends CoreAction<T> {
     const { reflection, operation } = history;
     return {
       ...store,
+      ...restrictPositions(store, table),
       ...reflection,
       table: table.shallowCopy(!shouldTracking(operation)),
     };
@@ -665,6 +659,7 @@ class RedoAction<T extends null> extends CoreAction<T> {
     return {
       ...store,
       ...reflection,
+      ...restrictPositions(store, table),
       table: table.shallowCopy(!shouldTracking(operation)),
     };
   }

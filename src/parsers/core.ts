@@ -36,8 +36,12 @@ export class Parser {
     return parsed;
   }
   public parse(value: string, cell: CellType, table: Table): CellType {
-    const parsed = this._parse(value, cell, table);
-    return { ...cell, value: parsed };
+    try {
+      const parsed = this._parse(value, cell, table);
+      return { ...cell, value: parsed };
+    } catch (e) {
+      return { ...cell, value: e };
+    }
   }
   protected _parse(value: string, cell: CellType, table: Table): any {
     if (this.condition && !this.condition(value)) {
@@ -58,7 +62,7 @@ export class Parser {
     }
     if (value[0] === "=") {
       const lexer = new Lexer(value.substring(1));
-      lexer.tokenize();
+      lexer.tokenize(false);
       return "=" + lexer.stringify("ID", table);
     }
     return this.callback(value, cell);

@@ -227,7 +227,10 @@ export class UserTable {
     if (y === -1 || x === -1) {
       return undefined;
     }
-    const id = this.idMatrix[y][x];
+    const id = this.idMatrix[y]?.[x];
+    if (id == null) {
+      return undefined;
+    }
     const value = this.data.get(id);
     return value;
   }
@@ -646,7 +649,7 @@ export class Table extends UserTable {
     const s = renderer.stringify({ ...cell, value });
     if (s[0] === "=") {
       const lexer = new Lexer(s.substring(1));
-      lexer.tokenize();
+      lexer.tokenize(true);
       return "=" + lexer.stringify("REF", this);
     }
     return s;
