@@ -130,7 +130,7 @@ export class UserTable {
   protected area: AreaType;
   protected parsers: Parsers;
   protected renderers: Renderers;
-  public functions: FunctionMapping = {};
+  protected functions: FunctionMapping = {};
   protected base: UserTable;
   protected histories: HistoryType[];
   protected historyIndex: number;
@@ -868,5 +868,8 @@ export class Table extends UserTable {
         ]);
     }
     return history;
+  }
+  getFunction(name: string) {
+    return this.functions[name];
   }
 }

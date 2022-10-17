@@ -123,7 +123,7 @@ export class Function {
   public evaluate(base: Table): any {
     const args = this.args.map((a) => a.evaluate(base));
     const name = this.name.toLowerCase();
-    const Func = base.functions[name];
+    const Func = base.getFunction(name);
     if (Func == null) {
       throw new FormulaError("#NAME?", `Unknown function: ${name}`);
     }
