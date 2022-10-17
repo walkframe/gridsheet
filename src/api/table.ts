@@ -420,9 +420,23 @@ export class UserTable {
     this.histories.splice(this.historyIndex + 1, this.histories.length);
     this.histories.push(history);
     if (this.histories.length > this.historySize) {
-      this.histories.splice(0, 1);
+      const kickedOut = this.histories.splice(0, 1)[0];
+      this.cleanObsolete(kickedOut);
     } else {
       this.historyIndex++;
+    }
+  }
+
+  private cleanObsolete(history: HistoryType) {
+    if (
+      history.operation === "REMOVE_ROW" ||
+      history.operation === "REMOVE_COL"
+    ) {
+      history.idMatrix.map((ids) => {
+        ids.map((id) => {
+          this.data.delete(id);
+        });
+      });
     }
   }
 
