@@ -134,7 +134,7 @@ export class Function {
 
 export const evaluate = (formula: string, base: Table, raise = true) => {
   const lexer = new Lexer(formula);
-  lexer.tokenize(true);
+  lexer.tokenize();
   const parser = new Parser(lexer.tokens);
   const expr = parser.build();
   try {
@@ -300,7 +300,7 @@ export class Lexer {
       .join("");
   }
 
-  public tokenize(allowSharp = false) {
+  public tokenize() {
     while (this.index <= this.formula.length) {
       this.skipSpaces();
       const char = this.get();
@@ -371,11 +371,6 @@ export class Lexer {
           const buf = this.getString();
           this.tokens.push(new Token("VALUE", buf));
           continue;
-
-        case "#":
-          if (!allowSharp) {
-            throw new FormulaError("#ERROR!", `Formula parsing error.`);
-          }
         default: {
           let buf = char;
           while (true) {

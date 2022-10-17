@@ -43,3 +43,19 @@ export const restrictPositions = (store: StoreType, table: Table) => {
     copyingZone: [y3, x3, y4, x4] as ZoneType,
   };
 };
+
+export const shouldTracking = (operation: string) => {
+  switch (operation) {
+    case "ADD_ROW":
+      return true;
+    case "ADD_COL":
+      return true;
+    case "REMOVE_ROW":
+      return true;
+    case "REMOVE_COL":
+      return true;
+    case "MOVE":
+      return true;
+  }
+  return false;
+};

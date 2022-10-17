@@ -649,7 +649,7 @@ export class Table extends UserTable {
     const s = renderer.stringify({ ...cell, value });
     if (s[0] === "=") {
       const lexer = new Lexer(s.substring(1));
-      lexer.tokenize(true);
+      lexer.tokenize();
       return "=" + lexer.stringify("REF", this);
     }
     return s;

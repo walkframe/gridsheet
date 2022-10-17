@@ -14,8 +14,6 @@ import {
   initializeTable,
 } from "../store/actions";
 
-const gridRef = React.createRef<{}>();
-
 import { HEADER_HEIGHT, HEADER_WIDTH } from "../constants";
 import { addressToPosition } from "../api/converters";
 import { Table } from "../api/table";

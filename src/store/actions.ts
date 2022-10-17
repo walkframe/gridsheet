@@ -21,7 +21,7 @@ import { Table } from "../api/table";
 
 import { tsv2matrix, x2c, positionToAddress, y2r } from "../api/converters";
 import { Area, DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
-import { restrictPositions } from "./utils";
+import { restrictPositions, shouldTracking } from "./utils";
 
 const actions: { [s: string]: CoreAction<any> } = {};
 
@@ -341,13 +341,39 @@ export const cut = new CutAction().bind();
 class PasteAction<T extends { text: string }> extends CoreAction<T> {
   code = "PASTE";
   reduce(store: StoreType, payload: T): StoreType {
-    const { choosing, copyingZone, cutting, table } = store;
-    let { selectingZone, history } = store;
-    let [y, x] = choosing;
+    const { choosing, copyingZone, selectingZone, cutting, table } = store;
     let selectingArea = zoneToArea(selectingZone);
     const copyingArea = zoneToArea(copyingZone);
-    const { text } = payload;
 
+    if (cutting) {
+      const src = copyingArea;
+      const [h, w] = zoneShape(copyingArea);
+      const dst: AreaType =
+        selectingArea[0] !== -1
+          ? [
+              selectingArea[Area.Top],
+              selectingArea[Area.Left],
+              selectingArea[Area.Top] + h,
+              selectingArea[Area.Left] + w,
+            ]
+          : [
+              choosing[Area.Top],
+              choosing[Area.Left],
+              choosing[Area.Top] + h,
+              choosing[Area.Left] + w,
+            ];
+      table.move(src, dst, { selectingZone: dst, cutting });
+      return {
+        ...store,
+
+        table: table.shallowCopy(),
+        selectingZone: dst,
+        copyingZone: [-1, -1, -1, -1] as ZoneType,
+      };
+    }
+
+    let [y, x] = choosing;
+    const { text } = payload;
     const diff: DiffType = {};
     if (copyingArea[0] === -1) {
       const matrixFrom = tsv2matrix(text);
@@ -376,31 +402,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
         [height, width] = superposeArea(selectingArea, copyingArea);
       }
       selectingArea = [y, x, y + height, x + width];
-      if (cutting) {
-        const src = copyingArea;
-        const [h, w] = zoneShape(copyingArea);
-        const dst: AreaType =
-          selectingArea[0] !== -1
-            ? [
-                selectingArea[Area.Top],
-                selectingArea[Area.Left],
-                selectingArea[Area.Top] + h,
-                selectingArea[Area.Left] + w,
-              ]
-            : [
-                choosing[Area.Top],
-                choosing[Area.Left],
-                choosing[Area.Top] + h,
-                choosing[Area.Left] + w,
-              ];
-        table.move(src, dst, { selectingZone: dst });
-        return {
-          ...store,
-          table: table.shallowCopy(),
-          selectingZone: dst,
-          copyingZone: [-1, -1, -1, -1] as ZoneType,
-        };
-      }
+
       {
         const [maxHeight, maxWidth] = zoneShape(copyingArea, 1);
         const [topTo, leftTo, bottomTo, rightTo] = selectingArea;
@@ -565,7 +567,7 @@ export const write = new WriteAction().bind();
 class ClearAction<T extends null> extends CoreAction<T> {
   code = "CLEAR";
   reduce(store: StoreType, payload: T): StoreType {
-    const { choosing, selectingZone, history, table } = store;
+    const { choosing, selectingZone, table } = store;
 
     let selectingArea = zoneToArea(selectingZone);
     if (selectingArea[0] === -1) {
@@ -589,22 +591,6 @@ class ClearAction<T extends null> extends CoreAction<T> {
   }
 }
 export const clear = new ClearAction().bind();
-
-const shouldTracking = (operation: string) => {
-  switch (operation) {
-    case "ADD_ROW":
-      return true;
-    case "ADD_COL":
-      return true;
-    case "REMOVE_ROW":
-      return true;
-    case "REMOVE_COL":
-      return true;
-    case "MOVE":
-      return true;
-  }
-  return false;
-};
 
 class UndoAction<T extends null> extends CoreAction<T> {
   code = "UNDO";
