@@ -258,7 +258,7 @@ export class UserTable {
   }
   protected getId(point: PointType) {
     const [y, x] = point;
-    return this.idMatrix[y][x];
+    return this.idMatrix[y]?.[x];
   }
 
   public getByPoint(point: PointType) {
@@ -783,7 +783,9 @@ export class Table extends UserTable {
   public getIdByAddress(address: Address) {
     const [y, x] = addressToPoint(address);
     const id = this.getId([y, x]);
-    this.idCache.set(id, address);
+    if (id) {
+      this.idCache.set(id, address);
+    }
     return id;
   }
 

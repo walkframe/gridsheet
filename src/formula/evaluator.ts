@@ -53,7 +53,10 @@ export class Ref {
   }
   public id(base: Table) {
     const id = base.getIdByAddress(this.value);
-    return `#${id}`;
+    if (id) {
+      return `#${id}`;
+    }
+    return this.value;
   }
 }
 
