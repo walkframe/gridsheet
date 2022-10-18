@@ -11,18 +11,19 @@ import { VerticalHeaderCell } from "./VerticalHeaderCell";
 import { SearchBox } from "./SearchBox";
 
 import { Context } from "../store";
-import { choose, select, setEntering } from "../store/actions";
+import { choose, select, setEntering, updateTable } from "../store/actions";
 
 import { GridTableLayout } from "./styles/GridTableLayout";
 
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
 import { Table, UserTable } from "../api/table";
+import { TableRef } from "../types";
 
 type Props = {
-  tableRef?: React.MutableRefObject<UserTable | null>;
+  tableRef?: React.MutableRefObject<TableRef | null>;
 };
 
-export const createTableRef = () => React.useRef<UserTable>(null);
+export const createTableRef = () => React.useRef<TableRef>(null);
 
 export const GridTable = ({ tableRef }: Props) => {
   const { store, dispatch } = React.useContext(Context);
@@ -41,7 +42,12 @@ export const GridTable = ({ tableRef }: Props) => {
 
   React.useEffect(() => {
     if (tableRef) {
-      tableRef.current = table;
+      tableRef.current = {
+        table,
+        dispatch: (table) => {
+          dispatch(updateTable(table as Table));
+        },
+      };
     }
   }, [table]);
 

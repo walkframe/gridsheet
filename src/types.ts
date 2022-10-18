@@ -34,6 +34,11 @@ export type HistoryOperationType =
   | "REMOVE_ROW"
   | "REMOVE_COL";
 
+export type TableRef = {
+  table: UserTable;
+  dispatch: (table: UserTable) => void;
+};
+
 export type FeedbackType = (
   table: UserTable,
   positions?: {
@@ -71,6 +76,10 @@ export type CellsType = { [address: Address]: CellType };
 export type DiffType = CellsType;
 export type DataType = Map<Id, CellType | undefined>;
 
+export type Dispatcher = React.Dispatch<{
+  type: string;
+  value: any;
+}>;
 export type OptionsType = {
   sheetHeight?: number;
   sheetWidth?: number;
@@ -170,7 +179,7 @@ export type StoreType = {
 
 export type Props = {
   initial?: CellsType;
-  tableRef?: React.MutableRefObject<UserTable | null>;
+  tableRef?: React.MutableRefObject<TableRef | null>;
   options?: OptionsType;
   className?: string;
   style?: React.CSSProperties;

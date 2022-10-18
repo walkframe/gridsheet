@@ -23,6 +23,7 @@ import { FunctionMapping } from "../formula/functions/__base";
 import { functions } from "../formula/mapping";
 import { Lexer, solveFormula } from "../formula/evaluator";
 import { Area, HISTORY_LIMIT } from "../constants";
+import { shouldTracking } from "../store/utils";
 
 type StoreReflectionType = {
   choosing?: PointType;
@@ -208,6 +209,28 @@ export class UserTable {
       }
     }
   }
+
+  protected shallowCopy(copyCache = true) {
+    const copied = new Table({ numRows: 0, numCols: 0 });
+    copied.lastChangedAt = this.changedAt;
+    copied.head = this.head;
+    copied.idMatrix = this.idMatrix;
+    copied.data = this.data;
+    copied.area = this.area;
+    copied.parsers = this.parsers;
+    copied.renderers = this.renderers;
+    copied.labelers = this.labelers;
+    copied.functions = this.functions;
+    copied.histories = this.histories;
+    copied.historyLimit = this.historyLimit;
+    copied.historyIndex = this.historyIndex;
+    copied.base = this;
+    if (copyCache) {
+      copied.idCache = this.idCache;
+    }
+    return copied;
+  }
+
   public getAddressById(id: Id) {
     const address = this.idCache.get(id);
     if (address) {
@@ -555,6 +578,7 @@ export class UserTable {
       positionTo: [to[0], to[1]],
       lostRows,
     });
+    return this.shallowCopy(true);
   }
 
   public update(
@@ -584,6 +608,7 @@ export class UserTable {
       diffAfter,
       partial,
     });
+    return this.shallowCopy(false);
   }
 
   public addRows(
@@ -614,6 +639,7 @@ export class UserTable {
       numRows,
       idMatrix: rows,
     });
+    return this.shallowCopy(true);
   }
   public removeRows(
     y: number,
@@ -629,6 +655,7 @@ export class UserTable {
       numRows,
       idMatrix: rows,
     });
+    return this.shallowCopy(true);
   }
   public addCols(
     x: number,
@@ -658,6 +685,7 @@ export class UserTable {
       numCols,
       idMatrix: rows,
     });
+    return this.shallowCopy(true);
   }
   public removeCols(
     x: number,
@@ -677,6 +705,7 @@ export class UserTable {
       numCols,
       idMatrix: rows,
     });
+    return this.shallowCopy(true);
   }
 }
 
@@ -758,27 +787,6 @@ export class Table extends UserTable {
     return id;
   }
 
-  public shallowCopy(copyCache = true) {
-    const copied = new Table({ numRows: 0, numCols: 0 });
-    copied.lastChangedAt = this.changedAt;
-    copied.head = this.head;
-    copied.idMatrix = this.idMatrix;
-    copied.data = this.data;
-    copied.area = this.area;
-    copied.parsers = this.parsers;
-    copied.renderers = this.renderers;
-    copied.labelers = this.labelers;
-    copied.functions = this.functions;
-    copied.histories = this.histories;
-    copied.historyLimit = this.historyLimit;
-    copied.historyIndex = this.historyIndex;
-    copied.base = this;
-    if (copyCache) {
-      copied.idCache = this.idCache;
-    }
-    return copied;
-  }
-
   private updateData(diff: DataType, partial = true) {
     diff.forEach((cell, id) => {
       if (partial) {
@@ -833,11 +841,12 @@ export class Table extends UserTable {
       partial: true,
     });
     this.put([y, x], cell);
+    return this.shallowCopy(false);
   }
 
   public undo() {
     if (this.historyIndex < 0) {
-      return;
+      return { history: null, newTable: this as Table };
     }
     const history = this.histories[this.historyIndex--];
     switch (history.operation) {
@@ -882,12 +891,15 @@ export class Table extends UserTable {
         ]);
         break;
     }
-    return history;
+    return {
+      history,
+      newTable: this.shallowCopy(shouldTracking(history.operation)),
+    };
   }
 
   public redo() {
     if (this.historyIndex + 1 >= this.histories.length) {
-      return;
+      return { history: null, newTable: this as Table };
     }
     const history = this.histories[++this.historyIndex];
     switch (history.operation) {
@@ -931,7 +943,10 @@ export class Table extends UserTable {
           xTo + cols,
         ]);
     }
-    return history;
+    return {
+      history,
+      newTable: this.shallowCopy(shouldTracking(history.operation)),
+    };
   }
   getFunction(name: string) {
     return this.functions[name];

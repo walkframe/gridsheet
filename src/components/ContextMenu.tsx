@@ -130,11 +130,16 @@ export const ContextMenu: React.FC = () => {
                 if (e.currentTarget.classList.contains("disabled")) {
                   return false;
                 }
-                table.addRows(selectingTop, height, selectingTop, {
-                  selectingZone,
-                  choosing,
-                });
-                dispatch(updateTable(table.shallowCopy(false)));
+                const newTable = table.addRows(
+                  selectingTop,
+                  height,
+                  selectingTop,
+                  {
+                    selectingZone,
+                    choosing,
+                  }
+                );
+                dispatch(updateTable(newTable));
                 dispatch(
                   select([
                     selectingTop,
@@ -162,11 +167,16 @@ export const ContextMenu: React.FC = () => {
                 if (e.currentTarget.classList.contains("disabled")) {
                   return false;
                 }
-                table.addRows(selectingBottom + 1, height, selectingBottom, {
-                  selectingZone,
-                  choosing,
-                });
-                dispatch(updateTable(table.shallowCopy(false)));
+                const newTable = table.addRows(
+                  selectingBottom + 1,
+                  height,
+                  selectingBottom,
+                  {
+                    selectingZone,
+                    choosing,
+                  }
+                );
+                dispatch(updateTable(newTable));
                 dispatch(
                   select([
                     selectingBottom + 1,
@@ -195,11 +205,16 @@ export const ContextMenu: React.FC = () => {
                 if (e.currentTarget.classList.contains("disabled")) {
                   return false;
                 }
-                table.addCols(selectingLeft, width, selectingLeft, {
-                  selectingZone,
-                  choosing,
-                });
-                dispatch(updateTable(table.shallowCopy(false)));
+                const newTable = table.addCols(
+                  selectingLeft,
+                  width,
+                  selectingLeft,
+                  {
+                    selectingZone,
+                    choosing,
+                  }
+                );
+                dispatch(updateTable(newTable));
                 dispatch(
                   select([
                     0,
@@ -227,11 +242,16 @@ export const ContextMenu: React.FC = () => {
                 if (e.currentTarget.classList.contains("disabled")) {
                   return false;
                 }
-                table.addCols(selectingRight + 1, width, selectingRight, {
-                  selectingZone,
-                  choosing,
-                });
-                dispatch(updateTable(table.shallowCopy(false)));
+                const newTable = table.addCols(
+                  selectingRight + 1,
+                  width,
+                  selectingRight,
+                  {
+                    selectingZone,
+                    choosing,
+                  }
+                );
+                dispatch(updateTable(newTable));
                 dispatch(
                   select([
                     1,
@@ -260,11 +280,11 @@ export const ContextMenu: React.FC = () => {
                 if (e.currentTarget.classList.contains("disabled")) {
                   return false;
                 }
-                table.removeRows(selectingTop, height, {
+                const newTable = table.removeRows(selectingTop, height, {
                   selectingZone,
                   choosing,
                 });
-                dispatch(updateTable(table.shallowCopy(false)));
+                dispatch(updateTable(newTable));
               }}
             >
               <div className="gs-menu-name">
@@ -284,11 +304,11 @@ export const ContextMenu: React.FC = () => {
                 if (e.currentTarget.classList.contains("disabled")) {
                   return false;
                 }
-                table.removeCols(selectingLeft, width, {
+                const newTable = table.removeCols(selectingLeft, width, {
                   selectingZone,
                   choosing,
                 });
-                dispatch(updateTable(table.shallowCopy(false)));
+                dispatch(updateTable(newTable));
               }}
             >
               <div className="gs-menu-name">

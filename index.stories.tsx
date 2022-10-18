@@ -3,7 +3,7 @@ import { GridSheet, Renderer, aa2oa, MatrixType, Parser } from "./src";
 import { createMatrix, matrixIntoCells } from "./src/api/matrix";
 import { defaultParser } from "./src/parsers/core";
 import { defaultRenderer } from "./src/renderers/core";
-import { CellType } from "./src/types";
+import { CellType, Dispatcher } from "./src/types";
 import { BaseFunction } from "./src";
 import { createTableRef } from "./src/components/GridTable";
 
@@ -160,11 +160,14 @@ const initialCells = matrixIntoCells(createMatrix(1000, 50), {});
 
 export const showIndex = () => {
   const ref = createTableRef();
-  /*
+
   setInterval(() => {
-    //ref.current?.update({ A1: { value: new Date() } }, true);
-  }, 30000);
-  */
+    if (ref.current) {
+      ref.current.dispatch(
+        ref.current.table.update({ A1: { value: new Date() } }, true)
+      );
+    }
+  }, 10000);
 
   return (
     <>

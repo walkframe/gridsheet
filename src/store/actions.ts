@@ -359,16 +359,21 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
               choosing[Area.Top] + h,
               choosing[Area.Left] + w,
             ];
-      table.move(src, dst, { selectingZone: dst, copyingZone, cutting });
+      const newTable = table.move(src, dst, {
+        selectingZone: dst,
+        copyingZone,
+        cutting,
+      });
       return {
         ...store,
         cutting: false,
-        table: table.shallowCopy(),
+        table: newTable,
         selectingZone: dst,
         copyingZone: [-1, -1, -1, -1] as ZoneType,
       };
     }
 
+    let newTable: Table;
     let [y, x] = choosing;
     const { text } = payload;
     const diff: DiffType = {};
@@ -388,7 +393,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
           };
         }
       }
-      table.update(diff, true, {
+      newTable = table.update(diff, true, {
         selectingZone,
         choosing,
       });
@@ -422,17 +427,16 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
           }
         }
       }
-      table.update(diff, false, {
+      newTable = table.update(diff, false, {
         copyingZone,
         selectingZone,
         choosing,
         cutting,
       });
     }
-
     return {
       ...store,
-      table: table.shallowCopy(),
+      table: newTable,
       selectingZone: selectingArea,
       copyingZone: [-1, -1, -1, -1] as ZoneType,
     };
@@ -548,13 +552,13 @@ class WriteAction<T extends string> extends CoreAction<T> {
   code = "WRITE";
   reduce(store: StoreType, payload: T): StoreType {
     const { choosing, selectingZone, table } = store;
-    table.write(choosing, payload, {
+    const newTable = table.write(choosing, payload, {
       selectingZone,
       choosing,
     });
     return {
       ...store,
-      table: table.shallowCopy(),
+      table: newTable,
       copyingZone: [-1, -1, -1, -1] as ZoneType,
     };
   }
@@ -577,13 +581,13 @@ class ClearAction<T extends null> extends CoreAction<T> {
         diff[positionToAddress([y, x])] = { value: null };
       }
     }
-    table.update(diff, true, {
+    const newTable = table.update(diff, true, {
       selectingZone,
       choosing,
     });
     return {
       ...store,
-      table: table.shallowCopy(),
+      table: newTable,
     };
   }
 }
@@ -593,7 +597,7 @@ class UndoAction<T extends null> extends CoreAction<T> {
   code = "UNDO";
   reduce(store: StoreType, payload: T): StoreType {
     const { table } = store;
-    const history = table.undo();
+    const { history, newTable } = table.undo();
     if (history == null) {
       return store;
     }
@@ -602,7 +606,7 @@ class UndoAction<T extends null> extends CoreAction<T> {
       ...store,
       ...restrictPoints(store, table),
       ...reflection,
-      table: table.shallowCopy(!shouldTracking(operation)),
+      table: newTable,
     };
   }
 }
@@ -612,7 +616,7 @@ class RedoAction<T extends null> extends CoreAction<T> {
   code = "REDO";
   reduce(store: StoreType, payload: T): StoreType {
     const { table } = store;
-    const history = table.redo();
+    const { history, newTable } = table.redo();
     if (history == null) {
       return store;
     }
@@ -621,7 +625,7 @@ class RedoAction<T extends null> extends CoreAction<T> {
       ...store,
       ...reflection,
       ...restrictPoints(store, table),
-      table: table.shallowCopy(!shouldTracking(operation)),
+      table: newTable,
     };
   }
 }
