@@ -279,7 +279,7 @@ export const showIndex = () => {
                     ],
                     { A3: { value: "four" } }
                   )}
-                  options={{ sheetResize: "both" }}
+                  options={{ sheetResize: "both", historySize: 2 }}
                 />
               </td>
               <td>
@@ -294,7 +294,7 @@ export const showIndex = () => {
                     ],
                     { B3: { value: "five" } }
                   )}
-                  options={{ sheetResize: "vertical" }}
+                  options={{ sheetResize: "vertical", historySize: 2 }}
                 />
               </td>
             </tr>
@@ -311,7 +311,7 @@ export const showIndex = () => {
                     ],
                     { C3: { value: "six" } }
                   )}
-                  options={{ sheetResize: "horizontal" }}
+                  options={{ sheetResize: "horizontal", historySize: 2 }}
                 />
               </td>
               <td>
@@ -326,7 +326,7 @@ export const showIndex = () => {
                     ],
                     { A3: { value: "four" } }
                   )}
-                  options={{ sheetResize: "none" }}
+                  options={{ sheetResize: "none", historySize: 2 }}
                 />
               </td>
             </tr>
