@@ -165,10 +165,6 @@ export type StoreType = {
   onSave?: FeedbackType;
 };
 
-export type RefType = {
-  update?: (cells: CellsType) => void;
-};
-
 export type Props = {
   initial?: CellsType;
   tableRef?: React.MutableRefObject<UserTable | null>;
@@ -182,3 +178,5 @@ export type Id = number | bigint;
 export type Ids = Id[];
 export type IdMatrix = Ids[];
 export type Address = string;
+
+export type RowByAddress<T> = Map<Address, T[]>;

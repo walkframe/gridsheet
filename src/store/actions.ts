@@ -362,10 +362,10 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
               choosing[Area.Top] + h,
               choosing[Area.Left] + w,
             ];
-      table.move(src, dst, { selectingZone: dst, cutting });
+      table.move(src, dst, { selectingZone: dst, copyingZone, cutting });
       return {
         ...store,
-
+        cutting: false,
         table: table.shallowCopy(),
         selectingZone: dst,
         copyingZone: [-1, -1, -1, -1] as ZoneType,

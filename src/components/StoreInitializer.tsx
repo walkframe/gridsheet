@@ -14,7 +14,7 @@ import {
   initializeTable,
 } from "../store/actions";
 
-import { HEADER_HEIGHT, HEADER_WIDTH } from "../constants";
+import { HEADER_HEIGHT, HEADER_WIDTH, HISTORY_SIZE } from "../constants";
 import { addressToPosition } from "../api/converters";
 import { Table } from "../api/table";
 import { functions } from "../formula/mapping";
@@ -29,6 +29,7 @@ export const StoreInitializer: React.FC<Props> = ({
     headerWidth = HEADER_WIDTH,
     numRows = 0,
     numCols = 0,
+    historySize = HISTORY_SIZE,
     sheetHeight,
     sheetWidth,
     editingOnEnter,
@@ -46,6 +47,7 @@ export const StoreInitializer: React.FC<Props> = ({
       numRows: auto.numRows,
       numCols: auto.numCols,
       cells: initial,
+      historySize,
       parsers,
       renderers,
     });
@@ -92,8 +94,7 @@ export const StoreInitializer: React.FC<Props> = ({
 };
 
 const getMaxSizeFromCells = (sizeY = 0, sizeX = 0, cells: CellsType = {}) => {
-  let lastY = sizeY,
-    lastX = sizeX;
+  let [lastY, lastX] = [sizeY, sizeX];
   Object.keys(cells).map((address) => {
     const [y, x] = addressToPosition(address);
     if (lastY < y) {

@@ -10,6 +10,7 @@ import {
   Height,
   Width,
   CellsType,
+  RowByAddress,
 } from "../types";
 import { addressToPosition, positionToAddress } from "./converters";
 
@@ -144,16 +145,29 @@ export const aa2oa = (
 };
 
 export const writeMatrix = <T = any>(
-  base: T[][],
-  target: T[][],
+  dst: T[][],
+  src: T[][],
   area: AreaType
 ) => {
+  const lostRows: RowByAddress<T> = new Map();
   const [top, left, bottom, right] = area;
+  const [dstNumRows, dstNumCols] = matrixShape(dst, 1);
   for (let y = top; y <= bottom; y++) {
+    const lostRow: T[] = [];
     for (let x = left; x <= right; x++) {
-      base[y][x] = target[y - top][x - left];
+      const value = src[y - top][x - left];
+      // excluding headers
+      if (y < dstNumRows - 1 && x < dstNumCols - 1) {
+        dst[y][x] = value;
+        continue;
+      }
+      if (lostRow.length === 0) {
+        lostRows.set(positionToAddress([y, x]), lostRow);
+      }
+      lostRow.push(value);
     }
   }
+  return lostRows;
 };
 
 export const createMatrix = (numRows: number, numCols: number, fill = null) => {

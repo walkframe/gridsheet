@@ -4,8 +4,8 @@ import {
   VariableSizeList as List,
 } from "react-window";
 
-import { Props, RefType, StoreType } from "../types";
-import { SHEET_HEIGHT, SHEET_WIDTH } from "../constants";
+import { Props, StoreType } from "../types";
+import { HISTORY_SIZE, SHEET_HEIGHT, SHEET_WIDTH } from "../constants";
 import { Context } from "../store";
 import { reducer } from "../store/actions";
 
@@ -27,6 +27,7 @@ export const GridSheet: React.FC<Props> = ({
   additionalFunctions = {},
 }) => {
   const { numRows = 0, numCols = 0, sheetResize: resize = "both" } = options;
+
   const sheetRef = React.useRef<HTMLDivElement>(document.createElement("div"));
   const searchInputRef = React.useRef<HTMLInputElement>(
     document.createElement("input")
@@ -41,7 +42,7 @@ export const GridSheet: React.FC<Props> = ({
   const verticalHeadersRef = React.useRef<List>(null);
   const horizontalHeadersRef = React.useRef<List>(null);
   const initialState: StoreType = {
-    table: new Table({ numRows, numCols }),
+    table: new Table({}), // temporary (see StoreInitializer for detail)
     tableInitialized: false,
     sheetRef,
     searchInputRef,

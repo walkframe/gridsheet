@@ -12,6 +12,7 @@ import {
   ZoneType,
   Address,
   HistoryOperationType,
+  RowByAddress,
 } from "../types";
 import { CellsType, CellType, Parsers, Renderers } from "../types";
 import { createMatrix, matrixShape, writeMatrix } from "./matrix";
@@ -25,17 +26,7 @@ import {
 import { FunctionMapping } from "../formula/functions/__base";
 import { functions } from "../formula/mapping";
 import { Lexer, solveFormula } from "../formula/evaluator";
-import { Area } from "../constants";
-
-type Props = {
-  numRows: number;
-  numCols: number;
-  cells?: CellsType;
-  parsers?: Parsers;
-  renderers?: Renderers;
-  useBigInt?: boolean;
-  historySize?: number;
-};
+import { Area, HISTORY_SIZE } from "../constants";
 
 type StoreReflectionType = {
   choosing?: PositionType;
@@ -68,6 +59,7 @@ type HistoryMoveType = {
   matrixNew: IdMatrix;
   positionFrom: PositionType;
   positionTo: PositionType;
+  lostRows: RowByAddress<Id>;
 };
 
 type HistoryAddRowType = {
@@ -123,6 +115,16 @@ export class History {
   }
 }
 
+type Props = {
+  numRows?: number;
+  numCols?: number;
+  cells?: CellsType;
+  parsers?: Parsers;
+  renderers?: Renderers;
+  useBigInt?: boolean;
+  historySize?: number;
+};
+
 export class UserTable {
   protected head: Id;
   protected idMatrix: IdMatrix;
@@ -138,13 +140,13 @@ export class UserTable {
   protected historySize: number;
 
   constructor({
-    numRows,
-    numCols,
+    numRows = 0,
+    numCols = 0,
     cells = {},
     parsers = {},
     renderers = {},
     useBigInt = false,
-    historySize = 10,
+    historySize = HISTORY_SIZE,
   }: Props) {
     this.head = useBigInt ? BigInt(0) : 0;
     this.data = new Map();
@@ -432,8 +434,15 @@ export class UserTable {
       history.operation === "REMOVE_ROW" ||
       history.operation === "REMOVE_COL"
     ) {
-      history.idMatrix.map((ids) => {
-        ids.map((id) => {
+      history.idMatrix.forEach((ids) => {
+        ids.forEach((id) => {
+          this.data.delete(id);
+        });
+      });
+    }
+    if (history.operation === "MOVE") {
+      history.lostRows.forEach((ids) => {
+        ids.forEach((id) => {
           this.data.delete(id);
         });
       });
@@ -460,7 +469,10 @@ export class UserTable {
       const ids: Ids = [];
       matrix.push(ids);
       for (let x = left; x <= right; x++) {
-        ids.push(this.idMatrix[y][x]);
+        const id = this.idMatrix[y]?.[x];
+        if (id) {
+          ids.push(id);
+        }
       }
     }
     return matrix;
@@ -501,7 +513,7 @@ export class UserTable {
     const matrixTo = this.getIdMatrixFromArea(to);
     const matrixNew = this.getNewIdMatrix(from);
     writeMatrix(this.idMatrix, matrixNew, from);
-    writeMatrix(this.idMatrix, matrixFrom, to);
+    const lostRows = writeMatrix(this.idMatrix, matrixFrom, to);
     this.pushHistory({
       operation: "MOVE",
       reflection,
@@ -510,6 +522,7 @@ export class UserTable {
       matrixNew,
       positionFrom: [from[0], from[1]],
       positionTo: [to[0], to[1]],
+      lostRows,
     });
   }
 
@@ -520,7 +533,7 @@ export class UserTable {
   ) {
     const diffBefore: DataType = new Map();
     const diffAfter: DataType = new Map();
-    Object.keys(diff).map((address) => {
+    Object.keys(diff).forEach((address) => {
       const value = diff[address];
       const pos = addressToPosition(address);
       const [y, x] = pos;
