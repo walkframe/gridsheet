@@ -36,6 +36,7 @@ export const StoreInitializer: React.FC<Props> = ({
     cellLabel,
     renderers,
     parsers,
+    labelers,
     onSave,
   } = options;
 
@@ -50,6 +51,7 @@ export const StoreInitializer: React.FC<Props> = ({
       historyLimit,
       parsers,
       renderers,
+      labelers,
     });
     // @ts-ignore
     table.setFunctions({ ...functions, ...additionalFunctions });

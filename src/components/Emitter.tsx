@@ -7,7 +7,6 @@ import {
 import { Context } from "../store";
 import { FeedbackType, FeedbackTypeForMatrix } from "../types";
 
-import { Table } from "../api/table";
 import { Area } from "../constants";
 
 type Props = {

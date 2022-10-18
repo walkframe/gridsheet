@@ -19,8 +19,11 @@ export type RectType = [Y, X, Height, Width];
 
 export type MatrixType = any[][];
 
+export type Labeler = (n: number) => string;
+
 export type Renderers = { [s: string]: RendererType };
 export type Parsers = { [s: string]: ParserType };
+export type Labelers = { [s: string]: Labeler };
 
 export type HistoryOperationType =
   | "WRITE"
@@ -49,13 +52,11 @@ export type FeedbackTypeForMatrix = (coordinate: {
 export type Mode = "light" | "dark";
 export type Headers = "both" | "vertical" | "horizontal" | "none";
 
-export type Labeling = (n: number) => string;
-
 export type CellType<Custom = any> = {
   value?: any;
   style?: React.CSSProperties;
   verticalAlign?: string;
-  label?: string | Labeling;
+  labeler?: string;
   width?: number;
   height?: number;
   renderer?: string;
@@ -63,6 +64,8 @@ export type CellType<Custom = any> = {
   custom?: Custom;
   changedAt?: Date;
 };
+
+export type CellFilter = (cell: CellType) => boolean;
 
 export type CellsType = { [address: Address]: CellType };
 export type DiffType = CellsType;
@@ -86,6 +89,7 @@ export type OptionsType = {
   mode?: Mode;
   renderers?: Renderers;
   parsers?: Parsers;
+  labelers?: Labelers;
   onSave?: FeedbackType;
   onChange?: FeedbackType;
   onChangeDiff?: FeedbackType;

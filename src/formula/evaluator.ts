@@ -564,7 +564,7 @@ export const solveFormula = (value: any, base: Table, raise = true) => {
 
 export const solveMatrix = (target: Table, base: Table): MatrixType => {
   const area = target.getArea();
-  return target.getMatrixFlatten(area).map((row) => {
+  return target.getMatrixFlatten({ area }).map((row) => {
     return row.map((col) => solveFormula(col, base));
   });
 };

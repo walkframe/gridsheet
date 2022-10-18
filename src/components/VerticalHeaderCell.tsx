@@ -87,11 +87,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
         }}
       >
         <div className="gs-header-inner" style={{ height, width: headerWidth }}>
-          {row?.label
-            ? typeof row?.label === "function"
-              ? row?.label(y)
-              : row?.label
-            : rowId}
+          {row?.labeler ? table.label(row.labeler, y) : rowId}
         </div>
         <div
           className="gs-resizer"

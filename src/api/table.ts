@@ -13,6 +13,8 @@ import {
   Address,
   HistoryOperationType,
   RowByAddress,
+  CellFilter,
+  Labelers,
 } from "../types";
 import { CellsType, CellType, Parsers, Renderers } from "../types";
 import { createMatrix, matrixShape, writeMatrix } from "./matrix";
@@ -115,17 +117,32 @@ type Props = {
   cells?: CellsType;
   parsers?: Parsers;
   renderers?: Renderers;
+  labelers?: Labelers;
   useBigInt?: boolean;
   historyLimit?: number;
 };
 
+const cellFilter = (cell: CellType) => true;
+
+type GetProps = {
+  evaluates?: boolean;
+  filter?: CellFilter;
+};
+
+type GetFlattenProps = GetProps & {
+  key?: keyof CellType;
+};
+
 export class UserTable {
+  public changedAt: Date;
+  public lastChangedAt?: Date;
   protected head: Id;
   protected idMatrix: IdMatrix;
   protected data: DataType;
   protected area: AreaType;
   protected parsers: Parsers;
   protected renderers: Renderers;
+  protected labelers: Labelers;
   protected functions: FunctionMapping = {};
   protected base: UserTable;
   protected histories: HistoryType[];
@@ -139,6 +156,7 @@ export class UserTable {
     cells = {},
     parsers = {},
     renderers = {},
+    labelers = {},
     useBigInt = false,
     historyLimit: historyLimit = HISTORY_LIMIT,
   }: Props) {
@@ -147,12 +165,14 @@ export class UserTable {
     this.area = [0, 0, numRows, numCols];
     this.parsers = parsers;
     this.renderers = renderers;
+    this.labelers = labelers;
     this.base = this;
     this.idMatrix = [];
     this.histories = [];
     this.historyIndex = -1;
     this.idCache = new Map();
     this.historyLimit = historyLimit;
+    this.changedAt = new Date();
 
     const common = cells.default;
     for (let y = 0; y < numRows + 1; y++) {
@@ -182,7 +202,7 @@ export class UserTable {
         if (y > 0 && x > 0) {
           delete stacked.height;
           delete stacked.width;
-          delete stacked.label;
+          delete stacked.labeler;
         }
         this.data.set(id, stacked);
       }
@@ -245,11 +265,14 @@ export class UserTable {
     return base + right - left;
   }
 
-  public getMatrixFlatten(
-    area?: AreaType,
-    key: keyof CellType = "value",
-    evaluates = true
-  ) {
+  public getMatrixFlatten({
+    area,
+    key = "value",
+    evaluates = true,
+    filter = cellFilter,
+  }: GetFlattenProps & {
+    area?: AreaType;
+  } = {}) {
     const [top, left, bottom, right] = area || [
       1,
       1,
@@ -260,6 +283,9 @@ export class UserTable {
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
         const cell = this.getByPoint([y, x]) || {};
+        if (!filter(cell)) {
+          continue;
+        }
         matrix[y - top][x - left] = evaluates
           ? solveFormula(cell[key], this.base as Table, false)
           : cell[key];
@@ -267,13 +293,17 @@ export class UserTable {
     }
     return matrix;
   }
-  public getObjectFlatten(key: keyof CellType = "value", evaluates = true) {
+  public getObjectFlatten({
+    key = "value",
+    evaluates = true,
+    filter = cellFilter,
+  }: GetFlattenProps = {}) {
     const result: CellsType = {};
     const [top, left, bottom, right] = this.area;
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
         const cell = this.getByPoint([y - top, x - left]);
-        if (cell != null) {
+        if (cell != null && filter(cell)) {
           result[positionToAddress([y, x])] = evaluates
             ? solveFormula(cell[key], this.base as Table, false)
             : cell[key];
@@ -282,7 +312,11 @@ export class UserTable {
     }
     return result;
   }
-  public getRowsFlatten(key: keyof CellType = "value", evaluates = true) {
+  public getRowsFlatten({
+    key = "value",
+    evaluates = true,
+    filter = cellFilter,
+  }: GetFlattenProps = {}) {
     const result: CellsType[] = [];
     const [top, left, bottom, right] = this.area;
     for (let y = top; y <= bottom; y++) {
@@ -290,7 +324,7 @@ export class UserTable {
       result.push(row);
       for (let x = left; x <= right; x++) {
         const cell = this.getByPoint([y - top, x - left]);
-        if (cell != null) {
+        if (cell != null && filter(cell)) {
           row[x2c(x) || y2r(y)] = evaluates
             ? solveFormula(cell[key], this.base as Table, false)
             : cell[key];
@@ -299,7 +333,11 @@ export class UserTable {
     }
     return result;
   }
-  public getColsFlatten(key: keyof CellType = "value", evaluates = true) {
+  public getColsFlatten({
+    key = "value",
+    evaluates = true,
+    filter = cellFilter,
+  }: GetFlattenProps = {}) {
     const result: CellsType[] = [];
     const [top, left, bottom, right] = this.area;
     for (let x = left; x <= right; x++) {
@@ -307,7 +345,7 @@ export class UserTable {
       result.push(col);
       for (let y = top; y <= bottom; y++) {
         const cell = this.getByPoint([y - top, x - left]);
-        if (cell != null) {
+        if (cell != null && filter(cell)) {
           col[y2r(y) || x2c(x)] = evaluates
             ? solveFormula(cell[key], this.base as Table, false)
             : cell[key];
@@ -316,7 +354,13 @@ export class UserTable {
     }
     return result;
   }
-  public getMatrix(area?: AreaType, evaluates = true) {
+  public getMatrix({
+    area,
+    evaluates = true,
+    filter = cellFilter,
+  }: GetProps & {
+    area?: AreaType;
+  } = {}): (CellType | null)[][] {
     const [top, left, bottom, right] = area || [
       1,
       1,
@@ -327,23 +371,25 @@ export class UserTable {
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
         const cell = this.getByPoint([y, x]);
-        matrix[y - top][x - left] = {
-          ...cell,
-          value: evaluates
-            ? solveFormula(cell?.value, this.base as Table, false)
-            : cell?.value,
-        };
+        if (cell != null && filter(cell)) {
+          matrix[y - top][x - left] = {
+            ...cell,
+            value: evaluates
+              ? solveFormula(cell?.value, this.base as Table, false)
+              : cell?.value,
+          };
+        }
       }
     }
     return matrix;
   }
-  public getObject(evaluates = true) {
+  public getObject({ evaluates = true, filter = cellFilter }: GetProps = {}) {
     const result: CellsType = {};
     const [top, left, bottom, right] = this.area;
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
         const cell = this.getByPoint([y - top, x - left]);
-        if (cell != null) {
+        if (cell != null && filter(cell)) {
           result[positionToAddress([y, x])] = {
             ...cell,
             value: evaluates
@@ -355,7 +401,7 @@ export class UserTable {
     }
     return result;
   }
-  public getRows(evaluates = true) {
+  public getRows({ evaluates = true, filter = cellFilter }: GetProps = {}) {
     const result: CellsType[] = [];
     const [top, left, bottom, right] = this.area;
     for (let y = top; y <= bottom; y++) {
@@ -363,7 +409,7 @@ export class UserTable {
       result.push(row);
       for (let x = left; x <= right; x++) {
         const cell = this.getByPoint([y - top, x - left]);
-        if (cell != null) {
+        if (cell != null && filter(cell)) {
           row[x2c(x) || y2r(y)] = {
             ...cell,
             value: evaluates
@@ -375,7 +421,7 @@ export class UserTable {
     }
     return result;
   }
-  public getCols(evaluates = true) {
+  public getCols({ evaluates = true, filter = cellFilter }: GetProps = {}) {
     const result: CellsType[] = [];
     const [top, left, bottom, right] = this.area;
     for (let x = left; x <= right; x++) {
@@ -383,7 +429,7 @@ export class UserTable {
       result.push(col);
       for (let y = top; y <= bottom; y++) {
         const cell = this.getByPoint([y - top, x - left]);
-        if (cell != null) {
+        if (cell != null && filter(cell)) {
           col[y2r(y) || x2c(x)] = {
             ...cell,
             value: evaluates
@@ -394,22 +440,6 @@ export class UserTable {
       }
     }
     return result;
-  }
-
-  public getTop() {
-    return this.area[Area.Top];
-  }
-  public getLeft() {
-    return this.area[Area.Left];
-  }
-  public getBottom() {
-    return this.area[Area.Bottom];
-  }
-  public getRight() {
-    return this.area[Area.Right];
-  }
-  public getArea(): AreaType {
-    return [...this.area];
   }
 
   protected pushHistory(history: HistoryType) {
@@ -503,10 +533,17 @@ export class UserTable {
     to: AreaType,
     reflection: StoreReflectionType = {}
   ) {
+    const now = new Date();
     const matrixFrom = this.getIdMatrixFromArea(from);
     const matrixTo = this.getIdMatrixFromArea(to);
     const matrixNew = this.getNewIdMatrix(from);
     writeMatrix(this.idMatrix, matrixNew, from);
+    matrixFrom.forEach((ids) => {
+      ids
+        .map(this.getById.bind(this))
+        .filter((c) => c)
+        .forEach((cell) => (cell!.changedAt = now));
+    });
     const lostRows = writeMatrix(this.idMatrix, matrixFrom, to);
     this.pushHistory({
       operation: "MOVE",
@@ -527,6 +564,7 @@ export class UserTable {
   ) {
     const diffBefore: DataType = new Map();
     const diffAfter: DataType = new Map();
+    const changedAt = new Date();
     Object.keys(diff).forEach((address) => {
       const value = diff[address];
       const point = addressToPoint(address);
@@ -534,9 +572,9 @@ export class UserTable {
       diffBefore.set(id, this.getByPoint(point));
       diffAfter.set(id, value);
       if (partial) {
-        this.data.set(id, { ...this.data.get(id), ...value });
+        this.data.set(id, { ...this.data.get(id), ...value, changedAt });
       } else {
-        this.data.set(id, value);
+        this.data.set(id, { ...value, changedAt });
       }
     });
     this.pushHistory({
@@ -648,6 +686,22 @@ export class Table extends UserTable {
     this.functions = { ...functions, ...additionalFunctions };
   }
 
+  public getTop() {
+    return this.area[Area.Top];
+  }
+  public getLeft() {
+    return this.area[Area.Left];
+  }
+  public getBottom() {
+    return this.area[Area.Bottom];
+  }
+  public getRight() {
+    return this.area[Area.Right];
+  }
+  public getArea(): AreaType {
+    return [...this.area];
+  }
+
   public parse(position: PointType, value: string) {
     const cell = this.getByPoint(position) || {};
     const parser = this.parsers[cell.parser || ""] || defaultParser;
@@ -688,6 +742,7 @@ export class Table extends UserTable {
     copied.data = this.data;
     copied.parsers = this.parsers;
     copied.renderers = this.renderers;
+    copied.labelers = this.labelers;
     copied.functions = this.functions;
     copied.histories = this.histories;
     copied.historyLimit = this.historyLimit;
@@ -705,12 +760,14 @@ export class Table extends UserTable {
 
   public shallowCopy(copyCache = true) {
     const copied = new Table({ numRows: 0, numCols: 0 });
+    copied.lastChangedAt = this.changedAt;
     copied.head = this.head;
     copied.idMatrix = this.idMatrix;
     copied.data = this.data;
     copied.area = this.area;
     copied.parsers = this.parsers;
     copied.renderers = this.renderers;
+    copied.labelers = this.labelers;
     copied.functions = this.functions;
     copied.histories = this.histories;
     copied.historyLimit = this.historyLimit;
@@ -757,7 +814,8 @@ export class Table extends UserTable {
     const modY = y % numRows;
     const modX = x % numCols;
     const id = this.getId([modY, modX]);
-    this.data.set(id, cell);
+    const changedAt = new Date();
+    this.data.set(id, { ...cell, changedAt });
   }
 
   public write(
@@ -886,5 +944,9 @@ export class Table extends UserTable {
   }
   getHistorySize() {
     return this.histories.length;
+  }
+  label(key: string, n: number) {
+    const labeler = this.labelers[key];
+    return labeler?.(n);
   }
 }

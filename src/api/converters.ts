@@ -62,6 +62,9 @@ export const x2c = (
   x: number,
   cacheSize = DEFAULT_ALPHABET_CACHE_SIZE
 ): string => {
+  if (x === 0) {
+    return "";
+  }
   return n2a(x + 1, cacheSize);
 };
 
@@ -73,6 +76,9 @@ export const c2x = (
 };
 
 export const y2r = (y: number) => {
+  if (y === 0) {
+    return "";
+  }
   return String(y);
 };
 

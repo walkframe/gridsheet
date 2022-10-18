@@ -368,7 +368,18 @@ export const showIndex = () => {
       <GridSheet
         style={{ maxWidth: "100%", maxHeight: "150px" }}
         initial={initialCells}
-        options={{ sheetResize: "both" }}
+        options={{
+          sheetResize: "both",
+          onChange: (table, positions) => {
+            console.log(
+              "diff",
+              table.getObjectFlatten({
+                filter: (cell) =>
+                  !!cell.changedAt && cell.changedAt > table.lastChangedAt!,
+              })
+            );
+          },
+        }}
       />
     </>
   );
