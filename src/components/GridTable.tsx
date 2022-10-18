@@ -16,7 +16,7 @@ import { choose, select, setEntering, updateTable } from "../store/actions";
 import { GridTableLayout } from "./styles/GridTableLayout";
 
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
-import { Table, UserTable } from "../api/table";
+import { Table } from "../api/table";
 import { TableRef } from "../types";
 
 type Props = {

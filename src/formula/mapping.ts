@@ -16,6 +16,7 @@ import { NowFunction } from "./functions/now";
 import { AndFunction } from "./functions/and";
 import { OrFunction } from "./functions/or";
 import { IfFunction } from "./functions/if";
+import { IfErrorFunction } from "./functions/iferror";
 import { NotFunction } from "./functions/not";
 import { CountFunction } from "./functions/count";
 import { CountifFunction } from "./functions/countif";
@@ -84,6 +85,7 @@ export const functions = {
   rounddown: RounddownFunction,
   roundup: RoundupFunction,
   if: IfFunction,
+  iferror: IfErrorFunction,
   not: NotFunction,
   vlookup: VlookupFunction,
   hlookup: HlookupFunction,

@@ -278,6 +278,11 @@ export class Lexer {
       return this.tokens
         .map((t) => {
           switch (t.type) {
+            case "VALUE":
+              if (typeof t.entity === "number") {
+                return t.entity;
+              }
+              return `"${t.entity}"`;
             case "REF":
               return new Ref(t.entity).id(table);
             case "RANGE":
@@ -290,6 +295,11 @@ export class Lexer {
     return this.tokens
       .map((t) => {
         switch (t.type) {
+          case "VALUE":
+            if (typeof t.entity === "number") {
+              return t.entity;
+            }
+            return `"${t.entity}"`;
           case "ID":
             return new Id(t.entity).ref(table);
           case "ID_RANGE":
