@@ -178,16 +178,16 @@ export const showIndex = () => {
         initial={matrixIntoCells(initialData, {
           default: { style: { fontStyle: "italic" } },
           A1: { value: 1, style: { color: "#008888" } },
-          B: { label: "ビー" },
+          B: { labeler: "b" },
           D: { width: 300, style: { textAlign: "right" } },
           "2": {
-            label: "二",
+            labeler: "2",
             style: { borderBottom: "double 4px #000000" },
             renderer: "kanji",
           },
           "3": {
             height: 100,
-            label: (row) => `${row}行目`,
+            labeler: "rowNumber",
             style: {
               fontWeight: "bold",
               color: "#ff0000",
@@ -195,7 +195,6 @@ export const showIndex = () => {
             },
           },
           "4": {
-            label: "よん",
             height: 50,
             verticalAlign: "bottom",
           },
@@ -224,6 +223,11 @@ export const showIndex = () => {
           headerHeight: 40,
           historyLimit: 100,
           mode: "dark",
+          labelers: {
+            rowNumber: (row) => `${row}行目`,
+            b: (n) => "ビー",
+            "2": (n) => "二",
+          },
           //stickyHeaders: "horizontal",
           /*
           onSave: (table, positions) => {
