@@ -6,7 +6,7 @@ export class BaseFunction {
   public helpArgs = [{ name: "value1", description: "" }];
 
   constructor(public args: any[], public base: Table) {
-    this.args = args;
+    this.args = args.map((a) => a.evaluate(base));
     this.base = base;
   }
   protected validate() {}

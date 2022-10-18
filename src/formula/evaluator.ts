@@ -1,7 +1,7 @@
 import { rangeToArea } from "../api/matrix";
 import { addressToPoint, n2a } from "../api/converters";
 import { Table } from "../api/table";
-import { AreaType, MatrixType } from "../types";
+import { MatrixType } from "../types";
 
 const getId = (idString: string) => {
   const id = Number(
@@ -31,6 +31,15 @@ export class Value {
   }
   public evaluate(base: Table) {
     return this.value;
+  }
+}
+
+export class InvalidRef {
+  constructor(public value?: any) {
+    this.value = value;
+  }
+  public evaluate(base: Table) {
+    throw new FormulaError("#NAME?", `Invalid ref: ${this.value}`);
   }
 }
 
@@ -121,13 +130,12 @@ export class Function {
   }
 
   public evaluate(base: Table): any {
-    const args = this.args.map((a) => a.evaluate(base));
     const name = this.name.toLowerCase();
     const Func = base.getFunction(name);
     if (Func == null) {
       throw new FormulaError("#NAME?", `Unknown function: ${name}`);
     }
-    const func = new Func(args, base);
+    const func = new Func(this.args, base);
     return func.call();
   }
 }
@@ -163,7 +171,8 @@ export type TokenType =
   | "OPEN"
   | "CLOSE"
   | "COMMA"
-  | "SPACE";
+  | "SPACE"
+  | "INVALID_REF";
 
 const INFIX_FUNCTION_NAME_MAP = {
   "+": "add",
@@ -223,6 +232,8 @@ export class Token {
       }
       case "FUNCTION":
         return new Function(this.entity);
+      case "INVALID_REF":
+        return new InvalidRef(this.entity);
     }
   }
 }
@@ -410,7 +421,12 @@ export class Lexer {
                 } else if (buf.indexOf(":") !== -1) {
                   this.tokens.push(new Token("RANGE", buf));
                 } else {
-                  this.tokens.push(new Token("REF", buf));
+                  // @ts-ignore
+                  if (isNaN(buf[buf.length - 1])) {
+                    this.tokens.push(new Token("INVALID_REF", buf));
+                  } else {
+                    this.tokens.push(new Token("REF", buf));
+                  }
                 }
               }
               break;
@@ -486,7 +502,6 @@ export class Parser {
       if (token.type === "SPACE") {
         continue;
       }
-
       if (token.type === "COMMA") {
         if (!underFunction) {
           throw new FormulaError("#ERROR!", "Invalid comma");
@@ -497,7 +512,8 @@ export class Parser {
         token.type === "ID" ||
         token.type === "ID_RANGE" ||
         token.type === "REF" ||
-        token.type === "RANGE"
+        token.type === "RANGE" ||
+        token.type === "INVALID_REF"
       ) {
         const expr = token.convert();
         stack.push(expr!);

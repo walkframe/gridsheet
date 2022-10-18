@@ -1,8 +1,9 @@
-import { FormulaError } from "../evaluator";
-import { BaseFunction } from "./__base";
-import { ensureBoolean } from "./__utils";
+// DO NOT COPY THIS CODE FOR THE OTHER.
 
-export class IfErrorFunction extends BaseFunction {
+import { Table } from "../../api/table";
+import { FormulaError } from "../evaluator";
+
+export class IfErrorFunction {
   example = 'IFERROR(A1, "Error in cell A1")';
   helpText = [
     "Returns the first argument if it is not an error value, otherwise returns the second argument if present, or a blank if the second argument is absent.",
@@ -19,6 +20,11 @@ export class IfErrorFunction extends BaseFunction {
     },
   ];
 
+  constructor(public args: any[], public base: Table) {
+    this.args = args;
+    this.base = base;
+  }
+
   protected validate() {
     if (this.args.length === 1 || this.args.length === 2) {
       return;
@@ -28,12 +34,14 @@ export class IfErrorFunction extends BaseFunction {
       "Number of arguments for IFERROR is incorrect. 1 or 2 argument(s) must be specified."
     );
   }
-  // @ts-ignore
-  protected main(value: any, valueIfError?: any) {
+
+  public call() {
+    this.validate();
+    const [value, valueIfError] = this.args;
     try {
-      return value;
+      return value.evaluate(this.base);
     } catch (e) {
-      return valueIfError;
+      return valueIfError ? valueIfError.evaluate(this.base) : null;
     }
   }
 }
