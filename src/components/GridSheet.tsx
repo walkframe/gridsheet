@@ -5,7 +5,7 @@ import {
 } from "react-window";
 
 import { Props, StoreType } from "../types";
-import { HISTORY_SIZE, SHEET_HEIGHT, SHEET_WIDTH } from "../constants";
+import { SHEET_HEIGHT, SHEET_WIDTH } from "../constants";
 import { Context } from "../store";
 import { reducer } from "../store/actions";
 
@@ -26,7 +26,7 @@ export const GridSheet: React.FC<Props> = ({
   style,
   additionalFunctions = {},
 }) => {
-  const { numRows = 0, numCols = 0, sheetResize: resize = "both" } = options;
+  const { sheetResize: resize = "both" } = options;
 
   const sheetRef = React.useRef<HTMLDivElement>(document.createElement("div"));
   const searchInputRef = React.useRef<HTMLInputElement>(

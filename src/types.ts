@@ -34,9 +34,9 @@ export type HistoryOperationType =
 export type FeedbackType = (
   table: UserTable,
   positions?: {
-    pointing: PositionType;
-    selectingFrom: PositionType;
-    selectingTo: PositionType;
+    pointing: PointType;
+    selectingFrom: PointType;
+    selectingTo: PointType;
   }
 ) => void;
 
@@ -94,7 +94,7 @@ export type OptionsType = {
 };
 
 export type RangeType = [number, number]; // [start, end]
-export type PositionType = [Y, X]; // [y, x]
+export type PointType = [Y, X]; // [y, x]
 export type ZoneType = [Y, X, Y, X]; // [startY, startX, endY, endX]
 export type AreaType = ZoneType; // [top, left, bottom, right] (subtype of ZoneType)
 
@@ -117,7 +117,7 @@ export type OperationType = {
   command: OperationCommandType;
   before: any;
   after: any;
-  choosing?: PositionType;
+  choosing?: PointType;
   selectingZone?: ZoneType;
   copyingZone?: ZoneType;
   cutting?: boolean;
@@ -136,7 +136,7 @@ export type StoreType = {
   verticalHeadersRef: React.MutableRefObject<List | null>;
   horizontalHeadersRef: React.MutableRefObject<List | null>;
   entering: boolean;
-  choosing: PositionType;
+  choosing: PointType;
   cutting: boolean;
   copyingZone: ZoneType;
   selectingZone: ZoneType;

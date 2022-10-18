@@ -34,7 +34,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
     if (table.getNumRows() === 0) {
       return null;
     }
-    const row = table.getByPosition([y, 0]);
+    const row = table.getByPoint([y, 0]);
     const height = row?.height || DEFAULT_HEIGHT;
 
     return (

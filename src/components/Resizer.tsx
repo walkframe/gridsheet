@@ -55,7 +55,7 @@ export const Resizer: React.FC = React.memo(() => {
   if (y === -1 && x === -1) {
     return null;
   }
-  const cell = table.getByPosition([y === -1 ? 0 : y, x === -1 ? 0 : x]);
+  const cell = table.getByPoint([y === -1 ? 0 : y, x === -1 ? 0 : x]);
   const { y: offsetY, x: offsetX } = sheetRef.current.getBoundingClientRect();
 
   const baseWidth = cell?.width || DEFAULT_WIDTH;

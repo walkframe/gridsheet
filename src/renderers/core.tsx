@@ -1,5 +1,5 @@
 import React from "react";
-import { CellType, PositionType, WriterType } from "../types";
+import { CellType, PointType, WriterType } from "../types";
 import { Table } from "../api/table";
 import { evaluate, FormulaError } from "../formula/evaluator";
 
@@ -39,7 +39,7 @@ export class Renderer {
         }
         if (value instanceof Table) {
           return this._render(
-            value.getByPosition([value.getTop(), value.getLeft()])?.value,
+            value.getByPoint([value.getTop(), value.getLeft()])?.value,
             table,
             writer
           );
@@ -62,12 +62,8 @@ export class Renderer {
     return "";
   }
 
-  public render(
-    table: Table,
-    position: PositionType,
-    writer?: WriterType
-  ): any {
-    const cell = table.getByPosition(position);
+  public render(table: Table, position: PointType, writer?: WriterType): any {
+    const cell = table.getByPoint(position);
     const { value } = cell || {};
     return this._render(value, table, writer);
   }

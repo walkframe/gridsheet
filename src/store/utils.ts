@@ -1,7 +1,7 @@
 import { Table } from "../api/table";
-import { PositionType, StoreType, ZoneType } from "../types";
+import { PointType, StoreType, ZoneType } from "../types";
 
-export const restrictPositions = (store: StoreType, table: Table) => {
+export const restrictPoints = (store: StoreType, table: Table) => {
   const { choosing, selectingZone, copyingZone } = store;
   let [y, x] = choosing;
   let [y1, x1, y2, x2] = selectingZone;
@@ -38,7 +38,7 @@ export const restrictPositions = (store: StoreType, table: Table) => {
     x4 = numCols;
   }
   return {
-    choosing: [y, x] as PositionType,
+    choosing: [y, x] as PointType,
     selectingZone: [y1, x1, y2, x2] as ZoneType,
     copyingZone: [y3, x3, y4, x4] as ZoneType,
   };

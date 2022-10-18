@@ -7,7 +7,7 @@ import {
   AreaType,
   DataType,
   DiffType,
-  PositionType,
+  PointType,
   WriterType,
   ZoneType,
   Address,
@@ -16,20 +16,14 @@ import {
 } from "../types";
 import { CellsType, CellType, Parsers, Renderers } from "../types";
 import { createMatrix, matrixShape, writeMatrix } from "./matrix";
-import {
-  addressToPosition,
-  n2a,
-  x2c,
-  positionToAddress,
-  y2r,
-} from "./converters";
+import { addressToPoint, n2a, x2c, positionToAddress, y2r } from "./converters";
 import { FunctionMapping } from "../formula/functions/__base";
 import { functions } from "../formula/mapping";
 import { Lexer, solveFormula } from "../formula/evaluator";
 import { Area, HISTORY_SIZE } from "../constants";
 
 type StoreReflectionType = {
-  choosing?: PositionType;
+  choosing?: PointType;
   cutting?: boolean;
   copyingZone?: ZoneType;
   selectingZone?: ZoneType | undefined;
@@ -57,8 +51,8 @@ type HistoryMoveType = {
   matrixFrom: IdMatrix;
   matrixTo: IdMatrix;
   matrixNew: IdMatrix;
-  positionFrom: PositionType;
-  positionTo: PositionType;
+  positionFrom: PointType;
+  positionTo: PointType;
   lostRows: RowByAddress<Id>;
 };
 
@@ -108,7 +102,7 @@ export class History {
   public diffBefore?: DataType;
   public diffAfter?: DataType;
   public idMatrix?: IdMatrix;
-  public position?: PositionType;
+  public position?: PointType;
 
   constructor(operation: HistoryOperationType) {
     this.operation = operation;
@@ -212,20 +206,20 @@ export class UserTable {
     }
   }
 
-  public getPositionById(id: Id) {
+  public getPointById(id: Id) {
     const address = this.getAddressById(id);
     if (address) {
-      return addressToPosition(address);
+      return addressToPoint(address);
     }
     return [0, 0];
   }
-  protected getId(position: PositionType) {
-    const [y, x] = position;
+  protected getId(point: PointType) {
+    const [y, x] = point;
     return this.idMatrix[y][x];
   }
 
-  public getByPosition(position: PositionType) {
-    const [y, x] = position;
+  public getByPoint(point: PointType) {
+    const [y, x] = point;
     if (y === -1 || x === -1) {
       return undefined;
     }
@@ -265,7 +259,7 @@ export class UserTable {
     const matrix = createMatrix(bottom - top + 1, right - left + 1);
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        const cell = this.getByPosition([y, x]) || {};
+        const cell = this.getByPoint([y, x]) || {};
         matrix[y - top][x - left] = evaluates
           ? solveFormula(cell[key], this.base as Table, false)
           : cell[key];
@@ -278,7 +272,7 @@ export class UserTable {
     const [top, left, bottom, right] = this.area;
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        const cell = this.getByPosition([y - top, x - left]);
+        const cell = this.getByPoint([y - top, x - left]);
         if (cell != null) {
           result[positionToAddress([y, x])] = evaluates
             ? solveFormula(cell[key], this.base as Table, false)
@@ -295,7 +289,7 @@ export class UserTable {
       const row: CellsType = {};
       result.push(row);
       for (let x = left; x <= right; x++) {
-        const cell = this.getByPosition([y - top, x - left]);
+        const cell = this.getByPoint([y - top, x - left]);
         if (cell != null) {
           row[x2c(x) || y2r(y)] = evaluates
             ? solveFormula(cell[key], this.base as Table, false)
@@ -312,7 +306,7 @@ export class UserTable {
       const col: CellsType = {};
       result.push(col);
       for (let y = top; y <= bottom; y++) {
-        const cell = this.getByPosition([y - top, x - left]);
+        const cell = this.getByPoint([y - top, x - left]);
         if (cell != null) {
           col[y2r(y) || x2c(x)] = evaluates
             ? solveFormula(cell[key], this.base as Table, false)
@@ -332,7 +326,7 @@ export class UserTable {
     const matrix = createMatrix(bottom - top + 1, right - left + 1);
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        const cell = this.getByPosition([y, x]);
+        const cell = this.getByPoint([y, x]);
         matrix[y - top][x - left] = {
           ...cell,
           value: evaluates
@@ -348,7 +342,7 @@ export class UserTable {
     const [top, left, bottom, right] = this.area;
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        const cell = this.getByPosition([y - top, x - left]);
+        const cell = this.getByPoint([y - top, x - left]);
         if (cell != null) {
           result[positionToAddress([y, x])] = {
             ...cell,
@@ -368,7 +362,7 @@ export class UserTable {
       const row: CellsType = {};
       result.push(row);
       for (let x = left; x <= right; x++) {
-        const cell = this.getByPosition([y - top, x - left]);
+        const cell = this.getByPoint([y - top, x - left]);
         if (cell != null) {
           row[x2c(x) || y2r(y)] = {
             ...cell,
@@ -388,7 +382,7 @@ export class UserTable {
       const col: CellsType = {};
       result.push(col);
       for (let y = top; y <= bottom; y++) {
-        const cell = this.getByPosition([y - top, x - left]);
+        const cell = this.getByPoint([y - top, x - left]);
         if (cell != null) {
           col[y2r(y) || x2c(x)] = {
             ...cell,
@@ -535,10 +529,10 @@ export class UserTable {
     const diffAfter: DataType = new Map();
     Object.keys(diff).forEach((address) => {
       const value = diff[address];
-      const pos = addressToPosition(address);
+      const pos = addressToPoint(address);
       const [y, x] = pos;
       const id = this.getId(pos);
-      diffBefore.set(id, this.getByPosition(pos));
+      diffBefore.set(id, this.getByPoint(pos));
       diffAfter.set(id, value);
       if (partial) {
         this.data.set(id, { ...this.data.get(id), ...value });
@@ -568,7 +562,7 @@ export class UserTable {
       for (let j = 0; j < numCols; j++) {
         const id = this.head++;
         row.push(id);
-        const cell = this.getByPosition([baseY, j]);
+        const cell = this.getByPoint([baseY, j]);
         const copied = this.copyCell(cell, baseY);
         this.data.set(id, copied);
       }
@@ -612,7 +606,7 @@ export class UserTable {
       for (let j = 0; j < numCols; j++) {
         const id = this.head++;
         row.push(id);
-        const cell = this.getByPosition([i, baseX]);
+        const cell = this.getByPoint([i, baseX]);
         const copied = this.copyCell(cell, baseX);
         this.idMatrix[i].splice(x, 0, id);
         this.data.set(id, copied);
@@ -655,20 +649,20 @@ export class Table extends UserTable {
     this.functions = { ...functions, ...additionalFunctions };
   }
 
-  public parse(position: PositionType, value: string) {
-    const cell = this.getByPosition(position) || {};
+  public parse(position: PointType, value: string) {
+    const cell = this.getByPoint(position) || {};
     const parser = this.parsers[cell.parser || ""] || defaultParser;
     return parser.parse(value, cell, this);
   }
 
-  public render(position: PositionType, writer?: WriterType) {
-    const cell = this.getByPosition(position) || {};
+  public render(position: PointType, writer?: WriterType) {
+    const cell = this.getByPoint(position) || {};
     const renderer = this.renderers[cell.renderer || ""] || defaultRenderer;
     return renderer.render(this, position, writer);
   }
 
-  public stringify(position: PositionType, value?: any) {
-    const cell = this.getByPosition(position);
+  public stringify(position: PointType, value?: any) {
+    const cell = this.getByPoint(position);
     const renderer = this.renderers[cell?.renderer || ""] || defaultRenderer;
     if (typeof value === "undefined") {
       return renderer.stringify(cell || {});
@@ -704,7 +698,7 @@ export class Table extends UserTable {
   }
 
   public getIdByAddress(address: Address) {
-    const [y, x] = addressToPosition(address);
+    const [y, x] = addressToPoint(address);
     const id = this.getId([y, x]);
     this.idCache.set(id, address);
     return id;
@@ -739,7 +733,7 @@ export class Table extends UserTable {
     });
   }
 
-  private getDiffByPos(position: PositionType, cell: CellType) {
+  private getDiffByPos(position: PointType, cell: CellType) {
     const diff: DataType = new Map();
     const id = this.getId(position);
     diff.set(id, cell);
@@ -752,13 +746,13 @@ export class Table extends UserTable {
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
         const id = this.getId([y, x]);
-        backdiff.set(id, this.getByPosition([y, x]));
+        backdiff.set(id, this.getByPoint([y, x]));
       }
     }
     return backdiff;
   }
 
-  private put(position: PositionType, cell: CellType) {
+  private put(position: PointType, cell: CellType) {
     const [y, x] = position;
     const [numRows, numCols] = [this.getNumRows(1), this.getNumCols(1)];
     const modY = y % numRows;
@@ -768,7 +762,7 @@ export class Table extends UserTable {
   }
 
   public write(
-    position: PositionType,
+    position: PointType,
     value: any,
     reflection: StoreReflectionType = {}
   ) {

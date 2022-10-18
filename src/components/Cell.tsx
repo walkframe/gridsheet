@@ -67,9 +67,9 @@ export const Cell: React.FC<Props> = React.memo(
     if (table.getNumRows() === 0) {
       return null;
     }
-    const cell = table.getByPosition([y, x]);
-    const height = table.getByPosition([y, 0])?.height || DEFAULT_HEIGHT;
-    const width = table.getByPosition([0, x])?.width || DEFAULT_WIDTH;
+    const cell = table.getByPoint([y, x]);
+    const height = table.getByPoint([y, 0])?.height || DEFAULT_HEIGHT;
+    const width = table.getByPoint([0, x])?.width || DEFAULT_WIDTH;
 
     const verticalAlign = cell?.verticalAlign || "middle";
     const writeCell = (value: string) => {

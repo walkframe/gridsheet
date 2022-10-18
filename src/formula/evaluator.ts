@@ -1,5 +1,5 @@
 import { rangeToArea } from "../api/matrix";
-import { addressToPosition, n2a } from "../api/converters";
+import { addressToPoint, n2a } from "../api/converters";
 import { Table } from "../api/table";
 import { AreaType, MatrixType } from "../types";
 
@@ -39,7 +39,7 @@ export class Ref {
     this.value = value.toUpperCase();
   }
   public evaluate(base: Table): Table {
-    const [y, x] = addressToPosition(this.value);
+    const [y, x] = addressToPoint(this.value);
     return base.trim([y, x, y, x]);
   }
   public id(base: Table) {
@@ -53,7 +53,7 @@ export class Id {
     this.value = value;
   }
   public evaluate(base: Table) {
-    const [y, x] = base.getPositionById(getId(this.value));
+    const [y, x] = base.getPointById(getId(this.value));
     return base.trim([y, x, y, x]);
   }
   public ref(base: Table) {
@@ -67,7 +67,7 @@ export class IdRange {
   }
   public evaluate(base: Table): Table {
     const ids = this.value.split(":");
-    const [p1, p2] = ids.map(getId).map((id) => base.getPositionById(id));
+    const [p1, p2] = ids.map(getId).map((id) => base.getPointById(id));
     return base.trim([p1[0], p1[1], p2[0], p2[1]]);
   }
   public range(base: Table) {

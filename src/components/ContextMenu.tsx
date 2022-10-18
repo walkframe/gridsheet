@@ -34,7 +34,6 @@ export const ContextMenu: React.FC = () => {
     history,
     editorRef,
     contextMenuPosition,
-    sheetRef,
     minNumRows,
     maxNumRows,
     minNumCols,
@@ -64,8 +63,6 @@ export const ContextMenu: React.FC = () => {
   if (top === -1) {
     return null;
   }
-
-  const { y: offsetY, x: offsetX } = sheetRef.current.getBoundingClientRect();
 
   return (
     <ContextMenuModalLayout

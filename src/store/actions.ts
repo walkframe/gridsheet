@@ -2,7 +2,7 @@ import {
   StoreType,
   RectType,
   ZoneType,
-  PositionType,
+  PointType,
   RangeType,
   FeedbackType,
   HistoryType,
@@ -21,7 +21,7 @@ import { Table } from "../api/table";
 
 import { tsv2matrix, x2c, positionToAddress, y2r } from "../api/converters";
 import { Area, DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
-import { restrictPositions, shouldTracking } from "./utils";
+import { restrictPoints, shouldTracking } from "./utils";
 
 const actions: { [s: string]: CoreAction<any> } = {};
 
@@ -231,7 +231,7 @@ class UpdateTableAction<T extends Table> extends CoreAction<T> {
     return {
       ...store,
       table: payload,
-      ...restrictPositions(store, payload),
+      ...restrictPoints(store, payload),
     };
   }
 }
@@ -417,7 +417,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
             if (x > table.getNumCols()) {
               continue;
             }
-            const cell = table.getByPosition([
+            const cell = table.getByPoint([
               topFrom + (i % maxHeight),
               leftFrom + (j % maxWidth),
             ]);
@@ -458,7 +458,7 @@ class EscapeAction<T extends null> extends CoreAction<T> {
 }
 export const escape = new EscapeAction().bind();
 
-class ChooseAction<T extends PositionType> extends CoreAction<T> {
+class ChooseAction<T extends PointType> extends CoreAction<T> {
   code = "CHOOSE";
   reduce(store: StoreType, payload: T): StoreType {
     return {
@@ -494,7 +494,7 @@ class SelectRowsAction<
     return {
       ...store,
       selectingZone,
-      choosing: [start, 0] as PositionType,
+      choosing: [start, 0] as PointType,
       verticalHeadersSelecting: true,
       horizontalHeadersSelecting: false,
     };
@@ -514,7 +514,7 @@ class SelectColsAction<
     return {
       ...store,
       selectingZone,
-      choosing: [0, start] as PositionType,
+      choosing: [0, start] as PointType,
       verticalHeadersSelecting: false,
       horizontalHeadersSelecting: true,
     };
@@ -522,7 +522,7 @@ class SelectColsAction<
 }
 export const selectCols = new SelectColsAction().bind();
 
-class DragAction<T extends PositionType> extends CoreAction<T> {
+class DragAction<T extends PointType> extends CoreAction<T> {
   code = "DRAG";
   reduce(store: StoreType, payload: T): StoreType {
     const [y, x] = store.choosing;
@@ -603,7 +603,7 @@ class UndoAction<T extends null> extends CoreAction<T> {
     const { reflection, operation } = history;
     return {
       ...store,
-      ...restrictPositions(store, table),
+      ...restrictPoints(store, table),
       ...reflection,
       table: table.shallowCopy(!shouldTracking(operation)),
     };
@@ -623,7 +623,7 @@ class RedoAction<T extends null> extends CoreAction<T> {
     return {
       ...store,
       ...reflection,
-      ...restrictPositions(store, table),
+      ...restrictPoints(store, table),
       table: table.shallowCopy(!shouldTracking(operation)),
     };
   }
@@ -667,29 +667,29 @@ class ArrowAction<
     let [editorTop, editorLeft, height, width] = store.editorRect;
     if (deltaY > 0) {
       for (let i = y; i < nextY; i++) {
-        editorTop += table.getByPosition([i, 0])?.height || DEFAULT_HEIGHT;
+        editorTop += table.getByPoint([i, 0])?.height || DEFAULT_HEIGHT;
       }
     } else if (deltaY < 0) {
       for (let i = y - 1; i >= nextY; i--) {
-        editorTop -= table.getByPosition([i, 0])?.height || DEFAULT_HEIGHT;
+        editorTop -= table.getByPoint([i, 0])?.height || DEFAULT_HEIGHT;
       }
     }
     if (deltaX > 0) {
       for (let i = x; i < nextX; i++) {
-        editorLeft += table.getByPosition([0, i])?.width || DEFAULT_WIDTH;
+        editorLeft += table.getByPoint([0, i])?.width || DEFAULT_WIDTH;
       }
     } else if (deltaX < 0) {
       for (let i = x - 1; i >= nextX; i--) {
-        editorLeft -= table.getByPosition([0, i])?.width || DEFAULT_WIDTH;
+        editorLeft -= table.getByPoint([0, i])?.width || DEFAULT_WIDTH;
       }
     }
-    const cell = table.getByPosition([nextY, nextX]);
+    const cell = table.getByPoint([nextY, nextX]);
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
     return {
       ...store,
       selectingZone: [-1, -1, -1, -1] as ZoneType,
-      choosing: [nextY, nextX] as PositionType,
+      choosing: [nextY, nextX] as PointType,
       editorRect: [editorTop, editorLeft, height, width] as RectType,
     };
   }
@@ -762,28 +762,28 @@ class WalkAction<
     }
     if (deltaY > 0) {
       for (let i = y; i < nextY; i++) {
-        editorTop += table.getByPosition([i, 0])?.height || DEFAULT_HEIGHT;
+        editorTop += table.getByPoint([i, 0])?.height || DEFAULT_HEIGHT;
       }
     } else if (deltaY < 0) {
       for (let i = y - 1; i >= nextY; i--) {
-        editorTop -= table.getByPosition([i, 0])?.height || DEFAULT_HEIGHT;
+        editorTop -= table.getByPoint([i, 0])?.height || DEFAULT_HEIGHT;
       }
     }
     if (deltaX > 0) {
       for (let i = x; i < nextX; i++) {
-        editorLeft += table.getByPosition([0, i])?.width || DEFAULT_WIDTH;
+        editorLeft += table.getByPoint([0, i])?.width || DEFAULT_WIDTH;
       }
     } else if (deltaX < 0) {
       for (let i = x - 1; i >= nextX; i--) {
-        editorLeft -= table.getByPosition([0, i])?.width || DEFAULT_WIDTH;
+        editorLeft -= table.getByPoint([0, i])?.width || DEFAULT_WIDTH;
       }
     }
-    const cell = table.getByPosition([nextY, nextX]);
+    const cell = table.getByPoint([nextY, nextX]);
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
     return {
       ...store,
-      choosing: [nextY, nextX] as PositionType,
+      choosing: [nextY, nextX] as PointType,
       editorRect: [editorTop, editorLeft, height, width] as RectType,
     };
   }

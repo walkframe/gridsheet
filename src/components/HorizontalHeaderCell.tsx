@@ -34,7 +34,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
     if (table.getNumRows() === 0) {
       return null;
     }
-    const col = table.getByPosition([0, x]);
+    const col = table.getByPoint([0, x]);
     const width = col?.width || DEFAULT_WIDTH;
     return (
       <div

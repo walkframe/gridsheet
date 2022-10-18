@@ -54,7 +54,7 @@ export const Editor: React.FC = () => {
 
   const editing = editingCell === address;
 
-  const cell = table.getByPosition([y, x]);
+  const cell = table.getByPoint([y, x]);
   const value = cell?.value;
   const [top, left, height, width] = editorRect;
 
