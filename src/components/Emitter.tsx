@@ -24,7 +24,7 @@ export const Emitter: React.FC<Props> = ({
   onSelect,
 }) => {
   const { store, dispatch } = React.useContext(Context);
-  const { choosing: pointing, selectingZone: zone, table, history } = store;
+  const { choosing: pointing, selectingZone: zone, table } = store;
 
   React.useEffect(() => {
     rerenderCells({
@@ -42,108 +42,10 @@ export const Emitter: React.FC<Props> = ({
         selectingTo: [zone[Area.Bottom], zone[Area.Right]],
       });
   }, [onChange, table]);
-  React.useEffect(() => {
-    if (onChangeDiff == null) {
-      return;
-    }
-    const { operations } = history;
-    let diffs: Table[] = [];
-    if (history.direction === "BACKWARD") {
-      const operation = operations[history.index + 1];
-      if (operation == null) {
-        return;
-      }
-      if (operation.command === "SET_TABLE") {
-        diffs = operation.before as Table[];
-      }
-    } else {
-      const operation = operations[history.index];
-      if (operation == null) {
-        return;
-      }
-      if (operation.command === "SET_TABLE") {
-        diffs = operation.after as Table[];
-      }
-    }
-  }, [onChangeDiff, history]);
-
-  React.useEffect(() => {
-    if (onChangeDiffNumMatrix == null) {
-      return;
-    }
-    const { operations } = history;
-    if (history.direction === "BACKWARD") {
-      const operation = operations[history.index + 1];
-      if (operation == null) {
-        return;
-      }
-      if (operation.command === "ADD_ROWS") {
-        const { y, numRows } = operation.after as {
-          y: number;
-          numRows: number;
-        };
-        onChangeDiffNumMatrix({ y: y, num: -numRows });
-      }
-      if (operation.command === "REMOVE_ROWS") {
-        const { y, numRows } = operation.after as {
-          y: number;
-          numRows: number;
-        };
-        onChangeDiffNumMatrix({ y: y, num: numRows });
-      }
-      if (operation.command === "ADD_COLS") {
-        const { x, numCols } = operation.after as {
-          x: number;
-          numCols: number;
-        };
-        onChangeDiffNumMatrix({ x: x, num: -numCols });
-      }
-      if (operation.command === "REMOVE_COLS") {
-        const { x, numCols } = operation.after as {
-          x: number;
-          numCols: number;
-        };
-        onChangeDiffNumMatrix({ x: x, num: numCols });
-      }
-    } else {
-      const operation = operations[history.index];
-      if (operation == null) {
-        return;
-      }
-      if (operation.command === "ADD_ROWS") {
-        const { y, numRows } = operation.after as {
-          y: number;
-          numRows: number;
-        };
-        onChangeDiffNumMatrix({ y: y, num: numRows });
-      }
-      if (operation.command === "REMOVE_ROWS") {
-        const { y, numRows } = operation.after as {
-          y: number;
-          numRows: number;
-        };
-        onChangeDiffNumMatrix({ y: y, num: -numRows });
-      }
-      if (operation.command === "ADD_COLS") {
-        const { x, numCols } = operation.after as {
-          x: number;
-          numCols: number;
-        };
-        onChangeDiffNumMatrix({ x: x, num: numCols });
-      }
-      if (operation.command === "REMOVE_COLS") {
-        const { x, numCols } = operation.after as {
-          x: number;
-          numCols: number;
-        };
-        onChangeDiffNumMatrix({ x: x, num: -numCols });
-      }
-    }
-  }, [onChangeDiffNumMatrix, history]);
 
   React.useEffect(() => {
     onSelect &&
-      onSelect(table as Table, {
+      onSelect(table, {
         pointing,
         selectingFrom: [zone[0], zone[1]],
         selectingTo: [zone[Area.Bottom], zone[Area.Right]],

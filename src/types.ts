@@ -72,7 +72,7 @@ export type OptionsType = {
   sheetHeight?: number;
   sheetWidth?: number;
   sheetResize?: "both" | "vertical" | "horizontal" | "none";
-  historySize?: number;
+  historyLimit?: number;
   headerHeight?: number;
   headerWidth?: number;
   editingOnEnter?: boolean;
@@ -143,7 +143,6 @@ export type StoreType = {
   horizontalHeadersSelecting: boolean;
   verticalHeadersSelecting: boolean;
   editingCell: string;
-  history: HistoryType;
   editorRect: RectType;
   resizingRect: RectType;
   sheetHeight: number;

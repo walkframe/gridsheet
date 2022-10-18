@@ -31,7 +31,6 @@ export const ContextMenu: React.FC = () => {
     selectingZone,
     horizontalHeadersSelecting,
     verticalHeadersSelecting,
-    history,
     editorRef,
     contextMenuPosition,
     minNumRows,
@@ -63,6 +62,7 @@ export const ContextMenu: React.FC = () => {
   if (top === -1) {
     return null;
   }
+  const historyIndex = table.getHistoryIndex();
 
   return (
     <ContextMenuModalLayout
@@ -297,12 +297,11 @@ export const ContextMenu: React.FC = () => {
             </li>
           )}
 
-          {(history.index > -1 ||
-            history.index < history.operations.length - 1) && (
+          {(historyIndex > -1 || historyIndex < table.getHistorySize() - 1) && (
             <li className="gs-menu-divider" />
           )}
 
-          {history.index > -1 && (
+          {historyIndex > -1 && (
             <li
               onClick={async () => {
                 dispatch(undo(null));
@@ -314,7 +313,7 @@ export const ContextMenu: React.FC = () => {
               </div>
             </li>
           )}
-          {history.index < history.operations.length - 1 && (
+          {historyIndex < table.getHistorySize() - 1 && (
             <li
               onClick={async () => {
                 dispatch(redo(null));

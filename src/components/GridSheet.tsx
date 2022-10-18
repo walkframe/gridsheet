@@ -58,7 +58,6 @@ export const GridSheet: React.FC<Props> = ({
     horizontalHeadersSelecting: false,
     verticalHeadersSelecting: false,
     editingCell: "",
-    history: { index: -1, size: 0, operations: [], direction: "FORWARD" },
     editorRect: [0, 0, 0, 0],
     resizingRect: [-1, -1, -1, -1],
     sheetHeight: 0,

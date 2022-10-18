@@ -222,7 +222,7 @@ export const showIndex = () => {
           numCols: 10,
           numRows: 10,
           headerHeight: 40,
-          historySize: 100,
+          historyLimit: 100,
           mode: "dark",
           //stickyHeaders: "horizontal",
           /*
@@ -279,7 +279,7 @@ export const showIndex = () => {
                     ],
                     { A3: { value: "four" } }
                   )}
-                  options={{ sheetResize: "both", historySize: 2 }}
+                  options={{ sheetResize: "both", historyLimit: 2 }}
                 />
               </td>
               <td>
@@ -294,7 +294,7 @@ export const showIndex = () => {
                     ],
                     { B3: { value: "five" } }
                   )}
-                  options={{ sheetResize: "vertical", historySize: 2 }}
+                  options={{ sheetResize: "vertical", historyLimit: 2 }}
                 />
               </td>
             </tr>
@@ -311,7 +311,7 @@ export const showIndex = () => {
                     ],
                     { C3: { value: "six" } }
                   )}
-                  options={{ sheetResize: "horizontal", historySize: 2 }}
+                  options={{ sheetResize: "horizontal", historyLimit: 2 }}
                 />
               </td>
               <td>
@@ -326,7 +326,7 @@ export const showIndex = () => {
                     ],
                     { A3: { value: "four" } }
                   )}
-                  options={{ sheetResize: "none", historySize: 2 }}
+                  options={{ sheetResize: "none", historyLimit: 2 }}
                 />
               </td>
             </tr>

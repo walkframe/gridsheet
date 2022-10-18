@@ -5,10 +5,7 @@ import {
   PointType,
   RangeType,
   FeedbackType,
-  HistoryType,
-  CellType,
   DiffType,
-  HistoryOperationType,
   AreaType,
 } from "../types";
 import {

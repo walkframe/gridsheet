@@ -14,7 +14,7 @@ import {
   initializeTable,
 } from "../store/actions";
 
-import { HEADER_HEIGHT, HEADER_WIDTH, HISTORY_SIZE } from "../constants";
+import { HEADER_HEIGHT, HEADER_WIDTH, HISTORY_LIMIT } from "../constants";
 import { addressToPoint } from "../api/converters";
 import { Table } from "../api/table";
 import { functions } from "../formula/mapping";
@@ -29,7 +29,7 @@ export const StoreInitializer: React.FC<Props> = ({
     headerWidth = HEADER_WIDTH,
     numRows = 0,
     numCols = 0,
-    historySize = HISTORY_SIZE,
+    historyLimit = HISTORY_LIMIT,
     sheetHeight,
     sheetWidth,
     editingOnEnter,
@@ -47,7 +47,7 @@ export const StoreInitializer: React.FC<Props> = ({
       numRows: auto.numRows,
       numCols: auto.numCols,
       cells: initial,
-      historySize,
+      historyLimit,
       parsers,
       renderers,
     });

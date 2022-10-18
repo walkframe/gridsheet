@@ -20,7 +20,7 @@ import { addressToPoint, n2a, x2c, positionToAddress, y2r } from "./converters";
 import { FunctionMapping } from "../formula/functions/__base";
 import { functions } from "../formula/mapping";
 import { Lexer, solveFormula } from "../formula/evaluator";
-import { Area, HISTORY_SIZE } from "../constants";
+import { Area, HISTORY_LIMIT } from "../constants";
 
 type StoreReflectionType = {
   choosing?: PointType;
@@ -116,7 +116,7 @@ type Props = {
   parsers?: Parsers;
   renderers?: Renderers;
   useBigInt?: boolean;
-  historySize?: number;
+  historyLimit?: number;
 };
 
 export class UserTable {
@@ -131,7 +131,7 @@ export class UserTable {
   protected histories: HistoryType[];
   protected historyIndex: number;
   protected idCache: Map<Id, string>;
-  protected historySize: number;
+  protected historyLimit: number;
 
   constructor({
     numRows = 0,
@@ -140,7 +140,7 @@ export class UserTable {
     parsers = {},
     renderers = {},
     useBigInt = false,
-    historySize = HISTORY_SIZE,
+    historyLimit: historyLimit = HISTORY_LIMIT,
   }: Props) {
     this.head = useBigInt ? BigInt(0) : 0;
     this.data = new Map();
@@ -152,7 +152,7 @@ export class UserTable {
     this.histories = [];
     this.historyIndex = -1;
     this.idCache = new Map();
-    this.historySize = historySize;
+    this.historyLimit = historyLimit;
 
     const common = cells.default;
     for (let y = 0; y < numRows + 1; y++) {
@@ -415,7 +415,7 @@ export class UserTable {
   protected pushHistory(history: HistoryType) {
     this.histories.splice(this.historyIndex + 1, this.histories.length);
     this.histories.push(history);
-    if (this.histories.length > this.historySize) {
+    if (this.histories.length > this.historyLimit) {
       const kickedOut = this.histories.splice(0, 1)[0];
       this.cleanObsolete(kickedOut);
     } else {
@@ -529,10 +529,9 @@ export class UserTable {
     const diffAfter: DataType = new Map();
     Object.keys(diff).forEach((address) => {
       const value = diff[address];
-      const pos = addressToPoint(address);
-      const [y, x] = pos;
-      const id = this.getId(pos);
-      diffBefore.set(id, this.getByPoint(pos));
+      const point = addressToPoint(address);
+      const id = this.getId(point);
+      diffBefore.set(id, this.getByPoint(point));
       diffAfter.set(id, value);
       if (partial) {
         this.data.set(id, { ...this.data.get(id), ...value });
@@ -691,7 +690,7 @@ export class Table extends UserTable {
     copied.renderers = this.renderers;
     copied.functions = this.functions;
     copied.histories = this.histories;
-    copied.historySize = this.historySize;
+    copied.historyLimit = this.historyLimit;
     copied.historyIndex = this.historyIndex;
     copied.idCache = this.idCache;
     return copied;
@@ -714,7 +713,7 @@ export class Table extends UserTable {
     copied.renderers = this.renderers;
     copied.functions = this.functions;
     copied.histories = this.histories;
-    copied.historySize = this.historySize;
+    copied.historyLimit = this.historyLimit;
     copied.historyIndex = this.historyIndex;
     copied.base = this;
     if (copyCache) {
@@ -878,5 +877,14 @@ export class Table extends UserTable {
   }
   getFunction(name: string) {
     return this.functions[name];
+  }
+  getHistoryIndex() {
+    return this.historyIndex;
+  }
+  getHistoryLimit() {
+    return this.historyLimit;
+  }
+  getHistorySize() {
+    return this.histories.length;
   }
 }

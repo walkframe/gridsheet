@@ -156,7 +156,7 @@ export const writeMatrix = <T = any>(
     const lostRow: T[] = [];
     for (let x = left; x <= right; x++) {
       const value = src[y - top][x - left];
-      // excluding headers
+      // -1 means excluding headers
       if (y < dstNumRows - 1 && x < dstNumCols - 1) {
         dst[y][x] = value;
         continue;
