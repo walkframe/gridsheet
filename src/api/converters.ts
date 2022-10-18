@@ -65,28 +65,31 @@ export const x2c = (
   if (x === 0) {
     return "";
   }
-  return n2a(x + 1, cacheSize);
+  const a = n2a(x + 1, cacheSize);
+  return x < 0 ? `$${a}` : a;
 };
 
 export const c2x = (
   col: string,
+  absolute = false,
   cacheSize = DEFAULT_ALPHABET_CACHE_SIZE
 ): number => {
-  return a2n(col, cacheSize);
+  const n = a2n(col, cacheSize);
+  return absolute ? -n : n;
 };
 
 export const y2r = (y: number) => {
   if (y === 0) {
     return "";
   }
-  return String(y);
+  return y < 0 ? `$${y}` : String(y);
 };
 
-export const r2y = (row: number | string) => {
+export const r2y = (row: number | string, absolute = false) => {
   if (typeof row === "string") {
     row = parseInt(row, 10);
   }
-  return row;
+  return absolute ? -row : row;
 };
 
 export const positionToAddress = ([y, x]: PointType) => {
@@ -155,10 +158,23 @@ export const tsv2matrix = (tsv: string): string[][] => {
 };
 
 export const addressToPoint = (address: Address): PointType => {
-  const m = address.match(/([A-Z]*)([0-9]*)/);
+  const m = address.match(/(\$)?([A-Z]*)(\$)?([0-9]*)/);
   if (m == null) {
     return [0, 0];
   }
+  const [_, absoluteCol, col, absoluteRow, row] = m.slice();
+  return [r2y(row, !!absoluteRow) || 0, c2x(col, !!absoluteCol) || 0];
+};
+
+export const grantAddressAbsolute = (
+  address: Address,
+  absCol: boolean,
+  absRow: boolean
+) => {
+  const m = address.match(/([A-Z]*)([0-9]*)/);
+  if (m == null) {
+    return;
+  }
   const [_, col, row] = m.slice();
-  return [r2y(row) || 0, c2x(col) || 0];
+  return `${absCol ? "$" : ""}${col}${absRow ? "$" : ""}${row}`;
 };

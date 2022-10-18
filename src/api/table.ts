@@ -18,7 +18,14 @@ import {
 } from "../types";
 import { CellsType, CellType, Parsers, Renderers } from "../types";
 import { createMatrix, matrixShape, writeMatrix } from "./matrix";
-import { addressToPoint, n2a, x2c, positionToAddress, y2r } from "./converters";
+import {
+  addressToPoint,
+  n2a,
+  x2c,
+  positionToAddress,
+  y2r,
+  grantAddressAbsolute,
+} from "./converters";
 import { FunctionMapping } from "../formula/functions/__base";
 import { functions } from "../formula/mapping";
 import { Lexer, solveFormula } from "../formula/evaluator";
@@ -137,7 +144,7 @@ type GetFlattenProps = GetProps & {
 export class UserTable {
   public changedAt: Date;
   public lastChangedAt?: Date;
-  protected head: Id;
+  protected head: bigint | number;
   protected idMatrix: IdMatrix;
   protected data: DataType;
   protected area: AreaType;
@@ -183,7 +190,7 @@ export class UserTable {
       this.idMatrix.push(ids);
       for (let x = 0; x < numCols + 1; x++) {
         const id = this.head++;
-        ids.push(id);
+        ids.push(id.toString(36));
         const address = positionToAddress([y, x]);
         const colId = x2c(x);
         const colDefault = cells[colId];
@@ -205,7 +212,7 @@ export class UserTable {
           delete stacked.width;
           delete stacked.labeler;
         }
-        this.data.set(id, stacked);
+        this.data.set(id.toString(36), stacked);
       }
     }
   }
@@ -232,9 +239,17 @@ export class UserTable {
   }
 
   public getAddressById(id: Id) {
+    const absCol = id.startsWith("$");
+    if (absCol) {
+      id = id.slice(1);
+    }
+    const absRow = id.endsWith("$");
+    if (absRow) {
+      id = id.slice(0, -1);
+    }
     const address = this.idCache.get(id);
     if (address) {
-      return address;
+      return grantAddressAbsolute(address, absCol, absRow);
     }
     for (let y = 0; y < this.idMatrix.length; y++) {
       const ids = this.idMatrix[y];
@@ -243,7 +258,7 @@ export class UserTable {
         const address = positionToAddress([y, x]);
         this.idCache.set(existing, address);
         if (existing === id) {
-          return address;
+          return grantAddressAbsolute(address, absCol, absRow);
         }
       }
     }
@@ -503,7 +518,7 @@ export class UserTable {
       const ids: Ids = [];
       matrix.push(ids);
       for (let x = left; x <= right; x++) {
-        ids.push(this.head++);
+        ids.push((this.head++).toString(36));
       }
     }
     return matrix;
@@ -623,10 +638,10 @@ export class UserTable {
       const row: Ids = [];
       for (let j = 0; j < numCols; j++) {
         const id = this.head++;
-        row.push(id);
+        row.push(id.toString(36));
         const cell = this.getByPoint([baseY, j]);
         const copied = this.copyCell(cell, baseY);
-        this.data.set(id, copied);
+        this.data.set(id.toString(36), copied);
       }
       rows.push(row);
     }
@@ -669,11 +684,11 @@ export class UserTable {
       const row: Ids = [];
       for (let j = 0; j < numCols; j++) {
         const id = this.head++;
-        row.push(id);
+        row.push(id.toString(36));
         const cell = this.getByPoint([i, baseX]);
         const copied = this.copyCell(cell, baseX);
-        this.idMatrix[i].splice(x, 0, id);
-        this.data.set(id, copied);
+        this.idMatrix[i].splice(x, 0, id.toString(36));
+        this.data.set(id.toString(36), copied);
       }
       rows.push(row);
     }
@@ -782,11 +797,11 @@ export class Table extends UserTable {
 
   public getIdByAddress(address: Address) {
     const [y, x] = addressToPoint(address);
-    const id = this.getId([y, x]);
+    const id = this.getId([Math.abs(y), Math.abs(x)]);
     if (id) {
       this.idCache.set(id, address);
+      return `#${x < 0 ? "$" : ""}${id}${y < 0 ? "$" : ""}`;
     }
-    return id;
   }
 
   private updateData(diff: DataType, partial = true) {

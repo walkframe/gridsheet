@@ -186,7 +186,7 @@ export type Props = {
   additionalFunctions?: FunctionMapping;
 };
 
-export type Id = number | bigint;
+export type Id = string;
 export type Ids = Id[];
 export type IdMatrix = Ids[];
 export type Address = string;

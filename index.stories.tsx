@@ -160,7 +160,7 @@ const initialCells = matrixIntoCells(createMatrix(1000, 50), {});
 
 export const showIndex = () => {
   const ref = createTableRef();
-
+  /*
   setInterval(() => {
     if (ref.current) {
       ref.current.dispatch(
@@ -168,6 +168,7 @@ export const showIndex = () => {
       );
     }
   }, 10000);
+  */
 
   return (
     <>

@@ -140,15 +140,6 @@ export const ContextMenu: React.FC = () => {
                   }
                 );
                 dispatch(updateTable(newTable));
-                dispatch(
-                  select([
-                    selectingTop,
-                    1,
-                    selectingTop + height,
-                    table.getNumCols(),
-                  ])
-                );
-                dispatch(choose([selectingTop, 0]));
               }}
             >
               <div className="gs-menu-name">
@@ -167,6 +158,9 @@ export const ContextMenu: React.FC = () => {
                 if (e.currentTarget.classList.contains("disabled")) {
                   return false;
                 }
+                selectingZone[0] += height;
+                selectingZone[2] += height;
+                choosing[0] += height;
                 const newTable = table.addRows(
                   selectingBottom + 1,
                   height,
@@ -177,15 +171,6 @@ export const ContextMenu: React.FC = () => {
                   }
                 );
                 dispatch(updateTable(newTable));
-                dispatch(
-                  select([
-                    selectingBottom + 1,
-                    1,
-                    selectingBottom + height,
-                    table.getNumCols(),
-                  ])
-                );
-                dispatch(choose([selectingBottom + 1, 0]));
               }}
             >
               <div className="gs-menu-name">
@@ -215,15 +200,6 @@ export const ContextMenu: React.FC = () => {
                   }
                 );
                 dispatch(updateTable(newTable));
-                dispatch(
-                  select([
-                    0,
-                    selectingLeft,
-                    table.getNumRows(),
-                    selectingLeft + width,
-                  ])
-                );
-                dispatch(choose([0, selectingLeft]));
               }}
             >
               <div className="gs-menu-name">
@@ -242,6 +218,10 @@ export const ContextMenu: React.FC = () => {
                 if (e.currentTarget.classList.contains("disabled")) {
                   return false;
                 }
+
+                selectingZone[1] += width;
+                selectingZone[3] += width;
+                choosing[1] += width;
                 const newTable = table.addCols(
                   selectingRight + 1,
                   width,
@@ -252,15 +232,6 @@ export const ContextMenu: React.FC = () => {
                   }
                 );
                 dispatch(updateTable(newTable));
-                dispatch(
-                  select([
-                    1,
-                    selectingRight + 1,
-                    table.getNumRows(),
-                    selectingRight + width,
-                  ])
-                );
-                dispatch(choose([0, selectingRight + 1]));
               }}
             >
               <div className="gs-menu-name">

@@ -3,12 +3,13 @@ import { addressToPoint, n2a } from "../api/converters";
 import { Table } from "../api/table";
 import { MatrixType } from "../types";
 
-const getId = (idString: string) => {
-  const id = Number(
-    idString.startsWith("#") ? idString.substring(1) : idString
-  );
-  if (isNaN(id)) {
-    throw new FormulaError("#ERROR!", `Formula parsing error.`);
+const getId = (idString: string, stripAbsolute = true) => {
+  let id = idString.slice(1);
+  if (stripAbsolute && id.startsWith("$")) {
+    id = id.slice(1);
+  }
+  if (stripAbsolute && id.endsWith("$")) {
+    id = id.slice(0, -1);
   }
   return id;
 };
@@ -54,7 +55,7 @@ export class Ref {
   public id(base: Table) {
     const id = base.getIdByAddress(this.value);
     if (id) {
-      return `#${id}`;
+      return id;
     }
     return this.value;
   }
@@ -69,7 +70,7 @@ export class Id {
     return base.trim([y, x, y, x]);
   }
   public ref(base: Table) {
-    return base.getAddressById(getId(this.value));
+    return base.getAddressById(getId(this.value, false));
   }
 }
 
@@ -79,13 +80,15 @@ export class IdRange {
   }
   public evaluate(base: Table): Table {
     const ids = this.value.split(":");
-    const [p1, p2] = ids.map(getId).map((id) => base.getPointById(id));
+    const [p1, p2] = ids
+      .map((id) => getId(id))
+      .map((id) => base.getPointById(id));
     return base.trim([p1[0], p1[1], p2[0], p2[1]]);
   }
   public range(base: Table) {
     return this.value
       .split(":")
-      .map(getId)
+      .map((id) => getId(id))
       .map((id) => base.getAddressById(id))
       .join(":");
   }
