@@ -35,6 +35,15 @@ export class Value {
   }
 }
 
+export class Unreferenced {
+  constructor(public value?: any) {
+    this.value = value;
+  }
+  public evaluate(base: Table) {
+    throw new FormulaError("#REF!", `Reference does not exist.`);
+  }
+}
+
 export class InvalidRef {
   constructor(public value?: any) {
     this.value = value;
@@ -78,6 +87,9 @@ export class Id {
       slideY,
       slideX
     );
+    if (address == null || address.length < 2) {
+      return "#REF!";
+    }
     return base.getIdByAddress(address!);
   }
 }
@@ -186,6 +198,7 @@ export type TokenType =
   | "CLOSE"
   | "COMMA"
   | "SPACE"
+  | "UNREFERENCED"
   | "INVALID_REF";
 
 const INFIX_FUNCTION_NAME_MAP = {
@@ -246,6 +259,8 @@ export class Token {
       }
       case "FUNCTION":
         return new Function(this.entity);
+      case "UNREFERENCED":
+        return new Unreferenced(this.entity);
       case "INVALID_REF":
         return new InvalidRef(this.entity);
     }
@@ -430,7 +445,9 @@ export class Lexer {
                 if (bool != null) {
                   this.tokens.push(new Token("VALUE", bool));
                 } else if (buf.startsWith("#")) {
-                  if (buf.indexOf(":") !== -1) {
+                  if (buf === "#REF!") {
+                    this.tokens.push(new Token("UNREFERENCED", buf));
+                  } else if (buf.indexOf(":") !== -1) {
                     this.tokens.push(new Token("ID_RANGE", buf));
                   } else {
                     this.tokens.push(new Token("ID", buf));
@@ -530,6 +547,7 @@ export class Parser {
         token.type === "ID_RANGE" ||
         token.type === "REF" ||
         token.type === "RANGE" ||
+        token.type === "UNREFERENCED" ||
         token.type === "INVALID_REF"
       ) {
         const expr = token.convert();

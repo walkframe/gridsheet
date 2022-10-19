@@ -404,7 +404,10 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
         [height, width] = superposeArea(selectingArea, copyingArea);
       }
       selectingArea = [y, x, y + height, x + width];
-      newTable = table.copy(copyingArea, selectingArea);
+      newTable = table.copy(copyingArea, selectingArea, {
+        copyingZone,
+        selectingZone,
+      });
     }
     return {
       ...store,
