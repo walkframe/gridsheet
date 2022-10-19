@@ -75,7 +75,12 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
         }}
         onDragEnter={() => {
           if (resizingRect[1] === -1) {
-            dispatch(drag([table.getNumRows(), x]));
+            const startY = selectingZone[0];
+            if (startY === 1) {
+              dispatch(drag([table.getNumRows(), x]));
+            } else {
+              dispatch(drag([1, x]));
+            }
           }
           return false;
         }}

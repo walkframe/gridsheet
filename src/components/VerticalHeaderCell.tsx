@@ -77,7 +77,12 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
         }}
         onDragEnter={() => {
           if (resizingRect[0] === -1) {
-            dispatch(drag([y, table.getNumCols()]));
+            const startX = selectingZone[1];
+            if (startX === 1) {
+              dispatch(drag([y, table.getNumCols()]));
+            } else {
+              dispatch(drag([y, 1]));
+            }
           }
           return false;
         }}
