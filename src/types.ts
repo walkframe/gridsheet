@@ -25,15 +25,6 @@ export type Renderers = { [s: string]: RendererType };
 export type Parsers = { [s: string]: ParserType };
 export type Labelers = { [s: string]: Labeler };
 
-export type HistoryOperationType =
-  | "WRITE"
-  | "COPY"
-  | "MOVE"
-  | "ADD_ROW"
-  | "ADD_COL"
-  | "REMOVE_ROW"
-  | "REMOVE_COL";
-
 export type TableRef = {
   table: UserTable;
   dispatch: (table: UserTable) => void;

@@ -39,7 +39,7 @@ export class SumifFunction extends BaseFunction {
     const conditionMatrix = solveMatrix(range, this.base);
     let sumMatrix = conditionMatrix;
     if (sumRange) {
-      const [top, left] = [sumRange.getTop(), sumRange.getLeft()];
+      const [top, left] = [sumRange.top, sumRange.left];
       const area: AreaType = [
         top,
         left,

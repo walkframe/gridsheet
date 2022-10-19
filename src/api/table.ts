@@ -11,7 +11,6 @@ import {
   WriterType,
   ZoneType,
   Address,
-  HistoryOperationType,
   RowByAddress,
   CellFilter,
   Labelers,
@@ -101,6 +100,11 @@ type HistoryRemoveColType = {
   idMatrix: IdMatrix;
 };
 
+type HistoryNoOperation = {
+  operation: "NO_OPERATION";
+  reflection?: StoreReflectionType;
+};
+
 type HistoryType =
   | HistoryUpdateType
   | HistoryMoveType
@@ -108,16 +112,17 @@ type HistoryType =
   | HistoryAddRowType
   | HistoryRemoveRowType
   | HistoryAddColType
-  | HistoryRemoveColType;
+  | HistoryRemoveColType
+  | HistoryNoOperation;
 
 export class History {
-  public operation: HistoryOperationType;
+  public operation: HistoryType["operation"];
   public diffBefore?: DataType;
   public diffAfter?: DataType;
   public idMatrix?: IdMatrix;
   public position?: PointType;
 
-  constructor(operation: HistoryOperationType) {
+  constructor(operation: HistoryType["operation"]) {
     this.operation = operation;
   }
 }
@@ -262,6 +267,10 @@ export class UserTable {
     copied.histories = this.histories;
     copied.historyLimit = this.historyLimit;
     copied.historyIndex = this.historyIndex;
+    copied.minNumRows = this.minNumRows;
+    copied.maxNumRows = this.maxNumRows;
+    copied.minNumCols = this.minNumCols;
+    copied.maxNumCols = this.maxNumCols;
     copied.base = this;
     if (copyCache) {
       copied.idCache = this.idCache;
@@ -841,16 +850,16 @@ export class Table extends UserTable {
     this.functions = { ...functions, ...additionalFunctions };
   }
 
-  public getTop() {
+  public get top() {
     return this.area[Area.Top];
   }
-  public getLeft() {
+  public get left() {
     return this.area[Area.Left];
   }
-  public getBottom() {
+  public get bottom() {
     return this.area[Area.Bottom];
   }
-  public getRight() {
+  public get right() {
     return this.area[Area.Right];
   }
   public getArea(): AreaType {
@@ -885,24 +894,16 @@ export class Table extends UserTable {
     return s;
   }
 
-  public trim(area?: AreaType) {
-    const copied = new Table({ numRows: 0, numCols: 0 });
-    if (area != null) {
-      copied.area = area;
-      copied.base = this.base;
-    } else {
-      copied.area = [...this.area];
-      copied.base = this;
-    }
+  public trim(area: AreaType): ReadonlyTable {
+    const copied = new Table({});
+    copied.area = [...this.area];
+    copied.base = this;
     copied.idMatrix = this.idMatrix;
     copied.data = this.data;
     copied.parsers = this.parsers;
     copied.renderers = this.renderers;
     copied.labelers = this.labelers;
     copied.functions = this.functions;
-    copied.histories = this.histories;
-    copied.historyLimit = this.historyLimit;
-    copied.historyIndex = this.historyIndex;
     copied.idCache = this.idCache;
     return copied;
   }
@@ -1089,8 +1090,11 @@ export class Table extends UserTable {
   getHistorySize() {
     return this.histories.length;
   }
-  label(key: string, n: number) {
+  getLabel(key: string, n: number) {
     const labeler = this.labelers[key];
     return labeler?.(n);
   }
 }
+
+// just using as a type
+export class ReadonlyTable extends Table {}

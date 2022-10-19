@@ -94,7 +94,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
           style={{ width, height: headerHeight }}
           draggable
         >
-          {col?.labeler ? table.label(col.labeler, x) : colId}
+          {col?.labeler ? table.getLabel(col.labeler, x) : colId}
         </div>
         <div
           className="gs-resizer"
