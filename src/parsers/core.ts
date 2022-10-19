@@ -1,6 +1,4 @@
-import { Table } from "api/table";
 import { parseFromTimeZone } from "date-fns-timezone";
-import { Lexer } from "../formula/evaluator";
 import { CellType } from "../types";
 
 type Condition = (value: string) => boolean;
@@ -90,7 +88,7 @@ export class Parser {
     try {
       timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     } catch (e) {}
-    const d = parseFromTimeZone(value, { timeZone });
+    const d = new Date(value);
     if (d.toString() === "Invalid Date") {
       return;
     }

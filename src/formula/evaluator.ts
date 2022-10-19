@@ -15,11 +15,10 @@ const getId = (idString: string, stripAbsolute = true) => {
 };
 
 export class FormulaError {
-  constructor(
-    public code: string,
-    public message: string,
-    public error?: Error
-  ) {
+  public code: string;
+  public message: string;
+  public error?: Error;
+  constructor(code: string, message: string, error?: Error) {
     this.code = code;
     this.message = message;
     this.error = error;
@@ -27,7 +26,8 @@ export class FormulaError {
 }
 
 export class Value {
-  constructor(public value?: any) {
+  public value: any;
+  constructor(value?: any) {
     this.value = value;
   }
   public evaluate(base: Table) {
@@ -36,7 +36,8 @@ export class Value {
 }
 
 export class Unreferenced {
-  constructor(public value?: any) {
+  private value: any;
+  constructor(value: any) {
     this.value = value;
   }
   public evaluate(base: Table) {
@@ -45,7 +46,8 @@ export class Unreferenced {
 }
 
 export class InvalidRef {
-  constructor(public value?: any) {
+  private value: any;
+  constructor(value?: any) {
     this.value = value;
   }
   public evaluate(base: Table) {
@@ -54,7 +56,8 @@ export class InvalidRef {
 }
 
 export class Ref {
-  constructor(public value: string) {
+  private value: any;
+  constructor(value: string) {
     this.value = value.toUpperCase();
   }
   public evaluate(base: Table): Table {
@@ -71,7 +74,8 @@ export class Ref {
 }
 
 export class Id {
-  constructor(public value: string) {
+  private value: any;
+  constructor(value: string) {
     this.value = value;
   }
   public evaluate(base: Table) {
@@ -95,7 +99,8 @@ export class Id {
 }
 
 export class IdRange {
-  constructor(public value: string) {
+  public value: string;
+  constructor(value: string) {
     this.value = value;
   }
   public evaluate(base: Table): Table {
@@ -115,7 +120,8 @@ export class IdRange {
 }
 
 export class Range {
-  constructor(public value: string) {
+  public value: string;
+  constructor(value: string) {
     this.value = value.toUpperCase();
   }
   public evaluate(base: Table): Table {
@@ -149,7 +155,9 @@ export class Range {
 
 export class Function {
   public args: Expression[];
-  constructor(public name: string, public precedence = 0) {
+  public name: string;
+  public precedence: number;
+  constructor(name: string, precedence = 0) {
     this.name = name;
     this.precedence = precedence;
     this.args = [];
@@ -161,7 +169,7 @@ export class Function {
     if (Func == null) {
       throw new FormulaError("#NAME?", `Unknown function: ${name}`);
     }
-    const func = new Func(this.args, base);
+    const func = new Func({ args: this.args, base });
     return func.call();
   }
 }
@@ -181,7 +189,15 @@ export const evaluate = (formula: string, base: Table, raise = true) => {
   }
 };
 
-type Expression = Value | Ref | Range | Function;
+type Expression =
+  | Value
+  | Ref
+  | Range
+  | Id
+  | IdRange
+  | Function
+  | Unreferenced
+  | InvalidRef;
 
 const ZERO = new Value(0);
 
@@ -292,8 +308,10 @@ const BOOLS = { true: true, false: false };
 export class Lexer {
   private index: number;
   public tokens: Token[] = [];
+  private formula: string;
+  private base: typeof Table;
 
-  constructor(private formula: string, public base = Table) {
+  constructor(formula: string, base = Table) {
     this.formula = formula;
     this.index = 0;
     this.tokens = [];
@@ -510,7 +528,9 @@ export class Lexer {
 export class Parser {
   public index = 0;
   public depth = 0;
-  constructor(public tokens: Token[], public base = Table) {
+  public tokens: Token[];
+  private base: typeof Table;
+  constructor(tokens: Token[], base = Table) {
     this.tokens = tokens;
     this.base = base;
   }

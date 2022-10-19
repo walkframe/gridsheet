@@ -3,7 +3,7 @@
     "target": "ES2015",
     "module": "ESNext",
     "moduleResolution": "node",
-    "lib": ["ES2015", "dom"],
+    "lib": ["DOM", "ES6", "DOM.Iterable", "ScriptHost", "ES2016.Array.Include"],
     "declaration": true,
     "declarationMap": true,
     "allowJs": true,

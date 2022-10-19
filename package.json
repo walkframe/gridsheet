@@ -32,10 +32,9 @@
   },
   "homepage": "https://docs.walkframe.com/products/react-gridsheet/",
   "devDependencies": {
-    "@storybook/addon-actions": "^6.0.21",
-    "@storybook/addon-essentials": "^6.0.21",
-    "@storybook/addon-links": "^6.0.21",
-    "@storybook/react": "^6.0.21",
+    "@storybook/addon-essentials": "^6.5.12",
+    "@storybook/addon-links": "^6.5.12",
+    "@storybook/react": "^6.5.12",
     "@types/react": "^16.9.49",
     "@types/react-window": "^1.8.2",
     "@types/storybook__react": "^5.2.1",
@@ -50,6 +49,7 @@
     "react-dom": ">=16.9.0",
     "react-is": "^16.13.1",
     "require-context.macro": "^1.2.2",
+    "storybook": "^6.5.12",
     "typescript": "^4.0.3"
   },
   "peerDependencies": {

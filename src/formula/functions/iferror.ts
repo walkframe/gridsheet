@@ -2,6 +2,7 @@
 
 import { Table } from "../../api/table";
 import { FormulaError } from "../evaluator";
+import { FunctionProps } from "./__base";
 
 export class IfErrorFunction {
   example = 'IFERROR(A1, "Error in cell A1")';
@@ -19,8 +20,10 @@ export class IfErrorFunction {
       optional: true,
     },
   ];
+  private args: any[];
+  private base: Table;
 
-  constructor(public args: any[], public base: Table) {
+  constructor({ args, base }: FunctionProps) {
     this.args = args;
     this.base = base;
   }

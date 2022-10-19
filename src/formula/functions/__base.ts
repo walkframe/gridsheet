@@ -1,11 +1,18 @@
 import { Table } from "../../api/table";
 
+export type FunctionProps = {
+  args: any[];
+  base: Table;
+};
+
 export class BaseFunction {
   public example = "_BASE()";
   public helpTexts = ["Function's description."];
   public helpArgs = [{ name: "value1", description: "" }];
+  protected args: any[];
+  protected base: Table;
 
-  constructor(public args: any[], public base: Table) {
+  constructor({ args, base }: FunctionProps) {
     this.args = args.map((a) => a.evaluate(base));
     this.base = base;
   }
