@@ -257,10 +257,12 @@ export class UserTable {
     const absCol = id.startsWith("$");
     if (absCol) {
       id = id.slice(1);
+      slideX = 0;
     }
     const absRow = id.endsWith("$");
     if (absRow) {
       id = id.slice(0, -1);
+      slideY = 0;
     }
     const address = this.idCache.get(id);
     if (address && slideY === 0 && slideX === 0) {
