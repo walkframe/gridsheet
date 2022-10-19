@@ -77,7 +77,7 @@ export type DiffType = CellsType;
 export type DataType = Map<Id, CellType | undefined>;
 
 export type Dispatcher = React.Dispatch<{
-  type: string;
+  type: number;
   value: any;
 }>;
 export type OptionsType = {

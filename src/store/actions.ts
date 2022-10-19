@@ -18,13 +18,13 @@ import { Table } from "../api/table";
 
 import { tsv2matrix, x2c, pointToAddress, y2r } from "../api/converters";
 import { Area, DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
-import { restrictPoints, shouldTracking } from "./utils";
+import { restrictPoints } from "./utils";
 
 const actions: { [s: string]: CoreAction<any> } = {};
 
 export const reducer = <T>(
   store: StoreType,
-  action: { type: string; value: T }
+  action: { type: number; value: T }
 ): StoreType => {
   const act: CoreAction<T> | undefined = actions[action.type];
   if (act == null) {
@@ -34,25 +34,26 @@ export const reducer = <T>(
 };
 
 export class CoreAction<T> {
-  public code = "";
+  static head = 1;
+  private actionId: number = 1;
 
   public reduce(store: StoreType, payload: T): StoreType {
     return store;
   }
-  public call(payload: T): { type: string; value: T } {
+  public call(payload: T): { type: number; value: T } {
     return {
-      type: this.code,
+      type: this.actionId,
       value: payload,
     };
   }
   public bind() {
-    actions[this.code] = this;
+    this.actionId = CoreAction.head++;
+    actions[this.actionId] = this;
     return this.call.bind(this);
   }
 }
 
 class SetSearchQueryAction<T extends string | undefined> extends CoreAction<T> {
-  code = "SET_SEARCH_QUERY";
   reduce(store: StoreType, payload: T): StoreType {
     const searchQuery = payload;
     const matchingCells: string[] = [];
@@ -73,7 +74,6 @@ class SetSearchQueryAction<T extends string | undefined> extends CoreAction<T> {
 export const setSearchQuery = new SetSearchQueryAction().bind();
 
 class SetEditingCellAction<T extends string> extends CoreAction<T> {
-  code = "SET_EDITING_CELL";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -84,7 +84,6 @@ class SetEditingCellAction<T extends string> extends CoreAction<T> {
 export const setEditingCell = new SetEditingCellAction().bind();
 
 class SetEditingOnEnterAction<T extends boolean> extends CoreAction<T> {
-  code = "SET_EDITING_ON_ENTER";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -95,7 +94,6 @@ class SetEditingOnEnterAction<T extends boolean> extends CoreAction<T> {
 export const setEditingOnEnter = new SetEditingOnEnterAction().bind();
 
 class SetCellLabelAction<T extends boolean> extends CoreAction<T> {
-  code = "SET_CELL_LABEL";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -108,7 +106,6 @@ export const setCellLabel = new SetCellLabelAction().bind();
 class SetContextMenuPositionAction<
   T extends [number, number]
 > extends CoreAction<T> {
-  code = "SET_CONTEXT_MENU_POSITION";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -121,7 +118,6 @@ export const setContextMenuPosition = new SetContextMenuPositionAction().bind();
 class SetResizingPositionYAction<
   T extends [number, number, number]
 > extends CoreAction<T> {
-  code = "SET_RESIZING_POSITION_Y";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -134,7 +130,6 @@ export const setResizingPositionY = new SetResizingPositionYAction().bind();
 class SetResizingPositionXAction<
   T extends [number, number, number]
 > extends CoreAction<T> {
-  code = "SET_RESIZING_POSITION_X";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -145,7 +140,6 @@ class SetResizingPositionXAction<
 export const setResizingPositionX = new SetResizingPositionXAction().bind();
 
 class SetOnSaveAction<T extends FeedbackType> extends CoreAction<T> {
-  code = "SET_ON_SAVE";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -156,7 +150,6 @@ class SetOnSaveAction<T extends FeedbackType> extends CoreAction<T> {
 export const setOnSave = new SetOnSaveAction().bind();
 
 class SetEnteringAction<T extends boolean> extends CoreAction<T> {
-  code = "SET_ENTERING";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -167,7 +160,6 @@ class SetEnteringAction<T extends boolean> extends CoreAction<T> {
 export const setEntering = new SetEnteringAction().bind();
 
 class SetHeaderHeightAction<T extends number> extends CoreAction<T> {
-  code = "SET_HEADER_HEIGHT";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -178,7 +170,6 @@ class SetHeaderHeightAction<T extends number> extends CoreAction<T> {
 export const setHeaderHeight = new SetHeaderHeightAction().bind();
 
 class SetHeaderWidthAction<T extends number> extends CoreAction<T> {
-  code = "SET_HEADER_WIDTH";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -189,7 +180,6 @@ class SetHeaderWidthAction<T extends number> extends CoreAction<T> {
 export const setHeaderWidth = new SetHeaderWidthAction().bind();
 
 class SetSheetHeightAction<T extends number> extends CoreAction<T> {
-  code = "SET_SHEET_HEIGHT";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -200,7 +190,6 @@ class SetSheetHeightAction<T extends number> extends CoreAction<T> {
 export const setSheetHeight = new SetSheetHeightAction().bind();
 
 class SetSheetWidthAction<T extends number> extends CoreAction<T> {
-  code = "SET_SHEET_WIDTH";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -211,7 +200,6 @@ class SetSheetWidthAction<T extends number> extends CoreAction<T> {
 export const setSheetWidth = new SetSheetWidthAction().bind();
 
 class InitializeTableAction<T extends Table> extends CoreAction<T> {
-  code = "INITIALIZE_TABLE";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -223,7 +211,6 @@ class InitializeTableAction<T extends Table> extends CoreAction<T> {
 export const initializeTable = new InitializeTableAction().bind();
 
 class UpdateTableAction<T extends Table> extends CoreAction<T> {
-  code = "UPDATE_TABLE";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -235,7 +222,6 @@ class UpdateTableAction<T extends Table> extends CoreAction<T> {
 export const updateTable = new UpdateTableAction().bind();
 
 class SetEditorRectAction<T extends RectType> extends CoreAction<T> {
-  code = "SET_EDITOR_RECT";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -246,7 +232,6 @@ class SetEditorRectAction<T extends RectType> extends CoreAction<T> {
 export const setEditorRect = new SetEditorRectAction().bind();
 
 class SetResizingRectAction<T extends RectType> extends CoreAction<T> {
-  code = "SET_RESIZING_RECT";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -257,7 +242,6 @@ class SetResizingRectAction<T extends RectType> extends CoreAction<T> {
 export const setResizingRect = new SetResizingRectAction().bind();
 
 class BlurAction<T extends null> extends CoreAction<T> {
-  code = "BLUR";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -268,7 +252,6 @@ class BlurAction<T extends null> extends CoreAction<T> {
 export const blur = new BlurAction().bind();
 
 class CopyAction<T extends ZoneType> extends CoreAction<T> {
-  code = "COPY";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -280,7 +263,6 @@ class CopyAction<T extends ZoneType> extends CoreAction<T> {
 export const copy = new CopyAction().bind();
 
 class CutAction<T extends ZoneType> extends CoreAction<T> {
-  code = "CUT";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -292,7 +274,6 @@ class CutAction<T extends ZoneType> extends CoreAction<T> {
 export const cut = new CutAction().bind();
 
 class PasteAction<T extends { text: string }> extends CoreAction<T> {
-  code = "PASTE";
   reduce(store: StoreType, payload: T): StoreType {
     const { choosing, copyingZone, selectingZone, cutting, table } = store;
     let selectingArea = zoneToArea(selectingZone);
@@ -376,7 +357,6 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
 export const paste = new PasteAction().bind();
 
 class EscapeAction<T extends null> extends CoreAction<T> {
-  code = "ESCAPE";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -391,7 +371,6 @@ class EscapeAction<T extends null> extends CoreAction<T> {
 export const escape = new EscapeAction().bind();
 
 class ChooseAction<T extends PointType> extends CoreAction<T> {
-  code = "CHOOSE";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -403,7 +382,6 @@ class ChooseAction<T extends PointType> extends CoreAction<T> {
 export const choose = new ChooseAction().bind();
 
 class SelectAction<T extends ZoneType> extends CoreAction<T> {
-  code = "SELECT";
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -418,7 +396,6 @@ export const select = new SelectAction().bind();
 class SelectRowsAction<
   T extends { range: RangeType; numCols: number }
 > extends CoreAction<T> {
-  code = "SELECT_ROWS";
   reduce(store: StoreType, payload: T): StoreType {
     const { range, numCols } = payload;
     const [start, end] = range.sort();
@@ -437,7 +414,6 @@ export const selectRows = new SelectRowsAction().bind();
 class SelectColsAction<
   T extends { range: RangeType; numRows: number }
 > extends CoreAction<T> {
-  code = "SELECT_COLS";
   reduce(store: StoreType, payload: T): StoreType {
     const { range, numRows } = payload;
     const [start, end] = range.sort();
@@ -455,7 +431,6 @@ class SelectColsAction<
 export const selectCols = new SelectColsAction().bind();
 
 class DragAction<T extends PointType> extends CoreAction<T> {
-  code = "DRAG";
   reduce(store: StoreType, payload: T): StoreType {
     const [y, x] = store.choosing;
     const selectingZone = [y, x, payload[0], payload[1]] as ZoneType;
@@ -465,7 +440,6 @@ class DragAction<T extends PointType> extends CoreAction<T> {
 export const drag = new DragAction().bind();
 
 class SearchAction<T extends number> extends CoreAction<T> {
-  code = "SEARCH";
   reduce(store: StoreType, payload: T): StoreType {
     let { matchingCells, matchingCellIndex } = store;
     matchingCellIndex += payload;
@@ -480,7 +454,6 @@ class SearchAction<T extends number> extends CoreAction<T> {
 export const search = new SearchAction().bind();
 
 class WriteAction<T extends string> extends CoreAction<T> {
-  code = "WRITE";
   reduce(store: StoreType, payload: T): StoreType {
     const { choosing, selectingZone, table } = store;
     const newTable = table.write(choosing, payload, {
@@ -497,7 +470,6 @@ class WriteAction<T extends string> extends CoreAction<T> {
 export const write = new WriteAction().bind();
 
 class ClearAction<T extends null> extends CoreAction<T> {
-  code = "CLEAR";
   reduce(store: StoreType, payload: T): StoreType {
     const { choosing, selectingZone, table } = store;
 
@@ -525,7 +497,6 @@ class ClearAction<T extends null> extends CoreAction<T> {
 export const clear = new ClearAction().bind();
 
 class UndoAction<T extends null> extends CoreAction<T> {
-  code = "UNDO";
   reduce(store: StoreType, payload: T): StoreType {
     const { table } = store;
     const { history, newTable } = table.undo();
@@ -544,7 +515,6 @@ class UndoAction<T extends null> extends CoreAction<T> {
 export const undo = new UndoAction().bind();
 
 class RedoAction<T extends null> extends CoreAction<T> {
-  code = "REDO";
   reduce(store: StoreType, payload: T): StoreType {
     const { table } = store;
     const { history, newTable } = table.redo();
@@ -571,7 +541,6 @@ class ArrowAction<
     numCols: number;
   }
 > extends CoreAction<T> {
-  code = "ARROW";
   reduce(store: StoreType, payload: T): StoreType {
     const { shiftKey, deltaY, deltaX, numRows, numCols } = payload;
     let { choosing, selectingZone, table } = store;
@@ -636,7 +605,6 @@ class WalkAction<
     numCols: number;
   }
 > extends CoreAction<T> {
-  code = "WALK";
   reduce(store: StoreType, payload: T): StoreType {
     let { deltaY, deltaX, numRows, numCols } = payload;
     let { choosing, selectingZone, table } = store;
