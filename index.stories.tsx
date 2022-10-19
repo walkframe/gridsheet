@@ -383,7 +383,8 @@ export const showIndex = () => {
               "diff",
               table.getObjectFlatten({
                 filter: (cell) =>
-                  !!cell.changedAt && cell.changedAt > table.lastChangedAt!,
+                  !!cell.system?.changedAt &&
+                  cell.system.changedAt > table.lastChangedAt!,
               })
             );
           },

@@ -14,6 +14,7 @@ import {
   RowByAddress,
   CellFilter,
   Labelers,
+  System,
 } from "../types";
 import { CellsType, CellType, Parsers, Renderers } from "../types";
 import { createMatrix, matrixShape, writeMatrix, zoneShape } from "./matrix";
@@ -33,6 +34,7 @@ import {
 } from "../formula/evaluator";
 import { Area, HISTORY_LIMIT } from "../constants";
 import { shouldTracking } from "../store/utils";
+import { setDefault } from "../utils";
 
 type StoreReflectionType = {
   choosing?: PointType;
@@ -255,6 +257,7 @@ export class UserTable {
 
   protected shallowCopy(copyCache = true) {
     const copied = new Table({ numRows: 0, numCols: 0 });
+    copied.changedAt = new Date();
     copied.lastChangedAt = this.changedAt;
     copied.head = this.head;
     copied.idMatrix = this.idMatrix;
@@ -614,7 +617,7 @@ export class UserTable {
     to: AreaType,
     reflection: StoreReflectionType = {}
   ) {
-    const now = new Date();
+    const changedAt = new Date();
     const matrixFrom = this.getIdMatrixFromArea(from);
     const matrixTo = this.getIdMatrixFromArea(to);
     const matrixNew = this.getNewIdMatrix(from);
@@ -623,7 +626,10 @@ export class UserTable {
       ids
         .map(this.getById.bind(this))
         .filter((c) => c)
-        .forEach((cell) => (cell!.changedAt = now));
+        .forEach(
+          (cell) =>
+            (setDefault(cell, "system", {} as System).changedAt = changedAt)
+        );
     });
     const lostRows = writeMatrix(this.idMatrix, matrixFrom, to);
     this.pushHistory({
@@ -668,16 +674,19 @@ export class UserTable {
           topFrom + (i % maxHeight),
           leftFrom + (j % maxWidth),
         ]);
+        if (cell) {
+          setDefault(cell, "system", {} as System).changedAt = now;
+        }
         const value = convertFormulaAbsolute(
           cell?.value,
           Table.cast(this),
           slideY,
           slideX
         );
+
         diff[pointToAddress([toY, toX])] = {
           ...cell,
           value,
-          changedAt: now,
         };
       }
     }
@@ -953,7 +962,8 @@ export class Table extends UserTable {
     const modX = x % numCols;
     const id = this.getId([modY, modX]);
     const value = convertFormulaAbsolute(cell.value, Table.cast(this));
-    this.data.set(id, { ...cell, value, changedAt });
+    setDefault(cell, "system", {} as System).changedAt = changedAt;
+    this.data.set(id, { ...cell, value });
   }
 
   public write(

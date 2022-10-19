@@ -48,6 +48,10 @@ export type FeedbackTypeForMatrix = (coordinate: {
 export type Mode = "light" | "dark";
 export type Headers = "both" | "vertical" | "horizontal" | "none";
 
+export type System = {
+  changedAt?: Date;
+};
+
 export type CellType<Custom = any> = {
   value?: any;
   style?: React.CSSProperties;
@@ -58,7 +62,7 @@ export type CellType<Custom = any> = {
   renderer?: string;
   parser?: string;
   custom?: Custom;
-  changedAt?: Date;
+  system?: System;
 };
 
 export type CellFilter = (cell: CellType) => boolean;
