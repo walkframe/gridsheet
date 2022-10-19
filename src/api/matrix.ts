@@ -12,7 +12,7 @@ import {
   CellsType,
   RowByAddress,
 } from "../types";
-import { addressToPoint, positionToAddress } from "./converters";
+import { addressToPoint, pointToAddress } from "./converters";
 
 export const slideArea = (area: AreaType, y: Y, x: X): AreaType => {
   const [top, left, bottom, right] = area;
@@ -52,10 +52,7 @@ export const zoneToArea = (zone: ZoneType): AreaType => {
 
 export const areaToRange = (area: AreaType): string => {
   const [top, left, bottom, right] = area;
-  return `${positionToAddress([top, left])}${positionToAddress([
-    bottom,
-    right,
-  ])}`;
+  return `${pointToAddress([top, left])}${pointToAddress([bottom, right])}`;
 };
 
 export const rangeToArea = (range: string): AreaType => {
@@ -162,7 +159,7 @@ export const writeMatrix = <T = any>(
         continue;
       }
       if (lostRow.length === 0) {
-        lostRows.set(positionToAddress([y, x]), lostRow);
+        lostRows.set(pointToAddress([y, x]), lostRow);
       }
       lostRow.push(value);
     }
@@ -189,7 +186,7 @@ export const matrixIntoCells = (
   const [baseY, baseX] = addressToPoint(origin);
   matrix.map((row, y) => {
     row.map((value, x) => {
-      const id = positionToAddress([baseY + y, baseX + x]);
+      const id = pointToAddress([baseY + y, baseX + x]);
       if (typeof value !== "undefined") {
         const cell = cells[id];
         cells[id] = { ...cell, value };

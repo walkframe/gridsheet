@@ -72,6 +72,14 @@ export class Id {
   public ref(base: Table) {
     return base.getAddressById(getId(this.value, false));
   }
+  public slide(base: Table, slideY = 0, slideX = 0) {
+    const address = base.getAddressById(
+      getId(this.value, false),
+      slideY,
+      slideX
+    );
+    return base.getIdByAddress(address!);
+  }
 }
 
 export class IdRange {
@@ -290,7 +298,7 @@ export class Lexer {
     return c;
   }
 
-  public stringify(to: "REF" | "ID", table: Table) {
+  public stringify(to: "REF" | "ID", table: Table, slideY = 0, slideX = 0) {
     if (to === "ID") {
       return this.tokens
         .map((t) => {
@@ -300,6 +308,8 @@ export class Lexer {
                 return t.entity;
               }
               return `"${t.entity}"`;
+            case "ID":
+              return new Id(t.entity).slide(table, slideY, slideX);
             case "REF":
               return new Ref(t.entity).id(table);
             case "RANGE":
@@ -594,12 +604,17 @@ export const solveFormula = (value: any, base: Table, raise = true) => {
   return value;
 };
 
-export const convertFormulaAbsolute = (value: any, base: Table) => {
+export const convertFormulaAbsolute = (
+  value: any,
+  base: Table,
+  slideY = 0,
+  slideX = 0
+) => {
   if (typeof value === "string" || value instanceof String) {
     if (value.charAt(0) === "=") {
       const lexer = new Lexer(value.substring(1));
       lexer.tokenize();
-      return "=" + lexer.stringify("ID", base);
+      return "=" + lexer.stringify("ID", base, slideY, slideX);
     }
   }
   return value;

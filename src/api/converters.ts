@@ -92,7 +92,7 @@ export const r2y = (row: number | string, absolute = false) => {
   return absolute ? -row : row;
 };
 
-export const positionToAddress = ([y, x]: PointType) => {
+export const pointToAddress = ([y, x]: PointType) => {
   return `${x2c(x)}${y2r(y)}`;
 };
 

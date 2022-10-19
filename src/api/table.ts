@@ -17,12 +17,11 @@ import {
   Labelers,
 } from "../types";
 import { CellsType, CellType, Parsers, Renderers } from "../types";
-import { createMatrix, matrixShape, writeMatrix } from "./matrix";
+import { createMatrix, matrixShape, writeMatrix, zoneShape } from "./matrix";
 import {
   addressToPoint,
-  n2a,
   x2c,
-  positionToAddress,
+  pointToAddress,
   y2r,
   grantAddressAbsolute,
 } from "./converters";
@@ -194,7 +193,7 @@ export class UserTable {
       for (let x = 0; x < numCols + 1; x++) {
         const id = (this.head++).toString(36);
         ids.push(id);
-        const address = positionToAddress([y, x]);
+        const address = pointToAddress([y, x]);
         this.idCache.set(id, address);
       }
     }
@@ -205,7 +204,7 @@ export class UserTable {
       this.idMatrix.push(ids);
       for (let x = 0; x < numCols + 1; x++) {
         const id = this.getId([y, x]);
-        const address = positionToAddress([y, x]);
+        const address = pointToAddress([y, x]);
         const colId = x2c(x);
         const colDefault = cells[colId];
         const cell = cells[address];
@@ -254,7 +253,7 @@ export class UserTable {
     return copied;
   }
 
-  public getAddressById(id: Id) {
+  public getAddressById(id: Id, slideY = 0, slideX = 0) {
     const absCol = id.startsWith("$");
     if (absCol) {
       id = id.slice(1);
@@ -264,17 +263,18 @@ export class UserTable {
       id = id.slice(0, -1);
     }
     const address = this.idCache.get(id);
-    if (address) {
+    if (address && slideY === 0 && slideX === 0) {
       return grantAddressAbsolute(address, absCol, absRow);
     }
     for (let y = 0; y < this.idMatrix.length; y++) {
       const ids = this.idMatrix[y];
       for (let x = 0; x < ids.length; x++) {
         const existing = ids[x];
-        const address = positionToAddress([y, x]);
+        const address = pointToAddress([y, x]);
         this.idCache.set(existing, address);
         if (existing === id) {
-          return grantAddressAbsolute(address, absCol, absRow);
+          const slidedAddress = pointToAddress([y + slideY, x + slideX]);
+          return grantAddressAbsolute(slidedAddress, absCol, absRow);
         }
       }
     }
@@ -358,7 +358,7 @@ export class UserTable {
       for (let x = left; x <= right; x++) {
         const cell = this.getByPoint([y - top, x - left]);
         if (cell != null && filter(cell)) {
-          result[positionToAddress([y, x])] = evaluates
+          result[pointToAddress([y, x])] = evaluates
             ? solveFormula(cell[key], this.base as Table, false)
             : cell[key];
         }
@@ -444,7 +444,7 @@ export class UserTable {
       for (let x = left; x <= right; x++) {
         const cell = this.getByPoint([y - top, x - left]);
         if (cell != null && filter(cell)) {
-          result[positionToAddress([y, x])] = {
+          result[pointToAddress([y, x])] = {
             ...cell,
             value: evaluates
               ? solveFormula(cell?.value, this.base as Table, false)
@@ -610,6 +610,51 @@ export class UserTable {
       lostRows,
     });
     return this.shallowCopy(false);
+  }
+
+  public copy(
+    from: AreaType,
+    to: AreaType,
+    reflection: StoreReflectionType = {}
+  ) {
+    const now = new Date();
+    const [maxHeight, maxWidth] = zoneShape(from, 1);
+    const [topFrom, leftFrom, bottomFrom, rightFrom] = from;
+    const [topTo, leftTo, bottomTo, rightTo] = to;
+    const diff: DiffType = {};
+
+    for (let i = 0; i <= bottomTo - topTo; i++) {
+      const toY = topTo + i;
+      if (toY > this.getNumRows()) {
+        continue;
+      }
+      for (let j = 0; j <= rightTo - leftTo; j++) {
+        const toX = leftTo + j;
+        if (toX > this.getNumCols()) {
+          continue;
+        }
+        const fromY = topFrom + (i % maxHeight);
+        const fromX = leftFrom + (j % maxWidth);
+        const slideY = toY - fromY;
+        const slideX = toX - fromX;
+        const cell = this.getByPoint([
+          topFrom + (i % maxHeight),
+          leftFrom + (j % maxWidth),
+        ]);
+        const value = convertFormulaAbsolute(
+          cell?.value,
+          Table.cast(this),
+          slideY,
+          slideX
+        );
+        diff[pointToAddress([toY, toX])] = {
+          ...cell,
+          value,
+          changedAt: now,
+        };
+      }
+    }
+    return this.update(diff, false, reflection);
   }
 
   public update(
@@ -820,7 +865,6 @@ export class Table extends UserTable {
     const [y, x] = addressToPoint(address);
     const id = this.getId([Math.abs(y), Math.abs(x)]);
     if (id) {
-      this.idCache.set(id, address);
       return `#${x < 0 ? "$" : ""}${id}${y < 0 ? "$" : ""}`;
     }
   }

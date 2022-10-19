@@ -16,7 +16,7 @@ import {
 } from "../api/matrix";
 import { Table } from "../api/table";
 
-import { tsv2matrix, x2c, positionToAddress, y2r } from "../api/converters";
+import { tsv2matrix, x2c, pointToAddress, y2r } from "../api/converters";
 import { Area, DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
 import { restrictPoints, shouldTracking } from "./utils";
 
@@ -388,7 +388,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
       const [top, left, bottom, right] = selectingArea;
       for (let y = top; y <= bottom; y++) {
         for (let x = left; x <= right; x++) {
-          diff[positionToAddress([y, x])] = {
+          diff[pointToAddress([y, x])] = {
             value: matrixFrom[y - top][x - left],
           };
         }
@@ -404,35 +404,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
         [height, width] = superposeArea(selectingArea, copyingArea);
       }
       selectingArea = [y, x, y + height, x + width];
-
-      {
-        const [maxHeight, maxWidth] = zoneShape(copyingArea, 1);
-        const [topTo, leftTo, bottomTo, rightTo] = selectingArea;
-        const [topFrom, leftFrom, bottomFrom, rightFrom] = copyingArea;
-        for (let i = 0; i <= bottomTo - topTo; i++) {
-          const y = topTo + i;
-          if (y > table.getNumRows()) {
-            continue;
-          }
-          for (let j = 0; j <= rightTo - leftTo; j++) {
-            const x = leftTo + j;
-            if (x > table.getNumCols()) {
-              continue;
-            }
-            const cell = table.getByPoint([
-              topFrom + (i % maxHeight),
-              leftFrom + (j % maxWidth),
-            ]);
-            diff[positionToAddress([y, x])] = cell || {};
-          }
-        }
-      }
-      newTable = table.update(diff, false, {
-        copyingZone,
-        selectingZone,
-        choosing,
-        cutting,
-      });
+      newTable = table.copy(copyingArea, selectingArea);
     }
     return {
       ...store,
@@ -578,7 +550,7 @@ class ClearAction<T extends null> extends CoreAction<T> {
     const diff: DiffType = {};
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        diff[positionToAddress([y, x])] = { value: null };
+        diff[pointToAddress([y, x])] = { value: null };
       }
     }
     const newTable = table.update(diff, true, {

@@ -164,7 +164,7 @@ export const showIndex = () => {
   setInterval(() => {
     if (ref.current) {
       ref.current.dispatch(
-        ref.current.table.update({ A1: { value: new Date() } }, true)
+        e.update({ A1: { value: new Date() } }, true)
       );
     }
   }, 10000);
