@@ -131,6 +131,10 @@ type Props = {
   labelers?: Labelers;
   useBigInt?: boolean;
   historyLimit?: number;
+  minNumRows?: number;
+  maxNumRows?: number;
+  minNumCols?: number;
+  maxNumCols?: number;
 };
 
 const cellFilter = (cell: CellType) => true;
@@ -160,6 +164,10 @@ export class UserTable {
   protected historyIndex: number;
   protected idCache: Map<Id, string>;
   protected historyLimit: number;
+  public minNumRows: number;
+  public maxNumRows: number;
+  public minNumCols: number;
+  public maxNumCols: number;
 
   constructor({
     numRows = 0,
@@ -170,6 +178,10 @@ export class UserTable {
     labelers = {},
     useBigInt = false,
     historyLimit: historyLimit = HISTORY_LIMIT,
+    minNumRows = 1,
+    maxNumRows = -1,
+    minNumCols = 1,
+    maxNumCols = -1,
   }: Props) {
     this.head = useBigInt ? BigInt(0) : 0;
     this.data = new Map();
@@ -184,6 +196,10 @@ export class UserTable {
     this.idCache = new Map();
     this.historyLimit = historyLimit;
     this.changedAt = new Date();
+    this.minNumRows = minNumRows;
+    this.maxNumRows = maxNumRows;
+    this.minNumCols = minNumCols;
+    this.maxNumCols = maxNumCols;
 
     const common = cells.default;
     // make idMatrix beforehand
@@ -695,6 +711,13 @@ export class UserTable {
     baseY: number,
     reflection: StoreReflectionType = {}
   ) {
+    if (
+      this.maxNumRows !== -1 &&
+      this.getNumRows() + numRows > this.maxNumRows
+    ) {
+      console.error(`Rows are limited to ${this.maxNumRows}.`);
+      return this;
+    }
     const numCols = this.getNumCols(1);
     const rows: IdMatrix = [];
     for (let i = 0; i < numRows; i++) {
@@ -724,6 +747,13 @@ export class UserTable {
     numRows: number,
     reflection: StoreReflectionType = {}
   ) {
+    if (
+      this.minNumRows !== -1 &&
+      this.getNumRows() - numRows < this.minNumRows
+    ) {
+      console.error(`At least ${this.minNumRows} row(s) are required.`);
+      return this;
+    }
     const rows = this.idMatrix.splice(y, numRows);
     this.area[Area.Bottom] -= numRows;
     this.pushHistory({
@@ -741,6 +771,13 @@ export class UserTable {
     baseX: number,
     reflection: StoreReflectionType = {}
   ) {
+    if (
+      this.maxNumCols !== -1 &&
+      this.getNumCols() + numCols > this.maxNumCols
+    ) {
+      console.error(`Columns are limited to ${this.maxNumCols}.`);
+      return this;
+    }
     const numRows = this.getNumRows(1);
     const rows: IdMatrix = [];
     for (let i = 0; i < numRows; i++) {
@@ -770,6 +807,13 @@ export class UserTable {
     numCols: number,
     reflection: StoreReflectionType = {}
   ) {
+    if (
+      this.minNumCols !== -1 &&
+      this.getNumCols() - numCols < this.minNumCols
+    ) {
+      console.error(`At least ${this.minNumCols} column(s) are required.`);
+      return this;
+    }
     const rows: IdMatrix = [];
     this.idMatrix.map((row) => {
       const deleted = row.splice(x, numCols);

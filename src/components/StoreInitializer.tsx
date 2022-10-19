@@ -37,6 +37,10 @@ export const StoreInitializer: React.FC<Props> = ({
     renderers,
     parsers,
     labelers,
+    minNumRows,
+    maxNumRows,
+    minNumCols,
+    maxNumCols,
     onSave,
   } = options;
 
@@ -52,6 +56,10 @@ export const StoreInitializer: React.FC<Props> = ({
       parsers,
       renderers,
       labelers,
+      minNumRows,
+      maxNumRows,
+      minNumCols,
+      maxNumCols,
     });
     // @ts-ignore
     table.setFunctions({ ...functions, ...additionalFunctions });

@@ -125,7 +125,7 @@ export class Range {
   public idRange(base: Table) {
     return this.value
       .split(":")
-      .map((ref) => "#" + base.getIdByAddress(ref))
+      .map((ref) => base.getIdByAddress(ref))
       .join(":");
   }
   private complementRange(base: Table) {

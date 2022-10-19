@@ -29,10 +29,6 @@ export const ContextMenu: React.FC = () => {
     verticalHeadersSelecting,
     editorRef,
     contextMenuPosition,
-    minNumRows,
-    maxNumRows,
-    minNumCols,
-    maxNumCols,
   } = store;
 
   const [y, x] = choosing;
@@ -118,14 +114,12 @@ export const ContextMenu: React.FC = () => {
           {!horizontalHeadersSelecting && (
             <li
               className={
-                maxNumRows !== -1 && tableHeight + height > maxNumRows
+                table.maxNumRows !== -1 &&
+                tableHeight + height > table.maxNumRows
                   ? "disabled"
                   : "enabled"
               }
               onClick={(e) => {
-                if (e.currentTarget.classList.contains("disabled")) {
-                  return false;
-                }
                 const newTable = table.addRows(
                   selectingTop,
                   height,
@@ -146,14 +140,12 @@ export const ContextMenu: React.FC = () => {
           {!horizontalHeadersSelecting && (
             <li
               className={
-                maxNumRows !== -1 && tableHeight + height > maxNumRows
+                table.maxNumRows !== -1 &&
+                tableHeight + height > table.maxNumRows
                   ? "disabled"
                   : "enabled"
               }
               onClick={(e) => {
-                if (e.currentTarget.classList.contains("disabled")) {
-                  return false;
-                }
                 selectingZone[0] += height;
                 selectingZone[2] += height;
                 choosing[0] += height;
@@ -178,14 +170,11 @@ export const ContextMenu: React.FC = () => {
           {!verticalHeadersSelecting && (
             <li
               className={
-                maxNumCols !== -1 && tableWidth + width > maxNumCols
+                table.maxNumCols !== -1 && tableWidth + width > table.maxNumCols
                   ? "disabled"
                   : "enabled"
               }
               onClick={(e) => {
-                if (e.currentTarget.classList.contains("disabled")) {
-                  return false;
-                }
                 const newTable = table.addCols(
                   selectingLeft,
                   width,
@@ -206,15 +195,11 @@ export const ContextMenu: React.FC = () => {
           {!verticalHeadersSelecting && (
             <li
               className={
-                maxNumCols !== -1 && tableWidth + width > maxNumCols
+                table.maxNumCols !== -1 && tableWidth + width > table.maxNumCols
                   ? "disabled"
                   : "enabled"
               }
               onClick={(e) => {
-                if (e.currentTarget.classList.contains("disabled")) {
-                  return false;
-                }
-
                 selectingZone[1] += width;
                 selectingZone[3] += width;
                 choosing[1] += width;
@@ -239,14 +224,12 @@ export const ContextMenu: React.FC = () => {
           {!horizontalHeadersSelecting && (
             <li
               className={
-                minNumRows !== -1 && tableHeight - height < minNumRows
+                table.minNumRows !== -1 &&
+                tableHeight - height < table.minNumRows
                   ? "disabled"
                   : "enabled"
               }
               onClick={(e) => {
-                if (e.currentTarget.classList.contains("disabled")) {
-                  return false;
-                }
                 const newTable = table.removeRows(selectingTop, height, {
                   selectingZone,
                   choosing,
@@ -263,14 +246,11 @@ export const ContextMenu: React.FC = () => {
           {!verticalHeadersSelecting && (
             <li
               className={
-                minNumCols !== -1 && tableWidth - width < minNumCols
+                table.minNumCols !== -1 && tableWidth - width < table.minNumCols
                   ? "disabled"
                   : "enabled"
               }
               onClick={(e) => {
-                if (e.currentTarget.classList.contains("disabled")) {
-                  return false;
-                }
                 const newTable = table.removeCols(selectingLeft, width, {
                   selectingZone,
                   choosing,

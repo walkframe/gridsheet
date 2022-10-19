@@ -256,50 +256,6 @@ class SetResizingRectAction<T extends RectType> extends CoreAction<T> {
 }
 export const setResizingRect = new SetResizingRectAction().bind();
 
-class SetMinNumRows<T extends number> extends CoreAction<T> {
-  code = "SET_MIN_NUM_ROWS";
-  reduce(store: StoreType, payload: T): StoreType {
-    return {
-      ...store,
-      minNumRows: payload,
-    };
-  }
-}
-export const setMinNumRows = new SetMinNumRows().bind();
-
-class SetMaxNumRows<T extends number> extends CoreAction<T> {
-  code = "SET_MAX_NUM_ROWS";
-  reduce(store: StoreType, payload: T): StoreType {
-    return {
-      ...store,
-      maxNumRows: payload,
-    };
-  }
-}
-export const setMaxNumRows = new SetMaxNumRows().bind();
-
-class SetMinNumCols<T extends number> extends CoreAction<T> {
-  code = "SET_MIN_NUM_COLS";
-  reduce(store: StoreType, payload: T): StoreType {
-    return {
-      ...store,
-      minNumCols: payload,
-    };
-  }
-}
-export const setMinNumCols = new SetMinNumCols().bind();
-
-class SetMaxNumCols<T extends number> extends CoreAction<T> {
-  code = "SET_MAX_NUM_COLS";
-  reduce(store: StoreType, payload: T): StoreType {
-    return {
-      ...store,
-      maxNumCols: payload,
-    };
-  }
-}
-export const setMaxNumCols = new SetMaxNumCols().bind();
-
 class BlurAction<T extends null> extends CoreAction<T> {
   code = "BLUR";
   reduce(store: StoreType, payload: T): StoreType {
