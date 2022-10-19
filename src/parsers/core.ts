@@ -88,7 +88,7 @@ export class Parser {
     try {
       timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     } catch (e) {}
-    const d = new Date(value);
+    const d = parseFromTimeZone(value, { timeZone });
     if (d.toString() === "Invalid Date") {
       return;
     }
