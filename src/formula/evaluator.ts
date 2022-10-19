@@ -298,27 +298,28 @@ export class Lexer {
     return c;
   }
 
-  public stringify(to: "REF" | "ID", table: Table, slideY = 0, slideX = 0) {
-    if (to === "ID") {
-      return this.tokens
-        .map((t) => {
-          switch (t.type) {
-            case "VALUE":
-              if (typeof t.entity === "number") {
-                return t.entity;
-              }
-              return `"${t.entity}"`;
-            case "ID":
-              return new Id(t.entity).slide(table, slideY, slideX);
-            case "REF":
-              return new Ref(t.entity).id(table);
-            case "RANGE":
-              return new Range(t.entity).idRange(table);
-          }
-          return t.entity;
-        })
-        .join("");
-    }
+  public stringifyToId(table: Table, slideY = 0, slideX = 0) {
+    return this.tokens
+      .map((t) => {
+        switch (t.type) {
+          case "VALUE":
+            if (typeof t.entity === "number") {
+              return t.entity;
+            }
+            return `"${t.entity}"`;
+          case "ID":
+            return new Id(t.entity).slide(table, slideY, slideX);
+          case "REF":
+            return new Ref(t.entity).id(table);
+          case "RANGE":
+            return new Range(t.entity).idRange(table);
+        }
+        return t.entity;
+      })
+      .join("");
+  }
+
+  public stringifyToRef(table: Table) {
     return this.tokens
       .map((t) => {
         switch (t.type) {
@@ -614,7 +615,7 @@ export const convertFormulaAbsolute = (
     if (value.charAt(0) === "=") {
       const lexer = new Lexer(value.substring(1));
       lexer.tokenize();
-      return "=" + lexer.stringify("ID", base, slideY, slideX);
+      return "=" + lexer.stringifyToId(base, slideY, slideX);
     }
   }
   return value;

@@ -834,7 +834,7 @@ export class Table extends UserTable {
     if (s[0] === "=") {
       const lexer = new Lexer(s.substring(1));
       lexer.tokenize();
-      return "=" + lexer.stringify("REF", this);
+      return "=" + lexer.stringifyToRef(this);
     }
     return s;
   }
