@@ -594,6 +594,17 @@ export const solveFormula = (value: any, base: Table, raise = true) => {
   return value;
 };
 
+export const convertFormulaAbsolute = (value: any, base: Table) => {
+  if (typeof value === "string" || value instanceof String) {
+    if (value.charAt(0) === "=") {
+      const lexer = new Lexer(value.substring(1));
+      lexer.tokenize();
+      return "=" + lexer.stringify("ID", base);
+    }
+  }
+  return value;
+};
+
 export const solveMatrix = (target: Table, base: Table): MatrixType => {
   const area = target.getArea();
   return target.getMatrixFlatten({ area }).map((row) => {

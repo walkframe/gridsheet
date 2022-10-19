@@ -16,12 +16,7 @@ type Props = {
   onSelect?: FeedbackType;
 };
 
-export const Emitter: React.FC<Props> = ({
-  onChange,
-  onChangeDiff,
-  onChangeDiffNumMatrix,
-  onSelect,
-}) => {
+export const Emitter: React.FC<Props> = ({ onChange, onSelect }) => {
   const { store, dispatch } = React.useContext(Context);
   const { choosing: pointing, selectingZone: zone, table } = store;
 

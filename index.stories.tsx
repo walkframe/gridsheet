@@ -88,7 +88,7 @@ const initialData = [
   ["a", "b", 789, "d", "e", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "=test()", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
+  ["=C2", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],

@@ -1,11 +1,7 @@
 import React from "react";
-
-import { x2c, y2r } from "../api/converters";
 import { clip } from "../api/clipboard";
 
 import {
-  choose,
-  select,
   undo,
   redo,
   copy,

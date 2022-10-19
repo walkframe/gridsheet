@@ -35,15 +35,15 @@ export class Parser {
   public callback(parsed: any, cell: CellType) {
     return parsed;
   }
-  public parse(value: string, cell: CellType, table: Table): CellType {
+  public parse(value: string, cell: CellType): CellType {
     try {
-      const parsed = this._parse(value, cell, table);
+      const parsed = this._parse(value, cell);
       return { ...cell, value: parsed };
     } catch (e) {
       return { ...cell, value: e };
     }
   }
-  protected _parse(value: string, cell: CellType, table: Table): any {
+  protected _parse(value: string, cell: CellType): any {
     if (this.condition && !this.condition(value)) {
       const result = this.complement ? this.complement(value) : value;
       return this.callback(result, cell);
@@ -59,11 +59,6 @@ export class Parser {
     }
     if (value === "") {
       return this.callback(null, cell);
-    }
-    if (value[0] === "=") {
-      const lexer = new Lexer(value.substring(1));
-      lexer.tokenize();
-      return "=" + lexer.stringify("ID", table);
     }
     return this.callback(value, cell);
   }

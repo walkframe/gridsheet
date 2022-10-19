@@ -28,7 +28,11 @@ import {
 } from "./converters";
 import { FunctionMapping } from "../formula/functions/__base";
 import { functions } from "../formula/mapping";
-import { Lexer, solveFormula } from "../formula/evaluator";
+import {
+  convertFormulaAbsolute,
+  Lexer,
+  solveFormula,
+} from "../formula/evaluator";
 import { Area, HISTORY_LIMIT } from "../constants";
 import { shouldTracking } from "../store/utils";
 
@@ -183,23 +187,35 @@ export class UserTable {
     this.changedAt = new Date();
 
     const common = cells.default;
+    // make idMatrix beforehand
+    for (let y = 0; y < numRows + 1; y++) {
+      const ids: Ids = [];
+      this.idMatrix.push(ids);
+      for (let x = 0; x < numCols + 1; x++) {
+        const id = (this.head++).toString(36);
+        ids.push(id);
+        const address = positionToAddress([y, x]);
+        this.idCache.set(id, address);
+      }
+    }
     for (let y = 0; y < numRows + 1; y++) {
       const ids: Ids = [];
       const rowId = y2r(y);
       const rowDefault = cells[rowId];
       this.idMatrix.push(ids);
       for (let x = 0; x < numCols + 1; x++) {
-        const id = this.head++;
-        ids.push(id.toString(36));
+        const id = this.getId([y, x]);
         const address = positionToAddress([y, x]);
         const colId = x2c(x);
         const colDefault = cells[colId];
         const cell = cells[address];
+        const value = convertFormulaAbsolute(cell?.value, Table.cast(this));
         const stacked = {
           ...common,
           ...rowDefault,
           ...colDefault,
           ...cell,
+          value,
           style: {
             ...common?.style,
             ...rowDefault?.style,
@@ -212,7 +228,7 @@ export class UserTable {
           delete stacked.width;
           delete stacked.labeler;
         }
-        this.data.set(id.toString(36), stacked);
+        this.data.set(id, stacked);
       }
     }
   }
@@ -593,7 +609,7 @@ export class UserTable {
       positionTo: [to[0], to[1]],
       lostRows,
     });
-    return this.shallowCopy(true);
+    return this.shallowCopy(false);
   }
 
   public update(
@@ -605,7 +621,7 @@ export class UserTable {
     const diffAfter: DataType = new Map();
     const changedAt = new Date();
     Object.keys(diff).forEach((address) => {
-      const value = diff[address];
+      const value = convertFormulaAbsolute(diff[address], Table.cast(this));
       const point = addressToPoint(address);
       const id = this.getId(point);
       diffBefore.set(id, this.getByPoint(point));
@@ -623,7 +639,7 @@ export class UserTable {
       diffAfter,
       partial,
     });
-    return this.shallowCopy(false);
+    return this.shallowCopy(true);
   }
 
   public addRows(
@@ -654,7 +670,7 @@ export class UserTable {
       numRows,
       idMatrix: rows,
     });
-    return this.shallowCopy(true);
+    return this.shallowCopy(false);
   }
   public removeRows(
     y: number,
@@ -670,7 +686,7 @@ export class UserTable {
       numRows,
       idMatrix: rows,
     });
-    return this.shallowCopy(true);
+    return this.shallowCopy(false);
   }
   public addCols(
     x: number,
@@ -700,7 +716,7 @@ export class UserTable {
       numCols,
       idMatrix: rows,
     });
-    return this.shallowCopy(true);
+    return this.shallowCopy(false);
   }
   public removeCols(
     x: number,
@@ -720,11 +736,15 @@ export class UserTable {
       numCols,
       idMatrix: rows,
     });
-    return this.shallowCopy(true);
+    return this.shallowCopy(false);
   }
 }
 
 export class Table extends UserTable {
+  static cast(userTable: UserTable) {
+    return userTable as Table;
+  }
+
   public setFunctions(additionalFunctions: FunctionMapping) {
     // @ts-ignore
     this.functions = { ...functions, ...additionalFunctions };
@@ -749,7 +769,7 @@ export class Table extends UserTable {
   public parse(position: PointType, value: string) {
     const cell = this.getByPoint(position) || {};
     const parser = this.parsers[cell.parser || ""] || defaultParser;
-    return parser.parse(value, cell, this);
+    return parser.parse(value, cell);
   }
 
   public render(position: PointType, writer?: WriterType) {
@@ -765,6 +785,7 @@ export class Table extends UserTable {
       return renderer.stringify(cell || {});
     }
     const s = renderer.stringify({ ...cell, value });
+
     if (s[0] === "=") {
       const lexer = new Lexer(s.substring(1));
       lexer.tokenize();
@@ -804,7 +825,7 @@ export class Table extends UserTable {
     }
   }
 
-  private updateData(diff: DataType, partial = true) {
+  private applyDiff(diff: DataType, partial = true) {
     diff.forEach((cell, id) => {
       if (partial) {
         this.data.set(id, { ...this.getById(id), ...cell });
@@ -834,13 +855,14 @@ export class Table extends UserTable {
   }
 
   private put(position: PointType, cell: CellType) {
+    const changedAt = new Date();
     const [y, x] = position;
     const [numRows, numCols] = [this.getNumRows(1), this.getNumCols(1)];
     const modY = y % numRows;
     const modX = x % numCols;
     const id = this.getId([modY, modX]);
-    const changedAt = new Date();
-    this.data.set(id, { ...cell, changedAt });
+    const value = convertFormulaAbsolute(cell.value, Table.cast(this));
+    this.data.set(id, { ...cell, value, changedAt });
   }
 
   public write(
@@ -858,7 +880,7 @@ export class Table extends UserTable {
       partial: true,
     });
     this.put([y, x], cell);
-    return this.shallowCopy(false);
+    return this.shallowCopy(true);
   }
 
   public undo() {
@@ -868,7 +890,7 @@ export class Table extends UserTable {
     const history = this.histories[this.historyIndex--];
     switch (history.operation) {
       case "UPDATE":
-        this.updateData(history.diffBefore!, history.partial);
+        this.applyDiff(history.diffBefore!, history.partial);
         break;
       case "ADD_ROW":
         this.idMatrix.splice(history.y, history.numRows);
@@ -910,7 +932,7 @@ export class Table extends UserTable {
     }
     return {
       history,
-      newTable: this.shallowCopy(shouldTracking(history.operation)),
+      newTable: this.shallowCopy(!shouldTracking(history.operation)),
     };
   }
 
@@ -921,7 +943,7 @@ export class Table extends UserTable {
     const history = this.histories[++this.historyIndex];
     switch (history.operation) {
       case "UPDATE":
-        this.updateData(history.diffAfter!, history.partial);
+        this.applyDiff(history.diffAfter!, history.partial);
         break;
       case "ADD_ROW":
         this.idMatrix.splice(history.y, 0, ...history.idMatrix);
@@ -962,7 +984,7 @@ export class Table extends UserTable {
     }
     return {
       history,
-      newTable: this.shallowCopy(shouldTracking(history.operation)),
+      newTable: this.shallowCopy(!shouldTracking(history.operation)),
     };
   }
   getFunction(name: string) {

@@ -28,8 +28,8 @@ export const CellLayout = styled.div`
     font-size: 8px;
     font-weight: normal;
     font-style: normal;
-    background-color: rgba(0, 128, 255, 0.3);
-    color: #ffffff;
+    background-color: rgba(0, 128, 255, 0.2);
+    color: rgba(255, 255, 255, 0.6);
     padding: 0 2px;
     display: none;
     opacity: 0.7;
