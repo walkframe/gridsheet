@@ -905,8 +905,8 @@ export class Table extends UserTable {
 
   public trim(area: AreaType): ReadonlyTable {
     const copied = new Table({});
-    copied.area = [...this.area];
-    copied.base = this;
+    copied.area = area;
+    copied.base = this.base;
     copied.idMatrix = this.idMatrix;
     copied.data = this.data;
     copied.parsers = this.parsers;
