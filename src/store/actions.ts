@@ -7,12 +7,15 @@ import {
   FeedbackType,
   DiffType,
   AreaType,
+  PositionType,
 } from "../types";
 import {
   zoneToArea,
   zoneShape,
   superposeArea,
   matrixShape,
+  areaShape,
+  areaToZone,
 } from "../api/matrix";
 import { Table } from "../api/table";
 
@@ -63,7 +66,7 @@ class SetSearchQueryAction<T extends string | undefined> extends CoreAction<T> {
     const { table } = store;
     for (let x = 1; x <= table.getNumCols(); x++) {
       for (let y = 1; y <= table.getNumRows(); y++) {
-        if (table.stringify([y, x]).indexOf(searchQuery as string) !== -1) {
+        if (table.stringify({ y, x }).indexOf(searchQuery as string) !== -1) {
           matchingCells.push(`${x2c(x)}${y2r(y)}`);
         }
       }
@@ -104,7 +107,7 @@ class SetCellLabelAction<T extends boolean> extends CoreAction<T> {
 export const setCellLabel = new SetCellLabelAction().bind();
 
 class SetContextMenuPositionAction<
-  T extends [number, number]
+  T extends PositionType
 > extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     return {
@@ -281,23 +284,23 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
 
     if (cutting) {
       const src = copyingArea;
-      const [h, w] = zoneShape(copyingArea);
+      const { height: h, width: w } = areaShape(copyingArea);
       const dst: AreaType =
-        selectingArea[0] !== -1
-          ? [
-              selectingArea[Area.Top],
-              selectingArea[Area.Left],
-              selectingArea[Area.Top] + h,
-              selectingArea[Area.Left] + w,
-            ]
-          : [
-              choosing[Area.Top],
-              choosing[Area.Left],
-              choosing[Area.Top] + h,
-              choosing[Area.Left] + w,
-            ];
+        selectingArea.top !== -1
+          ? {
+              top: selectingArea.top,
+              left: selectingArea.left,
+              bottom: selectingArea.top + h,
+              right: selectingArea.left + w,
+            }
+          : {
+              top: choosing.y,
+              left: choosing.x,
+              bottom: choosing.y + h,
+              right: choosing.x + w,
+            };
       const newTable = table.move(src, dst, {
-        selectingZone: dst,
+        selectingZone: areaToZone(dst),
         copyingZone,
         cutting,
       });
@@ -305,27 +308,35 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
         ...store,
         cutting: false,
         table: newTable,
-        selectingZone: dst,
-        copyingZone: [-1, -1, -1, -1] as ZoneType,
+        selectingZone: areaToZone(dst),
+        copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
       };
     }
 
     let newTable: Table;
-    let [y, x] = choosing;
+    let { y, x } = choosing;
     const { text } = payload;
     const diff: DiffType = {};
-    if (copyingArea[0] === -1) {
+    if (copyingArea.top === -1) {
       const matrixFrom = tsv2matrix(text);
-      let [height, width] = matrixShape(matrixFrom, -1);
-      if (selectingArea[0] !== -1) {
-        [y, x] = selectingArea;
-        [height, width] = superposeArea(selectingArea, [0, 0, height, width]);
+      let { height, width } = matrixShape(matrixFrom, -1);
+      if (selectingArea.top !== -1) {
+        y = selectingArea.top;
+        x = selectingArea.left;
+        const superposed = superposeArea(selectingArea, {
+          top: 0,
+          left: 0,
+          bottom: height,
+          right: width,
+        });
+        height = superposed.height;
+        width = superposed.width;
       }
-      selectingArea = [y, x, y + height, x + width];
-      const [top, left, bottom, right] = selectingArea;
+      selectingArea = { top: y, left: x, bottom: y + height, right: x + width };
+      const { top, left, bottom, right } = selectingArea;
       for (let y = top; y <= bottom; y++) {
         for (let x = left; x <= right; x++) {
-          diff[pointToAddress([y, x])] = {
+          diff[pointToAddress({ y, x })] = {
             value: matrixFrom[y - top][x - left],
           };
         }
@@ -335,12 +346,15 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
         choosing,
       });
     } else {
-      let [height, width] = zoneShape(copyingArea);
-      if (selectingArea[0] !== -1) {
-        [y, x] = selectingArea;
-        [height, width] = superposeArea(selectingArea, copyingArea);
+      let { height, width } = areaShape(copyingArea);
+      if (selectingArea.top !== -1) {
+        y = selectingArea.top;
+        x = selectingArea.left;
+        const superposed = superposeArea(selectingArea, copyingArea);
+        height = superposed.height;
+        width = superposed.width;
       }
-      selectingArea = [y, x, y + height, x + width];
+      selectingArea = { top: y, left: x, bottom: y + height, right: x + width };
       newTable = table.copy(copyingArea, selectingArea, {
         copyingZone,
         selectingZone,
@@ -349,8 +363,8 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
     return {
       ...store,
       table: newTable,
-      selectingZone: selectingArea,
-      copyingZone: [-1, -1, -1, -1] as ZoneType,
+      selectingZone: areaToZone(selectingArea),
+      copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
     };
   }
 }
@@ -360,7 +374,7 @@ class EscapeAction<T extends null> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
-      copyingZone: [-1, -1, -1, -1] as ZoneType,
+      copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
       cutting: false,
       editingCell: "",
       horizontalHeadersSelecting: false,
@@ -398,12 +412,17 @@ class SelectRowsAction<
 > extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     const { range, numCols } = payload;
-    const [start, end] = range.sort();
-    const selectingZone = [start, 1, end, numCols] as ZoneType;
+    const { start, end } = range;
+    const selectingZone = {
+      startY: start,
+      startX: 1,
+      endY: end,
+      endX: numCols,
+    } as ZoneType;
     return {
       ...store,
       selectingZone,
-      choosing: [start, 0] as PointType,
+      choosing: { y: start, x: 0 } as PointType,
       verticalHeadersSelecting: true,
       horizontalHeadersSelecting: false,
     };
@@ -416,13 +435,18 @@ class SelectColsAction<
 > extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     const { range, numRows } = payload;
-    const [start, end] = range.sort();
-    const selectingZone = [1, start, numRows, end] as ZoneType;
+    const { start, end } = range;
+    const selectingZone = {
+      startY: 1,
+      startX: start,
+      endY: numRows,
+      endX: end,
+    };
 
     return {
       ...store,
       selectingZone,
-      choosing: [0, start] as PointType,
+      choosing: { y: 0, x: start } as PointType,
       verticalHeadersSelecting: false,
       horizontalHeadersSelecting: true,
     };
@@ -432,8 +456,13 @@ export const selectCols = new SelectColsAction().bind();
 
 class DragAction<T extends PointType> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
-    const [y, x] = store.choosing;
-    const selectingZone = [y, x, payload[0], payload[1]] as ZoneType;
+    const { y, x } = store.choosing;
+    const selectingZone = {
+      startY: y,
+      startX: x,
+      endY: payload.y,
+      endX: payload.x,
+    };
     return { ...store, selectingZone };
   }
 }
@@ -463,7 +492,7 @@ class WriteAction<T extends string> extends CoreAction<T> {
     return {
       ...store,
       table: newTable,
-      copyingZone: [-1, -1, -1, -1] as ZoneType,
+      copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 } as ZoneType,
     };
   }
 }
@@ -474,14 +503,15 @@ class ClearAction<T extends null> extends CoreAction<T> {
     const { choosing, selectingZone, table } = store;
 
     let selectingArea = zoneToArea(selectingZone);
-    if (selectingArea[0] === -1) {
-      selectingArea = [...choosing, ...choosing];
+    if (selectingArea.top === -1) {
+      const { y, x } = choosing;
+      selectingArea = { top: y, left: x, bottom: y, right: x };
     }
-    const [top, left, bottom, right] = selectingArea;
+    const { top, left, bottom, right } = selectingArea;
     const diff: DiffType = {};
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        diff[pointToAddress([y, x])] = { value: null };
+        diff[pointToAddress({ y, x })] = { value: null };
       }
     }
     const newTable = table.update(diff, true, {
@@ -544,18 +574,20 @@ class ArrowAction<
   reduce(store: StoreType, payload: T): StoreType {
     const { shiftKey, deltaY, deltaX, numRows, numCols } = payload;
     let { choosing, selectingZone, table } = store;
-    const [y, x] = choosing;
+    const { y, x } = choosing;
     if (shiftKey) {
       let [dragEndY, dragEndX] = [
-        selectingZone[Area.Bottom] === -1 ? y : selectingZone[Area.Bottom],
-        selectingZone[Area.Right] === -1 ? x : selectingZone[Area.Right],
+        selectingZone.endY === -1 ? y : selectingZone.endY,
+        selectingZone.endX === -1 ? x : selectingZone.endX,
       ];
       const [nextY, nextX] = [dragEndY + deltaY, dragEndX + deltaX];
       if (nextY < 1 || numRows < nextY || nextX < 1 || numCols < nextX) {
         return store;
       }
       selectingZone =
-        y === nextY && x === nextX ? [-1, -1, -1, -1] : [y, x, nextY, nextX];
+        y === nextY && x === nextX
+          ? { startY: -1, startX: -1, endY: -1, endX: -1 }
+          : { startY: y, startX: x, endY: nextY, endX: nextX };
       return {
         ...store,
         selectingZone,
@@ -565,33 +597,33 @@ class ArrowAction<
     if (nextY < 1 || numRows < nextY || nextX < 1 || numCols < nextX) {
       return store;
     }
-    let [editorTop, editorLeft, height, width] = store.editorRect;
+    let { y: editorTop, x: editorLeft, height, width } = store.editorRect;
     if (deltaY > 0) {
       for (let i = y; i < nextY; i++) {
-        editorTop += table.getByPoint([i, 0])?.height || DEFAULT_HEIGHT;
+        editorTop += table.getByPoint({ y: i, x: 0 })?.height || DEFAULT_HEIGHT;
       }
     } else if (deltaY < 0) {
       for (let i = y - 1; i >= nextY; i--) {
-        editorTop -= table.getByPoint([i, 0])?.height || DEFAULT_HEIGHT;
+        editorTop -= table.getByPoint({ y: i, x: 0 })?.height || DEFAULT_HEIGHT;
       }
     }
     if (deltaX > 0) {
       for (let i = x; i < nextX; i++) {
-        editorLeft += table.getByPoint([0, i])?.width || DEFAULT_WIDTH;
+        editorLeft += table.getByPoint({ y: 0, x: i })?.width || DEFAULT_WIDTH;
       }
     } else if (deltaX < 0) {
       for (let i = x - 1; i >= nextX; i--) {
-        editorLeft -= table.getByPoint([0, i])?.width || DEFAULT_WIDTH;
+        editorLeft -= table.getByPoint({ y: 0, x: i })?.width || DEFAULT_WIDTH;
       }
     }
-    const cell = table.getByPoint([nextY, nextX]);
+    const cell = table.getByPoint({ y: nextY, x: nextX });
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
     return {
       ...store,
-      selectingZone: [-1, -1, -1, -1] as ZoneType,
-      choosing: [nextY, nextX] as PointType,
-      editorRect: [editorTop, editorLeft, height, width] as RectType,
+      selectingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
+      choosing: { y: nextY, x: nextX } as PointType,
+      editorRect: { y: editorTop, x: editorLeft, height, width },
     };
   }
 }
@@ -608,10 +640,10 @@ class WalkAction<
   reduce(store: StoreType, payload: T): StoreType {
     let { deltaY, deltaX, numRows, numCols } = payload;
     let { choosing, selectingZone, table } = store;
-    let [editorTop, editorLeft, height, width] = store.editorRect;
-    const [y, x] = choosing;
+    let { y: editorTop, x: editorLeft, height, width } = store.editorRect;
+    const { y, x } = choosing;
     const selectingArea = zoneToArea(selectingZone);
-    const [top, left, bottom, right] = selectingArea;
+    const { top, left, bottom, right } = selectingArea;
     let [nextY, nextX] = [y + deltaY, x + deltaX];
     if (nextY < top && top !== -1) {
       deltaY = bottom - nextY;
@@ -662,29 +694,29 @@ class WalkAction<
     }
     if (deltaY > 0) {
       for (let i = y; i < nextY; i++) {
-        editorTop += table.getByPoint([i, 0])?.height || DEFAULT_HEIGHT;
+        editorTop += table.getByPoint({ y: i, x: 0 })?.height || DEFAULT_HEIGHT;
       }
     } else if (deltaY < 0) {
       for (let i = y - 1; i >= nextY; i--) {
-        editorTop -= table.getByPoint([i, 0])?.height || DEFAULT_HEIGHT;
+        editorTop -= table.getByPoint({ y: i, x: 0 })?.height || DEFAULT_HEIGHT;
       }
     }
     if (deltaX > 0) {
       for (let i = x; i < nextX; i++) {
-        editorLeft += table.getByPoint([0, i])?.width || DEFAULT_WIDTH;
+        editorLeft += table.getByPoint({ y: 0, x: i })?.width || DEFAULT_WIDTH;
       }
     } else if (deltaX < 0) {
       for (let i = x - 1; i >= nextX; i--) {
-        editorLeft -= table.getByPoint([0, i])?.width || DEFAULT_WIDTH;
+        editorLeft -= table.getByPoint({ y: 0, x: i })?.width || DEFAULT_WIDTH;
       }
     }
-    const cell = table.getByPoint([nextY, nextX]);
+    const cell = table.getByPoint({ y: nextY, x: nextX });
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
     return {
       ...store,
-      choosing: [nextY, nextX] as PointType,
-      editorRect: [editorTop, editorLeft, height, width] as RectType,
+      choosing: { y: nextY, x: nextX } as PointType,
+      editorRect: { y: editorTop, x: editorLeft, height, width },
     };
   }
 }

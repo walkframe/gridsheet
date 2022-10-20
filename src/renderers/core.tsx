@@ -39,7 +39,7 @@ export class Renderer {
         }
         if (value instanceof Table) {
           return this._render(
-            value.getByPoint([value.top, value.left])?.value,
+            value.getByPoint({ y: value.top, x: value.left })?.value,
             table,
             writer
           );

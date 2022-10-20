@@ -22,7 +22,7 @@ import {
 import { EditorLayout } from "./styles/EditorLayout";
 
 import { Context } from "../store";
-import { Area } from "../constants";
+import { areaToZone } from "../api/matrix";
 
 export const Editor: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);
@@ -41,7 +41,7 @@ export const Editor: React.FC = () => {
     table,
   } = store;
 
-  let [y, x] = choosing;
+  let { y, x } = choosing;
 
   const rowId = `${y2r(y)}`;
   const colId = x2c(x);
@@ -54,9 +54,9 @@ export const Editor: React.FC = () => {
 
   const editing = editingCell === address;
 
-  const cell = table.getByPoint([y, x]);
+  const cell = table.getByPoint({ y, x });
   const value = cell?.value;
-  const [top, left, height, width] = editorRect;
+  const { y: top, x: left, height, width } = editorRect;
 
   const writeCell = (value: string) => {
     if (before !== value) {
@@ -83,7 +83,7 @@ export const Editor: React.FC = () => {
         onDoubleClick={(e) => {
           const input = e.currentTarget;
           if (!editing) {
-            input.value = table.stringify([y, x], value || null);
+            input.value = table.stringify({ y, x }, value || null);
             setBefore(input.value);
             dispatch(setEditingCell(address));
             setTimeout(() => {
@@ -136,7 +136,7 @@ export const Editor: React.FC = () => {
                   dispatch(setEditingCell(""));
                   input.value = "";
                 }
-              } else if (editingOnEnter && selectingZone[0] === -1) {
+              } else if (editingOnEnter && selectingZone.startY === -1) {
                 const dblclick = document.createEvent("MouseEvents");
                 dblclick.initEvent("dblclick", true, true);
                 input.dispatchEvent(dblclick);
@@ -232,7 +232,12 @@ export const Editor: React.FC = () => {
                 if (!editing) {
                   e.preventDefault();
                   dispatch(
-                    select([0, 0, table.getNumRows(), table.getNumCols()])
+                    select({
+                      startY: 0,
+                      startX: 0,
+                      endY: table.getNumRows(),
+                      endX: table.getNumCols(),
+                    })
                   );
                   return false;
                 }
@@ -242,7 +247,7 @@ export const Editor: React.FC = () => {
                 if (!editing) {
                   e.preventDefault();
                   const area = clip(store);
-                  dispatch(copy(area));
+                  dispatch(copy(areaToZone(area)));
                   input.focus(); // refocus
                   return false;
                 }
@@ -276,11 +281,14 @@ export const Editor: React.FC = () => {
                   onSave &&
                     onSave(table, {
                       pointing: choosing,
-                      selectingFrom: [selectingZone[0], selectingZone[1]],
-                      selectingTo: [
-                        selectingZone[Area.Bottom],
-                        selectingZone[Area.Right],
-                      ],
+                      selectingFrom: {
+                        y: selectingZone.startY,
+                        x: selectingZone.startX,
+                      },
+                      selectingTo: {
+                        y: selectingZone.endY,
+                        x: selectingZone.endX,
+                      },
                     });
                   return false;
                 }
@@ -300,7 +308,7 @@ export const Editor: React.FC = () => {
                 if (!editing) {
                   e.preventDefault();
                   const area = clip(store);
-                  dispatch(cut(area));
+                  dispatch(cut(areaToZone(area)));
                   input.focus(); // refocus
 
                   return false;

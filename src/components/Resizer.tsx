@@ -55,7 +55,7 @@ export const Resizer: React.FC = React.memo(() => {
   if (y === -1 && x === -1) {
     return null;
   }
-  const cell = table.getByPoint([y === -1 ? 0 : y, x === -1 ? 0 : x]);
+  const cell = table.getByPoint({ y: y === -1 ? 0 : y, x: x === -1 ? 0 : x });
   const { y: offsetY, x: offsetX } = sheetRef.current.getBoundingClientRect();
 
   const baseWidth = cell?.width || DEFAULT_WIDTH;
@@ -66,24 +66,27 @@ export const Resizer: React.FC = React.memo(() => {
 
   const handleResizeEnd = () => {
     const selectingArea = zoneToArea(selectingZone);
-    const [top, left, bottom, right] = selectingArea;
+    const { top, left, bottom, right } = selectingArea;
     const diff: DiffType = {};
     if (x !== -1) {
       let xs = [x];
-      if (horizontalHeadersSelecting && between([left, right], x)) {
+      if (
+        horizontalHeadersSelecting &&
+        between({ start: left, end: right }, x)
+      ) {
         xs = makeSequence(left, right + 1);
       }
       xs.map((x, i) => {
-        diff[pointToAddress([0, x])] = { width };
+        diff[pointToAddress({ y: 0, x })] = { width };
       });
     }
     if (y !== -1) {
       let ys = [y];
-      if (verticalHeadersSelecting && between([top, bottom], y)) {
+      if (verticalHeadersSelecting && between({ start: top, end: bottom }, y)) {
         ys = makeSequence(top, bottom + 1);
       }
       ys.map((y, i) => {
-        diff[pointToAddress([y, 0])] = { height };
+        diff[pointToAddress({ y, x: 0 })] = { height };
       });
     }
     const newTable = table.update(diff, true, { selectingZone });

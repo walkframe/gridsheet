@@ -40,12 +40,12 @@ export class SumifFunction extends BaseFunction {
     let sumMatrix = conditionMatrix;
     if (sumRange) {
       const [top, left] = [sumRange.top, sumRange.left];
-      const area: AreaType = [
+      const area: AreaType = {
         top,
         left,
-        top + sumRange.getNumRows(),
-        left + sumRange.getNumCols(),
-      ];
+        bottom: top + sumRange.getNumRows(),
+        right: left + sumRange.getNumCols(),
+      };
       sumMatrix = solveMatrix(this.base.trim(area), this.base);
     }
     let total = 0;

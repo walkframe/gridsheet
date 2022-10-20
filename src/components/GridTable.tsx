@@ -75,11 +75,16 @@ export const GridTable = ({ tableRef }: Props) => {
           <div
             className="gs-tabular-col"
             onClick={() => {
-              dispatch(choose([-1, -1]));
+              dispatch(choose({ y: -1, x: -1 }));
               setTimeout(() => {
-                dispatch(choose([1, 1]));
+                dispatch(choose({ y: 1, x: 1 }));
                 dispatch(
-                  select([1, 1, table.getNumRows(), table.getNumCols()])
+                  select({
+                    startY: 1,
+                    startX: 1,
+                    endY: table.getNumRows(),
+                    endX: table.getNumCols(),
+                  })
                 );
               }, 100);
             }}
@@ -89,7 +94,7 @@ export const GridTable = ({ tableRef }: Props) => {
               ref={horizontalHeadersRef}
               itemCount={table.getNumCols() || 0}
               itemSize={(x) =>
-                table.getByPoint([0, x + 1])?.width || DEFAULT_WIDTH
+                table.getByPoint({ y: 0, x: x + 1 })?.width || DEFAULT_WIDTH
               }
               layout="horizontal"
               width={gridOuterRef.current?.clientWidth || sheetInnerWidth}
@@ -108,7 +113,7 @@ export const GridTable = ({ tableRef }: Props) => {
               ref={verticalHeadersRef}
               itemCount={table.getNumRows() || 0}
               itemSize={(y) =>
-                table.getByPoint([y + 1, 0])?.height || DEFAULT_HEIGHT
+                table.getByPoint({ y: y + 1, x: 0 })?.height || DEFAULT_HEIGHT
               }
               height={gridOuterRef.current?.clientHeight || sheetInnerHeight}
               width={headerWidth}
@@ -126,10 +131,10 @@ export const GridTable = ({ tableRef }: Props) => {
               width={sheetWidth - headerWidth}
               height={sheetHeight - headerHeight}
               columnWidth={(x) =>
-                table.getByPoint([0, x + 1])?.width || DEFAULT_WIDTH
+                table.getByPoint({ y: 0, x: x + 1 })?.width || DEFAULT_WIDTH
               }
               rowHeight={(y) =>
-                table.getByPoint([y + 1, 0])?.height || DEFAULT_HEIGHT
+                table.getByPoint({ y: y + 1, x: 0 })?.height || DEFAULT_HEIGHT
               }
               onScroll={(e) => {
                 verticalHeadersRef.current?.scrollTo(e.scrollTop);

@@ -92,7 +92,7 @@ export const r2y = (row: number | string, absolute = false) => {
   return absolute ? -row : row;
 };
 
-export const pointToAddress = ([y, x]: PointType) => {
+export const pointToAddress = ({ y, x }: PointType) => {
   return `${x2c(x)}${y2r(y)}`;
 };
 
@@ -107,7 +107,7 @@ export const matrix2tsv = (
   matrix.map((row, i) => {
     const cols: string[] = [];
     row.map((col, j) => {
-      const value = table.stringify([y + i, x + j], col);
+      const value = table.stringify({ y: y + i, x: x + j }, col);
       if (value.indexOf("\n") !== -1) {
         cols.push(`"${value.replace(/"/g, '""')}"`);
       } else {
@@ -160,10 +160,10 @@ export const tsv2matrix = (tsv: string): string[][] => {
 export const addressToPoint = (address: Address): PointType => {
   const m = address.match(/(\$)?([A-Z]*)(\$)?([0-9]*)/);
   if (m == null) {
-    return [0, 0];
+    return { y: 0, x: 0 };
   }
   const [_, absoluteCol, col, absoluteRow, row] = m.slice();
-  return [r2y(row, !!absoluteRow) || 0, c2x(col, !!absoluteCol) || 0];
+  return { y: r2y(row, !!absoluteRow) || 0, x: c2x(col, !!absoluteCol) || 0 };
 };
 
 export const grantAddressAbsolute = (

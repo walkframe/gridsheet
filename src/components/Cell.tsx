@@ -55,21 +55,28 @@ export const Cell: React.FC<Props> = React.memo(
     const selectingArea = zoneToArea(selectingZone); // (top, left) -> (bottom, right)
     const copyingArea = zoneToArea(copyingZone); // (top, left) -> (bottom, right)
     const editing = editingCell === address;
-    const pointed = choosing[0] === y && choosing[1] === x;
+    const pointed = choosing.y === y && choosing.x === x;
 
     React.useEffect(() => {
       if (editing) {
         const rect = cellRef.current.getBoundingClientRect();
-        dispatch(setEditorRect([rect.top, rect.left, rect.height, rect.width]));
+        dispatch(
+          setEditorRect({
+            y: rect.top,
+            x: rect.left,
+            height: rect.height,
+            width: rect.width,
+          })
+        );
         //editorRef.current?.focus();
       }
     }, [editing]);
     if (table.getNumRows() === 0) {
       return null;
     }
-    const cell = table.getByPoint([y, x]);
-    const height = table.getByPoint([y, 0])?.height || DEFAULT_HEIGHT;
-    const width = table.getByPoint([0, x])?.width || DEFAULT_WIDTH;
+    const cell = table.getByPoint({ y, x });
+    const height = table.getByPoint({ y, x: 0 })?.height || DEFAULT_HEIGHT;
+    const width = table.getByPoint({ y: 0, x })?.width || DEFAULT_WIDTH;
 
     const verticalAlign = cell?.verticalAlign || "middle";
     const writeCell = (value: string) => {
@@ -80,14 +87,14 @@ export const Cell: React.FC<Props> = React.memo(
     };
 
     let matching = false;
-    if (searchQuery && table.stringify([y, x]).indexOf(searchQuery) !== -1) {
+    if (searchQuery && table.stringify({ y, x }).indexOf(searchQuery) !== -1) {
       matching = true;
     }
 
     let errorMessage = "";
     let rendered;
     try {
-      rendered = table.render([y, x], writeCell);
+      rendered = table.render({ y, x }, writeCell);
     } catch (e) {
       if (e instanceof FormulaError) {
         errorMessage = e.message;
@@ -103,11 +110,13 @@ export const Cell: React.FC<Props> = React.memo(
       <CellLayout
         key={x}
         ref={cellRef}
-        className={`gs-cell ${among(copyingArea, [y, x]) ? "gs-copying" : ""} ${
-          y === 0 ? "gs-cell-top-end" : ""
-        } ${x === 0 ? "gs-cell-left-end" : ""} ${
-          y === table.getNumRows() ? "gs-cell-bottom-end" : ""
-        } ${x === table.getNumCols() ? "gs-cell-right-end" : ""}`}
+        className={`gs-cell ${
+          among(copyingArea, { y, x }) ? "gs-copying" : ""
+        } ${y === 0 ? "gs-cell-top-end" : ""} ${
+          x === 0 ? "gs-cell-left-end" : ""
+        } ${y === table.getNumRows() ? "gs-cell-bottom-end" : ""} ${
+          x === table.getNumCols() ? "gs-cell-right-end" : ""
+        }`}
         style={{
           ...outerStyle,
           ...cell?.style,
@@ -116,16 +125,16 @@ export const Cell: React.FC<Props> = React.memo(
         onContextMenu={(e) => {
           e.preventDefault();
           console.log({ e });
-          dispatch(setContextMenuPosition([e.clientY, e.clientX]));
+          dispatch(setContextMenuPosition({ y: e.clientY, x: e.clientX }));
           return false;
         }}
         onClick={(e) => {
-          dispatch(setContextMenuPosition([-1, -1]));
+          dispatch(setContextMenuPosition({ y: -1, x: -1 }));
           if (e.shiftKey) {
-            dispatch(drag([y, x]));
+            dispatch(drag({ y, x }));
           } else {
-            dispatch(choose([y, x]));
-            dispatch(select([-1, -1, -1, -1]));
+            dispatch(choose({ y, x }));
+            dispatch(select({ startY: -1, startX: -1, endY: -1, endX: -1 }));
           }
           editorRef.current?.focus();
         }}
@@ -145,32 +154,32 @@ export const Cell: React.FC<Props> = React.memo(
         draggable
         onDragStart={(e) => {
           e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
-          dispatch(choose([y, x]));
-          dispatch(select([y, x, y, x]));
+          dispatch(choose({ y, x }));
+          dispatch(select({ startY: y, startX: x, endY: y, endX: x }));
         }}
         onDragEnd={(e) => {
-          const [h, w] = zoneShape(selectingZone);
+          const { height: h, width: w } = zoneShape(selectingZone);
           if (h + w === 0) {
-            dispatch(select([-1, -1, -1, -1]));
+            dispatch(select({ startY: -1, startX: -1, endY: -1, endX: -1 }));
           }
         }}
         onDragEnter={() => {
           if (horizontalHeadersSelecting) {
-            dispatch(drag([table.getNumRows(), x]));
+            dispatch(drag({ y: table.getNumRows(), x }));
             return false;
           }
           if (verticalHeadersSelecting) {
-            dispatch(drag([y, table.getNumCols()]));
+            dispatch(drag({ y, x: table.getNumCols() }));
             return false;
           }
-          dispatch(drag([y, x]));
+          dispatch(drag({ y, x }));
           return false;
         }}
       >
         <div
           className={`
           gs-cell-rendered-wrapper-outer ${
-            among(selectingArea, [y, x]) ? "gs-selected" : ""
+            among(selectingArea, { y, x }) ? "gs-selected" : ""
           }
           ${pointed ? "gs-pointed" : ""} ${editing ? "gs-editing" : ""}
           ${matching ? "gs-matching" : ""}
@@ -203,7 +212,7 @@ const getCellStyle = (
   cutting: boolean
 ): React.CSSProperties => {
   let style: any = {};
-  const [top, left, bottom, right] = copyingArea;
+  const { top, left, bottom, right } = copyingArea;
 
   if (top === y && left <= x && x <= right) {
     style.borderTop = `${cutting ? "dotted" : "dashed"} 2px #0077ff`;

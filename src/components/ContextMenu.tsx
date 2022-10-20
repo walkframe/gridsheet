@@ -14,7 +14,7 @@ import {
   ContextMenuLayout,
   ContextMenuModalLayout,
 } from "./styles/ContextMenuLayout";
-import { zoneShape, zoneToArea } from "../api/matrix";
+import { areaToZone, zoneShape, zoneToArea } from "../api/matrix";
 
 import { Context } from "../store";
 
@@ -31,13 +31,13 @@ export const ContextMenu: React.FC = () => {
     contextMenuPosition,
   } = store;
 
-  const [y, x] = choosing;
-  let [
-    selectingTop,
-    selectingLeft,
-    selectingBottom,
-    selectingRight,
-  ] = zoneToArea(selectingZone);
+  const { y, x } = choosing;
+  let {
+    top: selectingTop,
+    left: selectingLeft,
+    bottom: selectingBottom,
+    right: selectingRight,
+  } = zoneToArea(selectingZone);
   if (selectingTop === -1) {
     [selectingTop, selectingLeft, selectingBottom, selectingRight] = [
       y,
@@ -48,9 +48,9 @@ export const ContextMenu: React.FC = () => {
   }
 
   const [tableHeight, tableWidth] = [table.getNumRows(), table.getNumCols()];
-  const [height, width] = zoneShape(selectingZone, 1);
+  const { height, width } = zoneShape(selectingZone, 1);
 
-  const [top, left] = contextMenuPosition;
+  const { y: top, x: left } = contextMenuPosition;
   if (top === -1) {
     return null;
   }
@@ -61,7 +61,7 @@ export const ContextMenu: React.FC = () => {
       className="gs-contextmenu-modal"
       onClick={(e) => {
         e.preventDefault();
-        dispatch(setContextMenuPosition([-1, -1]));
+        dispatch(setContextMenuPosition({ y: -1, x: -1 }));
         return false;
       }}
     >
@@ -76,7 +76,7 @@ export const ContextMenu: React.FC = () => {
             className="enabled"
             onClick={() => {
               const area = clip(store);
-              dispatch(cut(area));
+              dispatch(cut(areaToZone(area)));
             }}
           >
             <div className="gs-menu-name">Cut</div>
@@ -88,7 +88,7 @@ export const ContextMenu: React.FC = () => {
             className="enabled"
             onClick={() => {
               const area = clip(store);
-              dispatch(copy(area));
+              dispatch(copy(areaToZone(area)));
             }}
           >
             <div className="gs-menu-name">Copy</div>
@@ -146,9 +146,9 @@ export const ContextMenu: React.FC = () => {
                   : "enabled"
               }
               onClick={(e) => {
-                selectingZone[0] += height;
-                selectingZone[2] += height;
-                choosing[0] += height;
+                selectingZone.startY += height;
+                selectingZone.endY += height;
+                choosing.y += height;
                 const newTable = table.addRows(
                   selectingBottom + 1,
                   height,
@@ -200,9 +200,9 @@ export const ContextMenu: React.FC = () => {
                   : "enabled"
               }
               onClick={(e) => {
-                selectingZone[1] += width;
-                selectingZone[3] += width;
-                choosing[1] += width;
+                selectingZone.startX += width;
+                selectingZone.endX += width;
+                choosing.x += width;
                 const newTable = table.addCols(
                   selectingRight + 1,
                   width,

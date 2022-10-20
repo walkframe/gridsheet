@@ -32,8 +32,8 @@ export const Emitter: React.FC<Props> = ({ onChange, onSelect }) => {
     onChange &&
       onChange(table, {
         pointing,
-        selectingFrom: [zone[0], zone[1]],
-        selectingTo: [zone[Area.Bottom], zone[Area.Right]],
+        selectingFrom: { y: zone.startY, x: zone.startX },
+        selectingTo: { y: zone.endY, x: zone.endX },
       });
   }, [onChange, table]);
 
@@ -41,8 +41,8 @@ export const Emitter: React.FC<Props> = ({ onChange, onSelect }) => {
     onSelect &&
       onSelect(table, {
         pointing,
-        selectingFrom: [zone[0], zone[1]],
-        selectingTo: [zone[Area.Bottom], zone[Area.Right]],
+        selectingFrom: { y: zone.startY, x: zone.startX },
+        selectingTo: { y: zone.endY, x: zone.endX },
       });
   }, [onSelect, pointing, zone]);
   return <></>;

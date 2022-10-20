@@ -3,9 +3,9 @@ import { PointType, StoreType, ZoneType } from "../types";
 
 export const restrictPoints = (store: StoreType, table: Table) => {
   const { choosing, selectingZone, copyingZone } = store;
-  let [y, x] = choosing;
-  let [y1, x1, y2, x2] = selectingZone;
-  let [y3, x3, y4, x4] = copyingZone;
+  let { y, x } = choosing;
+  let { startY: y1, startX: x1, endY: y2, endX: x2 } = selectingZone;
+  let { startY: y3, startX: x3, endY: y4, endX: x4 } = copyingZone;
   const [numRows, numCols] = [table.getNumRows(), table.getNumCols()];
   if (y > numRows) {
     y = numRows;
@@ -38,9 +38,9 @@ export const restrictPoints = (store: StoreType, table: Table) => {
     x4 = numCols;
   }
   return {
-    choosing: [y, x] as PointType,
-    selectingZone: [y1, x1, y2, x2] as ZoneType,
-    copyingZone: [y3, x3, y4, x4] as ZoneType,
+    choosing: { y, x } as PointType,
+    selectingZone: { startY: y1, startX: x1, endY: y2, endX: x2 } as ZoneType,
+    copyingZone: { startY: y3, startX: x3, endY: y4, endX: x4 } as ZoneType,
   };
 };
 

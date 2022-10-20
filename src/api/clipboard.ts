@@ -1,16 +1,16 @@
-import { ZoneType, StoreType } from "../types";
+import { StoreType, AreaType } from "../types";
 
 import { zoneToArea } from "./matrix";
 import { matrix2tsv } from "./converters";
 import { solveMatrix } from "../formula/evaluator";
 
-export const clip = (store: StoreType): ZoneType => {
+export const clip = (store: StoreType): AreaType => {
   const { selectingZone, choosing, editorRef, table } = store;
-  const [y, x] = choosing;
+  const { y, x } = choosing;
   let selectingArea = zoneToArea(selectingZone);
   let area = selectingArea;
-  if (area[0] === -1) {
-    area = [y, x, y, x];
+  if (area.left === -1) {
+    area = { top: y, left: x, bottom: y, right: x };
   }
   const input = editorRef.current;
   const trimmed = table.trim(area);

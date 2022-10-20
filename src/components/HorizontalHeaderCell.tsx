@@ -34,16 +34,16 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
     if (table.getNumRows() === 0) {
       return null;
     }
-    const col = table.getByPoint([0, x]);
+    const col = table.getByPoint({ y: 0, x });
     const width = col?.width || DEFAULT_WIDTH;
     return (
       <div
         style={outerStyle}
         className={`
       gs-header gs-horizontal
-      ${choosing[1] === x ? "gs-choosing" : ""}
+      ${choosing.x === x ? "gs-choosing" : ""}
       ${
-        between([selectingZone[1], selectingZone[Area.Right]], x)
+        between({ start: selectingZone.startX, end: selectingZone.endX }, x)
           ? horizontalHeadersSelecting
             ? "gs-header-selecting"
             : "gs-selecting"
@@ -51,35 +51,43 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
       }`}
         onContextMenu={(e) => {
           e.preventDefault();
-          dispatch(setContextMenuPosition([e.clientY, e.clientX]));
+          dispatch(setContextMenuPosition({ y: e.clientY, x: e.clientX }));
           return false;
         }}
         onClick={(e) => {
-          let startX = e.shiftKey ? selectingZone[1] : x;
+          let startX = e.shiftKey ? selectingZone.startX : x;
           if (startX === -1) {
-            startX = choosing[1];
+            startX = choosing.x;
           }
           dispatch(
-            selectCols({ range: [startX, x], numRows: table.getNumRows() })
+            selectCols({
+              range: { start: startX, end: x },
+              numRows: table.getNumRows(),
+            })
           );
-          dispatch(setContextMenuPosition([-1, -1]));
-          dispatch(choose([1, startX]));
+          dispatch(setContextMenuPosition({ y: -1, x: -1 }));
+          dispatch(choose({ y: 1, x: startX }));
           editorRef.current?.focus();
           return false;
         }}
         onDragStart={(e) => {
           e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
-          dispatch(selectCols({ range: [x, x], numRows: table.getNumRows() }));
-          dispatch(choose([1, x]));
+          dispatch(
+            selectCols({
+              range: { start: x, end: x },
+              numRows: table.getNumRows(),
+            })
+          );
+          dispatch(choose({ y: 1, x }));
           return false;
         }}
         onDragEnter={() => {
-          if (resizingRect[1] === -1) {
-            const startY = selectingZone[0];
+          if (resizingRect.x === -1) {
+            const { startY } = selectingZone;
             if (startY === 1) {
-              dispatch(drag([table.getNumRows(), x]));
+              dispatch(drag({ y: table.getNumRows(), x }));
             } else {
-              dispatch(drag([1, x]));
+              dispatch(drag({ y: 1, x }));
             }
           }
           return false;

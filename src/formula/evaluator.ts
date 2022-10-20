@@ -61,8 +61,8 @@ export class Ref {
     this.value = value.toUpperCase();
   }
   public evaluate(base: Table): Table {
-    const [y, x] = addressToPoint(this.value);
-    return base.trim([y, x, y, x]);
+    const { y, x } = addressToPoint(this.value);
+    return base.trim({ top: y, left: x, bottom: y, right: x });
   }
   public id(base: Table) {
     const id = base.getIdByAddress(this.value);
@@ -79,8 +79,8 @@ export class Id {
     this.value = value;
   }
   public evaluate(base: Table) {
-    const [y, x] = base.getPointById(getId(this.value));
-    return base.trim([y, x, y, x]);
+    const { y, x } = base.getPointById(getId(this.value));
+    return base.trim({ top: y, left: x, bottom: y, right: x });
   }
   public ref(base: Table) {
     return base.getAddressById(getId(this.value, false));
@@ -108,7 +108,7 @@ export class IdRange {
     const [p1, p2] = ids
       .map((id) => getId(id))
       .map((id) => base.getPointById(id));
-    return base.trim([p1[0], p1[1], p2[0], p2[1]]);
+    return base.trim({ top: p1.y, left: p1.x, bottom: p2.y, right: p2.x });
   }
   public range(base: Table) {
     return this.value

@@ -11,26 +11,27 @@ import {
   Width,
   CellsType,
   RowByAddress,
+  ShapeType,
 } from "../types";
 import { addressToPoint, pointToAddress } from "./converters";
 
 export const slideArea = (area: AreaType, y: Y, x: X): AreaType => {
-  const [top, left, bottom, right] = area;
-  return [top + y, left + x, bottom + y, right + x];
+  const { top, left, bottom, right } = area;
+  return { top: top + y, left: left + x, bottom: bottom + y, right: right + x };
 };
 
 export const superposeArea = (
   srcArea: AreaType,
   dstArea: AreaType
-): [Height, Width] => {
-  const [srcHeight, srcWidth] = zoneShape(srcArea);
-  const [dstHeight, dstWidth] = zoneShape(dstArea);
+): ShapeType => {
+  const { height: srcHeight, width: srcWidth } = areaShape(srcArea);
+  const { height: dstHeight, width: dstWidth } = areaShape(dstArea);
 
   // biggerHeight, biggerWidth
-  return [
-    srcHeight > dstHeight ? srcHeight : dstHeight,
-    srcWidth > dstWidth ? srcWidth : dstWidth,
-  ];
+  return {
+    height: srcHeight > dstHeight ? srcHeight : dstHeight,
+    width: srcWidth > dstWidth ? srcWidth : dstWidth,
+  };
 };
 
 export const Y_START = 0,
@@ -40,64 +41,85 @@ export const Y_START = 0,
 
 export const zoneToArea = (zone: ZoneType): AreaType => {
   const [top, bottom] =
-    zone[Y_START] < zone[Y_END]
-      ? [zone[Y_START], zone[Y_END]]
-      : [zone[Y_END], zone[Y_START]];
+    zone.startY < zone.endY
+      ? [zone.startY, zone.endY]
+      : [zone.endY, zone.startY];
   const [left, right] =
-    zone[X_START] < zone[X_END]
-      ? [zone[X_START], zone[X_END]]
-      : [zone[X_END], zone[X_START]];
-  return [top, left, bottom, right];
+    zone.startX < zone.endX
+      ? [zone.startX, zone.endX]
+      : [zone.endX, zone.startX];
+  return { top, left, bottom, right };
+};
+
+export const areaToZone = (area: AreaType): ZoneType => {
+  return {
+    startY: area.top,
+    startX: area.left,
+    endY: area.bottom,
+    endX: area.right,
+  };
 };
 
 export const areaToRange = (area: AreaType): string => {
-  const [top, left, bottom, right] = area;
-  return `${pointToAddress([top, left])}${pointToAddress([bottom, right])}`;
+  const { top, left, bottom, right } = area;
+  return `${pointToAddress({ y: top, x: left })}${pointToAddress({
+    y: bottom,
+    x: right,
+  })}`;
 };
 
 export const rangeToArea = (range: string): AreaType => {
   const cells = range.split(":");
   const [start, end] = cells;
-  return [...addressToPoint(start), ...addressToPoint(end)];
+  const { y: top, x: left } = addressToPoint(start);
+  const { y: bottom, x: right } = addressToPoint(end);
+  return { top, left, bottom, right };
 };
 
 export const between = (range: RangeType, index: number) => {
-  if (range[0] === -1 || range[1] === -1) {
+  if (range.start === -1 || range.end === -1) {
     return false;
   }
   return (
-    (range[0] <= index && index <= range[1]) ||
-    (range[1] <= index && index <= range[0])
+    (range.start <= index && index <= range.end) ||
+    (range.end <= index && index <= range.start)
   );
 };
 
-export const among = (area: AreaType, position: PointType) => {
+export const among = (area: AreaType, point: PointType) => {
   if (
-    area[Area.Top] === -1 ||
-    area[Area.Left] === -1 ||
-    area[Area.Bottom] === -1 ||
-    area[Area.Right] === -1
+    area.top === -1 ||
+    area.left === -1 ||
+    area.bottom === -1 ||
+    area.right === -1
   ) {
     return false;
   }
-  const [y, x] = position;
-  const [top, left, bottom, right] = area;
+  const { y, x } = point;
+  const { top, left, bottom, right } = area;
   return top <= y && y <= bottom && left <= x && x <= right;
 };
 
-export const zoneShape = (zone: ZoneType, base = 0): [Height, Width] => {
-  return [
-    base + Math.abs(zone[Area.Top] - zone[Area.Bottom]),
-    base + Math.abs(zone[Area.Left] - zone[Area.Right]),
-  ];
+export const zoneShape = (zone: ZoneType, base = 0): ShapeType => {
+  return {
+    height: base + Math.abs(zone.startY - zone.endY),
+    width: base + Math.abs(zone.startY - zone.endX),
+  };
 };
 
-export const matrixShape = (matrix: MatrixType, base = 0): [Height, Width] => {
+export const areaShape = (area: AreaType, base = 0): ShapeType => {
+  return {
+    height: base + Math.abs(area.top - area.bottom),
+    width: base + Math.abs(area.left - area.right),
+  };
+};
+
+export const matrixShape = (matrix: MatrixType, base = 0): ShapeType => {
   const h = matrix.length;
   if (h === 0) {
-    return [0, 0];
+    return { height: 0, width: 0 };
   }
-  return [base + h, base + matrix[0].length];
+  return { height: base + h, width: base + matrix[0].length };
 };
 
 export const makeSequence = (start: number, stop: number, step: number = 1) => {
@@ -147,8 +169,8 @@ export const writeMatrix = <T = any>(
   area: AreaType
 ) => {
   const lostRows: RowByAddress<T> = new Map();
-  const [top, left, bottom, right] = area;
-  const [dstNumRows, dstNumCols] = matrixShape(dst, 1);
+  const { top, left, bottom, right } = area;
+  const { height: dstNumRows, width: dstNumCols } = matrixShape(dst, 1);
   for (let y = top; y <= bottom; y++) {
     const lostRow: T[] = [];
     for (let x = left; x <= right; x++) {
@@ -159,7 +181,7 @@ export const writeMatrix = <T = any>(
         continue;
       }
       if (lostRow.length === 0) {
-        lostRows.set(pointToAddress([y, x]), lostRow);
+        lostRows.set(pointToAddress({ y, x }), lostRow);
       }
       lostRow.push(value);
     }
@@ -172,7 +194,7 @@ export const createMatrix = (numRows: number, numCols: number, fill = null) => {
 };
 
 export const cropMatrix = <T = any>(matrix: T[][], area: AreaType): T[][] => {
-  const [top, left, bottom, right] = area;
+  const { top, left, bottom, right } = area;
   return matrix
     .slice(top, bottom + 1)
     .map((cols) => cols.slice(left, right + 1));
@@ -183,10 +205,10 @@ export const matrixIntoCells = (
   cells: CellsType,
   origin = "A1"
 ) => {
-  const [baseY, baseX] = addressToPoint(origin);
+  const { y: baseY, x: baseX } = addressToPoint(origin);
   matrix.map((row, y) => {
     row.map((value, x) => {
-      const id = pointToAddress([baseY + y, baseX + x]);
+      const id = pointToAddress({ y: baseY + y, x: baseX + x });
       if (typeof value !== "undefined") {
         const cell = cells[id];
         cells[id] = { ...cell, value };

@@ -15,7 +15,9 @@ export type X = number;
 export type Height = number;
 export type Width = number;
 
-export type RectType = [Y, X, Height, Width];
+export type ShapeType = { height: Height; width: Width };
+
+export type RectType = { y: Y; x: X; height: Height; width: Width };
 
 export type MatrixType = any[][];
 
@@ -101,10 +103,11 @@ export type OptionsType = {
   onSelect?: FeedbackType;
 };
 
-export type RangeType = [number, number]; // [start, end]
-export type PointType = [Y, X]; // [y, x]
-export type ZoneType = [Y, X, Y, X]; // [startY, startX, endY, endX]
-export type AreaType = ZoneType; // [top, left, bottom, right] (subtype of ZoneType)
+export type RangeType = { start: number; end: number }; // [start, end]
+export type PointType = { y: Y; x: X }; // {y, x}
+export type PositionType = { y: Y; x: X }; // {y, x}
+export type ZoneType = { startY: Y; startX: X; endY: Y; endX: X }; // [startY, startX, endY, endX]
+export type AreaType = { top: Y; left: X; bottom: Y; right: X }; // {top, left, bottom, right} (subtype of ZoneType)
 
 export type Direction = "FORWARD" | "BACKWARD";
 export type HistoryType = {
@@ -166,7 +169,7 @@ export type StoreType = {
   matchingCellIndex: number;
   editingOnEnter: boolean;
   cellLabel: boolean;
-  contextMenuPosition: [Y, X];
+  contextMenuPosition: PositionType;
   resizingPositionY: [Y, Y, Y]; // indexY, startY, endY
   resizingPositionX: [X, X, X]; // indexX, startX, endX
   onSave?: FeedbackType;
