@@ -7,8 +7,6 @@ import {
 import { Context } from "../store";
 import { FeedbackType, FeedbackTypeForMatrix } from "../types";
 
-import { Area } from "../constants";
-
 type Props = {
   onChange?: FeedbackType;
   onChangeDiff?: FeedbackType;

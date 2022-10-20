@@ -17,10 +17,3 @@ export const MIN_WIDTH = 5;
 export const MIN_HEIGHT = 5;
 
 export const DEFAULT_ALPHABET_CACHE_SIZE = 1000;
-
-export enum Area {
-  Top = 0,
-  Left,
-  Bottom,
-  Right,
-}

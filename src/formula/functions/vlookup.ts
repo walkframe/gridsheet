@@ -2,7 +2,6 @@ import { solveMatrix, FormulaError } from "../evaluator";
 import { Table } from "../../api/table";
 import { BaseFunction } from "./__base";
 import { ensureBoolean, ensureNumber, stripTable } from "./__utils";
-import { Area } from "../../constants";
 
 export class VlookupFunction extends BaseFunction {
   example = "VLOOKUP(10003, A2:B26, 2, FALSE)";
@@ -40,12 +39,8 @@ export class VlookupFunction extends BaseFunction {
     if (!(this.args[1] instanceof Table)) {
       throw new FormulaError("#REF!", "2nd argument must be range");
     }
-    this.args[Area.Bottom] = ensureNumber(this.args[Area.Bottom], this.base);
-    this.args[Area.Right] = ensureBoolean(
-      this.args[Area.Right],
-      this.base,
-      true
-    );
+    this.args[2] = ensureNumber(this.args[2], this.base);
+    this.args[3] = ensureBoolean(this.args[3], this.base, true);
   }
   // @ts-ignore
   protected main(key: any, range: Table, index: number, isSorted: boolean) {

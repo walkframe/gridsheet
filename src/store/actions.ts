@@ -11,7 +11,6 @@ import {
 } from "../types";
 import {
   zoneToArea,
-  zoneShape,
   superposeArea,
   matrixShape,
   areaShape,
@@ -20,7 +19,7 @@ import {
 import { Table } from "../api/table";
 
 import { tsv2matrix, x2c, pointToAddress, y2r } from "../api/converters";
-import { Area, DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
+import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
 import { restrictPoints } from "./utils";
 
 const actions: { [s: string]: CoreAction<any> } = {};

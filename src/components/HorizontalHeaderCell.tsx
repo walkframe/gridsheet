@@ -9,7 +9,7 @@ import {
   setContextMenuPosition,
   setResizingPositionX,
 } from "../store/actions";
-import { DUMMY_IMG, DEFAULT_WIDTH, Area } from "../constants";
+import { DUMMY_IMG, DEFAULT_WIDTH } from "../constants";
 
 type Props = {
   index: number;

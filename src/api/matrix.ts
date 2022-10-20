@@ -1,4 +1,3 @@
-import { Area } from "../constants";
 import {
   MatrixType,
   AreaType,

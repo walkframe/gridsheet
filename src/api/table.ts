@@ -38,7 +38,7 @@ import {
   Lexer,
   solveFormula,
 } from "../formula/evaluator";
-import { Area, HISTORY_LIMIT } from "../constants";
+import { HISTORY_LIMIT } from "../constants";
 import { shouldTracking } from "../store/utils";
 import { setDefault } from "../utils";
 
