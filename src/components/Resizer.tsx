@@ -15,7 +15,7 @@ import {
   MIN_HEIGHT,
 } from "../constants";
 import { zoneToArea, makeSequence, between } from "../api/matrix";
-import { CellType, DiffType } from "../types";
+import { DiffType } from "../types";
 import { pointToAddress } from "../api/converters";
 
 const Line = styled.div`

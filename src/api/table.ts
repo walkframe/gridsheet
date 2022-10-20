@@ -38,7 +38,7 @@ import {
   Lexer,
   solveFormula,
 } from "../formula/evaluator";
-import { HISTORY_LIMIT } from "../constants";
+import { DEFAULT_HEIGHT, DEFAULT_WIDTH, HISTORY_LIMIT } from "../constants";
 import { shouldTracking } from "../store/utils";
 import { setDefault } from "../utils";
 
@@ -251,7 +251,15 @@ export class UserTable {
             ...cell?.style,
           },
         } as CellType;
-        if (y > 0 && x > 0) {
+        if (y === 0) {
+          if (stacked.width == null) {
+            stacked.width = DEFAULT_WIDTH;
+          }
+        } else if (x === 0) {
+          if (stacked.height == null) {
+            stacked.height = DEFAULT_HEIGHT;
+          }
+        } else {
           delete stacked.height;
           delete stacked.width;
           delete stacked.labeler;
