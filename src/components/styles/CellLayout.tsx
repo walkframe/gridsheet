@@ -50,7 +50,12 @@ export const CellLayout = styled.div`
       }
     }
     &.gs-pointed {
-      border: solid 2px #0077ff;
+      border: solid 1px #0077ff;
+      box-sizing: content-box;
+      margin-top: -1px;
+      margin-left: -1px;
+      z-index: 1;
+
       &.gs-editing {
         border: none;
       }
