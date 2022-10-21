@@ -39,8 +39,8 @@ export const restrictPoints = (store: StoreType, table: Table) => {
   }
   return {
     choosing: { y, x } as PointType,
-    selectingZone: { startY: y1, startX: x1, endY: y2, endX: x2 } as ZoneType,
-    copyingZone: { startY: y3, startX: x3, endY: y4, endX: x4 } as ZoneType,
+    selectingZone: { startY: y1, startX: x1, endY: y2, endX: x2 },
+    copyingZone: { startY: y3, startX: x3, endY: y4, endX: x4 },
   };
 };
 

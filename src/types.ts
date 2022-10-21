@@ -19,7 +19,7 @@ export type ShapeType = { height: Height; width: Width };
 
 export type RectType = { y: Y; x: X; height: Height; width: Width };
 
-export type MatrixType = any[][];
+export type MatrixType<T = any> = T[][];
 
 export type Labeler = (n: number) => string;
 
@@ -42,8 +42,8 @@ export type FeedbackType = (
 ) => void;
 
 export type FeedbackTypeForMatrix = (coordinate: {
-  y?: number;
-  x?: number;
+  y?: Y;
+  x?: X;
   num: number;
 }) => void;
 
@@ -59,8 +59,8 @@ export type CellType<Custom = any> = {
   style?: React.CSSProperties;
   verticalAlign?: string;
   labeler?: string;
-  width?: number;
-  height?: number;
+  width?: Width;
+  height?: Height;
   renderer?: string;
   parser?: string;
   custom?: Custom;
@@ -106,8 +106,8 @@ export type OptionsType = {
 export type RangeType = { start: number; end: number }; // [start, end]
 export type PointType = { y: Y; x: X }; // {y, x}
 export type PositionType = { y: Y; x: X }; // {y, x}
-export type ZoneType = { startY: Y; startX: X; endY: Y; endX: X }; // [startY, startX, endY, endX]
-export type AreaType = { top: Y; left: X; bottom: Y; right: X }; // {top, left, bottom, right} (subtype of ZoneType)
+export type ZoneType = { startY: Y; startX: X; endY: Y; endX: X };
+export type AreaType = { top: Y; left: X; bottom: Y; right: X };
 
 export type Direction = "FORWARD" | "BACKWARD";
 export type HistoryType = {

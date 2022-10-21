@@ -2,6 +2,7 @@ import { rangeToArea } from "../api/matrix";
 import { addressToPoint, n2a } from "../api/converters";
 import { Table } from "../api/table";
 import { MatrixType } from "../types";
+import { stripTable } from "./functions/__utils";
 
 const getId = (idString: string, stripAbsolute = true) => {
   let id = idString.slice(1);
@@ -82,19 +83,15 @@ export class Id {
     const { y, x } = base.getPointById(getId(this.value));
     return base.trim({ top: y, left: x, bottom: y, right: x });
   }
-  public ref(base: Table) {
-    return base.getAddressById(getId(this.value, false));
+  public ref(base: Table, slideY = 0, slideX = 0) {
+    return base.getAddressById(getId(this.value, false), slideY, slideX);
   }
   public slide(base: Table, slideY = 0, slideX = 0) {
-    const address = base.getAddressById(
-      getId(this.value, false),
-      slideY,
-      slideX
-    );
+    const address = this.ref(base, slideY, slideX);
     if (address == null || address.length < 2) {
       return "#REF!";
     }
-    return base.getIdByAddress(address!);
+    return base.getIdByAddress(address);
   }
 }
 
@@ -110,12 +107,17 @@ export class IdRange {
       .map((id) => base.getPointById(id));
     return base.trim({ top: p1.y, left: p1.x, bottom: p2.y, right: p2.x });
   }
-  public range(base: Table) {
+  public range(base: Table, slideY = 0, slideX = 0) {
     return this.value
       .split(":")
-      .map((id) => getId(id))
-      .map((id) => base.getAddressById(id))
+      .map((id) => getId(id, false))
+      .map((id) => base.getAddressById(id, slideY, slideX))
       .join(":");
+  }
+
+  public slide(base: Table, slideY = 0, slideX = 0) {
+    const range = this.range(base, slideY, slideX);
+    return new Range(range).idRange(base);
   }
 }
 
@@ -342,6 +344,8 @@ export class Lexer {
             return `"${t.entity}"`;
           case "ID":
             return new Id(t.entity).slide(table, slideY, slideX);
+          case "ID_RANGE":
+            return new IdRange(t.entity).slide(table, slideY, slideX);
           case "REF":
             return new Ref(t.entity).id(table);
           case "RANGE":
@@ -639,6 +643,9 @@ export const solveFormula = (value: any, base: Table, raise = true) => {
     if (value.charAt(0) === "=") {
       return evaluate(value.substring(1), base, raise);
     }
+  }
+  if (value instanceof Table) {
+    return stripTable(value, base, 0, 0);
   }
   return value;
 };

@@ -143,12 +143,6 @@ export const Cell: React.FC<Props> = React.memo(
           const dblclick = document.createEvent("MouseEvents");
           dblclick.initEvent("dblclick", true, true);
           editorRef.current?.dispatchEvent(dblclick);
-          /*
-          setTimeout(
-            () => (editorRef.current.value = table.stringify(y, x)),
-            100
-          );
-          */
           return false;
         }}
         draggable

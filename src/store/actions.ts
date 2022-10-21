@@ -315,34 +315,17 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
     let newTable: Table;
     let { y, x } = choosing;
     const { text } = payload;
-    const diff: DiffType = {};
     if (copyingArea.top === -1) {
       const matrixFrom = tsv2matrix(text);
       let { height, width } = matrixShape(matrixFrom, -1);
-      if (selectingArea.top !== -1) {
-        y = selectingArea.top;
-        x = selectingArea.left;
-        const superposed = superposeArea(selectingArea, {
-          top: 0,
-          left: 0,
-          bottom: height,
-          right: width,
-        });
-        height = superposed.height;
-        width = superposed.width;
-      }
-      selectingArea = { top: y, left: x, bottom: y + height, right: x + width };
-      const { top, left, bottom, right } = selectingArea;
-      for (let y = top; y <= bottom; y++) {
-        for (let x = left; x <= right; x++) {
-          diff[pointToAddress({ y, x })] = {
-            value: matrixFrom[y - top][x - left],
-          };
-        }
-      }
-      newTable = table.update(diff, true, {
-        selectingZone,
-        choosing,
+      selectingArea = {
+        top: y,
+        left: x,
+        bottom: y + height,
+        right: x + width,
+      };
+      newTable = table.writeMatrix({ y, x }, matrixFrom, {
+        selectingZone: areaToZone(selectingArea),
       });
     } else {
       let { height, width } = areaShape(copyingArea);
@@ -417,7 +400,7 @@ class SelectRowsAction<
       startX: 1,
       endY: end,
       endX: numCols,
-    } as ZoneType;
+    };
     return {
       ...store,
       selectingZone,
@@ -491,7 +474,7 @@ class WriteAction<T extends string> extends CoreAction<T> {
     return {
       ...store,
       table: newTable,
-      copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 } as ZoneType,
+      copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
     };
   }
 }

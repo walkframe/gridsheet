@@ -1,5 +1,6 @@
 import { Address, MatrixType, PointType, StoreType, X, Y } from "../types";
 import { DEFAULT_ALPHABET_CACHE_SIZE } from "../constants";
+import { Table } from "./table";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -97,12 +98,11 @@ export const pointToAddress = ({ y, x }: PointType) => {
 };
 
 export const matrix2tsv = (
-  store: StoreType,
-  y: number,
-  x: number,
-  matrix: MatrixType
+  table: Table,
+  matrix: MatrixType,
+  point: PointType
 ): string => {
-  const { table } = store;
+  const { y, x } = point;
   const lines: string[] = [];
   matrix.map((row, i) => {
     const cols: string[] = [];

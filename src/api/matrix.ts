@@ -102,7 +102,7 @@ export const among = (area: AreaType, point: PointType) => {
 export const zoneShape = (zone: ZoneType, base = 0): ShapeType => {
   return {
     height: base + Math.abs(zone.startY - zone.endY),
-    width: base + Math.abs(zone.startY - zone.endX),
+    width: base + Math.abs(zone.startX - zone.endX),
   };
 };
 
@@ -162,11 +162,7 @@ export const aa2oa = (
   return oa;
 };
 
-export const writeMatrix = <T = any>(
-  dst: T[][],
-  src: T[][],
-  area: AreaType
-) => {
+export const fillMatrix = <T = any>(dst: T[][], src: T[][], area: AreaType) => {
   const lostRows: RowByAddress<T> = new Map();
   const { top, left, bottom, right } = area;
   const { height: dstNumRows, width: dstNumCols } = matrixShape(dst, 1);

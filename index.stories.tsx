@@ -7,6 +7,13 @@ import { CellType, Dispatcher } from "./src/types";
 import { BaseFunction } from "./src";
 import { createTableRef } from "./src/components/GridTable";
 
+class HopeFunction extends BaseFunction {
+  // @ts-ignore
+  main(text: string) {
+    return `😸${text}😸`;
+  }
+}
+
 class TestFunction extends BaseFunction {
   main() {
     return "てすとだよ";
@@ -72,6 +79,40 @@ export default {
   title: "grid sheet",
 };
 
+const initialDataForFormula = [
+  [0, "=A1+60", "=B1+10", "=C1+10", "=D1+10", "=E1+5", "", "", "", ""],
+  ["E", "D", "C", "B", "A", "S", "", "", "", ""],
+  ["", "", "", "", "", "NOW:", "=NOW()", "", "", ""],
+  ["Name", "Point", "Rank", "", "", "", '=HOPE("World peace")', "", "", ""],
+  ["apple", 50, "=HLOOKUP(B5, A1:F2, 2, true)", "", "", "", "", "", "", ""],
+  ["orange", 82, "=HLOOKUP(B6, A1:F2, 2, true)", "", "", "", "", "", "", ""],
+  [
+    "grape",
+    75,
+    "=HLOOKUP(B7, A1:F2, 2, true)",
+    "",
+    "",
+    "",
+    "Greater than",
+    70,
+    "",
+    "",
+  ],
+  [
+    "meron",
+    98,
+    "=HLOOKUP(B8, A1:F2, 2, true)",
+    "",
+    "",
+    "",
+    '\'=countif(B5:B9, ">" & H7)',
+    '=countif(B5:B9, ">" & H7)',
+    "",
+    "",
+  ],
+  ["banana", 65, "=HLOOKUP(B9, A1:F2, 2, true)", "", "", "", "", "", "", ""],
+];
+
 const initialData = [
   [
     123456,
@@ -126,34 +167,6 @@ const initialData = [
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
   [true, "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
   [false, "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  [123456, "b", "c", "d", "e", "aa", "bb", "cc", [1, 2, 3], "ee"],
-  ["a", "b", 789, "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  [true, "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  [false, "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  [123456, "b", "c", "d", "e", "aa", "bb", "cc", [1, 2, 3], "ee"],
-  ["a", "b", 789, "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  [true, "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  [false, "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
 ];
 
 const initialCells = matrixIntoCells(createMatrix(1000, 50), {});
@@ -164,15 +177,42 @@ export const showIndex = () => {
   setInterval(() => {
     if (ref.current) {
       ref.current.dispatch(
-        e.update({ A1: { value: new Date() } }, true)
+        ref.current.table.update({ A1: { value: new Date() } }, true)
       );
     }
   }, 10000);
   */
-
   return (
     <>
       <div>aaaaa</div>
+
+      <GridSheet
+        initial={matrixIntoCells(initialDataForFormula, {
+          1: { style: { backgroundColor: "#ddd", borderColor: "#000" } },
+          2: { style: { borderColor: "#000" } },
+          3: { style: { borderTopColor: "#000" } },
+          A: { width: 50 },
+          B: { width: 50 },
+          C: { width: 50 },
+          D: { width: 50 },
+          E: { width: 50 },
+          F: { width: 50 },
+          G: { width: 200 },
+          H7: { style: { backgroundColor: "#ffeeee" } },
+          A4: {
+            style: { backgroundColor: "#dddddd", borderBottomStyle: "double" },
+          },
+          B4: {
+            style: { backgroundColor: "#dddddd", borderBottomStyle: "double" },
+          },
+          C4: {
+            style: { backgroundColor: "#dddddd", borderBottomStyle: "double" },
+          },
+        })}
+        additionalFunctions={{
+          hope: HopeFunction,
+        }}
+      />
 
       <GridSheet
         tableRef={ref}

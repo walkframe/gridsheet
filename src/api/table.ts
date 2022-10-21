@@ -15,13 +15,14 @@ import {
   CellFilter,
   Labelers,
   System,
+  MatrixType,
 } from "../types";
 import { CellsType, CellType, Parsers, Renderers } from "../types";
 import {
   areaShape,
   createMatrix,
   matrixShape,
-  writeMatrix,
+  fillMatrix,
   zoneShape,
 } from "./matrix";
 import {
@@ -366,6 +367,19 @@ export class UserTable {
     return base + right - left;
   }
 
+  public get top() {
+    return this.area.top;
+  }
+  public get left() {
+    return this.area.left;
+  }
+  public get bottom() {
+    return this.area.bottom;
+  }
+  public get right() {
+    return this.area.right;
+  }
+
   public getMatrixFlatten({
     area,
     key = "value",
@@ -638,7 +652,7 @@ export class UserTable {
     const matrixFrom = this.getIdMatrixFromArea(from);
     const matrixTo = this.getIdMatrixFromArea(to);
     const matrixNew = this.getNewIdMatrix(from);
-    writeMatrix(this.idMatrix, matrixNew, from);
+    fillMatrix(this.idMatrix, matrixNew, from);
     matrixFrom.forEach((ids) => {
       ids
         .map(this.getById.bind(this))
@@ -648,7 +662,7 @@ export class UserTable {
             (setDefault(cell, "system", {} as System).changedAt = changedAt)
         );
     });
-    const lostRows = writeMatrix(this.idMatrix, matrixFrom, to);
+    const lostRows = fillMatrix(this.idMatrix, matrixFrom, to);
     this.pushHistory({
       operation: "MOVE",
       reflection,
@@ -667,14 +681,8 @@ export class UserTable {
     to: AreaType,
     reflection: StoreReflectionType = {}
   ) {
-    const now = new Date();
     const { height: maxHeight, width: maxWidth } = areaShape(from, 1);
-    const {
-      top: topFrom,
-      left: leftFrom,
-      bottom: bottomFrom,
-      right: rightFrom,
-    } = from;
+    const { top: topFrom, left: leftFrom } = from;
     const { top: topTo, left: leftTo, bottom: bottomTo, right: rightTo } = to;
     const diff: DiffType = {};
 
@@ -696,9 +704,6 @@ export class UserTable {
           y: topFrom + (i % maxHeight),
           x: leftFrom + (j % maxWidth),
         });
-        if (cell) {
-          setDefault(cell, "system", {} as System).changedAt = now;
-        }
         const value = convertFormulaAbsolute(
           cell?.value,
           Table.cast(this),
@@ -708,6 +713,7 @@ export class UserTable {
 
         diff[pointToAddress({ y: toY, x: toX })] = {
           ...cell,
+          style: { ...cell?.style },
           value,
         };
       }
@@ -724,15 +730,17 @@ export class UserTable {
     const diffAfter: DataType = new Map();
     const changedAt = new Date();
     Object.keys(diff).forEach((address) => {
-      const value = convertFormulaAbsolute(diff[address], Table.cast(this));
+      const cell = { ...diff[address] };
+      cell.value = convertFormulaAbsolute(cell.value, Table.cast(this));
+      cell.system = { ...cell.system, changedAt };
       const point = addressToPoint(address);
       const id = this.getId(point);
       diffBefore.set(id, this.getByPoint(point));
-      diffAfter.set(id, value);
+      diffAfter.set(id, cell);
       if (partial) {
-        this.data.set(id, { ...this.data.get(id), ...value, changedAt });
+        this.data.set(id, { ...this.data.get(id), ...cell });
       } else {
-        this.data.set(id, { ...value, changedAt });
+        this.data.set(id, cell);
       }
     });
     this.pushHistory({
@@ -743,6 +751,44 @@ export class UserTable {
       partial,
     });
     return this.shallowCopy(true);
+  }
+
+  public writeMatrix(
+    point: PointType,
+    matrix: MatrixType<string>,
+    reflection: StoreReflectionType = {}
+  ) {
+    const { y: baseY, x: baseX } = point;
+    const diff: DiffType = {};
+    matrix.map((cols, i) => {
+      const y = baseY + i;
+      if (y > this.bottom) {
+        return;
+      }
+      cols.map((value, j) => {
+        const x = baseX + j;
+        if (x > this.right) {
+          return;
+        }
+        const cell = this.parse({ y, x }, value);
+        diff[pointToAddress({ y, x })] = cell;
+      });
+    });
+    return this.update(diff, true, reflection);
+  }
+
+  public write(
+    point: PointType,
+    value: string,
+    reflection: StoreReflectionType = {}
+  ) {
+    return this.writeMatrix(point, [[value]], reflection);
+  }
+
+  protected parse(point: PointType, value: string) {
+    const cell = this.getByPoint(point) || {};
+    const parser = this.parsers[cell.parser || ""] || defaultParser;
+    return parser.parse(value, cell);
   }
 
   public addRows(
@@ -881,18 +927,6 @@ export class Table extends UserTable {
     this.functions = { ...functions, ...additionalFunctions };
   }
 
-  public get top() {
-    return this.area.top;
-  }
-  public get left() {
-    return this.area.left;
-  }
-  public get bottom() {
-    return this.area.bottom;
-  }
-  public get right() {
-    return this.area.right;
-  }
   public getArea(): AreaType {
     return { ...this.area };
   }
@@ -957,55 +991,6 @@ export class Table extends UserTable {
     });
   }
 
-  private getDiffByPos(position: PointType, cell: CellType) {
-    const diff: DataType = new Map();
-    const id = this.getId(position);
-    diff.set(id, cell);
-    return diff;
-  }
-
-  private createBackDiff(area: AreaType) {
-    const backdiff: DataType = new Map();
-    const { top, left, bottom, right } = area;
-    for (let y = top; y <= bottom; y++) {
-      for (let x = left; x <= right; x++) {
-        const id = this.getId({ y, x });
-        backdiff.set(id, this.getByPoint({ y, x }));
-      }
-    }
-    return backdiff;
-  }
-
-  private put(point: PointType, cell: CellType) {
-    const changedAt = new Date();
-    const { y, x } = point;
-    const [numRows, numCols] = [this.getNumRows(1), this.getNumCols(1)];
-    const modY = y % numRows;
-    const modX = x % numCols;
-    const id = this.getId({ y: modY, x: modX });
-    const value = convertFormulaAbsolute(cell.value, Table.cast(this));
-    setDefault(cell, "system", {} as System).changedAt = changedAt;
-    this.data.set(id, { ...cell, value });
-  }
-
-  public write(
-    point: PointType,
-    value: any,
-    reflection: StoreReflectionType = {}
-  ) {
-    const { y, x } = point;
-    const cell = this.parse(point, value);
-    this.pushHistory({
-      operation: "UPDATE",
-      reflection,
-      diffBefore: this.createBackDiff({ top: y, left: x, bottom: y, right: x }),
-      diffAfter: this.getDiffByPos(point, cell),
-      partial: true,
-    });
-    this.put(point, cell);
-    return this.shallowCopy(true);
-  }
-
   public undo() {
     if (this.historyIndex < 0) {
       return { history: null, newTable: this as Table };
@@ -1042,13 +1027,13 @@ export class Table extends UserTable {
           history.matrixFrom,
           -1
         );
-        writeMatrix(this.idMatrix, history.matrixFrom, {
+        fillMatrix(this.idMatrix, history.matrixFrom, {
           top: yFrom,
           left: xFrom,
           bottom: yFrom + rows,
           right: xFrom + cols,
         });
-        writeMatrix(this.idMatrix, history.matrixTo, {
+        fillMatrix(this.idMatrix, history.matrixTo, {
           top: yTo,
           left: xTo,
           bottom: yTo + rows,
@@ -1098,13 +1083,13 @@ export class Table extends UserTable {
           history.matrixFrom,
           -1
         );
-        writeMatrix(this.idMatrix, history.matrixNew, {
+        fillMatrix(this.idMatrix, history.matrixNew, {
           top: yFrom,
           left: xFrom,
           bottom: yFrom + rows,
           right: xFrom + cols,
         });
-        writeMatrix(this.idMatrix, history.matrixFrom, {
+        fillMatrix(this.idMatrix, history.matrixFrom, {
           top: yTo,
           left: xTo,
           bottom: yTo + rows,

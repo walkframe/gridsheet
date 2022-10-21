@@ -49,7 +49,6 @@ export const ContextMenu: React.FC = () => {
 
   const [tableHeight, tableWidth] = [table.getNumRows(), table.getNumCols()];
   const { height, width } = zoneShape(selectingZone, 1);
-
   const { y: top, x: left } = contextMenuPosition;
   if (top === -1) {
     return null;
