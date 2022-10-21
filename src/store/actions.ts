@@ -555,7 +555,7 @@ class ArrowAction<
 > extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     const { shiftKey, deltaY, deltaX, numRows, numCols } = payload;
-    let { choosing, selectingZone, table } = store;
+    let { choosing, selectingZone, table, gridRef } = store;
     const { y, x } = choosing;
     if (shiftKey) {
       let [dragEndY, dragEndX] = [
@@ -598,9 +598,15 @@ class ArrowAction<
         editorLeft -= table.getByPoint({ y: 0, x: i })?.width || DEFAULT_WIDTH;
       }
     }
+
     const cell = table.getByPoint({ y: nextY, x: nextX });
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
+    gridRef.current?.scrollToItem({
+      rowIndex: nextY - 1,
+      columnIndex: nextX - 1,
+      align: "auto",
+    });
     return {
       ...store,
       selectingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
@@ -621,7 +627,7 @@ class WalkAction<
 > extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     let { deltaY, deltaX, numRows, numCols } = payload;
-    let { choosing, selectingZone, table } = store;
+    let { choosing, selectingZone, table, gridRef } = store;
     let { y: editorTop, x: editorLeft, height, width } = store.editorRect;
     const { y, x } = choosing;
     const selectingArea = zoneToArea(selectingZone);
@@ -671,6 +677,7 @@ class WalkAction<
         nextY = top;
       }
     }
+
     if (nextY < 1 || numRows < nextY || nextX < 1 || numCols < nextX) {
       return store;
     }
@@ -695,6 +702,11 @@ class WalkAction<
     const cell = table.getByPoint({ y: nextY, x: nextX });
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
+    gridRef.current?.scrollToItem({
+      rowIndex: nextY - 1,
+      columnIndex: nextX - 1,
+      align: "auto",
+    });
     return {
       ...store,
       choosing: { y: nextY, x: nextX } as PointType,

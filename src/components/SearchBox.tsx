@@ -25,8 +25,12 @@ export const SearchBox: React.FC = () => {
     if (typeof indexes === "undefined") {
       return;
     }
-    const [rowIndex, columnIndex] = indexes;
-    gridRef.current?.scrollToItem({ rowIndex, columnIndex, align: "auto" });
+    const { y, x } = indexes;
+    gridRef.current?.scrollToItem({
+      rowIndex: y - 1,
+      columnIndex: x - 1,
+      align: "auto",
+    });
   }, [matchingCell]);
 
   if (typeof searchQuery === "undefined") {
