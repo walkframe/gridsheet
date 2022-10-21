@@ -18,13 +18,7 @@ import {
   MatrixType,
 } from "../types";
 import { CellsType, CellType, Parsers, Renderers } from "../types";
-import {
-  areaShape,
-  createMatrix,
-  matrixShape,
-  fillMatrix,
-  zoneShape,
-} from "./matrix";
+import { areaShape, createMatrix, matrixShape, fillMatrix } from "./matrix";
 import {
   addressToPoint,
   x2c,
