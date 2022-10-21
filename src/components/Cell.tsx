@@ -205,20 +205,28 @@ const getCellStyle = (
   copyingArea: AreaType,
   cutting: boolean
 ): React.CSSProperties => {
-  let style: any = {};
+  let style: React.CSSProperties = {};
   const { top, left, bottom, right } = copyingArea;
 
   if (top === y && left <= x && x <= right) {
-    style.borderTop = `${cutting ? "dotted" : "dashed"} 2px #0077ff`;
+    style.borderTopStyle = cutting ? "dotted" : "dashed";
+    style.borderTopWidth = "2px";
+    style.borderColor = "#0077ff";
   }
   if (bottom === y && left <= x && x <= right) {
-    style.borderBottom = `${cutting ? "dotted" : "dashed"} 2px #0077ff`;
+    style.borderBottomStyle = cutting ? "dotted" : "dashed";
+    style.borderBottomWidth = "2px";
+    style.borderColor = "#0077ff";
   }
   if (left === x && top <= y && y <= bottom) {
-    style.borderLeft = `${cutting ? "dotted" : "dashed"} 2px #0077ff`;
+    style.borderLeftStyle = cutting ? "dotted" : "dashed";
+    style.borderLeftWidth = "2px";
+    style.borderColor = "#0077ff";
   }
   if (right === x && top <= y && y <= bottom) {
-    style.borderRight = `${cutting ? "dotted" : "dashed"} 2px #0077ff`;
+    style.borderRightStyle = cutting ? "dotted" : "dashed";
+    style.borderRightWidth = "2px";
+    style.borderColor = "#0077ff";
   }
   return style;
 };

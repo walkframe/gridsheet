@@ -710,7 +710,6 @@ export class UserTable {
           slideY,
           slideX
         );
-
         diff[pointToAddress({ y: toY, x: toX })] = {
           ...cell,
           style: { ...cell?.style },
