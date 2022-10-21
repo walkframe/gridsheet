@@ -930,27 +930,29 @@ export class Table extends UserTable {
     return { ...this.area };
   }
 
-  public parse(position: PointType, value: string) {
-    const cell = this.getByPoint(position) || {};
+  public parse(point: PointType, value: string) {
+    const cell = this.getByPoint(point) || {};
     const parser = this.parsers[cell.parser || ""] || defaultParser;
     return parser.parse(value, cell);
   }
 
-  public render(position: PointType, writer?: WriterType) {
-    const cell = this.getByPoint(position) || {};
+  public render(point: PointType, writer?: WriterType) {
+    const cell = this.getByPoint(point) || {};
     const renderer = this.renderers[cell.renderer || ""] || defaultRenderer;
-    return renderer.render(this, position, writer);
+    return renderer.render(this, point, writer);
   }
 
-  public stringify(position: PointType, value?: any) {
-    const cell = this.getByPoint(position);
+  public stringify(point: PointType, value?: any, evaluates = false) {
+    const cell = this.getByPoint(point);
     const renderer = this.renderers[cell?.renderer || ""] || defaultRenderer;
-    if (typeof value === "undefined") {
-      return renderer.stringify(cell || {});
-    }
-    const s = renderer.stringify({ ...cell, value });
+    const s = renderer.stringify(
+      typeof value === "undefined" ? { ...cell } : { ...cell, value }
+    );
 
     if (s[0] === "=") {
+      if (evaluates) {
+        return String(solveFormula(s, this.base as Table, false));
+      }
       const lexer = new Lexer(s.substring(1));
       lexer.tokenize();
       return "=" + lexer.stringifyToRef(this);

@@ -63,9 +63,10 @@ class SetSearchQueryAction<T extends string | undefined> extends CoreAction<T> {
       return { ...store, searchQuery, matchingCells, matchingCellIndex: 0 };
     }
     const { table } = store;
-    for (let x = 1; x <= table.getNumCols(); x++) {
-      for (let y = 1; y <= table.getNumRows(); y++) {
-        if (table.stringify({ y, x }).indexOf(searchQuery as string) !== -1) {
+    for (let x = 1; x <= table.right; x++) {
+      for (let y = 1; y <= table.bottom; y++) {
+        const s = table.stringify({ y, x }, undefined, true);
+        if (s.indexOf(searchQuery as string) !== -1) {
           matchingCells.push(`${x2c(x)}${y2r(y)}`);
         }
       }

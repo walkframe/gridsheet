@@ -59,10 +59,10 @@ export const CellLayout = styled.div`
       }
     }
     &.gs-matching {
-      background-color: rgba(0, 255, 128, 0.2);
+      background-color: rgba(0, 200, 100, 0.2);
     }
     &.gs-searching {
-      border: solid 2px rgb(0, 160, 120);
+      border: solid 2px rgb(0, 170, 120);
     }
   }
   .gs-cell-rendered-wrapper-inner {
