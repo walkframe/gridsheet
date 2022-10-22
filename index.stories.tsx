@@ -8,7 +8,6 @@ import { BaseFunction } from "./src";
 import { createTableRef } from "./src/components/GridTable";
 
 class HopeFunction extends BaseFunction {
-  // @ts-ignore
   main(text: string) {
     return `😸${text}😸`;
   }
@@ -188,9 +187,9 @@ export const showIndex = () => {
 
       <GridSheet
         initial={matrixIntoCells(initialDataForFormula, {
-          1: { style: { backgroundColor: "#ddd", borderColor: "#000" } },
-          2: { style: { borderColor: "#000" } },
-          3: { style: { borderTopColor: "#000" } },
+          1: { style: { backgroundColor: "#aaa" } },
+          2: { style: { backgroundColor: "#eee" } },
+          3: { style: {} },
           A: { width: 50 },
           B: { width: 50 },
           C: { width: 50 },

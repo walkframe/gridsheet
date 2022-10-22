@@ -16,7 +16,7 @@ export class NowFunction extends BaseFunction {
       );
     }
   }
-  // @ts-ignore
+
   protected main() {
     return new Date();
   }

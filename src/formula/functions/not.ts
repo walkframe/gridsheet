@@ -25,7 +25,7 @@ export class NotFunction extends BaseFunction {
       "Number of arguments for NOT is incorrect. 1 argument must be specified."
     );
   }
-  // @ts-ignore
+
   protected main(v1: boolean) {
     return !v1;
   }

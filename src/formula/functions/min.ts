@@ -37,7 +37,7 @@ export class MinFunction extends BaseFunction {
     });
     this.args = spreaded;
   }
-  // @ts-ignore
+
   protected main(...values: number[]) {
     if (values.length === 0) {
       return 0;

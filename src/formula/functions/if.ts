@@ -31,7 +31,7 @@ export class IfFunction extends BaseFunction {
       "Number of arguments for IF is incorrect. 2 or 3 arguments must be specified."
     );
   }
-  // @ts-ignore
+
   protected main(condition: boolean, v1: any, v2: any = false) {
     return condition ? v1 : v2;
   }

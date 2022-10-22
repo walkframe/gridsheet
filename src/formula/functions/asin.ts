@@ -24,7 +24,7 @@ export class AsinFunction extends BaseFunction {
       throw new FormulaError("#NUM!", "value must be between -1 and 1");
     }
   }
-  // @ts-ignore
+
   protected main(value: number) {
     return Math.asin(value);
   }

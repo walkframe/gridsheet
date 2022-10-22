@@ -31,7 +31,7 @@ export class SumifFunction extends BaseFunction {
       throw new FormulaError("#N/A", "3rd argument must be range.");
     }
   }
-  // @ts-ignore
+
   protected main(range: Table, condition: string, sumRange: Table) {
     if (!(range instanceof Table)) {
       return check(range, condition) ? range : 0;

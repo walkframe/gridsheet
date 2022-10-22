@@ -18,7 +18,7 @@ export class UminusFunction extends BaseFunction {
     }
     this.args = this.args.map((arg) => ensureNumber(arg, this.base));
   }
-  // @ts-ignore
+
   protected main(v1: number) {
     return -v1;
   }

@@ -14,7 +14,7 @@ export class RandFunction extends BaseFunction {
       );
     }
   }
-  // @ts-ignore
+
   protected main() {
     return Math.random();
   }

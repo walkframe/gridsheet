@@ -22,7 +22,7 @@ export class MultiplyFunction extends BaseFunction {
     }
     this.args = this.args.map((arg) => ensureNumber(arg, this.base));
   }
-  // @ts-ignore
+
   protected main(v1: number, v2: number) {
     return v1 * v2;
   }

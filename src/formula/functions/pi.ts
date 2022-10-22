@@ -14,7 +14,7 @@ export class PiFunction extends BaseFunction {
       );
     }
   }
-  // @ts-ignore
+
   protected main() {
     return Math.PI;
   }

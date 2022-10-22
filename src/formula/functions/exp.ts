@@ -23,7 +23,7 @@ export class ExpFunction extends BaseFunction {
     }
     this.args = this.args.map((arg) => ensureNumber(arg, this.base));
   }
-  // @ts-ignore
+
   protected main(exponent: number) {
     return Math.exp(exponent);
   }

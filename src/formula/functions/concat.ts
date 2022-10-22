@@ -22,7 +22,7 @@ export class ConcatFunction extends BaseFunction {
     }
     this.args = this.args.map((arg) => ensureString(arg, this.base));
   }
-  // @ts-ignore
+
   protected main(v1: string, v2: string) {
     return v1 + v2;
   }

@@ -42,7 +42,7 @@ export class VlookupFunction extends BaseFunction {
     this.args[2] = ensureNumber(this.args[2], this.base);
     this.args[3] = ensureBoolean(this.args[3], this.base, true);
   }
-  // @ts-ignore
+
   protected main(key: any, range: Table, index: number, isSorted: boolean) {
     const matrix = solveMatrix(range, this.base);
     if (isSorted) {

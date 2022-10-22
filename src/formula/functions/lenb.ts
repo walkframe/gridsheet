@@ -21,7 +21,7 @@ export class LenbFunction extends BaseFunction {
     }
     this.args = [ensureString(this.args[0], this.base)];
   }
-  // @ts-ignore
+
   protected main(text: string) {
     return encodeURIComponent(text).replace(/%../g, "x").length;
   }

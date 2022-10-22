@@ -24,7 +24,7 @@ export class Log10Function extends BaseFunction {
       throw new FormulaError("NUM!", "value must be greater than 0");
     }
   }
-  // @ts-ignore
+
   protected main(value: number) {
     return Math.log10(value);
   }

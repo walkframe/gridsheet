@@ -28,7 +28,7 @@ export class RounddownFunction extends BaseFunction {
     }
     this.args = this.args.map((arg) => ensureNumber(arg, this.base));
   }
-  // @ts-ignore
+
   protected main(value: number, digit = 0) {
     const multiplier = Math.pow(10, digit);
     return Math.floor(value * multiplier) / multiplier;

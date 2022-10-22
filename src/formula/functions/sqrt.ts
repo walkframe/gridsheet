@@ -25,7 +25,7 @@ export class SqrtFunction extends BaseFunction {
       throw new FormulaError("NUM!", "First argument must be positive.");
     }
   }
-  // @ts-ignore
+
   protected main(value: number) {
     return Math.sqrt(value);
   }

@@ -31,7 +31,7 @@ export class DivideFunction extends BaseFunction {
       );
     }
   }
-  // @ts-ignore
+
   protected main(divided: number, divisor: number) {
     return divided / divisor;
   }

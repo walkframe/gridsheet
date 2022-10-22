@@ -31,7 +31,7 @@ export class LogFunction extends BaseFunction {
       throw new FormulaError("NUM!", "base must be greater than 1");
     }
   }
-  // @ts-ignore
+
   protected main(value: number, base: number) {
     return Math.log2(value) / Math.log2(base);
   }

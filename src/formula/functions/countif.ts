@@ -22,7 +22,7 @@ export class CountifFunction extends BaseFunction {
       );
     }
   }
-  // @ts-ignore
+
   protected main(table: Table, condition: string) {
     const matrix = solveMatrix(table, this.base);
     return matrix

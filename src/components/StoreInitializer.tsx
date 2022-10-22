@@ -61,7 +61,6 @@ export const StoreInitializer: React.FC<Props> = ({
       minNumCols,
       maxNumCols,
     });
-    // @ts-ignore
     table.setFunctions({ ...functions, ...additionalFunctions });
     dispatch(initializeTable(table));
   }, []);

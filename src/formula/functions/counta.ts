@@ -29,7 +29,7 @@ export class CountaFunction extends BaseFunction {
     });
     this.args = spreaded;
   }
-  // @ts-ignore
+
   protected main(...values: any[]) {
     return values.filter((v) => v != null && v !== "").length;
   }

@@ -21,7 +21,7 @@ export class LenFunction extends BaseFunction {
     }
     this.args = [ensureString(this.args[0], this.base)];
   }
-  // @ts-ignore
+
   protected main(text: string) {
     return text.length;
   }

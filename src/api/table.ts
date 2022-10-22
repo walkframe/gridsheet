@@ -916,7 +916,6 @@ export class Table extends UserTable {
   }
 
   public setFunctions(additionalFunctions: FunctionMapping) {
-    // @ts-ignore
     this.functions = { ...functions, ...additionalFunctions };
   }
 

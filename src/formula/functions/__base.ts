@@ -18,12 +18,12 @@ export class BaseFunction {
   }
   protected validate() {}
 
-  protected main() {}
   public call() {
     this.validate();
+
     // @ts-ignore
     return this.main(...this.args);
   }
 }
 
-export type FunctionMapping = { [s: string]: typeof BaseFunction };
+export type FunctionMapping = { [functionName: string]: any };

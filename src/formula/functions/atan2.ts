@@ -27,7 +27,7 @@ export class Atan2Function extends BaseFunction {
     }
     this.args = this.args.map((arg) => ensureNumber(arg, this.base));
   }
-  // @ts-ignore
+
   protected main(x: number, y: number) {
     return Math.atan2(x, y);
   }

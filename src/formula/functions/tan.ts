@@ -21,7 +21,7 @@ export class TanFunction extends BaseFunction {
     }
     this.args = this.args.map((arg) => ensureNumber(arg, this.base));
   }
-  // @ts-ignore
+
   protected main(angle: number) {
     return Math.tan(angle);
   }
