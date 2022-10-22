@@ -1,4 +1,4 @@
-import { solveMatrix, FormulaError } from "../evaluator";
+import { solveTable, FormulaError } from "../evaluator";
 import { Table } from "../../api/table";
 import { BaseFunction } from "./__base";
 import { ensureBoolean, ensureNumber, stripTable } from "./__utils";
@@ -44,7 +44,7 @@ export class VlookupFunction extends BaseFunction {
   }
 
   protected main(key: any, range: Table, index: number, isSorted: boolean) {
-    const matrix = solveMatrix(range);
+    const matrix = solveTable(range);
     if (isSorted) {
       let last = -1;
       for (let y = 0; y <= range.getNumRows(); y++) {

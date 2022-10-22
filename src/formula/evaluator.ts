@@ -2,7 +2,6 @@ import { rangeToArea } from "../api/structs";
 import { addressToPoint, n2a } from "../api/converters";
 import { Table } from "../api/table";
 import { Address, MatrixType } from "../types";
-import { stripTable } from "./functions/__utils";
 
 type Refs = Set<Address>;
 
@@ -169,22 +168,6 @@ export class Function {
     return func.call();
   }
 }
-
-export const evaluate = (formula: string, base: Table, raise = true) => {
-  const lexer = new Lexer(formula);
-  lexer.tokenize();
-  const parser = new Parser(lexer.tokens);
-  const expr = parser.build();
-  try {
-    const calculated: Refs = new Set();
-    return expr?.evaluate?.({ base, calculated });
-  } catch (e) {
-    if (raise) {
-      throw e;
-    }
-    console.error(e);
-  }
-};
 
 type Expression =
   | Value
@@ -633,18 +616,6 @@ export class Parser {
   }
 }
 
-export const solveFormula = (value: any, base: Table, raise = true) => {
-  if (typeof value === "string" || value instanceof String) {
-    if (value.charAt(0) === "=") {
-      return evaluate(value.substring(1), base, raise);
-    }
-  }
-  if (value instanceof Table) {
-    return stripTable(value, 0, 0);
-  }
-  return value;
-};
-
 export const convertFormulaAbsolute = (
   value: any,
   base: Table,
@@ -661,9 +632,42 @@ export const convertFormulaAbsolute = (
   return value;
 };
 
-export const solveMatrix = (target: Table): MatrixType => {
-  const area = target.getArea();
-  return target.getMatrixFlatten({ area }).map((row) => {
-    return row.map((col) => solveFormula(col, target.getBase()));
+export const solveFormula = ({
+  value,
+  base,
+  raise = true,
+}: {
+  value: any;
+  base: Table;
+  raise?: boolean;
+}) => {
+  if (typeof value === "string" || value instanceof String) {
+    if (value.charAt(0) === "=") {
+      const lexer = new Lexer(value.substring(1));
+      lexer.tokenize();
+      const parser = new Parser(lexer.tokens);
+      const expr = parser.build();
+      try {
+        const calculated: Refs = new Set();
+        return expr?.evaluate?.({ base, calculated });
+      } catch (e) {
+        if (raise) {
+          throw e;
+        }
+      }
+    }
+  }
+  if (value instanceof Table) {
+    return solveTable(value)[0][0];
+  }
+  return value;
+};
+
+export const solveTable = (table: Table): MatrixType => {
+  const area = table.getArea();
+  return table.getMatrixFlatten({ area }).map((row) => {
+    return row.map((col) =>
+      solveFormula({ value: col, base: table.getBase() })
+    );
   });
 };

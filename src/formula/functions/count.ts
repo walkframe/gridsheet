@@ -1,4 +1,4 @@
-import { solveMatrix } from "../evaluator";
+import { solveTable } from "../evaluator";
 import { Table } from "../../api/table";
 import { BaseFunction } from "./__base";
 import { ensureNumber } from "./__utils";
@@ -20,7 +20,7 @@ export class CountFunction extends BaseFunction {
     const spreaded: any[] = [];
     this.args.map((arg) => {
       if (arg instanceof Table) {
-        spreaded.push(...solveMatrix(arg).reduce((a, b) => a.concat(b)));
+        spreaded.push(...solveTable(arg).reduce((a, b) => a.concat(b)));
         return;
       }
       spreaded.push(ensureNumber(arg));

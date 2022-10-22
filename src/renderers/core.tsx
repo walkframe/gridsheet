@@ -1,7 +1,7 @@
 import React from "react";
 import { CellType, PointType, WriterType } from "../types";
 import { Table } from "../api/table";
-import { evaluate, FormulaError } from "../formula/evaluator";
+import { solveFormula } from "../formula/evaluator";
 
 type Condition = (value: any) => boolean;
 type Stringify = (value: any) => string;
@@ -84,7 +84,8 @@ export class Renderer {
       return value.substring(1);
     }
     if (value[0] === "=") {
-      const result = evaluate(value.substring(1), table);
+      const result = solveFormula({ value, base: table });
+
       if (result == null) {
         return "";
       }

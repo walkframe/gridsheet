@@ -170,6 +170,7 @@ export class UserTable {
   protected historyIndex: number;
   protected idCache: Map<Id, string>;
   protected historyLimit: number;
+  protected referencedSet: Set<Address>;
   public minNumRows: number;
   public maxNumRows: number;
   public minNumCols: number;
@@ -206,6 +207,7 @@ export class UserTable {
     this.maxNumRows = maxNumRows;
     this.minNumCols = minNumCols;
     this.maxNumCols = maxNumCols;
+    this.referencedSet = new Set();
 
     const common = cells.default;
     // make idMatrix beforehand
@@ -394,7 +396,11 @@ export class UserTable {
           continue;
         }
         matrix[y - top][x - left] = evaluates
-          ? solveFormula(cell[key], this.base as Table, false)
+          ? solveFormula({
+              value: cell[key],
+              base: this.base as Table,
+              raise: false,
+            })
           : cell[key];
       }
     }
@@ -412,7 +418,11 @@ export class UserTable {
         const cell = this.getByPoint({ y: y - top, x: x - left });
         if (cell != null && filter(cell)) {
           result[pointToAddress({ y, x })] = evaluates
-            ? solveFormula(cell[key], this.base as Table, false)
+            ? solveFormula({
+                value: cell[key],
+                base: this.base as Table,
+                raise: false,
+              })
             : cell[key];
         }
       }
@@ -433,7 +443,11 @@ export class UserTable {
         const cell = this.getByPoint({ y: y - top, x: x - left });
         if (cell != null && filter(cell)) {
           row[x2c(x) || y2r(y)] = evaluates
-            ? solveFormula(cell[key], this.base as Table, false)
+            ? solveFormula({
+                value: cell[key],
+                base: this.base as Table,
+                raise: false,
+              })
             : cell[key];
         }
       }
@@ -454,7 +468,11 @@ export class UserTable {
         const cell = this.getByPoint({ y: y - top, x: x - left });
         if (cell != null && filter(cell)) {
           col[y2r(y) || x2c(x)] = evaluates
-            ? solveFormula(cell[key], this.base as Table, false)
+            ? solveFormula({
+                value: cell[key],
+                base: this.base as Table,
+                raise: false,
+              })
             : cell[key];
         }
       }
@@ -482,7 +500,11 @@ export class UserTable {
           matrix[y - top][x - left] = {
             ...cell,
             value: evaluates
-              ? solveFormula(cell?.value, this.base as Table, false)
+              ? solveFormula({
+                  value: cell?.value,
+                  base: this.base as Table,
+                  raise: false,
+                })
               : cell?.value,
           };
         }
@@ -500,7 +522,11 @@ export class UserTable {
           result[pointToAddress({ y, x })] = {
             ...cell,
             value: evaluates
-              ? solveFormula(cell?.value, this.base as Table, false)
+              ? solveFormula({
+                  value: cell?.value,
+                  base: this.base as Table,
+                  raise: false,
+                })
               : cell?.value,
           };
         }
@@ -520,7 +546,11 @@ export class UserTable {
           row[x2c(x) || y2r(y)] = {
             ...cell,
             value: evaluates
-              ? solveFormula(cell?.value, this.base as Table, false)
+              ? solveFormula({
+                  value: cell?.value,
+                  base: this.base as Table,
+                  raise: false,
+                })
               : cell?.value,
           };
         }
@@ -540,7 +570,11 @@ export class UserTable {
           col[y2r(y) || x2c(x)] = {
             ...cell,
             value: evaluates
-              ? solveFormula(cell?.value, this.base as Table, false)
+              ? solveFormula({
+                  value: cell?.value,
+                  base: this.base as Table,
+                  raise: false,
+                })
               : cell?.value,
           };
         }
@@ -1000,7 +1034,9 @@ export class Table extends UserTable {
 
     if (s[0] === "=") {
       if (evaluates) {
-        return String(solveFormula(s, this.base as Table, false));
+        return String(
+          solveFormula({ value: s, base: this.base as Table, raise: false })
+        );
       }
       const lexer = new Lexer(s.substring(1));
       lexer.tokenize();
@@ -1020,6 +1056,7 @@ export class Table extends UserTable {
     copied.labelers = this.labelers;
     copied.functions = this.functions;
     copied.idCache = this.idCache;
+    copied.referencedSet = this.referencedSet;
     return copied;
   }
 

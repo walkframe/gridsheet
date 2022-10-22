@@ -1,5 +1,5 @@
 import { Table } from "../../api/table";
-import { solveMatrix, FormulaError } from "../evaluator";
+import { solveTable, FormulaError } from "../evaluator";
 
 export const ensureNumber = (value: any, alternative?: number): number => {
   if (typeof value === "undefined" && typeof alternative !== "undefined") {
@@ -72,7 +72,7 @@ export const ensureBoolean = (
 
 export const stripTable = (value: any, y = 0, x = 0) => {
   if (value instanceof Table) {
-    return solveMatrix(value)[y][x];
+    return solveTable(value)[y][x];
   }
   return value;
 };

@@ -1,4 +1,4 @@
-import { solveMatrix, FormulaError } from "../evaluator";
+import { solveTable, FormulaError } from "../evaluator";
 import { Table } from "../../api/table";
 import { BaseFunction } from "./__base";
 import { ensureNumber } from "./__utils";
@@ -27,7 +27,7 @@ export class MaxFunction extends BaseFunction {
     this.args.map((arg) => {
       if (arg instanceof Table) {
         spreaded.push(
-          ...solveMatrix(arg)
+          ...solveTable(arg)
             .reduce((a, b) => a.concat(b))
             .filter((v: any) => typeof v === "number")
         );

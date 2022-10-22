@@ -1,4 +1,4 @@
-import { solveMatrix, FormulaError } from "../evaluator";
+import { solveTable, FormulaError } from "../evaluator";
 import { Table } from "../../api/table";
 import { BaseFunction } from "./__base";
 import { check } from "./__utils";
@@ -24,7 +24,7 @@ export class CountifFunction extends BaseFunction {
   }
 
   protected main(table: Table, condition: string) {
-    const matrix = solveMatrix(table);
+    const matrix = solveTable(table);
     return matrix
       .reduce((a, b) => a.concat(b))
       .filter((v: any) => check(v, condition)).length;
