@@ -14,7 +14,6 @@ import {
   RowByAddress,
   CellFilter,
   Labelers,
-  System,
   MatrixType,
 } from "../types";
 import { CellsType, CellType, Parsers, Renderers } from "../types";
@@ -35,7 +34,6 @@ import {
 } from "../formula/evaluator";
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH, HISTORY_LIMIT } from "../constants";
 import { shouldTracking } from "../store/utils";
-import { setDefault } from "../utils";
 
 type StoreReflectionType = {
   choosing?: PointType;
@@ -264,7 +262,7 @@ export class UserTable {
     }
   }
 
-  protected shallowCopy(copyCache = true) {
+  protected shallowCopy({ copyCache = true }: { copyCache?: boolean } = {}) {
     const copied = new Table({ numRows: 0, numCols: 0 });
     copied.changedAt = new Date();
     copied.lastChangedAt = this.changedAt;
@@ -645,44 +643,52 @@ export class UserTable {
     return newCell;
   }
 
-  public move(
-    from: AreaType,
-    to: AreaType,
-    reflection: StoreReflectionType = {}
-  ) {
+  public move({
+    src,
+    dst,
+    reflection = {},
+  }: {
+    src: AreaType;
+    dst: AreaType;
+    reflection?: StoreReflectionType;
+  }) {
     const changedAt = new Date();
-    const matrixFrom = this.getIdMatrixFromArea(from);
-    const matrixTo = this.getIdMatrixFromArea(to);
-    const matrixNew = this.getNewIdMatrix(from);
-    fillMatrix(this.idMatrix, matrixNew, from);
+    const matrixFrom = this.getIdMatrixFromArea(src);
+    const matrixTo = this.getIdMatrixFromArea(dst);
+    const matrixNew = this.getNewIdMatrix(src);
+    fillMatrix(this.idMatrix, matrixNew, src);
     matrixFrom.forEach((ids) => {
       ids
         .map(this.getById.bind(this))
         .filter((c) => c)
         .forEach((cell) => this.setChangedAt(cell, changedAt));
     });
-    const lostRows = fillMatrix(this.idMatrix, matrixFrom, to);
+    const lostRows = fillMatrix(this.idMatrix, matrixFrom, dst);
     this.pushHistory({
       operation: "MOVE",
       reflection,
       matrixFrom,
       matrixTo,
       matrixNew,
-      positionFrom: { y: from.top, x: from.left },
-      positionTo: { y: to.top, x: to.left },
+      positionFrom: { y: src.top, x: src.left },
+      positionTo: { y: dst.top, x: dst.left },
       lostRows,
     });
-    return this.shallowCopy(false);
+    return this.shallowCopy({ copyCache: false });
   }
 
-  public copy(
-    from: AreaType,
-    to: AreaType,
-    reflection: StoreReflectionType = {}
-  ) {
-    const { height: maxHeight, width: maxWidth } = areaShape(from, 1);
-    const { top: topFrom, left: leftFrom } = from;
-    const { top: topTo, left: leftTo, bottom: bottomTo, right: rightTo } = to;
+  public copy({
+    src,
+    dst,
+    reflection = {},
+  }: {
+    src: AreaType;
+    dst: AreaType;
+    reflection?: StoreReflectionType;
+  }) {
+    const { height: maxHeight, width: maxWidth } = areaShape(src, 1);
+    const { top: topFrom, left: leftFrom } = src;
+    const { top: topTo, left: leftTo, bottom: bottomTo, right: rightTo } = dst;
     const diff: DiffType = {};
     const changedAt = new Date();
 
@@ -718,18 +724,28 @@ export class UserTable {
         };
       }
     }
-    return this.update(diff, false, reflection);
+    return this.update({ diff, partial: false, reflection });
   }
 
-  public update(
-    diff: DiffType,
+  public update({
+    diff,
     partial = true,
-    reflection: StoreReflectionType = {}
-  ) {
+    updateChangedAt = true,
+    reflection = {},
+  }: {
+    diff: DiffType;
+    partial?: boolean;
+    updateChangedAt?: boolean;
+    reflection?: StoreReflectionType;
+  }) {
     const diffBefore: DataType = new Map();
     const diffAfter: DataType = new Map();
+    const changedAt = new Date();
     Object.keys(diff).forEach((address) => {
       const cell = { ...diff[address] };
+      if (updateChangedAt) {
+        this.setChangedAt(cell, changedAt);
+      }
       cell.value = convertFormulaAbsolute(cell.value, Table.cast(this));
       const point = addressToPoint(address);
       const id = this.getId(point);
@@ -748,17 +764,22 @@ export class UserTable {
       diffAfter,
       partial,
     });
-    return this.shallowCopy(true);
+    return this.shallowCopy({ copyCache: true });
   }
 
-  public writeMatrix(
-    point: PointType,
-    matrix: MatrixType<string>,
-    reflection: StoreReflectionType = {}
-  ) {
+  public writeMatrix({
+    point,
+    matrix,
+    updateChangedAt = true,
+    reflection = {},
+  }: {
+    point: PointType;
+    matrix: MatrixType<string>;
+    updateChangedAt?: boolean;
+    reflection?: StoreReflectionType;
+  }) {
     const { y: baseY, x: baseX } = point;
     const diff: DiffType = {};
-    const changedAt = new Date();
     matrix.map((cols, i) => {
       const y = baseY + i;
       if (y > this.bottom) {
@@ -770,19 +791,29 @@ export class UserTable {
           return;
         }
         const cell = this.parse({ y, x }, value);
-        this.setChangedAt(cell, changedAt);
         diff[pointToAddress({ y, x })] = cell;
       });
     });
-    return this.update(diff, true, reflection);
+    return this.update({ diff, partial: true, updateChangedAt, reflection });
   }
 
-  public write(
-    point: PointType,
-    value: string,
-    reflection: StoreReflectionType = {}
-  ) {
-    return this.writeMatrix(point, [[value]], reflection);
+  public write({
+    point,
+    value,
+    updateChangedAt = true,
+    reflection = {},
+  }: {
+    point: PointType;
+    value: string;
+    updateChangedAt?: boolean;
+    reflection?: StoreReflectionType;
+  }) {
+    return this.writeMatrix({
+      point,
+      matrix: [[value]],
+      updateChangedAt,
+      reflection,
+    });
   }
 
   protected parse(point: PointType, value: string) {
@@ -791,12 +822,17 @@ export class UserTable {
     return parser.parse(value, cell);
   }
 
-  public addRows(
-    y: number,
-    numRows: number,
-    baseY: number,
-    reflection: StoreReflectionType = {}
-  ) {
+  public addRows({
+    y,
+    numRows,
+    baseY,
+    reflection = {},
+  }: {
+    y: number;
+    numRows: number;
+    baseY: number;
+    reflection?: StoreReflectionType;
+  }) {
     if (
       this.maxNumRows !== -1 &&
       this.getNumRows() + numRows > this.maxNumRows
@@ -826,13 +862,17 @@ export class UserTable {
       numRows,
       idMatrix: rows,
     });
-    return this.shallowCopy(false);
+    return this.shallowCopy({ copyCache: false });
   }
-  public removeRows(
-    y: number,
-    numRows: number,
-    reflection: StoreReflectionType = {}
-  ) {
+  public removeRows({
+    y,
+    numRows,
+    reflection = {},
+  }: {
+    y: number;
+    numRows: number;
+    reflection?: StoreReflectionType;
+  }) {
     if (
       this.minNumRows !== -1 &&
       this.getNumRows() - numRows < this.minNumRows
@@ -849,14 +889,19 @@ export class UserTable {
       numRows,
       idMatrix: rows,
     });
-    return this.shallowCopy(false);
+    return this.shallowCopy({ copyCache: false });
   }
-  public addCols(
-    x: number,
-    numCols: number,
-    baseX: number,
-    reflection: StoreReflectionType = {}
-  ) {
+  public addCols({
+    x,
+    numCols,
+    baseX,
+    reflection = {},
+  }: {
+    x: number;
+    numCols: number;
+    baseX: number;
+    reflection?: StoreReflectionType;
+  }) {
     if (
       this.maxNumCols !== -1 &&
       this.getNumCols() + numCols > this.maxNumCols
@@ -886,13 +931,17 @@ export class UserTable {
       numCols,
       idMatrix: rows,
     });
-    return this.shallowCopy(false);
+    return this.shallowCopy({ copyCache: false });
   }
-  public removeCols(
-    x: number,
-    numCols: number,
-    reflection: StoreReflectionType = {}
-  ) {
+  public removeCols({
+    x,
+    numCols,
+    reflection = {},
+  }: {
+    x: number;
+    numCols: number;
+    reflection?: StoreReflectionType;
+  }) {
     if (
       this.minNumCols !== -1 &&
       this.getNumCols() - numCols < this.minNumCols
@@ -913,7 +962,7 @@ export class UserTable {
       numCols,
       idMatrix: rows,
     });
-    return this.shallowCopy(false);
+    return this.shallowCopy({ copyCache: false });
   }
 }
 
@@ -1044,7 +1093,9 @@ export class Table extends UserTable {
     }
     return {
       history,
-      newTable: this.shallowCopy(!shouldTracking(history.operation)),
+      newTable: this.shallowCopy({
+        copyCache: !shouldTracking(history.operation),
+      }),
     };
   }
 
@@ -1099,7 +1150,9 @@ export class Table extends UserTable {
     }
     return {
       history,
-      newTable: this.shallowCopy(!shouldTracking(history.operation)),
+      newTable: this.shallowCopy({
+        copyCache: !shouldTracking(history.operation),
+      }),
     };
   }
   getFunction(name: string) {

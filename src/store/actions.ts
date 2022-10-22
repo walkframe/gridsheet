@@ -299,10 +299,14 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
               bottom: choosing.y + h,
               right: choosing.x + w,
             };
-      const newTable = table.move(src, dst, {
-        selectingZone: areaToZone(dst),
-        copyingZone,
-        cutting,
+      const newTable = table.move({
+        src,
+        dst,
+        reflection: {
+          selectingZone: areaToZone(dst),
+          copyingZone,
+          cutting,
+        },
       });
       return {
         ...store,
@@ -325,8 +329,12 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
         bottom: y + height,
         right: x + width,
       };
-      newTable = table.writeMatrix({ y, x }, matrixFrom, {
-        selectingZone: areaToZone(selectingArea),
+      newTable = table.writeMatrix({
+        point: { y, x },
+        matrix: matrixFrom,
+        reflection: {
+          selectingZone: areaToZone(selectingArea),
+        },
       });
     } else {
       let { height, width } = areaShape(copyingArea);
@@ -338,9 +346,13 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
         width = superposed.width;
       }
       selectingArea = { top: y, left: x, bottom: y + height, right: x + width };
-      newTable = table.copy(copyingArea, selectingArea, {
-        copyingZone,
-        selectingZone,
+      newTable = table.copy({
+        src: copyingArea,
+        dst: selectingArea,
+        reflection: {
+          copyingZone,
+          selectingZone,
+        },
       });
     }
     return {
@@ -468,9 +480,13 @@ export const search = new SearchAction().bind();
 class WriteAction<T extends string> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     const { choosing, selectingZone, table } = store;
-    const newTable = table.write(choosing, payload, {
-      selectingZone,
-      choosing,
+    const newTable = table.write({
+      point: choosing,
+      value: payload,
+      reflection: {
+        selectingZone,
+        choosing,
+      },
     });
     return {
       ...store,
@@ -497,9 +513,13 @@ class ClearAction<T extends null> extends CoreAction<T> {
         diff[pointToAddress({ y, x })] = { value: null };
       }
     }
-    const newTable = table.update(diff, true, {
-      selectingZone,
-      choosing,
+    const newTable = table.update({
+      diff,
+      partial: true,
+      reflection: {
+        selectingZone,
+        choosing,
+      },
     });
     return {
       ...store,

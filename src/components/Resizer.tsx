@@ -89,7 +89,11 @@ export const Resizer: React.FC = React.memo(() => {
         diff[pointToAddress({ y, x: 0 })] = { height };
       });
     }
-    const newTable = table.update(diff, true, { selectingZone });
+    const newTable = table.update({
+      diff,
+      partial: true,
+      reflection: { selectingZone },
+    });
     dispatch(updateTable(newTable));
     dispatch(setResizingPositionY([-1, -1, -1]));
     dispatch(setResizingPositionX([-1, -1, -1]));

@@ -119,15 +119,15 @@ export const ContextMenu: React.FC = () => {
                   : "enabled"
               }
               onClick={(e) => {
-                const newTable = table.addRows(
-                  selectingTop,
-                  height,
-                  selectingTop,
-                  {
+                const newTable = table.addRows({
+                  y: selectingTop,
+                  numRows: height,
+                  baseY: selectingTop,
+                  reflection: {
                     selectingZone,
                     choosing,
-                  }
-                );
+                  },
+                });
                 dispatch(updateTable(newTable));
               }}
             >
@@ -148,15 +148,15 @@ export const ContextMenu: React.FC = () => {
                 selectingZone.startY += height;
                 selectingZone.endY += height;
                 choosing.y += height;
-                const newTable = table.addRows(
-                  selectingBottom + 1,
-                  height,
-                  selectingBottom,
-                  {
+                const newTable = table.addRows({
+                  y: selectingBottom + 1,
+                  numRows: height,
+                  baseY: selectingBottom,
+                  reflection: {
                     selectingZone,
                     choosing,
-                  }
-                );
+                  },
+                });
                 dispatch(updateTable(newTable));
               }}
             >
@@ -174,15 +174,15 @@ export const ContextMenu: React.FC = () => {
                   : "enabled"
               }
               onClick={(e) => {
-                const newTable = table.addCols(
-                  selectingLeft,
-                  width,
-                  selectingLeft,
-                  {
+                const newTable = table.addCols({
+                  x: selectingLeft,
+                  numCols: width,
+                  baseX: selectingLeft,
+                  reflection: {
                     selectingZone,
                     choosing,
-                  }
-                );
+                  },
+                });
                 dispatch(updateTable(newTable));
               }}
             >
@@ -202,15 +202,15 @@ export const ContextMenu: React.FC = () => {
                 selectingZone.startX += width;
                 selectingZone.endX += width;
                 choosing.x += width;
-                const newTable = table.addCols(
-                  selectingRight + 1,
-                  width,
-                  selectingRight,
-                  {
+                const newTable = table.addCols({
+                  x: selectingRight + 1,
+                  numCols: width,
+                  baseX: selectingRight,
+                  reflection: {
                     selectingZone,
                     choosing,
-                  }
-                );
+                  },
+                });
                 dispatch(updateTable(newTable));
               }}
             >
@@ -229,9 +229,13 @@ export const ContextMenu: React.FC = () => {
                   : "enabled"
               }
               onClick={(e) => {
-                const newTable = table.removeRows(selectingTop, height, {
-                  selectingZone,
-                  choosing,
+                const newTable = table.removeRows({
+                  y: selectingTop,
+                  numRows: height,
+                  reflection: {
+                    selectingZone,
+                    choosing,
+                  },
                 });
                 dispatch(updateTable(newTable));
               }}
@@ -250,9 +254,13 @@ export const ContextMenu: React.FC = () => {
                   : "enabled"
               }
               onClick={(e) => {
-                const newTable = table.removeCols(selectingLeft, width, {
-                  selectingZone,
-                  choosing,
+                const newTable = table.removeCols({
+                  x: selectingLeft,
+                  numCols: width,
+                  reflection: {
+                    selectingZone,
+                    choosing,
+                  },
                 });
                 dispatch(updateTable(newTable));
               }}
