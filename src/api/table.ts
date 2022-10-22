@@ -611,6 +611,14 @@ export class UserTable {
     return matrix;
   }
 
+  private setChangedAt(cell?: CellType, changedAt?: Date) {
+    if (cell == null) {
+      return null;
+    }
+    cell.changedAt = changedAt || new Date();
+    return cell;
+  }
+
   private copyCell(cell: CellType | undefined, base: number) {
     if (cell == null) {
       return undefined;
@@ -651,10 +659,7 @@ export class UserTable {
       ids
         .map(this.getById.bind(this))
         .filter((c) => c)
-        .forEach(
-          (cell) =>
-            (setDefault(cell, "system", {} as System).changedAt = changedAt)
-        );
+        .forEach((cell) => this.setChangedAt(cell, changedAt));
     });
     const lostRows = fillMatrix(this.idMatrix, matrixFrom, to);
     this.pushHistory({
@@ -679,6 +684,7 @@ export class UserTable {
     const { top: topFrom, left: leftFrom } = from;
     const { top: topTo, left: leftTo, bottom: bottomTo, right: rightTo } = to;
     const diff: DiffType = {};
+    const changedAt = new Date();
 
     for (let i = 0; i <= bottomTo - topTo; i++) {
       const toY = topTo + i;
@@ -704,6 +710,7 @@ export class UserTable {
           slideY,
           slideX
         );
+        this.setChangedAt(cell, changedAt);
         diff[pointToAddress({ y: toY, x: toX })] = {
           ...cell,
           style: { ...cell?.style },
@@ -721,11 +728,9 @@ export class UserTable {
   ) {
     const diffBefore: DataType = new Map();
     const diffAfter: DataType = new Map();
-    const changedAt = new Date();
     Object.keys(diff).forEach((address) => {
       const cell = { ...diff[address] };
       cell.value = convertFormulaAbsolute(cell.value, Table.cast(this));
-      cell.system = { ...cell.system, changedAt };
       const point = addressToPoint(address);
       const id = this.getId(point);
       diffBefore.set(id, this.getByPoint(point));
@@ -753,6 +758,7 @@ export class UserTable {
   ) {
     const { y: baseY, x: baseX } = point;
     const diff: DiffType = {};
+    const changedAt = new Date();
     matrix.map((cols, i) => {
       const y = baseY + i;
       if (y > this.bottom) {
@@ -764,6 +770,7 @@ export class UserTable {
           return;
         }
         const cell = this.parse({ y, x }, value);
+        this.setChangedAt(cell, changedAt);
         diff[pointToAddress({ y, x })] = cell;
       });
     });
