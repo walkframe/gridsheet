@@ -74,6 +74,39 @@ export class Ref extends Entity {
   }
 }
 
+export class Range extends Entity<string> {
+  constructor(value: string) {
+    super(value.toUpperCase());
+  }
+  public evaluate({ base }: EvaluateProps): Table {
+    const area = rangeToArea(this.complementRange(base));
+    return base.trim(area);
+  }
+  public idRange(base: Table) {
+    return this.value
+      .split(":")
+      .map((ref) => base.getIdByAddress(ref))
+      .join(":");
+  }
+  private complementRange(base: Table) {
+    const cells = this.value.split(":");
+    let [start = "", end = ""] = cells;
+    if (!start.match(/[1-9]\d*/)) {
+      start += "1";
+    }
+    if (!start.match(/[a-zA-Z]/)) {
+      start = "A" + start;
+    }
+    if (!end.match(/[1-9]\d*/)) {
+      end += base.getNumRows();
+    }
+    if (!end.match(/[a-zA-Z]/)) {
+      end = n2a(base.getNumCols() + 1) + end;
+    }
+    return `${start}:${end}`;
+  }
+}
+
 export class Id extends Entity {
   public evaluate({ base, calculated = new Set() }: EvaluateProps) {
     const id = getId(this.value);
@@ -115,36 +148,6 @@ export class IdRange extends Entity<string> {
   public slide(base: Table, slideY = 0, slideX = 0) {
     const range = this.range(base, slideY, slideX);
     return new Range(range).idRange(base);
-  }
-}
-
-export class Range extends Entity<string> {
-  public evaluate({ base }: EvaluateProps): Table {
-    const area = rangeToArea(this.complementRange(base));
-    return base.trim(area);
-  }
-  public idRange(base: Table) {
-    return this.value
-      .split(":")
-      .map((ref) => base.getIdByAddress(ref))
-      .join(":");
-  }
-  private complementRange(base: Table) {
-    const cells = this.value.split(":");
-    let [start = "", end = ""] = cells;
-    if (!start.match(/[1-9]\d*/)) {
-      start += "1";
-    }
-    if (!start.match(/[a-zA-Z]/)) {
-      start = "A" + start;
-    }
-    if (!end.match(/[1-9]\d*/)) {
-      end += base.getNumRows();
-    }
-    if (!end.match(/[a-zA-Z]/)) {
-      end = n2a(base.getNumCols() + 1) + end;
-    }
-    return `${start}:${end}`;
   }
 }
 
