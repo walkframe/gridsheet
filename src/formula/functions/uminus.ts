@@ -16,7 +16,7 @@ export class UminusFunction extends BaseFunction {
         "A single numerical value is only required."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
+    this.args = this.args.map((arg) => ensureNumber(arg));
   }
 
   protected main(v1: number) {

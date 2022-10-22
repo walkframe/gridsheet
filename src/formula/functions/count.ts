@@ -20,12 +20,10 @@ export class CountFunction extends BaseFunction {
     const spreaded: any[] = [];
     this.args.map((arg) => {
       if (arg instanceof Table) {
-        spreaded.push(
-          ...solveMatrix(arg, this.base).reduce((a, b) => a.concat(b))
-        );
+        spreaded.push(...solveMatrix(arg).reduce((a, b) => a.concat(b)));
         return;
       }
-      spreaded.push(ensureNumber(arg, this.base));
+      spreaded.push(ensureNumber(arg));
     });
     this.args = spreaded;
   }

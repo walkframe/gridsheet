@@ -17,7 +17,7 @@ import {
   MatrixType,
 } from "../types";
 import { CellsType, CellType, Parsers, Renderers } from "../types";
-import { areaShape, createMatrix, matrixShape, fillMatrix } from "./matrix";
+import { areaShape, createMatrix, matrixShape, fillMatrix } from "./structs";
 import {
   addressToPoint,
   x2c,
@@ -1170,6 +1170,9 @@ export class Table extends UserTable {
   getLabel(key: string, n: number) {
     const labeler = this.labelers[key];
     return labeler?.(n);
+  }
+  getBase() {
+    return this.base as Table;
   }
 }
 

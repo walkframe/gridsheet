@@ -14,7 +14,7 @@ import {
   MIN_WIDTH,
   MIN_HEIGHT,
 } from "../constants";
-import { zoneToArea, makeSequence, between } from "../api/matrix";
+import { zoneToArea, makeSequence, between } from "../api/structs";
 import { DiffType } from "../types";
 import { pointToAddress } from "../api/converters";
 

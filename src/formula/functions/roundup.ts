@@ -26,7 +26,7 @@ export class RoundupFunction extends BaseFunction {
         "Number of arguments for ROUNDUP is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
+    this.args = this.args.map((arg) => ensureNumber(arg));
   }
 
   protected main(value: number, digit = 0) {

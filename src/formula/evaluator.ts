@@ -1,8 +1,15 @@
-import { rangeToArea } from "../api/matrix";
+import { rangeToArea } from "../api/structs";
 import { addressToPoint, n2a } from "../api/converters";
 import { Table } from "../api/table";
-import { MatrixType } from "../types";
+import { Address, MatrixType } from "../types";
 import { stripTable } from "./functions/__utils";
+
+type Refs = Set<Address>;
+
+type EvaluateProps = {
+  base: Table;
+  calculated?: Refs;
+};
 
 const getId = (idString: string, stripAbsolute = true) => {
   let id = idString.slice(1);
@@ -26,42 +33,36 @@ export class FormulaError {
   }
 }
 
-export class Value {
-  public value: any;
-  constructor(value?: any) {
+class Entity<T = any> {
+  public value: T;
+  constructor(value: T) {
     this.value = value;
   }
-  public evaluate(base: Table) {
+}
+
+export class Value extends Entity {
+  public evaluate({ base }: EvaluateProps) {
     return this.value;
   }
 }
 
-export class Unreferenced {
-  private value: any;
-  constructor(value: any) {
-    this.value = value;
-  }
-  public evaluate(base: Table) {
+export class Unreferenced extends Entity {
+  public evaluate({ base }: EvaluateProps) {
     throw new FormulaError("#REF!", `Reference does not exist.`);
   }
 }
 
-export class InvalidRef {
-  private value: any;
-  constructor(value?: any) {
-    this.value = value;
-  }
-  public evaluate(base: Table) {
+export class InvalidRef extends Entity {
+  public evaluate({ base }: EvaluateProps) {
     throw new FormulaError("#NAME?", `Invalid ref: ${this.value}`);
   }
 }
 
-export class Ref {
-  private value: any;
+export class Ref extends Entity {
   constructor(value: string) {
-    this.value = value.toUpperCase();
+    super(value.toUpperCase());
   }
-  public evaluate(base: Table): Table {
+  public evaluate({ base }: EvaluateProps): Table {
     const { y, x } = addressToPoint(this.value);
     return base.trim({ top: y, left: x, bottom: y, right: x });
   }
@@ -74,13 +75,14 @@ export class Ref {
   }
 }
 
-export class Id {
-  private value: any;
-  constructor(value: string) {
-    this.value = value;
-  }
-  public evaluate(base: Table) {
-    const { y, x } = base.getPointById(getId(this.value));
+export class Id extends Entity {
+  public evaluate({ base, calculated = new Set() }: EvaluateProps) {
+    const id = getId(this.value);
+    if (calculated.has(id)) {
+      throw new FormulaError("#RFF!", "aaaaaaa");
+    }
+    calculated.add(id);
+    const { y, x } = base.getPointById(id);
     return base.trim({ top: y, left: x, bottom: y, right: x });
   }
   public ref(base: Table, slideY = 0, slideX = 0) {
@@ -95,12 +97,8 @@ export class Id {
   }
 }
 
-export class IdRange {
-  public value: string;
-  constructor(value: string) {
-    this.value = value;
-  }
-  public evaluate(base: Table): Table {
+export class IdRange extends Entity<string> {
+  public evaluate({ base, calculated = new Set() }: EvaluateProps): Table {
     const ids = this.value.split(":");
     const [p1, p2] = ids
       .map((id) => getId(id))
@@ -121,12 +119,8 @@ export class IdRange {
   }
 }
 
-export class Range {
-  public value: string;
-  constructor(value: string) {
-    this.value = value.toUpperCase();
-  }
-  public evaluate(base: Table): Table {
+export class Range extends Entity<string> {
+  public evaluate({ base }: EvaluateProps): Table {
     const area = rangeToArea(this.complementRange(base));
     return base.trim(area);
   }
@@ -165,7 +159,7 @@ export class Function {
     this.args = [];
   }
 
-  public evaluate(base: Table): any {
+  public evaluate({ base }: EvaluateProps): any {
     const name = this.name.toLowerCase();
     const Func = base.getFunction(name);
     if (Func == null) {
@@ -182,7 +176,8 @@ export const evaluate = (formula: string, base: Table, raise = true) => {
   const parser = new Parser(lexer.tokens);
   const expr = parser.build();
   try {
-    return expr?.evaluate?.(base);
+    const calculated: Refs = new Set();
+    return expr?.evaluate?.({ base, calculated });
   } catch (e) {
     if (raise) {
       throw e;
@@ -645,7 +640,7 @@ export const solveFormula = (value: any, base: Table, raise = true) => {
     }
   }
   if (value instanceof Table) {
-    return stripTable(value, base, 0, 0);
+    return stripTable(value, 0, 0);
   }
   return value;
 };
@@ -666,9 +661,9 @@ export const convertFormulaAbsolute = (
   return value;
 };
 
-export const solveMatrix = (target: Table, base: Table): MatrixType => {
+export const solveMatrix = (target: Table): MatrixType => {
   const area = target.getArea();
   return target.getMatrixFlatten({ area }).map((row) => {
-    return row.map((col) => solveFormula(col, base));
+    return row.map((col) => solveFormula(col, target.getBase()));
   });
 };

@@ -21,13 +21,13 @@ export class ProductFunction extends BaseFunction {
     this.args.map((arg) => {
       if (arg instanceof Table) {
         spreaded.push(
-          ...solveMatrix(arg, this.base)
+          ...solveMatrix(arg)
             .reduce((a, b) => a.concat(b))
             .filter((v: any) => typeof v === "number")
         );
         return;
       }
-      spreaded.push(ensureNumber(arg, this.base));
+      spreaded.push(ensureNumber(arg));
     });
     this.args = spreaded;
   }

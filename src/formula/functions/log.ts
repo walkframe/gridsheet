@@ -23,7 +23,7 @@ export class LogFunction extends BaseFunction {
         "Number of arguments for LOG is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
+    this.args = this.args.map((arg) => ensureNumber(arg));
     if (this.args[0] <= 0) {
       throw new FormulaError("NUM!", "value must be greater than 0");
     }

@@ -22,7 +22,7 @@ import {
 import { EditorLayout } from "./styles/EditorLayout";
 
 import { Context } from "../store";
-import { areaToZone } from "../api/matrix";
+import { areaToZone } from "../api/structs";
 
 export const Editor: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);

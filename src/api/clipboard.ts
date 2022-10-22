@@ -1,6 +1,6 @@
 import { StoreType, AreaType } from "../types";
 
-import { zoneToArea } from "./matrix";
+import { zoneToArea } from "./structs";
 import { matrix2tsv } from "./converters";
 import { solveMatrix } from "../formula/evaluator";
 
@@ -14,7 +14,7 @@ export const clip = (store: StoreType): AreaType => {
   }
   const input = editorRef.current;
   const trimmed = table.trim(area);
-  const matrix = solveMatrix(trimmed, table);
+  const matrix = solveMatrix(trimmed);
   const tsv = matrix2tsv(table, matrix, { y, x });
   if (input != null) {
     input.value = tsv;

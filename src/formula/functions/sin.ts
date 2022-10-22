@@ -19,7 +19,7 @@ export class SinFunction extends BaseFunction {
         "Number of arguments for SIN is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
+    this.args = this.args.map((arg) => ensureNumber(arg));
   }
 
   protected main(angle: number) {

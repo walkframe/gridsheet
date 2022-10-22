@@ -24,7 +24,7 @@ export class CountifFunction extends BaseFunction {
   }
 
   protected main(table: Table, condition: string) {
-    const matrix = solveMatrix(table, this.base);
+    const matrix = solveMatrix(table);
     return matrix
       .reduce((a, b) => a.concat(b))
       .filter((v: any) => check(v, condition)).length;

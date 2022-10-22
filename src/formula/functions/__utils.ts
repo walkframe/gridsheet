@@ -1,11 +1,7 @@
 import { Table } from "../../api/table";
 import { solveMatrix, FormulaError } from "../evaluator";
 
-export const ensureNumber = (
-  value: any,
-  base: Table,
-  alternative?: number
-): number => {
+export const ensureNumber = (value: any, alternative?: number): number => {
   if (typeof value === "undefined" && typeof alternative !== "undefined") {
     return alternative;
   }
@@ -14,8 +10,8 @@ export const ensureNumber = (
     return 0;
   }
   if (value instanceof Table) {
-    const v = stripTable(value, base, 0, 0);
-    return ensureNumber(v, base, alternative);
+    const v = stripTable(value, 0, 0);
+    return ensureNumber(v, alternative);
   }
   const num = parseFloat(value);
   if (isNaN(num)) {
@@ -27,13 +23,13 @@ export const ensureNumber = (
   return num;
 };
 
-export const ensureString = (value: any, base: Table): string => {
+export const ensureString = (value: any): string => {
   if (!value) {
     return "";
   }
   if (value instanceof Table) {
-    const v = stripTable(value, base, 0, 0);
-    return ensureString(v, base);
+    const v = stripTable(value, 0, 0);
+    return ensureString(v);
   }
   switch (value.constructor.name) {
     case "Date":
@@ -48,7 +44,7 @@ export const ensureString = (value: any, base: Table): string => {
 
 export const ensureBoolean = (
   value: any,
-  base: Table,
+
   alternative?: boolean
 ): boolean => {
   if (typeof value === "undefined" && typeof alternative !== "undefined") {
@@ -58,8 +54,8 @@ export const ensureBoolean = (
     return false;
   }
   if (value instanceof Table) {
-    const v = stripTable(value, base, 0, 0);
-    return ensureBoolean(v, base, alternative);
+    const v = stripTable(value, 0, 0);
+    return ensureBoolean(v, alternative);
   }
   if (typeof value === "string" || value instanceof String) {
     const bool = { true: true, false: false }[value.toLowerCase()];
@@ -74,9 +70,9 @@ export const ensureBoolean = (
   return Boolean(value);
 };
 
-export const stripTable = (value: any, base: Table, y = 0, x = 0) => {
+export const stripTable = (value: any, y = 0, x = 0) => {
   if (value instanceof Table) {
-    return solveMatrix(value, base)[y][x];
+    return solveMatrix(value)[y][x];
   }
   return value;
 };

@@ -14,7 +14,7 @@ import {
   ContextMenuLayout,
   ContextMenuModalLayout,
 } from "./styles/ContextMenuLayout";
-import { areaToZone, zoneShape, zoneToArea } from "../api/matrix";
+import { areaToZone, zoneShape, zoneToArea } from "../api/structs";
 
 import { Context } from "../store";
 

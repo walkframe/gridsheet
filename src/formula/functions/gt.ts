@@ -20,7 +20,7 @@ export class GtFunction extends BaseFunction {
         "Number of arguments for GT is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
+    this.args = this.args.map((arg) => ensureNumber(arg));
   }
 
   protected main(v1: number, v2: number) {

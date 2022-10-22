@@ -21,7 +21,7 @@ export class ExpFunction extends BaseFunction {
         "Number of arguments for EXP is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
+    this.args = this.args.map((arg) => ensureNumber(arg));
   }
 
   protected main(exponent: number) {

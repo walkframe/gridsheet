@@ -25,7 +25,7 @@ export class Atan2Function extends BaseFunction {
         "Number of arguments for ATAN2 is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
+    this.args = this.args.map((arg) => ensureNumber(arg));
   }
 
   protected main(x: number, y: number) {

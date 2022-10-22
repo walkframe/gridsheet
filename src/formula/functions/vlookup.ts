@@ -34,17 +34,17 @@ export class VlookupFunction extends BaseFunction {
       );
     }
     if (this.args[0] instanceof Table) {
-      this.args[0] = stripTable(this.args[0], this.base);
+      this.args[0] = stripTable(this.args[0]);
     }
     if (!(this.args[1] instanceof Table)) {
       throw new FormulaError("#REF!", "2nd argument must be range");
     }
-    this.args[2] = ensureNumber(this.args[2], this.base);
-    this.args[3] = ensureBoolean(this.args[3], this.base, true);
+    this.args[2] = ensureNumber(this.args[2]);
+    this.args[3] = ensureBoolean(this.args[3], true);
   }
 
   protected main(key: any, range: Table, index: number, isSorted: boolean) {
-    const matrix = solveMatrix(range, this.base);
+    const matrix = solveMatrix(range);
     if (isSorted) {
       let last = -1;
       for (let y = 0; y <= range.getNumRows(); y++) {

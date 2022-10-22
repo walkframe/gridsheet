@@ -36,7 +36,7 @@ export class SumifFunction extends BaseFunction {
     if (!(range instanceof Table)) {
       return check(range, condition) ? range : 0;
     }
-    const conditionMatrix = solveMatrix(range, this.base);
+    const conditionMatrix = solveMatrix(range);
     let sumMatrix = conditionMatrix;
     if (sumRange) {
       const [top, left] = [sumRange.top, sumRange.left];
@@ -46,7 +46,7 @@ export class SumifFunction extends BaseFunction {
         bottom: top + sumRange.getNumRows(),
         right: left + sumRange.getNumCols(),
       };
-      sumMatrix = solveMatrix(this.base.trim(area), this.base);
+      sumMatrix = solveMatrix(this.base.trim(area));
     }
     let total = 0;
     conditionMatrix.map((row, y) =>

@@ -19,7 +19,7 @@ export class CosFunction extends BaseFunction {
         "Number of arguments for COS is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
+    this.args = this.args.map((arg) => ensureNumber(arg));
   }
 
   protected main(angle: number) {

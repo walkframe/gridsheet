@@ -19,7 +19,7 @@ export class AcosFunction extends BaseFunction {
         "Number of arguments for ACOS is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
+    this.args = this.args.map((arg) => ensureNumber(arg));
     if (-1 > this.args[0] || this.args[0] > 1) {
       throw new FormulaError("#NUM!", "value must be between -1 and 1");
     }

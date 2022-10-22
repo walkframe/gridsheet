@@ -1,6 +1,6 @@
 import React from "react";
 import { y2r } from "../api/converters";
-import { between } from "../api/matrix";
+import { between } from "../api/structs";
 import { Context } from "../store";
 import {
   choose,

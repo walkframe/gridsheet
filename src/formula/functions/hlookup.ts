@@ -34,17 +34,17 @@ export class HlookupFunction extends BaseFunction {
       );
     }
     if (this.args[0] instanceof Table) {
-      this.args[0] = stripTable(this.args[0], this.base as Table);
+      this.args[0] = stripTable(this.args[0]);
     }
     if (!(this.args[1] instanceof Table)) {
       throw new FormulaError("#REF!", "2nd argument must be range");
     }
-    this.args[2] = ensureNumber(this.args[2], this.base as Table);
-    this.args[3] = ensureBoolean(this.args[3], this.base as Table, true);
+    this.args[2] = ensureNumber(this.args[2]);
+    this.args[3] = ensureBoolean(this.args[3], true);
   }
 
   protected main(key: any, range: Table, index: number, isSorted: boolean) {
-    const matrix = solveMatrix(range, this.base as Table);
+    const matrix = solveMatrix(range);
     if (isSorted) {
       let last = -1;
       for (let x = 0; x <= range.getNumCols(); x++) {

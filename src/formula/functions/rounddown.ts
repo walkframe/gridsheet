@@ -26,7 +26,7 @@ export class RounddownFunction extends BaseFunction {
         "Number of arguments for ROUNDDOWN is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
+    this.args = this.args.map((arg) => ensureNumber(arg));
   }
 
   protected main(value: number, digit = 0) {

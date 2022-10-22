@@ -15,7 +15,7 @@ import {
   matrixShape,
   areaShape,
   areaToZone,
-} from "../api/matrix";
+} from "../api/structs";
 import { Table } from "../api/table";
 
 import { tsv2matrix, x2c, pointToAddress, y2r } from "../api/converters";

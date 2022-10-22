@@ -1,6 +1,6 @@
 import React from "react";
 import { x2c, y2r } from "../api/converters";
-import { zoneToArea, among, zoneShape } from "../api/matrix";
+import { zoneToArea, among, zoneShape } from "../api/structs";
 import {
   choose,
   select,

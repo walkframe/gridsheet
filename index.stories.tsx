@@ -1,6 +1,6 @@
 import React from "react";
 import { GridSheet, Renderer, aa2oa, MatrixType, Parser } from "./src";
-import { createMatrix, matrixIntoCells } from "./src/api/matrix";
+import { createMatrix, matrixIntoCells } from "./src/api/structs";
 import { defaultParser } from "./src/parsers/core";
 import { defaultRenderer } from "./src/renderers/core";
 import { CellType, Dispatcher } from "./src/types";
