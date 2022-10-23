@@ -62,8 +62,8 @@ export class Renderer {
     return "";
   }
 
-  public render(table: Table, position: PointType, writer?: WriterType): any {
-    const cell = table.getByPoint(position);
+  public render(table: Table, point: PointType, writer?: WriterType): any {
+    const cell = table.getByPoint(point);
     const { value } = cell || {};
     return this._render(value, table, writer);
   }
