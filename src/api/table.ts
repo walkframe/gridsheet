@@ -169,7 +169,7 @@ export class UserTable {
   protected base: UserTable;
   protected histories: HistoryType[];
   protected historyIndex: number;
-  protected idCache: Map<Id, string>;
+  protected idAddressMap: Map<Id, string>;
   protected historyLimit: number;
   protected solvedCaches: { [address: Address]: any };
   public minNumRows: number;
@@ -201,7 +201,7 @@ export class UserTable {
     this.idMatrix = [];
     this.histories = [];
     this.historyIndex = -1;
-    this.idCache = new Map();
+    this.idAddressMap = new Map();
     this.historyLimit = historyLimit;
     this.changedAt = new Date();
     this.minNumRows = minNumRows;
@@ -219,7 +219,7 @@ export class UserTable {
         const id = (this.head++).toString(36);
         ids.push(id);
         const address = pointToAddress({ y, x });
-        this.idCache.set(id, address);
+        this.idAddressMap.set(id, address);
       }
     }
     for (let y = 0; y < numRows + 1; y++) {
@@ -284,7 +284,7 @@ export class UserTable {
     copied.maxNumCols = this.maxNumCols;
     copied.base = this;
     if (copyCache) {
-      copied.idCache = this.idCache;
+      copied.idAddressMap = this.idAddressMap;
     }
     return copied;
   }
@@ -300,7 +300,7 @@ export class UserTable {
       id = id.slice(0, -1);
       slideY = 0;
     }
-    const address = this.idCache.get(id);
+    const address = this.idAddressMap.get(id);
     if (address && slideY === 0 && slideX === 0) {
       return grantAddressAbsolute(address, absCol, absRow);
     }
@@ -309,7 +309,7 @@ export class UserTable {
       for (let x = 0; x < ids.length; x++) {
         const existing = ids[x];
         const address = pointToAddress({ y, x });
-        this.idCache.set(existing, address);
+        this.idAddressMap.set(existing, address);
         if (existing === id) {
           const slidedAddress = pointToAddress({
             y: y + slideY,
@@ -1072,7 +1072,7 @@ export class Table extends UserTable {
     copied.renderers = this.renderers;
     copied.labelers = this.labelers;
     copied.functions = this.functions;
-    copied.idCache = this.idCache;
+    copied.idAddressMap = this.idAddressMap;
     copied.solvedCaches = this.solvedCaches;
     return copied;
   }
