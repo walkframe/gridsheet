@@ -169,7 +169,7 @@ export class UserTable {
   protected base: UserTable;
   protected histories: HistoryType[];
   protected historyIndex: number;
-  protected idAddressMap: Map<Id, string>;
+  protected addressesById: { [id: Id]: Address };
   protected historyLimit: number;
   protected solvedCaches: { [address: Address]: any };
   public minNumRows: number;
@@ -201,7 +201,7 @@ export class UserTable {
     this.idMatrix = [];
     this.histories = [];
     this.historyIndex = -1;
-    this.idAddressMap = new Map();
+    this.addressesById = {};
     this.historyLimit = historyLimit;
     this.changedAt = new Date();
     this.minNumRows = minNumRows;
@@ -219,7 +219,7 @@ export class UserTable {
         const id = (this.head++).toString(36);
         ids.push(id);
         const address = pointToAddress({ y, x });
-        this.idAddressMap.set(id, address);
+        this.addressesById[id] = address;
       }
     }
     for (let y = 0; y < numRows + 1; y++) {
@@ -264,7 +264,7 @@ export class UserTable {
   }
 
   protected shallowCopy({ copyCache = true }: { copyCache?: boolean } = {}) {
-    const copied = new Table({ numRows: 0, numCols: 0 });
+    const copied = new Table({});
     copied.changedAt = new Date();
     copied.lastChangedAt = this.changedAt;
     copied.head = this.head;
@@ -284,7 +284,10 @@ export class UserTable {
     copied.maxNumCols = this.maxNumCols;
     copied.base = this;
     if (copyCache) {
-      copied.idAddressMap = this.idAddressMap;
+      copied.addressesById = this.addressesById;
+    } else {
+      // force reset
+      this.addressesById = {};
     }
     return copied;
   }
@@ -300,16 +303,13 @@ export class UserTable {
       id = id.slice(0, -1);
       slideY = 0;
     }
-    const address = this.idAddressMap.get(id);
-    if (address && slideY === 0 && slideX === 0) {
-      return grantAddressAbsolute(address, absCol, absRow);
-    }
+
     for (let y = 0; y < this.idMatrix.length; y++) {
       const ids = this.idMatrix[y];
       for (let x = 0; x < ids.length; x++) {
         const existing = ids[x];
         const address = pointToAddress({ y, x });
-        this.idAddressMap.set(existing, address);
+        this.addressesById[existing] = address;
         if (existing === id) {
           const slidedAddress = pointToAddress({
             y: y + slideY,
@@ -1072,7 +1072,7 @@ export class Table extends UserTable {
     copied.renderers = this.renderers;
     copied.labelers = this.labelers;
     copied.functions = this.functions;
-    copied.idAddressMap = this.idAddressMap;
+    copied.addressesById = this.addressesById;
     copied.solvedCaches = this.solvedCaches;
     return copied;
   }

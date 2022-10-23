@@ -206,7 +206,7 @@ export const matrixIntoCells = (
       const id = pointToAddress({ y: baseY + y, x: baseX + x });
       if (typeof value !== "undefined") {
         const cell = cells[id];
-        cells[id] = { ...cell, value };
+        cells[id] = { value, ...cell };
       }
     });
   });
