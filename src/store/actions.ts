@@ -218,7 +218,6 @@ class UpdateTableAction<T extends Table> extends CoreAction<T> {
     return {
       ...store,
       table: payload,
-      resolvedCache: {},
       ...restrictPoints(store, payload),
     };
   }
@@ -313,7 +312,6 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
         ...store,
         cutting: false,
         table: newTable,
-        resolvedCache: {},
         selectingZone: areaToZone(dst),
         copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
       };
@@ -360,7 +358,6 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
     return {
       ...store,
       table: newTable,
-      resolvedCache: {},
       selectingZone: areaToZone(selectingArea),
       copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
     };
@@ -494,7 +491,6 @@ class WriteAction<T extends string> extends CoreAction<T> {
     return {
       ...store,
       table: newTable,
-      resolvedCache: {},
       copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
     };
   }
@@ -529,7 +525,6 @@ class ClearAction<T extends null> extends CoreAction<T> {
       ...store,
 
       table: newTable,
-      resolvedCache: {},
     };
   }
 }
@@ -548,7 +543,6 @@ class UndoAction<T extends null> extends CoreAction<T> {
       ...restrictPoints(store, table),
       ...reflection,
       table: newTable,
-      resolvedCache: {},
     };
   }
 }
@@ -567,7 +561,6 @@ class RedoAction<T extends null> extends CoreAction<T> {
       ...reflection,
       ...restrictPoints(store, table),
       table: newTable,
-      resolvedCache: {},
     };
   }
 }

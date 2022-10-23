@@ -44,7 +44,6 @@ export const GridSheet: React.FC<Props> = ({
   const initialState: StoreType = {
     table: new Table({}), // temporary (see StoreInitializer for detail)
     tableInitialized: false,
-    resolvedCache: {},
     sheetRef,
     searchInputRef,
     editorRef,

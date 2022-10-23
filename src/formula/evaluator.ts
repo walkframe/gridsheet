@@ -664,41 +664,39 @@ export const solveFormula = ({
   base: Table;
   raise?: boolean;
 }) => {
-  const {
-    store: { resolvedCache },
-  } = React.useContext(Context);
-
   let solved = value;
   if (typeof value === "string") {
     if (value.charAt(0) === "=") {
-      const cache = resolvedCache[value];
-      if (cache === SOLVING) {
-        throw new FormulaError(
-          "#RFF!",
-          "References are circulating.",
-          new Error(value)
-        );
-      } else if (cache != null) {
-        return cache;
-      }
-      const lexer = new Lexer(value.substring(1));
-      lexer.tokenize();
-      const parser = new Parser(lexer.tokens);
-      const expr = parser.build();
+      const cache = base.getSolvedCache(value);
+
       try {
-        resolvedCache[value] = SOLVING;
+        if (cache === SOLVING) {
+          throw new FormulaError(
+            "#RFF!",
+            "References are circulating.",
+            new Error(value)
+          );
+        } else if (cache != null) {
+          return cache;
+        }
+        const lexer = new Lexer(value.substring(1));
+        lexer.tokenize();
+        const parser = new Parser(lexer.tokens);
+        const expr = parser.build();
+        base.setSolvedCache(value, SOLVING);
         solved = expr?.evaluate?.({ base });
       } catch (e) {
         if (raise) {
           throw e;
         }
+        solved = null;
       }
     }
   }
   if (solved instanceof Table) {
     solved = solveTable(solved)[0][0];
   }
-  resolvedCache[value] = solved;
+  base.setSolvedCache(value, solved);
   return solved;
 };
 

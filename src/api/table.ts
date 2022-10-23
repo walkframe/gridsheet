@@ -147,6 +147,7 @@ const cellFilter = (cell: CellType) => true;
 
 type GetProps = {
   evaluates?: boolean;
+  raise?: boolean;
   filter?: CellFilter;
 };
 
@@ -170,7 +171,7 @@ export class UserTable {
   protected historyIndex: number;
   protected idCache: Map<Id, string>;
   protected historyLimit: number;
-  protected referencedSet: Set<Address>;
+  protected solvedCaches: { [address: Address]: any };
   public minNumRows: number;
   public maxNumRows: number;
   public minNumCols: number;
@@ -207,7 +208,7 @@ export class UserTable {
     this.maxNumRows = maxNumRows;
     this.minNumCols = minNumCols;
     this.maxNumCols = maxNumCols;
-    this.referencedSet = new Set();
+    this.solvedCaches = {};
 
     const common = cells.default;
     // make idMatrix beforehand
@@ -376,6 +377,7 @@ export class UserTable {
     area,
     key = "value",
     evaluates = true,
+    raise = false,
     filter = cellFilter,
   }: GetFlattenProps & {
     area?: AreaType;
@@ -397,7 +399,7 @@ export class UserTable {
           ? solveFormula({
               value: cell[key],
               base: this.base as Table,
-              raise: false,
+              raise,
             })
           : cell[key];
       }
@@ -407,6 +409,7 @@ export class UserTable {
   public getObjectFlatten({
     key = "value",
     evaluates = true,
+    raise = false,
     filter = cellFilter,
   }: GetFlattenProps = {}) {
     const result: CellsType = {};
@@ -419,7 +422,7 @@ export class UserTable {
             ? solveFormula({
                 value: cell[key],
                 base: this.base as Table,
-                raise: false,
+                raise,
               })
             : cell[key];
         }
@@ -430,6 +433,7 @@ export class UserTable {
   public getRowsFlatten({
     key = "value",
     evaluates = true,
+    raise = false,
     filter = cellFilter,
   }: GetFlattenProps = {}) {
     const result: CellsType[] = [];
@@ -444,7 +448,7 @@ export class UserTable {
             ? solveFormula({
                 value: cell[key],
                 base: this.base as Table,
-                raise: false,
+                raise,
               })
             : cell[key];
         }
@@ -455,6 +459,7 @@ export class UserTable {
   public getColsFlatten({
     key = "value",
     evaluates = true,
+    raise = false,
     filter = cellFilter,
   }: GetFlattenProps = {}) {
     const result: CellsType[] = [];
@@ -469,7 +474,7 @@ export class UserTable {
             ? solveFormula({
                 value: cell[key],
                 base: this.base as Table,
-                raise: false,
+                raise,
               })
             : cell[key];
         }
@@ -480,6 +485,7 @@ export class UserTable {
   public getMatrix({
     area,
     evaluates = true,
+    raise = false,
     filter = cellFilter,
   }: GetProps & {
     area?: AreaType;
@@ -501,7 +507,7 @@ export class UserTable {
               ? solveFormula({
                   value: cell?.value,
                   base: this.base as Table,
-                  raise: false,
+                  raise,
                 })
               : cell?.value,
           };
@@ -510,7 +516,11 @@ export class UserTable {
     }
     return matrix;
   }
-  public getObject({ evaluates = true, filter = cellFilter }: GetProps = {}) {
+  public getObject({
+    evaluates = true,
+    raise = false,
+    filter = cellFilter,
+  }: GetProps = {}) {
     const result: CellsType = {};
     const { top, left, bottom, right } = this.area;
     for (let y = top; y <= bottom; y++) {
@@ -523,7 +533,7 @@ export class UserTable {
               ? solveFormula({
                   value: cell?.value,
                   base: this.base as Table,
-                  raise: false,
+                  raise,
                 })
               : cell?.value,
           };
@@ -532,7 +542,11 @@ export class UserTable {
     }
     return result;
   }
-  public getRows({ evaluates = true, filter = cellFilter }: GetProps = {}) {
+  public getRows({
+    evaluates = true,
+    raise = false,
+    filter = cellFilter,
+  }: GetProps = {}) {
     const result: CellsType[] = [];
     const { top, left, bottom, right } = this.area;
     for (let y = top; y <= bottom; y++) {
@@ -547,7 +561,7 @@ export class UserTable {
               ? solveFormula({
                   value: cell?.value,
                   base: this.base as Table,
-                  raise: false,
+                  raise,
                 })
               : cell?.value,
           };
@@ -556,7 +570,11 @@ export class UserTable {
     }
     return result;
   }
-  public getCols({ evaluates = true, filter = cellFilter }: GetProps = {}) {
+  public getCols({
+    evaluates = true,
+    raise = false,
+    filter = cellFilter,
+  }: GetProps = {}) {
     const result: CellsType[] = [];
     const { top, left, bottom, right } = this.area;
     for (let x = left; x <= right; x++) {
@@ -571,7 +589,7 @@ export class UserTable {
               ? solveFormula({
                   value: cell?.value,
                   base: this.base as Table,
-                  raise: false,
+                  raise,
                 })
               : cell?.value,
           };
@@ -796,6 +814,7 @@ export class UserTable {
       diffAfter,
       partial,
     });
+    this.solvedCaches = {};
     return this.shallowCopy({ copyCache: true });
   }
 
@@ -1054,7 +1073,7 @@ export class Table extends UserTable {
     copied.labelers = this.labelers;
     copied.functions = this.functions;
     copied.idCache = this.idCache;
-    copied.referencedSet = this.referencedSet;
+    copied.solvedCaches = this.solvedCaches;
     return copied;
   }
 
@@ -1208,6 +1227,12 @@ export class Table extends UserTable {
   }
   getBase() {
     return this.base as Table;
+  }
+  getSolvedCache(key: string) {
+    return this.solvedCaches[key];
+  }
+  setSolvedCache(key: string, value: any) {
+    this.solvedCaches[key] = value;
   }
 }
 
