@@ -222,10 +222,8 @@ export class UserTable {
       }
     }
     for (let y = 0; y < numRows + 1; y++) {
-      const ids: Ids = [];
       const rowId = y2r(y);
       const rowDefault = cells[rowId];
-      this.idMatrix.push(ids);
       for (let x = 0; x < numCols + 1; x++) {
         const id = this.getId({ y, x });
         const address = pointToAddress({ y, x });

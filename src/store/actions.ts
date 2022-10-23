@@ -21,6 +21,7 @@ import { Table } from "../api/table";
 import { tsv2matrix, x2c, pointToAddress, y2r } from "../api/converters";
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
 import { restrictPoints } from "./utils";
+import { FormulaCacheManager } from "../formula/evaluator";
 
 const actions: { [s: string]: CoreAction<any> } = {};
 
@@ -218,6 +219,7 @@ class UpdateTableAction<T extends Table> extends CoreAction<T> {
     return {
       ...store,
       table: payload,
+      resolvedCache: {},
       ...restrictPoints(store, payload),
     };
   }

@@ -142,6 +142,7 @@ export type StoreType = {
   gridRef: React.MutableRefObject<Grid | null>;
   verticalHeadersRef: React.MutableRefObject<List | null>;
   horizontalHeadersRef: React.MutableRefObject<List | null>;
+  resolvedCache: { [address: Address]: any };
   entering: boolean;
   choosing: PointType;
   cutting: boolean;

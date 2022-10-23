@@ -1,14 +1,38 @@
 import { rangeToArea } from "../api/structs";
-import { addressToPoint, n2a } from "../api/converters";
+import { addressToPoint, n2a, pointToAddress } from "../api/converters";
 import { Table } from "../api/table";
 import { Address, MatrixType } from "../types";
+import React from "react";
+import { Context } from "../store";
+import { SOLVING } from "../constants";
 
-type Refs = Set<Address>;
+type Refs = Set<string>;
+type Formula = string;
 
 type EvaluateProps = {
   base: Table;
-  calculated?: Refs;
 };
+
+export class FormulaCacheManager {
+  public refsMap: Map<Formula, Refs>;
+  public cacheMap: Map<Formula, any>;
+  constructor() {
+    this.refsMap = new Map();
+    this.cacheMap = new Map();
+  }
+
+  getRefs(formula: Formula) {
+    let refs = this.refsMap.get(formula);
+    if (refs == null) {
+      refs = new Set();
+      this.refsMap.set(formula, refs);
+    }
+    return refs;
+  }
+  getCache(formula: Formula) {
+    return this.cacheMap.get(formula);
+  }
+}
 
 const getId = (idString: string, stripAbsolute = true) => {
   let id = idString.slice(1);
@@ -108,12 +132,8 @@ export class Range extends Entity<string> {
 }
 
 export class Id extends Entity {
-  public evaluate({ base, calculated = new Set() }: EvaluateProps) {
+  public evaluate({ base }: EvaluateProps) {
     const id = getId(this.value);
-    if (calculated.has(id)) {
-      throw new FormulaError("#RFF!", "aaaaaaa");
-    }
-    calculated.add(id);
     const { y, x } = base.getPointById(id);
     return base.trim({ top: y, left: x, bottom: y, right: x });
   }
@@ -130,7 +150,7 @@ export class Id extends Entity {
 }
 
 export class IdRange extends Entity<string> {
-  public evaluate({ base, calculated = new Set() }: EvaluateProps): Table {
+  public evaluate({ base }: EvaluateProps): Table {
     const ids = this.value.split(":");
     const [p1, p2] = ids
       .map((id) => getId(id))
@@ -644,15 +664,26 @@ export const solveFormula = ({
   base: Table;
   raise?: boolean;
 }) => {
-  if (typeof value === "string" || value instanceof String) {
+  const {
+    store: { resolvedCache },
+  } = React.useContext(Context);
+
+  let solved = value;
+  if (typeof value === "string") {
     if (value.charAt(0) === "=") {
+      const cache = resolvedCache[value];
+      if (cache === SOLVING) {
+        throw new FormulaError("#RFF!", "References are circulating.");
+      } else if (cache != null) {
+        return cache;
+      }
       const lexer = new Lexer(value.substring(1));
       lexer.tokenize();
       const parser = new Parser(lexer.tokens);
       const expr = parser.build();
       try {
-        const calculated: Refs = new Set();
-        return expr?.evaluate?.({ base, calculated });
+        resolvedCache[value] = SOLVING;
+        solved = expr?.evaluate?.({ base });
       } catch (e) {
         if (raise) {
           throw e;
@@ -660,17 +691,34 @@ export const solveFormula = ({
       }
     }
   }
-  if (value instanceof Table) {
-    return solveTable(value)[0][0];
+  if (solved instanceof Table) {
+    solved = solveTable(solved)[0][0];
   }
-  return value;
+  resolvedCache[value] = solved;
+  return solved;
 };
 
 export const solveTable = (table: Table): MatrixType => {
+  const {
+    store: { resolvedCache },
+  } = React.useContext(Context);
+
   const area = table.getArea();
-  return table.getMatrixFlatten({ area }).map((row) => {
-    return row.map((col) =>
-      solveFormula({ value: col, base: table.getBase() })
-    );
+  return table.getMatrixFlatten({ area, evaluates: false }).map((row, i) => {
+    const y = area.top + i;
+    return row.map((value, j) => {
+      const x = area.left + j;
+      const address = pointToAddress({ y, x });
+      const cache = resolvedCache[address];
+      if (cache === SOLVING) {
+        throw new FormulaError("#RFF!", "References are circulating.");
+      } else if (cache != null) {
+        return cache;
+      }
+      resolvedCache[address] = SOLVING;
+      const solved = solveFormula({ value, base: table.getBase() });
+      resolvedCache[address] = solved;
+      return solved;
+    });
   });
 };
