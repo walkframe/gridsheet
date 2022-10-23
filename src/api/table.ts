@@ -109,11 +109,11 @@ type HistoryType =
   | HistoryNoOperation;
 
 export class History {
-  public operation: HistoryType["operation"];
-  public diffBefore?: DataType;
-  public diffAfter?: DataType;
-  public idMatrix?: IdMatrix;
-  public position?: PointType;
+  public readonly operation: HistoryType["operation"];
+  public readonly diffBefore?: DataType;
+  public readonly diffAfter?: DataType;
+  public readonly idMatrix?: IdMatrix;
+  public readonly position?: PointType;
 
   constructor(operation: HistoryType["operation"]) {
     this.operation = operation;
@@ -1009,6 +1009,18 @@ export class UserTable {
     });
     return this.shallowCopy({ copyCache: false });
   }
+  public getHistories() {
+    return [...this.histories];
+  }
+  public getHistoryIndex() {
+    return this.historyIndex;
+  }
+  public getHistorySize() {
+    return this.histories.length;
+  }
+  public getHistoryLimit() {
+    return this.historyLimit;
+  }
 }
 
 export class Table extends UserTable {
@@ -1207,15 +1219,7 @@ export class Table extends UserTable {
   getFunction(name: string) {
     return this.functions[name];
   }
-  getHistoryIndex() {
-    return this.historyIndex;
-  }
-  getHistoryLimit() {
-    return this.historyLimit;
-  }
-  getHistorySize() {
-    return this.histories.length;
-  }
+
   getLabel(key: string, n: number) {
     const labeler = this.labelers[key];
     return labeler?.(n);

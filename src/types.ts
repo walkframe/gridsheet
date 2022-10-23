@@ -105,31 +105,6 @@ export type PositionType = { y: Y; x: X }; // {y, x}
 export type ZoneType = { startY: Y; startX: X; endY: Y; endX: X };
 export type AreaType = { top: Y; left: X; bottom: Y; right: X };
 
-export type Direction = "FORWARD" | "BACKWARD";
-export type HistoryType = {
-  index: number;
-  size: number;
-  operations: OperationType[];
-  direction: Direction;
-};
-
-export type OperationCommandType =
-  | "SET_TABLE"
-  | "ADD_ROWS"
-  | "REMOVE_ROWS"
-  | "ADD_COLS"
-  | "REMOVE_COLS";
-
-export type OperationType = {
-  command: OperationCommandType;
-  before: any;
-  after: any;
-  choosing?: PointType;
-  selectingZone?: ZoneType;
-  copyingZone?: ZoneType;
-  cutting?: boolean;
-};
-
 export type WriterType = (value: string) => void;
 
 export type StoreType = {
