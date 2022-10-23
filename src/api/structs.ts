@@ -12,7 +12,7 @@ import {
   RowByAddress,
   ShapeType,
 } from "../types";
-import { addressToPoint, pointToAddress } from "./converters";
+import { a2p, p2a } from "./converters";
 
 export const slideArea = (area: AreaType, y: Y, x: X): AreaType => {
   const { top, left, bottom, right } = area;
@@ -61,7 +61,7 @@ export const areaToZone = (area: AreaType): ZoneType => {
 
 export const areaToRange = (area: AreaType): string => {
   const { top, left, bottom, right } = area;
-  return `${pointToAddress({ y: top, x: left })}${pointToAddress({
+  return `${p2a({ y: top, x: left })}${p2a({
     y: bottom,
     x: right,
   })}`;
@@ -70,8 +70,8 @@ export const areaToRange = (area: AreaType): string => {
 export const rangeToArea = (range: string): AreaType => {
   const cells = range.split(":");
   const [start, end] = cells;
-  const { y: top, x: left } = addressToPoint(start);
-  const { y: bottom, x: right } = addressToPoint(end);
+  const { y: top, x: left } = a2p(start);
+  const { y: bottom, x: right } = a2p(end);
   return { top, left, bottom, right };
 };
 
@@ -176,7 +176,7 @@ export const fillMatrix = <T = any>(dst: T[][], src: T[][], area: AreaType) => {
         continue;
       }
       if (lostRow.length === 0) {
-        lostRows.set(pointToAddress({ y, x }), lostRow);
+        lostRows.set(p2a({ y, x }), lostRow);
       }
       lostRow.push(value);
     }
@@ -200,10 +200,10 @@ export const matrixIntoCells = (
   cells: CellsType,
   origin = "A1"
 ) => {
-  const { y: baseY, x: baseX } = addressToPoint(origin);
+  const { y: baseY, x: baseX } = a2p(origin);
   matrix.map((row, y) => {
     row.map((value, x) => {
-      const id = pointToAddress({ y: baseY + y, x: baseX + x });
+      const id = p2a({ y: baseY + y, x: baseX + x });
       if (typeof value !== "undefined") {
         const cell = cells[id];
         cells[id] = { value, ...cell };

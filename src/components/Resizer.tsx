@@ -16,7 +16,7 @@ import {
 } from "../constants";
 import { zoneToArea, makeSequence, between } from "../api/structs";
 import { DiffType } from "../types";
-import { pointToAddress } from "../api/converters";
+import { p2a } from "../api/converters";
 
 const Line = styled.div`
   position: relative;
@@ -77,7 +77,7 @@ export const Resizer: React.FC = React.memo(() => {
         xs = makeSequence(left, right + 1);
       }
       xs.map((x, i) => {
-        diff[pointToAddress({ y: 0, x })] = { width };
+        diff[p2a({ y: 0, x })] = { width };
       });
     }
     if (y !== -1) {
@@ -86,7 +86,7 @@ export const Resizer: React.FC = React.memo(() => {
         ys = makeSequence(top, bottom + 1);
       }
       ys.map((y, i) => {
-        diff[pointToAddress({ y, x: 0 })] = { height };
+        diff[p2a({ y, x: 0 })] = { height };
       });
     }
     const newTable = table.update({

@@ -1,5 +1,5 @@
 import { rangeToArea } from "../api/structs";
-import { addressToPoint, n2a, pointToAddress } from "../api/converters";
+import { a2p, n2c, p2a } from "../api/converters";
 import { Table } from "../api/table";
 import { Address, MatrixType } from "../types";
 import { SOLVING } from "../constants";
@@ -60,7 +60,7 @@ export class Ref extends Entity {
     super(value.toUpperCase());
   }
   public evaluate({ base }: EvaluateProps): Table {
-    const { y, x } = addressToPoint(this.value);
+    const { y, x } = a2p(this.value);
     return base.trim({ top: y, left: x, bottom: y, right: x });
   }
   public id(base: Table) {
@@ -99,7 +99,7 @@ export class Range extends Entity<string> {
       end += base.getNumRows();
     }
     if (!end.match(/[a-zA-Z]/)) {
-      end = n2a(base.getNumCols() + 1) + end;
+      end = n2c(base.getNumCols() + 1) + end;
     }
     return `${start}:${end}`;
   }

@@ -4,14 +4,14 @@ import { Table } from "./table";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-const N2A_CACHE = new Map<number, string>();
-const A2N_CACHE = new Map<string, number>();
+const N2C_CACHE = new Map<number, string>();
+const C2N_CACHE = new Map<string, number>();
 
-export const n2a = (
+export const n2c = (
   key: number,
   cacheSize = DEFAULT_ALPHABET_CACHE_SIZE
 ): string => {
-  const cached = N2A_CACHE.get(--key);
+  const cached = N2C_CACHE.get(--key);
   if (cached != null) {
     return cached;
   }
@@ -25,19 +25,19 @@ export const n2a = (
     num = Math.floor(num / 26);
   } while (num > 0);
 
-  N2A_CACHE.set(key, result);
-  const it = N2A_CACHE.keys();
-  for (let st = it.next(); N2A_CACHE.size > cacheSize; st = it.next()) {
-    N2A_CACHE.delete(st.value);
+  N2C_CACHE.set(key, result);
+  const it = N2C_CACHE.keys();
+  for (let st = it.next(); N2C_CACHE.size > cacheSize; st = it.next()) {
+    N2C_CACHE.delete(st.value);
   }
   return result;
 };
 
-export const a2n = (
+export const c2n = (
   key: string,
   cacheSize = DEFAULT_ALPHABET_CACHE_SIZE
 ): number => {
-  const cached = A2N_CACHE.get(key);
+  const cached = C2N_CACHE.get(key);
   if (cached != null) {
     return cached;
   }
@@ -51,10 +51,10 @@ export const a2n = (
     const num = ALPHABET.indexOf(a) + 1;
     result += ALPHABET.length ** digit * num;
   }
-  A2N_CACHE.set(key, result);
-  const it = A2N_CACHE.keys();
-  for (let st = it.next(); A2N_CACHE.size > cacheSize; st = it.next()) {
-    A2N_CACHE.delete(st.value);
+  C2N_CACHE.set(key, result);
+  const it = C2N_CACHE.keys();
+  for (let st = it.next(); C2N_CACHE.size > cacheSize; st = it.next()) {
+    C2N_CACHE.delete(st.value);
   }
   return result;
 };
@@ -66,7 +66,7 @@ export const x2c = (
   if (x === 0) {
     return "";
   }
-  const a = n2a(x + 1, cacheSize);
+  const a = n2c(x + 1, cacheSize);
   return x < 0 ? `$${a}` : a;
 };
 
@@ -75,7 +75,7 @@ export const c2x = (
   absolute = false,
   cacheSize = DEFAULT_ALPHABET_CACHE_SIZE
 ): number => {
-  const n = a2n(col, cacheSize);
+  const n = c2n(col, cacheSize);
   return absolute ? -n : n;
 };
 
@@ -93,7 +93,7 @@ export const r2y = (row: number | string, absolute = false) => {
   return absolute ? -row : row;
 };
 
-export const pointToAddress = ({ y, x }: PointType) => {
+export const p2a = ({ y, x }: PointType) => {
   return `${x2c(x)}${y2r(y)}`;
 };
 
@@ -157,7 +157,7 @@ export const tsv2matrix = (tsv: string): string[][] => {
   return rows;
 };
 
-export const addressToPoint = (address: Address): PointType => {
+export const a2p = (address: Address): PointType => {
   const m = address.match(/(\$)?([A-Z]*)(\$)?([0-9]*)/);
   if (m == null) {
     return { y: 0, x: 0 };

@@ -18,13 +18,7 @@ import {
 } from "../types";
 import { CellsType, CellType, Parsers, Renderers } from "../types";
 import { areaShape, createMatrix, matrixShape, fillMatrix } from "./structs";
-import {
-  addressToPoint,
-  x2c,
-  pointToAddress,
-  y2r,
-  grantAddressAbsolute,
-} from "./converters";
+import { a2p, x2c, p2a, y2r, grantAddressAbsolute } from "./converters";
 import { FunctionMapping } from "../formula/functions/__base";
 import { functions } from "../formula/mapping";
 import {
@@ -218,7 +212,7 @@ export class UserTable {
       for (let x = 0; x < numCols + 1; x++) {
         const id = (this.head++).toString(36);
         ids.push(id);
-        const address = pointToAddress({ y, x });
+        const address = p2a({ y, x });
         this.addressesById[id] = address;
       }
     }
@@ -227,7 +221,7 @@ export class UserTable {
       const rowDefault = cells[rowId];
       for (let x = 0; x < numCols + 1; x++) {
         const id = this.getId({ y, x });
-        const address = pointToAddress({ y, x });
+        const address = p2a({ y, x });
         const colId = x2c(x);
         const colDefault = cells[colId];
         const cell = cells[address];
@@ -308,10 +302,10 @@ export class UserTable {
       const ids = this.idMatrix[y];
       for (let x = 0; x < ids.length; x++) {
         const existing = ids[x];
-        const address = pointToAddress({ y, x });
+        const address = p2a({ y, x });
         this.addressesById[existing] = address;
         if (existing === id) {
-          const slidedAddress = pointToAddress({
+          const slidedAddress = p2a({
             y: y + slideY,
             x: x + slideX,
           });
@@ -324,7 +318,7 @@ export class UserTable {
   public getPointById(id: Id): PointType {
     const address = this.getAddressById(id);
     if (address) {
-      return addressToPoint(address);
+      return a2p(address);
     }
     return { y: 0, x: 0 };
   }
@@ -418,7 +412,7 @@ export class UserTable {
       for (let x = left; x <= right; x++) {
         const cell = this.getByPoint({ y: y - top, x: x - left });
         if (cell != null && filter(cell)) {
-          result[pointToAddress({ y, x })] = evaluates
+          result[p2a({ y, x })] = evaluates
             ? solveFormula({
                 value: cell[key],
                 base: this.base as Table,
@@ -527,7 +521,7 @@ export class UserTable {
       for (let x = left; x <= right; x++) {
         const cell = this.getByPoint({ y: y - top, x: x - left });
         if (cell != null && filter(cell)) {
-          result[pointToAddress({ y, x })] = {
+          result[p2a({ y, x })] = {
             ...cell,
             value: evaluates
               ? solveFormula({
@@ -767,7 +761,7 @@ export class UserTable {
           slideX
         );
         this.setChangedAt(cell, changedAt);
-        diff[pointToAddress({ y: toY, x: toX })] = {
+        diff[p2a({ y: toY, x: toX })] = {
           ...cell,
           style: { ...cell?.style },
           value,
@@ -797,7 +791,7 @@ export class UserTable {
         this.setChangedAt(cell, changedAt);
       }
       cell.value = convertFormulaAbsolute(cell.value, Table.cast(this));
-      const point = addressToPoint(address);
+      const point = a2p(address);
       const id = this.getId(point);
 
       diffBefore[id] = this.getByPoint(point);
@@ -844,7 +838,7 @@ export class UserTable {
           return;
         }
         const cell = this.parse({ y, x }, value);
-        diff[pointToAddress({ y, x })] = cell;
+        diff[p2a({ y, x })] = cell;
       });
     });
     return this.update({ diff, partial: true, updateChangedAt, reflection });
@@ -1080,7 +1074,7 @@ export class Table extends UserTable {
   }
 
   public getIdByAddress(address: Address) {
-    const { y, x } = addressToPoint(address);
+    const { y, x } = a2p(address);
     const id = this.getId({ y: Math.abs(y), x: Math.abs(x) });
     if (id) {
       return `#${x < 0 ? "$" : ""}${id}${y < 0 ? "$" : ""}`;

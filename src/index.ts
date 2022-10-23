@@ -3,18 +3,11 @@ export { createTableRef } from "./components/GridTable";
 export { Renderer } from "./renderers/core";
 export { Parser } from "./parsers/core";
 export { oa2aa, aa2oa, matrixIntoCells } from "./api/structs";
-export {
-  n2a,
-  a2n,
-  x2c,
-  y2r,
-  pointToAddress,
-  tsv2matrix,
-} from "./api/converters";
+export { x2c, c2x, y2r, r2y, p2a, a2p } from "./api/converters";
 export {
   MatrixType,
   CellType,
-  FeedbackType as Feedback,
+  FeedbackType,
   OptionsType,
   WriterType,
   CellsType,

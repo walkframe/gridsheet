@@ -18,7 +18,7 @@ import {
 } from "../api/structs";
 import { Table } from "../api/table";
 
-import { tsv2matrix, x2c, pointToAddress, y2r } from "../api/converters";
+import { tsv2matrix, x2c, p2a, y2r } from "../api/converters";
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
 import { restrictPoints } from "./utils";
 
@@ -510,7 +510,7 @@ class ClearAction<T extends null> extends CoreAction<T> {
     const diff: DiffType = {};
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        diff[pointToAddress({ y, x })] = { value: null };
+        diff[p2a({ y, x })] = { value: null };
       }
     }
     const newTable = table.update({

@@ -1,4 +1,4 @@
-import { addressToPoint } from "../api/converters";
+import { a2p } from "../api/converters";
 import React from "react";
 
 import { Context } from "../store";
@@ -21,7 +21,7 @@ export const SearchBox: React.FC = () => {
     if (!matchingCell) {
       return;
     }
-    const indexes = addressToPoint(matchingCell);
+    const indexes = a2p(matchingCell);
     if (typeof indexes === "undefined") {
       return;
     }
