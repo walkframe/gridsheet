@@ -199,13 +199,13 @@ export const showIndex = () => {
           G: { width: 200 },
           H7: { style: { backgroundColor: "#ffeeee" } },
           A4: {
-            style: { backgroundColor: "#dddddd", borderBottomStyle: "double" },
+            style: { backgroundColor: "#dddddd" },
           },
           B4: {
-            style: { backgroundColor: "#dddddd", borderBottomStyle: "double" },
+            style: { backgroundColor: "#dddddd" },
           },
           C4: {
-            style: { backgroundColor: "#dddddd", borderBottomStyle: "double" },
+            style: { backgroundColor: "#dddddd" },
           },
         })}
         additionalFunctions={{
