@@ -8,7 +8,7 @@ import {
   X,
   Height,
   Width,
-  CellsType,
+  CellsByAddressType,
   RowByAddress,
   ShapeType,
 } from "../types";
@@ -197,7 +197,7 @@ export const cropMatrix = <T = any>(matrix: T[][], area: AreaType): T[][] => {
 
 export const matrixIntoCells = (
   matrix: MatrixType,
-  cells: CellsType,
+  cells: CellsByAddressType,
   origin = "A1"
 ) => {
   const { y: baseY, x: baseX } = a2p(origin);

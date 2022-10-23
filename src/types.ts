@@ -65,9 +65,8 @@ export type CellType<Custom = any> = {
 
 export type CellFilter = (cell: CellType) => boolean;
 
-export type CellsType = { [address: Address]: CellType };
-export type DiffType = CellsType;
-export type DataType = { [id: Id]: CellType | undefined };
+export type CellsByAddressType = { [address: Address]: CellType };
+export type CellsByIdType = { [id: Id]: CellType | undefined };
 
 export type Dispatcher = React.Dispatch<{
   type: number;
@@ -147,7 +146,7 @@ export type StoreType = {
 };
 
 export type Props = {
-  initial?: CellsType;
+  initial?: CellsByAddressType;
   tableRef?: React.MutableRefObject<TableRef | null>;
   options?: OptionsType;
   className?: string;

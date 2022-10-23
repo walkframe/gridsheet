@@ -5,7 +5,7 @@ import {
   PointType,
   RangeType,
   FeedbackType,
-  DiffType,
+  CellsByAddressType,
   AreaType,
   PositionType,
 } from "../types";
@@ -507,7 +507,7 @@ class ClearAction<T extends null> extends CoreAction<T> {
       selectingArea = { top: y, left: x, bottom: y, right: x };
     }
     const { top, left, bottom, right } = selectingArea;
-    const diff: DiffType = {};
+    const diff: CellsByAddressType = {};
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
         diff[p2a({ y, x })] = { value: null };

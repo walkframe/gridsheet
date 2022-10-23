@@ -15,7 +15,7 @@ import {
   MIN_HEIGHT,
 } from "../constants";
 import { zoneToArea, makeSequence, between } from "../api/structs";
-import { DiffType } from "../types";
+import { CellsByAddressType } from "../types";
 import { p2a } from "../api/converters";
 
 const Line = styled.div`
@@ -67,7 +67,7 @@ export const Resizer: React.FC = React.memo(() => {
   const handleResizeEnd = () => {
     const selectingArea = zoneToArea(selectingZone);
     const { top, left, bottom, right } = selectingArea;
-    const diff: DiffType = {};
+    const diff: CellsByAddressType = {};
     if (x !== -1) {
       let xs = [x];
       if (

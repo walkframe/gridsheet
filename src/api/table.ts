@@ -5,18 +5,18 @@ import {
   Ids,
   IdMatrix,
   AreaType,
-  DataType,
-  DiffType,
+  CellsByIdType,
+  CellsByAddressType,
   PointType,
   WriterType,
-  ZoneType,
   Address,
-  RowByAddress,
   CellFilter,
   Labelers,
   MatrixType,
+  CellType,
+  Parsers,
+  Renderers,
 } from "../types";
-import { CellsType, CellType, Parsers, Renderers } from "../types";
 import { areaShape, createMatrix, matrixShape, fillMatrix } from "./structs";
 import { a2p, x2c, p2a, y2r, grantAddressAbsolute } from "./converters";
 import { FunctionMapping } from "../formula/functions/__base";
@@ -26,104 +26,12 @@ import { solveFormula } from "../formula/solver";
 
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH, HISTORY_LIMIT } from "../constants";
 import { shouldTracking } from "../store/utils";
-
-type StoreReflectionType = {
-  choosing?: PointType;
-  cutting?: boolean;
-  copyingZone?: ZoneType;
-  selectingZone?: ZoneType | undefined;
-};
-
-type HistoryUpdateType = {
-  operation: "UPDATE";
-  reflection?: StoreReflectionType;
-  diffBefore: DataType;
-  diffAfter: DataType;
-  partial: boolean;
-};
-
-type HistoryCopyType = {
-  operation: "COPY";
-  reflection?: StoreReflectionType;
-  diffBefore: DataType;
-  diffAfter: DataType;
-  area: AreaType;
-};
-
-type HistoryMoveType = {
-  operation: "MOVE";
-  reflection?: StoreReflectionType;
-  matrixFrom: IdMatrix;
-  matrixTo: IdMatrix;
-  matrixNew: IdMatrix;
-  positionFrom: PointType;
-  positionTo: PointType;
-  lostRows: RowByAddress<Id>;
-};
-
-type HistoryAddRowType = {
-  operation: "ADD_ROW";
-  reflection?: StoreReflectionType;
-  y: number;
-  numRows: number;
-  idMatrix: IdMatrix;
-};
-
-type HistoryRemoveRowType = {
-  operation: "REMOVE_ROW";
-  reflection?: StoreReflectionType;
-  y: number;
-  numRows: number;
-  idMatrix: IdMatrix;
-};
-
-type HistoryAddColType = {
-  operation: "ADD_COL";
-  reflection?: StoreReflectionType;
-  x: number;
-  numCols: number;
-  idMatrix: IdMatrix;
-};
-
-type HistoryRemoveColType = {
-  operation: "REMOVE_COL";
-  reflection?: StoreReflectionType;
-  x: number;
-  numCols: number;
-  idMatrix: IdMatrix;
-};
-
-type HistoryNoOperation = {
-  operation: "NO_OPERATION";
-  reflection?: StoreReflectionType;
-};
-
-type HistoryType =
-  | HistoryUpdateType
-  | HistoryMoveType
-  | HistoryCopyType
-  | HistoryAddRowType
-  | HistoryRemoveRowType
-  | HistoryAddColType
-  | HistoryRemoveColType
-  | HistoryNoOperation;
-
-export class History {
-  public readonly operation: HistoryType["operation"];
-  public readonly diffBefore?: DataType;
-  public readonly diffAfter?: DataType;
-  public readonly idMatrix?: IdMatrix;
-  public readonly position?: PointType;
-
-  constructor(operation: HistoryType["operation"]) {
-    this.operation = operation;
-  }
-}
+import { HistoryType, StoreReflectionType } from "./history";
 
 type Props = {
   numRows?: number;
   numCols?: number;
-  cells?: CellsType;
+  cells?: CellsByAddressType;
   parsers?: Parsers;
   renderers?: Renderers;
   labelers?: Labelers;
@@ -152,7 +60,7 @@ export class UserTable {
   public lastChangedAt?: Date;
   protected head: bigint | number;
   protected idMatrix: IdMatrix;
-  protected data: DataType;
+  protected data: CellsByIdType;
   protected area: AreaType;
   protected parsers: Parsers;
   protected renderers: Renderers;
@@ -313,6 +221,18 @@ export class UserTable {
     }
   }
 
+  public getAddressesByIds(ids: CellsByIdType) {
+    const addresses: CellsByAddressType = {};
+    Object.keys(ids).map((id) => {
+      const cell = ids[id];
+      const address = this.getAddressById(id);
+      if (cell && address) {
+        addresses[address] = cell;
+      }
+    });
+    return addresses;
+  }
+
   public getPointById(id: Id): PointType {
     const address = this.getAddressById(id);
     if (address) {
@@ -404,7 +324,7 @@ export class UserTable {
     raise = false,
     filter = cellFilter,
   }: GetFlattenProps = {}) {
-    const result: CellsType = {};
+    const result: CellsByAddressType = {};
     const { top, left, bottom, right } = this.area;
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
@@ -428,10 +348,10 @@ export class UserTable {
     raise = false,
     filter = cellFilter,
   }: GetFlattenProps = {}) {
-    const result: CellsType[] = [];
+    const result: CellsByAddressType[] = [];
     const { top, left, bottom, right } = this.area;
     for (let y = top; y <= bottom; y++) {
-      const row: CellsType = {};
+      const row: CellsByAddressType = {};
       result.push(row);
       for (let x = left; x <= right; x++) {
         const cell = this.getByPoint({ y: y - top, x: x - left });
@@ -454,10 +374,10 @@ export class UserTable {
     raise = false,
     filter = cellFilter,
   }: GetFlattenProps = {}) {
-    const result: CellsType[] = [];
+    const result: CellsByAddressType[] = [];
     const { top, left, bottom, right } = this.area;
     for (let x = left; x <= right; x++) {
-      const col: CellsType = {};
+      const col: CellsByAddressType = {};
       result.push(col);
       for (let y = top; y <= bottom; y++) {
         const cell = this.getByPoint({ y: y - top, x: x - left });
@@ -513,7 +433,7 @@ export class UserTable {
     raise = false,
     filter = cellFilter,
   }: GetProps = {}) {
-    const result: CellsType = {};
+    const result: CellsByAddressType = {};
     const { top, left, bottom, right } = this.area;
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
@@ -539,10 +459,10 @@ export class UserTable {
     raise = false,
     filter = cellFilter,
   }: GetProps = {}) {
-    const result: CellsType[] = [];
+    const result: CellsByAddressType[] = [];
     const { top, left, bottom, right } = this.area;
     for (let y = top; y <= bottom; y++) {
-      const row: CellsType = {};
+      const row: CellsByAddressType = {};
       result.push(row);
       for (let x = left; x <= right; x++) {
         const cell = this.getByPoint({ y: y - top, x: x - left });
@@ -567,10 +487,10 @@ export class UserTable {
     raise = false,
     filter = cellFilter,
   }: GetProps = {}) {
-    const result: CellsType[] = [];
+    const result: CellsByAddressType[] = [];
     const { top, left, bottom, right } = this.area;
     for (let x = left; x <= right; x++) {
-      const col: CellsType = {};
+      const col: CellsByAddressType = {};
       result.push(col);
       for (let y = top; y <= bottom; y++) {
         const cell = this.getByPoint({ y: y - top, x: x - left });
@@ -731,7 +651,7 @@ export class UserTable {
     const { height: maxHeight, width: maxWidth } = areaShape(src, 1);
     const { top: topFrom, left: leftFrom } = src;
     const { top: topTo, left: leftTo, bottom: bottomTo, right: rightTo } = dst;
-    const diff: DiffType = {};
+    const diff: CellsByAddressType = {};
     const changedAt = new Date();
 
     for (let i = 0; i <= bottomTo - topTo; i++) {
@@ -775,13 +695,13 @@ export class UserTable {
     updateChangedAt = true,
     reflection = {},
   }: {
-    diff: DiffType;
+    diff: CellsByAddressType;
     partial?: boolean;
     updateChangedAt?: boolean;
     reflection?: StoreReflectionType;
   }) {
-    const diffBefore: DataType = {};
-    const diffAfter: DataType = {};
+    const diffBefore: CellsByIdType = {};
+    const diffAfter: CellsByIdType = {};
     const changedAt = new Date();
     Object.keys(diff).forEach((address) => {
       const cell = { ...diff[address] };
@@ -824,7 +744,7 @@ export class UserTable {
     reflection?: StoreReflectionType;
   }) {
     const { y: baseY, x: baseX } = point;
-    const diff: DiffType = {};
+    const diff: CellsByAddressType = {};
     matrix.map((cols, i) => {
       const y = baseY + i;
       if (y > this.bottom) {
@@ -1091,7 +1011,7 @@ export class Table extends UserTable {
     }
   }
 
-  private applyDiff(diff: DataType, partial = true) {
+  private applyDiff(diff: CellsByIdType, partial = true) {
     if (!partial) {
       Object.assign(this.data, diff);
       return;

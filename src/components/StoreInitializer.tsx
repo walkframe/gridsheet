@@ -1,6 +1,6 @@
 import React from "react";
 
-import { CellsType, Props } from "../types";
+import { CellsByAddressType, Props } from "../types";
 
 import { Context } from "../store";
 import {
@@ -102,7 +102,11 @@ export const StoreInitializer: React.FC<Props> = ({
   return <></>;
 };
 
-const getMaxSizeFromCells = (sizeY = 0, sizeX = 0, cells: CellsType = {}) => {
+const getMaxSizeFromCells = (
+  sizeY = 0,
+  sizeX = 0,
+  cells: CellsByAddressType = {}
+) => {
   let [lastY, lastX] = [sizeY, sizeX];
   Object.keys(cells).map((address) => {
     const { y, x } = a2p(address);
