@@ -2,37 +2,11 @@ import { rangeToArea } from "../api/structs";
 import { addressToPoint, n2a, pointToAddress } from "../api/converters";
 import { Table } from "../api/table";
 import { Address, MatrixType } from "../types";
-import React from "react";
-import { Context } from "../store";
 import { SOLVING } from "../constants";
-
-type Refs = Set<string>;
-type Formula = string;
 
 type EvaluateProps = {
   base: Table;
 };
-
-export class FormulaCacheManager {
-  public refsMap: Map<Formula, Refs>;
-  public cacheMap: Map<Formula, any>;
-  constructor() {
-    this.refsMap = new Map();
-    this.cacheMap = new Map();
-  }
-
-  getRefs(formula: Formula) {
-    let refs = this.refsMap.get(formula);
-    if (refs == null) {
-      refs = new Set();
-      this.refsMap.set(formula, refs);
-    }
-    return refs;
-  }
-  getCache(formula: Formula) {
-    return this.cacheMap.get(formula);
-  }
-}
 
 const getId = (idString: string, stripAbsolute = true) => {
   let id = idString.slice(1);

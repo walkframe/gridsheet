@@ -67,7 +67,7 @@ export type CellFilter = (cell: CellType) => boolean;
 
 export type CellsType = { [address: Address]: CellType };
 export type DiffType = CellsType;
-export type DataType = Map<Id, CellType | undefined>;
+export type DataType = { [id: Id]: CellType | undefined };
 
 export type Dispatcher = React.Dispatch<{
   type: number;

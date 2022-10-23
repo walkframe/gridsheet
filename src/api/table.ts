@@ -192,7 +192,7 @@ export class UserTable {
     maxNumCols = -1,
   }: Props) {
     this.head = useBigInt ? BigInt(0) : 0;
-    this.data = new Map();
+    this.data = {};
     this.area = { top: 0, left: 0, bottom: numRows, right: numCols };
     this.parsers = parsers;
     this.renderers = renderers;
@@ -258,7 +258,7 @@ export class UserTable {
           delete stacked.width;
           delete stacked.labeler;
         }
-        this.data.set(id, stacked);
+        this.data[id] = stacked;
       }
     }
   }
@@ -342,12 +342,12 @@ export class UserTable {
     if (id == null) {
       return undefined;
     }
-    const value = this.data.get(id);
+    const value = this.data[id];
     return value;
   }
 
   public getById(id: Id) {
-    return this.data.get(id);
+    return this.data[id];
   }
 
   public getNumRows(base = 0) {
@@ -617,14 +617,14 @@ export class UserTable {
     ) {
       history.idMatrix.forEach((ids) => {
         ids.forEach((id) => {
-          this.data.delete(id);
+          delete this.data[id];
         });
       });
     }
     if (history.operation === "MOVE") {
       history.lostRows.forEach((ids) => {
         ids.forEach((id) => {
-          this.data.delete(id);
+          delete this.data[id];
         });
       });
     }
@@ -788,8 +788,8 @@ export class UserTable {
     updateChangedAt?: boolean;
     reflection?: StoreReflectionType;
   }) {
-    const diffBefore: DataType = new Map();
-    const diffAfter: DataType = new Map();
+    const diffBefore: DataType = {};
+    const diffAfter: DataType = {};
     const changedAt = new Date();
     Object.keys(diff).forEach((address) => {
       const cell = { ...diff[address] };
@@ -799,14 +799,16 @@ export class UserTable {
       cell.value = convertFormulaAbsolute(cell.value, Table.cast(this));
       const point = addressToPoint(address);
       const id = this.getId(point);
-      diffBefore.set(id, this.getByPoint(point));
-      diffAfter.set(id, cell);
+
+      diffBefore[id] = this.getByPoint(point);
+      diffAfter[id] = cell;
       if (partial) {
-        this.data.set(id, { ...this.data.get(id), ...cell });
+        this.data[id] = { ...this.data[id], ...cell };
       } else {
-        this.data.set(id, cell);
+        this.data[id] = cell;
       }
     });
+
     this.pushHistory({
       operation: "UPDATE",
       reflection,
@@ -900,7 +902,7 @@ export class UserTable {
         row.push(id.toString(36));
         const cell = this.getByPoint({ y: baseY, x: j });
         const copied = this.copyCell(cell, baseY);
-        this.data.set(id.toString(36), copied);
+        this.data[id.toString(36)] = copied;
       }
       rows.push(row);
     }
@@ -970,7 +972,7 @@ export class UserTable {
         const cell = this.getByPoint({ y: i, x: baseX });
         const copied = this.copyCell(cell, baseX);
         this.idMatrix[i].splice(x, 0, id.toString(36));
-        this.data.set(id.toString(36), copied);
+        this.data[id.toString(36)] = copied;
       }
       rows.push(row);
     }
@@ -1086,12 +1088,13 @@ export class Table extends UserTable {
   }
 
   private applyDiff(diff: DataType, partial = true) {
-    diff.forEach((cell, id) => {
-      if (partial) {
-        this.data.set(id, { ...this.getById(id), ...cell });
-      } else {
-        this.data.set(id, cell);
-      }
+    if (!partial) {
+      Object.assign(this.data, diff);
+      return;
+    }
+    Object.keys(diff).map((id) => {
+      const cell = diff[id];
+      this.data[id] = { ...this.getById(id), ...cell };
     });
   }
 
