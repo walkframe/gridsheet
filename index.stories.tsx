@@ -425,6 +425,12 @@ export const showIndex = () => {
                   !!cell?.changedAt && cell.changedAt > table.lastChangedAt!,
               })
             );
+            const histories = table.getHistories();
+            console.log({ histories });
+            const h = histories[histories.length - 1];
+            if (h?.operation === "UPDATE") {
+              console.log("histories", table.getAddressesByIds(h.diffAfter));
+            }
           },
         }}
       />

@@ -4,8 +4,15 @@ import {
   VariableSizeList as List,
 } from "react-window";
 
-import { Props, StoreType } from "../types";
-import { SHEET_HEIGHT, SHEET_WIDTH } from "../constants";
+import { CellsByAddressType, OptionsType, Props, StoreType } from "../types";
+import {
+  DEFAULT_HEIGHT,
+  DEFAULT_WIDTH,
+  HEADER_HEIGHT,
+  HEADER_WIDTH,
+  SHEET_HEIGHT,
+  SHEET_WIDTH,
+} from "../constants";
 import { Context } from "../store";
 import { reducer } from "../store/actions";
 
@@ -17,6 +24,8 @@ import { ContextMenu } from "./ContextMenu";
 import { GridSheetLayout } from "./styles/GridSheetLayout";
 import { Table } from "../api/table";
 import { GridTable } from "./GridTable";
+import { getMaxSizeFromCells } from "../api/structs";
+import { x2c, y2r } from "../api/converters";
 
 export const GridSheet: React.FC<Props> = ({
   initial,
@@ -27,7 +36,6 @@ export const GridSheet: React.FC<Props> = ({
   additionalFunctions = {},
 }) => {
   const { sheetResize: resize = "both" } = options;
-
   const sheetRef = React.useRef<HTMLDivElement>(document.createElement("div"));
   const searchInputRef = React.useRef<HTMLInputElement>(
     document.createElement("input")
@@ -81,10 +89,10 @@ export const GridSheet: React.FC<Props> = ({
   const [store, dispatch] = React.useReducer(reducer, initialState);
 
   const [sheetHeight, setSheetHeight] = React.useState(
-    options.sheetHeight || SHEET_HEIGHT
+    estimateSheetHeight(options, initial)
   );
   const [sheetWidth, setSheetWidth] = React.useState(
-    options.sheetWidth || SHEET_WIDTH
+    estimateSheetWidth(options, initial)
   );
   React.useEffect(() => {
     setInterval(() => {
@@ -128,4 +136,38 @@ export const GridSheet: React.FC<Props> = ({
       </Context.Provider>
     </GridSheetLayout>
   );
+};
+
+const estimateSheetHeight = (
+  options: OptionsType,
+  initial?: CellsByAddressType
+) => {
+  const auto = getMaxSizeFromCells(options.numRows, options.numCols, initial);
+  let estimatedHeight = options.headerHeight || HEADER_HEIGHT;
+  for (let y = 0; y < auto.numRows; y++) {
+    const row = y2r(y);
+    const height = initial?.[row]?.height || DEFAULT_HEIGHT;
+    if (estimatedHeight + height > SHEET_HEIGHT) {
+      return SHEET_HEIGHT;
+    }
+    estimatedHeight += height;
+  }
+  return estimatedHeight;
+};
+
+const estimateSheetWidth = (
+  options: OptionsType,
+  initial?: CellsByAddressType
+) => {
+  const auto = getMaxSizeFromCells(options.numRows, options.numCols, initial);
+  let estimatedWidth = options.headerWidth || HEADER_WIDTH;
+  for (let x = 0; x < auto.numCols; x++) {
+    const col = x2c(x);
+    const width = initial?.[col]?.width || DEFAULT_WIDTH;
+    if (estimatedWidth + width > SHEET_WIDTH) {
+      return SHEET_WIDTH;
+    }
+    estimatedWidth += width;
+  }
+  return estimatedWidth;
 };

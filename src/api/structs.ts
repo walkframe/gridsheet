@@ -212,3 +212,21 @@ export const matrixIntoCells = (
   });
   return cells;
 };
+
+export const getMaxSizeFromCells = (
+  sizeY = 0,
+  sizeX = 0,
+  cells: CellsByAddressType = {}
+) => {
+  let [lastY, lastX] = [sizeY, sizeX];
+  Object.keys(cells).map((address) => {
+    const { y, x } = a2p(address);
+    if (lastY < y) {
+      lastY = y;
+    }
+    if (lastX < x) {
+      lastX = x;
+    }
+  });
+  return { numRows: lastY, numCols: lastX };
+};
