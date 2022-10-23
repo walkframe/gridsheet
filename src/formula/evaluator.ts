@@ -673,7 +673,11 @@ export const solveFormula = ({
     if (value.charAt(0) === "=") {
       const cache = resolvedCache[value];
       if (cache === SOLVING) {
-        throw new FormulaError("#RFF!", "References are circulating.");
+        throw new FormulaError(
+          "#RFF!",
+          "References are circulating.",
+          new Error(value)
+        );
       } else if (cache != null) {
         return cache;
       }
@@ -699,25 +703,10 @@ export const solveFormula = ({
 };
 
 export const solveTable = (table: Table): MatrixType => {
-  const {
-    store: { resolvedCache },
-  } = React.useContext(Context);
-
   const area = table.getArea();
-  return table.getMatrixFlatten({ area, evaluates: false }).map((row, i) => {
-    const y = area.top + i;
-    return row.map((value, j) => {
-      const x = area.left + j;
-      const address = pointToAddress({ y, x });
-      const cache = resolvedCache[address];
-      if (cache === SOLVING) {
-        throw new FormulaError("#RFF!", "References are circulating.");
-      } else if (cache != null) {
-        return cache;
-      }
-      resolvedCache[address] = SOLVING;
+  return table.getMatrixFlatten({ area, evaluates: false }).map((row) => {
+    return row.map((value) => {
       const solved = solveFormula({ value, base: table.getBase() });
-      resolvedCache[address] = solved;
       return solved;
     });
   });

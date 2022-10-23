@@ -21,7 +21,6 @@ import { Table } from "../api/table";
 import { tsv2matrix, x2c, pointToAddress, y2r } from "../api/converters";
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
 import { restrictPoints } from "./utils";
-import { FormulaCacheManager } from "../formula/evaluator";
 
 const actions: { [s: string]: CoreAction<any> } = {};
 
@@ -314,6 +313,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
         ...store,
         cutting: false,
         table: newTable,
+        resolvedCache: {},
         selectingZone: areaToZone(dst),
         copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
       };
@@ -360,6 +360,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
     return {
       ...store,
       table: newTable,
+      resolvedCache: {},
       selectingZone: areaToZone(selectingArea),
       copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
     };
@@ -493,6 +494,7 @@ class WriteAction<T extends string> extends CoreAction<T> {
     return {
       ...store,
       table: newTable,
+      resolvedCache: {},
       copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
     };
   }
@@ -525,7 +527,9 @@ class ClearAction<T extends null> extends CoreAction<T> {
     });
     return {
       ...store,
+
       table: newTable,
+      resolvedCache: {},
     };
   }
 }
@@ -544,6 +548,7 @@ class UndoAction<T extends null> extends CoreAction<T> {
       ...restrictPoints(store, table),
       ...reflection,
       table: newTable,
+      resolvedCache: {},
     };
   }
 }
@@ -562,6 +567,7 @@ class RedoAction<T extends null> extends CoreAction<T> {
       ...reflection,
       ...restrictPoints(store, table),
       table: newTable,
+      resolvedCache: {},
     };
   }
 }
