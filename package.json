@@ -63,5 +63,11 @@
     "date-fns-timezone": "^0.1.4",
     "react-window": "^1.8.6",
     "styled-components": "^5.2.1"
+  },
+  "resolutions": {
+    "trim": "^0.0.3",
+    "trim-newlines": "^3.0.1",
+    "got": "^11.8.5",
+    "glob-parent": "^5.1.2"
   }
 }
