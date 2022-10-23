@@ -2,6 +2,7 @@ import React from "react";
 import { CellType, PointType, WriterType } from "../types";
 import { Table } from "../api/table";
 import { solveFormula } from "../formula/solver";
+import { FormulaError } from "../formula/evaluator";
 
 type Condition = (value: any) => boolean;
 type Stringify = (value: any) => string;
@@ -46,6 +47,9 @@ export class Renderer {
         }
         if (Array.isArray(value)) {
           return this.array(value, writer);
+        }
+        if (value instanceof FormulaError) {
+          throw value;
         }
         return this.object(value, writer);
       case "string":

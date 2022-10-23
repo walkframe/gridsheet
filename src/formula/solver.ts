@@ -34,6 +34,7 @@ export const solveFormula = ({
         base.setSolvedCache(value, SOLVING);
         solved = expr?.evaluate?.({ base });
       } catch (e) {
+        base.setSolvedCache(value, e);
         if (raise) {
           throw e;
         }

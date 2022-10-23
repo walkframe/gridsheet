@@ -95,13 +95,14 @@ export const Cell: React.FC<Props> = React.memo(
     let rendered;
     try {
       rendered = table.render({ y, x }, writeCell);
-    } catch (e) {
+    } catch (e: any) {
       if (e instanceof FormulaError) {
         errorMessage = e.message;
         rendered = e.code;
-      } else if (e instanceof RangeError) {
-        errorMessage = "References are circulating.";
-        rendered = "#REF!";
+      } else {
+        errorMessage = e.message;
+        rendered = "#UNKNOWN";
+        console.error(e);
       }
       // TODO: debug flag
     }
