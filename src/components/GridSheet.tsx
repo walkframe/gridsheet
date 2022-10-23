@@ -152,7 +152,7 @@ const estimateSheetHeight = (
     }
     estimatedHeight += height;
   }
-  return estimatedHeight;
+  return estimatedHeight - 1;
 };
 
 const estimateSheetWidth = (
@@ -169,5 +169,5 @@ const estimateSheetWidth = (
     }
     estimatedWidth += width;
   }
-  return estimatedWidth;
+  return estimatedWidth - 1;
 };
