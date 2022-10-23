@@ -21,11 +21,9 @@ import { areaShape, createMatrix, matrixShape, fillMatrix } from "./structs";
 import { a2p, x2c, p2a, y2r, grantAddressAbsolute } from "./converters";
 import { FunctionMapping } from "../formula/functions/__base";
 import { functions } from "../formula/mapping";
-import {
-  convertFormulaAbsolute,
-  Lexer,
-  solveFormula,
-} from "../formula/evaluator";
+import { convertFormulaAbsolute, Lexer } from "../formula/evaluator";
+import { solveFormula } from "../formula/solver";
+
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH, HISTORY_LIMIT } from "../constants";
 import { shouldTracking } from "../store/utils";
 

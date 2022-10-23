@@ -1,13 +1,12 @@
 import { rangeToArea } from "../api/structs";
-import { a2p, n2c, p2a } from "../api/converters";
+import { a2p, x2c } from "../api/converters";
 import { Table } from "../api/table";
-import { Address, MatrixType } from "../types";
-import { SOLVING } from "../constants";
 
 type EvaluateProps = {
   base: Table;
 };
 
+// strip sharp and dollars
 const getId = (idString: string, stripAbsolute = true) => {
   let id = idString.slice(1);
   if (stripAbsolute && id.startsWith("$")) {
@@ -99,7 +98,7 @@ export class Range extends Entity<string> {
       end += base.getNumRows();
     }
     if (!end.match(/[a-zA-Z]/)) {
-      end = n2c(base.getNumCols() + 1) + end;
+      end = x2c(base.getNumCols() + 1) + end;
     }
     return `${start}:${end}`;
   }
@@ -627,59 +626,4 @@ export const convertFormulaAbsolute = (
     }
   }
   return value;
-};
-
-export const solveFormula = ({
-  value,
-  base,
-  raise = true,
-}: {
-  value: any;
-  base: Table;
-  raise?: boolean;
-}) => {
-  let solved = value;
-  if (typeof value === "string") {
-    if (value.charAt(0) === "=") {
-      const cache = base.getSolvedCache(value);
-
-      try {
-        if (cache === SOLVING) {
-          throw new FormulaError(
-            "#RFF!",
-            "References are circulating.",
-            new Error(value)
-          );
-        } else if (cache != null) {
-          return cache;
-        }
-        const lexer = new Lexer(value.substring(1));
-        lexer.tokenize();
-        const parser = new Parser(lexer.tokens);
-        const expr = parser.build();
-        base.setSolvedCache(value, SOLVING);
-        solved = expr?.evaluate?.({ base });
-      } catch (e) {
-        if (raise) {
-          throw e;
-        }
-        solved = null;
-      }
-    }
-  }
-  if (solved instanceof Table) {
-    solved = solveTable(solved)[0][0];
-  }
-  base.setSolvedCache(value, solved);
-  return solved;
-};
-
-export const solveTable = (table: Table): MatrixType => {
-  const area = table.getArea();
-  return table.getMatrixFlatten({ area, evaluates: false }).map((row) => {
-    return row.map((value) => {
-      const solved = solveFormula({ value, base: table.getBase() });
-      return solved;
-    });
-  });
 };

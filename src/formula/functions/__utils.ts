@@ -1,5 +1,6 @@
+import { solveTable } from "../solver";
 import { Table } from "../../api/table";
-import { solveTable, FormulaError } from "../evaluator";
+import { FormulaError } from "../evaluator";
 
 export const ensureNumber = (value: any, alternative?: number): number => {
   if (typeof value === "undefined" && typeof alternative !== "undefined") {

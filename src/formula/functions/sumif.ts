@@ -1,7 +1,8 @@
-import { solveTable, FormulaError } from "../evaluator";
+import { FormulaError } from "../evaluator";
+import { solveTable } from "../solver";
 import { Table } from "../../api/table";
 import { BaseFunction } from "./__base";
-import { check, ensureNumber } from "./__utils";
+import { check } from "./__utils";
 import { AreaType } from "../../types";
 
 export class SumifFunction extends BaseFunction {

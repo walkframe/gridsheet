@@ -1,4 +1,4 @@
-import { solveTable } from "../evaluator";
+import { solveTable } from "../solver";
 import { Table } from "../../api/table";
 import { BaseFunction } from "./__base";
 import { ensureNumber } from "./__utils";

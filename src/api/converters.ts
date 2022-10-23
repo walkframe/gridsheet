@@ -1,4 +1,4 @@
-import { Address, MatrixType, PointType, StoreType, X, Y } from "../types";
+import { Address, MatrixType, PointType } from "../types";
 import { DEFAULT_ALPHABET_CACHE_SIZE } from "../constants";
 import { Table } from "./table";
 
@@ -7,7 +7,7 @@ const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const N2C_CACHE = new Map<number, string>();
 const C2N_CACHE = new Map<string, number>();
 
-export const n2c = (
+const getColumnLetterFromNumber = (
   key: number,
   cacheSize = DEFAULT_ALPHABET_CACHE_SIZE
 ): string => {
@@ -33,7 +33,7 @@ export const n2c = (
   return result;
 };
 
-export const c2n = (
+const getNumberFromColumnLetter = (
   key: string,
   cacheSize = DEFAULT_ALPHABET_CACHE_SIZE
 ): number => {
@@ -59,23 +59,16 @@ export const c2n = (
   return result;
 };
 
-export const x2c = (
-  x: number,
-  cacheSize = DEFAULT_ALPHABET_CACHE_SIZE
-): string => {
+export const x2c = (x: number): string => {
   if (x === 0) {
     return "";
   }
-  const a = n2c(x + 1, cacheSize);
-  return x < 0 ? `$${a}` : a;
+  const c = getColumnLetterFromNumber(x + 1);
+  return x < 0 ? `$${c}` : c;
 };
 
-export const c2x = (
-  col: string,
-  absolute = false,
-  cacheSize = DEFAULT_ALPHABET_CACHE_SIZE
-): number => {
-  const n = c2n(col, cacheSize);
+export const c2x = (col: string, absolute = false): number => {
+  const n = getNumberFromColumnLetter(col);
   return absolute ? -n : n;
 };
 

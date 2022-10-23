@@ -1,4 +1,3 @@
-import { Table } from "../../api/table";
 import { FormulaError } from "../evaluator";
 import { BaseFunction } from "./__base";
 import { ensureNumber } from "./__utils";

@@ -1,7 +1,7 @@
 import React from "react";
 import { CellType, PointType, WriterType } from "../types";
 import { Table } from "../api/table";
-import { solveFormula, solveTable } from "../formula/evaluator";
+import { solveFormula } from "../formula/solver";
 
 type Condition = (value: any) => boolean;
 type Stringify = (value: any) => string;
