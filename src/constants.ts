@@ -18,10 +18,9 @@ export const MIN_HEIGHT = 5;
 
 export const DEFAULT_ALPHABET_CACHE_SIZE = 1000;
 
-class Special {
+export class Special {
   public name: string;
   constructor(name: string) {
     this.name = name;
   }
 }
-export const SOLVING = new Special("solving");

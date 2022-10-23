@@ -1,7 +1,9 @@
+import { Special } from "../constants";
 import { Table } from "../api/table";
 import { MatrixType } from "../types";
-import { SOLVING } from "../constants";
 import { FormulaError, Lexer, Parser } from "./evaluator";
+
+const SOLVING = new Special("solving");
 
 export const solveFormula = ({
   value,
