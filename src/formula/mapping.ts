@@ -16,6 +16,7 @@ import { NowFunction } from "./functions/now";
 import { AndFunction } from "./functions/and";
 import { OrFunction } from "./functions/or";
 import { IfFunction } from "./functions/if";
+import { IfErrorFunction } from "./functions/iferror";
 import { NotFunction } from "./functions/not";
 import { CountFunction } from "./functions/count";
 import { CountifFunction } from "./functions/countif";
@@ -49,6 +50,9 @@ import { MaxFunction } from "./functions/max";
 import { MinFunction } from "./functions/min";
 import { LenFunction } from "./functions/len";
 import { LenbFunction } from "./functions/lenb";
+import { UminusFunction } from "./functions/uminus";
+import { RowFunction } from "./functions/row";
+import { ColFunction } from "./functions/col";
 
 export const functions = {
   abs: AbsFunction,
@@ -56,6 +60,7 @@ export const functions = {
   divide: DivideFunction,
   mod: ModFunction,
   minus: MinusFunction,
+  uminus: UminusFunction,
   multiply: MultiplyFunction,
   power: PowerFunction,
   sqrt: SqrtFunction,
@@ -82,9 +87,12 @@ export const functions = {
   rounddown: RounddownFunction,
   roundup: RoundupFunction,
   if: IfFunction,
+  iferror: IfErrorFunction,
   not: NotFunction,
   vlookup: VlookupFunction,
   hlookup: HlookupFunction,
+  row: RowFunction,
+  col: ColFunction,
   now: NowFunction,
   rand: RandFunction,
   log: LogFunction,

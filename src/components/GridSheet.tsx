@@ -4,8 +4,15 @@ import {
   VariableSizeList as List,
 } from "react-window";
 
-import { Props, StoreType } from "../types";
-import { SHEET_HEIGHT, SHEET_WIDTH } from "../constants";
+import { CellsByAddressType, OptionsType, Props, StoreType } from "../types";
+import {
+  DEFAULT_HEIGHT,
+  DEFAULT_WIDTH,
+  HEADER_HEIGHT,
+  HEADER_WIDTH,
+  SHEET_HEIGHT,
+  SHEET_WIDTH,
+} from "../constants";
 import { Context } from "../store";
 import { reducer } from "../store/actions";
 
@@ -15,19 +22,20 @@ import { Resizer } from "./Resizer";
 import { Emitter } from "./Emitter";
 import { ContextMenu } from "./ContextMenu";
 import { GridSheetLayout } from "./styles/GridSheetLayout";
-import { Table } from "../api/tables";
+import { Table } from "../api/table";
 import { GridTable } from "./GridTable";
+import { getMaxSizeFromCells } from "../api/structs";
+import { x2c, y2r } from "../api/converters";
 
 export const GridSheet: React.FC<Props> = ({
   initial,
-  changes,
+  tableRef,
   options = {},
   className,
   style,
   additionalFunctions = {},
 }) => {
-  const { numRows = 0, numCols = 0, sheetResize: resize = "both" } = options;
-
+  const { sheetResize: resize = "both" } = options;
   const sheetRef = React.useRef<HTMLDivElement>(document.createElement("div"));
   const searchInputRef = React.useRef<HTMLInputElement>(
     document.createElement("input")
@@ -42,7 +50,7 @@ export const GridSheet: React.FC<Props> = ({
   const verticalHeadersRef = React.useRef<List>(null);
   const horizontalHeadersRef = React.useRef<List>(null);
   const initialState: StoreType = {
-    table: new Table({ numRows, numCols }),
+    table: new Table({}), // temporary (see StoreInitializer for detail)
     tableInitialized: false,
     sheetRef,
     searchInputRef,
@@ -51,16 +59,15 @@ export const GridSheet: React.FC<Props> = ({
     gridRef,
     verticalHeadersRef,
     horizontalHeadersRef,
-    choosing: [-1, -1],
+    choosing: { y: -1, x: -1 },
     cutting: false,
-    selectingZone: [-1, -1, -1, -1],
-    copyingZone: [-1, -1, -1, -1],
+    selectingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
+    copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
     horizontalHeadersSelecting: false,
     verticalHeadersSelecting: false,
     editingCell: "",
-    history: { index: -1, size: 0, operations: [], direction: "FORWARD" },
-    editorRect: [0, 0, 0, 0],
-    resizingRect: [-1, -1, -1, -1],
+    editorRect: { y: 0, x: 0, height: 0, width: 0 },
+    resizingRect: { y: -1, x: -1, height: -1, width: -1 },
     sheetHeight: 0,
     sheetWidth: 0,
     headerHeight: 0,
@@ -70,18 +77,22 @@ export const GridSheet: React.FC<Props> = ({
     matchingCellIndex: 0,
     editingOnEnter: true,
     cellLabel: true,
-    contextMenuPosition: [-1, -1],
+    contextMenuPosition: { y: -1, x: -1 },
     resizingPositionY: [-1, -1, -1],
     resizingPositionX: [-1, -1, -1],
+    minNumRows: 1,
+    maxNumRows: -1,
+    minNumCols: 1,
+    maxNumCols: -1,
   };
 
   const [store, dispatch] = React.useReducer(reducer, initialState);
 
   const [sheetHeight, setSheetHeight] = React.useState(
-    options.sheetHeight || SHEET_HEIGHT
+    estimateSheetHeight(options, initial)
   );
   const [sheetWidth, setSheetWidth] = React.useState(
-    options.sheetWidth || SHEET_WIDTH
+    estimateSheetWidth(options, initial)
   );
   React.useEffect(() => {
     setInterval(() => {
@@ -108,10 +119,9 @@ export const GridSheet: React.FC<Props> = ({
       style={{ ...style, resize, height: sheetHeight, width: sheetWidth }}
     >
       <Context.Provider value={{ store, dispatch }}>
-        <GridTable />
+        <GridTable tableRef={tableRef} />
         <StoreInitializer
           initial={initial}
-          changes={changes}
           options={{ ...options, sheetHeight, sheetWidth }}
           additionalFunctions={additionalFunctions}
         />
@@ -126,4 +136,38 @@ export const GridSheet: React.FC<Props> = ({
       </Context.Provider>
     </GridSheetLayout>
   );
+};
+
+const estimateSheetHeight = (
+  options: OptionsType,
+  initial?: CellsByAddressType
+) => {
+  const auto = getMaxSizeFromCells(options.numRows, options.numCols, initial);
+  let estimatedHeight = options.headerHeight || HEADER_HEIGHT;
+  for (let y = 0; y < auto.numRows; y++) {
+    const row = y2r(y);
+    const height = initial?.[row]?.height || DEFAULT_HEIGHT;
+    if (estimatedHeight + height > SHEET_HEIGHT) {
+      return SHEET_HEIGHT;
+    }
+    estimatedHeight += height;
+  }
+  return estimatedHeight - 1;
+};
+
+const estimateSheetWidth = (
+  options: OptionsType,
+  initial?: CellsByAddressType
+) => {
+  const auto = getMaxSizeFromCells(options.numRows, options.numCols, initial);
+  let estimatedWidth = options.headerWidth || HEADER_WIDTH;
+  for (let x = 0; x < auto.numCols; x++) {
+    const col = x2c(x);
+    const width = initial?.[col]?.width || DEFAULT_WIDTH;
+    if (estimatedWidth + width > SHEET_WIDTH) {
+      return SHEET_WIDTH;
+    }
+    estimatedWidth += width;
+  }
+  return estimatedWidth - 1;
 };

@@ -16,13 +16,13 @@ export class MinusFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 2) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for MINUS is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
+    this.args = this.args.map((arg) => ensureNumber(arg));
   }
-  // @ts-ignore
+
   protected main(v1: number, v2: number) {
     return v1 - v2;
   }

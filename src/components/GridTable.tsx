@@ -11,16 +11,21 @@ import { VerticalHeaderCell } from "./VerticalHeaderCell";
 import { SearchBox } from "./SearchBox";
 
 import { Context } from "../store";
-import { choose, select, setEntering } from "../store/actions";
+import { choose, select, setEntering, updateTable } from "../store/actions";
 
 import { GridTableLayout } from "./styles/GridTableLayout";
 
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
+import { Table } from "../api/table";
+import { TableRef } from "../types";
 
 type Props = {
+  tableRef?: React.MutableRefObject<TableRef | null>;
 };
 
-export const GridTable: React.FC<Props> = ({}) => {
+export const createTableRef = () => React.useRef<TableRef>(null);
+
+export const GridTable = ({ tableRef }: Props) => {
   const { store, dispatch } = React.useContext(Context);
 
   const {
@@ -35,7 +40,18 @@ export const GridTable: React.FC<Props> = ({}) => {
     table,
   } = store;
 
-  if (table.numRows() === 0) {
+  React.useEffect(() => {
+    if (tableRef) {
+      tableRef.current = {
+        table,
+        dispatch: (table) => {
+          dispatch(updateTable(table as Table));
+        },
+      };
+    }
+  }, [table]);
+
+  if (table.getNumRows() === 0) {
     return null;
   }
 
@@ -59,18 +75,27 @@ export const GridTable: React.FC<Props> = ({}) => {
           <div
             className="gs-tabular-col"
             onClick={() => {
-              dispatch(choose([-1, -1]));
+              dispatch(choose({ y: -1, x: -1 }));
               setTimeout(() => {
-                dispatch(choose([1, 1]));
-                dispatch(select([1, 1, table.numRows(), table.numCols()]));
+                dispatch(choose({ y: 1, x: 1 }));
+                dispatch(
+                  select({
+                    startY: 1,
+                    startX: 1,
+                    endY: table.getNumRows(),
+                    endX: table.getNumCols(),
+                  })
+                );
               }, 100);
             }}
           ></div>
           <div className="gs-tabular-col">
             <List
               ref={horizontalHeadersRef}
-              itemCount={table.numCols() || 0}
-              itemSize={(x) => table.get(0, x + 1)?.width || DEFAULT_WIDTH}
+              itemCount={table.getNumCols() || 0}
+              itemSize={(x) =>
+                table.getByPoint({ y: 0, x: x + 1 })?.width || DEFAULT_WIDTH
+              }
               layout="horizontal"
               width={gridOuterRef.current?.clientWidth || sheetInnerWidth}
               height={headerHeight}
@@ -86,8 +111,10 @@ export const GridTable: React.FC<Props> = ({}) => {
           <div className="gs-tabular-col" style={{ verticalAlign: "top" }}>
             <List
               ref={verticalHeadersRef}
-              itemCount={table.numRows() || 0}
-              itemSize={(y) => table.get(y + 1, 0)?.height || DEFAULT_HEIGHT}
+              itemCount={table.getNumRows() || 0}
+              itemSize={(y) =>
+                table.getByPoint({ y: y + 1, x: 0 })?.height || DEFAULT_HEIGHT
+              }
               height={gridOuterRef.current?.clientHeight || sheetInnerHeight}
               width={headerWidth}
               style={{ overflow: "hidden" }}
@@ -99,12 +126,16 @@ export const GridTable: React.FC<Props> = ({}) => {
             <Grid
               ref={gridRef}
               outerRef={gridOuterRef}
-              columnCount={table.numCols() || 0}
-              rowCount={table.numRows() || 0}
+              columnCount={table.getNumCols() || 0}
+              rowCount={table.getNumRows() || 0}
               width={sheetWidth - headerWidth}
               height={sheetHeight - headerHeight}
-              columnWidth={(x) => table.get(0, x + 1)?.width || DEFAULT_WIDTH}
-              rowHeight={(y) => table.get(y + 1, 0)?.height || DEFAULT_HEIGHT}
+              columnWidth={(x) =>
+                table.getByPoint({ y: 0, x: x + 1 })?.width || DEFAULT_WIDTH
+              }
+              rowHeight={(y) =>
+                table.getByPoint({ y: y + 1, x: 0 })?.height || DEFAULT_HEIGHT
+              }
               onScroll={(e) => {
                 verticalHeadersRef.current?.scrollTo(e.scrollTop);
                 horizontalHeadersRef.current?.scrollTo(e.scrollLeft);

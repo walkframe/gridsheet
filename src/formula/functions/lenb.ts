@@ -15,13 +15,13 @@ export class LenbFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 1) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for LENB is incorrect."
       );
     }
-    this.args = [ensureString(this.args[0], this.base)];
+    this.args = [ensureString(this.args[0])];
   }
-  // @ts-ignore
+
   protected main(text: string) {
     return encodeURIComponent(text).replace(/%../g, "x").length;
   }

@@ -1,16 +1,17 @@
-import { MatrixType, StoreType, X, Y } from "../types";
+import { Address, MatrixType, PointType } from "../types";
 import { DEFAULT_ALPHABET_CACHE_SIZE } from "../constants";
+import { Table } from "./table";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-const N2A_CACHE = new Map<number, string>();
-const A2N_CACHE = new Map<string, number>();
+const N2C_CACHE = new Map<number, string>();
+const C2N_CACHE = new Map<string, number>();
 
-export const n2a = (
+const getColumnLetterFromNumber = (
   key: number,
   cacheSize = DEFAULT_ALPHABET_CACHE_SIZE
 ): string => {
-  const cached = N2A_CACHE.get(--key);
+  const cached = N2C_CACHE.get(--key);
   if (cached != null) {
     return cached;
   }
@@ -24,19 +25,19 @@ export const n2a = (
     num = Math.floor(num / 26);
   } while (num > 0);
 
-  N2A_CACHE.set(key, result);
-  const it = N2A_CACHE.keys();
-  for (let st = it.next(); N2A_CACHE.size > cacheSize; st = it.next()) {
-    N2A_CACHE.delete(st.value);
+  N2C_CACHE.set(key, result);
+  const it = N2C_CACHE.keys();
+  for (let st = it.next(); N2C_CACHE.size > cacheSize; st = it.next()) {
+    N2C_CACHE.delete(st.value);
   }
   return result;
 };
 
-export const a2n = (
+const getNumberFromColumnLetter = (
   key: string,
   cacheSize = DEFAULT_ALPHABET_CACHE_SIZE
 ): number => {
-  const cached = A2N_CACHE.get(key);
+  const cached = C2N_CACHE.get(key);
   if (cached != null) {
     return cached;
   }
@@ -50,55 +51,56 @@ export const a2n = (
     const num = ALPHABET.indexOf(a) + 1;
     result += ALPHABET.length ** digit * num;
   }
-  A2N_CACHE.set(key, result);
-  const it = A2N_CACHE.keys();
-  for (let st = it.next(); A2N_CACHE.size > cacheSize; st = it.next()) {
-    A2N_CACHE.delete(st.value);
+  C2N_CACHE.set(key, result);
+  const it = C2N_CACHE.keys();
+  for (let st = it.next(); C2N_CACHE.size > cacheSize; st = it.next()) {
+    C2N_CACHE.delete(st.value);
   }
   return result;
 };
 
-export const x2c = (
-  x: number,
-  cacheSize = DEFAULT_ALPHABET_CACHE_SIZE
-): string => {
-  return n2a(x + 1, cacheSize);
+export const x2c = (x: number): string => {
+  if (x === 0) {
+    return "";
+  }
+  const c = getColumnLetterFromNumber(x + 1);
+  return x < 0 ? `$${c}` : c;
 };
 
-export const c2x = (
-  col: string,
-  cacheSize = DEFAULT_ALPHABET_CACHE_SIZE
-): number => {
-  return a2n(col, cacheSize);
+export const c2x = (col: string, absolute = false): number => {
+  const n = getNumberFromColumnLetter(col);
+  return absolute ? -n : n;
 };
 
 export const y2r = (y: number) => {
-  return String(y);
+  if (y === 0) {
+    return "";
+  }
+  return y < 0 ? `$${y}` : String(y);
 };
 
-export const r2y = (row: number | string) => {
+export const r2y = (row: number | string, absolute = false) => {
   if (typeof row === "string") {
     row = parseInt(row, 10);
   }
-  return row;
+  return absolute ? -row : row;
 };
 
-export const xy2cell = (x: number, y: number) => {
+export const p2a = ({ y, x }: PointType) => {
   return `${x2c(x)}${y2r(y)}`;
 };
 
 export const matrix2tsv = (
-  store: StoreType,
-  y: number,
-  x: number,
-  matrix: MatrixType
+  table: Table,
+  matrix: MatrixType,
+  point: PointType
 ): string => {
-  const { table } = store;
+  const { y, x } = point;
   const lines: string[] = [];
   matrix.map((row, i) => {
     const cols: string[] = [];
     row.map((col, j) => {
-      const value = table.stringify(y + i, x + j, col);
+      const value = table.stringify({ y: y + i, x: x + j }, col);
       if (value.indexOf("\n") !== -1) {
         cols.push(`"${value.replace(/"/g, '""')}"`);
       } else {
@@ -148,11 +150,24 @@ export const tsv2matrix = (tsv: string): string[][] => {
   return rows;
 };
 
-export const cellToIndexes = (cellId: string): [Y, X] => {
-  const m = cellId.match(/([A-Z]*)([0-9]*)/);
+export const a2p = (address: Address): PointType => {
+  const m = address.match(/(\$)?([A-Z]*)(\$)?([0-9]*)/);
   if (m == null) {
-    return [0, 0];
+    return { y: 0, x: 0 };
+  }
+  const [_, absoluteCol, col, absoluteRow, row] = m.slice();
+  return { y: r2y(row, !!absoluteRow) || 0, x: c2x(col, !!absoluteCol) || 0 };
+};
+
+export const grantAddressAbsolute = (
+  address: Address,
+  absCol: boolean,
+  absRow: boolean
+) => {
+  const m = address.match(/([A-Z]*)([0-9]*)/);
+  if (m == null) {
+    return;
   }
   const [_, col, row] = m.slice();
-  return [r2y(row) || 0, c2x(col) || 0];
+  return `${absCol ? "$" : ""}${col}${absRow ? "$" : ""}${row}`;
 };

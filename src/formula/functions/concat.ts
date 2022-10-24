@@ -16,13 +16,13 @@ export class ConcatFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 2) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for CONCAT is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureString(arg, this.base));
+    this.args = this.args.map((arg) => ensureString(arg));
   }
-  // @ts-ignore
+
   protected main(v1: string, v2: string) {
     return v1 + v2;
   }

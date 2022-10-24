@@ -1,5 +1,6 @@
-import { solveMatrix, FormulaError } from "../evaluator";
-import { UserTable } from "../../api/tables";
+import { FormulaError } from "../evaluator";
+import { solveTable } from "../solver";
+import { Table } from "../../api/table";
 import { BaseFunction } from "./__base";
 import { check } from "./__utils";
 
@@ -17,14 +18,14 @@ export class CountifFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 2) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for COUNTIF is incorrect."
       );
     }
   }
-  // @ts-ignore
-  protected main(table: UserTable, condition: string) {
-    const matrix = solveMatrix(table, this.base);
+
+  protected main(table: Table, condition: string) {
+    const matrix = solveTable({ table });
     return matrix
       .reduce((a, b) => a.concat(b))
       .filter((v: any) => check(v, condition)).length;

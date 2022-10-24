@@ -14,14 +14,17 @@ export class LnFunction extends BaseFunction {
 
   protected validate() {
     if (this.args.length !== 1) {
-      throw new FormulaError("N/A", "Number of arguments for LN is incorrect.");
+      throw new FormulaError(
+        "#N/A",
+        "Number of arguments for LN is incorrect."
+      );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
+    this.args = this.args.map((arg) => ensureNumber(arg));
     if (this.args[0] <= 0) {
       throw new FormulaError("NUM!", "value must be greater than 0");
     }
   }
-  // @ts-ignore
+
   protected main(value: number) {
     return Math.log(value);
   }

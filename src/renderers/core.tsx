@@ -1,7 +1,10 @@
 import React from "react";
-import { CellType, WriterType } from "../types";
-import { UserTable } from "../api/tables";
-import { evaluate } from "../formula/evaluator";
+import { CellType, PointType, WriterType } from "../types";
+import { Table } from "../api/table";
+import { solveFormula } from "../formula/solver";
+import { FormulaError } from "../formula/evaluator";
+import { p2a } from "../api/converters";
+import { format as formatDate } from "date-fns";
 
 type Condition = (value: any) => boolean;
 type Stringify = (value: any) => string;
@@ -12,6 +15,8 @@ type Props = {
 };
 
 export class Renderer {
+  public datetimeFormat: string = "yyyy-MM-dd HH:mm:ss";
+  public dateFormat: string = "yyyy-MM-dd";
   private condition?: Condition;
   private complement?: Stringify;
 
@@ -24,7 +29,19 @@ export class Renderer {
     this.complement = complement;
   }
 
-  public _render(value: any, table: UserTable, writer?: WriterType): any {
+  public render(table: Table, point: PointType, writer?: WriterType): any {
+    const address = p2a(point);
+    const cache = table.getSolvedCache(address);
+    const value = cache || table.getByPoint(point)?.value;
+    const { y, x } = point;
+    return this._render(
+      value,
+      table.trim({ top: y, left: x, bottom: y, right: x }),
+      writer
+    );
+  }
+
+  public _render(value: any, table: Table, writer?: WriterType): any {
     if (this.condition && !this.condition(value)) {
       return this.complement ? this.complement(value) : this.stringify(value);
     }
@@ -37,11 +54,18 @@ export class Renderer {
         if (value == null) {
           return this.null(value, writer);
         }
-        if (value instanceof UserTable) {
-          return this._render(value.get(0, 0)?.value, table, writer);
+        if (value instanceof Table) {
+          return this._render(
+            value.getByPoint({ y: value.top, x: value.left })?.value,
+            table,
+            writer
+          );
         }
         if (Array.isArray(value)) {
           return this.array(value, writer);
+        }
+        if (value instanceof FormulaError) {
+          throw value;
         }
         return this.object(value, writer);
       case "string":
@@ -58,17 +82,6 @@ export class Renderer {
     return "";
   }
 
-  public render(
-    table: UserTable,
-    y: number,
-    x: number,
-    writer?: WriterType
-  ): any {
-    const cell = table.get(y, x);
-    const { value } = cell || {};
-    return this._render(value, table, writer);
-  }
-
   public stringify(cell: CellType): string {
     const { value } = cell;
     if (value instanceof Date) {
@@ -80,12 +93,13 @@ export class Renderer {
     return value.toString();
   }
 
-  protected string(value: string, table: UserTable, writer?: WriterType): any {
+  protected string(value: string, table: Table, writer?: WriterType): any {
     if (value[0] === "'") {
       return value.substring(1);
     }
     if (value[0] === "=") {
-      const result = evaluate(value.substring(1), table);
+      const result = solveFormula({ value, table, raise: true });
+
       if (result == null) {
         return "";
       }
@@ -122,9 +136,9 @@ export class Renderer {
 
   protected date(value: Date, writer?: WriterType): any {
     if (value.getHours() + value.getMinutes() + value.getSeconds() === 0) {
-      return value.toLocaleDateString();
+      return formatDate(value, this.dateFormat);
     }
-    return value.toLocaleString();
+    return formatDate(value, this.datetimeFormat);
   }
 
   protected array(value: any[], writer?: WriterType): any {

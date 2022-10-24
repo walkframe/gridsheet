@@ -1,7 +1,8 @@
-import { solveMatrix, FormulaError } from "../evaluator";
-import { UserTable } from "../../api/tables";
+import { FormulaError } from "../evaluator";
+import { solveTable } from "../solver";
+import { Table } from "../../api/table";
 import { BaseFunction } from "./__base";
-import { check, ensureNumber } from "./__utils";
+import { check } from "./__utils";
 import { AreaType } from "../../types";
 
 export class SumifFunction extends BaseFunction {
@@ -23,34 +24,34 @@ export class SumifFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 2 && this.args.length !== 3) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for SUMIF is incorrect."
       );
     }
-    if (this.args[2] != undefined && this.args[2] instanceof UserTable) {
-      throw new FormulaError("N/A", "3rd argument must be range.");
+    if (this.args[2] != undefined && this.args[2] instanceof Table) {
+      throw new FormulaError("#N/A", "3rd argument must be range.");
     }
   }
-  // @ts-ignore
-  protected main(range: UserTable, condition: string, sumRange: UserTable) {
-    if (!(range instanceof UserTable)) {
+
+  protected main(range: Table, condition: string, sumRange: Table) {
+    if (!(range instanceof Table)) {
       return check(range, condition) ? range : 0;
     }
-    const conditionMatrix = solveMatrix(range, this.base);
+    const conditionMatrix = solveTable({ table: range });
     let sumMatrix = conditionMatrix;
     if (sumRange) {
-      const [top, left] = [sumRange.top(), sumRange.left()];
-      const area: AreaType = [
+      const [top, left] = [sumRange.top, sumRange.left];
+      const area: AreaType = {
         top,
         left,
-        top + sumRange.numRows(),
-        left + sumRange.numCols(),
-      ];
-      sumMatrix = solveMatrix(this.base.copy(area), this.base);
+        bottom: top + sumRange.getNumRows(),
+        right: left + sumRange.getNumCols(),
+      };
+      sumMatrix = solveTable({ table: this.table.trim(area) });
     }
     let total = 0;
-    conditionMatrix.map((row, y) =>
-      row.map((c, x) => {
+    conditionMatrix.forEach((row, y) =>
+      row.forEach((c, x) => {
         const s = sumMatrix[y]?.[x] || 0;
         if (typeof s === "number" && check(c, condition)) {
           total += s;

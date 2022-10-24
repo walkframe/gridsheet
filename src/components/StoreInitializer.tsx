@@ -1,10 +1,9 @@
 import React from "react";
 
-import { CellsType, Props } from "../types";
+import { CellsByAddressType, Props } from "../types";
 
 import { Context } from "../store";
 import {
-  initHistory,
   setSheetHeight,
   setSheetWidth,
   setHeaderHeight,
@@ -13,32 +12,35 @@ import {
   setCellLabel,
   setOnSave,
   initializeTable,
-  updateTable,
 } from "../store/actions";
 
-import { HISTORY_SIZE, HEADER_HEIGHT, HEADER_WIDTH } from "../constants";
-import { cellToIndexes } from "../api/converters";
-import { Table } from "../api/tables";
+import { HEADER_HEIGHT, HEADER_WIDTH, HISTORY_LIMIT } from "../constants";
+import { a2p } from "../api/converters";
+import { Table } from "../api/table";
 import { functions } from "../formula/mapping";
 
 export const StoreInitializer: React.FC<Props> = ({
   initial = {},
-  changes,
   options = {},
   additionalFunctions = {},
 }) => {
   const {
-    historySize = HISTORY_SIZE,
     headerHeight = HEADER_HEIGHT,
     headerWidth = HEADER_WIDTH,
     numRows = 0,
     numCols = 0,
+    historyLimit = HISTORY_LIMIT,
     sheetHeight,
     sheetWidth,
     editingOnEnter,
     cellLabel,
     renderers,
     parsers,
+    labelers,
+    minNumRows,
+    maxNumRows,
+    minNumCols,
+    maxNumCols,
     onSave,
   } = options;
 
@@ -50,25 +52,18 @@ export const StoreInitializer: React.FC<Props> = ({
       numRows: auto.numRows,
       numCols: auto.numCols,
       cells: initial,
+      historyLimit,
       parsers,
       renderers,
+      labelers,
+      minNumRows,
+      maxNumRows,
+      minNumCols,
+      maxNumCols,
     });
-    // @ts-ignore
     table.setFunctions({ ...functions, ...additionalFunctions });
     dispatch(initializeTable(table));
-    dispatch(initHistory(historySize));
   }, []);
-  React.useEffect(() => {
-    if (changes == null) {
-      return;
-    }
-    const { table, tableInitialized } = store;
-    if (!tableInitialized) {
-      return;
-    }
-    const diff = table.diffWithCells(changes);
-    dispatch(updateTable(diff));
-  }, [changes]);
   React.useEffect(() => {
     if (sheetHeight) {
       dispatch(setSheetHeight(sheetHeight));
@@ -107,11 +102,14 @@ export const StoreInitializer: React.FC<Props> = ({
   return <></>;
 };
 
-const getMaxSizeFromCells = (sizeY = 0, sizeX = 0, cells: CellsType = {}) => {
-  let lastY = sizeY,
-    lastX = sizeX;
-  Object.keys(cells).map((cellId) => {
-    const [y, x] = cellToIndexes(cellId);
+const getMaxSizeFromCells = (
+  sizeY = 0,
+  sizeX = 0,
+  cells: CellsByAddressType = {}
+) => {
+  let [lastY, lastX] = [sizeY, sizeX];
+  Object.keys(cells).map((address) => {
+    const { y, x } = a2p(address);
     if (lastY < y) {
       lastY = y;
     }

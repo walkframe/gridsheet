@@ -23,15 +23,15 @@ export class IfFunction extends BaseFunction {
 
   protected validate() {
     if (this.args.length === 2 || this.args.length === 3) {
-      this.args[0] = ensureBoolean(this.args[0], this.base);
+      this.args[0] = ensureBoolean(this.args[0]);
       return;
     }
     throw new FormulaError(
-      "N/A",
+      "#N/A",
       "Number of arguments for IF is incorrect. 2 or 3 arguments must be specified."
     );
   }
-  // @ts-ignore
+
   protected main(condition: boolean, v1: any, v2: any = false) {
     return condition ? v1 : v2;
   }

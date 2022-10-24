@@ -14,10 +14,13 @@ export class NeFunction extends BaseFunction {
 
   protected validate() {
     if (this.args.length !== 2) {
-      throw new FormulaError("N/A", "Number of arguments for NE is incorrect.");
+      throw new FormulaError(
+        "#N/A",
+        "Number of arguments for NE is incorrect."
+      );
     }
   }
-  // @ts-ignore
+
   protected main(v1: number, v2: number) {
     return v1 !== v2;
   }

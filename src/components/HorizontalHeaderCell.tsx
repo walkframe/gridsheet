@@ -1,6 +1,6 @@
 import React from "react";
 import { x2c } from "../api/converters";
-import { between } from "../api/matrix";
+import { between } from "../api/structs";
 import { Context } from "../store";
 import {
   choose,
@@ -31,19 +31,19 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
       editorRef,
     } = store;
 
-    if (table.numRows() === 0) {
+    if (table.getNumRows() === 0) {
       return null;
     }
-    const col = table.get(0, x);
+    const col = table.getByPoint({ y: 0, x });
     const width = col?.width || DEFAULT_WIDTH;
     return (
       <div
         style={outerStyle}
         className={`
       gs-header gs-horizontal
-      ${choosing[1] === x ? "gs-choosing" : ""}
+      ${choosing.x === x ? "gs-choosing" : ""}
       ${
-        between([selectingZone[1], selectingZone[3]], x)
+        between({ start: selectingZone.startX, end: selectingZone.endX }, x)
           ? horizontalHeadersSelecting
             ? "gs-header-selecting"
             : "gs-selecting"
@@ -51,29 +51,44 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
       }`}
         onContextMenu={(e) => {
           e.preventDefault();
-          dispatch(setContextMenuPosition([e.clientY, e.clientX]));
+          dispatch(setContextMenuPosition({ y: e.clientY, x: e.clientX }));
           return false;
         }}
         onClick={(e) => {
-          let startX = e.shiftKey ? selectingZone[1] : x;
+          let startX = e.shiftKey ? selectingZone.startX : x;
           if (startX === -1) {
-            startX = choosing[1];
+            startX = choosing.x;
           }
-          dispatch(selectCols({ range: [startX, x], numRows: table.numRows() }));
-          dispatch(setContextMenuPosition([-1, -1]));
-          dispatch(choose([1, startX]));
+          dispatch(
+            selectCols({
+              range: { start: startX, end: x },
+              numRows: table.getNumRows(),
+            })
+          );
+          dispatch(setContextMenuPosition({ y: -1, x: -1 }));
+          dispatch(choose({ y: 1, x: startX }));
           editorRef.current?.focus();
           return false;
         }}
         onDragStart={(e) => {
           e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
-          dispatch(selectCols({ range: [x, x], numRows: table.numRows() }));
-          dispatch(choose([1, x]));
+          dispatch(
+            selectCols({
+              range: { start: x, end: x },
+              numRows: table.getNumRows(),
+            })
+          );
+          dispatch(choose({ y: 1, x }));
           return false;
         }}
         onDragEnter={() => {
-          if (resizingRect[1] === -1) {
-            dispatch(drag([table.numRows(), x]));
+          if (resizingRect.x === -1) {
+            const { startY } = selectingZone;
+            if (startY === 1) {
+              dispatch(drag({ y: table.getNumRows(), x }));
+            } else {
+              dispatch(drag({ y: 1, x }));
+            }
           }
           return false;
         }}
@@ -87,7 +102,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
           style={{ width, height: headerHeight }}
           draggable
         >
-          {col?.label ? typeof col?.label === "function" ? col?.label(x) : col?.label : colId}
+          {col?.labeler ? table.getLabel(col.labeler, x) : colId}
         </div>
         <div
           className="gs-resizer"

@@ -1,11 +1,8 @@
-import { UserTable } from "../../api/tables";
-import { solveMatrix, FormulaError } from "../evaluator";
+import { solveTable } from "../solver";
+import { Table } from "../../api/table";
+import { FormulaError } from "../evaluator";
 
-export const ensureNumber = (
-  value: any,
-  base: UserTable,
-  alternative?: number
-): number => {
+export const ensureNumber = (value: any, alternative?: number): number => {
   if (typeof value === "undefined" && typeof alternative !== "undefined") {
     return alternative;
   }
@@ -13,27 +10,27 @@ export const ensureNumber = (
     // falsy is 0
     return 0;
   }
-  if (value instanceof UserTable) {
-    const v = stripTable(value, base, 0, 0);
-    return ensureNumber(v, base, alternative);
+  if (value instanceof Table) {
+    const v = stripTable(value, 0, 0);
+    return ensureNumber(v, alternative);
   }
   const num = parseFloat(value);
   if (isNaN(num)) {
     throw new FormulaError(
-      "VALUE!",
+      "#VALUE!",
       `${value} cannot be converted to a number`
     );
   }
   return num;
 };
 
-export const ensureString = (value: any, base: UserTable): string => {
+export const ensureString = (value: any): string => {
   if (!value) {
     return "";
   }
-  if (value instanceof UserTable) {
-    const v = stripTable(value, base, 0, 0);
-    return ensureString(v, base);
+  if (value instanceof Table) {
+    const v = stripTable(value, 0, 0);
+    return ensureString(v);
   }
   switch (value.constructor.name) {
     case "Date":
@@ -48,7 +45,7 @@ export const ensureString = (value: any, base: UserTable): string => {
 
 export const ensureBoolean = (
   value: any,
-  base: UserTable,
+
   alternative?: boolean
 ): boolean => {
   if (typeof value === "undefined" && typeof alternative !== "undefined") {
@@ -57,16 +54,15 @@ export const ensureBoolean = (
   if (value === null) {
     return false;
   }
-  if (value instanceof UserTable) {
-    const v = stripTable(value, base, 0, 0);
-    return ensureBoolean(v, base, alternative);
+  if (value instanceof Table) {
+    const v = stripTable(value, 0, 0);
+    return ensureBoolean(v, alternative);
   }
   if (typeof value === "string" || value instanceof String) {
-    // @ts-ignore
     const bool = { true: true, false: false }[value.toLowerCase()];
     if (bool == null) {
       throw new FormulaError(
-        "VALUE!",
+        "#VALUE!",
         `text '${value}' cannot be converted to a boolean`
       );
     }
@@ -75,9 +71,9 @@ export const ensureBoolean = (
   return Boolean(value);
 };
 
-export const stripTable = (value: any, base: UserTable, y = 0, x = 0) => {
-  if (value instanceof UserTable) {
-    return solveMatrix(value, base)[y][x];
+export const stripTable = (value: any, y = 0, x = 0) => {
+  if (value instanceof Table) {
+    return solveTable({ table: value })[y][x];
   }
   return value;
 };

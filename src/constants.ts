@@ -2,7 +2,7 @@ export const DUMMY_IMG = document.createElement("img");
 DUMMY_IMG.src =
   "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
 
-export const HISTORY_SIZE = 10;
+export const HISTORY_LIMIT = 10;
 
 export const DEFAULT_HEIGHT = 22;
 export const DEFAULT_WIDTH = 90;
@@ -17,3 +17,10 @@ export const MIN_WIDTH = 5;
 export const MIN_HEIGHT = 5;
 
 export const DEFAULT_ALPHABET_CACHE_SIZE = 1000;
+
+export class Special {
+  public name: string;
+  constructor(name: string) {
+    this.name = name;
+  }
+}

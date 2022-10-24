@@ -19,11 +19,11 @@ export class LogFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 2) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for LOG is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
+    this.args = this.args.map((arg) => ensureNumber(arg));
     if (this.args[0] <= 0) {
       throw new FormulaError("NUM!", "value must be greater than 0");
     }
@@ -31,7 +31,7 @@ export class LogFunction extends BaseFunction {
       throw new FormulaError("NUM!", "base must be greater than 1");
     }
   }
-  // @ts-ignore
+
   protected main(value: number, base: number) {
     return Math.log2(value) / Math.log2(base);
   }

@@ -1,5 +1,6 @@
-import { solveMatrix, FormulaError } from "../evaluator";
-import { UserTable } from "../../api/tables";
+import { FormulaError } from "../evaluator";
+import { solveTable } from "../solver";
+import { Table } from "../../api/table";
 import { BaseFunction } from "./__base";
 import { ensureBoolean, ensureNumber, stripTable } from "./__utils";
 
@@ -29,25 +30,25 @@ export class VlookupFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 3 && this.args.length !== 4) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for VLOOKUP is incorrect."
       );
     }
-    if (this.args[0] instanceof UserTable) {
-      this.args[0] = stripTable(this.args[0], this.base);
+    if (this.args[0] instanceof Table) {
+      this.args[0] = stripTable(this.args[0]);
     }
-    if (!(this.args[1] instanceof UserTable)) {
-      throw new FormulaError("REF!", "2nd argument must be range");
+    if (!(this.args[1] instanceof Table)) {
+      throw new FormulaError("#REF!", "2nd argument must be range");
     }
-    this.args[2] = ensureNumber(this.args[2], this.base);
-    this.args[3] = ensureBoolean(this.args[3], this.base, true);
+    this.args[2] = ensureNumber(this.args[2]);
+    this.args[3] = ensureBoolean(this.args[3], true);
   }
-  // @ts-ignore
-  protected main(key: any, range: UserTable, index: number, isSorted: boolean) {
-    const matrix = solveMatrix(range, this.base);
+
+  protected main(key: any, range: Table, index: number, isSorted: boolean) {
+    const matrix = solveTable({ table: range });
     if (isSorted) {
       let last = -1;
-      for (let y = 0; y <= range.numRows(); y++) {
+      for (let y = 0; y <= range.getNumRows(); y++) {
         const v = matrix[y]?.[0];
         if (v != null && v <= key) {
           last = y;
@@ -59,12 +60,12 @@ export class VlookupFunction extends BaseFunction {
         return matrix[last]?.[index - 1];
       }
     } else {
-      for (let y = 0; y <= range.numRows(); y++) {
+      for (let y = 0; y <= range.getNumRows(); y++) {
         if (matrix[y]?.[0] === key) {
           return matrix[y]?.[index - 1];
         }
       }
     }
-    throw new FormulaError("N/A", `No values found for '${key}'.`);
+    throw new FormulaError("#N/A", `No values found for '${key}'.`);
   }
 }

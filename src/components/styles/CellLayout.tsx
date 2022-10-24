@@ -28,8 +28,8 @@ export const CellLayout = styled.div`
     font-size: 8px;
     font-weight: normal;
     font-style: normal;
-    background-color: rgba(0, 128, 255, 0.3);
-    color: #ffffff;
+    background-color: rgba(0, 128, 255, 0.2);
+    color: rgba(255, 255, 255, 0.6);
     padding: 0 2px;
     display: none;
     opacity: 0.7;
@@ -50,7 +50,12 @@ export const CellLayout = styled.div`
       }
     }
     &.gs-pointed {
-      border: solid 2px #0077ff;
+      border: solid 1px #0077ff;
+      box-sizing: content-box;
+      margin-top: -1px;
+      margin-left: -1px;
+      z-index: 1;
+
       &.gs-editing {
         border: none;
       }
@@ -59,10 +64,10 @@ export const CellLayout = styled.div`
       }
     }
     &.gs-matching {
-      background-color: rgba(0, 255, 128, 0.2);
+      background-color: rgba(0, 200, 100, 0.2);
     }
     &.gs-searching {
-      border: solid 2px rgb(0, 180, 100);
+      border: solid 2px rgb(0, 170, 120);
     }
   }
   .gs-cell-rendered-wrapper-inner {

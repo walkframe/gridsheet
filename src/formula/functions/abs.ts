@@ -10,13 +10,13 @@ export class AbsFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 1) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for ABS is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
+    this.args = this.args.map((arg) => ensureNumber(arg));
   }
-  // @ts-ignore
+
   protected main(value: number) {
     return Math.abs(value);
   }

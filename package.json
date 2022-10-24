@@ -7,6 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rm -rf ./dist || true && tsc --project ./src/index.ts -p ./tsconfig.json",
+    "audit-fix": "yarn-audit-fix --force",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
   },
@@ -32,10 +33,9 @@
   },
   "homepage": "https://docs.walkframe.com/products/react-gridsheet/",
   "devDependencies": {
-    "@storybook/addon-actions": "^6.0.21",
-    "@storybook/addon-essentials": "^6.0.21",
-    "@storybook/addon-links": "^6.0.21",
-    "@storybook/react": "^6.0.21",
+    "@storybook/addon-essentials": "^6.5.12",
+    "@storybook/addon-links": "^6.5.12",
+    "@storybook/react": "^6.5.12",
     "@types/react": "^16.9.49",
     "@types/react-window": "^1.8.2",
     "@types/storybook__react": "^5.2.1",
@@ -50,7 +50,9 @@
     "react-dom": ">=16.9.0",
     "react-is": "^16.13.1",
     "require-context.macro": "^1.2.2",
-    "typescript": "^4.0.3"
+    "storybook": "^6.5.12",
+    "typescript": "^4.0.3",
+    "yarn-audit-fix": "^9.3.6"
   },
   "peerDependencies": {
     "react": ">=16.9.0",
@@ -61,5 +63,11 @@
     "date-fns-timezone": "^0.1.4",
     "react-window": "^1.8.6",
     "styled-components": "^5.2.1"
+  },
+  "resolutions": {
+    "trim": "^0.0.3",
+    "trim-newlines": "^3.0.1",
+    "got": "^11.8.5",
+    "glob-parent": "^5.1.2"
   }
 }

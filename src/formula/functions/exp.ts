@@ -17,13 +17,13 @@ export class ExpFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 1) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for EXP is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
+    this.args = this.args.map((arg) => ensureNumber(arg));
   }
-  // @ts-ignore
+
   protected main(exponent: number) {
     return Math.exp(exponent);
   }

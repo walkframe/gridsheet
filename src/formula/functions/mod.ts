@@ -16,16 +16,19 @@ export class ModFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 2) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for MOD is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
+    this.args = this.args.map((arg) => ensureNumber(arg));
     if (this.args[1] === 0) {
-      throw new FormulaError("DIV/0!", "The second argument must be non-zero.");
+      throw new FormulaError(
+        "#DIV/0!",
+        "The second argument must be non-zero."
+      );
     }
   }
-  // @ts-ignore
+
   protected main(v1: number, v2: number) {
     return v1 % v2;
   }

@@ -1,10 +1,17 @@
 import React from "react";
 import { GridSheet, Renderer, aa2oa, MatrixType, Parser } from "./src";
-import { createMatrix, matrixIntoCells } from "./src/api/matrix";
+import { createMatrix, matrixIntoCells } from "./src/api/structs";
 import { defaultParser } from "./src/parsers/core";
 import { defaultRenderer } from "./src/renderers/core";
-import { CellType } from "./src/types";
+import { CellType, Dispatcher } from "./src/types";
 import { BaseFunction } from "./src";
+import { createTableRef } from "./src/components/GridTable";
+
+class HopeFunction extends BaseFunction {
+  main(text: string) {
+    return `😸${text}😸`;
+  }
+}
 
 class TestFunction extends BaseFunction {
   main() {
@@ -71,6 +78,40 @@ export default {
   title: "grid sheet",
 };
 
+const initialDataForFormula = [
+  [0, "=A1+60", "=B1+10", "=C1+10", "=D1+10", "=E1+5", "", "", "", ""],
+  ["E", "D", "C", "B", "A", "S", "", "", "", ""],
+  ["", "", "", "", "", "NOW:", "=NOW()", "", "", ""],
+  ["Name", "Point", "Rank", "", "", "", '=HOPE("World peace")', "", "", ""],
+  ["apple", 50, "=HLOOKUP(B5, A1:F2, 2, true)", "", "", "", "", "", "", ""],
+  ["orange", 82, "=HLOOKUP(B6, A1:F2, 2, true)", "", "", "", "", "", "", ""],
+  [
+    "grape",
+    75,
+    "=HLOOKUP(B7, A1:F2, 2, true)",
+    "",
+    "",
+    "",
+    "Greater than",
+    70,
+    "",
+    "",
+  ],
+  [
+    "meron",
+    98,
+    "=HLOOKUP(B8, A1:F2, 2, true)",
+    "",
+    "",
+    "",
+    '\'=countif(B5:B9, ">" & H7)',
+    '=countif(B5:B9, ">" & H7)',
+    "",
+    "",
+  ],
+  ["banana", 65, "=HLOOKUP(B9, A1:F2, 2, true)", "", "", "", "", "", "", ""],
+];
+
 const initialData = [
   [
     123456,
@@ -87,35 +128,7 @@ const initialData = [
   ["a", "b", 789, "d", "e", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "=test()", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  [true, "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  [false, "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  [123456, "b", "c", "d", "e", "aa", "bb", "cc", [1, 2, 3], "ee"],
-  ["a", "b", 789, "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  [true, "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  [false, "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  [123456, "b", "c", "d", "e", "aa", "bb", "cc", [1, 2, 3], "ee"],
-  ["a", "b", 789, "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
-  ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
+  ["=C2", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
   ["a", "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
@@ -158,29 +171,66 @@ const initialData = [
 const initialCells = matrixIntoCells(createMatrix(1000, 50), {});
 
 export const showIndex = () => {
-  let [num, setNum] = React.useState(1);
-
+  const ref = createTableRef();
+  /*
+  setInterval(() => {
+    if (ref.current) {
+      ref.current.dispatch(
+        ref.current.table.update({ A1: { value: new Date() } }, true)
+      );
+    }
+  }, 10000);
+  */
   return (
     <>
       <div>aaaaa</div>
 
       <GridSheet
+        initial={matrixIntoCells(initialDataForFormula, {
+          1: { style: { backgroundColor: "#aaa" } },
+          2: { style: { backgroundColor: "#eee" } },
+          3: { style: {} },
+          A: { width: 50 },
+          B: { width: 50 },
+          C: { width: 50 },
+          D: { width: 50 },
+          E: { width: 50 },
+          F: { width: 50 },
+          G: { width: 200 },
+          H7: { style: { backgroundColor: "#ffeeee" } },
+          A4: {
+            style: { backgroundColor: "#dddddd" },
+          },
+          B4: {
+            style: { backgroundColor: "#dddddd" },
+          },
+          C4: {
+            style: { backgroundColor: "#dddddd" },
+          },
+        })}
+        additionalFunctions={{
+          hope: HopeFunction,
+        }}
+      />
+
+      <GridSheet
+        tableRef={ref}
         additionalFunctions={{
           test: TestFunction,
         }}
         initial={matrixIntoCells(initialData, {
           default: { style: { fontStyle: "italic" } },
           A1: { value: 1, style: { color: "#008888" } },
-          B: { label: "ビー" },
+          B: { labeler: "b" },
           D: { width: 300, style: { textAlign: "right" } },
           "2": {
-            label: "二",
+            labeler: "2",
             style: { borderBottom: "double 4px #000000" },
             renderer: "kanji",
           },
           "3": {
             height: 100,
-            label: (row) => `${row}行目`,
+            labeler: "rowNumber",
             style: {
               fontWeight: "bold",
               color: "#ff0000",
@@ -188,7 +238,6 @@ export const showIndex = () => {
             },
           },
           "4": {
-            label: "よん",
             height: 50,
             verticalAlign: "bottom",
           },
@@ -215,10 +264,15 @@ export const showIndex = () => {
           numCols: 10,
           numRows: 10,
           headerHeight: 40,
-          historySize: 100,
+          historyLimit: 100,
           mode: "dark",
+          labelers: {
+            rowNumber: (row) => `${row}行目`,
+            b: (n) => "ビー",
+            "2": (n) => "二",
+          },
           //stickyHeaders: "horizontal",
-
+          /*
           onSave: (table, positions) => {
             console.log(
               "matrix on save:",
@@ -246,7 +300,7 @@ export const showIndex = () => {
           onSelect: (table, positions) => {
             console.log("positions on select", positions);
           },
-
+          */
           renderers: {
             kanji: new KanjiRenderer(),
           },
@@ -272,7 +326,7 @@ export const showIndex = () => {
                     ],
                     { A3: { value: "four" } }
                   )}
-                  options={{ sheetResize: "both" }}
+                  options={{ sheetResize: "both", historyLimit: 2 }}
                 />
               </td>
               <td>
@@ -287,7 +341,7 @@ export const showIndex = () => {
                     ],
                     { B3: { value: "five" } }
                   )}
-                  options={{ sheetResize: "vertical" }}
+                  options={{ sheetResize: "vertical", historyLimit: 2 }}
                 />
               </td>
             </tr>
@@ -304,7 +358,7 @@ export const showIndex = () => {
                     ],
                     { C3: { value: "six" } }
                   )}
-                  options={{ sheetResize: "horizontal" }}
+                  options={{ sheetResize: "horizontal", historyLimit: 2 }}
                 />
               </td>
               <td>
@@ -319,7 +373,7 @@ export const showIndex = () => {
                     ],
                     { A3: { value: "four" } }
                   )}
-                  options={{ sheetResize: "none" }}
+                  options={{ sheetResize: "none", historyLimit: 2 }}
                 />
               </td>
             </tr>
@@ -353,7 +407,7 @@ export const showIndex = () => {
             }
           },
           onChangeDiff: (table, positions) => {
-            console.log("matrix on change diff:", table.objectFlatten());
+            console.log("matrix on change diff:", table.getObjectFlatten());
           },
         }}
       />
@@ -361,10 +415,24 @@ export const showIndex = () => {
       <GridSheet
         style={{ maxWidth: "100%", maxHeight: "150px" }}
         initial={initialCells}
-        changes={{
-          B2: { value: num },
+        options={{
+          sheetResize: "both",
+          onChange: (table, positions) => {
+            console.log(
+              "diff",
+              table.getObjectFlatten({
+                filter: (cell) =>
+                  !!cell?.changedAt && cell.changedAt > table.lastChangedAt!,
+              })
+            );
+            const histories = table.getHistories();
+            console.log({ histories });
+            const h = histories[histories.length - 1];
+            if (h?.operation === "UPDATE") {
+              console.log("histories", table.getAddressesByIds(h.diffAfter));
+            }
+          },
         }}
-        options={{ sheetResize: "both" }}
       />
     </>
   );

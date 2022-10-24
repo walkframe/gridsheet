@@ -1,4 +1,4 @@
-import { cellToIndexes } from "../api/converters";
+import { a2p } from "../api/converters";
 import React from "react";
 
 import { Context } from "../store";
@@ -21,12 +21,16 @@ export const SearchBox: React.FC = () => {
     if (!matchingCell) {
       return;
     }
-    const indexes = cellToIndexes(matchingCell);
+    const indexes = a2p(matchingCell);
     if (typeof indexes === "undefined") {
       return;
     }
-    const [rowIndex, columnIndex] = indexes;
-    gridRef.current?.scrollToItem({ rowIndex, columnIndex, align: "auto" });
+    const { y, x } = indexes;
+    gridRef.current?.scrollToItem({
+      rowIndex: y - 1,
+      columnIndex: x - 1,
+      align: "auto",
+    });
   }, [matchingCell]);
 
   if (typeof searchQuery === "undefined") {
@@ -69,7 +73,8 @@ export const SearchBox: React.FC = () => {
             input?.nodeName === "INPUT" && input.focus();
           }}
         >
-          {matchingCells.length === 0 ? 0 : matchingCellIndex + 1} / {matchingCells.length}
+          {matchingCells.length === 0 ? 0 : matchingCellIndex + 1} /{" "}
+          {matchingCells.length}
         </div>
       </div>
       <div className="gs-search-close">

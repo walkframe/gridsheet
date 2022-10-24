@@ -1,5 +1,5 @@
-import { solveMatrix } from "../evaluator";
-import { UserTable } from "../../api/tables";
+import { solveTable } from "../solver";
+import { Table } from "../../api/table";
 import { BaseFunction } from "./__base";
 import { ensureNumber } from "./__utils";
 
@@ -19,19 +19,19 @@ export class ProductFunction extends BaseFunction {
   protected validate() {
     const spreaded: number[] = [];
     this.args.map((arg) => {
-      if (arg instanceof UserTable) {
+      if (arg instanceof Table) {
         spreaded.push(
-          ...solveMatrix(arg, this.base)
+          ...solveTable({ table: arg })
             .reduce((a, b) => a.concat(b))
             .filter((v: any) => typeof v === "number")
         );
         return;
       }
-      spreaded.push(ensureNumber(arg, this.base));
+      spreaded.push(ensureNumber(arg));
     });
     this.args = spreaded;
   }
-  // @ts-ignore
+
   protected main(...values: number[]) {
     return values.reduce((a, b) => a * b);
   }

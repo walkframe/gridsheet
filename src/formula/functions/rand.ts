@@ -9,12 +9,12 @@ export class RandFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 0) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for RAND is incorrect."
       );
     }
   }
-  // @ts-ignore
+
   protected main() {
     return Math.random();
   }

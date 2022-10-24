@@ -19,16 +19,19 @@ export class DivideFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 2) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for DIVIDE is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
+    this.args = this.args.map((arg) => ensureNumber(arg));
     if (this.args[1] === 0) {
-      throw new FormulaError("DIV/0!", "The second argument must be non-zero.");
+      throw new FormulaError(
+        "#DIV/0!",
+        "The second argument must be non-zero."
+      );
     }
   }
-  // @ts-ignore
+
   protected main(divided: number, divisor: number) {
     return divided / divisor;
   }

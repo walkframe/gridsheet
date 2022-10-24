@@ -1,24 +1,20 @@
 import React from "react";
-
-import { x2c, y2r } from "../api/converters";
 import { clip } from "../api/clipboard";
 
 import {
-  choose,
-  select,
   undo,
   redo,
   copy,
   cut,
   paste,
-  addRows,
-  removeRows,
-  addCols,
-  removeCols,
   setContextMenuPosition,
+  updateTable,
 } from "../store/actions";
-import { ContextMenuLayout } from "./styles/ContextMenuLayout";
-import { zoneShape, zoneToArea } from "../api/matrix";
+import {
+  ContextMenuLayout,
+  ContextMenuModalLayout,
+} from "./styles/ContextMenuLayout";
+import { areaToZone, zoneShape, zoneToArea } from "../api/structs";
 
 import { Context } from "../store";
 
@@ -31,19 +27,17 @@ export const ContextMenu: React.FC = () => {
     selectingZone,
     horizontalHeadersSelecting,
     verticalHeadersSelecting,
-    history,
     editorRef,
     contextMenuPosition,
-    sheetRef,
   } = store;
 
-  const [y, x] = choosing;
-  let [
-    selectingTop,
-    selectingLeft,
-    selectingBottom,
-    selectingRight,
-  ] = zoneToArea(selectingZone);
+  const { y, x } = choosing;
+  let {
+    top: selectingTop,
+    left: selectingLeft,
+    bottom: selectingBottom,
+    right: selectingRight,
+  } = zoneToArea(selectingZone);
   if (selectingTop === -1) {
     [selectingTop, selectingLeft, selectingBottom, selectingRight] = [
       y,
@@ -52,215 +46,261 @@ export const ContextMenu: React.FC = () => {
       x,
     ];
   }
-  const rowId = y2r(y);
-  const colId = x2c(x);
-  const cellId = `${colId}${rowId}`;
 
-  const [height, width] = zoneShape(selectingZone);
-
-  const [top, left] = contextMenuPosition;
+  const [tableHeight, tableWidth] = [table.getNumRows(), table.getNumCols()];
+  const { height, width } = zoneShape(selectingZone, 1);
+  const { y: top, x: left } = contextMenuPosition;
   if (top === -1) {
     return null;
   }
-
-  const { y: offsetY, x: offsetX } = sheetRef.current.getBoundingClientRect();
+  const historyIndex = table.getHistoryIndex();
 
   return (
-    <ContextMenuLayout
-      style={{
-        top: top - offsetY,
-        left: left - offsetX,
+    <ContextMenuModalLayout
+      className="gs-contextmenu-modal"
+      onClick={(e) => {
+        e.preventDefault();
+        dispatch(setContextMenuPosition({ y: -1, x: -1 }));
+        return false;
       }}
     >
-      <ul>
-        <li
-          onClick={() => {
-            const area = clip(store);
-            dispatch(cut(area));
-            dispatch(setContextMenuPosition([-1, -1]));
-          }}
-        >
-          <div className="gs-menu-name">Cut</div>
-          <div className="gs-menu-shortcut">
-            <span className="gs-menu-underline">X</span>
-          </div>
-        </li>
-        <li
-          onClick={() => {
-            const area = clip(store);
-            dispatch(copy(area));
-            dispatch(setContextMenuPosition([-1, -1]));
-          }}
-        >
-          <div className="gs-menu-name">Copy</div>
-          <div className="gs-menu-shortcut">
-            <span className="gs-menu-underline">C</span>
-          </div>
-        </li>
-        <li
-          onClick={async () => {
-            const text = editorRef.current?.value || "";
-            dispatch(paste({ text }));
-            dispatch(setContextMenuPosition([-1, -1]));
-          }}
-        >
-          <div className="gs-menu-name">Paste</div>
-          <div className="gs-menu-shortcut">
-            <span className="gs-menu-underline">V</span>
-          </div>
-        </li>
-
-        <li className="gs-menu-divider" />
-
-        {!horizontalHeadersSelecting && (
+      <ContextMenuLayout
+        style={{
+          top: top,
+          left: left,
+        }}
+      >
+        <ul>
           <li
+            className="enabled"
             onClick={() => {
-              dispatch(addRows({ numRows: height + 1, y: selectingTop, base: selectingTop }));
-              dispatch(
-                select([
-                  selectingTop,
-                  1,
-                  selectingTop + height,
-                  table.numCols(),
-                ])
-              );
-              dispatch(choose([selectingTop, 0]));
-              dispatch(setContextMenuPosition([-1, -1]));
+              const area = clip(store);
+              dispatch(cut(areaToZone(area)));
             }}
           >
-            <div className="gs-menu-name">
-              Insert {height + 1} row{height > 0 && "s"} above
+            <div className="gs-menu-name">Cut</div>
+            <div className="gs-menu-shortcut">
+              <span className="gs-menu-underline">X</span>
             </div>
           </li>
-        )}
-        {!horizontalHeadersSelecting && (
           <li
+            className="enabled"
             onClick={() => {
-              dispatch(
-                addRows({ numRows: height + 1, y: selectingBottom + 1, base: selectingBottom })
-              );
-              dispatch(
-                select([
-                  selectingBottom + 1,
-                  1,
-                  selectingBottom + height + 1,
-                  table.numCols(),
-                ])
-              );
-              dispatch(choose([selectingBottom + 1, 0]));
-              dispatch(setContextMenuPosition([-1, -1]));
+              const area = clip(store);
+              dispatch(copy(areaToZone(area)));
             }}
           >
-            <div className="gs-menu-name">
-              Insert {height + 1} row{height > 0 && "s"} below
+            <div className="gs-menu-name">Copy</div>
+            <div className="gs-menu-shortcut">
+              <span className="gs-menu-underline">C</span>
             </div>
           </li>
-        )}
+          <li
+            className="enabled"
+            onClick={async () => {
+              const text = editorRef.current?.value || "";
+              dispatch(paste({ text }));
+            }}
+          >
+            <div className="gs-menu-name">Paste</div>
+            <div className="gs-menu-shortcut">
+              <span className="gs-menu-underline">V</span>
+            </div>
+          </li>
 
-        {!verticalHeadersSelecting && (
-          <li
-            onClick={() => {
-              dispatch(addCols({ numCols: width + 1, x: selectingLeft, base: selectingLeft }));
-              dispatch(
-                select([0, selectingLeft, table.numRows(), selectingLeft + width])
-              );
-              dispatch(choose([0, selectingLeft]));
-              dispatch(setContextMenuPosition([-1, -1]));
-            }}
-          >
-            <div className="gs-menu-name">
-              Insert {width + 1} column{width > 0 && "s"} left
-            </div>
-          </li>
-        )}
-        {!verticalHeadersSelecting && (
-          <li
-            onClick={() => {
-              dispatch(addCols({ numCols: width + 1, x: selectingRight + 1, base: selectingRight }));
-              dispatch(
-                select([
-                  1,
-                  selectingRight + 1,
-                  table.numRows(),
-                  selectingRight + width + 1,
-                ])
-              );
-              dispatch(choose([0, selectingRight + 1]));
-              dispatch(setContextMenuPosition([-1, -1]));
-            }}
-          >
-            <div className="gs-menu-name">
-              Insert {width + 1} column{width > 0 && "s"} right
-            </div>
-          </li>
-        )}
-
-        {!horizontalHeadersSelecting && (
-          <li
-            onClick={() => {
-              dispatch(removeRows({ numRows: height + 1, y: selectingTop }));
-              dispatch(setContextMenuPosition([-1, -1]));
-              dispatch(choose([-1, -1]));
-              setTimeout(() => {
-                dispatch(choose([y, 0]));
-              }, 200);
-            }}
-          >
-            <div className="gs-menu-name">
-              Remove {height + 1} row{height > 0 && "s"}
-            </div>
-          </li>
-        )}
-
-        {!verticalHeadersSelecting && (
-          <li
-            onClick={() => {
-              dispatch(removeCols({ numCols: width + 1, x: selectingLeft }));
-              dispatch(setContextMenuPosition([-1, -1]));
-              dispatch(choose([-1, -1]));
-              setTimeout(() => {
-                dispatch(choose([0, x]));
-              }, 200);
-            }}
-          >
-            <div className="gs-menu-name">
-              Remove {width + 1} column{width > 0 && "s"}
-            </div>
-          </li>
-        )}
-
-        {(history.index > -1 ||
-          history.index < history.operations.length - 1) && (
           <li className="gs-menu-divider" />
-        )}
 
-        {history.index > -1 && (
-          <li
-            onClick={async () => {
-              dispatch(undo(null));
-              dispatch(setContextMenuPosition([-1, -1]));
-            }}
-          >
-            <div className="gs-menu-name">Undo</div>
-            <div className="gs-menu-shortcut">
-              <span className="gs-menu-underline">Z</span>
-            </div>
-          </li>
-        )}
-        {history.index < history.operations.length - 1 && (
-          <li
-            onClick={async () => {
-              dispatch(redo(null));
-              dispatch(setContextMenuPosition([-1, -1]));
-            }}
-          >
-            <div className="gs-menu-name">Redo</div>
-            <div className="gs-menu-shortcut">
-              <span className="gs-menu-underline">R</span>
-            </div>
-          </li>
-        )}
-      </ul>
-    </ContextMenuLayout>
+          {!horizontalHeadersSelecting && (
+            <li
+              className={
+                table.maxNumRows !== -1 &&
+                tableHeight + height > table.maxNumRows
+                  ? "disabled"
+                  : "enabled"
+              }
+              onClick={(e) => {
+                const newTable = table.addRows({
+                  y: selectingTop,
+                  numRows: height,
+                  baseY: selectingTop,
+                  reflection: {
+                    selectingZone,
+                    choosing,
+                  },
+                });
+                dispatch(updateTable(newTable));
+              }}
+            >
+              <div className="gs-menu-name">
+                Insert {height} row{height > 0 && "s"} above
+              </div>
+            </li>
+          )}
+          {!horizontalHeadersSelecting && (
+            <li
+              className={
+                table.maxNumRows !== -1 &&
+                tableHeight + height > table.maxNumRows
+                  ? "disabled"
+                  : "enabled"
+              }
+              onClick={(e) => {
+                selectingZone.startY += height;
+                selectingZone.endY += height;
+                choosing.y += height;
+                const newTable = table.addRows({
+                  y: selectingBottom + 1,
+                  numRows: height,
+                  baseY: selectingBottom,
+                  reflection: {
+                    selectingZone,
+                    choosing,
+                  },
+                });
+                dispatch(updateTable(newTable));
+              }}
+            >
+              <div className="gs-menu-name">
+                Insert {height} row{height > 0 && "s"} below
+              </div>
+            </li>
+          )}
+
+          {!verticalHeadersSelecting && (
+            <li
+              className={
+                table.maxNumCols !== -1 && tableWidth + width > table.maxNumCols
+                  ? "disabled"
+                  : "enabled"
+              }
+              onClick={(e) => {
+                const newTable = table.addCols({
+                  x: selectingLeft,
+                  numCols: width,
+                  baseX: selectingLeft,
+                  reflection: {
+                    selectingZone,
+                    choosing,
+                  },
+                });
+                dispatch(updateTable(newTable));
+              }}
+            >
+              <div className="gs-menu-name">
+                Insert {width} column{width > 0 && "s"} left
+              </div>
+            </li>
+          )}
+          {!verticalHeadersSelecting && (
+            <li
+              className={
+                table.maxNumCols !== -1 && tableWidth + width > table.maxNumCols
+                  ? "disabled"
+                  : "enabled"
+              }
+              onClick={(e) => {
+                selectingZone.startX += width;
+                selectingZone.endX += width;
+                choosing.x += width;
+                const newTable = table.addCols({
+                  x: selectingRight + 1,
+                  numCols: width,
+                  baseX: selectingRight,
+                  reflection: {
+                    selectingZone,
+                    choosing,
+                  },
+                });
+                dispatch(updateTable(newTable));
+              }}
+            >
+              <div className="gs-menu-name">
+                Insert {width} column{width > 0 && "s"} right
+              </div>
+            </li>
+          )}
+
+          {!horizontalHeadersSelecting && (
+            <li
+              className={
+                table.minNumRows !== -1 &&
+                tableHeight - height < table.minNumRows
+                  ? "disabled"
+                  : "enabled"
+              }
+              onClick={(e) => {
+                const newTable = table.removeRows({
+                  y: selectingTop,
+                  numRows: height,
+                  reflection: {
+                    selectingZone,
+                    choosing,
+                  },
+                });
+                dispatch(updateTable(newTable));
+              }}
+            >
+              <div className="gs-menu-name">
+                Remove {height} row{height > 0 && "s"}
+              </div>
+            </li>
+          )}
+
+          {!verticalHeadersSelecting && (
+            <li
+              className={
+                table.minNumCols !== -1 && tableWidth - width < table.minNumCols
+                  ? "disabled"
+                  : "enabled"
+              }
+              onClick={(e) => {
+                const newTable = table.removeCols({
+                  x: selectingLeft,
+                  numCols: width,
+                  reflection: {
+                    selectingZone,
+                    choosing,
+                  },
+                });
+                dispatch(updateTable(newTable));
+              }}
+            >
+              <div className="gs-menu-name">
+                Remove {width} column{width > 0 && "s"}
+              </div>
+            </li>
+          )}
+
+          {(historyIndex > -1 || historyIndex < table.getHistorySize() - 1) && (
+            <li className="gs-menu-divider" />
+          )}
+
+          {historyIndex > -1 && (
+            <li
+              onClick={async () => {
+                dispatch(undo(null));
+              }}
+            >
+              <div className="gs-menu-name">Undo</div>
+              <div className="gs-menu-shortcut">
+                <span className="gs-menu-underline">Z</span>
+              </div>
+            </li>
+          )}
+          {historyIndex < table.getHistorySize() - 1 && (
+            <li
+              onClick={async () => {
+                dispatch(redo(null));
+              }}
+            >
+              <div className="gs-menu-name">Redo</div>
+              <div className="gs-menu-shortcut">
+                <span className="gs-menu-underline">R</span>
+              </div>
+            </li>
+          )}
+        </ul>
+      </ContextMenuLayout>
+    </ContextMenuModalLayout>
   );
 };

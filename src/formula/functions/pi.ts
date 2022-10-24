@@ -8,10 +8,13 @@ export class PiFunction extends BaseFunction {
 
   protected validate() {
     if (this.args.length !== 0) {
-      throw new FormulaError("N/A", "Number of arguments for PI is incorrect.");
+      throw new FormulaError(
+        "#N/A",
+        "Number of arguments for PI is incorrect."
+      );
     }
   }
-  // @ts-ignore
+
   protected main() {
     return Math.PI;
   }

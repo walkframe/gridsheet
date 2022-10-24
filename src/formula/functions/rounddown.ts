@@ -22,13 +22,13 @@ export class RounddownFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 1 && this.args.length !== 2) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for ROUNDDOWN is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
+    this.args = this.args.map((arg) => ensureNumber(arg));
   }
-  // @ts-ignore
+
   protected main(value: number, digit = 0) {
     const multiplier = Math.pow(10, digit);
     return Math.floor(value * multiplier) / multiplier;

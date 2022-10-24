@@ -15,13 +15,13 @@ export class LenFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 1) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for LEN is incorrect."
       );
     }
-    this.args = [ensureString(this.args[0], this.base)];
+    this.args = [ensureString(this.args[0])];
   }
-  // @ts-ignore
+
   protected main(text: string) {
     return text.length;
   }

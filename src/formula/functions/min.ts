@@ -1,5 +1,6 @@
-import { solveMatrix, FormulaError } from "../evaluator";
-import { UserTable } from "../../api/tables";
+import { FormulaError } from "../evaluator";
+import { solveTable } from "../solver";
+import { Table } from "../../api/table";
 import { BaseFunction } from "./__base";
 import { ensureNumber } from "./__utils";
 
@@ -19,25 +20,25 @@ export class MinFunction extends BaseFunction {
   protected validate() {
     if (this.args.length === 0) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments must be greater than 0."
       );
     }
     const spreaded: number[] = [];
     this.args.map((arg) => {
-      if (arg instanceof UserTable) {
+      if (arg instanceof Table) {
         spreaded.push(
-          ...solveMatrix(arg, this.base)
+          ...solveTable({ table: arg })
             .reduce((a, b) => a.concat(b))
             .filter((v: any) => typeof v === "number")
         );
         return;
       }
-      spreaded.push(ensureNumber(arg, this.base));
+      spreaded.push(ensureNumber(arg));
     });
     this.args = spreaded;
   }
-  // @ts-ignore
+
   protected main(...values: number[]) {
     if (values.length === 0) {
       return 0;

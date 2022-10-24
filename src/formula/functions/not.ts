@@ -17,15 +17,15 @@ export class NotFunction extends BaseFunction {
 
   protected validate() {
     if (this.args.length === 1) {
-      this.args[0] = ensureBoolean(this.args[0], this.base);
+      this.args[0] = ensureBoolean(this.args[0]);
       return;
     }
     throw new FormulaError(
-      "N/A",
+      "#N/A",
       "Number of arguments for NOT is incorrect. 1 argument must be specified."
     );
   }
-  // @ts-ignore
+
   protected main(v1: boolean) {
     return !v1;
   }

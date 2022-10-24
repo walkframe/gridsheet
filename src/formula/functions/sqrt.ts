@@ -16,16 +16,16 @@ export class SqrtFunction extends BaseFunction {
   protected validate() {
     if (this.args.length !== 1) {
       throw new FormulaError(
-        "N/A",
+        "#N/A",
         "Number of arguments for SQRT is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg, this.base));
+    this.args = this.args.map((arg) => ensureNumber(arg));
     if (this.args[0] < 0) {
       throw new FormulaError("NUM!", "First argument must be positive.");
     }
   }
-  // @ts-ignore
+
   protected main(value: number) {
     return Math.sqrt(value);
   }
