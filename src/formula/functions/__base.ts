@@ -2,7 +2,7 @@ import { Table } from "../../api/table";
 
 export type FunctionProps = {
   args: any[];
-  base: Table;
+  table: Table;
 };
 
 export class BaseFunction {
@@ -10,11 +10,11 @@ export class BaseFunction {
   public helpTexts = ["Function's description."];
   public helpArgs = [{ name: "value1", description: "" }];
   protected args: any[];
-  protected base: Table;
+  protected table: Table;
 
-  constructor({ args, base }: FunctionProps) {
-    this.args = args.map((a) => a.evaluate(base));
-    this.base = base;
+  constructor({ args, table: table }: FunctionProps) {
+    this.args = args.map((a) => a.evaluate(table));
+    this.table = table;
   }
   protected validate() {}
 

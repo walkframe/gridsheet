@@ -285,13 +285,11 @@ export class Lexer {
   private index: number;
   public tokens: Token[] = [];
   private formula: string;
-  private base: typeof Table;
 
-  constructor(formula: string, base = Table) {
+  constructor(formula: string) {
     this.formula = formula;
     this.index = 0;
     this.tokens = [];
-    this.base = base;
   }
 
   private isWhiteSpace() {
@@ -507,10 +505,8 @@ export class Parser {
   public index = 0;
   public depth = 0;
   public tokens: Token[];
-  private base: typeof Table;
-  constructor(tokens: Token[], base = Table) {
+  constructor(tokens: Token[]) {
     this.tokens = tokens;
-    this.base = base;
   }
   public build() {
     const { expr } = this.parse(false);

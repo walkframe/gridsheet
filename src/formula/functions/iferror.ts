@@ -21,11 +21,11 @@ export class IfErrorFunction {
     },
   ];
   private args: any[];
-  private base: Table;
+  private table: Table;
 
-  constructor({ args, base }: FunctionProps) {
+  constructor({ args, table }: FunctionProps) {
     this.args = args;
-    this.base = base;
+    this.table = table;
   }
 
   protected validate() {
@@ -42,9 +42,9 @@ export class IfErrorFunction {
     this.validate();
     const [value, valueIfError] = this.args;
     try {
-      return value.evaluate(this.base);
+      return value.evaluate(this.table);
     } catch (e) {
-      return valueIfError ? valueIfError.evaluate(this.base) : null;
+      return valueIfError ? valueIfError.evaluate(this.table) : null;
     }
   }
 }

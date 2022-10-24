@@ -47,11 +47,11 @@ export class SumifFunction extends BaseFunction {
         bottom: top + sumRange.getNumRows(),
         right: left + sumRange.getNumCols(),
       };
-      sumMatrix = solveTable(this.base.trim(area));
+      sumMatrix = solveTable(this.table.trim(area));
     }
     let total = 0;
-    conditionMatrix.map((row, y) =>
-      row.map((c, x) => {
+    conditionMatrix.forEach((row, y) =>
+      row.forEach((c, x) => {
         const s = sumMatrix[y]?.[x] || 0;
         if (typeof s === "number" && check(c, condition)) {
           total += s;

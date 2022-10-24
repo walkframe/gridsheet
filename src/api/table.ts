@@ -310,7 +310,7 @@ export class UserTable {
         matrix[y - top][x - left] = evaluates
           ? solveFormula({
               value: cell[key],
-              base: this.base as Table,
+              table: Table.cast(this),
               raise,
             })
           : cell[key];
@@ -333,7 +333,7 @@ export class UserTable {
           result[p2a({ y, x })] = evaluates
             ? solveFormula({
                 value: cell[key],
-                base: this.base as Table,
+                table: Table.cast(this),
                 raise,
               })
             : cell[key];
@@ -359,7 +359,7 @@ export class UserTable {
           row[x2c(x) || y2r(y)] = evaluates
             ? solveFormula({
                 value: cell[key],
-                base: this.base as Table,
+                table: Table.cast(this),
                 raise,
               })
             : cell[key];
@@ -385,7 +385,7 @@ export class UserTable {
           col[y2r(y) || x2c(x)] = evaluates
             ? solveFormula({
                 value: cell[key],
-                base: this.base as Table,
+                table: Table.cast(this),
                 raise,
               })
             : cell[key];
@@ -418,7 +418,7 @@ export class UserTable {
             value: evaluates
               ? solveFormula({
                   value: cell?.value,
-                  base: this.base as Table,
+                  table: Table.cast(this),
                   raise,
                 })
               : cell?.value,
@@ -444,7 +444,7 @@ export class UserTable {
             value: evaluates
               ? solveFormula({
                   value: cell?.value,
-                  base: this.base as Table,
+                  table: Table.cast(this),
                   raise,
                 })
               : cell?.value,
@@ -472,7 +472,7 @@ export class UserTable {
             value: evaluates
               ? solveFormula({
                   value: cell?.value,
-                  base: this.base as Table,
+                  table: Table.cast(this),
                   raise,
                 })
               : cell?.value,
@@ -500,7 +500,7 @@ export class UserTable {
             value: evaluates
               ? solveFormula({
                   value: cell?.value,
-                  base: this.base as Table,
+                  table: Table.cast(this),
                   raise,
                 })
               : cell?.value,
@@ -978,7 +978,7 @@ export class Table extends UserTable {
     if (s[0] === "=") {
       if (evaluates) {
         return String(
-          solveFormula({ value: s, base: this.base as Table, raise: false })
+          solveFormula({ value: s, table: Table.cast(this), raise: false })
         );
       }
       const lexer = new Lexer(s.substring(1));
@@ -1145,7 +1145,7 @@ export class Table extends UserTable {
     return labeler?.(n);
   }
   getBase() {
-    return this.base as Table;
+    return Table.cast(this);
   }
   getSolvedCache(key: string) {
     return this.solvedCaches[key];

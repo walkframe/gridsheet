@@ -3,6 +3,7 @@ import { CellType, PointType, WriterType } from "../types";
 import { Table } from "../api/table";
 import { solveFormula } from "../formula/solver";
 import { FormulaError } from "../formula/evaluator";
+import { p2a } from "../api/converters";
 
 type Condition = (value: any) => boolean;
 type Stringify = (value: any) => string;
@@ -23,6 +24,18 @@ export class Renderer {
     const { condition, complement } = props;
     this.condition = condition;
     this.complement = complement;
+  }
+
+  public render(table: Table, point: PointType, writer?: WriterType): any {
+    const address = p2a(point);
+    //const cache = table.getSolvedCache(address);
+    const value = table.getByPoint(point)?.value;
+    const { y, x } = point;
+    return this._render(
+      value,
+      table.trim({ top: y, left: x, bottom: y, right: x }),
+      writer
+    );
   }
 
   public _render(value: any, table: Table, writer?: WriterType): any {
@@ -66,12 +79,6 @@ export class Renderer {
     return "";
   }
 
-  public render(table: Table, point: PointType, writer?: WriterType): any {
-    const cell = table.getByPoint(point);
-    const { value } = cell || {};
-    return this._render(value, table, writer);
-  }
-
   public stringify(cell: CellType): string {
     const { value } = cell;
     if (value instanceof Date) {
@@ -88,7 +95,7 @@ export class Renderer {
       return value.substring(1);
     }
     if (value[0] === "=") {
-      const result = solveFormula({ value, base: table, raise: true });
+      const result = solveFormula({ value, table: table, raise: true });
 
       if (result == null) {
         return "";

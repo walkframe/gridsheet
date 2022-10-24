@@ -2,22 +2,50 @@ import { Special } from "../constants";
 import { Table } from "../api/table";
 import { MatrixType } from "../types";
 import { FormulaError, Lexer, Parser } from "./evaluator";
+import { p2a } from "../api/converters";
 
 const SOLVING = new Special("solving");
 
 export const solveFormula = ({
   value,
-  base,
+  table,
   raise = true,
 }: {
   value: any;
-  base: Table;
+  table: Table;
   raise?: boolean;
 }) => {
   let solved = value;
   if (typeof value === "string") {
     if (value.charAt(0) === "=") {
-      const cache = base.getSolvedCache(value);
+      try {
+        const lexer = new Lexer(value.substring(1));
+        lexer.tokenize();
+        const parser = new Parser(lexer.tokens);
+        const expr = parser.build();
+        solved = expr?.evaluate?.({ base: table });
+      } catch (e) {
+        if (raise) {
+          throw e;
+        }
+        return null;
+      }
+    }
+  }
+  if (solved instanceof Table) {
+    solved = solveTable(solved, raise)[0][0];
+  }
+  return solved;
+};
+
+export const solveTable = (table: Table, raise = true): MatrixType => {
+  const area = table.getArea();
+  return table.getMatrixFlatten({ area, evaluates: false }).map((row, i) => {
+    const y = area.top + i;
+    return row.map((value, j) => {
+      const x = area.left + j;
+      const address = p2a({ y, x });
+      const cache = table.getSolvedCache(address);
 
       try {
         if (cache === SOLVING) {
@@ -26,37 +54,21 @@ export const solveFormula = ({
             "References are circulating.",
             new Error(value)
           );
+        } else if (cache instanceof FormulaError) {
+          throw cache;
         } else if (cache != null) {
           return cache;
         }
-        const lexer = new Lexer(value.substring(1));
-        lexer.tokenize();
-        const parser = new Parser(lexer.tokens);
-        const expr = parser.build();
-        base.setSolvedCache(value, SOLVING);
-        solved = expr?.evaluate?.({ base });
+        table.setSolvedCache(address, SOLVING);
+        const solved = solveFormula({ value, table, raise });
+        table.setSolvedCache(address, solved);
+        return solved;
       } catch (e) {
-        base.setSolvedCache(value, e);
+        table.setSolvedCache(address, e);
         if (raise) {
           throw e;
         }
-        solved = null;
       }
-    }
-  }
-  if (solved instanceof Table) {
-    solved = solveTable(solved)[0][0];
-  }
-  base.setSolvedCache(value, solved);
-  return solved;
-};
-
-export const solveTable = (table: Table): MatrixType => {
-  const area = table.getArea();
-  return table.getMatrixFlatten({ area, evaluates: false }).map((row) => {
-    return row.map((value) => {
-      const solved = solveFormula({ value, base: table.getBase() });
-      return solved;
     });
   });
 };

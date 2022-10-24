@@ -51,6 +51,8 @@ import { MinFunction } from "./functions/min";
 import { LenFunction } from "./functions/len";
 import { LenbFunction } from "./functions/lenb";
 import { UminusFunction } from "./functions/uminus";
+import { RowFunction } from "./functions/row";
+import { ColFunction } from "./functions/col";
 
 export const functions = {
   abs: AbsFunction,
@@ -89,6 +91,8 @@ export const functions = {
   not: NotFunction,
   vlookup: VlookupFunction,
   hlookup: HlookupFunction,
+  row: RowFunction,
+  col: ColFunction,
   now: NowFunction,
   rand: RandFunction,
   log: LogFunction,
