@@ -68,6 +68,7 @@ export const solveTable = (table: Table, raise = true): MatrixType => {
         if (raise) {
           throw e;
         }
+        return null;
       }
     });
   });
