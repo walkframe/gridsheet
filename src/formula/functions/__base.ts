@@ -12,7 +12,7 @@ export class BaseFunction {
   protected args: any[];
   protected table: Table;
 
-  constructor({ args, table: table }: FunctionProps) {
+  constructor({ args, table }: FunctionProps) {
     this.args = args.map((a) => a.evaluate({ table }));
     this.table = table;
   }

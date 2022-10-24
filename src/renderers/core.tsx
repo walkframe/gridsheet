@@ -95,7 +95,7 @@ export class Renderer {
       return value.substring(1);
     }
     if (value[0] === "=") {
-      const result = solveFormula({ value, table: table, raise: true });
+      const result = solveFormula({ value, table, raise: true });
 
       if (result == null) {
         return "";
