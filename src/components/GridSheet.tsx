@@ -146,7 +146,8 @@ const estimateSheetHeight = (
   let estimatedHeight = options.headerHeight || HEADER_HEIGHT;
   for (let y = 0; y < auto.numRows; y++) {
     const row = y2r(y);
-    const height = initial?.[row]?.height || DEFAULT_HEIGHT;
+    const height =
+      initial?.[row]?.height || initial?.default?.height || DEFAULT_HEIGHT;
     if (estimatedHeight + height > SHEET_HEIGHT) {
       return SHEET_HEIGHT;
     }
@@ -163,7 +164,8 @@ const estimateSheetWidth = (
   let estimatedWidth = options.headerWidth || HEADER_WIDTH;
   for (let x = 0; x < auto.numCols; x++) {
     const col = x2c(x);
-    const width = initial?.[col]?.width || DEFAULT_WIDTH;
+    const width =
+      initial?.[col]?.width || initial?.default?.width || DEFAULT_WIDTH;
     if (estimatedWidth + width > SHEET_WIDTH) {
       return SHEET_WIDTH;
     }
