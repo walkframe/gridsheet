@@ -28,8 +28,8 @@ export class Renderer {
 
   public render(table: Table, point: PointType, writer?: WriterType): any {
     const address = p2a(point);
-    //const cache = table.getSolvedCache(address);
-    const value = table.getByPoint(point)?.value;
+    const cache = table.getSolvedCache(address);
+    const value = cache || table.getByPoint(point)?.value;
     const { y, x } = point;
     return this._render(
       value,
