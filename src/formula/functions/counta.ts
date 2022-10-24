@@ -20,7 +20,9 @@ export class CountaFunction extends BaseFunction {
     const spreaded: any[] = [];
     this.args.map((arg) => {
       if (arg instanceof Table) {
-        spreaded.push(...solveTable(arg).reduce((a, b) => a.concat(b)));
+        spreaded.push(
+          ...solveTable({ table: arg }).reduce((a, b) => a.concat(b))
+        );
         return;
       }
       spreaded.push(ensureNumber(arg));

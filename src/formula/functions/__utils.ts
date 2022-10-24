@@ -73,7 +73,7 @@ export const ensureBoolean = (
 
 export const stripTable = (value: any, y = 0, x = 0) => {
   if (value instanceof Table) {
-    return solveTable(value)[y][x];
+    return solveTable({ table: value })[y][x];
   }
   return value;
 };

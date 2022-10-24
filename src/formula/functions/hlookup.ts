@@ -45,7 +45,7 @@ export class HlookupFunction extends BaseFunction {
   }
 
   protected main(key: any, range: Table, index: number, isSorted: boolean) {
-    const matrix = solveTable(range);
+    const matrix = solveTable({ table: range });
     if (isSorted) {
       let last = -1;
       for (let x = 0; x <= range.getNumCols(); x++) {

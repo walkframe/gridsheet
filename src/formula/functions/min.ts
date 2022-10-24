@@ -28,7 +28,7 @@ export class MinFunction extends BaseFunction {
     this.args.map((arg) => {
       if (arg instanceof Table) {
         spreaded.push(
-          ...solveTable(arg)
+          ...solveTable({ table: arg })
             .reduce((a, b) => a.concat(b))
             .filter((v: any) => typeof v === "number")
         );

@@ -33,12 +33,18 @@ export const solveFormula = ({
     }
   }
   if (solved instanceof Table) {
-    solved = solveTable(solved, raise)[0][0];
+    solved = solveTable({ table: solved, raise })[0][0];
   }
   return solved;
 };
 
-export const solveTable = (table: Table, raise = true): MatrixType => {
+export const solveTable = ({
+  table,
+  raise = true,
+}: {
+  table: Table;
+  raise?: boolean;
+}): MatrixType => {
   const area = table.getArea();
   return table.getMatrixFlatten({ area, evaluates: false }).map((row, i) => {
     const y = area.top + i;

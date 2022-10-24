@@ -668,10 +668,12 @@ export class UserTable {
         const fromX = leftFrom + (j % maxWidth);
         const slideY = toY - fromY;
         const slideX = toX - fromX;
-        const cell = this.getByPoint({
-          y: topFrom + (i % maxHeight),
-          x: leftFrom + (j % maxWidth),
-        });
+        const cell = {
+          ...this.getByPoint({
+            y: topFrom + (i % maxHeight),
+            x: leftFrom + (j % maxWidth),
+          }),
+        };
         const value = convertFormulaAbsolute(
           cell?.value,
           Table.cast(this),
