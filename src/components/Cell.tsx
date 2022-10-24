@@ -211,22 +211,22 @@ const getCellStyle = (
   if (top === y && left <= x && x <= right) {
     style.borderTopStyle = cutting ? "dotted" : "dashed";
     style.borderTopWidth = "2px";
-    style.borderColor = "#0077ff";
+    style.borderTopColor = "#0077ff";
   }
   if (bottom === y && left <= x && x <= right) {
     style.borderBottomStyle = cutting ? "dotted" : "dashed";
     style.borderBottomWidth = "2px";
-    style.borderColor = "#0077ff";
+    style.borderBottomColor = "#0077ff";
   }
   if (left === x && top <= y && y <= bottom) {
     style.borderLeftStyle = cutting ? "dotted" : "dashed";
     style.borderLeftWidth = "2px";
-    style.borderColor = "#0077ff";
+    style.borderLeftColor = "#0077ff";
   }
   if (right === x && top <= y && y <= bottom) {
     style.borderRightStyle = cutting ? "dotted" : "dashed";
     style.borderRightWidth = "2px";
-    style.borderColor = "#0077ff";
+    style.borderRightColor = "#0077ff";
   }
   return style;
 };
