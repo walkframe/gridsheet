@@ -3,7 +3,7 @@ import { FormulaError } from "../evaluator";
 import { BaseFunction } from "./__base";
 
 export class ColFunction extends BaseFunction {
-  example = "Col(A9)";
+  example = "COL(A9)";
   helpText = ["Returns the col number of a specified cell."];
   helpArgs = [
     {
