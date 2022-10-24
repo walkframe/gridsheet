@@ -15,7 +15,7 @@ export const clip = (store: StoreType): AreaType => {
   const input = editorRef.current;
   const trimmed = table.trim(area);
   const matrix = solveTable({ table: trimmed, raise: false });
-  const tsv = matrix2tsv(table, matrix, { y, x });
+  const tsv = matrix2tsv({ table, matrix, point: choosing });
   if (input != null) {
     input.value = tsv;
     input.focus();
