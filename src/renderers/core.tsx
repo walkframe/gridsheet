@@ -4,6 +4,7 @@ import { Table } from "../api/table";
 import { solveFormula } from "../formula/solver";
 import { FormulaError } from "../formula/evaluator";
 import { p2a } from "../api/converters";
+import { format as formatDate } from "date-fns";
 
 type Condition = (value: any) => boolean;
 type Stringify = (value: any) => string;
@@ -14,6 +15,8 @@ type Props = {
 };
 
 export class Renderer {
+  public datetimeFormat: string = "yyyy-MM-dd HH:mm:ss";
+  public dateFormat: string = "yyyy-MM-dd";
   private condition?: Condition;
   private complement?: Stringify;
 
@@ -133,9 +136,9 @@ export class Renderer {
 
   protected date(value: Date, writer?: WriterType): any {
     if (value.getHours() + value.getMinutes() + value.getSeconds() === 0) {
-      return value.toLocaleDateString();
+      return formatDate(value, this.dateFormat);
     }
-    return value.toLocaleString();
+    return formatDate(value, this.datetimeFormat);
   }
 
   protected array(value: any[], writer?: WriterType): any {
