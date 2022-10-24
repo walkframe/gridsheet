@@ -42,32 +42,38 @@ export type HistoryMoveType = {
   lostRows: RowByAddress<Id>;
 };
 
-export type HistoryAddRowType = {
-  operation: "ADD_ROW";
+export type HistoryAddRowsType = {
+  operation: "ADD_ROWS";
+  reflection?: StoreReflectionType;
+  y: number;
+  numRows: number;
+  idMatrix: IdMatrix;
+  // TODO: add
+  // diffBefore: CellsByIdType;
+  // diffAfter: CellsByIdType;
+};
+
+export type HistoryRemoveRowsType = {
+  operation: "REMOVE_ROWS";
   reflection?: StoreReflectionType;
   y: number;
   numRows: number;
   idMatrix: IdMatrix;
 };
 
-export type HistoryRemoveRowType = {
-  operation: "REMOVE_ROW";
-  reflection?: StoreReflectionType;
-  y: number;
-  numRows: number;
-  idMatrix: IdMatrix;
-};
-
-export type HistoryAddColType = {
-  operation: "ADD_COL";
+export type HistoryAddColsType = {
+  operation: "ADD_COLS";
   reflection?: StoreReflectionType;
   x: number;
   numCols: number;
   idMatrix: IdMatrix;
+  // TODO: add
+  // diffBefore: CellsByIdType;
+  // diffAfter: CellsByIdType;
 };
 
-export type HistoryRemoveColType = {
-  operation: "REMOVE_COL";
+export type HistoryRemoveColsType = {
+  operation: "REMOVE_COLS";
   reflection?: StoreReflectionType;
   x: number;
   numCols: number;
@@ -78,7 +84,7 @@ export type HistoryType =
   | HistoryUpdateType
   | HistoryMoveType
   | HistoryCopyType
-  | HistoryAddRowType
-  | HistoryRemoveRowType
-  | HistoryAddColType
-  | HistoryRemoveColType;
+  | HistoryAddRowsType
+  | HistoryRemoveRowsType
+  | HistoryAddColsType
+  | HistoryRemoveColsType;

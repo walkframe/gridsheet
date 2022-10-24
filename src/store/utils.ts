@@ -46,13 +46,13 @@ export const restrictPoints = (store: StoreType, table: Table) => {
 
 export const shouldTracking = (operation: string) => {
   switch (operation) {
-    case "ADD_ROW":
+    case "ADD_ROWS":
       return true;
-    case "ADD_COL":
+    case "ADD_COLS":
       return true;
-    case "REMOVE_ROW":
+    case "REMOVE_ROWS":
       return true;
-    case "REMOVE_COL":
+    case "REMOVE_COLS":
       return true;
     case "MOVE":
       return true;

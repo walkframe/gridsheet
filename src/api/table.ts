@@ -512,7 +512,11 @@ export class UserTable {
   }
 
   protected pushHistory(history: HistoryType) {
-    this.histories.splice(this.historyIndex + 1, this.histories.length);
+    const strayedHistories = this.histories.splice(
+      this.historyIndex + 1,
+      this.histories.length
+    );
+    strayedHistories.forEach(this.cleanStrayed.bind(this));
     this.histories.push(history);
     if (this.histories.length > this.historyLimit) {
       const kickedOut = this.histories.splice(0, 1)[0];
@@ -524,8 +528,8 @@ export class UserTable {
 
   private cleanObsolete(history: HistoryType) {
     if (
-      history.operation === "REMOVE_ROW" ||
-      history.operation === "REMOVE_COL"
+      history.operation === "REMOVE_ROWS" ||
+      history.operation === "REMOVE_COLS"
     ) {
       history.idMatrix.forEach((ids) => {
         ids.forEach((id) => {
@@ -535,6 +539,16 @@ export class UserTable {
     }
     if (history.operation === "MOVE") {
       history.lostRows.forEach((ids) => {
+        ids.forEach((id) => {
+          delete this.data[id];
+        });
+      });
+    }
+  }
+
+  private cleanStrayed(history: HistoryType) {
+    if (history.operation === "ADD_ROWS" || history.operation === "ADD_COLS") {
+      history.idMatrix.forEach((ids) => {
         ids.forEach((id) => {
           delete this.data[id];
         });
@@ -789,7 +803,10 @@ export class UserTable {
     return parser.parse(value, cell);
   }
 
-  public addRows({
+  // TODO: addRows, addRowsFlatten
+  // TODO: addCols, addColsFlatten
+
+  public addBlankRows({
     y,
     numRows,
     baseY,
@@ -809,6 +826,7 @@ export class UserTable {
     }
     const numCols = this.getNumCols(1);
     const rows: IdMatrix = [];
+    const changedAt = new Date();
     for (let i = 0; i < numRows; i++) {
       const row: Ids = [];
       for (let j = 0; j < numCols; j++) {
@@ -816,14 +834,14 @@ export class UserTable {
         row.push(id.toString(36));
         const cell = this.getByPoint({ y: baseY, x: j });
         const copied = this.copyCell(cell, baseY);
-        this.data[id.toString(36)] = copied;
+        this.data[id.toString(36)] = { ...copied, changedAt };
       }
       rows.push(row);
     }
     this.idMatrix.splice(y, 0, ...rows);
     this.area.bottom += numRows;
     this.pushHistory({
-      operation: "ADD_ROW",
+      operation: "ADD_ROWS",
       reflection,
       y,
       numRows,
@@ -850,7 +868,7 @@ export class UserTable {
     const rows = this.idMatrix.splice(y, numRows);
     this.area.bottom -= numRows;
     this.pushHistory({
-      operation: "REMOVE_ROW",
+      operation: "REMOVE_ROWS",
       reflection,
       y,
       numRows,
@@ -858,7 +876,7 @@ export class UserTable {
     });
     return this.shallowCopy({ copyCache: false });
   }
-  public addCols({
+  public addBlankCols({
     x,
     numCols,
     baseX,
@@ -878,6 +896,7 @@ export class UserTable {
     }
     const numRows = this.getNumRows(1);
     const rows: IdMatrix = [];
+    const changedAt = new Date();
     for (let i = 0; i < numRows; i++) {
       const row: Ids = [];
       for (let j = 0; j < numCols; j++) {
@@ -886,13 +905,13 @@ export class UserTable {
         const cell = this.getByPoint({ y: i, x: baseX });
         const copied = this.copyCell(cell, baseX);
         this.idMatrix[i].splice(x, 0, id.toString(36));
-        this.data[id.toString(36)] = copied;
+        this.data[id.toString(36)] = { ...copied, changedAt };
       }
       rows.push(row);
     }
     this.area.right += numCols;
     this.pushHistory({
-      operation: "ADD_COL",
+      operation: "ADD_COLS",
       reflection,
       x,
       numCols,
@@ -923,7 +942,7 @@ export class UserTable {
     });
     this.area.right -= numCols;
     this.pushHistory({
-      operation: "REMOVE_COL",
+      operation: "REMOVE_COLS",
       reflection,
       x,
       numCols,
@@ -1033,21 +1052,21 @@ export class Table extends UserTable {
       case "UPDATE":
         this.applyDiff(history.diffBefore!, history.partial);
         break;
-      case "ADD_ROW":
+      case "ADD_ROWS":
         this.idMatrix.splice(history.y, history.numRows);
         this.area.bottom -= history.numRows;
         break;
-      case "ADD_COL":
+      case "ADD_COLS":
         this.idMatrix.map((row) => {
           row.splice(history.x, history.numCols);
         });
         this.area.right -= history.numCols;
         break;
-      case "REMOVE_ROW":
+      case "REMOVE_ROWS":
         this.idMatrix.splice(history.y, 0, ...history.idMatrix);
         this.area.bottom += history.numRows;
         break;
-      case "REMOVE_COL":
+      case "REMOVE_COLS":
         this.idMatrix.map((row, i) => {
           row.splice(history.x, 0, ...history.idMatrix[i]);
         });
@@ -1091,21 +1110,21 @@ export class Table extends UserTable {
       case "UPDATE":
         this.applyDiff(history.diffAfter!, history.partial);
         break;
-      case "ADD_ROW":
+      case "ADD_ROWS":
         this.idMatrix.splice(history.y, 0, ...history.idMatrix);
         this.area.bottom += history.numRows;
         break;
-      case "ADD_COL":
+      case "ADD_COLS":
         this.idMatrix.map((row, i) => {
           row.splice(history.x, 0, ...history.idMatrix[i]);
         });
         this.area.right += history.numCols;
         break;
-      case "REMOVE_ROW":
+      case "REMOVE_ROWS":
         this.idMatrix.splice(history.y, history.numRows);
         this.area.bottom -= history.numRows;
         break;
-      case "REMOVE_COL":
+      case "REMOVE_COLS":
         this.idMatrix.map((row) => {
           row.splice(history.x, history.numCols);
         });
