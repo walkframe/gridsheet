@@ -23,7 +23,7 @@ export const solveFormula = ({
         lexer.tokenize();
         const parser = new Parser(lexer.tokens);
         const expr = parser.build();
-        solved = expr?.evaluate?.({ base: table });
+        solved = expr?.evaluate?.({ table });
       } catch (e) {
         if (raise) {
           throw e;

@@ -13,7 +13,7 @@ export class BaseFunction {
   protected table: Table;
 
   constructor({ args, table: table }: FunctionProps) {
-    this.args = args.map((a) => a.evaluate(table));
+    this.args = args.map((a) => a.evaluate({ table }));
     this.table = table;
   }
   protected validate() {}

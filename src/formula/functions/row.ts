@@ -26,7 +26,6 @@ export class RowFunction extends BaseFunction {
   }
 
   protected main(trimmed: Table) {
-    console.log({ trimmed });
     return trimmed.top;
   }
 }

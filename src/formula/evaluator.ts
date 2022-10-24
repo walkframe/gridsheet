@@ -3,7 +3,7 @@ import { a2p, x2c } from "../api/converters";
 import { Table } from "../api/table";
 
 type EvaluateProps = {
-  base: Table;
+  table: Table;
 };
 
 // strip sharp and dollars
@@ -37,19 +37,19 @@ class Entity<T = any> {
 }
 
 export class Value extends Entity {
-  public evaluate({ base }: EvaluateProps) {
+  public evaluate({ table }: EvaluateProps) {
     return this.value;
   }
 }
 
 export class Unreferenced extends Entity {
-  public evaluate({ base }: EvaluateProps) {
+  public evaluate({ table }: EvaluateProps) {
     throw new FormulaError("#REF!", `Reference does not exist.`);
   }
 }
 
 export class InvalidRef extends Entity {
-  public evaluate({ base }: EvaluateProps) {
+  public evaluate({ table }: EvaluateProps) {
     throw new FormulaError("#NAME?", `Invalid ref: ${this.value}`);
   }
 }
@@ -58,12 +58,12 @@ export class Ref extends Entity {
   constructor(value: string) {
     super(value.toUpperCase());
   }
-  public evaluate({ base }: EvaluateProps): Table {
+  public evaluate({ table }: EvaluateProps): Table {
     const { y, x } = a2p(this.value);
-    return base.trim({ top: y, left: x, bottom: y, right: x });
+    return table.trim({ top: y, left: x, bottom: y, right: x });
   }
-  public id(base: Table) {
-    const id = base.getIdByAddress(this.value);
+  public id(table: Table) {
+    const id = table.getIdByAddress(this.value);
     if (id) {
       return id;
     }
@@ -75,17 +75,17 @@ export class Range extends Entity<string> {
   constructor(value: string) {
     super(value.toUpperCase());
   }
-  public evaluate({ base }: EvaluateProps): Table {
-    const area = rangeToArea(this.complementRange(base));
-    return base.trim(area);
+  public evaluate({ table }: EvaluateProps): Table {
+    const area = rangeToArea(this.complementRange(table));
+    return table.trim(area);
   }
-  public idRange(base: Table) {
+  public idRange(table: Table) {
     return this.value
       .split(":")
-      .map((ref) => base.getIdByAddress(ref))
+      .map((ref) => table.getIdByAddress(ref))
       .join(":");
   }
-  private complementRange(base: Table) {
+  private complementRange(table: Table) {
     const cells = this.value.split(":");
     let [start = "", end = ""] = cells;
     if (!start.match(/[1-9]\d*/)) {
@@ -95,52 +95,52 @@ export class Range extends Entity<string> {
       start = "A" + start;
     }
     if (!end.match(/[1-9]\d*/)) {
-      end += base.getNumRows();
+      end += table.getNumRows();
     }
     if (!end.match(/[a-zA-Z]/)) {
-      end = x2c(base.getNumCols() + 1) + end;
+      end = x2c(table.getNumCols() + 1) + end;
     }
     return `${start}:${end}`;
   }
 }
 
 export class Id extends Entity {
-  public evaluate({ base }: EvaluateProps) {
+  public evaluate({ table }: EvaluateProps) {
     const id = getId(this.value);
-    const { y, x } = base.getPointById(id);
-    return base.trim({ top: y, left: x, bottom: y, right: x });
+    const { y, x } = table.getPointById(id);
+    return table.trim({ top: y, left: x, bottom: y, right: x });
   }
-  public ref(base: Table, slideY = 0, slideX = 0) {
-    return base.getAddressById(getId(this.value, false), slideY, slideX);
+  public ref(table: Table, slideY = 0, slideX = 0) {
+    return table.getAddressById(getId(this.value, false), slideY, slideX);
   }
-  public slide(base: Table, slideY = 0, slideX = 0) {
-    const address = this.ref(base, slideY, slideX);
+  public slide(table: Table, slideY = 0, slideX = 0) {
+    const address = this.ref(table, slideY, slideX);
     if (address == null || address.length < 2) {
       return "#REF!";
     }
-    return base.getIdByAddress(address);
+    return table.getIdByAddress(address);
   }
 }
 
 export class IdRange extends Entity<string> {
-  public evaluate({ base }: EvaluateProps): Table {
+  public evaluate({ table }: EvaluateProps): Table {
     const ids = this.value.split(":");
     const [p1, p2] = ids
       .map((id) => getId(id))
-      .map((id) => base.getPointById(id));
-    return base.trim({ top: p1.y, left: p1.x, bottom: p2.y, right: p2.x });
+      .map((id) => table.getPointById(id));
+    return table.trim({ top: p1.y, left: p1.x, bottom: p2.y, right: p2.x });
   }
-  public range(base: Table, slideY = 0, slideX = 0) {
+  public range(table: Table, slideY = 0, slideX = 0) {
     return this.value
       .split(":")
       .map((id) => getId(id, false))
-      .map((id) => base.getAddressById(id, slideY, slideX))
+      .map((id) => table.getAddressById(id, slideY, slideX))
       .join(":");
   }
 
-  public slide(base: Table, slideY = 0, slideX = 0) {
-    const range = this.range(base, slideY, slideX);
-    return new Range(range).idRange(base);
+  public slide(table: Table, slideY = 0, slideX = 0) {
+    const range = this.range(table, slideY, slideX);
+    return new Range(range).idRange(table);
   }
 }
 
@@ -154,13 +154,13 @@ export class Function {
     this.args = [];
   }
 
-  public evaluate({ base }: EvaluateProps): any {
+  public evaluate({ table }: EvaluateProps): any {
     const name = this.name.toLowerCase();
-    const Func = base.getFunction(name);
+    const Func = table.getFunction(name);
     if (Func == null) {
       throw new FormulaError("#NAME?", `Unknown function: ${name}`);
     }
-    const func = new Func({ args: this.args, base });
+    const func = new Func({ args: this.args, table });
     return func.call();
   }
 }
@@ -296,12 +296,12 @@ export class Lexer {
     return isWhiteSpace(this.formula[this.index]);
   }
 
-  private next(base = 1) {
-    this.index += base;
+  private next(table = 1) {
+    this.index += table;
   }
 
-  private get(base = 0) {
-    const c = this.formula[this.index + base];
+  private get(table = 0) {
+    const c = this.formula[this.index + table];
     return c;
   }
 
@@ -610,7 +610,7 @@ export class Parser {
 
 export const convertFormulaAbsolute = (
   value: any,
-  base: Table,
+  table: Table,
   slideY = 0,
   slideX = 0
 ) => {
@@ -618,7 +618,7 @@ export const convertFormulaAbsolute = (
     if (value.charAt(0) === "=") {
       const lexer = new Lexer(value.substring(1));
       lexer.tokenize();
-      return "=" + lexer.stringifyToId(base, slideY, slideX);
+      return "=" + lexer.stringifyToId(table, slideY, slideX);
     }
   }
   return value;
