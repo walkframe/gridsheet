@@ -89,10 +89,10 @@ export const GridSheet: React.FC<Props> = ({
   const [store, dispatch] = React.useReducer(reducer, initialState);
 
   const [sheetHeight, setSheetHeight] = React.useState(
-    estimateSheetHeight(options, initial)
+    options.sheetHeight || estimateSheetHeight(options, initial)
   );
   const [sheetWidth, setSheetWidth] = React.useState(
-    estimateSheetWidth(options, initial)
+    options.sheetWidth || estimateSheetWidth(options, initial)
   );
   React.useEffect(() => {
     setInterval(() => {

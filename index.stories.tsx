@@ -211,6 +211,11 @@ export const showIndex = () => {
         additionalFunctions={{
           hope: HopeFunction,
         }}
+        options={
+          {
+            // sheetWidth: 1000,
+          }
+        }
       />
 
       <GridSheet
@@ -261,6 +266,7 @@ export const showIndex = () => {
         options={{
           // cellLabel: false,
           // headerWidth: 50,
+
           numCols: 10,
           numRows: 10,
           headerHeight: 40,
