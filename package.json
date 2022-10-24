@@ -1,6 +1,6 @@
 {
   "name": "react-gridsheet",
-  "version": "0.8.0-rc.0",
+  "version": "0.8.0-rc.1",
   "description": "ReactGridsheet is a react component like spreadsheet.",
   "main": "dist/index.js",
   "module": "dist/index.js",
