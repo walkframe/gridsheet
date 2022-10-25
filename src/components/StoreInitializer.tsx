@@ -9,7 +9,7 @@ import {
   setHeaderHeight,
   setHeaderWidth,
   setEditingOnEnter,
-  setCellLabel,
+  setShowAddress,
   setOnSave,
   initializeTable,
 } from "../store/actions";
@@ -18,6 +18,7 @@ import { HEADER_HEIGHT, HEADER_WIDTH, HISTORY_LIMIT } from "../constants";
 import { a2p } from "../api/converters";
 import { Table } from "../api/table";
 import { functions } from "../formula/mapping";
+import { getMaxSizesFromCells } from "../api/structs";
 
 export const StoreInitializer: React.FC<Props> = ({
   initial = {},
@@ -27,13 +28,11 @@ export const StoreInitializer: React.FC<Props> = ({
   const {
     headerHeight = HEADER_HEIGHT,
     headerWidth = HEADER_WIDTH,
-    numRows = 0,
-    numCols = 0,
     historyLimit = HISTORY_LIMIT,
     sheetHeight,
     sheetWidth,
     editingOnEnter,
-    cellLabel,
+    showAddress: showAddress,
     renderers,
     parsers,
     labelers,
@@ -47,7 +46,7 @@ export const StoreInitializer: React.FC<Props> = ({
   const { store, dispatch } = React.useContext(Context);
 
   React.useEffect(() => {
-    const auto = getMaxSizeFromCells(numRows, numCols, initial);
+    const auto = getMaxSizesFromCells(initial);
     const table = new Table({
       numRows: auto.numRows,
       numCols: auto.numCols,
@@ -90,32 +89,14 @@ export const StoreInitializer: React.FC<Props> = ({
     }
   }, [editingOnEnter]);
   React.useEffect(() => {
-    if (typeof cellLabel !== "undefined") {
-      dispatch(setCellLabel(cellLabel));
+    if (typeof showAddress !== "undefined") {
+      dispatch(setShowAddress(showAddress));
     }
-  }, [cellLabel]);
+  }, [showAddress]);
   React.useEffect(() => {
     if (typeof onSave !== "undefined") {
       dispatch(setOnSave(onSave));
     }
   }, [onSave]);
   return <></>;
-};
-
-const getMaxSizeFromCells = (
-  sizeY = 0,
-  sizeX = 0,
-  cells: CellsByAddressType = {}
-) => {
-  let [lastY, lastX] = [sizeY, sizeX];
-  Object.keys(cells).map((address) => {
-    const { y, x } = a2p(address);
-    if (lastY < y) {
-      lastY = y;
-    }
-    if (lastX < x) {
-      lastX = x;
-    }
-  });
-  return { numRows: lastY, numCols: lastX };
 };

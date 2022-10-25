@@ -131,13 +131,11 @@ export class UserTable {
         const colId = x2c(x);
         const colDefault = cells[colId];
         const cell = cells[address];
-        const value = convertFormulaAbsolute(cell?.value, Table.cast(this));
         const stacked = {
           ...common,
           ...rowDefault,
           ...colDefault,
           ...cell,
-          value,
           style: {
             ...common?.style,
             ...rowDefault?.style,
@@ -145,6 +143,10 @@ export class UserTable {
             ...cell?.style,
           },
         } as CellType;
+        stacked.value = convertFormulaAbsolute(
+          stacked?.value,
+          Table.cast(this)
+        );
         if (y === 0) {
           if (stacked.width == null) {
             stacked.width = DEFAULT_WIDTH;

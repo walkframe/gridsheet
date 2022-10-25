@@ -6,11 +6,11 @@ import {
   PointType,
   Y,
   X,
-  Height,
-  Width,
   CellsByAddressType,
-  RowByAddress,
+  LostRowByAddress,
   ShapeType,
+  Address,
+  MatrixesByAddress,
 } from "../types";
 import { a2p, p2a } from "./converters";
 
@@ -163,7 +163,7 @@ export const aa2oa = (
 };
 
 export const fillMatrix = <T = any>(dst: T[][], src: T[][], area: AreaType) => {
-  const lostRows: RowByAddress<T> = new Map();
+  const lostRows: LostRowByAddress<T> = new Map();
   const { top, left, bottom, right } = area;
   const { height: dstNumRows, width: dstNumCols } = matrixShape(dst, 1);
   for (let y = top; y <= bottom; y++) {
@@ -200,6 +200,9 @@ export const matrixIntoCells = (
   cells: CellsByAddressType,
   origin = "A1"
 ) => {
+  console.warn(
+    "matrixIntoCells will be deleted in the next version. Use 'generateInitial'."
+  );
   const { y: baseY, x: baseX } = a2p(origin);
   matrix.map((row, y) => {
     row.map((value, x) => {
@@ -213,12 +216,45 @@ export const matrixIntoCells = (
   return cells;
 };
 
-export const getMaxSizeFromCells = (
-  sizeY = 0,
-  sizeX = 0,
-  cells: CellsByAddressType = {}
-) => {
-  let [lastY, lastX] = [sizeY, sizeX];
+export const generateInitial = ({
+  cells = {},
+  ensured = {},
+  matrixes = {},
+}: {
+  cells?: CellsByAddressType;
+  ensured?: {
+    numRows?: number;
+    numCols?: number;
+  };
+  matrixes?: MatrixesByAddress<any>;
+} = {}) => {
+  Object.keys(matrixes).forEach((address) => {
+    const matrix = matrixes[address];
+    const { y: baseY, x: baseX } = a2p(address);
+    matrix.map((row, y) => {
+      row.map((value, x) => {
+        const id = p2a({ y: baseY + y, x: baseX + x });
+        if (typeof value !== "undefined") {
+          const cell = cells[id];
+          cells[id] = { value, ...cell };
+        }
+      });
+    });
+  });
+
+  const { numRows, numCols } = Object.assign(
+    { numRows: 1, numCols: 1 },
+    ensured
+  );
+  const rightBottom = p2a({ y: numRows, x: numCols });
+  if (cells[rightBottom] == null) {
+    cells[rightBottom] = {};
+  }
+  return cells;
+};
+
+export const getMaxSizesFromCells = (cells: CellsByAddressType = {}) => {
+  let [lastY, lastX] = [0, 0];
   Object.keys(cells).map((address) => {
     const { y, x } = a2p(address);
     if (lastY < y) {

@@ -157,7 +157,8 @@ export const tsv2matrix = (tsv: string): string[][] => {
 export const a2p = (address: Address): PointType => {
   const m = address.match(/(\$)?([A-Z]*)(\$)?([0-9]*)/);
   if (m == null) {
-    return { y: 0, x: 0 };
+    console.error("invalid address", address);
+    return { y: 1, x: 1 };
   }
   const [_, absoluteCol, col, absoluteRow, row] = m.slice();
   return { y: r2y(row, !!absoluteRow) || 0, x: c2x(col, !!absoluteCol) || 0 };

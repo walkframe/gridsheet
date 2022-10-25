@@ -9,14 +9,17 @@ import { FeedbackType, FeedbackTypeForMatrix } from "../types";
 
 type Props = {
   onChange?: FeedbackType;
-  onChangeDiff?: FeedbackType;
-  onChangeDiffNumMatrix?: FeedbackTypeForMatrix;
   onSelect?: FeedbackType;
 };
 
 export const Emitter: React.FC<Props> = ({ onChange, onSelect }) => {
   const { store, dispatch } = React.useContext(Context);
-  const { choosing: pointing, selectingZone: zone, table } = store;
+  const {
+    choosing: pointing,
+    selectingZone: zone,
+    table,
+    tableInitialized,
+  } = store;
 
   React.useEffect(() => {
     rerenderCells({
@@ -27,13 +30,15 @@ export const Emitter: React.FC<Props> = ({ onChange, onSelect }) => {
   }, [table]);
 
   React.useEffect(() => {
-    onChange &&
+    tableInitialized &&
+      table &&
+      onChange &&
       onChange(table, {
         pointing,
         selectingFrom: { y: zone.startY, x: zone.startX },
         selectingTo: { y: zone.endY, x: zone.endX },
       });
-  }, [onChange, table]);
+  }, [table]);
 
   React.useEffect(() => {
     onSelect &&
@@ -42,7 +47,7 @@ export const Emitter: React.FC<Props> = ({ onChange, onSelect }) => {
         selectingFrom: { y: zone.startY, x: zone.startX },
         selectingTo: { y: zone.endY, x: zone.endX },
       });
-  }, [onSelect, pointing, zone]);
+  }, [pointing, zone]);
   return <></>;
 };
 

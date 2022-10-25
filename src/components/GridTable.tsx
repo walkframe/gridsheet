@@ -38,10 +38,11 @@ export const GridTable = ({ tableRef }: Props) => {
     headerHeight,
     headerWidth,
     table,
+    tableInitialized,
   } = store;
 
   React.useEffect(() => {
-    if (tableRef) {
+    if (tableRef && tableInitialized) {
       tableRef.current = {
         table,
         dispatch: (table) => {

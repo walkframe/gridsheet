@@ -1,0 +1,56 @@
+name: test
+on:
+  push:
+    # 一旦保留
+    branches-ignore:
+      - '**'
+
+jobs:
+  build-storybook:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: setup
+        uses: actions/setup-node@v2.1.2
+        with:
+          node-version: "14" # 16
+      - name: cache
+        uses: actions/cache@v2.1.1
+        with:
+          path: |
+            node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+      - name: build
+        run: |
+          yarn install
+          yarn run build-storybook
+      - name: upload storybook
+        uses: actions/upload-artifact@v3
+        with:
+          name: storybook
+          path: ${{ github.workspace }}/storybook-static
+          retention-days: 1
+
+  run-tests:
+    needs: [build-storybook]
+    runs-on: ubuntu-latest
+    services:
+      nginx:
+        image: nginx:1.23.2
+        ports:
+          - 5233:80
+        volumes:
+          - ${{ github.workspace }}/storybook-static:/usr/share/nginx/html/
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v3
+        id: storybook
+        with:
+          name: storybook
+          path: ${{ github.workspace }}/storybook-static
+      - run: chmod -R 777 ${{ github.workspace }}/storybook-static/
+      - name: test
+        run: ls -l storybook-static
+      - name: test2
+        run: curl http://localhost:5233/?path=/story/basic--small
