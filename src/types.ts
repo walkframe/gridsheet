@@ -34,7 +34,7 @@ export type TableRef = {
 
 export type FeedbackType = (
   table: UserTable,
-  positions?: {
+  points?: {
     pointing: PointType;
     selectingFrom: PointType;
     selectingTo: PointType;
@@ -93,8 +93,6 @@ export type OptionsType = {
   labelers?: Labelers;
   onSave?: FeedbackType;
   onChange?: FeedbackType;
-  onChangeDiff?: FeedbackType;
-  onChangeDiffNumMatrix?: FeedbackTypeForMatrix;
   onSelect?: FeedbackType;
 };
 

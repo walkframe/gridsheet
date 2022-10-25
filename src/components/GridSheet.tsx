@@ -105,13 +105,7 @@ export const GridSheet: React.FC<Props> = ({
     }, 1000);
   }, []);
 
-  const {
-    onChange,
-    onChangeDiff,
-    onChangeDiffNumMatrix,
-    onSelect,
-    mode,
-  } = options;
+  const { onChange, onSelect, mode } = options;
   return (
     <GridSheetLayout
       ref={sheetRef}
@@ -127,12 +121,7 @@ export const GridSheet: React.FC<Props> = ({
         />
         <ContextMenu />
         <Resizer />
-        <Emitter
-          onChange={onChange}
-          onChangeDiff={onChangeDiff}
-          onChangeDiffNumMatrix={onChangeDiffNumMatrix}
-          onSelect={onSelect}
-        />
+        <Emitter onChange={onChange} onSelect={onSelect} />
       </Context.Provider>
     </GridSheetLayout>
   );
