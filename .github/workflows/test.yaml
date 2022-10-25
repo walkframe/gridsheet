@@ -30,6 +30,7 @@ jobs:
           retention-days: 1
 
   run-tests:
+    needs: [build-storybook]
     runs-on: ubuntu-latest
     container:
       image: nginx:1.23.2
