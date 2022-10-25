@@ -32,14 +32,15 @@ jobs:
   run-tests:
     needs: [build-storybook]
     runs-on: ubuntu-latest
-    container:
-      image: nginx:1.23.2
-      env:
-        NGINX_PORT: 5233
-      ports:
-        - 5233:5233
-      volumes:
-        - ${{ github.workspace }}/storybook-static:/usr/share/nginx/html
+    services:
+      nginx:
+        image: nginx:1.23.2
+        env:
+          NGINX_PORT: 5233
+        ports:
+          - 5233:5233
+        volumes:
+          - ${{ github.workspace }}/storybook-static:/usr/share/nginx/html
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v3
