@@ -195,6 +195,27 @@ export const cropMatrix = <T = any>(matrix: T[][], area: AreaType): T[][] => {
     .map((cols) => cols.slice(left, right + 1));
 };
 
+export const matrixIntoCells = (
+  matrix: MatrixType,
+  cells: CellsByAddressType,
+  origin = "A1"
+) => {
+  console.warn(
+    "matrixIntoCells will be deleted in the next version. Use 'generateInitial'."
+  );
+  const { y: baseY, x: baseX } = a2p(origin);
+  matrix.map((row, y) => {
+    row.map((value, x) => {
+      const id = p2a({ y: baseY + y, x: baseX + x });
+      if (typeof value !== "undefined") {
+        const cell = cells[id];
+        cells[id] = { value, ...cell };
+      }
+    });
+  });
+  return cells;
+};
+
 export const generateInitial = ({
   cells = {},
   ensured = {},
