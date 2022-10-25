@@ -22,6 +22,12 @@ jobs:
         run: |
           yarn install
           yarn run build-storybook
+      - name: upload storybook
+        uses: actions/upload-artifact@v3
+        with:
+          name: storybook
+          path: ${{ github.workspace }}/storybook-static
+          retention-days: 1
 
   run-tests:
     runs-on: ubuntu-latest
@@ -29,9 +35,15 @@ jobs:
       image: nginx:1.23.2
       env:
         NGINX_PORT: 5233
-      # volumes:
-        # - ./storybook-static:/usr/share/nginx/html
+      volumes:
+        - ${{ github.workspace }}/storybook-static:/usr/share/nginx/html
     steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v3
+        id: storybook
+        with:
+          name: storybook
+          path: ${{ github.workspace }}/storybook-static
       - name: test0
         run: ls
       - name: test
