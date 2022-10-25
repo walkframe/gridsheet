@@ -1,6 +1,9 @@
 name: test
 on:
-  - push
+  push:
+    # 一旦保留
+    branches-ignore:
+      - '**'
 
 jobs:
   build-storybook:
