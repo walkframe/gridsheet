@@ -38,7 +38,7 @@ jobs:
         ports:
           - 5233:80
         volumes:
-          - ${{ github.workspace }}/storybook-static:/usr/share/nginx/html
+          - ${{ github.workspace }}/storybook-static:/var/www/html
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v3
