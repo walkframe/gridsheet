@@ -96,15 +96,15 @@ class SetEditingOnEnterAction<T extends boolean> extends CoreAction<T> {
 }
 export const setEditingOnEnter = new SetEditingOnEnterAction().bind();
 
-class SetCellLabelAction<T extends boolean> extends CoreAction<T> {
+class SetShowAddressAction<T extends boolean> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
-      cellLabel: payload,
+      showAddress: payload,
     };
   }
 }
-export const setCellLabel = new SetCellLabelAction().bind();
+export const setShowAddress = new SetShowAddressAction().bind();
 
 class SetContextMenuPositionAction<
   T extends PositionType

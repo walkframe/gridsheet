@@ -280,7 +280,7 @@ const TOKEN_OPEN = new Token("OPEN", "("),
   TOKEN_NE = new Token("INFIX_OPERATOR", "<>", 1),
   TOKEN_EQ = new Token("INFIX_OPERATOR", "=", 1);
 
-const BOOLS = { true: true, false: false };
+const BOOLS = { ["true"]: true, ["false"]: false };
 export class Lexer {
   private index: number;
   public tokens: Token[] = [];
@@ -310,7 +310,7 @@ export class Lexer {
       .map((t) => {
         switch (t.type) {
           case "VALUE":
-            if (typeof t.entity === "number") {
+            if (typeof t.entity === "number" || typeof t.entity === "boolean") {
               return t.entity;
             }
             return `"${t.entity}"`;
@@ -333,7 +333,7 @@ export class Lexer {
       .map((t) => {
         switch (t.type) {
           case "VALUE":
-            if (typeof t.entity === "number") {
+            if (typeof t.entity === "number" || typeof t.entity === "boolean") {
               return t.entity;
             }
             return `"${t.entity}"`;

@@ -9,7 +9,7 @@ import {
   setHeaderHeight,
   setHeaderWidth,
   setEditingOnEnter,
-  setCellLabel,
+  setShowAddress,
   setOnSave,
   initializeTable,
 } from "../store/actions";
@@ -32,7 +32,7 @@ export const StoreInitializer: React.FC<Props> = ({
     sheetHeight,
     sheetWidth,
     editingOnEnter,
-    cellLabel,
+    showAddress: showAddress,
     renderers,
     parsers,
     labelers,
@@ -89,10 +89,10 @@ export const StoreInitializer: React.FC<Props> = ({
     }
   }, [editingOnEnter]);
   React.useEffect(() => {
-    if (typeof cellLabel !== "undefined") {
-      dispatch(setCellLabel(cellLabel));
+    if (typeof showAddress !== "undefined") {
+      dispatch(setShowAddress(showAddress));
     }
-  }, [cellLabel]);
+  }, [showAddress]);
   React.useEffect(() => {
     if (typeof onSave !== "undefined") {
       dispatch(setOnSave(onSave));

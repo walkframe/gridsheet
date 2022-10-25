@@ -45,7 +45,7 @@ export const Cell: React.FC<Props> = React.memo(
       matchingCells,
       matchingCellIndex,
       editorRef,
-      cellLabel,
+      showAddress,
     } = store;
 
     const [before, setBefore] = React.useState("");
@@ -190,7 +190,7 @@ export const Cell: React.FC<Props> = React.memo(
               verticalAlign,
             }}
           >
-            {cellLabel && <div className="gs-cell-label">{address}</div>}
+            {showAddress && <div className="gs-cell-label">{address}</div>}
             <div className="gs-cell-rendered">{rendered}</div>
           </div>
         </div>

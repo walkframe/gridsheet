@@ -76,7 +76,7 @@ export const GridSheet: React.FC<Props> = ({
     matchingCells: [],
     matchingCellIndex: 0,
     editingOnEnter: true,
-    cellLabel: true,
+    showAddress: true,
     contextMenuPosition: { y: -1, x: -1 },
     resizingPositionY: [-1, -1, -1],
     resizingPositionX: [-1, -1, -1],

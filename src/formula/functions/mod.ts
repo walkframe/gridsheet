@@ -30,6 +30,7 @@ export class ModFunction extends BaseFunction {
   }
 
   protected main(v1: number, v2: number) {
-    return v1 % v2;
+    // https://stackoverflow.com/questions/4467539/javascript-modulo-gives-a-negative-result-for-negative-numbers
+    return ((v1 % v2) + v2) % v2;
   }
 }

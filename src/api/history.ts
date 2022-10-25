@@ -4,7 +4,7 @@ import {
   Id,
   IdMatrix,
   PointType,
-  RowByAddress,
+  LostRowByAddress,
   ZoneType,
 } from "../types";
 
@@ -39,7 +39,7 @@ export type HistoryMoveType = {
   matrixNew: IdMatrix;
   positionFrom: PointType;
   positionTo: PointType;
-  lostRows: RowByAddress<Id>;
+  lostRows: LostRowByAddress<Id>;
 };
 
 export type HistoryAddRowsType = {

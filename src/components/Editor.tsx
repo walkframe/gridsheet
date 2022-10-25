@@ -28,6 +28,7 @@ export const Editor: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);
 
   const {
+    showAddress,
     editorRect,
     editingCell,
     choosing,
@@ -70,7 +71,7 @@ export const Editor: React.FC = () => {
       className={`gs-editor ${editing ? "gs-editing" : ""}`}
       style={editing ? { top, left, height, width } : {}}
     >
-      <div className="gs-cell-label">{address}</div>
+      {showAddress && <div className="gs-cell-label">{address}</div>}
       <textarea
         autoFocus
         draggable={false}

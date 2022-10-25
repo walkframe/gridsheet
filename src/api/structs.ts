@@ -7,9 +7,10 @@ import {
   Y,
   X,
   CellsByAddressType,
-  RowByAddress,
+  LostRowByAddress,
   ShapeType,
   Address,
+  MatrixesByAddress,
 } from "../types";
 import { a2p, p2a } from "./converters";
 
@@ -162,7 +163,7 @@ export const aa2oa = (
 };
 
 export const fillMatrix = <T = any>(dst: T[][], src: T[][], area: AreaType) => {
-  const lostRows: RowByAddress<T> = new Map();
+  const lostRows: LostRowByAddress<T> = new Map();
   const { top, left, bottom, right } = area;
   const { height: dstNumRows, width: dstNumCols } = matrixShape(dst, 1);
   for (let y = top; y <= bottom; y++) {
@@ -197,34 +198,36 @@ export const cropMatrix = <T = any>(matrix: T[][], area: AreaType): T[][] => {
 export const generateInitial = ({
   cells = {},
   ensured = {},
-  values: matrix = [],
-  valuesOrigin: matrixOrigin = "A1",
+  matrixes = {},
 }: {
   cells?: CellsByAddressType;
   ensured?: {
     numRows?: number;
     numCols?: number;
   };
-  values?: MatrixType;
-  valuesOrigin?: Address;
+  matrixes?: MatrixesByAddress<any>;
 } = {}) => {
-  const { y: baseY, x: baseX } = a2p(matrixOrigin);
-  matrix.map((row, y) => {
-    row.map((value, x) => {
-      const id = p2a({ y: baseY + y, x: baseX + x });
-      if (typeof value !== "undefined") {
-        const cell = cells[id];
-        cells[id] = { value, ...cell };
-      }
+  Object.keys(matrixes).forEach((address) => {
+    const matrix = matrixes[address];
+    const { y: baseY, x: baseX } = a2p(address);
+    matrix.map((row, y) => {
+      row.map((value, x) => {
+        const id = p2a({ y: baseY + y, x: baseX + x });
+        if (typeof value !== "undefined") {
+          const cell = cells[id];
+          cells[id] = { value, ...cell };
+        }
+      });
     });
   });
+
   const { numRows, numCols } = Object.assign(
     { numRows: 1, numCols: 1 },
     ensured
   );
   const rightBottom = p2a({ y: numRows, x: numCols });
   if (cells[rightBottom] == null) {
-    cells[rightBottom] = { value: undefined };
+    cells[rightBottom] = {};
   }
   return cells;
 };

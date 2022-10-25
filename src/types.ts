@@ -80,7 +80,7 @@ export type OptionsType = {
   headerHeight?: number;
   headerWidth?: number;
   editingOnEnter?: boolean;
-  cellLabel?: boolean;
+  showAddress?: boolean;
   minNumRows?: number;
   maxNumRows?: number;
   minNumCols?: number;
@@ -134,7 +134,7 @@ export type StoreType = {
   matchingCells: string[];
   matchingCellIndex: number;
   editingOnEnter: boolean;
-  cellLabel: boolean;
+  showAddress: boolean;
   contextMenuPosition: PositionType;
   resizingPositionY: [Y, Y, Y]; // indexY, startY, endY
   resizingPositionX: [X, X, X]; // indexX, startX, endX
@@ -155,4 +155,6 @@ export type Ids = Id[];
 export type IdMatrix = Ids[];
 export type Address = string;
 
-export type RowByAddress<T> = Map<Address, T[]>;
+export type LostRowByAddress<T> = Map<Address, T[]>;
+
+export type MatrixesByAddress<T> = { [address: Address]: MatrixType<T> };
