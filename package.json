@@ -8,7 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rm -rf ./dist || true && tsc --project ./src/index.ts -p ./tsconfig.json",
     "audit-fix": "yarn-audit-fix --force",
-    "storybook": "start-storybook -p 6006",
+    "storybook": "start-storybook -p 5233",
     "build-storybook": "build-storybook"
   },
   "repository": {

@@ -81,8 +81,6 @@ export type OptionsType = {
   headerWidth?: number;
   editingOnEnter?: boolean;
   cellLabel?: boolean;
-  numRows?: number;
-  numCols?: number;
   minNumRows?: number;
   maxNumRows?: number;
   minNumCols?: number;
@@ -144,7 +142,7 @@ export type StoreType = {
 };
 
 export type Props = {
-  initial?: CellsByAddressType;
+  initial: CellsByAddressType;
   tableRef?: React.MutableRefObject<TableRef | null>;
   options?: OptionsType;
   className?: string;

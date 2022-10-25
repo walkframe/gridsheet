@@ -6,11 +6,10 @@ import {
   PointType,
   Y,
   X,
-  Height,
-  Width,
   CellsByAddressType,
   RowByAddress,
   ShapeType,
+  Address,
 } from "../types";
 import { a2p, p2a } from "./converters";
 
@@ -195,12 +194,21 @@ export const cropMatrix = <T = any>(matrix: T[][], area: AreaType): T[][] => {
     .map((cols) => cols.slice(left, right + 1));
 };
 
-export const matrixIntoCells = (
-  matrix: MatrixType,
-  cells: CellsByAddressType,
-  origin = "A1"
-) => {
-  const { y: baseY, x: baseX } = a2p(origin);
+export const generateInitial = ({
+  cells = {},
+  ensured = {},
+  values: matrix = [],
+  valuesOrigin: matrixOrigin = "A1",
+}: {
+  cells?: CellsByAddressType;
+  ensured?: {
+    numRows?: number;
+    numCols?: number;
+  };
+  values?: MatrixType;
+  valuesOrigin?: Address;
+} = {}) => {
+  const { y: baseY, x: baseX } = a2p(matrixOrigin);
   matrix.map((row, y) => {
     row.map((value, x) => {
       const id = p2a({ y: baseY + y, x: baseX + x });
@@ -210,15 +218,19 @@ export const matrixIntoCells = (
       }
     });
   });
+  const { numRows, numCols } = Object.assign(
+    { numRows: 1, numCols: 1 },
+    ensured
+  );
+  const rightBottom = p2a({ y: numRows, x: numCols });
+  if (cells[rightBottom] == null) {
+    cells[rightBottom] = { value: undefined };
+  }
   return cells;
 };
 
-export const getMaxSizeFromCells = (
-  sizeY = 0,
-  sizeX = 0,
-  cells: CellsByAddressType = {}
-) => {
-  let [lastY, lastX] = [sizeY, sizeX];
+export const getMaxSizesFromCells = (cells: CellsByAddressType = {}) => {
+  let [lastY, lastX] = [0, 0];
   Object.keys(cells).map((address) => {
     const { y, x } = a2p(address);
     if (lastY < y) {

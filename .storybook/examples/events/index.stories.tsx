@@ -1,11 +1,11 @@
 import React from "react";
-import { GridSheet, Renderer, aa2oa, MatrixType, Parser } from "./src";
-import { createMatrix, matrixIntoCells } from "./src/api/structs";
-import { defaultParser } from "./src/parsers/core";
-import { defaultRenderer } from "./src/renderers/core";
-import { CellType, Dispatcher } from "./src/types";
-import { BaseFunction } from "./src";
-import { createTableRef } from "./src/components/GridTable";
+import { GridSheet, Renderer, aa2oa, MatrixType, Parser } from "../../../src";
+import { createMatrix, generateInitial } from "../../../src/api/structs";
+import { defaultParser } from "../../../src/parsers/core";
+import { defaultRenderer } from "../../../src/renderers/core";
+import { CellType, Dispatcher } from "../../../src/types";
+import { BaseFunction } from "../../../src";
+import { createTableRef } from "../../../src/components/GridTable";
 
 class HopeFunction extends BaseFunction {
   main(text: string) {
@@ -98,7 +98,7 @@ const initialDataForFormula = [
     "",
   ],
   [
-    "meron",
+    "melon",
     98,
     "=HLOOKUP(B8, A1:F2, 2, true)",
     "",
@@ -168,7 +168,13 @@ const initialData = [
   [false, "b", "c", "d", "e", "aa", "bb", "cc", "dd", "ee"],
 ];
 
-const initialCells = matrixIntoCells(createMatrix(1000, 50), {});
+const initialCells = generateInitial({
+  cells: {},
+  ensured: {
+    //numRows: 1000,
+    numCols: 50,
+  },
+});
 
 export const showIndex = () => {
   const ref = createTableRef();
@@ -186,26 +192,33 @@ export const showIndex = () => {
       <div>aaaaa</div>
 
       <GridSheet
-        initial={matrixIntoCells(initialDataForFormula, {
-          1: { style: { backgroundColor: "#aaa" } },
-          2: { style: { backgroundColor: "#eee" } },
-          3: { style: {} },
-          A: { width: 50 },
-          B: { width: 50 },
-          C: { width: 50 },
-          D: { width: 50 },
-          E: { width: 50 },
-          F: { width: 50 },
-          G: { width: 200 },
-          H7: { style: { backgroundColor: "#ffeeee" } },
-          A4: {
-            style: { backgroundColor: "#dddddd" },
+        initial={generateInitial({
+          values: initialDataForFormula,
+          ensured: {
+            numCols: 10,
+            numRows: 10,
           },
-          B4: {
-            style: { backgroundColor: "#dddddd" },
-          },
-          C4: {
-            style: { backgroundColor: "#dddddd" },
+          cells: {
+            1: { style: { backgroundColor: "#aaa" } },
+            2: { style: { backgroundColor: "#eee" } },
+            3: { style: {} },
+            A: { width: 50 },
+            B: { width: 50 },
+            C: { width: 50 },
+            D: { width: 50 },
+            E: { width: 50 },
+            F: { width: 50 },
+            G: { width: 200 },
+            H7: { style: { backgroundColor: "#ffeeee" } },
+            A4: {
+              style: { backgroundColor: "#dddddd" },
+            },
+            B4: {
+              style: { backgroundColor: "#dddddd" },
+            },
+            C4: {
+              style: { backgroundColor: "#dddddd" },
+            },
           },
         })}
         additionalFunctions={{
@@ -223,43 +236,46 @@ export const showIndex = () => {
         additionalFunctions={{
           test: TestFunction,
         }}
-        initial={matrixIntoCells(initialData, {
-          default: { style: { fontStyle: "italic" } },
-          A1: { value: 1, style: { color: "#008888" } },
-          B: { labeler: "b" },
-          D: { width: 300, style: { textAlign: "right" } },
-          "2": {
-            labeler: "2",
-            style: { borderBottom: "double 4px #000000" },
-            renderer: "kanji",
-          },
-          "3": {
-            height: 100,
-            labeler: "rowNumber",
-            style: {
-              fontWeight: "bold",
-              color: "#ff0000",
-              backgroundColor: "rgba(255, 200, 200, 0.5)",
+        initial={generateInitial({
+          values: initialData,
+          cells: {
+            default: { style: { fontStyle: "italic" } },
+            A1: { value: 1, style: { color: "#008888" } },
+            B: { labeler: "b" },
+            D: { width: 300, style: { textAlign: "right" } },
+            "2": {
+              labeler: "2",
+              style: { borderBottom: "double 4px #000000" },
+              renderer: "kanji",
             },
-          },
-          "4": {
-            height: 50,
-            verticalAlign: "bottom",
-          },
-          "5": {
-            height: 100,
-            style: {
-              fontWeight: "bold",
-              color: "#000fff",
-              backgroundColor: "rgba(0, 200, 200, 0.5)",
+            "3": {
+              height: 100,
+              labeler: "rowNumber",
+              style: {
+                fontWeight: "bold",
+                color: "#ff0000",
+                backgroundColor: "rgba(255, 200, 200, 0.5)",
+              },
             },
-          },
-          "6": {
-            height: 100,
-            style: {
-              fontWeight: "bold",
-              color: "#ff0000",
-              backgroundColor: "rgba(255, 200, 200, 0.5)",
+            "4": {
+              height: 50,
+              verticalAlign: "bottom",
+            },
+            "5": {
+              height: 100,
+              style: {
+                fontWeight: "bold",
+                color: "#000fff",
+                backgroundColor: "rgba(0, 200, 200, 0.5)",
+              },
+            },
+            "6": {
+              height: 100,
+              style: {
+                fontWeight: "bold",
+                color: "#ff0000",
+                backgroundColor: "rgba(255, 200, 200, 0.5)",
+              },
             },
           },
         })}
@@ -267,8 +283,6 @@ export const showIndex = () => {
           // cellLabel: false,
           // headerWidth: 50,
 
-          numCols: 10,
-          numRows: 10,
           headerHeight: 40,
           historyLimit: 100,
           mode: "dark",
@@ -277,7 +291,6 @@ export const showIndex = () => {
             b: (n) => "ビー",
             "2": (n) => "二",
           },
-          //stickyHeaders: "horizontal",
           /*
           onSave: (table, positions) => {
             console.log(
@@ -324,14 +337,14 @@ export const showIndex = () => {
                 {" "}
                 <GridSheet
                   style={{ maxWidth: "100%", maxHeight: "150px" }}
-                  initial={matrixIntoCells(
-                    [
+                  initial={generateInitial({
+                    values: [
                       ["resizable", "both", "!"],
                       [1, 2, 3],
                       [undefined, 5, 6],
                     ],
-                    { A3: { value: "four" } }
-                  )}
+                    cells: { A3: { value: "four" } },
+                  })}
                   options={{ sheetResize: "both", historyLimit: 2 }}
                 />
               </td>
@@ -339,14 +352,14 @@ export const showIndex = () => {
                 {" "}
                 <GridSheet
                   style={{ maxWidth: "100%", maxHeight: "150px" }}
-                  initial={matrixIntoCells(
-                    [
+                  initial={generateInitial({
+                    values: [
                       ["resizable", "vertically", "!"],
                       [1, 2, 3],
                       [4, undefined, 6],
                     ],
-                    { B3: { value: "five" } }
-                  )}
+                    cells: { B3: { value: "five" } },
+                  })}
                   options={{ sheetResize: "vertical", historyLimit: 2 }}
                 />
               </td>
@@ -356,14 +369,14 @@ export const showIndex = () => {
                 {" "}
                 <GridSheet
                   style={{ maxWidth: "100%", maxHeight: "150px" }}
-                  initial={matrixIntoCells(
-                    [
+                  initial={generateInitial({
+                    values: [
                       ["resizable", "horizontally", "!"],
                       [1, 2, 3],
                       [4, 5, undefined],
                     ],
-                    { C3: { value: "six" } }
-                  )}
+                    cells: { C3: { value: "six" } },
+                  })}
                   options={{ sheetResize: "horizontal", historyLimit: 2 }}
                 />
               </td>
@@ -371,14 +384,14 @@ export const showIndex = () => {
                 {" "}
                 <GridSheet
                   style={{ maxWidth: "100%", maxHeight: "150px" }}
-                  initial={matrixIntoCells(
-                    [
+                  initial={generateInitial({
+                    values: [
                       ["not", "resizable", "!!!"],
                       [1, 2, 3],
                       [4, 5, 6],
                     ],
-                    { A3: { value: "four" } }
-                  )}
+                    cells: { A3: { value: "four" } },
+                  })}
                   options={{ sheetResize: "none", historyLimit: 2 }}
                 />
               </td>
@@ -411,9 +424,6 @@ export const showIndex = () => {
             if (typeof positions !== "undefined") {
               console.log("positions on change", positions);
             }
-          },
-          onChangeDiff: (table, positions) => {
-            console.log("matrix on change diff:", table.getObjectFlatten());
           },
         }}
       />
