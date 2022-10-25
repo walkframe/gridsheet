@@ -53,4 +53,4 @@ jobs:
       - name: test
         run: ls storybook-static
       - name: test2
-        run: curl http://localhost:5233/?path=/story/basic--small
+        run: curl http://nginx:5233/?path=/story/basic--small
