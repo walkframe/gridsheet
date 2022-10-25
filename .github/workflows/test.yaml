@@ -38,7 +38,7 @@ jobs:
         ports:
           - 5233:80
         volumes:
-          - ${{ github.workspace }}/storybook-static:/usr/share/nginx/html
+          - ${{ github.workspace }}/storybook-static:/usr/share/nginx/html/
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v3
@@ -46,8 +46,8 @@ jobs:
         with:
           name: storybook
           path: ${{ github.workspace }}/storybook-static
-      - run: chmod -R 755 ${{ github.workspace }}/storybook-static
+      - run: chmod -R 777 ${{ github.workspace }}/storybook-static/
       - name: test
-        run: ls storybook-static
+        run: ls -l storybook-static
       - name: test2
         run: curl http://localhost:5233/?path=/story/basic--small
