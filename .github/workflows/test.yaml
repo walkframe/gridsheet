@@ -29,9 +29,11 @@ jobs:
       image: nginx:1.23.2
       env:
         NGINX_PORT: 5233
-      volumes:
-        - ./storybook-static:/usr/share/nginx/html
+      # volumes:
+        # - ./storybook-static:/usr/share/nginx/html
     steps:
+      - name: test0
+        run: ls
       - name: test
         run: ls storybook-static
       - name: test2
