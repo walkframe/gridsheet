@@ -664,7 +664,10 @@ export class UserTable {
     dst: AreaType;
     reflection?: StoreReflectionType;
   }) {
-    const { height: maxHeight, width: maxWidth } = areaShape(src, 1);
+    const { height: maxHeight, width: maxWidth } = areaShape({
+      ...src,
+      base: 1,
+    });
     const { top: topFrom, left: leftFrom } = src;
     const { top: topTo, left: leftTo, bottom: bottomTo, right: rightTo } = dst;
     const diff: CellsByAddressType = {};
@@ -1077,10 +1080,10 @@ export class Table extends UserTable {
       case "MOVE":
         const { y: yFrom, x: xFrom } = history.positionFrom;
         const { y: yTo, x: xTo } = history.positionTo;
-        const { height: rows, width: cols } = matrixShape(
-          history.matrixFrom,
-          -1
-        );
+        const { height: rows, width: cols } = matrixShape({
+          matrix: history.matrixFrom,
+          base: -1,
+        });
         fillMatrix(this.idMatrix, history.matrixFrom, {
           top: yFrom,
           left: xFrom,
@@ -1135,10 +1138,10 @@ export class Table extends UserTable {
       case "MOVE":
         const { y: yFrom, x: xFrom } = history.positionFrom;
         const { y: yTo, x: xTo } = history.positionTo;
-        const { height: rows, width: cols } = matrixShape(
-          history.matrixFrom,
-          -1
-        );
+        const { height: rows, width: cols } = matrixShape({
+          matrix: history.matrixFrom,
+          base: -1,
+        });
         fillMatrix(this.idMatrix, history.matrixNew, {
           top: yFrom,
           left: xFrom,
