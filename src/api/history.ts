@@ -4,8 +4,8 @@ import {
   Id,
   IdMatrix,
   PointType,
-  LostRowByAddress,
   ZoneType,
+  MatrixesByAddress,
 } from "../types";
 
 export type StoreReflectionType = {
@@ -39,7 +39,7 @@ export type HistoryMoveType = {
   matrixNew: IdMatrix;
   positionFrom: PointType;
   positionTo: PointType;
-  lostRows: LostRowByAddress<Id>;
+  lostRows: MatrixesByAddress<Id>;
 };
 
 export type HistoryAddRowsType = {

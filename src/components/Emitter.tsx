@@ -5,7 +5,7 @@ import {
 } from "react-window";
 
 import { Context } from "../store";
-import { FeedbackType, FeedbackTypeForMatrix } from "../types";
+import { FeedbackType } from "../types";
 
 type Props = {
   onChange?: FeedbackType;

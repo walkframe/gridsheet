@@ -155,6 +155,4 @@ export type Ids = Id[];
 export type IdMatrix = Ids[];
 export type Address = string;
 
-export type LostRowByAddress<T> = Map<Address, T[]>;
-
 export type MatrixesByAddress<T> = { [address: Address]: MatrixType<T> };

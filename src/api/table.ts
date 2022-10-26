@@ -540,10 +540,13 @@ export class UserTable {
       });
     }
     if (history.operation === "MOVE") {
-      history.lostRows.forEach((ids) => {
-        ids.forEach((id) => {
-          delete this.data[id];
-        });
+      Object.keys(history.lostRows).forEach((address) => {
+        const idMatrix = history.lostRows[address];
+        idMatrix.map((ids) =>
+          ids.forEach((id) => {
+            delete this.data[id];
+          })
+        );
       });
     }
   }

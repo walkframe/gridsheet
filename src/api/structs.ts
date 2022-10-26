@@ -7,10 +7,10 @@ import {
   Y,
   X,
   CellsByAddressType,
-  LostRowByAddress,
   ShapeType,
   Address,
   MatrixesByAddress,
+  CellType,
 } from "../types";
 import { a2p, p2a } from "./converters";
 
@@ -174,7 +174,7 @@ export const aa2oa = (
 };
 
 export const fillMatrix = <T = any>(dst: T[][], src: T[][], area: AreaType) => {
-  const lostRows: LostRowByAddress<T> = new Map();
+  const lostRows: MatrixesByAddress<T> = {};
   const { top, left, bottom, right } = area;
   const { height: dstNumRows, width: dstNumCols } = matrixShape({
     matrix: dst,
@@ -190,7 +190,7 @@ export const fillMatrix = <T = any>(dst: T[][], src: T[][], area: AreaType) => {
         continue;
       }
       if (lostRow.length === 0) {
-        lostRows.set(p2a({ y, x }), lostRow);
+        lostRows[p2a({ y, x })] = [lostRow];
       }
       lostRow.push(value);
     }
@@ -230,17 +230,19 @@ export const matrixIntoCells = (
   return cells;
 };
 
-export const generateInitial = ({
+export const generateInitial = <T>({
   cells = {},
   ensured = {},
   matrixes = {},
+  flattenAs = "value",
 }: {
   cells?: CellsByAddressType;
   ensured?: {
     numRows?: number;
     numCols?: number;
   };
-  matrixes?: MatrixesByAddress<any>;
+  flattenAs?: keyof CellType;
+  matrixes?: MatrixesByAddress<T>;
 } = {}) => {
   Object.keys(matrixes).forEach((address) => {
     const matrix = matrixes[address];
@@ -255,6 +257,7 @@ export const generateInitial = ({
       });
     });
   });
+  upsert({ cells, flattenAs, matrixes });
 
   const { numRows, numCols } = Object.assign(
     { numRows: 1, numCols: 1 },
@@ -264,6 +267,33 @@ export const generateInitial = ({
   if (cells[rightBottom] == null) {
     cells[rightBottom] = {};
   }
+  return cells;
+};
+
+export const upsert = <T>({
+  cells = {},
+  matrixes = {},
+  flattenAs,
+}: {
+  cells?: CellsByAddressType;
+  flattenAs?: keyof CellType;
+  matrixes?: MatrixesByAddress<T>;
+}) => {
+  Object.keys(matrixes).forEach((address) => {
+    const matrix = matrixes[address];
+    const { y: baseY, x: baseX } = a2p(address);
+    matrix.map((row, y) => {
+      row.map((e, x) => {
+        const id = p2a({ y: baseY + y, x: baseX + x });
+        if (flattenAs) {
+          const cell = cells[id];
+          cells[id] = { [flattenAs]: e, ...cell };
+        } else {
+          cells[id] = e;
+        }
+      });
+    });
+  });
   return cells;
 };
 
