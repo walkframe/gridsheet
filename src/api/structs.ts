@@ -7,10 +7,9 @@ import {
   Y,
   X,
   CellsByAddressType,
-  LostRowByAddress,
   ShapeType,
-  Address,
   MatrixesByAddress,
+  CellType,
 } from "../types";
 import { a2p, p2a } from "./converters";
 
@@ -99,21 +98,32 @@ export const among = (area: AreaType, point: PointType) => {
   return top <= y && y <= bottom && left <= x && x <= right;
 };
 
-export const zoneShape = (zone: ZoneType, base = 0): ShapeType => {
+type ShapeExtension = { base?: number };
+
+export const zoneShape = ({
+  base = 0,
+  ...zone
+}: ZoneType & ShapeExtension): ShapeType => {
   return {
     height: base + Math.abs(zone.startY - zone.endY),
     width: base + Math.abs(zone.startX - zone.endX),
   };
 };
 
-export const areaShape = (area: AreaType, base = 0): ShapeType => {
+export const areaShape = ({
+  base = 0,
+  ...area
+}: AreaType & ShapeExtension): ShapeType => {
   return {
     height: base + Math.abs(area.top - area.bottom),
     width: base + Math.abs(area.left - area.right),
   };
 };
 
-export const matrixShape = (matrix: MatrixType, base = 0): ShapeType => {
+export const matrixShape = ({
+  base = 0,
+  matrix,
+}: { matrix: MatrixType } & ShapeExtension): ShapeType => {
   const h = matrix.length;
   if (h === 0) {
     return { height: 0, width: 0 };
@@ -162,10 +172,17 @@ export const aa2oa = (
   return oa;
 };
 
-export const fillMatrix = <T = any>(dst: T[][], src: T[][], area: AreaType) => {
-  const lostRows: LostRowByAddress<T> = new Map();
-  const { top, left, bottom, right } = area;
-  const { height: dstNumRows, width: dstNumCols } = matrixShape(dst, 1);
+export const putMatrix = <T = any>(
+  dst: T[][],
+  src: T[][],
+  dstArea: AreaType
+) => {
+  const lostRows: MatrixesByAddress<T> = {};
+  const { top, left, bottom, right } = dstArea;
+  const { height: dstNumRows, width: dstNumCols } = matrixShape({
+    matrix: dst,
+    base: 1,
+  });
   for (let y = top; y <= bottom; y++) {
     const lostRow: T[] = [];
     for (let x = left; x <= right; x++) {
@@ -176,7 +193,7 @@ export const fillMatrix = <T = any>(dst: T[][], src: T[][], area: AreaType) => {
         continue;
       }
       if (lostRow.length === 0) {
-        lostRows.set(p2a({ y, x }), lostRow);
+        lostRows[p2a({ y, x })] = [lostRow];
       }
       lostRow.push(value);
     }
@@ -195,53 +212,21 @@ export const cropMatrix = <T = any>(matrix: T[][], area: AreaType): T[][] => {
     .map((cols) => cols.slice(left, right + 1));
 };
 
-export const matrixIntoCells = (
-  matrix: MatrixType,
-  cells: CellsByAddressType,
-  origin = "A1"
-) => {
-  console.warn(
-    "matrixIntoCells will be deleted in the next version. Use 'generateInitial'."
-  );
-  const { y: baseY, x: baseX } = a2p(origin);
-  matrix.map((row, y) => {
-    row.map((value, x) => {
-      const id = p2a({ y: baseY + y, x: baseX + x });
-      if (typeof value !== "undefined") {
-        const cell = cells[id];
-        cells[id] = { value, ...cell };
-      }
-    });
-  });
-  return cells;
-};
-
-export const generateInitial = ({
+export const generateInitial = <T>({
   cells = {},
   ensured = {},
   matrixes = {},
+  flattenAs = "value",
 }: {
   cells?: CellsByAddressType;
   ensured?: {
     numRows?: number;
     numCols?: number;
   };
-  matrixes?: MatrixesByAddress<any>;
+  flattenAs?: keyof CellType;
+  matrixes?: MatrixesByAddress<T>;
 } = {}) => {
-  Object.keys(matrixes).forEach((address) => {
-    const matrix = matrixes[address];
-    const { y: baseY, x: baseX } = a2p(address);
-    matrix.map((row, y) => {
-      row.map((value, x) => {
-        const id = p2a({ y: baseY + y, x: baseX + x });
-        if (typeof value !== "undefined") {
-          const cell = cells[id];
-          cells[id] = { value, ...cell };
-        }
-      });
-    });
-  });
-
+  upsert({ cells, flattenAs, matrixes });
   const { numRows, numCols } = Object.assign(
     { numRows: 1, numCols: 1 },
     ensured
@@ -250,6 +235,33 @@ export const generateInitial = ({
   if (cells[rightBottom] == null) {
     cells[rightBottom] = {};
   }
+  return cells;
+};
+
+export const upsert = <T>({
+  cells = {},
+  matrixes = {},
+  flattenAs,
+}: {
+  cells?: CellsByAddressType;
+  flattenAs?: keyof CellType;
+  matrixes?: MatrixesByAddress<T>;
+}) => {
+  Object.keys(matrixes).forEach((address) => {
+    const matrix = matrixes[address];
+    const { y: baseY, x: baseX } = a2p(address);
+    matrix.map((row, y) => {
+      row.map((e, x) => {
+        const id = p2a({ y: baseY + y, x: baseX + x });
+        if (flattenAs) {
+          const cell = cells[id];
+          cells[id] = { [flattenAs]: e, ...cell };
+        } else {
+          cells[id] = e;
+        }
+      });
+    });
+  });
   return cells;
 };
 

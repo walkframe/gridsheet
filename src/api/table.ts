@@ -17,7 +17,7 @@ import {
   Parsers,
   Renderers,
 } from "../types";
-import { areaShape, createMatrix, matrixShape, fillMatrix } from "./structs";
+import { areaShape, createMatrix, matrixShape, putMatrix } from "./structs";
 import { a2p, x2c, p2a, y2r, grantAddressAbsolute } from "./converters";
 import { FunctionMapping } from "../formula/functions/__base";
 import { functions } from "../formula/mapping";
@@ -67,6 +67,7 @@ export class UserTable {
   protected labelers: Labelers;
   protected functions: FunctionMapping = {};
   protected base: UserTable;
+  protected lastHistory?: HistoryType;
   protected histories: HistoryType[];
   protected historyIndex: number;
   protected addressesById: { [id: Id]: Address };
@@ -116,7 +117,7 @@ export class UserTable {
       const ids: Ids = [];
       this.idMatrix.push(ids);
       for (let x = 0; x < numCols + 1; x++) {
-        const id = (this.head++).toString(36);
+        const id = this.generateId();
         ids.push(id);
         const address = p2a({ y, x });
         this.addressesById[id] = address;
@@ -163,6 +164,10 @@ export class UserTable {
         this.data[id] = stacked;
       }
     }
+  }
+
+  protected generateId() {
+    return (this.head++).toString(36);
   }
 
   protected shallowCopy({ copyCache = true }: { copyCache?: boolean } = {}) {
@@ -520,6 +525,7 @@ export class UserTable {
     );
     strayedHistories.forEach(this.cleanStrayed.bind(this));
     this.histories.push(history);
+    this.lastHistory = history;
     if (this.histories.length > this.historyLimit) {
       const kickedOut = this.histories.splice(0, 1)[0];
       this.cleanObsolete(kickedOut);
@@ -540,10 +546,13 @@ export class UserTable {
       });
     }
     if (history.operation === "MOVE") {
-      history.lostRows.forEach((ids) => {
-        ids.forEach((id) => {
-          delete this.data[id];
-        });
+      Object.keys(history.lostRows).forEach((address) => {
+        const idMatrix = history.lostRows[address];
+        idMatrix.map((ids) =>
+          ids.forEach((id) => {
+            delete this.data[id];
+          })
+        );
       });
     }
   }
@@ -565,7 +574,7 @@ export class UserTable {
       const ids: Ids = [];
       matrix.push(ids);
       for (let x = left; x <= right; x++) {
-        ids.push((this.head++).toString(36));
+        ids.push(this.generateId());
       }
     }
     return matrix;
@@ -634,22 +643,22 @@ export class UserTable {
     const matrixFrom = this.getIdMatrixFromArea(src);
     const matrixTo = this.getIdMatrixFromArea(dst);
     const matrixNew = this.getNewIdMatrix(src);
-    fillMatrix(this.idMatrix, matrixNew, src);
+    putMatrix(this.idMatrix, matrixNew, src);
     matrixFrom.forEach((ids) => {
       ids
         .map(this.getById.bind(this))
         .filter((c) => c)
         .forEach((cell) => this.setChangedAt(cell, changedAt));
     });
-    const lostRows = fillMatrix(this.idMatrix, matrixFrom, dst);
+    const lostRows = putMatrix(this.idMatrix, matrixFrom, dst);
     this.pushHistory({
       operation: "MOVE",
       reflection,
       matrixFrom,
       matrixTo,
       matrixNew,
-      positionFrom: { y: src.top, x: src.left },
-      positionTo: { y: dst.top, x: dst.left },
+      pointFrom: { y: src.top, x: src.left },
+      pointTo: { y: dst.top, x: dst.left },
       lostRows,
     });
     return this.shallowCopy({ copyCache: false });
@@ -664,7 +673,10 @@ export class UserTable {
     dst: AreaType;
     reflection?: StoreReflectionType;
   }) {
-    const { height: maxHeight, width: maxWidth } = areaShape(src, 1);
+    const { height: maxHeight, width: maxWidth } = areaShape({
+      ...src,
+      base: 1,
+    });
     const { top: topFrom, left: leftFrom } = src;
     const { top: topTo, left: leftTo, bottom: bottomTo, right: rightTo } = dst;
     const diff: CellsByAddressType = {};
@@ -707,16 +719,14 @@ export class UserTable {
     return this.update({ diff, partial: false, reflection });
   }
 
-  public update({
+  protected _update({
     diff,
     partial = true,
     updateChangedAt = true,
-    reflection = {},
   }: {
     diff: CellsByAddressType;
     partial?: boolean;
     updateChangedAt?: boolean;
-    reflection?: StoreReflectionType;
   }) {
     const diffBefore: CellsByIdType = {};
     const diffAfter: CellsByIdType = {};
@@ -730,6 +740,7 @@ export class UserTable {
       const point = a2p(address);
       const id = this.getId(point);
 
+      // must not partial
       diffBefore[id] = this.getByPoint(point);
       diffAfter[id] = cell;
       if (partial) {
@@ -737,6 +748,29 @@ export class UserTable {
       } else {
         this.data[id] = cell;
       }
+    });
+    this.solvedCaches = {};
+    return {
+      diffBefore,
+      diffAfter,
+    };
+  }
+
+  public update({
+    diff,
+    partial = true,
+    updateChangedAt = true,
+    reflection = {},
+  }: {
+    diff: CellsByAddressType;
+    partial?: boolean;
+    updateChangedAt?: boolean;
+    reflection?: StoreReflectionType;
+  }) {
+    const { diffBefore, diffAfter } = this._update({
+      diff,
+      partial,
+      updateChangedAt,
     });
 
     this.pushHistory({
@@ -746,7 +780,7 @@ export class UserTable {
       diffAfter,
       partial,
     });
-    this.solvedCaches = {};
+
     return this.shallowCopy({ copyCache: true });
   }
 
@@ -777,7 +811,12 @@ export class UserTable {
         diff[p2a({ y, x })] = cell;
       });
     });
-    return this.update({ diff, partial: true, updateChangedAt, reflection });
+    return this.update({
+      diff,
+      partial: true,
+      updateChangedAt,
+      reflection,
+    });
   }
 
   public write({
@@ -805,10 +844,40 @@ export class UserTable {
     return parser.parse(value, cell);
   }
 
-  // TODO: addRows, addRowsFlatten
-  // TODO: addCols, addColsFlatten
+  public addRowsAndUpdate({
+    y,
+    numRows,
+    baseY,
+    diff,
+    partial,
+    updateChangedAt,
+    reflection = {},
+  }: {
+    y: number;
+    numRows: number;
+    baseY: number;
+    diff: CellsByAddressType;
+    partial?: boolean;
+    updateChangedAt?: boolean;
+    reflection?: StoreReflectionType;
+  }) {
+    const returned = this.addRows({
+      y,
+      numRows,
+      baseY,
+      reflection,
+    });
 
-  public addBlankRows({
+    Object.assign(
+      this.lastHistory!,
+      this._update({ diff, partial, updateChangedAt }),
+      { partial }
+    );
+
+    return returned;
+  }
+
+  public addRows({
     y,
     numRows,
     baseY,
@@ -832,21 +901,21 @@ export class UserTable {
     for (let i = 0; i < numRows; i++) {
       const row: Ids = [];
       for (let j = 0; j < numCols; j++) {
-        const id = this.head++;
-        row.push(id.toString(36));
+        const id = this.generateId();
+        row.push(id);
         const cell = this.getByPoint({ y: baseY, x: j });
         const copied = this.copyCell(cell, baseY);
-        this.data[id.toString(36)] = { ...copied, changedAt };
+        this.data[id] = { ...copied, changedAt };
       }
       rows.push(row);
     }
     this.idMatrix.splice(y, 0, ...rows);
     this.area.bottom += numRows;
+
     this.pushHistory({
       operation: "ADD_ROWS",
       reflection,
       y,
-      numRows,
       idMatrix: rows,
     });
     return this.shallowCopy({ copyCache: false });
@@ -873,12 +942,44 @@ export class UserTable {
       operation: "REMOVE_ROWS",
       reflection,
       y,
-      numRows,
       idMatrix: rows,
     });
     return this.shallowCopy({ copyCache: false });
   }
-  public addBlankCols({
+
+  public addColsAndUpdate({
+    x,
+    numCols,
+    baseX,
+    diff,
+    partial,
+    updateChangedAt,
+    reflection = {},
+  }: {
+    x: number;
+    numCols: number;
+    baseX: number;
+    diff: CellsByAddressType;
+    partial?: boolean;
+    updateChangedAt?: boolean;
+    reflection?: StoreReflectionType;
+  }) {
+    const returned = this.addCols({
+      x,
+      numCols,
+      baseX,
+      reflection,
+    });
+
+    Object.assign(
+      this.lastHistory!,
+      this._update({ diff, partial, updateChangedAt }),
+      { partial }
+    );
+    return returned;
+  }
+
+  public addCols({
     x,
     numCols,
     baseX,
@@ -902,21 +1003,21 @@ export class UserTable {
     for (let i = 0; i < numRows; i++) {
       const row: Ids = [];
       for (let j = 0; j < numCols; j++) {
-        const id = this.head++;
-        row.push(id.toString(36));
+        const id = this.generateId();
+        row.push(id);
         const cell = this.getByPoint({ y: i, x: baseX });
         const copied = this.copyCell(cell, baseX);
-        this.idMatrix[i].splice(x, 0, id.toString(36));
-        this.data[id.toString(36)] = { ...copied, changedAt };
+        this.idMatrix[i].splice(x, 0, id);
+        this.data[id] = { ...copied, changedAt };
       }
       rows.push(row);
     }
     this.area.right += numCols;
+
     this.pushHistory({
       operation: "ADD_COLS",
       reflection,
       x,
-      numCols,
       idMatrix: rows,
     });
     return this.shallowCopy({ copyCache: false });
@@ -943,11 +1044,11 @@ export class UserTable {
       rows.push(deleted);
     });
     this.area.right -= numCols;
+
     this.pushHistory({
       operation: "REMOVE_COLS",
       reflection,
       x,
-      numCols,
       idMatrix: rows,
     });
     return this.shallowCopy({ copyCache: false });
@@ -1052,48 +1153,64 @@ export class Table extends UserTable {
     const history = this.histories[this.historyIndex--];
     switch (history.operation) {
       case "UPDATE":
-        this.applyDiff(history.diffBefore!, history.partial);
+        // diffBefore is guaranteed as total of cell (not partial)
+        this.applyDiff(history.diffBefore!, false);
         break;
-      case "ADD_ROWS":
-        this.idMatrix.splice(history.y, history.numRows);
-        this.area.bottom -= history.numRows;
+      case "ADD_ROWS": {
+        if (history.diffBefore) {
+          this.applyDiff(history.diffBefore, false);
+        }
+        const { height } = matrixShape({ matrix: history.idMatrix });
+        this.idMatrix.splice(history.y, height);
+        this.area.bottom -= height;
         break;
-      case "ADD_COLS":
+      }
+      case "ADD_COLS": {
+        if (history.diffBefore) {
+          this.applyDiff(history.diffBefore, false);
+        }
+        const { width } = matrixShape({ matrix: history.idMatrix });
         this.idMatrix.map((row) => {
-          row.splice(history.x, history.numCols);
+          row.splice(history.x, width);
         });
-        this.area.right -= history.numCols;
+        this.area.right -= width;
         break;
-      case "REMOVE_ROWS":
+      }
+      case "REMOVE_ROWS": {
+        const { height } = matrixShape({ matrix: history.idMatrix });
         this.idMatrix.splice(history.y, 0, ...history.idMatrix);
-        this.area.bottom += history.numRows;
+        this.area.bottom += height;
         break;
-      case "REMOVE_COLS":
+      }
+      case "REMOVE_COLS": {
+        const { width } = matrixShape({ matrix: history.idMatrix });
         this.idMatrix.map((row, i) => {
           row.splice(history.x, 0, ...history.idMatrix[i]);
         });
-        this.area.right += history.numCols;
+        this.area.right += width;
         break;
-      case "MOVE":
-        const { y: yFrom, x: xFrom } = history.positionFrom;
-        const { y: yTo, x: xTo } = history.positionTo;
-        const { height: rows, width: cols } = matrixShape(
-          history.matrixFrom,
-          -1
-        );
-        fillMatrix(this.idMatrix, history.matrixFrom, {
+      }
+      case "MOVE": {
+        const { y: yFrom, x: xFrom } = history.pointFrom;
+        const { y: yTo, x: xTo } = history.pointTo;
+        const { height: rows, width: cols } = matrixShape({
+          matrix: history.matrixFrom,
+          base: -1,
+        });
+        putMatrix(this.idMatrix, history.matrixFrom, {
           top: yFrom,
           left: xFrom,
           bottom: yFrom + rows,
           right: xFrom + cols,
         });
-        fillMatrix(this.idMatrix, history.matrixTo, {
+        putMatrix(this.idMatrix, history.matrixTo, {
           top: yTo,
           left: xTo,
           bottom: yTo + rows,
           right: xTo + cols,
         });
         break;
+      }
     }
     return {
       history,
@@ -1112,45 +1229,60 @@ export class Table extends UserTable {
       case "UPDATE":
         this.applyDiff(history.diffAfter!, history.partial);
         break;
-      case "ADD_ROWS":
+      case "ADD_ROWS": {
+        if (history.diffAfter) {
+          this.applyDiff(history.diffAfter, history.partial);
+        }
+        const { height } = matrixShape({ matrix: history.idMatrix });
         this.idMatrix.splice(history.y, 0, ...history.idMatrix);
-        this.area.bottom += history.numRows;
+        this.area.bottom += height;
         break;
-      case "ADD_COLS":
+      }
+      case "ADD_COLS": {
+        if (history.diffAfter) {
+          this.applyDiff(history.diffAfter, history.partial);
+        }
+        const { width } = matrixShape({ matrix: history.idMatrix });
         this.idMatrix.map((row, i) => {
           row.splice(history.x, 0, ...history.idMatrix[i]);
         });
-        this.area.right += history.numCols;
+        this.area.right += width;
         break;
-      case "REMOVE_ROWS":
-        this.idMatrix.splice(history.y, history.numRows);
-        this.area.bottom -= history.numRows;
+      }
+      case "REMOVE_ROWS": {
+        const { height } = matrixShape({ matrix: history.idMatrix });
+        this.idMatrix.splice(history.y, height);
+        this.area.bottom -= height;
         break;
-      case "REMOVE_COLS":
+      }
+      case "REMOVE_COLS": {
+        const { width } = matrixShape({ matrix: history.idMatrix });
         this.idMatrix.map((row) => {
-          row.splice(history.x, history.numCols);
+          row.splice(history.x, width);
         });
-        this.area.right -= history.numCols;
+        this.area.right -= width;
         break;
-      case "MOVE":
-        const { y: yFrom, x: xFrom } = history.positionFrom;
-        const { y: yTo, x: xTo } = history.positionTo;
-        const { height: rows, width: cols } = matrixShape(
-          history.matrixFrom,
-          -1
-        );
-        fillMatrix(this.idMatrix, history.matrixNew, {
+      }
+      case "MOVE": {
+        const { y: yFrom, x: xFrom } = history.pointFrom;
+        const { y: yTo, x: xTo } = history.pointTo;
+        const { height: rows, width: cols } = matrixShape({
+          matrix: history.matrixFrom,
+          base: -1,
+        });
+        putMatrix(this.idMatrix, history.matrixNew, {
           top: yFrom,
           left: xFrom,
           bottom: yFrom + rows,
           right: xFrom + cols,
         });
-        fillMatrix(this.idMatrix, history.matrixFrom, {
+        putMatrix(this.idMatrix, history.matrixFrom, {
           top: yTo,
           left: xTo,
           bottom: yTo + rows,
           right: xTo + cols,
         });
+      }
     }
     return {
       history,

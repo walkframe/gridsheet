@@ -322,7 +322,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
     const { text } = payload;
     if (copyingArea.top === -1) {
       const matrixFrom = tsv2matrix(text);
-      let { height, width } = matrixShape(matrixFrom, -1);
+      let { height, width } = matrixShape({ matrix: matrixFrom, base: -1 });
       selectingArea = {
         top: y,
         left: x,
