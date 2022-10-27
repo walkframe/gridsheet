@@ -257,7 +257,7 @@ export const upsert = <T>({
           const cell = cells[id];
           cells[id] = { [flattenAs]: e, ...cell };
         } else {
-          cells[id] = e;
+          cells[id] = e as CellType;
         }
       });
     });
