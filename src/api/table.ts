@@ -745,6 +745,7 @@ export class UserTable {
       const point = a2p(address);
       const id = this.getId(point);
 
+      // must not partial
       diffBefore[id] = this.getByPoint(point);
       diffAfter[id] = cell;
       if (partial) {
@@ -1157,21 +1158,21 @@ export class Table extends UserTable {
     const history = this.histories[this.historyIndex--];
     switch (history.operation) {
       case "UPDATE":
-        this.applyDiff(history.diffBefore!, history.partial);
+        // diffBefore is guaranteed as total of cell (not partial)
+        this.applyDiff(history.diffBefore!, false);
         break;
       case "ADD_ROWS": {
         if (history.diffBefore) {
-          this.applyDiff(history.diffBefore, history.partial);
+          this.applyDiff(history.diffBefore, false);
         }
         const { height } = matrixShape({ matrix: history.idMatrix });
         this.idMatrix.splice(history.y, height);
         this.area.bottom -= height;
         break;
       }
-
       case "ADD_COLS": {
         if (history.diffBefore) {
-          this.applyDiff(history.diffBefore, history.partial);
+          this.applyDiff(history.diffBefore, false);
         }
         const { width } = matrixShape({ matrix: history.idMatrix });
         this.idMatrix.map((row) => {
@@ -1180,14 +1181,12 @@ export class Table extends UserTable {
         this.area.right -= width;
         break;
       }
-
       case "REMOVE_ROWS": {
         const { height } = matrixShape({ matrix: history.idMatrix });
         this.idMatrix.splice(history.y, 0, ...history.idMatrix);
         this.area.bottom += height;
         break;
       }
-
       case "REMOVE_COLS": {
         const { width } = matrixShape({ matrix: history.idMatrix });
         this.idMatrix.map((row, i) => {
@@ -1196,7 +1195,6 @@ export class Table extends UserTable {
         this.area.right += width;
         break;
       }
-
       case "MOVE": {
         const { y: yFrom, x: xFrom } = history.pointFrom;
         const { y: yTo, x: xTo } = history.pointTo;
@@ -1245,7 +1243,6 @@ export class Table extends UserTable {
         this.area.bottom += height;
         break;
       }
-
       case "ADD_COLS": {
         if (history.diffAfter) {
           this.applyDiff(history.diffAfter, history.partial);
@@ -1257,14 +1254,12 @@ export class Table extends UserTable {
         this.area.right += width;
         break;
       }
-
       case "REMOVE_ROWS": {
         const { height } = matrixShape({ matrix: history.idMatrix });
         this.idMatrix.splice(history.y, height);
         this.area.bottom -= height;
         break;
       }
-
       case "REMOVE_COLS": {
         const { width } = matrixShape({ matrix: history.idMatrix });
         this.idMatrix.map((row) => {
@@ -1273,7 +1268,6 @@ export class Table extends UserTable {
         this.area.right -= width;
         break;
       }
-
       case "MOVE": {
         const { y: yFrom, x: xFrom } = history.pointFrom;
         const { y: yTo, x: xTo } = history.pointTo;
