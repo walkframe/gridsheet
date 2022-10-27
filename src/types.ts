@@ -155,4 +155,4 @@ export type Ids = Id[];
 export type IdMatrix = Ids[];
 export type Address = string;
 
-export type MatrixesByAddress<T> = { [address: Address]: MatrixType<T> };
+export type MatrixesByAddress<T> = { [origin: Address]: MatrixType<T> };
