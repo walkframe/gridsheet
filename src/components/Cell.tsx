@@ -111,6 +111,9 @@ export const Cell: React.FC<Props> = React.memo(
       <CellLayout
         key={x}
         ref={cellRef}
+        data-x={x}
+        data-y={y}
+        data-test-id={address}
         className={`gs-cell ${
           among(copyingArea, { y, x }) ? "gs-copying" : ""
         } ${y === 0 ? "gs-cell-top-end" : ""} ${
