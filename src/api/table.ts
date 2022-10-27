@@ -16,9 +16,8 @@ import {
   CellType,
   Parsers,
   Renderers,
-  MatrixesByAddress,
 } from "../types";
-import { areaShape, createMatrix, matrixShape, fillMatrix } from "./structs";
+import { areaShape, createMatrix, matrixShape, putMatrix } from "./structs";
 import { a2p, x2c, p2a, y2r, grantAddressAbsolute } from "./converters";
 import { FunctionMapping } from "../formula/functions/__base";
 import { functions } from "../formula/mapping";
@@ -27,11 +26,7 @@ import { solveFormula } from "../formula/solver";
 
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH, HISTORY_LIMIT } from "../constants";
 import { shouldTracking } from "../store/utils";
-import {
-  HistoryAddRowsType,
-  HistoryType,
-  StoreReflectionType,
-} from "./history";
+import { HistoryType, StoreReflectionType } from "./history";
 
 type Props = {
   numRows?: number;
@@ -648,14 +643,14 @@ export class UserTable {
     const matrixFrom = this.getIdMatrixFromArea(src);
     const matrixTo = this.getIdMatrixFromArea(dst);
     const matrixNew = this.getNewIdMatrix(src);
-    fillMatrix(this.idMatrix, matrixNew, src);
+    putMatrix(this.idMatrix, matrixNew, src);
     matrixFrom.forEach((ids) => {
       ids
         .map(this.getById.bind(this))
         .filter((c) => c)
         .forEach((cell) => this.setChangedAt(cell, changedAt));
     });
-    const lostRows = fillMatrix(this.idMatrix, matrixFrom, dst);
+    const lostRows = putMatrix(this.idMatrix, matrixFrom, dst);
     this.pushHistory({
       operation: "MOVE",
       reflection,
@@ -866,7 +861,7 @@ export class UserTable {
     updateChangedAt?: boolean;
     reflection?: StoreReflectionType;
   }) {
-    const returned = this.addBlankRows({
+    const returned = this.addRows({
       y,
       numRows,
       baseY,
@@ -882,7 +877,7 @@ export class UserTable {
     return returned;
   }
 
-  public addBlankRows({
+  public addRows({
     y,
     numRows,
     baseY,
@@ -969,7 +964,7 @@ export class UserTable {
     updateChangedAt?: boolean;
     reflection?: StoreReflectionType;
   }) {
-    const returned = this.addBlankCols({
+    const returned = this.addCols({
       x,
       numCols,
       baseX,
@@ -984,7 +979,7 @@ export class UserTable {
     return returned;
   }
 
-  public addBlankCols({
+  public addCols({
     x,
     numCols,
     baseX,
@@ -1202,13 +1197,13 @@ export class Table extends UserTable {
           matrix: history.matrixFrom,
           base: -1,
         });
-        fillMatrix(this.idMatrix, history.matrixFrom, {
+        putMatrix(this.idMatrix, history.matrixFrom, {
           top: yFrom,
           left: xFrom,
           bottom: yFrom + rows,
           right: xFrom + cols,
         });
-        fillMatrix(this.idMatrix, history.matrixTo, {
+        putMatrix(this.idMatrix, history.matrixTo, {
           top: yTo,
           left: xTo,
           bottom: yTo + rows,
@@ -1275,13 +1270,13 @@ export class Table extends UserTable {
           matrix: history.matrixFrom,
           base: -1,
         });
-        fillMatrix(this.idMatrix, history.matrixNew, {
+        putMatrix(this.idMatrix, history.matrixNew, {
           top: yFrom,
           left: xFrom,
           bottom: yFrom + rows,
           right: xFrom + cols,
         });
-        fillMatrix(this.idMatrix, history.matrixFrom, {
+        putMatrix(this.idMatrix, history.matrixFrom, {
           top: yTo,
           left: xTo,
           bottom: yTo + rows,

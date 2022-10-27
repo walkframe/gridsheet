@@ -8,7 +8,6 @@ import {
   X,
   CellsByAddressType,
   ShapeType,
-  Address,
   MatrixesByAddress,
   CellType,
 } from "../types";
@@ -173,9 +172,13 @@ export const aa2oa = (
   return oa;
 };
 
-export const fillMatrix = <T = any>(dst: T[][], src: T[][], area: AreaType) => {
+export const putMatrix = <T = any>(
+  dst: T[][],
+  src: T[][],
+  dstArea: AreaType
+) => {
   const lostRows: MatrixesByAddress<T> = {};
-  const { top, left, bottom, right } = area;
+  const { top, left, bottom, right } = dstArea;
   const { height: dstNumRows, width: dstNumCols } = matrixShape({
     matrix: dst,
     base: 1,
@@ -209,27 +212,6 @@ export const cropMatrix = <T = any>(matrix: T[][], area: AreaType): T[][] => {
     .map((cols) => cols.slice(left, right + 1));
 };
 
-export const matrixIntoCells = (
-  matrix: MatrixType,
-  cells: CellsByAddressType,
-  origin = "A1"
-) => {
-  console.warn(
-    "matrixIntoCells will be deleted in the next version. Use 'generateInitial'."
-  );
-  const { y: baseY, x: baseX } = a2p(origin);
-  matrix.map((row, y) => {
-    row.map((value, x) => {
-      const id = p2a({ y: baseY + y, x: baseX + x });
-      if (typeof value !== "undefined") {
-        const cell = cells[id];
-        cells[id] = { value, ...cell };
-      }
-    });
-  });
-  return cells;
-};
-
 export const generateInitial = <T>({
   cells = {},
   ensured = {},
@@ -244,21 +226,7 @@ export const generateInitial = <T>({
   flattenAs?: keyof CellType;
   matrixes?: MatrixesByAddress<T>;
 } = {}) => {
-  Object.keys(matrixes).forEach((address) => {
-    const matrix = matrixes[address];
-    const { y: baseY, x: baseX } = a2p(address);
-    matrix.map((row, y) => {
-      row.map((value, x) => {
-        const id = p2a({ y: baseY + y, x: baseX + x });
-        if (typeof value !== "undefined") {
-          const cell = cells[id];
-          cells[id] = { value, ...cell };
-        }
-      });
-    });
-  });
   upsert({ cells, flattenAs, matrixes });
-
   const { numRows, numCols } = Object.assign(
     { numRows: 1, numCols: 1 },
     ensured

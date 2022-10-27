@@ -119,7 +119,7 @@ export const ContextMenu: React.FC = () => {
                   : "enabled"
               }
               onClick={(e) => {
-                const newTable = table.addBlankRows({
+                const newTable = table.addRows({
                   y: selectingTop,
                   numRows: height,
                   baseY: selectingTop,
@@ -148,7 +148,7 @@ export const ContextMenu: React.FC = () => {
                 selectingZone.startY += height;
                 selectingZone.endY += height;
                 choosing.y += height;
-                const newTable = table.addBlankRows({
+                const newTable = table.addRows({
                   y: selectingBottom + 1,
                   numRows: height,
                   baseY: selectingBottom,
@@ -174,7 +174,7 @@ export const ContextMenu: React.FC = () => {
                   : "enabled"
               }
               onClick={(e) => {
-                const newTable = table.addBlankCols({
+                const newTable = table.addCols({
                   x: selectingLeft,
                   numCols: width,
                   baseX: selectingLeft,
@@ -202,7 +202,7 @@ export const ContextMenu: React.FC = () => {
                 selectingZone.startX += width;
                 selectingZone.endX += width;
                 choosing.x += width;
-                const newTable = table.addBlankCols({
+                const newTable = table.addCols({
                   x: selectingRight + 1,
                   numCols: width,
                   baseX: selectingRight,
