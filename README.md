@@ -5,7 +5,8 @@
 
 react-gridsheet is a simple yet highly functional spreadsheet component for ReactJS.
 
-<img src="https://github.com/walkframe/react-gridsheet/raw/master/gridsheet.png" alt="gridsheet image" />
+![react-gridsheet](https://github.com/walkframe/react-gridsheet/raw/master/gridsheet.png)
+
 
 ### Supporting features
 
