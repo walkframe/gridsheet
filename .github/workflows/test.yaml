@@ -10,13 +10,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: setup
-        uses: actions/setup-node@v2.1.2
+        uses: actions/setup-node@v3
         with:
-          node-version: "14" # 16
+          node-version: "16"
       - name: cache
-        uses: actions/cache@v2.1.1
+        uses: actions/cache@v3
         with:
           path: |
             node_modules
@@ -43,7 +43,7 @@ jobs:
         volumes:
           - ${{ github.workspace }}/storybook-static:/usr/share/nginx/html/
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
         id: storybook
         with:

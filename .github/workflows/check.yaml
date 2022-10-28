@@ -1,13 +1,12 @@
-name: build
+name: test
 on:
-  - push
+  push:
+
 
 jobs:
-  release:
-    # needs: test
+  type-check:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
-    name: npm upload
+
     steps:
       - uses: actions/checkout@v3
       - name: setup
@@ -22,9 +21,7 @@ jobs:
             node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
 
-      - name: upload
+      - name: check
         run: |
           yarn install
-          yarn run build
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
-          npm publish || true
+          yarn run tsc

@@ -13,7 +13,7 @@ type Props = {
 };
 
 export const Emitter: React.FC<Props> = ({ onChange, onSelect }) => {
-  const { store, dispatch } = React.useContext(Context);
+  const { store } = React.useContext(Context);
   const {
     choosing: pointing,
     selectingZone: zone,

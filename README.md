@@ -36,7 +36,17 @@ $ yarn add react-gridsheet
 
 - 0.7.x
   - Support formula.
-    - Example: https://codesandbox.io/s/react-gridsheet-with-formula-fohcyk
+
+- 0.8.x
+  - Improve ref handling on formula.
+    - Add and absolute ref.
+  - Change table operation.
+    - Get/Set data through tableRef.
+    - Dropped changes option.
+
+- 0.9.x
+  - Add addRowsAndUpdate and addColsAndUpdate method on UserTable.
+
 
 # Image
 <img src="https://github.com/walkframe/react-gridsheet/raw/master/gridsheet.png" alt="gridsheet image" />

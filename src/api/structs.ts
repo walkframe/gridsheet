@@ -32,11 +32,6 @@ export const superposeArea = (
   };
 };
 
-export const Y_START = 0,
-  X_START = 1,
-  Y_END = 2,
-  X_END = 3;
-
 export const zoneToArea = (zone: ZoneType): AreaType => {
   const [top, bottom] =
     zone.startY < zone.endY
