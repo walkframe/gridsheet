@@ -1,3 +1,23 @@
+## Introduction
+
+<img src="https://github.com/walkframe/react-gridsheet/raw/master/gridsheet.png" alt="gridsheet image" />
+
+react-gridsheet is a simple yet highly functional spreadsheet component for ReactJS.
+
+### Supporting features
+
+- Copy & Paste
+- Cut & Paste
+- Add rows and columns
+- Displaying formulas
+- Cell styling
+- Custom renderer
+- Custom parser
+- Undo & Redo
+- Basic Shortcut keys
+- Context menus
+- External Data Manipulation
+
 ## Installation
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet?ref=badge_shield)
@@ -46,10 +66,6 @@ $ yarn add react-gridsheet
 
 - 0.9.x
   - Add addRowsAndUpdate and addColsAndUpdate method on UserTable.
-
-
-# Image
-<img src="https://github.com/walkframe/react-gridsheet/raw/master/gridsheet.png" alt="gridsheet image" />
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet?ref=badge_large)
