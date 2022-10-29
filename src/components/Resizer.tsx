@@ -76,7 +76,7 @@ export const Resizer: React.FC = React.memo(() => {
       ) {
         xs = makeSequence(left, right + 1);
       }
-      xs.map((x, i) => {
+      xs.forEach((x, i) => {
         diff[p2a({ y: 0, x })] = { width };
       });
     }
@@ -85,7 +85,7 @@ export const Resizer: React.FC = React.memo(() => {
       if (verticalHeadersSelecting && between({ start: top, end: bottom }, y)) {
         ys = makeSequence(top, bottom + 1);
       }
-      ys.map((y, i) => {
+      ys.forEach((y, i) => {
         diff[p2a({ y, x: 0 })] = { height };
       });
     }

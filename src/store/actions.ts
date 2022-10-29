@@ -20,7 +20,7 @@ import { Table } from "../api/table";
 
 import { tsv2matrix, x2c, p2a, y2r } from "../api/converters";
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
-import { restrictPoints } from "./utils";
+import { initSearchStatement, restrictPoints } from "./utils";
 
 const actions: { [s: string]: CoreAction<any> } = {};
 
@@ -58,20 +58,12 @@ export class CoreAction<T> {
 class SetSearchQueryAction<T extends string | undefined> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     const searchQuery = payload;
-    const matchingCells: string[] = [];
-    if (!searchQuery) {
-      return { ...store, searchQuery, matchingCells, matchingCellIndex: 0 };
-    }
     const { table } = store;
-    for (let x = 1; x <= table.right; x++) {
-      for (let y = 1; y <= table.bottom; y++) {
-        const s = table.stringify({ y, x }, undefined, true);
-        if (s.indexOf(searchQuery as string) !== -1) {
-          matchingCells.push(`${x2c(x)}${y2r(y)}`);
-        }
-      }
-    }
-    return { ...store, searchQuery, matchingCells, matchingCellIndex: 0 };
+    return {
+      ...store,
+      ...initSearchStatement(table, { ...store, searchQuery }),
+      searchQuery,
+    };
   }
 }
 export const setSearchQuery = new SetSearchQueryAction().bind();
@@ -218,6 +210,7 @@ class UpdateTableAction<T extends Table> extends CoreAction<T> {
     return {
       ...store,
       table: payload,
+      ...initSearchStatement(payload, store),
       ...restrictPoints(store, payload),
     };
   }
@@ -310,6 +303,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
       });
       return {
         ...store,
+        ...initSearchStatement(newTable, store),
         cutting: false,
         table: newTable,
         selectingZone: areaToZone(dst),
@@ -360,6 +354,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
       table: newTable,
       selectingZone: areaToZone(selectingArea),
       copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
+      ...initSearchStatement(newTable, store),
     };
   }
 }
@@ -490,6 +485,7 @@ class WriteAction<T extends string> extends CoreAction<T> {
     });
     return {
       ...store,
+      ...initSearchStatement(newTable, store),
       table: newTable,
       copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
     };
@@ -523,7 +519,7 @@ class ClearAction<T extends null> extends CoreAction<T> {
     });
     return {
       ...store,
-
+      ...initSearchStatement(newTable, store),
       table: newTable,
     };
   }
@@ -542,6 +538,7 @@ class UndoAction<T extends null> extends CoreAction<T> {
       ...store,
       ...restrictPoints(store, table),
       ...reflection,
+      ...initSearchStatement(newTable, store),
       table: newTable,
     };
   }
@@ -560,6 +557,7 @@ class RedoAction<T extends null> extends CoreAction<T> {
       ...store,
       ...reflection,
       ...restrictPoints(store, table),
+      ...initSearchStatement(newTable, store),
       table: newTable,
     };
   }

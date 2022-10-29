@@ -101,9 +101,9 @@ export const matrix2tsv = ({
 }): string => {
   const { y, x } = point;
   const lines: string[] = [];
-  matrix.map((row, i) => {
+  matrix.forEach((row, i) => {
     const cols: string[] = [];
-    row.map((col, j) => {
+    row.forEach((col, j) => {
       const value = table.stringify({ y: y + i, x: x + j }, col);
       if (value.indexOf("\n") !== -1) {
         cols.push(`"${value.replace(/"/g, '""')}"`);

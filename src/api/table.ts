@@ -144,10 +144,10 @@ export class UserTable {
             ...cell?.style,
           },
         } as CellType;
-        stacked.value = convertFormulaAbsolute(
-          stacked?.value,
-          Table.cast(this)
-        );
+        stacked.value = convertFormulaAbsolute({
+          value: stacked?.value,
+          table: Table.cast(this),
+        });
         if (y === 0) {
           if (stacked.width == null) {
             stacked.width = DEFAULT_WIDTH;
@@ -230,7 +230,7 @@ export class UserTable {
 
   public getAddressesByIds(ids: CellsByIdType) {
     const addresses: CellsByAddressType = {};
-    Object.keys(ids).map((id) => {
+    Object.keys(ids).forEach((id) => {
       const cell = ids[id];
       const address = this.getAddressById(id);
       if (cell && address) {
@@ -702,12 +702,12 @@ export class UserTable {
             x: leftFrom + (j % maxWidth),
           }),
         };
-        const value = convertFormulaAbsolute(
-          cell?.value,
-          Table.cast(this),
+        const value = convertFormulaAbsolute({
+          value: cell?.value,
+          table: Table.cast(this),
           slideY,
-          slideX
-        );
+          slideX,
+        });
         this.setChangedAt(cell, changedAt);
         diff[p2a({ y: toY, x: toX })] = {
           ...cell,
@@ -736,7 +736,10 @@ export class UserTable {
       if (updateChangedAt) {
         this.setChangedAt(cell, changedAt);
       }
-      cell.value = convertFormulaAbsolute(cell.value, Table.cast(this));
+      cell.value = convertFormulaAbsolute({
+        value: cell.value,
+        table: Table.cast(this),
+      });
       const point = a2p(address);
       const id = this.getId(point);
 
@@ -797,12 +800,12 @@ export class UserTable {
   }) {
     const { y: baseY, x: baseX } = point;
     const diff: CellsByAddressType = {};
-    matrix.map((cols, i) => {
+    matrix.forEach((cols, i) => {
       const y = baseY + i;
       if (y > this.bottom) {
         return;
       }
-      cols.map((value, j) => {
+      cols.forEach((value, j) => {
         const x = baseX + j;
         if (x > this.right) {
           return;
@@ -1039,7 +1042,7 @@ export class UserTable {
       return this;
     }
     const rows: IdMatrix = [];
-    this.idMatrix.map((row) => {
+    this.idMatrix.forEach((row) => {
       const deleted = row.splice(x, numCols);
       rows.push(deleted);
     });
@@ -1170,7 +1173,7 @@ export class Table extends UserTable {
           this.applyDiff(history.diffBefore, false);
         }
         const { width } = matrixShape({ matrix: history.idMatrix });
-        this.idMatrix.map((row) => {
+        this.idMatrix.forEach((row) => {
           row.splice(history.x, width);
         });
         this.area.right -= width;
@@ -1184,7 +1187,7 @@ export class Table extends UserTable {
       }
       case "REMOVE_COLS": {
         const { width } = matrixShape({ matrix: history.idMatrix });
-        this.idMatrix.map((row, i) => {
+        this.idMatrix.forEach((row, i) => {
           row.splice(history.x, 0, ...history.idMatrix[i]);
         });
         this.area.right += width;
@@ -1257,7 +1260,7 @@ export class Table extends UserTable {
       }
       case "REMOVE_COLS": {
         const { width } = matrixShape({ matrix: history.idMatrix });
-        this.idMatrix.map((row) => {
+        this.idMatrix.forEach((row) => {
           row.splice(history.x, width);
         });
         this.area.right -= width;

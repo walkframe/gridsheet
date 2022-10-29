@@ -31,7 +31,7 @@ export const SearchBox: React.FC = () => {
       columnIndex: x - 1,
       align: "auto",
     });
-  }, [matchingCell]);
+  }, [searchQuery, matchingCellIndex]);
 
   if (typeof searchQuery === "undefined") {
     return null;

@@ -138,9 +138,9 @@ export const oa2aa = (
   fields: string[]
 ): MatrixType => {
   const aa: any[][] = [];
-  oa.map((o) => {
+  oa.forEach((o) => {
     const a: any[] = [];
-    fields.map((field) => {
+    fields.forEach((field) => {
       a.push(o[field]);
     });
     aa.push(a);
@@ -153,9 +153,9 @@ export const aa2oa = (
   fields: string[]
 ): { [s: string]: any } => {
   const oa: { [s: string]: any }[] = [];
-  aa.map((a) => {
+  aa.forEach((a) => {
     const o: { [s: string]: any } = {};
-    a.map((v, i) => {
+    a.forEach((v, i) => {
       if (i >= fields.length) {
         return;
       }
@@ -245,8 +245,8 @@ export const upsert = <T>({
   Object.keys(matrixes).forEach((address) => {
     const matrix = matrixes[address];
     const { y: baseY, x: baseX } = a2p(address);
-    matrix.map((row, y) => {
-      row.map((e, x) => {
+    matrix.forEach((row, y) => {
+      row.forEach((e, x) => {
         const id = p2a({ y: baseY + y, x: baseX + x });
         if (flattenAs) {
           const cell = cells[id];

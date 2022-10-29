@@ -1,5 +1,6 @@
+import { x2c, y2r } from "../api/converters";
 import { Table } from "../api/table";
-import { PointType, StoreType, ZoneType } from "../types";
+import { Address, PointType, StoreType, ZoneType } from "../types";
 
 export const restrictPoints = (store: StoreType, table: Table) => {
   const { choosing, selectingZone, copyingZone } = store;
@@ -58,4 +59,25 @@ export const shouldTracking = (operation: string) => {
       return true;
   }
   return false;
+};
+
+export const initSearchStatement = (table: Table, store: StoreType) => {
+  const { searchQuery } = store;
+  if (!searchQuery) {
+    return {};
+  }
+  const matchingCells: Address[] = [];
+  for (let y = 1; y <= table.bottom; y++) {
+    for (let x = 1; x <= table.right; x++) {
+      const s = table.stringify({ y, x }, undefined, true);
+      if (s.indexOf(searchQuery) !== -1) {
+        matchingCells.push(`${x2c(x)}${y2r(y)}`);
+      }
+    }
+  }
+  const matchingCellIndex =
+    matchingCells.length === store.matchingCells.length
+      ? store.matchingCellIndex
+      : 0;
+  return { matchingCells, searchQuery, matchingCellIndex };
 };

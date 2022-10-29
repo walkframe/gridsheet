@@ -56,6 +56,7 @@ export const Editor: React.FC = () => {
   const editing = editingCell === address;
 
   const cell = table.getByPoint({ y, x });
+  const horizontalHeader = table.getByPoint({ y: 0, x });
   const value = cell?.value;
   const { y: top, x: left, height, width } = editorRect;
 
@@ -87,6 +88,9 @@ export const Editor: React.FC = () => {
             input.value = table.stringify({ y, x }, value);
             setBefore(input.value);
             dispatch(setEditingCell(address));
+            if (horizontalHeader?.width) {
+              input.style.width = `${horizontalHeader.width}px`;
+            }
             setTimeout(() => {
               input.style.width = `${input.scrollWidth}px`;
               const length = new String(input.value).length;
@@ -152,7 +156,6 @@ export const Editor: React.FC = () => {
                   deltaX: 0,
                 })
               );
-              // gridRef.current?.scrollToItem({ rowIndex: y + 1, align: "end" });
               e.preventDefault();
               return false;
             case "Backspace": // BACKSPACE

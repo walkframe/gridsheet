@@ -114,6 +114,7 @@ export const GridTableLayout = styled.div`
         flex: 1;
       }
       .gs-search-progress {
+        color: #999999;
         padding: 6px 3px;
         font-size: 13px;
         text-align: right;

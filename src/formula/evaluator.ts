@@ -296,13 +296,17 @@ export class Lexer {
     return isWhiteSpace(this.formula[this.index]);
   }
 
-  private next(table = 1) {
-    this.index += table;
+  private next(base = 1) {
+    this.index += base;
   }
 
-  private get(table = 0) {
-    const c = this.formula[this.index + table];
+  private get(base = 0) {
+    const c = this.formula[this.index + base];
     return c;
+  }
+
+  private getToken(base = 0) {
+    return this.tokens[this.tokens.length + base];
   }
 
   public stringifyToId(table: Table, slideY = 0, slideX = 0) {
@@ -367,17 +371,19 @@ export class Lexer {
         case "+":
           this.tokens.push(TOKEN_ADD);
           continue;
-        case "-":
+        case "-": {
+          const prev1 = this.getToken(-1)?.type;
+          const prev2 = this.getToken(-2)?.type;
           if (
-            this.tokens[this.tokens.length - 1]?.type === "INFIX_OPERATOR" ||
-            (this.tokens[this.tokens.length - 1]?.type === "SPACE" &&
-              this.tokens[this.tokens.length - 2]?.type === "INFIX_OPERATOR")
+            prev1 === "INFIX_OPERATOR" ||
+            (prev1 === "SPACE" && prev2 === "INFIX_OPERATOR")
           ) {
             this.tokens.push(TOKEN_UMINUS);
           } else {
             this.tokens.push(TOKEN_MINUS);
           }
           continue;
+        }
         case "/":
           this.tokens.push(TOKEN_DIVIDE);
           continue;
@@ -414,55 +420,54 @@ export class Lexer {
           }
           this.tokens.push(TOKEN_LT);
           continue;
-        case '"':
+        case '"': {
           const buf = this.getString();
           this.tokens.push(new Token("VALUE", buf));
           continue;
-        default: {
-          let buf = char;
-          while (true) {
-            const c = this.get();
-            if (c === "(") {
-              this.tokens.push(new Token("FUNCTION", buf), TOKEN_OPEN);
-              this.next();
-              break;
-            }
-            if (c == null || c.match(/[ +\-/*^&=<>),]/)) {
-              if (buf.length === 0) {
-                break;
-              }
-              if (buf.match(/^[+-]?(\d*[.])?\d+$/)) {
-                this.tokens.push(new Token("VALUE", parseFloat(buf)));
-              } else {
-                // @ts-ignore
-                const bool = BOOLS[buf.toLowerCase()];
-                if (bool != null) {
-                  this.tokens.push(new Token("VALUE", bool));
-                } else if (buf.startsWith("#")) {
-                  if (buf === "#REF!") {
-                    this.tokens.push(new Token("UNREFERENCED", buf));
-                  } else if (buf.indexOf(":") !== -1) {
-                    this.tokens.push(new Token("ID_RANGE", buf));
-                  } else {
-                    this.tokens.push(new Token("ID", buf));
-                  }
-                } else if (buf.indexOf(":") !== -1) {
-                  this.tokens.push(new Token("RANGE", buf));
-                } else {
-                  // @ts-ignore
-                  if (isNaN(buf[buf.length - 1])) {
-                    this.tokens.push(new Token("INVALID_REF", buf));
-                  } else {
-                    this.tokens.push(new Token("REF", buf));
-                  }
-                }
-              }
-              break;
-            }
-            buf += c;
-            this.next();
-          }
         }
+      } // switch end
+      let buf = char;
+      while (true) {
+        const c = this.get();
+        if (c === "(") {
+          this.tokens.push(new Token("FUNCTION", buf), TOKEN_OPEN);
+          this.next();
+          break;
+        }
+        if (c == null || c.match(/[ +\-/*^&=<>),]/)) {
+          if (buf.length === 0) {
+            break;
+          }
+          if (buf.match(/^[+-]?(\d*[.])?\d+$/)) {
+            this.tokens.push(new Token("VALUE", parseFloat(buf)));
+          } else {
+            // @ts-ignore
+            const bool = BOOLS[buf.toLowerCase()];
+            if (bool != null) {
+              this.tokens.push(new Token("VALUE", bool));
+            } else if (buf.startsWith("#")) {
+              if (buf === "#REF!") {
+                this.tokens.push(new Token("UNREFERENCED", buf));
+              } else if (buf.indexOf(":") !== -1) {
+                this.tokens.push(new Token("ID_RANGE", buf));
+              } else {
+                this.tokens.push(new Token("ID", buf));
+              }
+            } else if (buf.indexOf(":") !== -1) {
+              this.tokens.push(new Token("RANGE", buf));
+            } else {
+              // @ts-ignore
+              if (isNaN(buf[buf.length - 1])) {
+                this.tokens.push(new Token("INVALID_REF", buf));
+              } else {
+                this.tokens.push(new Token("REF", buf));
+              }
+            }
+          }
+          break;
+        }
+        buf += c;
+        this.next();
       }
     }
   }
@@ -608,12 +613,17 @@ export class Parser {
   }
 }
 
-export const convertFormulaAbsolute = (
-  value: any,
-  table: Table,
+export const convertFormulaAbsolute = ({
+  value,
+  table,
   slideY = 0,
-  slideX = 0
-) => {
+  slideX = 0,
+}: {
+  value: any;
+  table: Table;
+  slideY?: number;
+  slideX?: number;
+}) => {
   if (typeof value === "string" || value instanceof String) {
     if (value.charAt(0) === "=") {
       const lexer = new Lexer(value.substring(1));

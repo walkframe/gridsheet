@@ -62,6 +62,7 @@ export const functions = {
   minus: MinusFunction,
   uminus: UminusFunction,
   multiply: MultiplyFunction,
+  pow: PowerFunction,
   power: PowerFunction,
   sqrt: SqrtFunction,
   sum: SumFunction,
