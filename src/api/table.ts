@@ -66,7 +66,6 @@ export class UserTable {
   protected renderers: Renderers;
   protected labelers: Labelers;
   protected functions: FunctionMapping = {};
-  protected base: UserTable;
   protected lastHistory?: HistoryType;
   protected histories: HistoryType[];
   protected historyIndex: number;
@@ -98,7 +97,6 @@ export class UserTable {
     this.parsers = parsers;
     this.renderers = renderers;
     this.labelers = labelers;
-    this.base = this;
     this.idMatrix = [];
     this.histories = [];
     this.historyIndex = -1;
@@ -189,7 +187,6 @@ export class UserTable {
     copied.maxNumRows = this.maxNumRows;
     copied.minNumCols = this.minNumCols;
     copied.maxNumCols = this.maxNumCols;
-    copied.base = this;
     if (copyCache) {
       copied.addressesById = this.addressesById;
     } else {
@@ -1118,7 +1115,6 @@ export class Table extends UserTable {
   public trim(area: AreaType): ReadonlyTable {
     const copied = new Table({});
     copied.area = area;
-    copied.base = this.base;
     copied.idMatrix = this.idMatrix;
     copied.data = this.data;
     copied.parsers = this.parsers;
