@@ -50,7 +50,10 @@ export class HlookupFunction extends BaseFunction {
       let last = -1;
       for (let x = 0; x <= range.getNumCols(); x++) {
         const v = matrix[0]?.[x];
-        if (v != null && v <= key) {
+        if (v == null) {
+          continue;
+        }
+        if (v <= key) {
           last = x;
         } else {
           break;

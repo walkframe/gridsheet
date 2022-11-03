@@ -50,7 +50,10 @@ export class VlookupFunction extends BaseFunction {
       let last = -1;
       for (let y = 0; y <= range.getNumRows(); y++) {
         const v = matrix[y]?.[0];
-        if (v != null && v <= key) {
+        if (v == null) {
+          continue;
+        }
+        if (v <= key) {
           last = y;
         } else {
           break;
