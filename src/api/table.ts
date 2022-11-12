@@ -618,10 +618,10 @@ export class UserTable {
     if (cell.parser != null) {
       newCell.parser = cell.parser;
     }
-    if (cell.width != null && base === 0) {
+    if (cell.width != null) {
       newCell.width = cell.width;
     }
-    if (cell.height != null && base === 0) {
+    if (cell.height != null) {
       newCell.height = cell.height;
     }
     return newCell;
