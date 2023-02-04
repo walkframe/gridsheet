@@ -16,6 +16,8 @@ import {
   CellType,
   Parsers,
   Renderers,
+  HistoryType,
+  StoreReflectionType,
 } from "../types";
 import { areaShape, createMatrix, matrixShape, putMatrix } from "./structs";
 import { a2p, x2c, p2a, y2r, grantAddressAbsolute } from "./converters";
@@ -26,7 +28,6 @@ import { solveFormula } from "../formula/solver";
 
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH, HISTORY_LIMIT } from "../constants";
 import { shouldTracking } from "../store/utils";
-import { HistoryType, StoreReflectionType } from "./history";
 
 type Props = {
   numRows?: number;
@@ -601,7 +602,7 @@ export class UserTable {
     return cell;
   }
 
-  private copyCell(cell: CellType | undefined, base: number) {
+  private copyCellLayout(cell: CellType | undefined) {
     if (cell == null) {
       return undefined;
     }
@@ -904,7 +905,7 @@ export class UserTable {
         const id = this.generateId();
         row.push(id);
         const cell = this.getByPoint({ y: baseY, x: j });
-        const copied = this.copyCell(cell, baseY);
+        const copied = this.copyCellLayout(cell);
         this.data[id] = { ...copied, changedAt };
       }
       rows.push(row);
@@ -1006,7 +1007,7 @@ export class UserTable {
         const id = this.generateId();
         row.push(id);
         const cell = this.getByPoint({ y: i, x: baseX });
-        const copied = this.copyCell(cell, baseX);
+        const copied = this.copyCellLayout(cell);
         this.idMatrix[i].splice(x, 0, id);
         this.data[id] = { ...copied, changedAt };
       }

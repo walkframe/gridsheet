@@ -1,8 +1,8 @@
-import { StoreType, AreaType } from "../types";
+import { StoreType, AreaType, PointType } from "../types";
 
 import { zoneToArea } from "./structs";
-import { matrix2tsv } from "./converters";
 import { solveTable } from "../formula/solver";
+import { Table } from "./table";
 
 export const clip = (store: StoreType): AreaType => {
   const { selectingZone, choosing, editorRef, table } = store;
@@ -14,8 +14,7 @@ export const clip = (store: StoreType): AreaType => {
   }
   const input = editorRef.current;
   const trimmed = table.trim(area);
-  const matrix = solveTable({ table: trimmed, raise: false });
-  const tsv = matrix2tsv({ table, matrix, point: choosing });
+  const tsv = table2tsv({ table: trimmed });
   if (input != null) {
     input.value = tsv;
     input.focus();
@@ -25,4 +24,22 @@ export const clip = (store: StoreType): AreaType => {
     input.blur();
   }
   return area;
+};
+
+const table2tsv = ({ table }: { table: Table }): string => {
+  const lines: string[] = [];
+  const matrix = solveTable({ table, raise: false });
+  matrix.forEach((row, i) => {
+    const cols: string[] = [];
+    row.forEach((col, j) => {
+      const value = table.stringify({ y: i, x: j }, col);
+      if (value.indexOf("\n") !== -1) {
+        cols.push(`"${value.replace(/"/g, '""')}"`);
+      } else {
+        cols.push(value);
+      }
+    });
+    lines.push(cols.join("\t"));
+  });
+  return lines.join("\n");
 };

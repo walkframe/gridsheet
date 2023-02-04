@@ -90,32 +90,6 @@ export const p2a = ({ y, x }: PointType) => {
   return `${x2c(x)}${y2r(y)}`;
 };
 
-export const matrix2tsv = ({
-  table,
-  matrix,
-  point,
-}: {
-  table: Table;
-  matrix: MatrixType;
-  point: PointType;
-}): string => {
-  const { y, x } = point;
-  const lines: string[] = [];
-  matrix.forEach((row, i) => {
-    const cols: string[] = [];
-    row.forEach((col, j) => {
-      const value = table.stringify({ y: y + i, x: x + j }, col);
-      if (value.indexOf("\n") !== -1) {
-        cols.push(`"${value.replace(/"/g, '""')}"`);
-      } else {
-        cols.push(value);
-      }
-    });
-    lines.push(cols.join("\t"));
-  });
-  return lines.join("\n");
-};
-
 const restoreDoubleQuote = (text: string) => text.replace(/\x00/g, '"');
 
 export const tsv2matrix = (tsv: string): string[][] => {

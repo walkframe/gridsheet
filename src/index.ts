@@ -16,4 +16,3 @@ export {
 export { ThousandSeparatorRenderer } from "./renderers/thousand_separator";
 export { BaseFunction } from "./formula/functions/__base";
 export { Table } from "./api/table";
-export { HistoryType } from "./api/history";

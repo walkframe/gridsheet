@@ -15,7 +15,6 @@ import {
 } from "../store/actions";
 
 import { HEADER_HEIGHT, HEADER_WIDTH, HISTORY_LIMIT } from "../constants";
-import { a2p } from "../api/converters";
 import { Table } from "../api/table";
 import { functions } from "../formula/mapping";
 import { getMaxSizesFromCells } from "../api/structs";
