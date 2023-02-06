@@ -15,7 +15,10 @@ export const clip = (store: StoreType): AreaType => {
   const input = editorRef.current;
   const trimmed = table.trim(area);
   const tsv = table2tsv({ table: trimmed });
-  if (input != null) {
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(tsv);
+  } else if (input != null) {
     input.value = tsv;
     input.focus();
     input.select();
