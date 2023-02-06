@@ -13,8 +13,6 @@ import { SearchBox } from "./SearchBox";
 import { Context } from "../store";
 import { choose, select, setEntering, updateTable } from "../store/actions";
 
-import { GridTableLayout } from "./styles/GridTableLayout";
-
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
 import { Table } from "../api/table";
 import { TableRef } from "../types";
@@ -60,7 +58,7 @@ export const GridTable = ({ tableRef }: Props) => {
   const sheetInnerWidth = sheetWidth - headerWidth;
 
   return (
-    <GridTableLayout className={'gs-table'}>
+    <>
       <Editor />
       <SearchBox />
       <div
@@ -147,6 +145,6 @@ export const GridTable = ({ tableRef }: Props) => {
           </div>
         </div>
       </div>
-    </GridTableLayout>
+    </>
   );
 };

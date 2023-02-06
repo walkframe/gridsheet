@@ -113,7 +113,7 @@ export const GridSheet: React.FC<Props> = ({
   return (
     <div
       ref={sheetRef}
-      className={`gridsheet ${mode || "light"} ${className || ""}`}
+      className={`gridsheet-1 ${mode || "light"} ${className || ""}`}
       style={{ ...style, resize, height: sheetHeight, width: sheetWidth }}
     >
       <Context.Provider value={{ store, dispatch }}>
