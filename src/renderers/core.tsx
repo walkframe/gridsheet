@@ -1,9 +1,9 @@
 import React from "react";
 import { CellType, PointType, WriterType } from "../types";
-import { Table } from "../api/table";
+import { Table } from "../lib/table";
 import { solveFormula } from "../formula/solver";
 import { FormulaError } from "../formula/evaluator";
-import { p2a } from "../api/converters";
+import { p2a } from "../lib/converters";
 import { format as formatDate } from "date-fns";
 
 type Condition = (value: any) => boolean;

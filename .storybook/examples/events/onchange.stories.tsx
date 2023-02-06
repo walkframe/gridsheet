@@ -1,7 +1,8 @@
 import React from "react";
-import { GridSheet, HistoryType } from "../../../src";
-import { generateInitial } from "../../../src/api/structs";
+import { GridSheet } from "../../../src";
+import { generateInitial } from "../../../src/lib/structs";
 import { createTableRef } from "../../../src/components/GridTable";
+import {HistoryType} from "../../../src/types";
 
 export default {
   title: "Table operations",

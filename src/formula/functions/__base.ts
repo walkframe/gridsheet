@@ -1,4 +1,4 @@
-import { Table } from "../../api/table";
+import { Table } from "../../lib/table";
 
 export type FunctionProps = {
   args: any[];

@@ -1,6 +1,6 @@
-import { rangeToArea } from "../api/structs";
-import { a2p, x2c } from "../api/converters";
-import { Table } from "../api/table";
+import { rangeToArea } from "../lib/structs";
+import { a2p, x2c } from "../lib/converters";
+import { Table } from "../lib/table";
 
 type EvaluateProps = {
   table: Table;

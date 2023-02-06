@@ -1,6 +1,6 @@
 import { FormulaError } from "../evaluator";
 import { solveTable } from "../solver";
-import { Table } from "../../api/table";
+import { Table } from "../../lib/table";
 import { BaseFunction } from "./__base";
 import { ensureNumber } from "./__utils";
 

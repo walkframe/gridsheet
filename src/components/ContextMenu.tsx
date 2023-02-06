@@ -1,5 +1,5 @@
 import React from "react";
-import { clip } from "../api/clipboard";
+import { clip } from "../lib/clipboard";
 
 import {
   undo,
@@ -10,11 +10,7 @@ import {
   setContextMenuPosition,
   updateTable,
 } from "../store/actions";
-import {
-  ContextMenuLayout,
-  ContextMenuModalLayout,
-} from "./styles/ContextMenuLayout";
-import { areaToZone, zoneShape, zoneToArea } from "../api/structs";
+import { areaToZone, zoneShape, zoneToArea } from "../lib/structs";
 
 import { Context } from "../store";
 
@@ -56,7 +52,7 @@ export const ContextMenu: React.FC = () => {
   const historyIndex = table.getHistoryIndex();
 
   return (
-    <ContextMenuModalLayout
+    <div
       className="gs-contextmenu-modal"
       onClick={(e) => {
         e.preventDefault();
@@ -64,7 +60,8 @@ export const ContextMenu: React.FC = () => {
         return false;
       }}
     >
-      <ContextMenuLayout
+      <div
+        className={'gs-contextmenu'}
         style={{
           top: top,
           left: left,
@@ -300,7 +297,7 @@ export const ContextMenu: React.FC = () => {
             </li>
           )}
         </ul>
-      </ContextMenuLayout>
-    </ContextMenuModalLayout>
+      </div>
+    </div>
   );
 };

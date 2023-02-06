@@ -21,11 +21,12 @@ import { Resizer } from "./Resizer";
 
 import { Emitter } from "./Emitter";
 import { ContextMenu } from "./ContextMenu";
-import { GridSheetLayout } from "./styles/GridSheetLayout";
-import { Table } from "../api/table";
+import { Table } from "../lib/table";
 import { GridTable } from "./GridTable";
-import { getMaxSizesFromCells } from "../api/structs";
-import { x2c, y2r } from "../api/converters";
+import { getMaxSizesFromCells } from "../lib/structs";
+import { x2c, y2r } from "../lib/converters";
+import {useEffect} from "react";
+import {embedStyle} from "../styles/styles";
 
 export const GridSheet: React.FC<Props> = ({
   initial,
@@ -36,6 +37,9 @@ export const GridSheet: React.FC<Props> = ({
   additionalFunctions = {},
 }) => {
   const { sheetResize: resize = "both" } = options;
+  useEffect(() => {
+    embedStyle();
+  }, []);
   const sheetRef = React.useRef<HTMLDivElement>(document.createElement("div"));
   const searchInputRef = React.useRef<HTMLInputElement>(
     document.createElement("input")
@@ -107,9 +111,9 @@ export const GridSheet: React.FC<Props> = ({
 
   const { onChange, onSelect, mode } = options;
   return (
-    <GridSheetLayout
+    <div
       ref={sheetRef}
-      className={`react-grid-sheet ${mode || "light"} ${className || ""}`}
+      className={`gridsheet-1 ${mode || "light"} ${className || ""}`}
       style={{ ...style, resize, height: sheetHeight, width: sheetWidth }}
     >
       <Context.Provider value={{ store, dispatch }}>
@@ -123,7 +127,7 @@ export const GridSheet: React.FC<Props> = ({
         <Resizer />
         <Emitter onChange={onChange} onSelect={onSelect} />
       </Context.Provider>
-    </GridSheetLayout>
+    </div>
   );
 };
 

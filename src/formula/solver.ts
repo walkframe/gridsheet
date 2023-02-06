@@ -1,8 +1,8 @@
 import { Special } from "../constants";
-import { Table } from "../api/table";
+import { Table } from "../lib/table";
 import { MatrixType } from "../types";
 import { FormulaError, Lexer, Parser } from "./evaluator";
-import { p2a } from "../api/converters";
+import { p2a } from "../lib/converters";
 
 const SOLVING = new Special("solving");
 

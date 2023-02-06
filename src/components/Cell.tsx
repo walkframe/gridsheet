@@ -1,6 +1,6 @@
 import React from "react";
-import { x2c, y2r } from "../api/converters";
-import { zoneToArea, among, zoneShape } from "../api/structs";
+import { x2c, y2r } from "../lib/converters";
+import { zoneToArea, among, zoneShape } from "../lib/structs";
 import {
   choose,
   select,
@@ -12,7 +12,6 @@ import {
 
 import { DUMMY_IMG, DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
 import { AreaType } from "../types";
-import { CellLayout } from "./styles/CellLayout";
 
 import { Context } from "../store";
 import { FormulaError } from "../formula/evaluator";
@@ -108,7 +107,7 @@ export const Cell: React.FC<Props> = React.memo(
     }
 
     return (
-      <CellLayout
+      <div
         key={x}
         ref={cellRef}
         data-x={x}
@@ -196,8 +195,10 @@ export const Cell: React.FC<Props> = React.memo(
             {showAddress && <div className="gs-cell-label">{address}</div>}
             <div className="gs-cell-rendered">{rendered}</div>
           </div>
+
+
         </div>
-      </CellLayout>
+      </div>
     );
   }
 );

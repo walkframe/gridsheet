@@ -1,5 +1,5 @@
-import { x2c, y2r } from "../api/converters";
-import { Table } from "../api/table";
+import { x2c, y2r } from "../lib/converters";
+import { Table } from "../lib/table";
 import { Address, PointType, StoreType, ZoneType } from "../types";
 
 export const restrictPoints = (store: StoreType, table: Table) => {

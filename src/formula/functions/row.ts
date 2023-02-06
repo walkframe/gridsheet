@@ -1,4 +1,4 @@
-import { Table } from "../../api/table";
+import { Table } from "../../lib/table";
 import { FormulaError } from "../evaluator";
 import { BaseFunction } from "./__base";
 

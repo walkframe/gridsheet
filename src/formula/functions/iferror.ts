@@ -1,6 +1,6 @@
 // DO NOT COPY THIS CODE FOR THE OTHER.
 
-import { Table } from "../../api/table";
+import { Table } from "../../lib/table";
 import { FormulaError } from "../evaluator";
 import { FunctionProps } from "./__base";
 

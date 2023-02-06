@@ -1,4 +1,4 @@
-import { a2p } from "../api/converters";
+import { a2p } from "../lib/converters";
 import React from "react";
 
 import { Context } from "../store";

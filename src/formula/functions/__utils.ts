@@ -1,5 +1,5 @@
 import { solveTable } from "../solver";
-import { Table } from "../../api/table";
+import { Table } from "../../lib/table";
 import { FormulaError } from "../evaluator";
 
 export const ensureNumber = (value: any, alternative?: number): number => {
