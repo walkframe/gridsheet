@@ -60,7 +60,7 @@ export const GridTable = ({ tableRef }: Props) => {
   const sheetInnerWidth = sheetWidth - headerWidth;
 
   return (
-    <GridTableLayout>
+    <GridTableLayout className={'gs-table'}>
       <Editor />
       <SearchBox />
       <div

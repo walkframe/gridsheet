@@ -16,7 +16,8 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "baseUrl": "./src/",
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true
   },
   "exclude": ["node_modules", "src/stories", "*.stories.tsx", "dist"],
   "include": ["**/*.ts", "**/*.tsx"]
