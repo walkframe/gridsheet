@@ -1,6 +1,6 @@
 import React from "react";
-import { x2c } from "../api/converters";
-import { between } from "../api/structs";
+import { x2c } from "../lib/converters";
+import { between } from "../lib/structs";
 import { Context } from "../store";
 import {
   choose,

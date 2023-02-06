@@ -14,7 +14,7 @@ import { Context } from "../store";
 import { choose, select, setEntering, updateTable } from "../store/actions";
 
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
-import { Table } from "../api/table";
+import { Table } from "../lib/table";
 import { TableRef } from "../types";
 
 type Props = {

@@ -15,9 +15,9 @@ import {
 } from "../store/actions";
 
 import { HEADER_HEIGHT, HEADER_WIDTH, HISTORY_LIMIT } from "../constants";
-import { Table } from "../api/table";
+import { Table } from "../lib/table";
 import { functions } from "../formula/mapping";
-import { getMaxSizesFromCells } from "../api/structs";
+import { getMaxSizesFromCells } from "../lib/structs";
 
 export const StoreInitializer: React.FC<Props> = ({
   initial = {},

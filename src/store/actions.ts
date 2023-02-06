@@ -15,10 +15,10 @@ import {
   matrixShape,
   areaShape,
   areaToZone,
-} from "../api/structs";
-import { Table } from "../api/table";
+} from "../lib/structs";
+import { Table } from "../lib/table";
 
-import { tsv2matrix, x2c, p2a, y2r } from "../api/converters";
+import { tsv2matrix, x2c, p2a, y2r } from "../lib/converters";
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
 import { initSearchStatement, restrictPoints } from "./utils";
 

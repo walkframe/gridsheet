@@ -1,5 +1,5 @@
 import React from "react";
-import { clip } from "../api/clipboard";
+import { clip } from "../lib/clipboard";
 
 import {
   undo,
@@ -10,7 +10,7 @@ import {
   setContextMenuPosition,
   updateTable,
 } from "../store/actions";
-import { areaToZone, zoneShape, zoneToArea } from "../api/structs";
+import { areaToZone, zoneShape, zoneToArea } from "../lib/structs";
 
 import { Context } from "../store";
 

@@ -5,7 +5,7 @@ import {
 
 import { RendererType } from "./renderers/core";
 import { ParserType } from "./parsers/core";
-import { UserTable, Table } from "./api/table";
+import { UserTable, Table } from "./lib/table";
 import { FunctionMapping } from "./formula/functions/__base";
 import React from "react";
 

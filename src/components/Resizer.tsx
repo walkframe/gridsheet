@@ -1,5 +1,4 @@
 import React from "react";
-import styled from "styled-components";
 
 import { Context } from "../store";
 import {
@@ -14,28 +13,9 @@ import {
   MIN_WIDTH,
   MIN_HEIGHT,
 } from "../constants";
-import { zoneToArea, makeSequence, between } from "../api/structs";
+import { zoneToArea, makeSequence, between } from "../lib/structs";
 import { CellsByAddressType } from "../types";
-import { p2a } from "../api/converters";
-
-const Line = styled.div`
-  position: relative;
-  top: 0;
-  left: 0;
-  border: dotted 1px #0077ff;
-  box-sizing: border-box;
-
-  span {
-    font-size: 10px;
-    padding: 3px;
-    background-color: #0077ff;
-    color: #ffffff;
-    margin: 0;
-    position: absolute;
-    top: 0;
-    left: 0;
-  }
-`;
+import { p2a } from "../lib/converters";
 
 export const Resizer: React.FC = React.memo(() => {
   const { store, dispatch } = React.useContext(Context);
@@ -119,28 +99,19 @@ export const Resizer: React.FC = React.memo(() => {
 
   return (
     <div
-      className="resizing"
-      style={{
-        width: "100%",
-        height: "100%",
-        position: "absolute",
-        backgroundColor: "rgba(0, 127, 255, 0.08)",
-        top: 0,
-        left: 0,
-        zIndex: 2,
-      }}
+      className="gs-resizing"
       onMouseUp={handleResizeEnd}
       onMouseMove={handleResizeMove}
     >
       {x !== -1 && (
-        <Line style={{ width: 1, height: "100%", left: endX - offsetX }}>
+        <div className={'gs-line'} style={{ width: 1, height: "100%", left: endX - offsetX }}>
           <span style={{ left: "-50%" }}>{width}px</span>
-        </Line>
+        </div>
       )}
       {y !== -1 && (
-        <Line style={{ width: "100%", height: 1, top: endY - offsetY }}>
+        <div className={'gs-line'} style={{ width: "100%", height: 1, top: endY - offsetY }}>
           <span style={{ top: "-50%" }}>{height}px</span>
-        </Line>
+        </div>
       )}
     </div>
   );

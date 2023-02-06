@@ -1,6 +1,6 @@
 import React from "react";
-import { x2c, y2r } from "../api/converters";
-import { clip } from "../api/clipboard";
+import { x2c, y2r } from "../lib/converters";
+import { clip } from "../lib/clipboard";
 import {
   blur,
   clear,
@@ -20,7 +20,7 @@ import {
 } from "../store/actions";
 
 import { Context } from "../store";
-import { areaToZone } from "../api/structs";
+import { areaToZone } from "../lib/structs";
 
 export const Editor: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);

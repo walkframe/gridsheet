@@ -21,10 +21,10 @@ import { Resizer } from "./Resizer";
 
 import { Emitter } from "./Emitter";
 import { ContextMenu } from "./ContextMenu";
-import { Table } from "../api/table";
+import { Table } from "../lib/table";
 import { GridTable } from "./GridTable";
-import { getMaxSizesFromCells } from "../api/structs";
-import { x2c, y2r } from "../api/converters";
+import { getMaxSizesFromCells } from "../lib/structs";
+import { x2c, y2r } from "../lib/converters";
 import {useEffect} from "react";
 import {embedStyle} from "../styles/styles";
 
