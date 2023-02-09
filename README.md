@@ -12,20 +12,21 @@ react-gridsheet is a simple yet highly functional spreadsheet component for Reac
 
 - Copy & Paste
 - Cut & Paste
+- Undo & Redo
 - Add rows and columns
 - Displaying formulas
 - Cell styling
 - Custom renderer
 - Custom parser
-- Undo & Redo
-- Basic Shortcut keys
-- Context menus
-- External Data Manipulation
+- Basic shortcut keys
+- Context menu
+- External data manipulation
 
 ## Installation
 
 ```sh
 $ npm install react-gridsheet --save
+$ npm install @gridsheet/react --save
 ```
 
 ```sh

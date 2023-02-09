@@ -3,6 +3,8 @@ import {
   VariableSizeGrid as Grid,
   VariableSizeList as List,
 } from "react-window";
+import { useVirtualizer, useWindowVirtualizer } from '@tanstack/react-virtual';
+import { useVirtual } from 'react-virtual'
 
 import { Editor } from "./Editor";
 import { Cell } from "./Cell";
@@ -50,12 +52,38 @@ export const GridTable = ({ tableRef }: Props) => {
     }
   }, [table]);
 
+  const parentRef = React.useRef(document.createElement('div'));
+  const parentOffsetRef = React.useRef(0);
+  const rowVirtual = useWindowVirtualizer({
+    count: table.getNumRows(),
+    scrollMargin: parentOffsetRef.current,
+    estimateSize: (y) => table.getByPoint({ y: y + 1, x: 0 })?.height || DEFAULT_HEIGHT,
+    horizontal: false,
+    //getScrollElement: () => parentRef.current,
+    //rangeExtractor: (range) => {
+    //  return [...Array(range.endIndex+10).keys()];
+    //},
+    scrollToFn: (offset, options, instance) => {
+      console.log({offset, options, instance});
+    },
+    scrollingDelay: 0,
+    overscan: 10,
+
+    //paddingStart: 100,
+    //paddingEnd: 100,
+  })
+  const columnVirtual = useVirtualizer({
+    count: table.getNumCols(),
+    estimateSize: (x) => table.getByPoint({ y: 0, x: x + 1 })?.width || DEFAULT_WIDTH,
+    horizontal: true,
+    getScrollElement: () => parentRef.current,
+    overscan: 10,
+  });
+
   if (table.getNumRows() === 0) {
     return null;
   }
-
-  const sheetInnerHeight = sheetHeight - headerHeight;
-  const sheetInnerWidth = sheetWidth - headerWidth;
+  console.log("DEBUG", table.getNumRows(), table.getNumCols())
 
   return (
     <>
@@ -63,6 +91,13 @@ export const GridTable = ({ tableRef }: Props) => {
       <SearchBox />
       <div
         className="gs-tabular"
+        style={{
+          overflow: "auto",
+          display: 'block',
+          width: sheetWidth,
+          height: sheetHeight,
+        }}
+        ref={parentRef}
         onMouseEnter={() => {
           dispatch(setEntering(true));
         }}
@@ -70,79 +105,62 @@ export const GridTable = ({ tableRef }: Props) => {
           dispatch(setEntering(false));
         }}
       >
-        <div className="gs-tabular-row">
-          <div
-            className="gs-tabular-col"
-            onClick={() => {
-              dispatch(choose({ y: -1, x: -1 }));
-              setTimeout(() => {
-                dispatch(choose({ y: 1, x: 1 }));
-                dispatch(
-                  select({
-                    startY: 1,
-                    startX: 1,
-                    endY: table.getNumRows(),
-                    endX: table.getNumCols(),
-                  })
-                );
-              }, 100);
-            }}
-          ></div>
-          <div className="gs-tabular-col">
-            <List
-              ref={horizontalHeadersRef}
-              itemCount={table.getNumCols() || 0}
-              itemSize={(x) =>
-                table.getByPoint({ y: 0, x: x + 1 })?.width || DEFAULT_WIDTH
-              }
-              layout="horizontal"
-              width={gridOuterRef.current?.clientWidth || sheetInnerWidth}
-              height={headerHeight}
-              style={{
-                overflow: "hidden",
-              }}
-            >
-              {HorizontalHeaderCell}
-            </List>
-          </div>
-        </div>
-        <div className="gs-tabular-row">
-          <div className="gs-tabular-col" style={{ verticalAlign: "top" }}>
-            <List
-              ref={verticalHeadersRef}
-              itemCount={table.getNumRows() || 0}
-              itemSize={(y) =>
-                table.getByPoint({ y: y + 1, x: 0 })?.height || DEFAULT_HEIGHT
-              }
-              height={gridOuterRef.current?.clientHeight || sheetInnerHeight}
-              width={headerWidth}
-              style={{ overflow: "hidden" }}
-            >
-              {VerticalHeaderCell}
-            </List>
-          </div>
-          <div className="gs-tabular-col">
-            <Grid
-              ref={gridRef}
-              outerRef={gridOuterRef}
-              columnCount={table.getNumCols() || 0}
-              rowCount={table.getNumRows() || 0}
-              width={sheetWidth - headerWidth}
-              height={sheetHeight - headerHeight}
-              columnWidth={(x) =>
-                table.getByPoint({ y: 0, x: x + 1 })?.width || DEFAULT_WIDTH
-              }
-              rowHeight={(y) =>
-                table.getByPoint({ y: y + 1, x: 0 })?.height || DEFAULT_HEIGHT
-              }
-              onScroll={(e) => {
-                verticalHeadersRef.current?.scrollTo(e.scrollTop);
-                horizontalHeadersRef.current?.scrollTo(e.scrollLeft);
-              }}
-            >
-              {Cell}
-            </Grid>
-          </div>
+        <div
+          style={{
+            width: columnVirtual.getTotalSize(),
+            height: rowVirtual.getTotalSize()
+          }}
+        >
+        <table style={{borderCollapse: 'collapse'}}>
+          <thead>
+            <tr style={{height: headerHeight}}>
+              <th
+                style={{width: headerWidth, position: "sticky", top: 0, left: 0, zIndex: 2}}
+                onClick={() => {
+                  dispatch(choose({ y: -1, x: -1 }));
+                  setTimeout(() => {
+                    dispatch(choose({ y: 1, x: 1 }));
+                    dispatch(
+                      select({
+                        startY: 1,
+                        startX: 1,
+                        endY: table.getNumRows(),
+                        endX: table.getNumCols(),
+                      })
+                    );
+                  }, 100);
+                }}
+              ></th>
+              {
+              columnVirtual.getVirtualItems().map((virtualCol) => {
+                return <HorizontalHeaderCell
+                  index={virtualCol.index}
+                  key={virtualCol.index}
+                  style={{
+                    overflow: 'hidden',
+                  }} />
+              })
+            }</tr>
+          </thead>
+          <tbody>
+        {
+          rowVirtual.getVirtualItems().map((virtualRow) => {
+            return (<tr key={virtualRow.index}>
+              <VerticalHeaderCell index={virtualRow.index} style={{}} />
+              {
+                columnVirtual.getVirtualItems().map((virtualCol) => {
+                return <Cell
+                  key={virtualCol.index}
+                  rowIndex={virtualRow.index}
+                  columnIndex={virtualCol.index}
+                  style={{}}
+                />
+              })
+            }</tr>);
+          })
+        }
+          </tbody>
+        </table>
         </div>
       </div>
     </>

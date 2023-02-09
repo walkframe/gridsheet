@@ -37,8 +37,8 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
     const col = table.getByPoint({ y: 0, x });
     const width = col?.width || DEFAULT_WIDTH;
     return (
-      <div
-        style={outerStyle}
+      <th
+        style={{...outerStyle, padding: 0, position: "sticky", top: 0, zIndex: 1}}
         className={`
       gs-header gs-horizontal
       ${choosing.x === x ? "gs-choosing" : ""}
@@ -70,52 +70,56 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
           editorRef.current?.focus();
           return false;
         }}
-        onDragStart={(e) => {
-          e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
-          dispatch(
-            selectCols({
-              range: { start: x, end: x },
-              numRows: table.getNumRows(),
-            })
-          );
-          dispatch(choose({ y: 1, x }));
-          return false;
-        }}
-        onDragEnter={() => {
-          if (resizingRect.x === -1) {
-            const { startY } = selectingZone;
-            if (startY === 1) {
-              dispatch(drag({ y: table.getNumRows(), x }));
-            } else {
-              dispatch(drag({ y: 1, x }));
-            }
-          }
-          return false;
-        }}
-        onDragOver={(e) => {
-          e.dataTransfer.dropEffect = "move";
-          e.preventDefault();
-        }}
       >
         <div
-          className="gs-header-inner"
-          style={{ width, height: headerHeight }}
-          draggable
-        >
-          {col?.labeler ? table.getLabel(col.labeler, x) : colId}
-        </div>
-        <div
-          className="gs-resizer"
-          style={{ height: headerHeight }}
-          onMouseDown={(e) => {
-            dispatch(setResizingPositionX([x, e.clientX, e.clientX]));
+          className="gs-header-outer"
+          onDragStart={(e) => {
+            e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
+            dispatch(
+              selectCols({
+                range: { start: x, end: x },
+                numRows: table.getNumRows(),
+              })
+            );
+            dispatch(choose({ y: 1, x }));
+            return false;
+          }}
+          onDragEnter={() => {
+            if (resizingRect.x === -1) {
+              const { startY } = selectingZone;
+              if (startY === 1) {
+                dispatch(drag({ y: table.getNumRows(), x }));
+              } else {
+                dispatch(drag({ y: 1, x }));
+              }
+            }
+            return false;
+          }}
+          onDragOver={(e) => {
+            e.dataTransfer.dropEffect = "move";
             e.preventDefault();
-            e.stopPropagation();
           }}
         >
-          <i />
+          <div
+            className="gs-header-inner"
+            style={{ width, height: headerHeight, position: 'relative' }}
+            draggable
+          >
+            {col?.labeler ? table.getLabel(col.labeler, x) : colId}
+            <div
+              className="gs-resizer"
+              style={{ height: headerHeight }}
+              onMouseDown={(e) => {
+                dispatch(setResizingPositionX([x, e.clientX, e.clientX]));
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            >
+              <i />
+            </div>
+          </div>
         </div>
-      </div>
+      </th>
     );
   }
 );

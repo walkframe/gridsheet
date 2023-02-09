@@ -29,7 +29,7 @@ export const Cell: React.FC<Props> = React.memo(
     const address = `${colId}${rowId}`;
     const { store, dispatch } = React.useContext(Context);
 
-    const cellRef = React.useRef<HTMLDivElement>(document.createElement("div"));
+    const cellRef = React.useRef(document.createElement("td"));
 
     const {
       table,
@@ -107,7 +107,7 @@ export const Cell: React.FC<Props> = React.memo(
     }
 
     return (
-      <div
+      <td
         key={x}
         ref={cellRef}
         data-x={x}
@@ -124,6 +124,8 @@ export const Cell: React.FC<Props> = React.memo(
           ...outerStyle,
           ...cell?.style,
           ...getCellStyle(y, x, copyingArea, cutting),
+          width,
+          height,
         }}
         onContextMenu={(e) => {
           e.preventDefault();
@@ -198,7 +200,7 @@ export const Cell: React.FC<Props> = React.memo(
 
 
         </div>
-      </div>
+      </td>
     );
   }
 );
