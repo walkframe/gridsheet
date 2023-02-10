@@ -21,8 +21,8 @@ export const ContextMenu: React.FC = () => {
     table,
     choosing,
     selectingZone,
-    horizontalHeadersSelecting,
-    verticalHeadersSelecting,
+    headerTopSelecting,
+    headerLeftSelecting,
     editorRef,
     contextMenuPosition,
   } = store;
@@ -107,7 +107,7 @@ export const ContextMenu: React.FC = () => {
 
           <li className="gs-menu-divider" />
 
-          {!horizontalHeadersSelecting && (
+          {!headerTopSelecting && (
             <li
               className={
                 table.maxNumRows !== -1 &&
@@ -133,7 +133,7 @@ export const ContextMenu: React.FC = () => {
               </div>
             </li>
           )}
-          {!horizontalHeadersSelecting && (
+          {!headerTopSelecting && (
             <li
               className={
                 table.maxNumRows !== -1 &&
@@ -163,7 +163,7 @@ export const ContextMenu: React.FC = () => {
             </li>
           )}
 
-          {!verticalHeadersSelecting && (
+          {!headerLeftSelecting && (
             <li
               className={
                 table.maxNumCols !== -1 && tableWidth + width > table.maxNumCols
@@ -188,7 +188,7 @@ export const ContextMenu: React.FC = () => {
               </div>
             </li>
           )}
-          {!verticalHeadersSelecting && (
+          {!headerLeftSelecting && (
             <li
               className={
                 table.maxNumCols !== -1 && tableWidth + width > table.maxNumCols
@@ -217,7 +217,7 @@ export const ContextMenu: React.FC = () => {
             </li>
           )}
 
-          {!horizontalHeadersSelecting && (
+          {!headerTopSelecting && (
             <li
               className={
                 table.minNumRows !== -1 &&
@@ -243,7 +243,7 @@ export const ContextMenu: React.FC = () => {
             </li>
           )}
 
-          {!verticalHeadersSelecting && (
+          {!headerLeftSelecting && (
             <li
               className={
                 table.minNumCols !== -1 && tableWidth - width < table.minNumCols

@@ -12,44 +12,40 @@ import {
 import { DUMMY_IMG, DEFAULT_HEIGHT } from "../constants";
 
 type Props = {
-  index: number;
-  style: React.CSSProperties;
+  y: number;
 };
 
-export const VerticalHeaderCell: React.FC<Props> = React.memo(
-  ({ index: y, style: outerStyle }) => {
-    const rowId = `${y2r(++y)}`;
+export const HeaderLeftCell: React.FC<Props> = React.memo(
+  ({ y }) => {
+    const rowId = `${y2r(y)}`;
     const { store, dispatch } = React.useContext(Context);
 
     const {
       choosing,
       selectingZone,
-      verticalHeadersSelecting,
+      headerLeftSelecting,
       resizingRect,
       headerWidth,
       editorRef,
       table,
     } = store;
 
-    if (table.getNumRows() === 0) {
-      return null;
-    }
     const row = table.getByPoint({ y, x: 0 });
     const height = row?.height || DEFAULT_HEIGHT;
 
     return (
       <th
-        style={{...outerStyle, padding: 0, position: "sticky", left: 0, zIndex: 1}}
-        className={`
-      gs-header gs-vertical
-      ${choosing.y === y ? "gs-choosing" : ""}
-      ${
-        between({ start: selectingZone.startY, end: selectingZone.endY }, y)
-          ? verticalHeadersSelecting
-            ? "gs-header-selecting"
-            : "gs-selecting"
-          : ""
-      }`}
+        className={`gs-header gs-header-vertical gs-header-left ${choosing.y === y ? "gs-choosing" : ""
+        } ${
+          between({ start: selectingZone.startY, end: selectingZone.endY }, y)
+            ? headerLeftSelecting
+              ? "gs-header-selecting"
+              : "gs-selecting"
+            : ""
+        } ${
+          y === table.getNumRows() ? "gs-header-left-end" : ""
+        }`}
+        style={{height}}
         onClick={(e) => {
           let startY = e.shiftKey ? selectingZone.startY : y;
           if (startY === -1) {
@@ -66,7 +62,6 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
           editorRef.current?.focus();
           return false;
         }}
-        draggable
         onContextMenu={(e) => {
           e.preventDefault();
           dispatch(setContextMenuPosition({ y: e.clientY, x: e.clientX }));
@@ -75,6 +70,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
       >
         <div
           className="gs-header-outer"
+          draggable
           onDragStart={(e) => {
             e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
             dispatch(
@@ -101,18 +97,22 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
             e.dataTransfer.dropEffect = "move";
             e.preventDefault();
           }}
-        ></div>
-        <div className="gs-header-inner" style={{ height, width: headerWidth, position: 'relative' }}>
-          {row?.labeler ? table.getLabel(row.labeler, y) : rowId}
+        >
           <div
-            className="gs-resizer"
-            style={{ width: headerWidth }}
-            onMouseDown={(e) => {
-              dispatch(setResizingPositionY([y, e.clientY, e.clientY]));
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-          ></div>
+            className="gs-header-inner"
+            style={{ width: headerWidth, position: 'relative' }}
+          >
+            {row?.labeler ? table.getLabel(row.labeler, y) : rowId}
+            <div
+              className="gs-resizer"
+              style={{ width: headerWidth }}
+              onMouseDown={(e) => {
+                dispatch(setResizingPositionY([y, e.clientY, e.clientY]));
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            ></div>
+          </div>
         </div>
       </th>
     );

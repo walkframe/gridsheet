@@ -1,6 +1,5 @@
-import { Address, MatrixType, PointType } from "../types";
+import { Address, PointType } from "../types";
 import { DEFAULT_ALPHABET_CACHE_SIZE } from "../constants";
-import { Table } from "./table";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 

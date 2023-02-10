@@ -3,6 +3,7 @@ import React from "react";
 
 import { Context } from "../store";
 import { setSearchQuery, search } from "../store/actions";
+import {smartScroll} from "../lib/virtualization";
 
 export const SearchBox: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);
@@ -10,10 +11,11 @@ export const SearchBox: React.FC = () => {
   const {
     editorRef,
     searchInputRef,
-    gridRef,
+    gridOuterRef,
     searchQuery,
     matchingCellIndex,
     matchingCells,
+    table,
   } = store;
 
   const matchingCell = matchingCells[matchingCellIndex];
@@ -21,16 +23,11 @@ export const SearchBox: React.FC = () => {
     if (!matchingCell) {
       return;
     }
-    const indexes = a2p(matchingCell);
-    if (typeof indexes === "undefined") {
+    const point = a2p(matchingCell);
+    if (typeof point === "undefined") {
       return;
     }
-    const { y, x } = indexes;
-    gridRef.current?.scrollToItem({
-      rowIndex: y - 1,
-      columnIndex: x - 1,
-      align: "auto",
-    });
+    smartScroll(table, gridOuterRef.current, point);
   }, [searchQuery, matchingCellIndex]);
 
   if (typeof searchQuery === "undefined") {
@@ -40,7 +37,7 @@ export const SearchBox: React.FC = () => {
     <div className="gs-search">
       <div
         className="gs-searchbox"
-        title={"Press 'Enter' to next, 'Enter + Shift' to previos."}
+        title={"Press 'Enter' to next, 'Enter + Shift' to previous."}
       >
         <input
           type="text"

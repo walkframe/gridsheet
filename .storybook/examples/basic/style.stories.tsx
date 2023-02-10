@@ -49,6 +49,9 @@ export const Style = () => {
             },
             2: {
               style: { color: "#F00" },
+              height: 100,
+              alignItems: 'center',
+              justifyContent: 'center',
             },
             3: {
               style: { color: "#0C0" },
@@ -56,6 +59,14 @@ export const Style = () => {
             },
             4: {
               style: { color: "#00F" },
+            },
+            E2: {
+              style: {
+                borderTop: "dashed 3px orange",
+                borderLeft: "dashed 3px orange",
+                borderBottom: "dashed 3px orange",
+                borderRight: "dashed 3px orange",
+              }
             },
             E5: {
               style: {

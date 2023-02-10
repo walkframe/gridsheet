@@ -64,7 +64,7 @@ export const shouldTracking = (operation: string) => {
 export const initSearchStatement = (table: Table, store: StoreType) => {
   const { searchQuery } = store;
   if (!searchQuery) {
-    return {};
+    return {matchingCells: []};
   }
   const matchingCells: Address[] = [];
   for (let y = 1; y <= table.bottom; y++) {

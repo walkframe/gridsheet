@@ -17,17 +17,17 @@ import {
   Parsers,
   Renderers,
   HistoryType,
-  StoreReflectionType,
+  StoreReflectionType, PositionType,
 } from "../types";
-import { areaShape, createMatrix, matrixShape, putMatrix } from "./structs";
+import {areaShape, createMatrix, matrixShape, putMatrix, range} from "./structs";
 import { a2p, x2c, p2a, y2r, grantAddressAbsolute } from "./converters";
 import { FunctionMapping } from "../formula/functions/__base";
 import { functions } from "../formula/mapping";
 import { convertFormulaAbsolute, Lexer } from "../formula/evaluator";
 import { solveFormula } from "../formula/solver";
 
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH, HISTORY_LIMIT } from "../constants";
-import { shouldTracking } from "../store/utils";
+import {DEFAULT_HEIGHT, DEFAULT_WIDTH, HISTORY_LIMIT, OVERSCAN_X, OVERSCAN_Y} from "../constants";
+import { shouldTracking } from "../store/helpers";
 
 type Props = {
   numRows?: number;
@@ -42,6 +42,8 @@ type Props = {
   maxNumRows?: number;
   minNumCols?: number;
   maxNumCols?: number;
+  headerHeight?: number;
+  headerWidth?: number;
 };
 
 const cellFilter = (cell: CellType) => true;
@@ -77,6 +79,10 @@ export class UserTable {
   public maxNumRows: number;
   public minNumCols: number;
   public maxNumCols: number;
+  public totalWidth: number = 0;
+  public totalHeight: number = 0;
+  public headerWidth: number = 0;
+  public headerHeight: number = 0;
 
   constructor({
     numRows = 0,
@@ -91,6 +97,8 @@ export class UserTable {
     maxNumRows = -1,
     minNumCols = 1,
     maxNumCols = -1,
+    headerWidth = -1,
+    headerHeight = -1,
   }: Props) {
     this.head = useBigInt ? BigInt(0) : 0;
     this.data = {};
@@ -109,6 +117,8 @@ export class UserTable {
     this.minNumCols = minNumCols;
     this.maxNumCols = maxNumCols;
     this.solvedCaches = {};
+    this.headerHeight = headerHeight;
+    this.headerWidth = headerWidth;
 
     const common = cells.default;
     // make idMatrix beforehand
@@ -163,10 +173,28 @@ export class UserTable {
         this.data[id] = stacked;
       }
     }
+    this.setTableRectSize();
   }
 
   protected generateId() {
     return (this.head++).toString(36);
+  }
+
+  getRectSize({top, left, bottom, right}: AreaType) {
+    let width = 0, height = 0;
+    for (let x = left || 1; x < right; x++) {
+      width += this.getByPoint({ y: 0, x })?.width || DEFAULT_WIDTH;
+    }
+    for (let y = top || 1; y < bottom; y++) {
+      height += this.getByPoint({ y, x: 0 })?.height || DEFAULT_HEIGHT;
+    }
+    return {width, height};
+  }
+  setTableRectSize() {
+    const {bottom, right} = this.area;
+    const {width, height} = this.getRectSize({top: 1, left: 1, bottom: bottom + 1, right: right + 1});
+    this.totalWidth = width + this.headerWidth;
+    this.totalHeight = height + this.headerHeight;
   }
 
   protected shallowCopy({ copyCache = true }: { copyCache?: boolean } = {}) {
@@ -188,6 +216,9 @@ export class UserTable {
     copied.maxNumRows = this.maxNumRows;
     copied.minNumCols = this.minNumCols;
     copied.maxNumCols = this.maxNumCols;
+    copied.headerHeight = this.headerHeight;
+    copied.headerWidth = this.headerWidth;
+    copied.setTableRectSize();
     if (copyCache) {
       copied.addressesById = this.addressesById;
     } else {
@@ -610,8 +641,11 @@ export class UserTable {
     if (cell.style != null) {
       newCell.style = cell.style;
     }
-    if (cell.verticalAlign != null) {
-      newCell.verticalAlign = cell.verticalAlign;
+    if (cell.justifyContent != null) {
+      newCell.justifyContent = cell.justifyContent;
+    }
+    if (cell.alignItems != null) {
+      newCell.alignItems = cell.alignItems;
     }
     if (cell.renderer != null) {
       newCell.renderer = cell.renderer;
@@ -624,6 +658,9 @@ export class UserTable {
     }
     if (cell.height != null) {
       newCell.height = cell.height;
+    }
+    if (cell.labeler != null) {
+      newCell.labeler = cell.labeler;
     }
     return newCell;
   }

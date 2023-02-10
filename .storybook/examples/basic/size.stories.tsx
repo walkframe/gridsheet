@@ -16,9 +16,19 @@ const Sheet = ({ numRows, numCols, defaultWidth }: Props) => {
   return (
     <>
       <GridSheet
+        options={{
+          headerHeight: 50,
+          headerWidth: 150,
+          labelers: {
+            raw: (n) => String(n),
+          },
+        }}
         initial={generateInitial({
           cells: {
             default: { width: defaultWidth },
+            B2: {
+              value: "b2",
+            }
           },
           ensured: { numRows, numCols },
         })}
