@@ -1,6 +1,4 @@
-import type {Config} from 'jest';
-
-const config: Config = {
+module.exports = {
   verbose: true,
 
   preset: "ts-jest",
@@ -17,4 +15,3 @@ const config: Config = {
   testEnvironment: 'jest-environment-jsdom'
 };
 
-export default config;
