@@ -11,7 +11,7 @@
     "storybook": "start-storybook -p 5233",
     "build-storybook": "build-storybook",
     "less": "lessc --clean-css ./src/styles/root.less ./src/styles/root.min.css",
-    "generate-style": "ts-node ./generate-style.ts"
+    "generate-style": "node ./generate-style.js"
   },
   "repository": {
     "type": "git",
