@@ -1,9 +1,11 @@
-name: build
+name: release
 on:
-  - push
+  push:
+    branches:
+      - master
 
 jobs:
-  release:
+  package-release:
     # needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
