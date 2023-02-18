@@ -1,7 +1,7 @@
-name: test
+name: e2e
 on:
   push:
-    # 一旦保留
+    # pending
     branches-ignore:
       - '**'
 

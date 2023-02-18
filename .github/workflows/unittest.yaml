@@ -1,10 +1,9 @@
-name: typecheck
+name: unittest
 on:
   push:
 
-
 jobs:
-  type-check:
+  build-storybook:
     runs-on: ubuntu-latest
 
     steps:
@@ -13,17 +12,15 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "16"
-
       - name: cache
         uses: actions/cache@v3
         with:
           path: |
             node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
-
       - name: install
         run: |
           yarn install
-      - name: check
+      - name: test
         run: |
-          yarn run tsc
+          yarn test
