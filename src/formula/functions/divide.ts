@@ -17,14 +17,14 @@ export class DivideFunction extends BaseFunction {
   ];
 
   protected validate() {
-    if (this.args.length !== 2) {
+    if (this.bareArgs.length !== 2) {
       throw new FormulaError(
         "#N/A",
         "Number of arguments for DIVIDE is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg));
-    if (this.args[1] === 0) {
+    this.bareArgs = this.bareArgs.map((arg) => ensureNumber(arg));
+    if (this.bareArgs[1] === 0) {
       throw new FormulaError(
         "#DIV/0!",
         "The second argument must be non-zero."

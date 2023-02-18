@@ -18,14 +18,14 @@ export class SumFunction extends BaseFunction {
   ];
 
   protected validate() {
-    if (this.args.length === 0) {
+    if (this.bareArgs.length === 0) {
       throw new FormulaError(
         "#N/A",
         "One or more arguments are required.",
       );
     }
     const spreaded: number[] = [];
-    this.args.forEach((arg) => {
+    this.bareArgs.forEach((arg) => {
       if (arg instanceof Table) {
         spreaded.push(
           ...solveTable({ table: arg })
@@ -36,7 +36,7 @@ export class SumFunction extends BaseFunction {
       }
       spreaded.push(ensureNumber(arg));
     });
-    this.args = spreaded;
+    this.bareArgs = spreaded;
   }
 
   protected main(...values: number[]) {

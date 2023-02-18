@@ -18,7 +18,7 @@ export class CountFunction extends BaseFunction {
 
   protected validate() {
     const spreaded: any[] = [];
-    this.args.map((arg) => {
+    this.bareArgs.map((arg) => {
       if (arg instanceof Table) {
         spreaded.push(
           ...solveTable({ table: arg }).reduce((a, b) => a.concat(b))
@@ -27,7 +27,7 @@ export class CountFunction extends BaseFunction {
       }
       spreaded.push(ensureNumber(arg));
     });
-    this.args = spreaded;
+    this.bareArgs = spreaded;
   }
 
   protected main(...values: any[]) {

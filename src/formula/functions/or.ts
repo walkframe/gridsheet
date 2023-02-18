@@ -18,7 +18,7 @@ export class OrFunction extends BaseFunction {
   ];
 
   protected validate() {
-    this.args = this.args.map((arg) => ensureBoolean(arg));
+    this.bareArgs = this.bareArgs.map((arg) => ensureBoolean(arg));
   }
 
   protected main(...values: boolean[]) {

@@ -28,20 +28,20 @@ export class VlookupFunction extends BaseFunction {
   ];
 
   protected validate() {
-    if (this.args.length !== 3 && this.args.length !== 4) {
+    if (this.bareArgs.length !== 3 && this.bareArgs.length !== 4) {
       throw new FormulaError(
         "#N/A",
         "Number of arguments for VLOOKUP is incorrect."
       );
     }
-    if (this.args[0] instanceof Table) {
-      this.args[0] = stripTable(this.args[0]);
+    if (this.bareArgs[0] instanceof Table) {
+      this.bareArgs[0] = stripTable(this.bareArgs[0]);
     }
-    if (!(this.args[1] instanceof Table)) {
+    if (!(this.bareArgs[1] instanceof Table)) {
       throw new FormulaError("#REF!", "2nd argument must be range");
     }
-    this.args[2] = ensureNumber(this.args[2]);
-    this.args[3] = ensureBoolean(this.args[3], true);
+    this.bareArgs[2] = ensureNumber(this.bareArgs[2]);
+    this.bareArgs[3] = ensureBoolean(this.bareArgs[3], true);
   }
 
   protected main(key: any, range: Table, index: number, isSorted: boolean) {

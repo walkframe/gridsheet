@@ -37,19 +37,19 @@ class Entity<T = any> {
 }
 
 export class Value extends Entity {
-  public evaluate({ table }: EvaluateProps) {
+  public evaluate({}: EvaluateProps) {
     return this.value;
   }
 }
 
 export class Unreferenced extends Entity {
-  public evaluate({ table }: EvaluateProps) {
+  public evaluate({}: EvaluateProps) {
     throw new FormulaError("#REF!", `Reference does not exist.`);
   }
 }
 
 export class InvalidRef extends Entity {
-  public evaluate({ table }: EvaluateProps) {
+  public evaluate({}: EvaluateProps) {
     throw new FormulaError("#NAME?", `Invalid ref: ${this.value}`);
   }
 }

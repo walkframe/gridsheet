@@ -19,7 +19,7 @@ export class AverageFunction extends BaseFunction {
 
   protected validate() {
     const spreaded: number[] = [];
-    this.args.map((arg) => {
+    this.bareArgs.map((arg) => {
       if (arg instanceof Table) {
         spreaded.push(
           ...solveTable({ table: arg })
@@ -36,7 +36,7 @@ export class AverageFunction extends BaseFunction {
         "Number of arguments must be greater than 0."
       );
     }
-    this.args = spreaded;
+    this.bareArgs = spreaded;
   }
 
   protected main(...values: number[]) {

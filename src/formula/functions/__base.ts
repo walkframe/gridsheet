@@ -10,11 +10,11 @@ export class BaseFunction {
   public example = "_BASE()";
   public helpTexts = ["Function's description."];
   public helpArgs = [{ name: "value1", description: "" }];
-  protected args: any[];
+  protected bareArgs: any[];
   protected table: Table;
 
   constructor({ args, table }: FunctionProps) {
-    this.args = args.map((a) => a.evaluate({ table }));
+    this.bareArgs = args.map((a) => a.evaluate({ table }));
     this.table = table;
   }
   protected validate() {}
@@ -23,7 +23,7 @@ export class BaseFunction {
     this.validate();
 
     // @ts-ignore
-    return this.main(...this.args);
+    return this.main(...this.bareArgs);
   }
 }
 

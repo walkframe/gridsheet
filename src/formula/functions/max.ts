@@ -18,14 +18,14 @@ export class MaxFunction extends BaseFunction {
   ];
 
   protected validate() {
-    if (this.args.length === 0) {
+    if (this.bareArgs.length === 0) {
       throw new FormulaError(
         "#N/A",
         "Number of arguments must be greater than 0."
       );
     }
     const spreaded: number[] = [];
-    this.args.map((arg) => {
+    this.bareArgs.map((arg) => {
       if (arg instanceof Table) {
         spreaded.push(
           ...solveTable({ table: arg })
@@ -36,7 +36,7 @@ export class MaxFunction extends BaseFunction {
       }
       spreaded.push(ensureNumber(arg));
     });
-    this.args = spreaded;
+    this.bareArgs = spreaded;
   }
 
   protected main(...values: number[]) {

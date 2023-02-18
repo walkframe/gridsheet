@@ -11,13 +11,13 @@ export class PowerFunction extends BaseFunction {
   ];
 
   protected validate() {
-    if (this.args.length !== 2) {
+    if (this.bareArgs.length !== 2) {
       throw new FormulaError(
         "#N/A",
         "Number of arguments for POWER is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg));
+    this.bareArgs = this.bareArgs.map((arg) => ensureNumber(arg));
   }
 
   protected main(base: number, exponent: number) {

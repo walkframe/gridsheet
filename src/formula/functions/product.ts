@@ -18,7 +18,7 @@ export class ProductFunction extends BaseFunction {
 
   protected validate() {
     const spreaded: number[] = [];
-    this.args.forEach((arg) => {
+    this.bareArgs.forEach((arg) => {
       if (arg instanceof Table) {
         spreaded.push(
           ...solveTable({ table: arg })
@@ -29,7 +29,7 @@ export class ProductFunction extends BaseFunction {
       }
       spreaded.push(ensureNumber(arg));
     });
-    this.args = spreaded;
+    this.bareArgs = spreaded;
   }
 
   protected main(...values: number[]) {

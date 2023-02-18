@@ -22,8 +22,8 @@ export class IfFunction extends BaseFunction {
   ];
 
   protected validate() {
-    if (this.args.length === 2 || this.args.length === 3) {
-      this.args[0] = ensureBoolean(this.args[0]);
+    if (this.bareArgs.length === 2 || this.bareArgs.length === 3) {
+      this.bareArgs[0] = ensureBoolean(this.bareArgs[0]);
       return;
     }
     throw new FormulaError(

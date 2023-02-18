@@ -14,9 +14,9 @@ export class RowFunction extends BaseFunction {
   ];
 
   protected validate() {
-    if (this.args.length === 0) {
-      this.args = [this.table];
-    } else if (this.args.length === 1) {
+    if (this.bareArgs.length === 0) {
+      this.bareArgs = [this.table];
+    } else if (this.bareArgs.length === 1) {
     } else {
       throw new FormulaError(
         "#N/A",
