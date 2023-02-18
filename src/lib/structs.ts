@@ -273,3 +273,11 @@ export const getMaxSizesFromCells = (cells: CellsByAddressType = {}) => {
   });
   return { numRows: lastY, numCols: lastX };
 };
+
+export const range = (start: number, end: number) => {
+  const list: number[] = [];
+  for (let i = start; i <= end; i++) {
+    list.push(i);
+  }
+  return list;
+}

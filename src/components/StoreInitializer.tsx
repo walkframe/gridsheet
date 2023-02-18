@@ -1,6 +1,6 @@
 import React from "react";
 
-import { CellsByAddressType, Props } from "../types";
+import { Props } from "../types";
 
 import { Context } from "../store";
 import {
@@ -31,7 +31,7 @@ export const StoreInitializer: React.FC<Props> = ({
     sheetHeight,
     sheetWidth,
     editingOnEnter,
-    showAddress: showAddress,
+    showAddress,
     renderers,
     parsers,
     labelers,
@@ -58,6 +58,8 @@ export const StoreInitializer: React.FC<Props> = ({
       maxNumRows,
       minNumCols,
       maxNumCols,
+      headerHeight,
+      headerWidth,
     });
     table.setFunctions({ ...functions, ...additionalFunctions });
     dispatch(initializeTable(table));

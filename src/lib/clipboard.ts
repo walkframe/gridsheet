@@ -14,7 +14,7 @@ export const clip = (store: StoreType): AreaType => {
   }
   const input = editorRef.current;
   const trimmed = table.trim(area);
-  const tsv = table2tsv({ table: trimmed });
+  const tsv = table2tsv(trimmed);
 
   if (navigator.clipboard) {
     navigator.clipboard.writeText(tsv);
@@ -29,7 +29,7 @@ export const clip = (store: StoreType): AreaType => {
   return area;
 };
 
-const table2tsv = ({ table }: { table: Table }): string => {
+const table2tsv = (table: Table): string => {
   const lines: string[] = [];
   const matrix = solveTable({ table, raise: false });
   matrix.forEach((row, i) => {

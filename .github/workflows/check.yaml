@@ -1,4 +1,4 @@
-name: test
+name: typecheck
 on:
   push:
 
@@ -21,7 +21,9 @@ jobs:
             node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
 
-      - name: check
+      - name: install
         run: |
           yarn install
+      - name: check
+        run: |
           yarn run tsc

@@ -14,13 +14,13 @@ export class MultiplyFunction extends BaseFunction {
   ];
 
   protected validate() {
-    if (this.args.length !== 2) {
+    if (this.bareArgs.length !== 2) {
       throw new FormulaError(
         "#N/A",
         "Number of arguments for MULTIPLY is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg));
+    this.bareArgs = this.bareArgs.map((arg) => ensureNumber(arg));
   }
 
   protected main(v1: number, v2: number) {

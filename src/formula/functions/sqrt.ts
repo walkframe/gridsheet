@@ -14,14 +14,14 @@ export class SqrtFunction extends BaseFunction {
   ];
 
   protected validate() {
-    if (this.args.length !== 1) {
+    if (this.bareArgs.length !== 1) {
       throw new FormulaError(
         "#N/A",
         "Number of arguments for SQRT is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg));
-    if (this.args[0] < 0) {
+    this.bareArgs = this.bareArgs.map((arg) => ensureNumber(arg));
+    if (this.bareArgs[0] < 0) {
       throw new FormulaError("NUM!", "First argument must be positive.");
     }
   }

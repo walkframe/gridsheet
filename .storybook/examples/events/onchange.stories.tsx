@@ -1,7 +1,7 @@
 import React from "react";
 import { GridSheet } from "../../../src";
 import { generateInitial } from "../../../src/lib/structs";
-import { createTableRef } from "../../../src/components/GridTable";
+import { createTableRef } from "../../../src/components/Tabular";
 import {HistoryType} from "../../../src/types";
 
 export default {

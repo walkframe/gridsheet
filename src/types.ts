@@ -1,8 +1,3 @@
-import {
-  VariableSizeGrid as Grid,
-  VariableSizeList as List,
-} from "react-window";
-
 import { RendererType } from "./renderers/core";
 import { ParserType } from "./parsers/core";
 import { UserTable, Table } from "./lib/table";
@@ -53,7 +48,8 @@ export type Headers = "both" | "vertical" | "horizontal" | "none";
 export type CellType<Custom = any> = {
   value?: any;
   style?: React.CSSProperties;
-  verticalAlign?: string;
+  justifyContent?: React.CSSProperties['justifyContent'];
+  alignItems?: React.CSSProperties['alignItems'];
   labeler?: string;
   width?: Width;
   height?: Height;
@@ -68,10 +64,7 @@ export type CellFilter = (cell: CellType) => boolean;
 export type CellsByAddressType = { [address: Address]: CellType };
 export type CellsByIdType = { [id: Id]: CellType | undefined };
 
-export type Dispatcher = React.Dispatch<{
-  type: number;
-  value: any;
-}>;
+
 export type OptionsType = {
   sheetHeight?: number;
   sheetWidth?: number;
@@ -109,16 +102,13 @@ export type StoreType = {
   editorRef: React.MutableRefObject<HTMLTextAreaElement>;
   gridOuterRef: React.MutableRefObject<HTMLDivElement>;
   searchInputRef: React.MutableRefObject<HTMLInputElement>;
-  gridRef: React.MutableRefObject<Grid | null>;
-  verticalHeadersRef: React.MutableRefObject<List | null>;
-  horizontalHeadersRef: React.MutableRefObject<List | null>;
   entering: boolean;
   choosing: PointType;
   cutting: boolean;
   copyingZone: ZoneType;
   selectingZone: ZoneType;
-  horizontalHeadersSelecting: boolean;
-  verticalHeadersSelecting: boolean;
+  headerTopSelecting: boolean;
+  headerLeftSelecting: boolean;
   editingCell: string;
   editorRect: RectType;
   resizingRect: RectType;

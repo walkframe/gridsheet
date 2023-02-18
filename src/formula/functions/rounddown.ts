@@ -20,13 +20,13 @@ export class RounddownFunction extends BaseFunction {
   ];
 
   protected validate() {
-    if (this.args.length !== 1 && this.args.length !== 2) {
+    if (this.bareArgs.length !== 1 && this.bareArgs.length !== 2) {
       throw new FormulaError(
         "#N/A",
         "Number of arguments for ROUNDDOWN is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg));
+    this.bareArgs = this.bareArgs.map((arg) => ensureNumber(arg));
   }
 
   protected main(value: number, digit = 0) {

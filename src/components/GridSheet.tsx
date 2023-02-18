@@ -1,8 +1,4 @@
 import * as React from "react";
-import {
-  VariableSizeGrid as Grid,
-  VariableSizeList as List,
-} from "react-window";
 
 import { CellsByAddressType, OptionsType, Props, StoreType } from "../types";
 import {
@@ -18,15 +14,14 @@ import { reducer } from "../store/actions";
 
 import { StoreInitializer } from "./StoreInitializer";
 import { Resizer } from "./Resizer";
-
 import { Emitter } from "./Emitter";
 import { ContextMenu } from "./ContextMenu";
 import { Table } from "../lib/table";
-import { GridTable } from "./GridTable";
+import { Tabular } from "./Tabular";
 import { getMaxSizesFromCells } from "../lib/structs";
 import { x2c, y2r } from "../lib/converters";
 import {useEffect} from "react";
-import {embedStyle} from "../styles/styles";
+import {embedStyle} from "../styles/embedder";
 
 export const GridSheet: React.FC<Props> = ({
   initial,
@@ -50,9 +45,6 @@ export const GridSheet: React.FC<Props> = ({
   const gridOuterRef = React.useRef<HTMLDivElement>(
     document.createElement("div")
   );
-  const gridRef = React.useRef<Grid>(null);
-  const verticalHeadersRef = React.useRef<List>(null);
-  const horizontalHeadersRef = React.useRef<List>(null);
   const initialState: StoreType = {
     table: new Table({}), // temporary (see StoreInitializer for detail)
     tableInitialized: false,
@@ -60,15 +52,12 @@ export const GridSheet: React.FC<Props> = ({
     searchInputRef,
     editorRef,
     gridOuterRef,
-    gridRef,
-    verticalHeadersRef,
-    horizontalHeadersRef,
     choosing: { y: -1, x: -1 },
     cutting: false,
     selectingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
     copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
-    horizontalHeadersSelecting: false,
-    verticalHeadersSelecting: false,
+    headerTopSelecting: false,
+    headerLeftSelecting: false,
     editingCell: "",
     editorRect: { y: 0, x: 0, height: 0, width: 0 },
     resizingRect: { y: -1, x: -1, height: -1, width: -1 },
@@ -99,7 +88,7 @@ export const GridSheet: React.FC<Props> = ({
     options.sheetWidth || estimateSheetWidth({ options, initial })
   );
   React.useEffect(() => {
-    setInterval(() => {
+    const intervalId = window.setInterval(() => {
       if (sheetRef.current?.clientHeight) {
         setSheetHeight(sheetRef.current?.clientHeight);
       }
@@ -107,17 +96,26 @@ export const GridSheet: React.FC<Props> = ({
         setSheetWidth(sheetRef.current?.clientWidth);
       }
     }, 1000);
+    return () => window.clearInterval(intervalId);
   }, []);
 
   const { onChange, onSelect, mode } = options;
   return (
-    <div
-      ref={sheetRef}
-      className={`gridsheet-1 ${mode || "light"} ${className || ""}`}
-      style={{ ...style, resize, height: sheetHeight, width: sheetWidth }}
-    >
-      <Context.Provider value={{ store, dispatch }}>
-        <GridTable tableRef={tableRef} />
+    <Context.Provider value={{ store, dispatch }}>
+      <div
+        ref={sheetRef}
+        className={`gridsheet-1 ${mode || "light"} ${className || ""}`}
+        style={{
+          ...style, resize,
+          height: sheetHeight,
+          width: sheetWidth,
+          maxWidth: store.table.totalWidth + 3,
+          maxHeight: store.table.totalHeight + 3,
+        }}
+      >
+        <Tabular
+          tableRef={tableRef}
+        />
         <StoreInitializer
           initial={initial}
           options={{ ...options, sheetHeight, sheetWidth }}
@@ -126,8 +124,9 @@ export const GridSheet: React.FC<Props> = ({
         <ContextMenu />
         <Resizer />
         <Emitter onChange={onChange} onSelect={onSelect} />
-      </Context.Provider>
-    </div>
+      </div>
+    </Context.Provider>
+
   );
 };
 

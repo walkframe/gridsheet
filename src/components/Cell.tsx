@@ -10,34 +10,32 @@ import {
   setContextMenuPosition,
 } from "../store/actions";
 
-import { DUMMY_IMG, DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
-import { AreaType } from "../types";
+import { DUMMY_IMG } from "../constants";
+import {AreaType, PointType} from "../types";
 
 import { Context } from "../store";
 import { FormulaError } from "../formula/evaluator";
 
 type Props = {
-  rowIndex: number;
-  columnIndex: number;
-  style: React.CSSProperties;
+  y: number;
+  x: number;
 };
 
 export const Cell: React.FC<Props> = React.memo(
-  ({ rowIndex: y, columnIndex: x, style: outerStyle }) => {
-    const rowId = y2r(++y);
-    const colId = x2c(++x);
+  ({ y, x }) => {
+    const rowId = y2r(y);
+    const colId = x2c(x);
     const address = `${colId}${rowId}`;
     const { store, dispatch } = React.useContext(Context);
 
-    const cellRef = React.useRef<HTMLDivElement>(document.createElement("div"));
-
+    const cellRef = React.useRef(document.createElement("td"));
     const {
       table,
       editingCell,
       choosing,
       selectingZone,
-      horizontalHeadersSelecting,
-      verticalHeadersSelecting,
+      headerTopSelecting,
+      headerLeftSelecting,
       copyingZone,
       cutting,
       searchQuery,
@@ -48,36 +46,30 @@ export const Cell: React.FC<Props> = React.memo(
     } = store;
 
     const [before, setBefore] = React.useState("");
-
     const matchingCell = matchingCells[matchingCellIndex];
 
     const selectingArea = zoneToArea(selectingZone); // (top, left) -> (bottom, right)
     const copyingArea = zoneToArea(copyingZone); // (top, left) -> (bottom, right)
     const editing = editingCell === address;
     const pointed = choosing.y === y && choosing.x === x;
+    const _setEditorRect = React.useCallback(() => {
+      const rect = cellRef.current.getBoundingClientRect();
+      dispatch(
+        setEditorRect({
+          y: rect.top,
+          x: rect.left,
+          height: rect.height,
+          width: rect.width,
+        })
+      );
+    }, []);
 
     React.useEffect(() => {
-      if (editing) {
-        const rect = cellRef.current.getBoundingClientRect();
-        dispatch(
-          setEditorRect({
-            y: rect.top,
-            x: rect.left,
-            height: rect.height,
-            width: rect.width,
-          })
-        );
-        //editorRef.current?.focus();
+      if (pointed) {
+        _setEditorRect();
       }
-    }, [editing]);
-    if (table.getNumRows() === 0) {
-      return null;
-    }
+    }, [pointed]);
     const cell = table.getByPoint({ y, x });
-    const height = table.getByPoint({ y, x: 0 })?.height || DEFAULT_HEIGHT;
-    const width = table.getByPoint({ y: 0, x })?.width || DEFAULT_WIDTH;
-
-    const verticalAlign = cell?.verticalAlign || "middle";
     const writeCell = (value: string) => {
       if (before !== value) {
         dispatch(write(value));
@@ -105,25 +97,25 @@ export const Cell: React.FC<Props> = React.memo(
       }
       // TODO: debug flag
     }
-
     return (
-      <div
+      <td
         key={x}
         ref={cellRef}
         data-x={x}
         data-y={y}
-        data-test-id={address}
+        data-address={address}
         className={`gs-cell ${
           among(copyingArea, { y, x }) ? "gs-copying" : ""
-        } ${y === 0 ? "gs-cell-top-end" : ""} ${
-          x === 0 ? "gs-cell-left-end" : ""
-        } ${y === table.getNumRows() ? "gs-cell-bottom-end" : ""} ${
-          x === table.getNumCols() ? "gs-cell-right-end" : ""
+        } ${
+          among(selectingArea, { y, x }) ? "gs-selected" : ""
+        } ${pointed ? "gs-pointed" : ""
+        } ${editing ? "gs-editing" : ""
+        } ${matching ? "gs-matching" : ""
+        } ${matchingCell === address ? "gs-searching" : ""
         }`}
         style={{
-          ...outerStyle,
           ...cell?.style,
-          ...getCellStyle(y, x, copyingArea, cutting),
+          ...getCellStyle({y, x, pointed, selectingArea, copyingArea, cutting}),
         }}
         onContextMenu={(e) => {
           e.preventDefault();
@@ -160,11 +152,11 @@ export const Cell: React.FC<Props> = React.memo(
           }
         }}
         onDragEnter={() => {
-          if (horizontalHeadersSelecting) {
+          if (headerTopSelecting) {
             dispatch(drag({ y: table.getNumRows(), x }));
             return false;
           }
-          if (verticalHeadersSelecting) {
+          if (headerLeftSelecting) {
             dispatch(drag({ y, x: table.getNumCols() }));
             return false;
           }
@@ -172,65 +164,74 @@ export const Cell: React.FC<Props> = React.memo(
           return false;
         }}
       >
-        <div
-          className={`
-          gs-cell-rendered-wrapper-outer ${
-            among(selectingArea, { y, x }) ? "gs-selected" : ""
-          }
-          ${pointed ? "gs-pointed" : ""} ${editing ? "gs-editing" : ""}
-          ${matching ? "gs-matching" : ""}
-          ${matchingCell === address ? "gs-searching" : ""}`}
-        >
+        <div className={`gs-cell-rendered-wrapper-outer`}>
+          <div
+            className={'gs-cell-rendered-wrapper-inner'}
+            style={{
+              justifyContent: cell?.justifyContent || "left",
+              alignItems: cell?.alignItems || "start",
+            }}
+          >
           {errorMessage && (
             <div className="formula-error-triangle" title={errorMessage} />
           )}
-          <div
-            className={`gs-cell-rendered-wrapper-inner`}
-            style={{
-              width,
-              height,
-              verticalAlign,
-            }}
-          >
             {showAddress && <div className="gs-cell-label">{address}</div>}
             <div className="gs-cell-rendered">{rendered}</div>
           </div>
-
-
         </div>
-      </div>
+      </td>
     );
   }
 );
 
-const getCellStyle = (
-  y: number,
-  x: number,
-  copyingArea: AreaType,
-  cutting: boolean
-): React.CSSProperties => {
-  let style: React.CSSProperties = {};
-  const { top, left, bottom, right } = copyingArea;
 
-  if (top === y && left <= x && x <= right) {
-    style.borderTopStyle = cutting ? "dotted" : "dashed";
-    style.borderTopWidth = "2px";
-    style.borderTopColor = "#0077ff";
+const getCellStyle = ({ y, x, pointed, selectingArea, copyingArea, cutting }: {
+  y: number;
+  x: number;
+  pointed: boolean;
+  selectingArea: AreaType;
+  copyingArea: AreaType;
+  cutting: boolean;
+}): React.CSSProperties => {
+  const style: React.CSSProperties = {};
+  if (pointed) {
+    style.borderTop = "solid 2px #0077ff";
+    style.borderBottom = "solid 2px #0077ff";
+    style.borderLeft = "solid 2px #0077ff";
+    style.borderRight = "solid 2px #0077ff";
   }
-  if (bottom === y && left <= x && x <= right) {
-    style.borderBottomStyle = cutting ? "dotted" : "dashed";
-    style.borderBottomWidth = "2px";
-    style.borderBottomColor = "#0077ff";
+  else {
+    // selecting style
+    const {top, left, bottom, right} = selectingArea;
+    if (top === y && left <= x && x <= right) {
+      style.borderTop = "solid 1px #0077ff";
+    }
+    if (bottom === y && left <= x && x <= right) {
+      style.borderBottom = "solid 1px #0077ff";
+    }
+    if (left === x && top <= y && y <= bottom) {
+      style.borderLeft = "solid 1px #0077ff";
+    }
+    if (right === x && top <= y && y <= bottom) {
+      style.borderRight = "solid 1px #0077ff";
+    }
   }
-  if (left === x && top <= y && y <= bottom) {
-    style.borderLeftStyle = cutting ? "dotted" : "dashed";
-    style.borderLeftWidth = "2px";
-    style.borderLeftColor = "#0077ff";
-  }
-  if (right === x && top <= y && y <= bottom) {
-    style.borderRightStyle = cutting ? "dotted" : "dashed";
-    style.borderRightWidth = "2px";
-    style.borderRightColor = "#0077ff";
+  // copy or cut style
+  {
+    const {top, left, bottom, right} = copyingArea;
+    const border = cutting ? "dotted 2px #0077ff" : "dashed 2px #0077ff";
+    if (top === y && left <= x && x <= right) {
+      style.borderTop = border;
+    }
+    if (bottom === y && left <= x && x <= right) {
+      style.borderBottom = border;
+    }
+    if (left === x && top <= y && y <= bottom) {
+      style.borderLeft = border;
+    }
+    if (right === x && top <= y && y <= bottom) {
+      style.borderRight = border;
+    }
   }
   return style;
 };

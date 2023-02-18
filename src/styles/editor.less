@@ -5,9 +5,10 @@
   background-color: #aaaaaa;
   textarea {
     width: 100%;
+    padding: 0 2px;
     position: absolute;
     font-size: 13px;
-    line-height: 20px;
+    line-height: 24px;
     letter-spacing: 1px;
     top: 0;
     left: 0;
@@ -23,7 +24,7 @@
     cursor: default;
   }
   &.gs-editing {
-    z-index: 2;
+    z-index: 3;
     opacity: 1;
 
     textarea {
@@ -31,19 +32,21 @@
       min-width: 100%;
       white-space: pre;
       outline: solid 2px #0077ff;
+      border: none !important;
       height: auto;
     }
     .gs-cell-label {
-      font-family: mono, serif;
+      font-family: monospace, serif;
       position: absolute;
       top: 0;
       right: 0;
-      margin-top: -19px;
+      margin-top: -20px;
       margin-right: -2px;
       padding: 3px 5px;
       font-size: 10px;
       background-color: #0077ff;
       color: #ffffff;
+      z-index: 1;
     }
   }
 }

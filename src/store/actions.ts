@@ -18,9 +18,10 @@ import {
 } from "../lib/structs";
 import { Table } from "../lib/table";
 
-import { tsv2matrix, x2c, p2a, y2r } from "../lib/converters";
+import { tsv2matrix, p2a } from "../lib/converters";
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
-import { initSearchStatement, restrictPoints } from "./utils";
+import { initSearchStatement, restrictPoints } from "./helpers";
+import { smartScroll } from "../lib/virtualization";
 
 const actions: { [s: string]: CoreAction<any> } = {};
 
@@ -367,8 +368,8 @@ class EscapeAction<T extends null> extends CoreAction<T> {
       copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
       cutting: false,
       editingCell: "",
-      horizontalHeadersSelecting: false,
-      verticalHeadersSelecting: false,
+      headerTopSelecting: false,
+      headerLeftSelecting: false,
     };
   }
 }
@@ -390,8 +391,8 @@ class SelectAction<T extends ZoneType> extends CoreAction<T> {
     return {
       ...store,
       selectingZone: payload,
-      horizontalHeadersSelecting: false,
-      verticalHeadersSelecting: false,
+      headerTopSelecting: false,
+      headerLeftSelecting: false,
     };
   }
 }
@@ -413,8 +414,8 @@ class SelectRowsAction<
       ...store,
       selectingZone,
       choosing: { y: start, x: 0 } as PointType,
-      verticalHeadersSelecting: true,
-      horizontalHeadersSelecting: false,
+      headerLeftSelecting: true,
+      headerTopSelecting: false,
     };
   }
 }
@@ -437,8 +438,8 @@ class SelectColsAction<
       ...store,
       selectingZone,
       choosing: { y: 0, x: start } as PointType,
-      verticalHeadersSelecting: false,
-      horizontalHeadersSelecting: true,
+      headerLeftSelecting: false,
+      headerTopSelecting: true,
     };
   }
 }
@@ -575,7 +576,7 @@ class ArrowAction<
 > extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     const { shiftKey, deltaY, deltaX, numRows, numCols } = payload;
-    let { choosing, selectingZone, table, gridRef } = store;
+    let { choosing, selectingZone, table, gridOuterRef } = store;
     const { y, x } = choosing;
     if (shiftKey) {
       let [dragEndY, dragEndX] = [
@@ -622,11 +623,8 @@ class ArrowAction<
     const cell = table.getByPoint({ y: nextY, x: nextX });
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
-    gridRef.current?.scrollToItem({
-      rowIndex: nextY - 1,
-      columnIndex: nextX - 1,
-      align: "auto",
-    });
+
+    smartScroll(table, gridOuterRef.current, { y: nextY, x: nextX });
     return {
       ...store,
       selectingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
@@ -647,7 +645,7 @@ class WalkAction<
 > extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     let { deltaY, deltaX, numRows, numCols } = payload;
-    let { choosing, selectingZone, table, gridRef } = store;
+    let { choosing, selectingZone, table, gridOuterRef } = store;
     let { y: editorTop, x: editorLeft, height, width } = store.editorRect;
     const { y, x } = choosing;
     const selectingArea = zoneToArea(selectingZone);
@@ -722,11 +720,7 @@ class WalkAction<
     const cell = table.getByPoint({ y: nextY, x: nextX });
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
-    gridRef.current?.scrollToItem({
-      rowIndex: nextY - 1,
-      columnIndex: nextX - 1,
-      align: "auto",
-    });
+    smartScroll(table, gridOuterRef.current, { y: nextY, x: nextX});
     return {
       ...store,
       choosing: { y: nextY, x: nextX } as PointType,

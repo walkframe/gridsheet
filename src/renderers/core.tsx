@@ -99,10 +99,6 @@ export class Renderer {
     }
     if (value[0] === "=") {
       const result = solveFormula({ value, table, raise: true });
-
-      if (result == null) {
-        return "";
-      }
       if (result.constructor.name === "Boolean") {
         return String(result).toUpperCase();
       }

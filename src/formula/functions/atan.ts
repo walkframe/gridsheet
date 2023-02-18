@@ -13,13 +13,13 @@ export class AtanFunction extends BaseFunction {
   ];
 
   protected validate() {
-    if (this.args.length !== 1) {
+    if (this.bareArgs.length !== 1) {
       throw new FormulaError(
         "#N/A",
         "Number of arguments for ATAN is incorrect."
       );
     }
-    this.args = this.args.map((arg) => ensureNumber(arg));
+    this.bareArgs = this.bareArgs.map((arg) => ensureNumber(arg));
   }
 
   protected main(value: number) {

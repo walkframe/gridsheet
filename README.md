@@ -1,5 +1,6 @@
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet?ref=badge_shield)
+![unittest workflow](https://github.com/walkframe/react-gridsheet/actions/workflows/unittest.yaml/badge.svg?branch=master)
 [![NPM](https://nodei.co/npm/react-gridsheet.png?mini=true)](https://www.npmjs.com/package/react-gridsheet)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet?ref=badge_shield)
 
 ## Introduction
 
@@ -12,15 +13,15 @@ react-gridsheet is a simple yet highly functional spreadsheet component for Reac
 
 - Copy & Paste
 - Cut & Paste
+- Undo & Redo
 - Add rows and columns
 - Displaying formulas
 - Cell styling
 - Custom renderer
 - Custom parser
-- Undo & Redo
-- Basic Shortcut keys
-- Context menus
-- External Data Manipulation
+- Basic shortcut keys
+- Context menu
+- External data manipulation
 
 ## Installation
 

@@ -9,7 +9,7 @@ export class NowFunction extends BaseFunction {
   helpArgs = [];
 
   protected validate() {
-    if (this.args.length !== 0) {
+    if (this.bareArgs.length !== 0) {
       throw new FormulaError(
         "#N/A",
         "Number of arguments for NOW is incorrect."
