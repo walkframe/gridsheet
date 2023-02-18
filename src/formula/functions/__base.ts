@@ -1,7 +1,8 @@
 import { Table } from "../../lib/table";
+import {Expression} from "../evaluator";
 
 export type FunctionProps = {
-  args: any[];
+  args: Expression[];
   table: Table;
 };
 

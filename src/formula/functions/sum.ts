@@ -2,6 +2,7 @@ import { solveTable } from "../solver";
 import { Table } from "../../lib/table";
 import { BaseFunction } from "./__base";
 import { ensureNumber } from "./__utils";
+import {FormulaError} from "../evaluator";
 
 export class SumFunction extends BaseFunction {
   example = "SUM(A2:A100, 101)";
@@ -17,6 +18,12 @@ export class SumFunction extends BaseFunction {
   ];
 
   protected validate() {
+    if (this.args.length === 0) {
+      throw new FormulaError(
+        "#N/A",
+        "One or more arguments are required.",
+      );
+    }
     const spreaded: number[] = [];
     this.args.forEach((arg) => {
       if (arg instanceof Table) {

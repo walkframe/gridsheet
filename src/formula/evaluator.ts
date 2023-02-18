@@ -148,10 +148,10 @@ export class Function {
   public args: Expression[];
   public name: string;
   public precedence: number;
-  constructor(name: string, precedence = 0) {
+  constructor(name: string, precedence = 0, args: Expression[]=[]) {
     this.name = name;
     this.precedence = precedence;
-    this.args = [];
+    this.args = args;
   }
 
   public evaluate({ table }: EvaluateProps): any {
@@ -165,7 +165,7 @@ export class Function {
   }
 }
 
-type Expression =
+export type Expression =
   | Value
   | Ref
   | Range

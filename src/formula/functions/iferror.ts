@@ -1,8 +1,9 @@
 // DO NOT COPY THIS CODE FOR THE OTHER.
 
 import { Table } from "../../lib/table";
-import { FormulaError } from "../evaluator";
+import {Expression, FormulaError} from "../evaluator";
 import { FunctionProps } from "./__base";
+import {stripTable} from "./__utils";
 
 export class IfErrorFunction {
   example = 'IFERROR(A1, "Error in cell A1")';
@@ -20,7 +21,7 @@ export class IfErrorFunction {
       optional: true,
     },
   ];
-  private args: any[];
+  private args: Expression[];
   private table: Table;
 
   constructor({ args, table }: FunctionProps) {
@@ -41,10 +42,11 @@ export class IfErrorFunction {
   public call() {
     this.validate();
     const [value, valueIfError] = this.args;
+
     try {
-      return value.evaluate(this.table);
+      return stripTable(value.evaluate({table: this.table}));
     } catch (e) {
-      return valueIfError ? valueIfError.evaluate(this.table) : null;
+      return stripTable(valueIfError?.evaluate({table: this.table}));
     }
   }
 }
