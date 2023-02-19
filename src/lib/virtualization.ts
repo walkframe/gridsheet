@@ -53,8 +53,18 @@ export const virtualize = (table: Table, e: HTMLDivElement) => {
   }
   const ys = range(boundaryTop, boundaryBottom);
   const xs = range(boundaryLeft, boundaryRight);
-  const skip = table.getRectSize({top: 1, left: 1, bottom: boundaryTop, right: boundaryLeft});
-  return { ys, xs, skipHeight: skip.height, skipWidth: skip.width, width, height};
+  const before = table.getRectSize({top: 1, left: 1, bottom: boundaryTop, right: boundaryLeft});
+  const after = table.getRectSize({top: boundaryBottom, left: boundaryRight, bottom: table.getNumRows(), right: table.getNumCols()});
+  return {
+    ys,
+    xs,
+    adjuster: {
+      top: before.height,
+      left: before.width,
+      bottom: after.height,
+      right: after.width,
+    },
+  };
 }
 
 export const smartScroll = (

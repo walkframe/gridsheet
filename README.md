@@ -67,6 +67,14 @@ $ yarn add react-gridsheet
 
 - 0.9.x
   - Add addRowsAndUpdate and addColsAndUpdate method on UserTable.
+  - Drop styled-components
+
+- 0.10.x
+  - Drop react-window
+  - Add tests.
+  - BREAKING CHANGE:
+      - cell.verticalAlign -> cell.alignItems.
+      - generateInitial's arg matrixes -> matrices.
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet?ref=badge_large)

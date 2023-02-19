@@ -50,7 +50,7 @@ export const Tabular = ({ tableRef }: Props) => {
     sheetRef.current?.clientHeight, sheetRef.current?.clientWidth,
   ]);
 
-  const { ys, xs, skipHeight, skipWidth, width } = virtualized;
+  const { ys, xs, adjuster } = virtualized;
 
   return (
     <>
@@ -103,14 +103,14 @@ export const Tabular = ({ tableRef }: Props) => {
                     }, 100);
                   }}
                 ></th>
-                <th className="gs-adjuster" style={{width: skipWidth}}></th>
+                <th className="gs-adjuster" style={{ width: adjuster.left }}></th>
                 { xs.map((x) => <HeaderTopCell x={x} key={x} />) }
-                <th className="gs-adjuster"></th>
+                <th className="gs-adjuster" style={{ width: adjuster.right }}></th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td className="gs-header gs-header-left gs-adjuster" style={{height: skipHeight}}></td>
+                <th className="gs-header gs-header-left gs-adjuster" style={{height: adjuster.top }}></th>
                 { xs.map((x) => <td className="gs-adjuster" key={x} />) }
               </tr>
             </tbody>
@@ -121,6 +121,7 @@ export const Tabular = ({ tableRef }: Props) => {
                     <HeaderLeftCell y={y} />
                     <td className="gs-adjuster" />
                     { xs.map((x) => <Cell key={x} y={y} x={x} />) }
+                    <td className="gs-adjuster" />
                   </tr>);
                 })
               }
