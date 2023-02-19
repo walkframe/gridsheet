@@ -1,6 +1,6 @@
 {
   "name": "react-gridsheet",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "Spreadsheet component for React",
   "main": "dist/index.js",
   "module": "dist/index.js",
