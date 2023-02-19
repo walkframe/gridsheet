@@ -1,14 +1,12 @@
 import {SumFunction} from "./sum";
 import {Table} from "../../lib/table";
 import {FormulaError, Range, Ref, Value} from "../evaluator";
-import {functions} from "../mapping";
 
 describe('sum', () => {
   const table = new Table({
     numRows: 100, numCols: 100,
     cells: {A1: {value: 5}, A2: {value: "=-(9 * 10) - 4"}, B50: {value: 25}, C15: {value: "not a number"}, C20: {value: 10}},
   });
-  table.setFunctions(functions);
 
   describe('normal', () => {
     it('sum single values', () => {

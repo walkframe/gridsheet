@@ -60,8 +60,8 @@ export const StoreInitializer: React.FC<Props> = ({
       maxNumCols,
       headerHeight,
       headerWidth,
+      functions: { ...functions, ...additionalFunctions },
     });
-    table.setFunctions({ ...functions, ...additionalFunctions });
     dispatch(initializeTable(table));
   }, []);
   React.useEffect(() => {

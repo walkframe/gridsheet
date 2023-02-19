@@ -20,7 +20,7 @@ export const SheetOnChange = () => {
           <GridSheet
             tableRef={tableRef}
             initial={generateInitial({
-              matrixes: {
+              matrices: {
                 A1: [
                   [1, 2, 3, 4, 5],
                   [6, 7, 8, 9, 10],

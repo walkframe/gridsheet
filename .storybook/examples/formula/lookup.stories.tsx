@@ -18,7 +18,7 @@ export const LookUp = () => {
             C4: { style: { backgroundColor: "#ddd" } },
           },
           ensured: { numRows: 10, numCols: 10 },
-          matrixes: {
+          matrices: {
             A1: [
               [
                 0,
@@ -109,7 +109,7 @@ export const LookUp = () => {
             D: { width: 50, style: { textAlign: "right" } },
             E: { width: 130 },
           },
-          matrixes: {
+          matrices: {
             A1: [
               [0, "子🐭"],
               [1, "丑🐮"],

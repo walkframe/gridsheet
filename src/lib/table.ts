@@ -22,7 +22,7 @@ import {
 import {areaShape, createMatrix, matrixShape, putMatrix, range} from "./structs";
 import { a2p, x2c, p2a, y2r, grantAddressAbsolute } from "./converters";
 import { FunctionMapping } from "../formula/functions/__base";
-import { functions } from "../formula/mapping";
+import { functions as functionsDefault } from "../formula/mapping";
 import { convertFormulaAbsolute, Lexer } from "../formula/evaluator";
 import { solveFormula } from "../formula/solver";
 
@@ -44,6 +44,7 @@ type Props = {
   maxNumCols?: number;
   headerHeight?: number;
   headerWidth?: number;
+  functions?: typeof functionsDefault;
 };
 
 const cellFilter = (cell: CellType) => true;
@@ -99,6 +100,7 @@ export class UserTable {
     maxNumCols = -1,
     headerWidth = -1,
     headerHeight = -1,
+    functions = functionsDefault,
   }: Props) {
     this.head = useBigInt ? BigInt(0) : 0;
     this.data = {};
@@ -119,6 +121,7 @@ export class UserTable {
     this.solvedCaches = {};
     this.headerHeight = headerHeight;
     this.headerWidth = headerWidth;
+    this.functions = functions;
 
     const common = cells.default;
     // make idMatrix beforehand
@@ -173,7 +176,7 @@ export class UserTable {
         this.data[id] = stacked;
       }
     }
-    this.setTableRectSize();
+    this.setTotalSize();
   }
 
   protected generateId() {
@@ -190,7 +193,7 @@ export class UserTable {
     }
     return {width, height};
   }
-  setTableRectSize() {
+  setTotalSize() {
     const {bottom, right} = this.area;
     const {width, height} = this.getRectSize({top: 1, left: 1, bottom: bottom + 1, right: right + 1});
     this.totalWidth = width + this.headerWidth;
@@ -218,7 +221,7 @@ export class UserTable {
     copied.maxNumCols = this.maxNumCols;
     copied.headerHeight = this.headerHeight;
     copied.headerWidth = this.headerWidth;
-    copied.setTableRectSize();
+    copied.setTotalSize();
     if (copyCache) {
       copied.addressesById = this.addressesById;
     } else {
@@ -1111,7 +1114,7 @@ export class Table extends UserTable {
   }
 
   public setFunctions(additionalFunctions: FunctionMapping) {
-    this.functions = { ...functions, ...additionalFunctions };
+    this.functions = { ...functionsDefault, ...additionalFunctions };
   }
 
   public getArea(): AreaType {

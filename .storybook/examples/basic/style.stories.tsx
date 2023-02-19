@@ -10,7 +10,7 @@ export const Style = () => {
     <>
       <GridSheet
         initial={generateInitial({
-          matrixes: {
+          matrices: {
             A1: [
               ["a", "b", "c", "d", "e"],
               ["aa", "bb", "cc", "dd", "ee"],

@@ -35,7 +35,7 @@ export const ParseAsList = () => {
     <>
       <GridSheet
         initial={generateInitial({
-          matrixes: {
+          matrices: {
             A1: [
               [
                 [1, 2, 3],

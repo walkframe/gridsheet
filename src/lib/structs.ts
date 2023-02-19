@@ -8,7 +8,7 @@ import {
   X,
   CellsByAddressType,
   ShapeType,
-  MatrixesByAddress,
+  MatricesByAddress,
   CellType,
 } from "../types";
 import { a2p, p2a } from "./converters";
@@ -172,7 +172,7 @@ export const putMatrix = <T = any>(
   src: T[][],
   dstArea: AreaType
 ) => {
-  const lostRows: MatrixesByAddress<T> = {};
+  const lostRows: MatricesByAddress<T> = {};
   const { top, left, bottom, right } = dstArea;
   const { height: dstNumRows, width: dstNumCols } = matrixShape({
     matrix: dst,
@@ -207,10 +207,33 @@ export const cropMatrix = <T = any>(matrix: T[][], area: AreaType): T[][] => {
     .map((cols) => cols.slice(left, right + 1));
 };
 
+export const generateInitialSimple = <T>(
+  {
+    cells = {},
+    ensured = {},
+    matrix = [],
+    flattenAs = "value",
+  }: {
+    cells?: CellsByAddressType;
+    ensured?: {
+      numRows?: number;
+      numCols?: number;
+    };
+    flattenAs?: keyof CellType;
+    matrix?: MatrixType;
+  }) => {
+  return generateInitial({
+    cells,
+    ensured,
+    matrices: {A1: matrix},
+    flattenAs,
+  });
+}
+
 export const generateInitial = <T>({
   cells = {},
   ensured = {},
-  matrixes = {},
+  matrices = {},
   flattenAs = "value",
 }: {
   cells?: CellsByAddressType;
@@ -219,9 +242,9 @@ export const generateInitial = <T>({
     numCols?: number;
   };
   flattenAs?: keyof CellType;
-  matrixes?: MatrixesByAddress<T>;
+  matrices?: MatricesByAddress<T>;
 } = {}) => {
-  upsert({ cells, flattenAs, matrixes });
+  upsert({ cells, flattenAs, matrices });
   const { numRows, numCols } = Object.assign(
     { numRows: 1, numCols: 1 },
     ensured
@@ -235,15 +258,15 @@ export const generateInitial = <T>({
 
 export const upsert = <T>({
   cells = {},
-  matrixes = {},
+  matrices = {},
   flattenAs,
 }: {
   cells?: CellsByAddressType;
   flattenAs?: keyof CellType;
-  matrixes?: MatrixesByAddress<T>;
+  matrices?: MatricesByAddress<T>;
 }) => {
-  Object.keys(matrixes).forEach((address) => {
-    const matrix = matrixes[address];
+  Object.keys(matrices).forEach((address) => {
+    const matrix = matrices[address];
     const { y: baseY, x: baseX } = a2p(address);
     matrix.forEach((row, y) => {
       row.forEach((e, x) => {

@@ -47,7 +47,7 @@ export const RenderToKanji = () => {
     <>
       <GridSheet
         initial={generateInitial({
-          matrixes: {
+          matrices: {
             B3: [[100], [200, 300], [400, 500, 600], [800, 900, 1000, 1100]],
           },
           cells: {
