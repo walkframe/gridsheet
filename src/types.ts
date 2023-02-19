@@ -61,7 +61,7 @@ export type CellType<Custom = any> = {
 
 export type CellFilter = (cell: CellType) => boolean;
 
-export type CellsByAddressType = { [address: Address]: CellType };
+export type CellsByAddressType = { [address: string]: CellType };
 export type CellsByIdType = { [id: Id]: CellType | undefined };
 
 
