@@ -10,7 +10,7 @@ export const DEFAULT_WIDTH = 90;
 export const SHEET_HEIGHT = 500;
 export const SHEET_WIDTH = 1000;
 
-export const HEADER_HEIGHT = 20;
+export const HEADER_HEIGHT = 24;
 export const HEADER_WIDTH = 50;
 
 export const MIN_WIDTH = 5;

@@ -147,7 +147,7 @@ const estimateSheetHeight = ({ initial, options }: EstimateProps) => {
     }
     estimatedHeight += height;
   }
-  return estimatedHeight - 1;
+  return estimatedHeight + 3;
 };
 
 const estimateSheetWidth = ({ initial, options }: EstimateProps) => {
@@ -162,5 +162,5 @@ const estimateSheetWidth = ({ initial, options }: EstimateProps) => {
     }
     estimatedWidth += width;
   }
-  return estimatedWidth - 1;
+  return estimatedWidth + 3;
 };

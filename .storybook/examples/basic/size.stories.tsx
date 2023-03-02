@@ -43,4 +43,4 @@ export const Large = Template.bind({});
 Large.args = { numRows: 1000, numCols: 100, defaultWidth: 50 };
 
 export const Small = Template.bind({});
-Small.args = { numRows: 5, numCols: 5, defaultWidth: 100 };
+Small.args = { numRows: 5, numCols: 3, defaultWidth: 100 };
