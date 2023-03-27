@@ -56,6 +56,7 @@ export const GridSheet: React.FC<Props> = ({
     cutting: false,
     selectingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
     copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
+    autofillTarget: { top: -1, left: -1, bottom: -1, right: -1 },
     headerTopSelecting: false,
     headerLeftSelecting: false,
     editingCell: "",

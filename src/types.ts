@@ -107,6 +107,7 @@ export type StoreType = {
   cutting: boolean;
   copyingZone: ZoneType;
   selectingZone: ZoneType;
+  autofillTarget: AreaType;
   headerTopSelecting: boolean;
   headerLeftSelecting: boolean;
   editingCell: string;

@@ -7,7 +7,7 @@ import {
   drag,
   write,
   setEditorRect,
-  setContextMenuPosition,
+  setContextMenuPosition, setAutofillTarget,
 } from "../store/actions";
 
 import { DUMMY_IMG } from "../constants";
@@ -172,12 +172,34 @@ export const Cell: React.FC<Props> = React.memo(
               alignItems: cell?.alignItems || "start",
             }}
           >
-          {errorMessage && (
-            <div className="formula-error-triangle" title={errorMessage} />
-          )}
+            {errorMessage && (
+              <div className="formula-error-triangle" title={errorMessage} />
+            )}
             {showAddress && <div className="gs-cell-label">{address}</div>}
             <div className="gs-cell-rendered">{rendered}</div>
           </div>
+          {((pointed && selectingArea.bottom === -1) ||
+            (selectingArea.bottom === y && selectingArea.right === x)) &&
+            <div
+              className="gs-autofill-drag"
+              draggable
+              onDragStart={(e) => {
+                let target = selectingArea;
+                if (target.left === -1) {
+                  target = {
+                    top: choosing.y,
+                    left: choosing.x,
+                    bottom: choosing.y,
+                    right: choosing.x,
+                  };
+                }
+                dispatch(setAutofillTarget(target))
+                e.stopPropagation();
+                e.preventDefault();
+                return false;
+              }}
+            ></div>
+          }
         </div>
       </td>
     );

@@ -72,12 +72,12 @@ export class Renderer {
         return this.string(value, table, writer);
       case "number":
         return this.number(value, writer);
-      case "function":
-        return value() as string;
       case "boolean":
         return this.bool(value, writer);
       case "undefined":
         return this.undefined(value, writer);
+      case "function":
+        return value() as string;
     }
     return "";
   }

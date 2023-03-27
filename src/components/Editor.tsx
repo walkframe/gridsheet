@@ -232,7 +232,7 @@ export const Editor: React.FC = () => {
               dispatch(setSearchQuery(""));
             }
             dispatch(setEntering(false));
-            setTimeout(() => searchInputRef.current?.focus(), 100);
+            window.setTimeout(() => searchInputRef.current?.focus(), 100);
             return false;
           }
         }
@@ -241,7 +241,7 @@ export const Editor: React.FC = () => {
           if (!editing) {
             e.preventDefault();
             dispatch(redo(null));
-            setTimeout(() => (input.value = ""), 100); // resetting textarea
+            window.setTimeout(() => (input.value = ""), 100); // resetting textarea
             return false;
           }
         }
@@ -267,7 +267,7 @@ export const Editor: React.FC = () => {
       case "v": // V
         if (e.ctrlKey || e.metaKey) {
           if (!editing) {
-            setTimeout(() => {
+            window.setTimeout(() => {
               dispatch(paste({text: input.value}));
               input.value = "";
             }, 50);
@@ -291,7 +291,7 @@ export const Editor: React.FC = () => {
             e.preventDefault();
             if (e.shiftKey) {
               dispatch(redo(null));
-              setTimeout(() => (input.value = ""), 100); // resetting textarea
+              window.setTimeout(() => (input.value = ""), 100); // resetting textarea
             } else {
               dispatch(undo(null));
             }
@@ -344,7 +344,7 @@ export const Editor: React.FC = () => {
             dispatch(setEditingCell(address));
             input.style.width = `${width}px`;
             input.style.height = `${height}px`;
-            setTimeout(() => {
+            window.setTimeout(() => {
               input.style.width = `${input.scrollWidth}px`;
               input.style.height = `${input.scrollHeight}px`;
               const length = new String(input.value).length;
@@ -358,7 +358,7 @@ export const Editor: React.FC = () => {
           }
           e.target.value = "";
           dispatch(blur(null));
-          setTimeout(() => entering && e.target.focus(), 100);
+          window.setTimeout(() => entering && e.target.focus(), 100);
         }}
         onInput={(e) => {
           const input = e.currentTarget;

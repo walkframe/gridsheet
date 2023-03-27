@@ -90,7 +90,7 @@ export const Tabular = ({ tableRef }: Props) => {
                   style={{width: headerWidth, position: "sticky"}}
                   onClick={() => {
                     dispatch(choose({ y: -1, x: -1 }));
-                    setTimeout(() => {
+                    window.setTimeout(() => {
                       dispatch(choose({ y: 1, x: 1 }));
                       dispatch(
                         select({
