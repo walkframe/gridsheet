@@ -89,15 +89,15 @@ class SetEditingOnEnterAction<T extends boolean> extends CoreAction<T> {
 }
 export const setEditingOnEnter = new SetEditingOnEnterAction().bind();
 
-class SetAutofillTargetAction<T extends AreaType> extends CoreAction<T> {
+class SetAutofillDraggingToAction<T extends PointType | null> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
-      autofillTarget: payload,
+      autofillDraggingTo: payload,
     };
   }
 }
-export const setAutofillTarget = new SetAutofillTargetAction().bind();
+export const setAutofillDraggingTo = new SetAutofillDraggingToAction().bind();
 
 class SetShowAddressAction<T extends boolean> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {

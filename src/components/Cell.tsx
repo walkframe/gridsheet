@@ -7,7 +7,7 @@ import {
   drag,
   write,
   setEditorRect,
-  setContextMenuPosition, setAutofillTarget,
+  setContextMenuPosition, setAutofillDraggingTo,
 } from "../store/actions";
 
 import { DUMMY_IMG } from "../constants";
@@ -15,6 +15,7 @@ import {AreaType, PointType} from "../types";
 
 import { Context } from "../store";
 import { FormulaError } from "../formula/evaluator";
+import {getAutofillCandidateStyle} from "../lib/autofill";
 
 type Props = {
   y: number;
@@ -43,6 +44,7 @@ export const Cell: React.FC<Props> = React.memo(
       matchingCellIndex,
       editorRef,
       showAddress,
+      autofillDraggingTo,
     } = store;
 
     const [before, setBefore] = React.useState("");
@@ -115,7 +117,7 @@ export const Cell: React.FC<Props> = React.memo(
         }`}
         style={{
           ...cell?.style,
-          ...getCellStyle({y, x, pointed, selectingArea, copyingArea, cutting}),
+          ...getCellStyle({y, x, pointed, choosing, selectingArea, copyingArea, cutting, autofillDraggingTo}),
         }}
         onContextMenu={(e) => {
           e.preventDefault();
@@ -123,6 +125,9 @@ export const Cell: React.FC<Props> = React.memo(
           return false;
         }}
         onClick={(e) => {
+          if (autofillDraggingTo) {
+            return false;
+          }
           dispatch(setContextMenuPosition({ y: -1, x: -1 }));
           if (e.shiftKey) {
             dispatch(drag({ y, x }));
@@ -141,17 +146,29 @@ export const Cell: React.FC<Props> = React.memo(
         }}
         draggable
         onDragStart={(e) => {
+          if (autofillDraggingTo) {
+            return false;
+          }
           e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
           dispatch(choose({ y, x }));
           dispatch(select({ startY: y, startX: x, endY: y, endX: x }));
         }}
         onDragEnd={(e) => {
+          if (autofillDraggingTo) {
+            dispatch(drag(autofillDraggingTo));
+            dispatch(setAutofillDraggingTo(null));
+            return false;
+          }
           const { height: h, width: w } = zoneShape(selectingZone);
           if (h + w === 0) {
             dispatch(select({ startY: -1, startX: -1, endY: -1, endX: -1 }));
           }
         }}
         onDragEnter={() => {
+          if (autofillDraggingTo) {
+            dispatch(setAutofillDraggingTo({x, y}));
+            return false;
+          }
           if (headerTopSelecting) {
             dispatch(drag({ y: table.getNumRows(), x }));
             return false;
@@ -183,20 +200,17 @@ export const Cell: React.FC<Props> = React.memo(
             <div
               className="gs-autofill-drag"
               draggable
+              onClick={(e) => {
+                //e.stopPropagation();
+                //e.preventDefault();
+                //return false;
+              }}
               onDragStart={(e) => {
-                let target = selectingArea;
-                if (target.left === -1) {
-                  target = {
-                    top: choosing.y,
-                    left: choosing.x,
-                    bottom: choosing.y,
-                    right: choosing.x,
-                  };
-                }
-                dispatch(setAutofillTarget(target))
+                e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
+                dispatch(setAutofillDraggingTo({x, y}));
                 e.stopPropagation();
-                e.preventDefault();
-                return false;
+                //e.preventDefault();
+                //return false;
               }}
             ></div>
           }
@@ -207,13 +221,15 @@ export const Cell: React.FC<Props> = React.memo(
 );
 
 
-const getCellStyle = ({ y, x, pointed, selectingArea, copyingArea, cutting }: {
+const getCellStyle = ({ y, x, pointed, choosing, selectingArea, copyingArea, cutting, autofillDraggingTo }: {
   y: number;
   x: number;
   pointed: boolean;
+  choosing: PointType;
   selectingArea: AreaType;
   copyingArea: AreaType;
   cutting: boolean;
+  autofillDraggingTo: PointType | null
 }): React.CSSProperties => {
   const style: React.CSSProperties = {};
   if (pointed) {
@@ -254,6 +270,9 @@ const getCellStyle = ({ y, x, pointed, selectingArea, copyingArea, cutting }: {
     if (right === x && top <= y && y <= bottom) {
       style.borderRight = border;
     }
+  }
+  if (autofillDraggingTo) {
+    Object.assign(style, getAutofillCandidateStyle({choosing, selectingArea, autofillDraggingTo, target: {x, y}}))
   }
   return style;
 };

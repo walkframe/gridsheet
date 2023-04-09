@@ -178,12 +178,12 @@
 .gridsheet-1 .gs-cell .gs-autofill-drag {
   background-color: #0077ff;
   position: absolute;
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   bottom: 0;
   right: 0;
-  margin-right: -3px;
-  margin-bottom: -3px;
+  margin-right: -3.5px;
+  margin-bottom: -3.5px;
   cursor: crosshair;
   z-index: 1;
 }
