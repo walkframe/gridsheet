@@ -1,13 +1,13 @@
 import React from "react";
 import { x2c, y2r } from "../lib/converters";
-import { zoneToArea, among, zoneShape } from "../lib/structs";
+import {zoneToArea, among, zoneShape, concatAreas, areaToZone} from "../lib/structs";
 import {
   choose,
   select,
   drag,
   write,
   setEditorRect,
-  setContextMenuPosition, setAutofillDraggingTo,
+  setContextMenuPosition, setAutofillDraggingTo, updateTable,
 } from "../store/actions";
 
 import { DUMMY_IMG } from "../constants";
@@ -15,7 +15,12 @@ import {AreaType, PointType} from "../types";
 
 import { Context } from "../store";
 import { FormulaError } from "../formula/evaluator";
-import {getAutofillCandidateStyle} from "../lib/autofill";
+import {
+  applyAutofillToTable,
+  complementSelectingArea,
+  getAutofillCandidateStyle,
+  getAutofillDestinationArea
+} from "../lib/autofill";
 
 type Props = {
   y: number;
@@ -155,7 +160,12 @@ export const Cell: React.FC<Props> = React.memo(
         }}
         onDragEnd={(e) => {
           if (autofillDraggingTo) {
-            dispatch(drag(autofillDraggingTo));
+            const selecting = complementSelectingArea(selectingArea, choosing);
+            const dst = getAutofillDestinationArea({choosing, selecting, autofillDraggingTo});
+            const newTable = applyAutofillToTable({table, choosing, src: selecting, autofillDraggingTo})
+            const after = concatAreas(selecting, dst);
+            dispatch(updateTable(newTable));
+            dispatch(select(areaToZone(after)));
             dispatch(setAutofillDraggingTo(null));
             return false;
           }
@@ -221,6 +231,11 @@ export const Cell: React.FC<Props> = React.memo(
 );
 
 
+const BORDER_POINTED = "solid 2px #0077ff";
+const BORDER_SELECTED = "solid 1px #0077ff";
+const BORDER_CUTTING = "dotted 2px #0077ff";
+const BORDER_COPYING = "dashed 2px #0077ff";
+
 const getCellStyle = ({ y, x, pointed, choosing, selectingArea, copyingArea, cutting, autofillDraggingTo }: {
   y: number;
   x: number;
@@ -232,32 +247,41 @@ const getCellStyle = ({ y, x, pointed, choosing, selectingArea, copyingArea, cut
   autofillDraggingTo: PointType | null
 }): React.CSSProperties => {
   const style: React.CSSProperties = {};
+  if (autofillDraggingTo) {
+    Object.assign(style, getAutofillCandidateStyle({
+      choosing,
+      selecting: selectingArea,
+      autofillDraggingTo,
+      target: {x, y},
+    }));
+  }
+
   if (pointed) {
-    style.borderTop = "solid 2px #0077ff";
-    style.borderBottom = "solid 2px #0077ff";
-    style.borderLeft = "solid 2px #0077ff";
-    style.borderRight = "solid 2px #0077ff";
+    style.borderTop = BORDER_POINTED;
+    style.borderBottom = BORDER_POINTED;
+    style.borderLeft = BORDER_POINTED;
+    style.borderRight = BORDER_POINTED;
   }
   else {
     // selecting style
     const {top, left, bottom, right} = selectingArea;
     if (top === y && left <= x && x <= right) {
-      style.borderTop = "solid 1px #0077ff";
+      style.borderTop = BORDER_SELECTED;
     }
     if (bottom === y && left <= x && x <= right) {
-      style.borderBottom = "solid 1px #0077ff";
+      style.borderBottom = BORDER_SELECTED;
     }
     if (left === x && top <= y && y <= bottom) {
-      style.borderLeft = "solid 1px #0077ff";
+      style.borderLeft = BORDER_SELECTED;
     }
     if (right === x && top <= y && y <= bottom) {
-      style.borderRight = "solid 1px #0077ff";
+      style.borderRight = BORDER_SELECTED;
     }
   }
   // copy or cut style
   {
     const {top, left, bottom, right} = copyingArea;
-    const border = cutting ? "dotted 2px #0077ff" : "dashed 2px #0077ff";
+    const border = cutting ? BORDER_CUTTING : BORDER_COPYING;
     if (top === y && left <= x && x <= right) {
       style.borderTop = border;
     }
@@ -270,9 +294,6 @@ const getCellStyle = ({ y, x, pointed, choosing, selectingArea, copyingArea, cut
     if (right === x && top <= y && y <= bottom) {
       style.borderRight = border;
     }
-  }
-  if (autofillDraggingTo) {
-    Object.assign(style, getAutofillCandidateStyle({choosing, selectingArea, autofillDraggingTo, target: {x, y}}))
   }
   return style;
 };

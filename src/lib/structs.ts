@@ -32,6 +32,27 @@ export const superposeArea = (
   };
 };
 
+export const concatAreas = (
+  area1: AreaType,
+  area2: AreaType
+): AreaType => {
+  const result: AreaType = {...area1};
+  if (area2.left < area1.left) {
+    result.left = area2.left;
+  }
+  if (area2.right > area1.right) {
+    result.right = area2.right;
+  }
+  if (area2.top < area1.top) {
+    result.top = area2.top;
+  }
+  if (area2.bottom > area1.bottom) {
+    result.bottom = area2.bottom;
+  }
+  return result;
+};
+
+
 export const zoneToArea = (zone: ZoneType): AreaType => {
   const [top, bottom] =
     zone.startY < zone.endY
@@ -196,7 +217,7 @@ export const putMatrix = <T = any>(
   return lostRows;
 };
 
-export const createMatrix = (numRows: number, numCols: number, fill = null) => {
+export const createMatrix = <T = any>(numRows: number, numCols: number, fill?: T): T[][] => {
   return [...Array(numRows)].map(() => Array(numCols).fill(fill));
 };
 
