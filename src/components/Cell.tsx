@@ -1,6 +1,6 @@
 import React from "react";
 import { x2c, y2r } from "../lib/converters";
-import {zoneToArea, among, zoneShape, concatAreas, areaToZone} from "../lib/structs";
+import {zoneToArea, among, zoneShape, areaToZone} from "../lib/structs";
 import {
   choose,
   select,
@@ -11,15 +11,12 @@ import {
 } from "../store/actions";
 
 import { DUMMY_IMG } from "../constants";
-import {AreaType, PointType} from "../types";
+import {AreaType, PointType, StoreType} from "../types";
 
 import { Context } from "../store";
 import { FormulaError } from "../formula/evaluator";
 import {
-  applyAutofillToTable,
-  complementSelectingArea,
-  getAutofillCandidateStyle,
-  getAutofillDestinationArea
+  Autofill,
 } from "../lib/autofill";
 
 type Props = {
@@ -122,7 +119,7 @@ export const Cell: React.FC<Props> = React.memo(
         }`}
         style={{
           ...cell?.style,
-          ...getCellStyle({y, x, pointed, choosing, selectingArea, copyingArea, cutting, autofillDraggingTo}),
+          ...getCellStyle({target: {y, x}, store, pointed, selectingArea, copyingArea, autofillDraggingTo}),
         }}
         onContextMenu={(e) => {
           e.preventDefault();
@@ -160,12 +157,9 @@ export const Cell: React.FC<Props> = React.memo(
         }}
         onDragEnd={(e) => {
           if (autofillDraggingTo) {
-            const selecting = complementSelectingArea(selectingArea, choosing);
-            const dst = getAutofillDestinationArea({choosing, selecting, autofillDraggingTo});
-            const newTable = applyAutofillToTable({table, choosing, src: selecting, autofillDraggingTo})
-            const after = concatAreas(selecting, dst);
-            dispatch(updateTable(newTable));
-            dispatch(select(areaToZone(after)));
+            const autofill = new Autofill(store, autofillDraggingTo);
+            dispatch(updateTable(autofill.applied));
+            dispatch(select(areaToZone(autofill.wholeArea)));
             dispatch(setAutofillDraggingTo(null));
             return false;
           }
@@ -210,11 +204,6 @@ export const Cell: React.FC<Props> = React.memo(
             <div
               className="gs-autofill-drag"
               draggable
-              onClick={(e) => {
-                //e.stopPropagation();
-                //e.preventDefault();
-                //return false;
-              }}
               onDragStart={(e) => {
                 e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
                 dispatch(setAutofillDraggingTo({x, y}));
@@ -230,32 +219,26 @@ export const Cell: React.FC<Props> = React.memo(
   }
 );
 
-
 const BORDER_POINTED = "solid 2px #0077ff";
 const BORDER_SELECTED = "solid 1px #0077ff";
 const BORDER_CUTTING = "dotted 2px #0077ff";
 const BORDER_COPYING = "dashed 2px #0077ff";
 
-const getCellStyle = ({ y, x, pointed, choosing, selectingArea, copyingArea, cutting, autofillDraggingTo }: {
-  y: number;
-  x: number;
+const getCellStyle = ({ target, pointed, selectingArea, copyingArea, store, autofillDraggingTo }: {
+  target: PointType;
   pointed: boolean;
-  choosing: PointType;
   selectingArea: AreaType;
   copyingArea: AreaType;
-  cutting: boolean;
-  autofillDraggingTo: PointType | null
+  store: StoreType;
+  autofillDraggingTo: PointType | null;
 }): React.CSSProperties => {
   const style: React.CSSProperties = {};
   if (autofillDraggingTo) {
-    Object.assign(style, getAutofillCandidateStyle({
-      choosing,
-      selecting: selectingArea,
-      autofillDraggingTo,
-      target: {x, y},
-    }));
+    const autofill = new Autofill(store, autofillDraggingTo);
+    Object.assign(style, autofill.getCellStyle(target));
   }
-
+  const {cutting} = store;
+  const {y, x} = target;
   if (pointed) {
     style.borderTop = BORDER_POINTED;
     style.borderBottom = BORDER_POINTED;

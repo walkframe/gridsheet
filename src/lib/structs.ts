@@ -325,3 +325,26 @@ export const range = (start: number, end: number) => {
   }
   return list;
 }
+
+export const complementSelectingArea = (selectingArea: AreaType, choosing: PointType) => {
+  if (selectingArea.left === -1) {
+    selectingArea = {left: choosing.x, top: choosing.y, right: choosing.x, bottom: choosing.y};
+  }
+  return selectingArea;
+}
+
+export const isSameArea = (area1: AreaType, area2: AreaType) => {
+  if (area1.top !== area2.top) {
+    return false;
+  }
+  if (area1.left !== area2.left) {
+    return false;
+  }
+  if (area1.bottom !== area2.bottom) {
+    return false;
+  }
+  if (area1.right !== area2.right) {
+    return false;
+  }
+  return true;
+}

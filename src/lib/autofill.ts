@@ -3,85 +3,16 @@ import {
   subYears, subMonths, subDays, subHours, subMinutes, subSeconds, subMilliseconds,
   isEqual
 } from 'date-fns';
-import {AreaType, CellsByAddressType, CellType, PointType} from "../types";
+import {AreaType, CellsByAddressType, CellType, PointType, StoreType} from "../types";
 import { Table } from "../lib/table";
 import React from "react";
-import {areaShape, areaToZone, createMatrix} from "./structs";
+import {areaShape, areaToZone, complementSelectingArea, concatAreas, createMatrix, zoneToArea} from "./structs";
 import {p2a} from "./converters";
 
-export const complementSelectingArea = (selectingArea: AreaType, choosing: PointType) => {
-  if (selectingArea.left === -1) {
-    selectingArea = {left: choosing.x, top: choosing.y, right: choosing.x, bottom: choosing.y};
-  }
-  return selectingArea;
-}
+const ADD_FNS = [addYears, addMonths, addDays, addHours, addMinutes, addSeconds, addMilliseconds];
+const SUB_FNS = [subYears, subMonths, subDays, subHours, subMinutes, subSeconds, subMilliseconds];
 
-const suggestDirection = (
-  {
-  choosing,
-  selecting,
-  autofillDraggingTo,
-}: {
-  choosing: PointType;
-  selecting: AreaType;
-  autofillDraggingTo: PointType;
-}) => {
-  const {top, left, bottom, right} = complementSelectingArea(selecting, choosing);
-  let horizontal = 0, vertical = 0;
-  if (autofillDraggingTo.x < left) {
-    horizontal = autofillDraggingTo.x - left;
-  }
-  else if (autofillDraggingTo.x > right) {
-    horizontal = autofillDraggingTo.x - right;
-  }
-  if (autofillDraggingTo.y < top) {
-    vertical = autofillDraggingTo.y - top
-  }
-  else if (autofillDraggingTo.y > bottom) {
-    vertical = autofillDraggingTo.y - bottom;
-  }
-  // diagonal
-  if (Math.abs(horizontal) > 0 && Math.abs(vertical) > 0) {
-    if (Math.abs(horizontal) > Math.abs(vertical)) {
-      return horizontal < 0 ? "left" : "right";
-    }
-    return vertical < 0 ? "up" : "down";
-  }
-  if (horizontal !== 0) {
-    return horizontal < 0 ? "left" : "right";
-  }
-  if (vertical !== 0 ) {
-    return vertical < 0 ? "up" : "down";
-  }
-};
-
-export const getAutofillDestinationArea = ({
-  choosing,
-  selecting,
-  autofillDraggingTo,
-}: {
-  choosing: PointType;
-  selecting: AreaType;
-  autofillDraggingTo: PointType;
-}): AreaType => {
-  selecting = complementSelectingArea(selecting, choosing);
-  const direction = suggestDirection({choosing, selecting, autofillDraggingTo});
-  const {x, y} = autofillDraggingTo;
-  const {top, left, bottom, right} = selecting;
-  switch (direction) {
-    case "left":
-      return {top, bottom, left: x, right: left - 1}
-    case "right":
-      return {top, bottom, left: right + 1, right: x};
-    case "up":
-      return {left, right, top: y, bottom: top - 1};
-    case "down":
-      return {left, right, top: bottom + 1, bottom: y};
-  }
-  return selecting;
-}
-
-
+const BORDER_AUTOFILL_DRAGGING = "dashed 1px #000000";
 const DirectionMapping: {
   [key: string]: [string, number]
 } = {
@@ -89,140 +20,176 @@ const DirectionMapping: {
   right: ["horizontal", 1],
   up: ["vertical", -1],
   down: ["vertical", 1],
-}
-
-
-
-const BORDER_AUTOFILL_DRAGGING = "dashed 1px #000000";
-
-export const getAutofillCandidateStyle = ({
-  choosing,
-  selecting,
-  target,
-  autofillDraggingTo,
-}: {
-  choosing: PointType;
-  selecting: AreaType;
-  target: PointType;
-  autofillDraggingTo: PointType;
-}) => {
-  selecting = complementSelectingArea(selecting, choosing);
-  const dst = getAutofillDestinationArea({choosing, selecting, autofillDraggingTo});
-  const {x, y} = target;
-  const style: React.CSSProperties = {};
-
-  const {top, left, bottom, right} = selecting;
-  const direction = suggestDirection({choosing, selecting, autofillDraggingTo});
-
-  switch (direction) {
-    case "left": {
-      if (dst.left <= x && x <= dst.right) {
-        if (top === y) {
-          style.borderTop = BORDER_AUTOFILL_DRAGGING;
-        }
-        if (bottom === y - 1) {
-          style.borderTop = BORDER_AUTOFILL_DRAGGING;
-        }
-      }
-      if (dst.left === x && top <= y && y <= bottom) {
-        style.borderLeft = BORDER_AUTOFILL_DRAGGING;
-      }
-      break;
-    }
-    case "right": {
-      if (dst.left <= x && x <= dst.right) {
-        if (top === y) {
-          style.borderTop = BORDER_AUTOFILL_DRAGGING;
-        }
-        if (bottom === y - 1) {
-          style.borderTop = BORDER_AUTOFILL_DRAGGING;
-        }
-      }
-      if (dst.right === x - 1 && top <= y && y <= bottom) {
-        style.borderLeft = BORDER_AUTOFILL_DRAGGING;
-      }
-      break;
-    }
-
-    case "up": {
-      if (dst.top <= y && y <= dst.bottom) {
-        if (left === x) {
-          style.borderLeft = BORDER_AUTOFILL_DRAGGING;
-        }
-        if (right === x - 1) {
-          style.borderLeft = BORDER_AUTOFILL_DRAGGING;
-        }
-      }
-      if (dst.top === y && left <= x && x <= right) {
-        style.borderTop = BORDER_AUTOFILL_DRAGGING;
-      }
-      break;
-    }
-    case "down": {
-      if (dst.top <= y && y <= dst.bottom) {
-        if (left === x) {
-          style.borderLeft = BORDER_AUTOFILL_DRAGGING;
-        }
-        if (right === x - 1) {
-          style.borderLeft = BORDER_AUTOFILL_DRAGGING;
-        }
-      }
-      if (dst.bottom === y - 1 && left <= x && x <= right) {
-        style.borderTop = BORDER_AUTOFILL_DRAGGING;
-      }
-      break;
-    }
-  }
-  return style;
 };
 
-export const applyAutofillToTable = ({
-  table,
-  choosing,
-  src,
-  autofillDraggingTo,
-}: {
-  table: Table;
-  choosing: PointType;
-  src: AreaType;
-  autofillDraggingTo: PointType;
-}): Table => {
-  const dst = getAutofillDestinationArea({choosing, selecting: src, autofillDraggingTo});
-  const direction = suggestDirection({choosing, selecting: src, autofillDraggingTo});
-  const [orientation, sign] = DirectionMapping[direction as string];
+type Direction = "left" | "right" | "up" | "down";
 
-  const matrix = table.getMatrix({area: src, evaluates: false});
-  const srcSize = areaShape({...src, base: 1});
-  const dstSize = areaShape({...dst, base: 1});
-
-  const diff: CellsByAddressType = {};
-  if (orientation === "horizontal") {
-    for (let i = 0; i < dstSize.height; i++) {
-      const gens = getPattern(matrix[i], table, sign);
-      for (let j = 0; j < dstSize.width; j++) {
-        const x = sign > 0 ? dst.left + j : dst.right - j;
-        diff[p2a({y: dst.top + i, x})] = {value: gens[j % srcSize.width].next().value};
-      }
-    }
-  } else {
-    for (let i = 0; i < dstSize.width; i++) {
-      const gens = getPattern(matrix.map((row) => row[i]), table, sign);
-      for (let j = 0; j < dstSize.height; j++) {
-        const y = sign > 0 ? dst.top + j : dst.bottom - j;
-        diff[p2a({y, x: dst.left + i})] = {value: gens[j % srcSize.height].next().value};
-      }
-    }
+export class Autofill {
+  private readonly src: AreaType;
+  private readonly dst: AreaType;
+  private readonly direction: Direction;
+  private readonly table: Table;
+  constructor(store: StoreType, draggingTo: PointType) {
+    const { table, choosing, selectingZone } = store;
+    this.src = complementSelectingArea(zoneToArea(selectingZone), choosing);
+    this.direction = this.suggestDirection(draggingTo);
+    this.dst = this.getDestinationArea(draggingTo);
+    this.table = table;
   }
-  table = table.update({
-    diff,
-    reflection: {
-      selectingZone: areaToZone(src),
+
+  public get applied(): Table {
+    const [orientation, sign] = DirectionMapping[this.direction as string];
+
+    const matrix = this.table.getMatrix({area: this.src, evaluates: false});
+    const srcSize = areaShape({...this.src, base: 1});
+    const dstSize = areaShape({...this.dst, base: 1});
+
+    const diff: CellsByAddressType = {};
+    if (orientation === "horizontal") {
+      for (let i = 0; i < dstSize.height; i++) {
+        const gens = getPattern(matrix[i], this.table, sign);
+        for (let j = 0; j < dstSize.width; j++) {
+          const x = sign > 0 ? this.dst.left + j : this.dst.right - j;
+          diff[p2a({y: this.dst.top + i, x})] = {value: gens[j % srcSize.width].next().value};
+        }
+      }
+    } else {
+      for (let i = 0; i < dstSize.width; i++) {
+        const gens = getPattern(matrix.map((row) => row[i]), this.table, sign);
+        for (let j = 0; j < dstSize.height; j++) {
+          const y = sign > 0 ? this.dst.top + j : this.dst.bottom - j;
+          diff[p2a({y, x: this.dst.left + i})] = {value: gens[j % srcSize.height].next().value};
+        }
+      }
     }
-  })
+    const table = this.table.update({
+      diff,
+      reflection: {
+        selectingZone: areaToZone(this.src),
+      }
+    })
+    return table;
+  }
 
-  return table;
+  public get wholeArea() {
+    return concatAreas(this.src, this.dst);
+  }
+
+  public getCellStyle(target: PointType) {
+    const {x, y} = target;
+    const style: React.CSSProperties = {};
+    const {top, left, bottom, right} = this.src;
+
+    switch (this.direction) {
+      case "left": {
+        if (this.dst.left <= x && x <= this.dst.right) {
+          if (top === y) {
+            style.borderTop = BORDER_AUTOFILL_DRAGGING;
+          }
+          if (bottom === y - 1) {
+            style.borderTop = BORDER_AUTOFILL_DRAGGING;
+          }
+        }
+        if (this.dst.left === x && top <= y && y <= bottom) {
+          style.borderLeft = BORDER_AUTOFILL_DRAGGING;
+        }
+        break;
+      }
+      case "right": {
+        if (this.dst.left <= x && x <= this.dst.right) {
+          if (top === y) {
+            style.borderTop = BORDER_AUTOFILL_DRAGGING;
+          }
+          if (bottom === y - 1) {
+            style.borderTop = BORDER_AUTOFILL_DRAGGING;
+          }
+        }
+        if (this.dst.right === x - 1 && top <= y && y <= bottom) {
+          style.borderLeft = BORDER_AUTOFILL_DRAGGING;
+        }
+        break;
+      }
+
+      case "up": {
+        if (this.dst.top <= y && y <= this.dst.bottom) {
+          if (left === x) {
+            style.borderLeft = BORDER_AUTOFILL_DRAGGING;
+          }
+          if (right === x - 1) {
+            style.borderLeft = BORDER_AUTOFILL_DRAGGING;
+          }
+        }
+        if (this.dst.top === y && left <= x && x <= right) {
+          style.borderTop = BORDER_AUTOFILL_DRAGGING;
+        }
+        break;
+      }
+      case "down": {
+        if (this.dst.top <= y && y <= this.dst.bottom) {
+          if (left === x) {
+            style.borderLeft = BORDER_AUTOFILL_DRAGGING;
+          }
+          if (right === x - 1) {
+            style.borderLeft = BORDER_AUTOFILL_DRAGGING;
+          }
+        }
+        if (this.dst.bottom === y - 1 && left <= x && x <= right) {
+          style.borderTop = BORDER_AUTOFILL_DRAGGING;
+        }
+        break;
+      }
+    }
+    return style;
+  }
+
+  private getDestinationArea(autofillDraggingTo: PointType): AreaType {
+    const {x, y} = autofillDraggingTo;
+    const {top, left, bottom, right} = this.src;
+    switch (this.direction) {
+      case "left":
+        return {top, bottom, left: x, right: left - 1}
+      case "right":
+        return {top, bottom, left: right + 1, right: x};
+      case "up":
+        return {left, right, top: y, bottom: top - 1};
+      case "down":
+        return {left, right, top: bottom + 1, bottom: y};
+    }
+    return this.src;
+  }
+
+  suggestDirection(draggingTo: PointType): Direction {
+    const {top, left, bottom, right} = this.src;
+    let horizontal = 0, vertical = 0;
+    if (draggingTo.x < left) {
+      horizontal = draggingTo.x - left;
+    }
+    else if (draggingTo.x > right) {
+      horizontal = draggingTo.x - right;
+    }
+    if (draggingTo.y < top) {
+      vertical = draggingTo.y - top
+    }
+    else if (draggingTo.y > bottom) {
+      vertical = draggingTo.y - bottom;
+    }
+    // diagonal
+    if (Math.abs(horizontal) > 0 && Math.abs(vertical) > 0) {
+      if (Math.abs(horizontal) > Math.abs(vertical)) {
+        return horizontal < 0 ? "left" : "right";
+      }
+      return vertical < 0 ? "up" : "down";
+    }
+    if (horizontal !== 0) {
+      return horizontal < 0 ? "left" : "right";
+    }
+    if (vertical !== 0 ) {
+      return vertical < 0 ? "up" : "down";
+    }
+    return "down";
+  };
+
 }
-
 
 function* pass(value: any){
   while(true) {
@@ -253,7 +220,7 @@ const getPattern = (
       return;
     }
     const lastIndex = sign > 0 ? values.length - 1 : 0;
-    switch(grouped.type) {
+    switch(type) {
       case "string": {
         result.push(...values.map((v) => pass(v)));
         break;
@@ -279,11 +246,9 @@ const getPattern = (
           (values[1].getSeconds() - values[0].getSeconds()),
           (values[1].getMilliseconds() - values[0].getMilliseconds()),
         ];
-        const add = [addYears, addMonths, addDays, addHours, addMinutes, addSeconds, addMilliseconds];
-        const sub = [subYears, subMonths, subDays, subHours, subMinutes, subSeconds, subMilliseconds];
         const next = (d: Date, sign=1) => {
           diff.forEach((n, i) => {
-            d = (sign > 0 ? add : sub)[i](d, n);
+            d = (sign > 0 ? ADD_FNS : SUB_FNS)[i](d, n);
           });
           return d;
         }
@@ -313,11 +278,6 @@ const getPattern = (
 
 type GroupedValues = { type: string; values: any[] };
 
-function isDate(value: any): value is Date {
-  return value instanceof Date;
-}
-
-
 function groupByType(values: (CellType | null)[]): GroupedValues[] {
   const result: GroupedValues[] = [];
 
@@ -325,7 +285,11 @@ function groupByType(values: (CellType | null)[]): GroupedValues[] {
 
   for (const cell of values) {
     const value = cell?.value;
-    const valueType = isDate(value) ? "date" : typeof value;
+    let valueType = value instanceof Date ? "date" : typeof value;
+
+    if (valueType === "string" && value[0] === "=") {
+      valueType = "formula";
+    }
 
     if (
       currentGroup &&
