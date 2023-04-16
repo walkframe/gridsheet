@@ -8,21 +8,24 @@ import { Table } from "../lib/table";
 import React from "react";
 import {areaShape, areaToZone, complementSelectingArea, concatAreas, createMatrix, zoneToArea} from "./structs";
 import {p2a} from "./converters";
+import {convertFormulaAbsolute} from "../formula/evaluator";
 
 const ADD_FNS = [addYears, addMonths, addDays, addHours, addMinutes, addSeconds, addMilliseconds];
 const SUB_FNS = [subYears, subMonths, subDays, subHours, subMinutes, subSeconds, subMilliseconds];
 
 const BORDER_AUTOFILL_DRAGGING = "dashed 1px #000000";
+
+
+type Direction = "left" | "right" | "up" | "down";
+type Orientation = "horizontal" | "vertical";
 const DirectionMapping: {
-  [key: string]: [string, number]
+  [key: string]: [Orientation, number]
 } = {
   left: ["horizontal", -1],
   right: ["horizontal", 1],
   up: ["vertical", -1],
   down: ["vertical", 1],
 };
-
-type Direction = "left" | "right" | "up" | "down";
 
 export class Autofill {
   private readonly src: AreaType;
@@ -38,27 +41,26 @@ export class Autofill {
   }
 
   public get applied(): Table {
-    const [orientation, sign] = DirectionMapping[this.direction as string];
-
+    const [orientation, sign] = DirectionMapping[this.direction];
     const matrix = this.table.getMatrix({area: this.src, evaluates: false});
-    const srcSize = areaShape({...this.src, base: 1});
-    const dstSize = areaShape({...this.dst, base: 1});
+    const srcShape = areaShape({...this.src, base: 1});
+    const dstShape = areaShape({...this.dst, base: 1});
 
     const diff: CellsByAddressType = {};
     if (orientation === "horizontal") {
-      for (let i = 0; i < dstSize.height; i++) {
-        const gens = getPattern(matrix[i], this.table, sign);
-        for (let j = 0; j < dstSize.width; j++) {
+      for (let i = 0; i < dstShape.height; i++) {
+        const patterns = this.getChangePatterns(matrix[i]);
+        for (let j = 0; j < dstShape.width; j++) {
           const x = sign > 0 ? this.dst.left + j : this.dst.right - j;
-          diff[p2a({y: this.dst.top + i, x})] = {value: gens[j % srcSize.width].next().value};
+          diff[p2a({y: this.dst.top + i, x})] = {value: patterns[j % srcShape.width].next().value};
         }
       }
     } else {
-      for (let i = 0; i < dstSize.width; i++) {
-        const gens = getPattern(matrix.map((row) => row[i]), this.table, sign);
-        for (let j = 0; j < dstSize.height; j++) {
+      for (let i = 0; i < dstShape.width; i++) {
+        const patterns = this.getChangePatterns(matrix.map((row) => row[i]));
+        for (let j = 0; j < dstShape.height; j++) {
           const y = sign > 0 ? this.dst.top + j : this.dst.bottom - j;
-          diff[p2a({y, x: this.dst.left + i})] = {value: gens[j % srcSize.height].next().value};
+          diff[p2a({y, x: this.dst.left + i})] = {value: patterns[j % srcShape.height].next().value};
         }
       }
     }
@@ -158,7 +160,7 @@ export class Autofill {
     return this.src;
   }
 
-  suggestDirection(draggingTo: PointType): Direction {
+  private suggestDirection(draggingTo: PointType): Direction {
     const {top, left, bottom, right} = this.src;
     let horizontal = 0, vertical = 0;
     if (draggingTo.x < left) {
@@ -189,91 +191,107 @@ export class Autofill {
     return "down";
   };
 
-}
-
-function* pass(value: any){
-  while(true) {
-    yield value;
-  }
-}
-
-function* arithmeticNumbers(initial: number, diff: number) {
-  let value = initial;
-  while(true) {
-    value += diff;
-    yield value;
-
-  }
-}
-
-const getPattern = (
-  cells: (CellType | null)[],
-  table: Table,
-  sign: number,
-): Generator[] => {
-  const result: Generator[] = [];
-  const groupedValues = groupByType(cells);
-  groupedValues.forEach((grouped) => {
-    const { type, values } = grouped;
-    if (values.length === 1) {
-      result.push(pass(values[0]));
-      return;
-    }
-    const lastIndex = sign > 0 ? values.length - 1 : 0;
-    switch(type) {
-      case "string": {
-        result.push(...values.map((v) => pass(v)));
-        break;
+  private getChangePatterns (cells: (CellType | null)[]): Generator[] {
+    const result: Generator[] = [];
+    const groupedValues = groupByType(cells);
+    const [orientation, sign] = DirectionMapping[this.direction];
+    groupedValues.forEach((grouped) => {
+      const { type, values } = grouped;
+      if (values.length === 1 && (type === "number" || type === "date")) {
+        result.push(pass(values[0]));
+        return;
       }
-      case "number": {
-        const diff = values[1] - values[0];
-        const match = values.every((v, i) => v === values[0] + diff * i);
-        if (match) {
-          const g = arithmeticNumbers(values[lastIndex], diff * sign);
-          result.push(...values.map(() => g));
-        } else {
+      const lastIndex = sign > 0 ? values.length - 1 : 0;
+      switch(type) {
+        case "string": {
           result.push(...values.map((v) => pass(v)));
+          break;
         }
-        break;
-      }
-      case "date": {
-        const diff = [
-          (values[1].getFullYear() - values[0].getFullYear()),
-          (values[1].getMonth() - values[0].getMonth()),
-          (values[1].getDate() - values[0].getDate()),
-          (values[1].getHours() - values[0].getHours()),
-          (values[1].getMinutes() - values[0].getMinutes()),
-          (values[1].getSeconds() - values[0].getSeconds()),
-          (values[1].getMilliseconds() - values[0].getMilliseconds()),
-        ];
-        const next = (d: Date, sign=1) => {
-          diff.forEach((n, i) => {
-            d = (sign > 0 ? ADD_FNS : SUB_FNS)[i](d, n);
-          });
-          return d;
+        case "formula": {
+          for (let i = 0; i < values.length; i++) {
+            const value = values[i];
+            const table = this.table;
+            function* generateFormula(){
+              let slide = 0;
+              const skip = cells.length * sign;
+              while(true) {
+                slide += skip;
+                yield convertFormulaAbsolute({
+                  value,
+                  table,
+                  slideY: orientation === "vertical" ? slide : 0,
+                  slideX: orientation === "horizontal" ? slide : 0,
+                });
+              }
+            }
+            result.push(generateFormula());
+          }
+          break;
         }
-        const match = values.every((v, i) => i === 0 || isEqual(v, next(values[i - 1])));
-        if (match) {
-          function* arithmeticDates(initial: Date) {
+        case "number": {
+          const diff = values[1] - values[0];
+          const match = values.every((v, i) => v === values[0] + diff * i);
+          if (!match) {
+            result.push(...values.map((v) => pass(v)));
+            break;
+          }
+          function* generateNumber() {
+            let value = values[lastIndex];
+            const skip = diff * sign;
+            while(true) {
+              value += skip;
+              yield value;
+            }
+          }
+          const g = generateNumber();
+          result.push(...values.map(() => g));
+          break;
+        }
+        case "date": {
+          const diff = [
+            (values[1].getFullYear() - values[0].getFullYear()),
+            (values[1].getMonth() - values[0].getMonth()),
+            (values[1].getDate() - values[0].getDate()),
+            (values[1].getHours() - values[0].getHours()),
+            (values[1].getMinutes() - values[0].getMinutes()),
+            (values[1].getSeconds() - values[0].getSeconds()),
+            (values[1].getMilliseconds() - values[0].getMilliseconds()),
+          ];
+          const next = (d: Date, sign=1) => {
+            diff.forEach((n, i) => {
+              d = (sign > 0 ? ADD_FNS : SUB_FNS)[i](d, n);
+            });
+            return d;
+          }
+          const match = values.every((v, i) => i === 0 || isEqual(v, next(values[i - 1])));
+          if (!match) {
+            result.push(...values.map((v) => pass(v)));
+            break;
+          }
+          function* generateDate(initial: Date) {
             let value = initial;
             while(true) {
               value = next(value, sign);
               yield new Date(value);
             }
           }
-          const g = arithmeticDates(values[lastIndex]);
+          const g = generateDate(values[lastIndex]);
           result.push(...values.map(() => g));
-        } else {
+          break;
+        }
+        default: {
           result.push(...values.map((v) => pass(v)));
         }
-        break;
       }
-      default: {
-        result.push(...values.map((v) => pass(v)));
-      }
-    }
-  });
-  return result;
+    });
+    return result;
+  }
+}
+
+function* pass(value: any){
+  while(true) {
+    yield value;
+  }
 }
 
 type GroupedValues = { type: string; values: any[] };
