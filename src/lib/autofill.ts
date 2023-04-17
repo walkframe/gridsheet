@@ -1,20 +1,15 @@
+import React from "react";
 import {
-  addYears, addMonths, addDays, addHours, addMinutes, addSeconds, addMilliseconds,
-  subYears, subMonths, subDays, subHours, subMinutes, subSeconds, subMilliseconds,
   isEqual
 } from 'date-fns';
 import {AreaType, CellsByAddressType, CellType, PointType, StoreType} from "../types";
 import { Table } from "../lib/table";
-import React from "react";
 import {areaShape, areaToZone, complementSelectingArea, concatAreas, createMatrix, zoneToArea} from "./structs";
 import {p2a} from "./converters";
 import {convertFormulaAbsolute} from "../formula/evaluator";
-
-const ADD_FNS = [addYears, addMonths, addDays, addHours, addMinutes, addSeconds, addMilliseconds];
-const SUB_FNS = [subYears, subMonths, subDays, subHours, subMinutes, subSeconds, subMilliseconds];
+import {TimeDelta} from "./time";
 
 const BORDER_AUTOFILL_DRAGGING = "dashed 1px #000000";
-
 
 type Direction = "left" | "right" | "up" | "down";
 type Orientation = "horizontal" | "vertical";
@@ -52,7 +47,8 @@ export class Autofill {
         const patterns = this.getChangePatterns(matrix[i]);
         for (let j = 0; j < dstShape.width; j++) {
           const x = sign > 0 ? this.dst.left + j : this.dst.right - j;
-          diff[p2a({y: this.dst.top + i, x})] = {value: patterns[j % srcShape.width].next().value};
+          const px = sign > 0 ? j % srcShape.width : (srcShape.width - 1 - (j % srcShape.width)) % srcShape.width;
+          diff[p2a({y: this.dst.top + i, x})] = {value: patterns[px].next().value};
         }
       }
     } else {
@@ -60,7 +56,8 @@ export class Autofill {
         const patterns = this.getChangePatterns(matrix.map((row) => row[i]));
         for (let j = 0; j < dstShape.height; j++) {
           const y = sign > 0 ? this.dst.top + j : this.dst.bottom - j;
-          diff[p2a({y, x: this.dst.left + i})] = {value: patterns[j % srcShape.height].next().value};
+          const py = sign > 0 ? j % srcShape.height : (srcShape.height - 1 - (j % srcShape.height)) % srcShape.height;
+          diff[p2a({y, x: this.dst.left + i})] = {value: patterns[py].next().value};
         }
       }
     }
@@ -193,94 +190,88 @@ export class Autofill {
 
   private getChangePatterns (cells: (CellType | null)[]): Generator[] {
     const result: Generator[] = [];
-    const groupedValues = groupByType(cells);
+    const groups = groupByType(cells);
     const [orientation, sign] = DirectionMapping[this.direction];
-    groupedValues.forEach((grouped) => {
-      const { type, values } = grouped;
-      if (values.length === 1 && (type === "number" || type === "date")) {
-        result.push(pass(values[0]));
-        return;
-      }
-      const lastIndex = sign > 0 ? values.length - 1 : 0;
-      switch(type) {
-        case "string": {
-          result.push(...values.map((v) => pass(v)));
-          break;
+    groups.forEach((group) => {
+      const lastValue = sign > 0 ? group.last : group.first;
+      switch(group.kind) {
+        case "other": {
+          result.push(pass(group.first));
+          return;
         }
         case "formula": {
-          for (let i = 0; i < values.length; i++) {
-            const value = values[i];
-            const table = this.table;
-            function* generateFormula(){
-              let slide = 0;
-              const skip = cells.length * sign;
-              while(true) {
-                slide += skip;
-                yield convertFormulaAbsolute({
-                  value,
-                  table,
-                  slideY: orientation === "vertical" ? slide : 0,
-                  slideX: orientation === "horizontal" ? slide : 0,
-                });
-              }
+          const value = group.first;
+          const table = this.table;
+          function* generateFormula(){
+            let slide = 0;
+            const skip = cells.length * sign;
+            while(true) {
+              slide += skip;
+              yield convertFormulaAbsolute({
+                value,
+                table,
+                slideY: orientation === "vertical" ? slide : 0,
+                slideX: orientation === "horizontal" ? slide : 0,
+              });
             }
-            result.push(generateFormula());
           }
-          break;
+          result.push(generateFormula());
+          return;
         }
         case "number": {
-          const diff = values[1] - values[0];
-          const match = values.every((v, i) => v === values[0] + diff * i);
-          if (!match) {
-            result.push(...values.map((v) => pass(v)));
-            break;
+          if (!group.equidistant) {
+            result.push(pass(group.first), ...group.nexts.map((v) => pass(v)));
+            return;
           }
           function* generateNumber() {
-            let value = values[lastIndex];
-            const skip = diff * sign;
+            let value = lastValue;
+            const skip = group.numericDelta * sign;
             while(true) {
               value += skip;
               yield value;
             }
           }
           const g = generateNumber();
-          result.push(...values.map(() => g));
-          break;
+          result.push(g, ...group.nexts.map(() => g));
+          return;
         }
         case "date": {
-          const diff = [
-            (values[1].getFullYear() - values[0].getFullYear()),
-            (values[1].getMonth() - values[0].getMonth()),
-            (values[1].getDate() - values[0].getDate()),
-            (values[1].getHours() - values[0].getHours()),
-            (values[1].getMinutes() - values[0].getMinutes()),
-            (values[1].getSeconds() - values[0].getSeconds()),
-            (values[1].getMilliseconds() - values[0].getMilliseconds()),
-          ];
-          const next = (d: Date, sign=1) => {
-            diff.forEach((n, i) => {
-              d = (sign > 0 ? ADD_FNS : SUB_FNS)[i](d, n);
-            });
-            return d;
+          const next = (d: Date, sign= 1) => {
+            return sign > 0 ? group.timeDelta.add(d) : group.timeDelta.sub(d);
           }
-          const match = values.every((v, i) => i === 0 || isEqual(v, next(values[i - 1])));
-          if (!match) {
-            result.push(...values.map((v) => pass(v)));
-            break;
+          if (!group.equidistant) {
+            result.push(pass(group.first), ...group.nexts.map((v) => pass(v)));
+            return;
           }
-          function* generateDate(initial: Date) {
-            let value = initial;
+          function* generateDate() {
+            let value = lastValue;
             while(true) {
-              value = next(value, sign);
+              value = next(value);
               yield new Date(value);
             }
           }
-          const g = generateDate(values[lastIndex]);
-          result.push(...values.map(() => g));
-          break;
+          const g = generateDate();
+          result.push(g, ...group.nexts.map(() => g));
+          return;
         }
-        default: {
-          result.push(...values.map((v) => pass(v)));
+        case "string+number": {
+          if (!group.equidistant) {
+            result.push(pass(group.first), ...group.nexts.map((v) => pass(v)));
+            return;
+          }
+          function* generateStringNumber() {
+            const {prefix} = extractStringNumber(group.first);
+            const {number: lastNumber} = extractStringNumber(lastValue);
+            let value = lastNumber;
+            const skip = group.numericDelta * sign;
+            while(true) {
+              value += skip;
+              yield `${prefix}${Math.abs(value)}`;
+            }
+          }
+          const g = generateStringNumber();
+          result.push(g, ...group.nexts.map(() => g));
+          return;
         }
       }
     });
@@ -294,47 +285,141 @@ function* pass(value: any){
   }
 }
 
-type GroupedValues = { type: string; values: any[] };
+type GroupKind = "number" | "date" | "string+number" | "formula" | "other";
 
-function groupByType(values: (CellType | null)[]): GroupedValues[] {
-  const result: GroupedValues[] = [];
+const StringNumberPattern = new RegExp('(.+?)(\\d+)$');
 
-  let currentGroup: GroupedValues | null = null;
-
-  for (const cell of values) {
-    const value = cell?.value;
-    let valueType = value instanceof Date ? "date" : typeof value;
-
-    if (valueType === "string" && value[0] === "=") {
-      valueType = "formula";
-    }
-
-    if (
-      currentGroup &&
-      (valueType === "number" || valueType === "string" || valueType === "date") &&
-      currentGroup.type === valueType
-    ) {
-      currentGroup.values.push(value);
-    } else {
-      if (currentGroup) {
-        result.push(currentGroup);
-      }
-
-      currentGroup =
-        valueType === "number" || valueType === "string" || valueType === "date"
-          ? { type: valueType, values: [value] }
-          : null;
-
-      if (currentGroup === null) {
-        result.push({ type: valueType, values: [value] });
-      }
-    }
+const extractStringNumber = (value: string) => {
+  const match = value.match(StringNumberPattern);
+  if (match) {
+    const [, prefix, n] = match;
+    return {prefix, number: Number(n)};
   }
-
-  if (currentGroup) {
-    result.push(currentGroup);
-  }
-
-  return result;
+  return {prefix: "", number: 0};
 }
 
+class TypedGroup {
+  public timeDelta: TimeDelta = TimeDelta.blank() ;
+  public numericDelta: number = 0;
+  public kind: GroupKind;
+  public nexts: any[];
+  public first: any;
+  public equidistant = true;
+
+  constructor(value: any) {
+    this.first = value;
+    this.nexts = [];
+    this.kind = this.discriminate(value);
+  }
+  private discriminate(value: any): GroupKind {
+    let kind = value instanceof Date ? "date" : typeof value;
+    if (kind === "number" || kind === "date") {
+      return kind;
+    }
+    if (kind === "string" && value[0] === "=") {
+      return "formula";
+    }
+    else if (kind === "string" && value.match(StringNumberPattern)) {
+      return "string+number";
+    }
+    return "other";
+  }
+
+  public get last() {
+    if (this.nexts.length === 0) {
+      return this.first;
+    }
+    return this.nexts[this.nexts.length - 1];
+  }
+
+  public add(value: any): TypedGroup | undefined {
+    const kind = this.discriminate(value);
+    if (this.kind === kind && kind !== "other") {
+      this.nexts.push(value);
+      if (this.nexts.length === 1) {
+        switch (kind) {
+          case "date": {
+            this.timeDelta = new TimeDelta(value, this.first);
+            break;
+          }
+          case "number": {
+            this.numericDelta = value - this.first;
+            break;
+          }
+          case "string+number": {
+            const {prefix: prefix1, number: number1} = extractStringNumber(this.first);
+            const {prefix: prefix2, number: number2} = extractStringNumber(value);
+            if (prefix1 === prefix2) {
+              this.numericDelta = number2 - number1;
+            }
+            break;
+          }
+        }
+      }
+      return;
+    }
+    return new TypedGroup(value);
+  }
+
+  public subdivide() {
+    if (this.nexts.length === 0) {
+      return [];
+    }
+
+    const news: TypedGroup[] = [];
+    let lastGroup: TypedGroup = this;
+    switch(this.kind) {
+      case "date": {
+        const eq = this.nexts.every((v, i) => i === 0 || isEqual(v, this.timeDelta.add(this.nexts[i - 1])));
+        this.equidistant = eq;
+        return [];
+      }
+      case "number": {
+        const eq = this.nexts.every((v, i) => i === 0 || v === this.first + this.numericDelta * (i + 1));
+        this.equidistant = eq;
+        return [];
+      }
+      case "string+number": {
+        let {prefix: basePrefix, number: baseNumber} = extractStringNumber(this.first);
+        for (let i = 0; i < lastGroup.nexts.length; i++) {
+          const next = lastGroup.nexts[i];
+          const {prefix, number} = extractStringNumber(next);
+          if (basePrefix !== prefix) {
+            const nexts = this.nexts.splice(i, this.nexts.length);
+            lastGroup = new TypedGroup(nexts.splice(0, 1)[0]);
+            nexts.forEach(lastGroup.add.bind(lastGroup));
+            news.push(lastGroup, ...lastGroup.subdivide());
+            break;
+          } else {
+            const {number: firstNumber} = extractStringNumber(lastGroup.first);
+            if (number !== firstNumber + (i + 1) * lastGroup.numericDelta) {
+              lastGroup.equidistant = false;
+            }
+          }
+        }
+        break;
+      }
+    }
+
+    return news;
+  }
+}
+
+function groupByType(cells: (CellType | null)[]): TypedGroup[] {
+  let group = new TypedGroup(cells[0]?.value);
+  const groups: TypedGroup[] = [group];
+
+  for (let i = 1; i < cells.length; i++) {
+    const value = cells[i]?.value;
+    const nextGroup = group.add(value);
+    if (nextGroup) {
+      groups.push(nextGroup);
+      group = nextGroup;
+    }
+  }
+  for (let i = groups.length - 1; i >= 0; i--) {
+    const group = groups[i];
+    groups.splice(i + 1, 0, ...group.subdivide());
+  }
+  return groups;
+}
