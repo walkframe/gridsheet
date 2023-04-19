@@ -46,18 +46,20 @@ export class Autofill {
       for (let i = 0; i < dstShape.height; i++) {
         const patterns = this.getChangePatterns(matrix[i]);
         for (let j = 0; j < dstShape.width; j++) {
+          const baseCell = matrix[i % srcShape.height][j % srcShape.width];
           const x = sign > 0 ? this.dst.left + j : this.dst.right - j;
           const px = sign > 0 ? j % srcShape.width : (srcShape.width - 1 - (j % srcShape.width)) % srcShape.width;
-          diff[p2a({y: this.dst.top + i, x})] = {value: patterns[px].next().value};
+          diff[p2a({y: this.dst.top + i, x})] = {...baseCell, value: patterns[px].next().value};
         }
       }
     } else {
       for (let i = 0; i < dstShape.width; i++) {
         const patterns = this.getChangePatterns(matrix.map((row) => row[i]));
         for (let j = 0; j < dstShape.height; j++) {
+          const baseCell = matrix[i % srcShape.height][j % srcShape.width];
           const y = sign > 0 ? this.dst.top + j : this.dst.bottom - j;
           const py = sign > 0 ? j % srcShape.height : (srcShape.height - 1 - (j % srcShape.height)) % srcShape.height;
-          diff[p2a({y, x: this.dst.left + i})] = {value: patterns[py].next().value};
+          diff[p2a({y, x: this.dst.left + i})] = {...baseCell, value: patterns[py].next().value};
         }
       }
     }
