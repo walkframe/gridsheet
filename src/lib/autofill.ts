@@ -334,31 +334,30 @@ class TypedGroup {
 
   public add(value: any): TypedGroup | undefined {
     const kind = this.discriminate(value);
-    if (this.kind === kind && kind !== "other") {
-      this.nexts.push(value);
-      if (this.nexts.length === 1) {
-        switch (kind) {
-          case "date": {
-            this.timeDelta = new TimeDelta(value, this.first);
-            break;
+    if (this.kind !== kind || kind === "other" || kind === "formula") {
+      return new TypedGroup(value);
+    }
+    if (this.nexts.length === 0) {
+      switch (kind) {
+        case "date": {
+          this.timeDelta = new TimeDelta(value, this.first);
+          break;
+        }
+        case "number": {
+          this.numericDelta = value - this.first;
+          break;
+        }
+        case "string+number": {
+          const {prefix: prefix1, number: number1} = extractStringNumber(this.first);
+          const {prefix: prefix2, number: number2} = extractStringNumber(value);
+          if (prefix1 === prefix2) {
+            this.numericDelta = number2 - number1;
           }
-          case "number": {
-            this.numericDelta = value - this.first;
-            break;
-          }
-          case "string+number": {
-            const {prefix: prefix1, number: number1} = extractStringNumber(this.first);
-            const {prefix: prefix2, number: number2} = extractStringNumber(value);
-            if (prefix1 === prefix2) {
-              this.numericDelta = number2 - number1;
-            }
-            break;
-          }
+          break;
         }
       }
-      return;
     }
-    return new TypedGroup(value);
+    this.nexts.push(value);
   }
 
   public subdivide() {

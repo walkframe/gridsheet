@@ -28,6 +28,7 @@ export const HeaderLeftCell: React.FC<Props> = React.memo(
       headerWidth,
       editorRef,
       table,
+      autofillDraggingTo,
     } = store;
 
     const row = table.getByPoint({ y, x: 0 });
@@ -83,7 +84,7 @@ export const HeaderLeftCell: React.FC<Props> = React.memo(
             return false;
           }}
           onDragEnter={() => {
-            if (resizingRect.y === -1) {
+            if (resizingRect.y === -1 && autofillDraggingTo == null) {
               const { startX } = selectingZone;
               if (startX === 1) {
                 dispatch(drag({ y, x: table.getNumCols() }));
