@@ -238,7 +238,7 @@ export class Autofill {
           return;
         }
         case "date": {
-          const next = (d: Date, sign= 1) => {
+          const next = (d: Date) => {
             return sign > 0 ? group.timeDelta.add(d) : group.timeDelta.sub(d);
           }
           if (!group.equidistant) {
