@@ -1,5 +1,6 @@
 import { parseFromTimeZone } from "date-fns-timezone";
 import { CellType } from "../types";
+import {TimeDelta} from "../lib/time";
 
 type Condition = (value: string) => boolean;
 type Stringify = (value: string) => any;
@@ -14,6 +15,7 @@ const BOOLS = { true: true, false: false } as { [s: string]: boolean };
 export class Parser {
   protected parseFunctions: ((value: string, cell: CellType) => any)[] = [
     this.number,
+    this.timedelta,
     this.date,
     this.bool,
   ];
@@ -73,6 +75,39 @@ export class Parser {
       (value.match(/\./g) || []).length <= 1
     ) {
       return parseFloat(value);
+    }
+  }
+
+  protected timedelta(value: string, cell: CellType): TimeDelta | undefined {
+    if (value.length < 4 || isNaN(value[value.length - 1] as any)) {
+      return;
+    }
+    {
+      const match = value.match(/^([+-]?)(\d+):(\d{2})$/);
+      if (match) {
+        const [, _sign, hours, minutes] = match;
+        const sign = _sign === "-"  ? -1 : 1;
+        return TimeDelta.create(sign * Number(hours), sign * Number(minutes));
+      }
+    }
+    {
+      const match = value.match(/^([+-]?)(\d+):(\d{2}):(\d{2})$/);
+      if (match) {
+        const [, _sign, hours, minutes, seconds] = match;
+        const sign = _sign === "-" ? -1 : 1;
+        return TimeDelta.create(sign * Number(hours), sign * Number(minutes), sign * Number(seconds));
+      }
+    }
+    {
+      const match = value.match(/^([+-]?)(\d+):(\d{2}):(\d{2})\.(\d+)$/);
+      if (match) {
+        const [, _sign, hours, minutes, seconds, msecs] = match;
+        const sign = _sign === "-" ? -1 : 1;
+        return TimeDelta.create(
+          sign * Number(hours), sign * Number(minutes),
+          sign * Number(seconds), sign * Number(msecs),
+        );
+      }
     }
   }
 

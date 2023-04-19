@@ -4,6 +4,7 @@ import { Table } from "../lib/table";
 import { solveFormula } from "../formula/solver";
 import { FormulaError } from "../formula/evaluator";
 import { p2a } from "../lib/converters";
+import { TimeDelta } from "../lib/time";
 import { format as formatDate } from "date-fns";
 
 type Condition = (value: any) => boolean;
@@ -17,6 +18,7 @@ type Props = {
 export class Renderer {
   public datetimeFormat: string = "yyyy-MM-dd HH:mm:ss";
   public dateFormat: string = "yyyy-MM-dd";
+  public timeDeltaFormat: string = "HH:mm";
   private condition?: Condition;
   private complement?: Stringify;
 
@@ -50,6 +52,9 @@ export class Renderer {
       case "object":
         if (value instanceof Date) {
           return this.date(value, writer);
+        }
+        if (value instanceof TimeDelta) {
+          return this.timedelta(value, writer);
         }
         if (value == null) {
           return this.null(value, writer);
@@ -86,6 +91,9 @@ export class Renderer {
     const { value } = cell;
     if (value instanceof Date) {
       return this.date(value);
+    }
+    if (value instanceof TimeDelta) {
+      return this.timedelta(value);
     }
     if (value == null) {
       return "";
@@ -139,6 +147,10 @@ export class Renderer {
       return formatDate(value, this.dateFormat);
     }
     return formatDate(value, this.datetimeFormat);
+  }
+
+  protected timedelta(value: TimeDelta, writer?: WriterType): any {
+    return value.stringify(this.timeDeltaFormat);
   }
 
   protected array(value: any[], writer?: WriterType): any {

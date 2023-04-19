@@ -301,7 +301,7 @@ const extractStringNumber = (value: string) => {
 }
 
 class TypedGroup {
-  public timeDelta: TimeDelta = TimeDelta.blank() ;
+  public timeDelta: TimeDelta = TimeDelta.create() ;
   public numericDelta: number = 0;
   public kind: GroupKind;
   public nexts: any[];
