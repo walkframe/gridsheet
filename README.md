@@ -1,12 +1,12 @@
 ![unittest workflow](https://github.com/walkframe/gridsheet/actions/workflows/unittest.yaml/badge.svg?branch=master)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet?ref=badge_shield)
-[![NPM](https://nodei.co/npm/gridsheet.png?mini=true)](https://www.npmjs.com/package/@gridsheet/react-core)
+[![NPM](https://nodei.co/npm/@gridsheet/react-core.png?mini=true)](https://www.npmjs.com/package/@gridsheet/react-core)
 
 ## Introduction
 
 @gridsheet/react-core is a simple yet highly functional spreadsheet component for ReactJS.
 
-![react-gridsheet](https://github.com/walkframe/gridsheet/raw/master/gridsheet.png)
+![gridsheet](https://github.com/walkframe/gridsheet/raw/master/gridsheet.png)
 
 
 ### Supporting features

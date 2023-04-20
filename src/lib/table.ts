@@ -97,14 +97,14 @@ export interface UserTable {
   getById(id: Id): CellType | undefined;
   getNumRows(base?: number): number;
   getNumCols(base?: number): number;
-  getMatrixFlatten(args: GetFlattenPropsWithArea): any[][];
-  getObjectFlatten(args: GetFlattenProps): CellsByAddressType;
-  getRowsFlatten(args: GetFlattenProps): CellsByAddressType[];
-  getColsFlatten(args: GetFlattenProps): CellsByAddressType[];
-  getMatrix(args: GetPropsWithArea): (CellType | null)[][];
-  getObject(args: GetProps): CellsByAddressType;
-  getRows(args: GetProps): CellsByAddressType[];
-  getCols(args: GetProps): CellsByAddressType[];
+  getMatrixFlatten(args?: GetFlattenPropsWithArea): any[][];
+  getObjectFlatten(args?: GetFlattenProps): CellsByAddressType;
+  getRowsFlatten(args?: GetFlattenProps): CellsByAddressType[];
+  getColsFlatten(args?: GetFlattenProps): CellsByAddressType[];
+  getMatrix(args?: GetPropsWithArea): (CellType | null)[][];
+  getObject(args?: GetProps): CellsByAddressType;
+  getRows(args?: GetProps): CellsByAddressType[];
+  getCols(args?: GetProps): CellsByAddressType[];
   move(args: MoveProps): UserTable;
   copy(args: MoveProps): UserTable;
   update(args: {
@@ -450,9 +450,7 @@ export class Table implements UserTable {
     evaluates = true,
     raise = false,
     filter = cellFilter,
-  }: GetFlattenProps & {
-    area?: AreaType;
-  } = {}) {
+  }: GetFlattenPropsWithArea = {}) {
     const { top, left, bottom, right } = area || {
       top: 1,
       left: 1,
@@ -558,9 +556,7 @@ export class Table implements UserTable {
     evaluates = true,
     raise = false,
     filter = cellFilter,
-  }: GetProps & {
-    area?: AreaType;
-  } = {}): (CellType | null)[][] {
+  }: GetPropsWithArea = {}): (CellType | null)[][] {
     const { top, left, bottom, right } = area || {
       top: 1,
       left: 1,
