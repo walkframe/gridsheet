@@ -1,12 +1,12 @@
-![unittest workflow](https://github.com/walkframe/react-gridsheet/actions/workflows/unittest.yaml/badge.svg?branch=master)
+![unittest workflow](https://github.com/walkframe/gridsheet/actions/workflows/unittest.yaml/badge.svg?branch=master)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet?ref=badge_shield)
 [![NPM](https://nodei.co/npm/react-gridsheet.png?mini=true)](https://www.npmjs.com/package/react-gridsheet)
 
 ## Introduction
 
-react-gridsheet is a simple yet highly functional spreadsheet component for ReactJS.
+@gridsheet/react-core is a simple yet highly functional spreadsheet component for ReactJS.
 
-![react-gridsheet](https://github.com/walkframe/react-gridsheet/raw/master/gridsheet.png)
+![react-gridsheet](https://github.com/walkframe/gridsheet/raw/master/gridsheet.png)
 
 
 ### Supporting features
@@ -22,16 +22,14 @@ react-gridsheet is a simple yet highly functional spreadsheet component for Reac
 - Basic shortcut keys
 - Context menu
 - External data manipulation
+- Autofill
 
 ## Installation
 
 ```sh
-$ npm install react-gridsheet --save
+$ npm install @gridsheet/react-core --save
 ```
 
-```sh
-$ yarn add react-gridsheet
-```
 ## Docs
 
 - [ReactGridsheet document](https://docs.walkframe.com/products/react-gridsheet/)
@@ -75,6 +73,12 @@ $ yarn add react-gridsheet
   - BREAKING CHANGE:
       - cell.verticalAlign -> cell.alignItems.
       - generateInitial's arg matrixes -> matrices.
+
+- 0.11.x
+  - Support Autofill.
+  - Support renderer mixin and parser mixin.
+  - Add TimeDelta class.
+  - Rename to https://www.npmjs.com/package/@gridsheet/react-core 
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet?ref=badge_large)

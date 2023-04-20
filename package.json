@@ -1,5 +1,5 @@
 {
-  "name": "react-gridsheet",
+  "name": "gridsheet/react-core",
   "version": "0.11.0",
   "description": "Spreadsheet component for React",
   "main": "dist/index.js",
@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/walkframe/react-gridsheet.git"
+    "url": "git+https://github.com/walkframe/gridsheet.git"
   },
   "keywords": [
     "spreadsheet",
@@ -31,7 +31,7 @@
     "LICENSE"
   ],
   "bugs": {
-    "url": "https://github.com/walkframe/react-gridsheet/issues"
+    "url": "https://github.com/walkframe/gridsheet/issues"
   },
   "homepage": "https://docs.walkframe.com/products/react-gridsheet/",
   "devDependencies": {
