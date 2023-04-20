@@ -32,6 +32,27 @@ export const superposeArea = (
   };
 };
 
+export const concatAreas = (
+  area1: AreaType,
+  area2: AreaType
+): AreaType => {
+  const result: AreaType = {...area1};
+  if (area2.left < area1.left) {
+    result.left = area2.left;
+  }
+  if (area2.right > area1.right) {
+    result.right = area2.right;
+  }
+  if (area2.top < area1.top) {
+    result.top = area2.top;
+  }
+  if (area2.bottom > area1.bottom) {
+    result.bottom = area2.bottom;
+  }
+  return result;
+};
+
+
 export const zoneToArea = (zone: ZoneType): AreaType => {
   const [top, bottom] =
     zone.startY < zone.endY
@@ -196,7 +217,7 @@ export const putMatrix = <T = any>(
   return lostRows;
 };
 
-export const createMatrix = (numRows: number, numCols: number, fill = null) => {
+export const createMatrix = <T = any>(numRows: number, numCols: number, fill?: T): T[][] => {
   return [...Array(numRows)].map(() => Array(numCols).fill(fill));
 };
 
@@ -230,7 +251,7 @@ export const generateInitialSimple = <T>(
   });
 }
 
-export const generateInitial = <T>({
+export const generateInitial = ({
   cells = {},
   ensured = {},
   matrices = {},
@@ -242,7 +263,7 @@ export const generateInitial = <T>({
     numCols?: number;
   };
   flattenAs?: keyof CellType;
-  matrices?: MatricesByAddress<T>;
+  matrices?: MatricesByAddress<any>;
 } = {}) => {
   upsert({ cells, flattenAs, matrices });
   const { numRows, numCols } = Object.assign(
@@ -303,4 +324,27 @@ export const range = (start: number, end: number) => {
     list.push(i);
   }
   return list;
+}
+
+export const complementSelectingArea = (selectingArea: AreaType, choosing: PointType) => {
+  if (selectingArea.left === -1) {
+    selectingArea = {left: choosing.x, top: choosing.y, right: choosing.x, bottom: choosing.y};
+  }
+  return selectingArea;
+}
+
+export const isSameArea = (area1: AreaType, area2: AreaType) => {
+  if (area1.top !== area2.top) {
+    return false;
+  }
+  if (area1.left !== area2.left) {
+    return false;
+  }
+  if (area1.bottom !== area2.bottom) {
+    return false;
+  }
+  if (area1.right !== area2.right) {
+    return false;
+  }
+  return true;
 }

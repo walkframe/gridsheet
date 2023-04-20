@@ -1,6 +1,12 @@
+import {
+  subSeconds,
+} from 'date-fns';
+
 import { FormulaError } from "../evaluator";
+import { TimeDelta } from "../../lib/time";
 import { BaseFunction } from "./__base";
-import { ensureNumber } from "./__utils";
+import {ensureNumber, stripTable} from "./__utils";
+import {Table} from "../../lib/table";
 
 export class MinusFunction extends BaseFunction {
   example = "MINUS(8, 3)";
@@ -20,10 +26,33 @@ export class MinusFunction extends BaseFunction {
         "Number of arguments for MINUS is incorrect."
       );
     }
-    this.bareArgs = this.bareArgs.map((arg) => ensureNumber(arg));
+    this.bareArgs = this.bareArgs.map((arg) => {
+      if (arg instanceof Table) {
+        arg = stripTable(arg, 0, 0);
+      }
+      return typeof arg === "object" ? arg : ensureNumber(arg);
+    });
   }
 
-  protected main(v1: number, v2: number) {
-    return v1 - v2;
+  protected main(v1: number | Date | TimeDelta, v2: number | Date | TimeDelta) {
+    if (typeof v1 === "number" && typeof v2 === "number") {
+      return v1 - v2;
+    }
+    if (v1 instanceof Date && v2 instanceof Date) {
+      return new TimeDelta(v1, v2);
+    }
+    if (v1 instanceof Date && v2 instanceof TimeDelta) {
+      return v2.sub(v1);
+    }
+    if (v1 instanceof TimeDelta && v2 instanceof Date) {
+      return v1.sub(v2);
+    }
+    if (v1 instanceof Date && typeof v2 === "number") {
+      return subSeconds(v1, v2);
+    }
+    throw new FormulaError(
+      "#VALUE!",
+      "Mismatched types for minuend and subtrahend."
+    );
   }
 }

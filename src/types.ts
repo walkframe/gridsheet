@@ -36,12 +36,6 @@ export type FeedbackType = (
   }
 ) => void;
 
-export type FeedbackTypeForMatrix = (coordinate: {
-  y?: Y;
-  x?: X;
-  num: number;
-}) => void;
-
 export type Mode = "light" | "dark";
 export type Headers = "both" | "vertical" | "horizontal" | "none";
 
@@ -107,6 +101,7 @@ export type StoreType = {
   cutting: boolean;
   copyingZone: ZoneType;
   selectingZone: ZoneType;
+  autofillDraggingTo: PointType | null;
   headerTopSelecting: boolean;
   headerLeftSelecting: boolean;
   editingCell: string;

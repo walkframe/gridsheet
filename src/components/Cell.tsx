@@ -1,20 +1,23 @@
 import React from "react";
 import { x2c, y2r } from "../lib/converters";
-import { zoneToArea, among, zoneShape } from "../lib/structs";
+import {zoneToArea, among, zoneShape, areaToZone} from "../lib/structs";
 import {
   choose,
   select,
   drag,
   write,
   setEditorRect,
-  setContextMenuPosition,
+  setContextMenuPosition, setAutofillDraggingTo, updateTable,
 } from "../store/actions";
 
 import { DUMMY_IMG } from "../constants";
-import {AreaType, PointType} from "../types";
+import {AreaType, PointType, StoreType} from "../types";
 
 import { Context } from "../store";
 import { FormulaError } from "../formula/evaluator";
+import {
+  Autofill,
+} from "../lib/autofill";
 
 type Props = {
   y: number;
@@ -43,6 +46,7 @@ export const Cell: React.FC<Props> = React.memo(
       matchingCellIndex,
       editorRef,
       showAddress,
+      autofillDraggingTo,
     } = store;
 
     const [before, setBefore] = React.useState("");
@@ -115,7 +119,7 @@ export const Cell: React.FC<Props> = React.memo(
         }`}
         style={{
           ...cell?.style,
-          ...getCellStyle({y, x, pointed, selectingArea, copyingArea, cutting}),
+          ...getCellStyle({target: {y, x}, store, pointed, selectingArea, copyingArea, autofillDraggingTo}),
         }}
         onContextMenu={(e) => {
           e.preventDefault();
@@ -123,6 +127,9 @@ export const Cell: React.FC<Props> = React.memo(
           return false;
         }}
         onClick={(e) => {
+          if (autofillDraggingTo) {
+            return false;
+          }
           dispatch(setContextMenuPosition({ y: -1, x: -1 }));
           if (e.shiftKey) {
             dispatch(drag({ y, x }));
@@ -141,17 +148,31 @@ export const Cell: React.FC<Props> = React.memo(
         }}
         draggable
         onDragStart={(e) => {
+          if (autofillDraggingTo) {
+            return false;
+          }
           e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
           dispatch(choose({ y, x }));
           dispatch(select({ startY: y, startX: x, endY: y, endX: x }));
         }}
         onDragEnd={(e) => {
+          if (autofillDraggingTo) {
+            const autofill = new Autofill(store, autofillDraggingTo);
+            dispatch(updateTable(autofill.applied));
+            dispatch(select(areaToZone(autofill.wholeArea)));
+            dispatch(setAutofillDraggingTo(null));
+            return false;
+          }
           const { height: h, width: w } = zoneShape(selectingZone);
           if (h + w === 0) {
             dispatch(select({ startY: -1, startX: -1, endY: -1, endX: -1 }));
           }
         }}
         onDragEnter={() => {
+          if (autofillDraggingTo) {
+            dispatch(setAutofillDraggingTo({x, y}));
+            return false;
+          }
           if (headerTopSelecting) {
             dispatch(drag({ y: table.getNumRows(), x }));
             return false;
@@ -172,54 +193,78 @@ export const Cell: React.FC<Props> = React.memo(
               alignItems: cell?.alignItems || "start",
             }}
           >
-          {errorMessage && (
-            <div className="formula-error-triangle" title={errorMessage} />
-          )}
+            {errorMessage && (
+              <div className="formula-error-triangle" title={errorMessage} />
+            )}
             {showAddress && <div className="gs-cell-label">{address}</div>}
             <div className="gs-cell-rendered">{rendered}</div>
           </div>
+          {((pointed && selectingArea.bottom === -1) ||
+            (selectingArea.bottom === y && selectingArea.right === x)) &&
+            <div
+              className="gs-autofill-drag"
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
+                dispatch(setAutofillDraggingTo({x, y}));
+                e.stopPropagation();
+                //e.preventDefault();
+                //return false;
+              }}
+            ></div>
+          }
         </div>
       </td>
     );
   }
 );
 
+const BORDER_POINTED = "solid 2px #0077ff";
+const BORDER_SELECTED = "solid 1px #0077ff";
+const BORDER_CUTTING = "dotted 2px #0077ff";
+const BORDER_COPYING = "dashed 2px #0077ff";
 
-const getCellStyle = ({ y, x, pointed, selectingArea, copyingArea, cutting }: {
-  y: number;
-  x: number;
+const getCellStyle = ({ target, pointed, selectingArea, copyingArea, store, autofillDraggingTo }: {
+  target: PointType;
   pointed: boolean;
   selectingArea: AreaType;
   copyingArea: AreaType;
-  cutting: boolean;
+  store: StoreType;
+  autofillDraggingTo: PointType | null;
 }): React.CSSProperties => {
   const style: React.CSSProperties = {};
+  if (autofillDraggingTo) {
+    const autofill = new Autofill(store, autofillDraggingTo);
+    Object.assign(style, autofill.getCellStyle(target));
+  }
+  const {cutting} = store;
+  const {y, x} = target;
   if (pointed) {
-    style.borderTop = "solid 2px #0077ff";
-    style.borderBottom = "solid 2px #0077ff";
-    style.borderLeft = "solid 2px #0077ff";
-    style.borderRight = "solid 2px #0077ff";
+    style.borderTop = BORDER_POINTED;
+    style.borderBottom = BORDER_POINTED;
+    style.borderLeft = BORDER_POINTED;
+    style.borderRight = BORDER_POINTED;
   }
   else {
     // selecting style
     const {top, left, bottom, right} = selectingArea;
     if (top === y && left <= x && x <= right) {
-      style.borderTop = "solid 1px #0077ff";
+      style.borderTop = BORDER_SELECTED;
     }
     if (bottom === y && left <= x && x <= right) {
-      style.borderBottom = "solid 1px #0077ff";
+      style.borderBottom = BORDER_SELECTED;
     }
     if (left === x && top <= y && y <= bottom) {
-      style.borderLeft = "solid 1px #0077ff";
+      style.borderLeft = BORDER_SELECTED;
     }
     if (right === x && top <= y && y <= bottom) {
-      style.borderRight = "solid 1px #0077ff";
+      style.borderRight = BORDER_SELECTED;
     }
   }
   // copy or cut style
   {
     const {top, left, bottom, right} = copyingArea;
-    const border = cutting ? "dotted 2px #0077ff" : "dashed 2px #0077ff";
+    const border = cutting ? BORDER_CUTTING : BORDER_COPYING;
     if (top === y && left <= x && x <= right) {
       style.borderTop = border;
     }

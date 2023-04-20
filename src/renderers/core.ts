@@ -1,9 +1,9 @@
-import React from "react";
 import { CellType, PointType, WriterType } from "../types";
-import { Table } from "../lib/table";
+import {Table, UserTable} from "../lib/table";
 import { solveFormula } from "../formula/solver";
 import { FormulaError } from "../formula/evaluator";
 import { p2a } from "../lib/converters";
+import { TimeDelta } from "../lib/time";
 import { format as formatDate } from "date-fns";
 
 type Condition = (value: any) => boolean;
@@ -12,21 +12,50 @@ type Stringify = (value: any) => string;
 type Props = {
   condition?: Condition;
   complement?: Stringify;
+  mixins?: RendererMixinType[];
 };
 
-export class Renderer {
+export interface RendererMixinType {
+  render?(table: UserTable, point: PointType, writer?: WriterType): any;
+  stringify?(cell: CellType): string;
+  string?(value: string, table: UserTable, writer?: WriterType): any;
+  bool?(value: boolean, writer?: WriterType): any;
+  number?(value: number, writer?: WriterType): any;
+  date?(value: Date, writer?: WriterType): any;
+  timedelta?(value: TimeDelta, writer?: WriterType): any;
+  array?(value: any[], writer?: WriterType): any;
+  object?(value: any, writer?: WriterType): any;
+  null?(value: null, writer?: WriterType): any;
+  undefined?(value: undefined, writer?: WriterType): any;
+}
+
+export class Renderer implements RendererMixinType {
   public datetimeFormat: string = "yyyy-MM-dd HH:mm:ss";
   public dateFormat: string = "yyyy-MM-dd";
+  public timeDeltaFormat: string = "HH:mm";
   private condition?: Condition;
   private complement?: Stringify;
 
   constructor(props?: Props) {
+    this.applyMixins(props?.mixins);
     if (props == null) {
       return;
     }
     const { condition, complement } = props;
     this.condition = condition;
     this.complement = complement;
+  }
+
+  private applyMixins(mixins?: RendererMixinType[]) {
+    if (mixins == null) {
+      return;
+    }
+    for (const mixin of mixins) {
+      for (const key in mixin) {
+        // @ts-ignore
+        this[key] = mixin[key];
+      }
+    }
   }
 
   public render(table: Table, point: PointType, writer?: WriterType): any {
@@ -51,6 +80,9 @@ export class Renderer {
         if (value instanceof Date) {
           return this.date(value, writer);
         }
+        if (value instanceof TimeDelta) {
+          return this.timedelta(value, writer);
+        }
         if (value == null) {
           return this.null(value, writer);
         }
@@ -72,20 +104,23 @@ export class Renderer {
         return this.string(value, table, writer);
       case "number":
         return this.number(value, writer);
-      case "function":
-        return value() as string;
       case "boolean":
         return this.bool(value, writer);
       case "undefined":
         return this.undefined(value, writer);
+      case "function":
+        return value() as string;
     }
     return "";
   }
 
-  public stringify(cell: CellType): string {
+  stringify(cell: CellType): string {
     const { value } = cell;
     if (value instanceof Date) {
       return this.date(value);
+    }
+    if (value instanceof TimeDelta) {
+      return this.timedelta(value);
     }
     if (value == null) {
       return "";
@@ -93,7 +128,7 @@ export class Renderer {
     return value.toString();
   }
 
-  protected string(value: string, table: Table, writer?: WriterType): any {
+  string(value: string, table: Table, writer?: WriterType): any {
     if (value[0] === "'") {
       return value.substring(1);
     }
@@ -114,45 +149,40 @@ export class Renderer {
     return value;
   }
 
-  protected bool(value: boolean, writer?: WriterType): any {
-    return (
-      <input
-        type="checkbox"
-        checked={value}
-        onChange={(e) => {
-          writer && writer(e.currentTarget.checked.toString());
-          e.currentTarget.blur();
-        }}
-      />
-    );
+  bool(value: boolean, writer?: WriterType): any {
+    return value ? "TRUE" : "FALSE";
   }
 
-  protected number(value: number, writer?: WriterType): any {
+  number(value: number, writer?: WriterType): any {
     if (isNaN(value)) {
       return "NaN";
     }
     return value;
   }
 
-  protected date(value: Date, writer?: WriterType): any {
+  date(value: Date, writer?: WriterType): any {
     if (value.getHours() + value.getMinutes() + value.getSeconds() === 0) {
       return formatDate(value, this.dateFormat);
     }
     return formatDate(value, this.datetimeFormat);
   }
 
-  protected array(value: any[], writer?: WriterType): any {
+  timedelta(value: TimeDelta, writer?: WriterType): any {
+    return value.stringify(this.timeDeltaFormat);
+  }
+
+  array(value: any[], writer?: WriterType): any {
     return value.map((v) => this.stringify({ value: v })).join(",");
   }
 
-  protected object(value: any, writer?: WriterType): any {
+  object(value: any, writer?: WriterType): any {
     return JSON.stringify(value);
   }
 
-  protected null(value: null, writer?: WriterType): any {
+  null(value: null, writer?: WriterType): any {
     return "";
   }
-  protected undefined(value: undefined, writer?: WriterType): any {
+  undefined(value: undefined, writer?: WriterType): any {
     return "";
   }
 }

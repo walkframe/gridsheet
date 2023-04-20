@@ -23,12 +23,14 @@ class ListRenderer extends Renderer {
   }
 }
 
-class ListParser extends Parser {
-  parseFunctions = [this.parseArray];
-  parseArray(value: string): any[] {
-    return value.split(/\n/g);
-  }
+function parseArray(value: string): any[] {
+  return value.split(/\n/g);
 }
+
+const ListParserMixin = {
+  parseArray,
+  parseFunctions: [parseArray],
+};
 
 export const ParseAsList = () => {
   return (
@@ -68,7 +70,7 @@ export const ParseAsList = () => {
             list: new ListRenderer(),
           },
           parsers: {
-            list: new ListParser(),
+            list: new Parser({mixins: [ListParserMixin]}),
           },
         }}
       />

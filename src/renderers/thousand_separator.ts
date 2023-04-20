@@ -1,8 +1,7 @@
-import { Renderer } from "./core";
 import { WriterType } from "../types";
 
-export class ThousandSeparatorRenderer extends Renderer {
-  protected number (value: number, writer?: WriterType): any {
+export const ThousandSeparatorRendererMixin = {
+  number (value: number, writer?: WriterType): any {
     if (isNaN(value)) {
       return "NaN";
     }

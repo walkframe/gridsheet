@@ -89,6 +89,16 @@ class SetEditingOnEnterAction<T extends boolean> extends CoreAction<T> {
 }
 export const setEditingOnEnter = new SetEditingOnEnterAction().bind();
 
+class SetAutofillDraggingToAction<T extends PointType | null> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreType {
+    return {
+      ...store,
+      autofillDraggingTo: payload,
+    };
+  }
+}
+export const setAutofillDraggingTo = new SetAutofillDraggingToAction().bind();
+
 class SetShowAddressAction<T extends boolean> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     return {
