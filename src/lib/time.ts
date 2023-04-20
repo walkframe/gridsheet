@@ -3,7 +3,7 @@ import {
   subYears, subMonths, subDays, subHours, subMinutes, subSeconds, subMilliseconds,
 } from 'date-fns';
 
-export const BASE_DATE = new Date('2006-01-02T15:04:05Z');
+export const BASE_DATE = new Date('2345-01-02T03:04:05Z');
 const ADD_FNS = [addYears, addMonths, addDays, addHours, addMinutes, addSeconds, addMilliseconds];
 const SUB_FNS = [subYears, subMonths, subDays, subHours, subMinutes, subSeconds, subMilliseconds];
 

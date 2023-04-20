@@ -17,9 +17,10 @@ import {
   Parsers,
   Renderers,
   HistoryType,
-  StoreReflectionType, PositionType,
+  StoreReflectionType,
+  ShapeType,
 } from "../types";
-import {areaShape, createMatrix, matrixShape, putMatrix, range} from "./structs";
+import {areaShape, createMatrix, matrixShape, putMatrix} from "./structs";
 import { a2p, x2c, p2a, y2r, grantAddressAbsolute } from "./converters";
 import { FunctionMapping } from "../formula/functions/__base";
 import { functions as functionsDefault } from "../formula/mapping";
@@ -55,27 +56,131 @@ type GetProps = {
   filter?: CellFilter;
 };
 
+type MoveProps = {
+  src: AreaType;
+  dst: AreaType;
+  reflection?: StoreReflectionType;
+};
+
 type GetFlattenProps = GetProps & {
   key?: keyof CellType;
 };
 
-export class UserTable {
+type GetPropsWithArea = GetProps & {
+  area?: AreaType;
+};
+
+type GetFlattenPropsWithArea = GetFlattenProps & {
+  area?: AreaType;
+};
+
+export interface UserTable {
+  changedAt: Date;
+  lastChangedAt?: Date;
+  top: number;
+  left: number;
+  bottom: number;
+  right: number;
+  minNumRows: number;
+  maxNumRows: number;
+  minNumCols: number;
+  maxNumCols: number;
+  totalWidth: number;
+  totalHeight: number;
+  headerWidth: number;
+  headerHeight: number;
+  getRectSize(area: AreaType): ShapeType;
+  getAddressById(id: Id, slideY: number, slideX: number): string | undefined;
+  getAddressesByIds(ids: CellsByIdType): CellsByAddressType;
+  getPointById(id: Id): PointType;
+  getByPoint(point: PointType): CellType | undefined;
+  getById(id: Id): CellType | undefined;
+  getNumRows(base?: number): number;
+  getNumCols(base?: number): number;
+  getMatrixFlatten(args: GetFlattenPropsWithArea): any[][];
+  getObjectFlatten(args: GetFlattenProps): CellsByAddressType;
+  getRowsFlatten(args: GetFlattenProps): CellsByAddressType[];
+  getColsFlatten(args: GetFlattenProps): CellsByAddressType[];
+  getMatrix(args: GetPropsWithArea): (CellType | null)[][];
+  getObject(args: GetProps): CellsByAddressType;
+  getRows(args: GetProps): CellsByAddressType[];
+  getCols(args: GetProps): CellsByAddressType[];
+  move(args: MoveProps): UserTable;
+  copy(args: MoveProps): UserTable;
+  update(args: {
+    diff: CellsByAddressType;
+    partial?: boolean;
+    updateChangedAt?: boolean;
+    reflection?: StoreReflectionType;
+  }): UserTable;
+  writeMatrix(args: {
+    point: PointType;
+    matrix: MatrixType<string>;
+    updateChangedAt?: boolean;
+    reflection?: StoreReflectionType;
+  }): UserTable;
+  write(args: {
+    point: PointType;
+    value: string;
+    updateChangedAt?: boolean;
+    reflection?: StoreReflectionType;
+  }): UserTable;
+  addRowsAndUpdate(args: {
+    y: number;
+    numRows: number;
+    baseY: number;
+    diff: CellsByAddressType;
+    partial?: boolean;
+    updateChangedAt?: boolean;
+    reflection?: StoreReflectionType;
+  }): UserTable;
+  addRows(args: {
+    y: number;
+    numRows: number;
+    baseY: number;
+    reflection?: StoreReflectionType;
+  }): UserTable;
+  removeRows(args: {
+    y: number;
+    numRows: number;
+    reflection?: StoreReflectionType;
+  }): UserTable;
+  addColsAndUpdate(args: {
+    x: number;
+    numCols: number;
+    baseX: number;
+    diff: CellsByAddressType;
+    partial?: boolean;
+    updateChangedAt?: boolean;
+    reflection?: StoreReflectionType;
+  }): UserTable;
+  addCols(args: {
+    x: number;
+    numCols: number;
+    baseX: number;
+    reflection?: StoreReflectionType;
+  }): UserTable;
+  removeCols(args: {
+    x: number;
+    numCols: number;
+    reflection?: StoreReflectionType;
+  }): UserTable;
+  undo(): {
+    history: HistoryType | null;
+    newTable: UserTable;
+  };
+  redo(): {
+    history: HistoryType | null;
+    newTable: UserTable;
+  };
+  getHistories(): HistoryType[];
+  getHistoryIndex(): number;
+  getHistorySize(): number;
+}
+
+export class Table implements UserTable {
   public changedAt: Date;
   public lastChangedAt?: Date;
-  protected head: bigint | number;
-  protected idMatrix: IdMatrix;
-  protected data: CellsByIdType;
-  protected area: AreaType;
-  protected parsers: Parsers;
-  protected renderers: Renderers;
-  protected labelers: Labelers;
-  protected functions: FunctionMapping = {};
-  protected lastHistory?: HistoryType;
-  protected histories: HistoryType[];
-  protected historyIndex: number;
-  protected addressesById: { [id: Id]: Address };
-  protected historyLimit: number;
-  protected solvedCaches: { [address: Address]: any };
   public minNumRows: number;
   public maxNumRows: number;
   public minNumCols: number;
@@ -84,6 +189,21 @@ export class UserTable {
   public totalHeight: number = 0;
   public headerWidth: number = 0;
   public headerHeight: number = 0;
+
+  private head: bigint | number;
+  private idMatrix: IdMatrix;
+  private data: CellsByIdType;
+  private area: AreaType;
+  private parsers: Parsers;
+  private renderers: Renderers;
+  private labelers: Labelers;
+  private functions: FunctionMapping = {};
+  private lastHistory?: HistoryType;
+  private histories: HistoryType[];
+  private historyIndex: number;
+  private addressesById: { [id: Id]: Address };
+  private historyLimit: number;
+  private solvedCaches: { [address: Address]: any };
 
   constructor({
     numRows = 0,
@@ -158,7 +278,7 @@ export class UserTable {
         } as CellType;
         stacked.value = convertFormulaAbsolute({
           value: stacked?.value,
-          table: Table.cast(this),
+          table: this,
         });
         if (y === 0) {
           if (stacked.width == null) {
@@ -179,11 +299,11 @@ export class UserTable {
     this.setTotalSize();
   }
 
-  protected generateId() {
+  private generateId() {
     return (this.head++).toString(36);
   }
 
-  getRectSize({top, left, bottom, right}: AreaType) {
+  public getRectSize({top, left, bottom, right}: AreaType) {
     let width = 0, height = 0;
     for (let x = left || 1; x < right; x++) {
       width += this.getByPoint({ y: 0, x })?.width || DEFAULT_WIDTH;
@@ -193,14 +313,14 @@ export class UserTable {
     }
     return {width, height};
   }
-  setTotalSize() {
+  private setTotalSize() {
     const {bottom, right} = this.area;
     const {width, height} = this.getRectSize({top: 1, left: 1, bottom: bottom + 1, right: right + 1});
     this.totalWidth = width + this.headerWidth;
     this.totalHeight = height + this.headerHeight;
   }
 
-  protected shallowCopy({ copyCache = true }: { copyCache?: boolean } = {}) {
+  private shallowCopy({ copyCache = true }: { copyCache?: boolean } = {}) {
     const copied = new Table({});
     copied.changedAt = new Date();
     copied.lastChangedAt = this.changedAt;
@@ -279,7 +399,7 @@ export class UserTable {
     }
     return { y: 0, x: 0 };
   }
-  protected getId(point: PointType) {
+  private getId(point: PointType) {
     const { y, x } = point;
     return this.idMatrix[y]?.[x];
   }
@@ -349,7 +469,7 @@ export class UserTable {
         matrix[y - top][x - left] = evaluates
           ? solveFormula({
               value: cell[key],
-              table: Table.cast(this),
+              table: this,
               raise,
             })
           : cell[key];
@@ -372,7 +492,7 @@ export class UserTable {
           result[p2a({ y, x })] = evaluates
             ? solveFormula({
                 value: cell[key],
-                table: Table.cast(this),
+                table: this,
                 raise,
               })
             : cell[key];
@@ -398,7 +518,7 @@ export class UserTable {
           row[x2c(x) || y2r(y)] = evaluates
             ? solveFormula({
                 value: cell[key],
-                table: Table.cast(this),
+                table: this,
                 raise,
               })
             : cell[key];
@@ -424,7 +544,7 @@ export class UserTable {
           col[y2r(y) || x2c(x)] = evaluates
             ? solveFormula({
                 value: cell[key],
-                table: Table.cast(this),
+                table: this,
                 raise,
               })
             : cell[key];
@@ -457,7 +577,7 @@ export class UserTable {
             value: evaluates
               ? solveFormula({
                   value: cell?.value,
-                  table: Table.cast(this),
+                  table: this,
                   raise,
                 })
               : cell?.value,
@@ -483,7 +603,7 @@ export class UserTable {
             value: evaluates
               ? solveFormula({
                   value: cell?.value,
-                  table: Table.cast(this),
+                  table: this,
                   raise,
                 })
               : cell?.value,
@@ -511,7 +631,7 @@ export class UserTable {
             value: evaluates
               ? solveFormula({
                   value: cell?.value,
-                  table: Table.cast(this),
+                  table: this,
                   raise,
                 })
               : cell?.value,
@@ -539,7 +659,7 @@ export class UserTable {
             value: evaluates
               ? solveFormula({
                   value: cell?.value,
-                  table: Table.cast(this),
+                  table: this,
                   raise,
                 })
               : cell?.value,
@@ -550,7 +670,7 @@ export class UserTable {
     return result;
   }
 
-  protected pushHistory(history: HistoryType) {
+  private pushHistory(history: HistoryType) {
     const strayedHistories = this.histories.splice(
       this.historyIndex + 1,
       this.histories.length
@@ -672,11 +792,7 @@ export class UserTable {
     src,
     dst,
     reflection = {},
-  }: {
-    src: AreaType;
-    dst: AreaType;
-    reflection?: StoreReflectionType;
-  }) {
+  }: MoveProps) {
     const changedAt = new Date();
     const matrixFrom = this.getIdMatrixFromArea(src);
     const matrixTo = this.getIdMatrixFromArea(dst);
@@ -706,11 +822,7 @@ export class UserTable {
     src,
     dst,
     reflection = {},
-  }: {
-    src: AreaType;
-    dst: AreaType;
-    reflection?: StoreReflectionType;
-  }) {
+  }: MoveProps) {
     const { height: maxHeight, width: maxWidth } = areaShape({
       ...src,
       base: 1,
@@ -742,7 +854,7 @@ export class UserTable {
         };
         const value = convertFormulaAbsolute({
           value: cell?.value,
-          table: Table.cast(this),
+          table: this,
           slideY,
           slideX,
         });
@@ -757,7 +869,7 @@ export class UserTable {
     return this.update({ diff, partial: false, reflection });
   }
 
-  protected _update({
+  private _update({
     diff,
     partial = true,
     updateChangedAt = true,
@@ -776,7 +888,7 @@ export class UserTable {
       }
       cell.value = convertFormulaAbsolute({
         value: cell.value,
-        table: Table.cast(this),
+        table: this,
       });
       const point = a2p(address);
       const id = this.getId(point);
@@ -877,12 +989,6 @@ export class UserTable {
       updateChangedAt,
       reflection,
     });
-  }
-
-  protected parse(point: PointType, value: string) {
-    const cell = this.getByPoint(point) || {};
-    const parser = this.parsers[cell.parser || ""] || defaultParser;
-    return parser.parse(value, cell);
   }
 
   public addRowsAndUpdate({
@@ -1106,12 +1212,6 @@ export class UserTable {
   public getHistoryLimit() {
     return this.historyLimit;
   }
-}
-
-export class Table extends UserTable {
-  static cast(userTable: UserTable) {
-    return userTable as Table;
-  }
 
   public setFunctions(additionalFunctions: FunctionMapping) {
     this.functions = { ...functionsDefault, ...additionalFunctions };
@@ -1143,7 +1243,7 @@ export class Table extends UserTable {
     if (s[0] === "=") {
       if (evaluates) {
         return String(
-          solveFormula({ value: s, table: Table.cast(this), raise: false })
+          solveFormula({ value: s, table: this, raise: false })
         );
       }
       const lexer = new Lexer(s.substring(1));
@@ -1331,21 +1431,21 @@ export class Table extends UserTable {
       }),
     };
   }
-  getFunction(name: string) {
+  public getFunction(name: string) {
     return this.functions[name];
   }
 
-  getLabel(key: string, n: number) {
+  public getLabel(key: string, n: number) {
     const labeler = this.labelers[key];
     return labeler?.(n);
   }
-  getBase() {
-    return Table.cast(this);
+  public getBase() {
+    return this;
   }
-  getSolvedCache(key: string) {
+  public getSolvedCache(key: string) {
     return this.solvedCaches[key];
   }
-  setSolvedCache(key: string, value: any) {
+  public setSolvedCache(key: string, value: any) {
     this.solvedCaches[key] = value;
   }
 }

@@ -36,12 +36,6 @@ export type FeedbackType = (
   }
 ) => void;
 
-export type FeedbackTypeForMatrix = (coordinate: {
-  y?: Y;
-  x?: X;
-  num: number;
-}) => void;
-
 export type Mode = "light" | "dark";
 export type Headers = "both" | "vertical" | "horizontal" | "none";
 
