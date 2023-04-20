@@ -251,7 +251,7 @@ export const generateInitialSimple = <T>(
   });
 }
 
-export const generateInitial = <T>({
+export const generateInitial = ({
   cells = {},
   ensured = {},
   matrices = {},
@@ -263,7 +263,7 @@ export const generateInitial = <T>({
     numCols?: number;
   };
   flattenAs?: keyof CellType;
-  matrices?: MatricesByAddress<T>;
+  matrices?: MatricesByAddress<any>;
 } = {}) => {
   upsert({ cells, flattenAs, matrices });
   const { numRows, numCols } = Object.assign(

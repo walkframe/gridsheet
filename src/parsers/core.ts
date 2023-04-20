@@ -8,12 +8,23 @@ type Stringify = (value: string) => any;
 type Props = {
   condition?: Condition;
   complement?: Stringify;
+  mixins?: ParserMixin[];
 };
 
 const BOOLS = { true: true, false: false } as { [s: string]: boolean };
 
-export class Parser {
-  protected parseFunctions: ((value: string, cell: CellType) => any)[] = [
+export interface ParserMixin {
+  parseFunctions?: ((value: string, cell: CellType) => any)[];
+  parse?(value: string, cell: CellType): CellType;
+  callback?(parsed: any, cell: CellType): any;
+  bool?(value: string, cell: CellType): boolean | undefined;
+  number?(value: string, cell: CellType): number | undefined;
+  timedelta?(value: string, cell: CellType): TimeDelta | undefined;
+  date?(value: string, cell: CellType): Date | undefined;
+}
+
+export class Parser implements ParserMixin {
+  parseFunctions: ((value: string, cell: CellType) => any)[] = [
     this.number,
     this.timedelta,
     this.date,
@@ -24,12 +35,25 @@ export class Parser {
   private complement?: Stringify;
 
   constructor(props?: Props) {
+    this.applyMixins(props?.mixins);
     if (props == null) {
       return;
     }
     const { condition, complement } = props;
     this.condition = condition;
     this.complement = complement;
+  }
+
+  private applyMixins(mixins?: ParserMixin[]) {
+    if (mixins == null) {
+      return;
+    }
+    for (const mixin of mixins) {
+      for (const key in mixin) {
+        // @ts-ignore
+        this[key] = mixin[key];
+      }
+    }
   }
 
   public callback(parsed: any, cell: CellType) {
@@ -63,11 +87,11 @@ export class Parser {
     return this.callback(value, cell);
   }
 
-  protected bool(value: string, cell: CellType): boolean | undefined {
+  bool(value: string, cell: CellType): boolean | undefined {
     return BOOLS[value.toLowerCase()];
   }
 
-  protected number(value: string, cell: CellType): number | undefined {
+  number(value: string, cell: CellType): number | undefined {
     const m = value.match(/^-?[\d.]+$/);
     if (
       m != null &&
@@ -78,7 +102,7 @@ export class Parser {
     }
   }
 
-  protected timedelta(value: string, cell: CellType): TimeDelta | undefined {
+  timedelta(value: string, cell: CellType): TimeDelta | undefined {
     if (value.length < 4 || isNaN(value[value.length - 1] as any)) {
       return;
     }
@@ -111,7 +135,7 @@ export class Parser {
     }
   }
 
-  protected date(value: string, cell: CellType): Date | undefined {
+  date(value: string, cell: CellType): Date | undefined {
     const first = value[0];
     if (first == null || first.match(/[JFMASOND0-9]/) == null) {
       return;
