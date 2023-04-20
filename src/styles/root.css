@@ -323,10 +323,10 @@
   left: 0;
 }
 .gridsheet-1 .gs-header-top.gs-header-left {
-  z-index: 3;
+  z-index: 4;
 }
 .gridsheet-1 .gs-header {
-  z-index: 2;
+  z-index: 3;
   padding: 0;
   position: sticky;
   font-size: 13px;
