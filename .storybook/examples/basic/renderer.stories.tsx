@@ -1,6 +1,6 @@
 import React from "react";
 import { generateInitial, GridSheet, Renderer } from "../../../src";
-import {RendererMixin} from "../../../src/renderers/core";
+import {RendererMixinType} from "../../../src/renderers/core";
 import {CheckboxRendererMixin} from "../../../src/renderers/checkbox";
 
 export default {
@@ -21,7 +21,7 @@ const kanjiMap: { [s: string]: string } = {
   ".": ".",
 };
 
-const KanjiRendererMixin: RendererMixin = {
+const KanjiRendererMixin: RendererMixinType = {
   number(value: number): string {
     const minus = value < 0;
 

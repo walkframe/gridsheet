@@ -12,10 +12,10 @@ type Stringify = (value: any) => string;
 type Props = {
   condition?: Condition;
   complement?: Stringify;
-  mixins?: RendererMixin[];
+  mixins?: RendererMixinType[];
 };
 
-export interface RendererMixin {
+export interface RendererMixinType {
   render?(table: UserTable, point: PointType, writer?: WriterType): any;
   stringify?(cell: CellType): string;
   string?(value: string, table: UserTable, writer?: WriterType): any;
@@ -29,7 +29,7 @@ export interface RendererMixin {
   undefined?(value: undefined, writer?: WriterType): any;
 }
 
-export class Renderer implements RendererMixin{
+export class Renderer implements RendererMixinType {
   public datetimeFormat: string = "yyyy-MM-dd HH:mm:ss";
   public dateFormat: string = "yyyy-MM-dd";
   public timeDeltaFormat: string = "HH:mm";
@@ -46,7 +46,7 @@ export class Renderer implements RendererMixin{
     this.complement = complement;
   }
 
-  private applyMixins(mixins?: RendererMixin[]) {
+  private applyMixins(mixins?: RendererMixinType[]) {
     if (mixins == null) {
       return;
     }

@@ -8,12 +8,12 @@ type Stringify = (value: string) => any;
 type Props = {
   condition?: Condition;
   complement?: Stringify;
-  mixins?: ParserMixin[];
+  mixins?: ParserMixinType[];
 };
 
 const BOOLS = { true: true, false: false } as { [s: string]: boolean };
 
-export interface ParserMixin {
+export interface ParserMixinType {
   parseFunctions?: ((value: string, cell: CellType) => any)[];
   parse?(value: string, cell: CellType): CellType;
   callback?(parsed: any, cell: CellType): any;
@@ -23,7 +23,7 @@ export interface ParserMixin {
   date?(value: string, cell: CellType): Date | undefined;
 }
 
-export class Parser implements ParserMixin {
+export class Parser implements ParserMixinType {
   parseFunctions: ((value: string, cell: CellType) => any)[] = [
     this.number,
     this.timedelta,
@@ -44,7 +44,7 @@ export class Parser implements ParserMixin {
     this.complement = complement;
   }
 
-  private applyMixins(mixins?: ParserMixin[]) {
+  private applyMixins(mixins?: ParserMixinType[]) {
     if (mixins == null) {
       return;
     }
