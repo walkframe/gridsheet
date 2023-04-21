@@ -16,7 +16,7 @@ type Props = {
 };
 
 export interface RendererMixinType {
-  render?(value: any, table: Table, writer?: WriterType): any
+  render?(value: any, table: UserTable, writer?: WriterType): any
   stringify?(cell: CellType): string;
   string?(value: string, table: UserTable, writer?: WriterType): any;
   bool?(value: boolean, writer?: WriterType): any;

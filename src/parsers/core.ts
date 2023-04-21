@@ -14,7 +14,7 @@ type Props = {
 const BOOLS = { true: true, false: false } as { [s: string]: boolean };
 
 export interface ParserMixinType {
-  parseFunctions?: ((value: string, cell?: CellType) => any)[];
+  functions?: ((value: string, cell?: CellType) => any)[];
   callback?(parsed: any, cell?: CellType): CellType;
   parse?(value: string, cell: CellType): any;
   bool?(value: string, cell?: CellType): boolean | undefined;
@@ -24,7 +24,7 @@ export interface ParserMixinType {
 }
 
 export class Parser implements ParserMixinType {
-  parseFunctions: ((value: string, cell?: CellType) => any)[] = [
+  functions: ((value: string, cell?: CellType) => any)[] = [
     this.number,
     this.timedelta,
     this.date,
@@ -74,8 +74,8 @@ export class Parser implements ParserMixinType {
     if (value[0] === "'") {
       return value;
     }
-    for (let i = 0; i < this.parseFunctions.length; i++) {
-      const result = this.parseFunctions[i](value, cell);
+    for (let i = 0; i < this.functions.length; i++) {
+      const result = this.functions[i](value, cell);
       if (result != null) {
         return result;
       }

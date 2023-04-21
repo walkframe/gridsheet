@@ -23,13 +23,10 @@ class ListRenderer extends Renderer {
   }
 }
 
-function parseArray(value: string): any[] {
-  return value.split(/\n/g);
-}
-
 const ListParserMixin = {
-  parseArray,
-  parseFunctions: [parseArray],
+  functions: [
+    (value: string) => value.split(/\n/g),
+  ],
 };
 
 export const ParseAsList = () => {
