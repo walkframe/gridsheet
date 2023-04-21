@@ -1,5 +1,4 @@
 ![unittest workflow](https://github.com/walkframe/gridsheet/actions/workflows/unittest.yaml/badge.svg?branch=master)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet?ref=badge_shield)
 [![NPM](https://nodei.co/npm/@gridsheet/react-core.png?mini=true)](https://www.npmjs.com/package/@gridsheet/react-core)
 
 ## Introduction
@@ -32,8 +31,8 @@ $ npm install @gridsheet/react-core --save
 
 ## Docs
 
-- [ReactGridsheet document](https://docs.walkframe.com/products/react-gridsheet/)
-- [Examples](https://docs.walkframe.com/products/react-gridsheet/examples/)
+- [ReactGridsheet document](https://docs.walkframe.com/products/@gridsheet/react-core/)
+- [Examples](https://docs.walkframe.com/products/gridsheet/examples/)
 
 ## History
 
@@ -78,7 +77,10 @@ $ npm install @gridsheet/react-core --save
   - Support Autofill.
   - Support renderer mixin and parser mixin.
   - Add TimeDelta class.
-  - Rename to https://www.npmjs.com/package/@gridsheet/react-core 
+  - Renaming to https://www.npmjs.com/package/@gridsheet/react-core 
+
+- 0.12.x
+  - Renamed from https://www.npmjs.com/package/react-gridsheet
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet?ref=badge_large)

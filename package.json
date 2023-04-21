@@ -33,7 +33,7 @@
   "bugs": {
     "url": "https://github.com/walkframe/gridsheet/issues"
   },
-  "homepage": "https://docs.walkframe.com/products/react-gridsheet/",
+  "homepage": "https://docs.walkframe.com/products/gridsheet/react-core",
   "devDependencies": {
     "@storybook/addon-essentials": "^6.5.12",
     "@storybook/addon-links": "^6.5.12",
