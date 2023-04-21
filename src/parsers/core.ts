@@ -14,17 +14,17 @@ type Props = {
 const BOOLS = { true: true, false: false } as { [s: string]: boolean };
 
 export interface ParserMixinType {
-  parseFunctions?: ((value: string, cell: CellType) => any)[];
+  parseFunctions?: ((value: string, cell?: CellType) => any)[];
   parse?(value: string, cell: CellType): CellType;
-  callback?(parsed: any, cell: CellType): any;
-  bool?(value: string, cell: CellType): boolean | undefined;
-  number?(value: string, cell: CellType): number | undefined;
-  timedelta?(value: string, cell: CellType): TimeDelta | undefined;
-  date?(value: string, cell: CellType): Date | undefined;
+  callback?(parsed: any, cell?: CellType): any;
+  bool?(value: string, cell?: CellType): boolean | undefined;
+  number?(value: string, cell?: CellType): number | undefined;
+  timedelta?(value: string, cell?: CellType): TimeDelta | undefined;
+  date?(value: string, cell?: CellType): Date | undefined;
 }
 
 export class Parser implements ParserMixinType {
-  parseFunctions: ((value: string, cell: CellType) => any)[] = [
+  parseFunctions: ((value: string, cell?: CellType) => any)[] = [
     this.number,
     this.timedelta,
     this.date,
@@ -56,7 +56,7 @@ export class Parser implements ParserMixinType {
     }
   }
 
-  public callback(parsed: any, cell: CellType) {
+  public callback(parsed: any, cell?: CellType) {
     return parsed;
   }
   public parse(value: string, cell: CellType): CellType {
@@ -87,11 +87,11 @@ export class Parser implements ParserMixinType {
     return this.callback(value, cell);
   }
 
-  bool(value: string, cell: CellType): boolean | undefined {
+  bool(value: string, cell?: CellType): boolean | undefined {
     return BOOLS[value.toLowerCase()];
   }
 
-  number(value: string, cell: CellType): number | undefined {
+  number(value: string, cell?: CellType): number | undefined {
     const m = value.match(/^-?[\d.]+$/);
     if (
       m != null &&
@@ -102,7 +102,7 @@ export class Parser implements ParserMixinType {
     }
   }
 
-  timedelta(value: string, cell: CellType): TimeDelta | undefined {
+  timedelta(value: string, cell?: CellType): TimeDelta | undefined {
     if (value.length < 4 || isNaN(value[value.length - 1] as any)) {
       return;
     }
@@ -135,7 +135,7 @@ export class Parser implements ParserMixinType {
     }
   }
 
-  date(value: string, cell: CellType): Date | undefined {
+  date(value: string, cell?: CellType): Date | undefined {
     const first = value[0];
     if (first == null || first.match(/[JFMASOND0-9]/) == null) {
       return;
