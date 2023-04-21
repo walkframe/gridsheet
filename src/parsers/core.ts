@@ -15,9 +15,8 @@ const BOOLS = { true: true, false: false } as { [s: string]: boolean };
 
 export interface ParserMixinType {
   parseFunctions?: ((value: string, cell?: CellType) => any)[];
-  parse?(value: string, cell: CellType): CellType;
-  call?(value: string, cell: CellType): any;
-  callback?(parsed: any, cell?: CellType): any;
+  callback?(parsed: any, cell?: CellType): CellType;
+  parse?(value: string, cell: CellType): any;
   bool?(value: string, cell?: CellType): boolean | undefined;
   number?(value: string, cell?: CellType): number | undefined;
   timedelta?(value: string, cell?: CellType): TimeDelta | undefined;
@@ -56,36 +55,35 @@ export class Parser implements ParserMixinType {
       }
     }
   }
-
-  public callback(parsed: any, cell?: CellType) {
-    return parsed;
-  }
-  public parse(value: string, cell: CellType): CellType {
+  public call(value: string, cell: CellType): CellType {
     try {
-      const parsed = this.call(value, cell);
-      return { ...cell, value: parsed };
+      const parsed = this.parse(value, cell);
+      return this.callback(parsed, cell);
     } catch (e) {
-      return { ...cell, value: e };
+      return this.callback(e, cell);
     }
   }
-  public call(value: string, cell: CellType): any {
+  public callback(parsed: any, cell?: CellType): CellType {
+    return { ...cell, value: parsed };
+  }
+  public parse(value: string, cell?: CellType): any {
     if (this.condition && !this.condition(value)) {
       const result = this.complement ? this.complement(value) : value;
-      return this.callback(result, cell);
+      return result;
     }
     if (value[0] === "'") {
-      return this.callback(value, cell);
+      return value;
     }
     for (let i = 0; i < this.parseFunctions.length; i++) {
       const result = this.parseFunctions[i](value, cell);
       if (result != null) {
-        return this.callback(result, cell);
+        return result;
       }
     }
     if (value === "") {
-      return this.callback(null, cell);
+      return null;
     }
-    return this.callback(value, cell);
+    return value;
   }
 
   bool(value: string, cell?: CellType): boolean | undefined {

@@ -16,7 +16,7 @@ type Props = {
 };
 
 export interface RendererMixinType {
-  render?(table: UserTable, point: PointType, writer?: WriterType): any;
+  render?(value: any, table: Table, writer?: WriterType): any
   stringify?(cell: CellType): string;
   string?(value: string, table: UserTable, writer?: WriterType): any;
   bool?(value: boolean, writer?: WriterType): any;
@@ -58,19 +58,19 @@ export class Renderer implements RendererMixinType {
     }
   }
 
-  public render(table: Table, point: PointType, writer?: WriterType): any {
+  public call(table: Table, point: PointType, writer?: WriterType): any {
     const address = p2a(point);
     const cache = table.getSolvedCache(address);
     const value = cache || table.getByPoint(point)?.value;
     const { y, x } = point;
-    return this._render(
+    return this.render(
       value,
       table.trim({ top: y, left: x, bottom: y, right: x }),
       writer
     );
   }
 
-  public _render(value: any, table: Table, writer?: WriterType): any {
+  public render(value: any, table: Table, writer?: WriterType): any {
     if (this.condition && !this.condition(value)) {
       return this.complement ? this.complement(value) : this.stringify(value);
     }
@@ -87,7 +87,7 @@ export class Renderer implements RendererMixinType {
           return this.null(value, writer);
         }
         if (value instanceof Table) {
-          return this._render(
+          return this.render(
             value.getByPoint({ y: value.top, x: value.left })?.value,
             table,
             writer
@@ -144,7 +144,7 @@ export class Renderer implements RendererMixinType {
       if (result.constructor.name === "Date") {
         return this.date(result);
       }
-      return this._render(result, table, writer);
+      return this.render(result, table, writer);
     }
     return value;
   }

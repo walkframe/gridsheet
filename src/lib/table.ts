@@ -1220,13 +1220,13 @@ export class Table implements UserTable {
   public parse(point: PointType, value: string) {
     const cell = this.getByPoint(point) || {};
     const parser = this.parsers[cell.parser || ""] || defaultParser;
-    return parser.parse(value, cell);
+    return parser.call(value, cell);
   }
 
   public render(point: PointType, writer?: WriterType) {
     const cell = this.getByPoint(point) || {};
     const renderer = this.renderers[cell.renderer || ""] || defaultRenderer;
-    return renderer.render(this, point, writer);
+    return renderer.call(this, point, writer);
   }
 
   public stringify(point: PointType, value?: any, evaluates = false) {
