@@ -157,9 +157,11 @@ export const Cell: React.FC<Props> = React.memo(
         }}
         onDragEnd={(e) => {
           if (autofillDraggingTo) {
-            const autofill = new Autofill(store, autofillDraggingTo);
-            dispatch(updateTable(autofill.applied));
-            dispatch(select(areaToZone(autofill.wholeArea)));
+            if (autofillDraggingTo.x !== x || autofillDraggingTo.y !== y) {
+              const autofill = new Autofill(store, autofillDraggingTo);
+              dispatch(updateTable(autofill.applied));
+              dispatch(select(areaToZone(autofill.wholeArea)));
+            }
             dispatch(setAutofillDraggingTo(null));
             return false;
           }
@@ -170,7 +172,9 @@ export const Cell: React.FC<Props> = React.memo(
         }}
         onDragEnter={() => {
           if (autofillDraggingTo) {
-            dispatch(setAutofillDraggingTo({x, y}));
+            if (!among(selectingArea, {x, y})) {
+              dispatch(setAutofillDraggingTo({x, y}));
+            }
             return false;
           }
           if (headerTopSelecting) {
