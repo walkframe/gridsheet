@@ -61,13 +61,13 @@ export class Parser implements ParserMixinType {
   }
   public parse(value: string, cell: CellType): CellType {
     try {
-      const parsed = this._parse(value, cell);
+      const parsed = this.call(value, cell);
       return { ...cell, value: parsed };
     } catch (e) {
       return { ...cell, value: e };
     }
   }
-  protected _parse(value: string, cell: CellType): any {
+  public call(value: string, cell: CellType): any {
     if (this.condition && !this.condition(value)) {
       const result = this.complement ? this.complement(value) : value;
       return this.callback(result, cell);
