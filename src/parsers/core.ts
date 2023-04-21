@@ -16,6 +16,7 @@ const BOOLS = { true: true, false: false } as { [s: string]: boolean };
 export interface ParserMixinType {
   parseFunctions?: ((value: string, cell?: CellType) => any)[];
   parse?(value: string, cell: CellType): CellType;
+  call?(value: string, cell: CellType): any;
   callback?(parsed: any, cell?: CellType): any;
   bool?(value: string, cell?: CellType): boolean | undefined;
   number?(value: string, cell?: CellType): number | undefined;
