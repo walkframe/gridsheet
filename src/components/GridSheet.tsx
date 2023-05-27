@@ -105,13 +105,16 @@ export const GridSheet: React.FC<Props> = ({
     <Context.Provider value={{ store, dispatch }}>
       <div
         ref={sheetRef}
-        className={`gridsheet-1 ${mode || "light"} ${className || ""}`}
+        className={`gridsheet-1 ${mode || "light"} ${className || ""} ${
+          sheetWidth > store.table.totalWidth ? 'gs-table-width-smaller' : 'gs-table-width-larger'} ${
+          sheetHeight > store.table.totalHeight ? 'gs-table-height-smaller' : 'gs-table-height-larger'
+        }`}
         style={{
+          maxWidth: store.table.totalWidth + 3,
+          maxHeight: store.table.totalHeight + 3,
           ...style, resize,
           height: sheetHeight,
           width: sheetWidth,
-          maxWidth: store.table.totalWidth + 3,
-          maxHeight: store.table.totalHeight + 3,
         }}
       >
         <Tabular

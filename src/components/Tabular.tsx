@@ -80,9 +80,12 @@ export const Tabular = ({ tableRef }: Props) => {
             height: table.totalHeight,
           }}
         >
-          <table style={{
-            width: table.totalWidth,
-          }}>
+          <table
+            className={`gs-table`}
+            style={{
+              width: table.totalWidth,
+            }}
+          >
             <thead>
               <tr style={{height: headerHeight}}>
                 <th
