@@ -31,7 +31,7 @@ $ npm install @gridsheet/react-core --save
 
 ## Docs
 
-- [ReactGridsheet document](https://docs.walkframe.com/products/@gridsheet/react-core/)
+- [ReactGridsheet document](https://docs.walkframe.com/products/gridsheet/react/)
 - [Examples](https://docs.walkframe.com/products/gridsheet/examples/)
 
 ## History
