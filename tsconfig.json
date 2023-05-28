@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2015",
-    "module": "ES2015",
+    "module": "umd",
     "moduleResolution": "node",
     "lib": ["DOM", "ES6", "DOM.Iterable", "ScriptHost", "ES2016.Array.Include"],
     "declaration": true,
@@ -16,8 +16,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "baseUrl": "./src/",
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true
+    "forceConsistentCasingInFileNames": true
   },
   "exclude": ["node_modules", "src/stories", "*.stories.tsx", "dist"],
   "include": ["**/*.ts", "**/*.tsx"]
