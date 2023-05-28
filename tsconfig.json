@@ -1,23 +1,19 @@
 {
   "compilerOptions": {
-    "target": "ES2015",
-    "module": "esnext",
-    "moduleResolution": "nodenext",
-    "lib": ["DOM", "ES6", "DOM.Iterable", "ScriptHost", "ES2016.Array.Include"],
-    "declaration": true,
-    "declarationMap": true,
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
-    "jsx": "react-jsx",
-    "sourceMap": true,
-    "outDir": "./dist/",
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "esModuleInterop": true,
     "skipLibCheck": true,
-    "baseUrl": "./src/",
-    "forceConsistentCasingInFileNames": true
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve"
   },
-  "exclude": ["node_modules", "src/stories", "*.stories.tsx", "dist"],
+  "exclude": ["node_modules", "src/stories", "*.stories.tsx", "*.spec.ts", "dist"],
   "include": ["**/*.ts", "**/*.tsx"]
 }

@@ -14,7 +14,7 @@ module.exports = {
     home: "./src/index.ts",
   },
   output: {
-    libraryTarget: "umd",
+    libraryTarget: "commonjs2",
     globalObject: "this",
     filename: "index.js",
     path: path.resolve(__dirname, "dist"),
@@ -24,7 +24,7 @@ module.exports = {
     rules: [
       {
         test: /\.(ts|tsx)$/,
-        use: ["ts-loader?configFile=tsconfig.json"],
+        use: ["babel-loader"],
         exclude: [/node_modules/, /.examples/],
       },
       {
