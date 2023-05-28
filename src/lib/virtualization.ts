@@ -23,7 +23,13 @@ export const getScreenRect = (e: HTMLDivElement) => {
   return { top, left, bottom, right, height, width };
 }
 
-export const virtualize = (table: Table, e: HTMLDivElement) => {
+export const virtualize = (table: Table, e: HTMLDivElement | null) => {
+  if (e == null) {
+    return {
+      xs: [], ys: [],
+      adjuster: {}
+    }
+  }
   let boundaryTop = 0, boundaryLeft = 0,
     boundaryBottom = table.getNumRows(), boundaryRight = table.getNumCols();
 

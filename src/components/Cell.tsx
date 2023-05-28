@@ -31,7 +31,7 @@ export const Cell: React.FC<Props> = React.memo(
     const address = `${colId}${rowId}`;
     const { store, dispatch } = React.useContext(Context);
 
-    const cellRef = React.useRef(document.createElement("td"));
+    const cellRef = React.useRef<HTMLTableCellElement>(null);
     const {
       table,
       editingCell,
@@ -57,15 +57,17 @@ export const Cell: React.FC<Props> = React.memo(
     const editing = editingCell === address;
     const pointed = choosing.y === y && choosing.x === x;
     const _setEditorRect = React.useCallback(() => {
-      const rect = cellRef.current.getBoundingClientRect();
-      dispatch(
-        setEditorRect({
-          y: rect.top,
-          x: rect.left,
-          height: rect.height,
-          width: rect.width,
-        })
-      );
+      const rect = cellRef.current?.getBoundingClientRect();
+      if (rect) {
+        dispatch(
+          setEditorRect({
+            y: rect.top,
+            x: rect.left,
+            height: rect.height,
+            width: rect.width,
+          })
+        );
+      }
     }, []);
 
     React.useEffect(() => {

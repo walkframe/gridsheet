@@ -92,10 +92,10 @@ export type WriterType = (value: string) => void;
 export type StoreType = {
   table: Table;
   tableInitialized: boolean;
-  sheetRef: React.MutableRefObject<HTMLDivElement>;
-  editorRef: React.MutableRefObject<HTMLTextAreaElement>;
-  gridOuterRef: React.MutableRefObject<HTMLDivElement>;
-  searchInputRef: React.MutableRefObject<HTMLInputElement>;
+  sheetRef: React.MutableRefObject<HTMLDivElement | null>;
+  editorRef: React.MutableRefObject<HTMLTextAreaElement | null>;
+  gridOuterRef: React.MutableRefObject<HTMLDivElement | null>;
+  searchInputRef: React.MutableRefObject<HTMLInputElement | null>;
   entering: boolean;
   choosing: PointType;
   cutting: boolean;

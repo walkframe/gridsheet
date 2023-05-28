@@ -35,16 +35,10 @@ export const GridSheet: React.FC<Props> = ({
   useEffect(() => {
     embedStyle();
   }, []);
-  const sheetRef = React.useRef<HTMLDivElement>(document.createElement("div"));
-  const searchInputRef = React.useRef<HTMLInputElement>(
-    document.createElement("input")
-  );
-  const editorRef = React.useRef<HTMLTextAreaElement>(
-    document.createElement("textarea")
-  );
-  const gridOuterRef = React.useRef<HTMLDivElement>(
-    document.createElement("div")
-  );
+  const sheetRef = React.useRef<HTMLDivElement>(null);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  const editorRef = React.useRef<HTMLTextAreaElement>(null);
+  const gridOuterRef = React.useRef<HTMLDivElement>(null);
   const initialState: StoreType = {
     table: new Table({}), // temporary (see StoreInitializer for detail)
     tableInitialized: false,

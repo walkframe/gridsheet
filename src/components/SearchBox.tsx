@@ -27,7 +27,9 @@ export const SearchBox: React.FC = () => {
     if (typeof point === "undefined") {
       return;
     }
-    smartScroll(table, gridOuterRef.current, point);
+    if (gridOuterRef.current) {
+      smartScroll(table, gridOuterRef.current, point);
+    }
   }, [searchQuery, matchingCellIndex]);
 
   if (typeof searchQuery === "undefined") {

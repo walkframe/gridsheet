@@ -1,6 +1,12 @@
-export const DUMMY_IMG = document.createElement("img");
-DUMMY_IMG.src =
-  "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+const IMG_BASE64 = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+
+export const DUMMY_IMG =
+  (typeof window === 'undefined' ? null :
+    document.createElement("img")) as HTMLImageElement;
+
+if (DUMMY_IMG) {
+  DUMMY_IMG.src = IMG_BASE64;
+}
 
 export const HISTORY_LIMIT = 10;
 

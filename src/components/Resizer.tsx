@@ -35,6 +35,9 @@ export const Resizer: React.FC = React.memo(() => {
   if (y === -1 && x === -1) {
     return null;
   }
+  if (sheetRef.current == null) {
+    return null;
+  }
   const cell = table.getByPoint({ y: y === -1 ? 0 : y, x: x === -1 ? 0 : x });
   const { y: offsetY, x: offsetX } = sheetRef.current.getBoundingClientRect();
 
