@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
     "target": "ES2015",
-    "module": "umd",
-    "moduleResolution": "node",
+    "module": "esnext",
+    "moduleResolution": "nodenext",
     "lib": ["DOM", "ES6", "DOM.Iterable", "ScriptHost", "ES2016.Array.Include"],
     "declaration": true,
     "declarationMap": true,
     "allowJs": true,
-    "jsx": "react",
+    "jsx": "react-jsx",
     "sourceMap": true,
     "outDir": "./dist/",
     "strict": true,

@@ -1,5 +1,5 @@
 import React from "react";
-import { generateInitial, GridSheet } from "../../../src";
+import { generateInitial, GridSheet } from "../../../dist";
 
 export default {
   title: "Basic",
