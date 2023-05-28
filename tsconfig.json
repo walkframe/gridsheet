@@ -8,7 +8,7 @@
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "module": "esnext",
+    "module": "umd",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
