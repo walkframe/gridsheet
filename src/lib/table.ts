@@ -48,7 +48,7 @@ type Props = {
   functions?: typeof functionsDefault;
 };
 
-const cellFilter = (cell: CellType) => true;
+const cellFilter: CellFilter = (cell: CellType) => true;
 
 type GetProps = {
   evaluates?: boolean;
@@ -213,7 +213,7 @@ export class Table implements UserTable {
     renderers = {},
     labelers = {},
     useBigInt = false,
-    historyLimit: historyLimit = HISTORY_LIMIT,
+    historyLimit: historyLimit,
     minNumRows = 1,
     maxNumRows = -1,
     minNumCols = 1,
@@ -224,26 +224,26 @@ export class Table implements UserTable {
   }: Props) {
     this.head = useBigInt ? BigInt(0) : 0;
     this.data = {};
-    this.area = { top: 0, left: 0, bottom: numRows, right: numCols };
-    this.parsers = parsers;
-    this.renderers = renderers;
-    this.labelers = labelers;
+    this.area = { top: 0, left: 0, bottom: numRows || 0, right: numCols || 0 };
+    this.parsers = parsers || {};
+    this.renderers = renderers || {};
+    this.labelers = labelers || {};
     this.idMatrix = [];
     this.histories = [];
     this.historyIndex = -1;
     this.addressesById = {};
-    this.historyLimit = historyLimit;
+    this.historyLimit = historyLimit || HISTORY_LIMIT;
     this.changedAt = new Date();
-    this.minNumRows = minNumRows;
-    this.maxNumRows = maxNumRows;
-    this.minNumCols = minNumCols;
-    this.maxNumCols = maxNumCols;
+    this.minNumRows = minNumRows || 0;
+    this.maxNumRows = maxNumRows || 0;
+    this.minNumCols = minNumCols || 0;
+    this.maxNumCols = maxNumCols || 0;
     this.solvedCaches = {};
-    this.headerHeight = headerHeight;
-    this.headerWidth = headerWidth;
+    this.headerHeight = headerHeight || 0;
+    this.headerWidth = headerWidth || 0;
     this.functions = functions;
 
-    const common = cells.default;
+    const common = cells?.['default'];
     // make idMatrix beforehand
     for (let y = 0; y < numRows + 1; y++) {
       const ids: Ids = [];
@@ -257,13 +257,13 @@ export class Table implements UserTable {
     }
     for (let y = 0; y < numRows + 1; y++) {
       const rowId = y2r(y);
-      const rowDefault = cells[rowId];
+      const rowDefault = cells?.[rowId];
       for (let x = 0; x < numCols + 1; x++) {
         const id = this.getId({ y, x });
         const address = p2a({ y, x });
         const colId = x2c(x);
-        const colDefault = cells[colId];
-        const cell = cells[address];
+        const colDefault = cells?.[colId];
+        const cell = cells?.[address];
         const stacked = {
           ...common,
           ...rowDefault,
@@ -351,7 +351,7 @@ export class Table implements UserTable {
     return copied;
   }
 
-  public getAddressById(id: Id, slideY = 0, slideX = 0) {
+  public getAddressById(id: Id, slideY = 0, slideX = 0): string | undefined {
     const absCol = id.startsWith("$");
     if (absCol) {
       id = id.slice(1);
@@ -461,7 +461,7 @@ export class Table implements UserTable {
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
         const cell = this.getByPoint({ y, x }) || {};
-        if (!filter(cell)) {
+        if (!filter!(cell)) {
           continue;
         }
         matrix[y - top][x - left] = evaluates
@@ -486,7 +486,7 @@ export class Table implements UserTable {
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
         const cell = this.getByPoint({ y: y - top, x: x - left });
-        if (cell != null && filter(cell)) {
+        if (cell != null && filter!(cell)) {
           result[p2a({ y, x })] = evaluates
             ? solveFormula({
                 value: cell[key],
@@ -512,7 +512,7 @@ export class Table implements UserTable {
       result.push(row);
       for (let x = left; x <= right; x++) {
         const cell = this.getByPoint({ y: y - top, x: x - left });
-        if (cell != null && filter(cell)) {
+        if (cell != null && filter!(cell)) {
           row[x2c(x) || y2r(y)] = evaluates
             ? solveFormula({
                 value: cell[key],
@@ -538,7 +538,7 @@ export class Table implements UserTable {
       result.push(col);
       for (let y = top; y <= bottom; y++) {
         const cell = this.getByPoint({ y: y - top, x: x - left });
-        if (cell != null && filter(cell)) {
+        if (cell != null && filter!(cell)) {
           col[y2r(y) || x2c(x)] = evaluates
             ? solveFormula({
                 value: cell[key],
@@ -567,7 +567,7 @@ export class Table implements UserTable {
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
         const cell = this.getByPoint({ y, x });
-        if (cell != null && filter(cell)) {
+        if (cell != null && filter!(cell)) {
           matrix[y - top][x - left] = {
             ...cell,
             value: evaluates
@@ -593,7 +593,7 @@ export class Table implements UserTable {
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
         const cell = this.getByPoint({ y: y - top, x: x - left });
-        if (cell != null && filter(cell)) {
+        if (cell != null && filter!(cell)) {
           result[p2a({ y, x })] = {
             ...cell,
             value: evaluates
@@ -621,7 +621,7 @@ export class Table implements UserTable {
       result.push(row);
       for (let x = left; x <= right; x++) {
         const cell = this.getByPoint({ y: y - top, x: x - left });
-        if (cell != null && filter(cell)) {
+        if (cell != null && filter!(cell)) {
           row[x2c(x) || y2r(y)] = {
             ...cell,
             value: evaluates
@@ -649,7 +649,7 @@ export class Table implements UserTable {
       result.push(col);
       for (let y = top; y <= bottom; y++) {
         const cell = this.getByPoint({ y: y - top, x: x - left });
-        if (cell != null && filter(cell)) {
+        if (cell != null && filter!(cell)) {
           col[y2r(y) || x2c(x)] = {
             ...cell,
             value: evaluates
@@ -842,7 +842,7 @@ export class Table implements UserTable {
         const fromX = leftFrom + (j % maxWidth);
         const slideY = toY - fromY;
         const slideX = toX - fromX;
-        const cell = {
+        const cell: CellType = {
           ...this.getByPoint({
             y: topFrom + (i % maxHeight),
             x: leftFrom + (j % maxWidth),
@@ -1249,7 +1249,7 @@ export class Table implements UserTable {
     return s;
   }
 
-  public trim(area: AreaType): ReadonlyTable {
+  public trim(area: AreaType): Table {
     const copied = new Table({});
     copied.area = area;
     copied.idMatrix = this.idMatrix;
@@ -1446,5 +1446,3 @@ export class Table implements UserTable {
   }
 }
 
-// just using as a type
-export class ReadonlyTable extends Table {}

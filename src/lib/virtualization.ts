@@ -1,7 +1,7 @@
 import {DEFAULT_HEIGHT, DEFAULT_WIDTH, OVERSCAN_X, OVERSCAN_Y} from "../constants";
 import {range} from "./structs";
 import {Table} from "./table";
-import {PointType} from "../types";
+import {AreaType, PointType, Virtualization} from "../types";
 
 export const getCellRectPositions = (
   table: Table,
@@ -23,12 +23,9 @@ export const getScreenRect = (e: HTMLDivElement) => {
   return { top, left, bottom, right, height, width };
 }
 
-export const virtualize = (table: Table, e: HTMLDivElement | null) => {
+export const virtualize = (table: Table, e: HTMLDivElement | null): Virtualization | null => {
   if (e == null) {
-    return {
-      xs: [], ys: [],
-      adjuster: {}
-    }
+    return null;
   }
   let boundaryTop = 0, boundaryLeft = 0,
     boundaryBottom = table.getNumRows(), boundaryRight = table.getNumCols();

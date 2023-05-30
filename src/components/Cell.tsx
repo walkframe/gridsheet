@@ -31,7 +31,7 @@ export const Cell: React.FC<Props> = React.memo(
     const address = `${colId}${rowId}`;
     const { store, dispatch } = React.useContext(Context);
 
-    const cellRef = React.useRef<HTMLTableCellElement>(null);
+    const cellRef = React.useRef<HTMLTableCellElement | null>(null);
     const {
       table,
       editingCell,

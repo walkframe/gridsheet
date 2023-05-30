@@ -179,7 +179,7 @@ export class Renderer implements RendererMixinType {
     return JSON.stringify(value);
   }
 
-  null(value: null, writer?: WriterType): any {
+  null(value: any, writer?: WriterType): any {
     return "";
   }
   undefined(value: undefined, writer?: WriterType): any {

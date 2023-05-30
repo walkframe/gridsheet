@@ -209,3 +209,9 @@ export type HistoryType =
   | HistoryRemoveRowsType
   | HistoryAddColsType
   | HistoryRemoveColsType;
+
+export type Virtualization = {
+  xs: number[];
+  ys: number[];
+  adjuster: AreaType;
+};

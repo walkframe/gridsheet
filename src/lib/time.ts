@@ -4,8 +4,9 @@ import {
 } from 'date-fns';
 
 export const BASE_DATE = new Date('2345-01-02T03:04:05Z');
-const ADD_FNS = [addYears, addMonths, addDays, addHours, addMinutes, addSeconds, addMilliseconds];
-const SUB_FNS = [subYears, subMonths, subDays, subHours, subMinutes, subSeconds, subMilliseconds];
+type DiffFunction = (date: Date | number, amount: number) => Date;
+const ADD_FNS = [addYears, addMonths, addDays, addHours, addMinutes, addSeconds, addMilliseconds] as DiffFunction[];
+const SUB_FNS = [subYears, subMonths, subDays, subHours, subMinutes, subSeconds, subMilliseconds] as DiffFunction[];
 
 type Diff = [number, number, number, number, number, number, number];
 
@@ -64,7 +65,7 @@ export class TimeDelta {
     const diff: Diff = [0, 0, 0, hours, minutes, seconds, milliseconds];
     let date = BASE_DATE;
     diff.forEach((n, i) => {
-      date = ADD_FNS[i](date, n);
+      date = (ADD_FNS[i])(date, n);
     })
     return new TimeDelta(date, BASE_DATE);
   }

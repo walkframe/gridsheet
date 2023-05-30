@@ -9,7 +9,7 @@ import { Context } from "../store";
 import { choose, select, setEntering, updateTable } from "../store/actions";
 
 import { Table } from "../lib/table";
-import { TableRef } from "../types";
+import {TableRef, Virtualization} from "../types";
 import { virtualize } from "../lib/virtualization";
 
 type Props = {
@@ -41,7 +41,7 @@ export const Tabular = ({ tableRef }: Props) => {
       };
     }
   }, [table]);
-  const [virtualized, setVirtualized] = React.useState(virtualize(table, gridOuterRef.current));
+  const [virtualized, setVirtualized] = React.useState<Virtualization | null>(null);
   React.useEffect(() => {
     setVirtualized(virtualize(table, gridOuterRef.current));
   }, [
@@ -50,8 +50,11 @@ export const Tabular = ({ tableRef }: Props) => {
     sheetRef.current?.clientHeight, sheetRef.current?.clientWidth,
   ]);
 
-  const { ys, xs, adjuster } = virtualized;
+  if (virtualized == null) {
+    return null;
+  }
 
+  const { ys, xs, adjuster } = virtualized;
   return (
     <>
       <Editor />
