@@ -232,7 +232,7 @@ export const Editor: React.FC = () => {
               dispatch(setSearchQuery(""));
             }
             dispatch(setEntering(false));
-            window.setTimeout(() => searchInputRef.current?.focus(), 100);
+            window.setTimeout(() => searchInputRef.current!.focus(), 100);
             return false;
           }
         }

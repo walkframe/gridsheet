@@ -62,7 +62,7 @@ export type CellsByIdType = { [id: Id]: CellType | undefined };
 export type OptionsType = {
   sheetHeight?: number;
   sheetWidth?: number;
-  sheetResize?: "both" | "vertical" | "horizontal" | "none";
+  sheetResize?: React.CSSProperties['resize'];
   historyLimit?: number;
   headerHeight?: number;
   headerWidth?: number;

@@ -27,9 +27,7 @@ export const SearchBox: React.FC = () => {
     if (typeof point === "undefined") {
       return;
     }
-    if (gridOuterRef.current) {
-      smartScroll(table, gridOuterRef.current, point);
-    }
+    smartScroll(table, gridOuterRef.current, point);
   }, [searchQuery, matchingCellIndex]);
 
   if (typeof searchQuery === "undefined") {
@@ -50,7 +48,10 @@ export const SearchBox: React.FC = () => {
           onChange={(e) => dispatch(setSearchQuery(e.target.value))}
           onKeyDown={(e) => {
             if (e.key === "Escape") {
-              editorRef.current?.focus();
+              const el = editorRef?.current;
+              if (el) {
+                el.focus();
+              }
               dispatch(setSearchQuery(undefined));
             }
             if (e.key === "f" && (e.ctrlKey || e.metaKey)) {

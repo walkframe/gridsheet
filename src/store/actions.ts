@@ -634,9 +634,7 @@ class ArrowAction<
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
 
-    if (gridOuterRef.current) {
-      smartScroll(table, gridOuterRef.current, { y: nextY, x: nextX });
-    }
+    smartScroll(table, gridOuterRef.current, { y: nextY, x: nextX });
     return {
       ...store,
       selectingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
@@ -732,9 +730,7 @@ class WalkAction<
     const cell = table.getByPoint({ y: nextY, x: nextX });
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
-    if (gridOuterRef.current) {
-      smartScroll(table, gridOuterRef.current, { y: nextY, x: nextX});
-    }
+    smartScroll(table, gridOuterRef.current, { y: nextY, x: nextX});
     return {
       ...store,
       choosing: { y: nextY, x: nextX } as PointType,

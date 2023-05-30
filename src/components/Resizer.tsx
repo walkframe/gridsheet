@@ -35,11 +35,11 @@ export const Resizer: React.FC = React.memo(() => {
   if (y === -1 && x === -1) {
     return null;
   }
-  if (sheetRef.current == null) {
+  if (sheetRef.current == null || editorRef.current == null) {
     return null;
   }
   const cell = table.getByPoint({ y: y === -1 ? 0 : y, x: x === -1 ? 0 : x });
-  const { y: offsetY, x: offsetX } = sheetRef.current.getBoundingClientRect();
+  const { y: offsetY, x: offsetX } = sheetRef.current!.getBoundingClientRect();
 
   const baseWidth = cell?.width || DEFAULT_WIDTH;
   const baseHeight = cell?.height || DEFAULT_HEIGHT;
@@ -80,7 +80,7 @@ export const Resizer: React.FC = React.memo(() => {
     dispatch(updateTable(newTable));
     dispatch(setResizingPositionY([-1, -1, -1]));
     dispatch(setResizingPositionX([-1, -1, -1]));
-    editorRef.current?.focus();
+    editorRef.current!.focus();
   };
   const handleResizeMove = (e: React.MouseEvent) => {
     if (y !== -1) {

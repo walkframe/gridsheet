@@ -60,7 +60,7 @@ export const HeaderLeftCell: React.FC<Props> = React.memo(
           );
           dispatch(setContextMenuPosition({ y: -1, x: -1 }));
           dispatch(choose({ y: startY, x: 1 }));
-          editorRef.current?.focus();
+          editorRef.current!.focus();
           return false;
         }}
         onContextMenu={(e) => {

@@ -139,13 +139,13 @@ export const Cell: React.FC<Props> = React.memo(
             dispatch(choose({ y, x }));
             dispatch(select({ startY: -1, startX: -1, endY: -1, endX: -1 }));
           }
-          editorRef.current?.focus();
+          editorRef.current!.focus();
         }}
         onDoubleClick={(e) => {
           e.preventDefault();
           const dblclick = document.createEvent("MouseEvents");
           dblclick.initEvent("dblclick", true, true);
-          editorRef.current?.dispatchEvent(dblclick);
+          editorRef.current!.dispatchEvent(dblclick);
           return false;
         }}
         draggable

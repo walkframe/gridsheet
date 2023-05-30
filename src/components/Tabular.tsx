@@ -13,10 +13,10 @@ import { TableRef } from "../types";
 import { virtualize } from "../lib/virtualization";
 
 type Props = {
-  tableRef?: React.MutableRefObject<TableRef | null>;
+  tableRef: React.MutableRefObject<TableRef | null> | undefined;
 };
 
-export const createTableRef = () => React.useRef<TableRef>(null);
+export const createTableRef = () => React.useRef<TableRef | null>(null);
 
 export const Tabular = ({ tableRef }: Props) => {
   const { store, dispatch } = React.useContext(Context);

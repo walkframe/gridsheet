@@ -10,7 +10,7 @@ import {
   SHEET_WIDTH,
 } from "../constants";
 import { Context } from "../store";
-import { reducer } from "../store/actions";
+import { reducer as defaultReducer } from "../store/actions";
 
 import { StoreInitializer } from "./StoreInitializer";
 import { Resizer } from "./Resizer";
@@ -20,7 +20,7 @@ import { Table } from "../lib/table";
 import { Tabular } from "./Tabular";
 import { getMaxSizesFromCells } from "../lib/structs";
 import { x2c, y2r } from "../lib/converters";
-import {useEffect} from "react";
+import {Reducer, ReducerWithoutAction, useEffect} from "react";
 import {embedStyle} from "../styles/embedder";
 
 export const GridSheet: React.FC<Props> = ({
@@ -31,14 +31,14 @@ export const GridSheet: React.FC<Props> = ({
   style,
   additionalFunctions = {},
 }) => {
-  const { sheetResize: resize = "both" } = options;
+  const { sheetResize } = options;
   useEffect(() => {
     embedStyle();
   }, []);
-  const sheetRef = React.useRef<HTMLDivElement>(null);
-  const searchInputRef = React.useRef<HTMLInputElement>(null);
-  const editorRef = React.useRef<HTMLTextAreaElement>(null);
-  const gridOuterRef = React.useRef<HTMLDivElement>(null);
+  const sheetRef = React.useRef<HTMLDivElement | null>(null);
+  const searchInputRef = React.useRef<HTMLInputElement | null>(null);
+  const editorRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const gridOuterRef = React.useRef<HTMLDivElement | null>(null);
   const initialState: StoreType = {
     table: new Table({}), // temporary (see StoreInitializer for detail)
     tableInitialized: false,
@@ -74,21 +74,21 @@ export const GridSheet: React.FC<Props> = ({
     maxNumCols: -1,
   };
 
-  const [store, dispatch] = React.useReducer(reducer, initialState);
+  const [store, dispatch] = React.useReducer(defaultReducer as ReducerWithoutAction<StoreType>, initialState, () => initialState);
 
   const [sheetHeight, setSheetHeight] = React.useState(
-    options.sheetHeight || estimateSheetHeight({ options, initial })
+    options?.sheetHeight || estimateSheetHeight({ options, initial })
   );
   const [sheetWidth, setSheetWidth] = React.useState(
-    options.sheetWidth || estimateSheetWidth({ options, initial })
+    options?.sheetWidth || estimateSheetWidth({ options, initial })
   );
   React.useEffect(() => {
     const intervalId = window.setInterval(() => {
       if (sheetRef.current?.clientHeight) {
-        setSheetHeight(sheetRef.current?.clientHeight);
+        setSheetHeight(sheetRef.current?.clientHeight || 0);
       }
       if (sheetRef.current?.clientWidth) {
-        setSheetWidth(sheetRef.current?.clientWidth);
+        setSheetWidth(sheetRef.current?.clientWidth || 0);
       }
     }, 1000);
     return () => window.clearInterval(intervalId);
@@ -106,7 +106,7 @@ export const GridSheet: React.FC<Props> = ({
         style={{
           maxWidth: store.table.totalWidth + 3,
           maxHeight: store.table.totalHeight + 3,
-          ...style, resize,
+          ...style, resize: sheetResize,
           height: sheetHeight,
           width: sheetWidth,
         }}

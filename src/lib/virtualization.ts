@@ -75,10 +75,13 @@ export const virtualize = (table: Table, e: HTMLDivElement | null) => {
 
 export const smartScroll = (
   table: Table,
-  e: HTMLDivElement,
+  e: HTMLDivElement | null,
   targetPoint: PointType,
   behavior: ScrollBehavior='auto',
 ) => {
+  if (e == null) {
+    return;
+  }
   const screen = getScreenRect(e);
   const target = getCellRectPositions(table, e, targetPoint);
 
