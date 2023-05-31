@@ -50,11 +50,6 @@ export const Tabular = ({ tableRef }: Props) => {
     sheetRef.current?.clientHeight, sheetRef.current?.clientWidth,
   ]);
 
-  if (virtualized == null) {
-    return null;
-  }
-
-  const { ys, xs, adjuster } = virtualized;
   return (
     <>
       <Editor />
@@ -109,24 +104,24 @@ export const Tabular = ({ tableRef }: Props) => {
                     }, 100);
                   }}
                 ></th>
-                <th className="gs-adjuster" style={{ width: adjuster.left }}></th>
-                { xs.map((x) => <HeaderTopCell x={x} key={x} />) }
-                <th className="gs-adjuster" style={{ width: adjuster.right }}></th>
+                <th className="gs-adjuster" style={{ width: virtualized?.adjuster?.left }}></th>
+                { virtualized?.xs?.map?.((x) => <HeaderTopCell x={x} key={x} />) }
+                <th className="gs-adjuster" style={{ width: virtualized?.adjuster?.right }}></th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <th className="gs-header gs-header-left gs-adjuster" style={{height: adjuster.top }}></th>
-                { xs.map((x) => <td className="gs-adjuster" key={x} />) }
+                <th className="gs-header gs-header-left gs-adjuster" style={{height: virtualized?.adjuster?.top }}></th>
+                { virtualized?.xs?.map((x) => <td className="gs-adjuster" key={x} />) }
               </tr>
             </tbody>
             <tbody>
               {
-                ys.map((y, i) => {
+                virtualized?.ys?.map((y, i) => {
                   return (<tr key={y}>
                     <HeaderLeftCell y={y} />
                     <td className="gs-adjuster" />
-                    { xs.map((x) => <Cell key={x} y={y} x={x} />) }
+                    { virtualized?.xs?.map((x) => <Cell key={x} y={y} x={x} />) }
                     <td className="gs-adjuster" />
                   </tr>);
                 })

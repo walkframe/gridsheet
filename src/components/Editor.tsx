@@ -313,9 +313,6 @@ export const Editor: React.FC = () => {
     dispatch(setEditingCell(address));
     return false;
   };
-  if (y === -1 || x === -1) {
-    return <></>;
-  }
 
   return (
     <div
