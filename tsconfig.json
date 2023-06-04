@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2015",
-    "module": "ES2015",
+    "module": "CommonJS",
     "moduleResolution": "node",
     "lib": ["DOM", "ES2020", "DOM.Iterable", "ScriptHost", "ES2016.Array.Include"],
     "declaration": true,
