@@ -171,8 +171,8 @@ export const oa2aa = (
 
 export const aa2oa = (
   aa: MatrixType,
-  fields: string[]
-): { [s: string]: any } => {
+  fields: string[],
+): { [s: string]: any }[] => {
   const oa: { [s: string]: any }[] = [];
   aa.forEach((a) => {
     const o: { [s: string]: any } = {};
