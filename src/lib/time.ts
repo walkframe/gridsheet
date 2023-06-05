@@ -14,6 +14,7 @@ export class TimeDelta {
   protected diff: Diff = [0, 0, 0, 0, 0, 0, 0];
   private date1: Date;
   private date2: Date;
+  public format: string;
   
   constructor (date1: Date, date2: Date) {
     this.diff = [
@@ -27,6 +28,7 @@ export class TimeDelta {
     ];
     this.date1 = date1;
     this.date2 = date2;
+    this.format = "HH:mm";
   }
   public add(date: Date) {
     this.diff.forEach((n, i) => {
@@ -41,7 +43,10 @@ export class TimeDelta {
     return date;
   }
 
-  public stringify(format="HH:mm") {
+  public stringify(format?: string) {
+    if (format == null) {
+      format = this.format;
+    }
     const tokens = [];
     const msecs = this.date1.getMilliseconds() - this.date2.getMilliseconds();
     let secs = (this.date1.getTime() - this.date2.getTime()) / 1000;
@@ -59,6 +64,14 @@ export class TimeDelta {
     result = result.replace("SS", String(tokens[3]).padStart(2, '0').substring(0, 2));
     result = result.replace("S", String(tokens[3]).padStart(1, '0').substring(0, 1));
     return result;
+  }
+
+  public toJSON() {
+    return this.stringify();
+  }
+
+  public toString() {
+    return this.stringify();
   }
 
   static create(hours=0, minutes=0, seconds=0, milliseconds=0) {
