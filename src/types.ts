@@ -151,6 +151,7 @@ export type StoreReflectionType = {
 
 export type HistoryUpdateType = {
   operation: "UPDATE";
+  applyed: boolean;
   reflection?: StoreReflectionType;
   diffBefore: CellsByIdType;
   diffAfter: CellsByIdType;
@@ -159,6 +160,7 @@ export type HistoryUpdateType = {
 
 export type HistoryMoveType = {
   operation: "MOVE";
+  applyed: boolean;
   reflection?: StoreReflectionType;
   matrixFrom: IdMatrix;
   matrixTo: IdMatrix;
@@ -170,6 +172,7 @@ export type HistoryMoveType = {
 
 export type HistoryAddRowsType = {
   operation: "ADD_ROWS";
+  applyed: boolean;
   reflection?: StoreReflectionType;
   y: number;
   numRows: number;
@@ -181,6 +184,7 @@ export type HistoryAddRowsType = {
 
 export type HistoryRemoveRowsType = {
   operation: "REMOVE_ROWS";
+  applyed: boolean;
   reflection?: StoreReflectionType;
   y: number;
   numRows: number;
@@ -189,6 +193,7 @@ export type HistoryRemoveRowsType = {
 
 export type HistoryAddColsType = {
   operation: "ADD_COLS";
+  applyed: boolean;
   reflection?: StoreReflectionType;
   x: number;
   numCols: number;
@@ -200,6 +205,7 @@ export type HistoryAddColsType = {
 
 export type HistoryRemoveColsType = {
   operation: "REMOVE_COLS";
+  applyed: boolean;
   reflection?: StoreReflectionType;
   x: number;
   numCols: number;

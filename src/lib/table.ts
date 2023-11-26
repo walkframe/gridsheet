@@ -805,6 +805,7 @@ export class Table implements UserTable {
     });
     const lostRows = putMatrix(this.idMatrix, matrixFrom, dst);
     this.pushHistory({
+      applyed: true,
       operation: "MOVE",
       reflection,
       matrixFrom,
@@ -926,6 +927,7 @@ export class Table implements UserTable {
     });
 
     this.pushHistory({
+      applyed: true,
       operation: "UPDATE",
       reflection,
       diffBefore,
@@ -1059,6 +1061,7 @@ export class Table implements UserTable {
     this.area.bottom += numRows;
 
     this.pushHistory({
+      applyed: true,
       operation: "ADD_ROWS",
       reflection,
       y,
@@ -1086,6 +1089,7 @@ export class Table implements UserTable {
     const rows = this.idMatrix.splice(y, numRows);
     this.area.bottom -= numRows;
     this.pushHistory({
+      applyed: true,
       operation: "REMOVE_ROWS",
       reflection,
       y,
@@ -1163,6 +1167,7 @@ export class Table implements UserTable {
     this.area.right += numCols;
 
     this.pushHistory({
+      applyed: true,
       operation: "ADD_COLS",
       reflection,
       x,
@@ -1195,6 +1200,7 @@ export class Table implements UserTable {
     this.area.right -= numCols;
 
     this.pushHistory({
+      applyed: true,
       operation: "REMOVE_COLS",
       reflection,
       x,
@@ -1294,6 +1300,7 @@ export class Table implements UserTable {
       return { history: null, newTable: this as Table };
     }
     const history = this.histories[this.historyIndex--];
+    history.applyed = false;
     this.currentHistory = history;
     switch (history.operation) {
       case "UPDATE":
@@ -1369,7 +1376,9 @@ export class Table implements UserTable {
       return { history: null, newTable: this as Table };
     }
     const history = this.histories[++this.historyIndex];
+    history.applyed = true;
     this.currentHistory = history;
+
     switch (history.operation) {
       case "UPDATE":
         this.applyDiff(history.diffAfter!, history.partial);
