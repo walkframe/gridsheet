@@ -335,6 +335,7 @@ export class Table implements UserTable {
     copied.labelers = this.labelers;
     copied.functions = this.functions;
     copied.histories = this.histories;
+    copied.currentHistory = this.currentHistory;
     copied.historyLimit = this.historyLimit;
     copied.historyIndex = this.historyIndex;
     copied.minNumRows = this.minNumRows;
