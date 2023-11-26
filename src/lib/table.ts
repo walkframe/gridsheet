@@ -189,7 +189,7 @@ export class Table implements UserTable {
   public totalHeight: number = 0;
   public headerWidth: number = 0;
   public headerHeight: number = 0;
-  private currentHistory?: HistoryType;
+  public currentHistory?: HistoryType;
 
   private head: bigint | number;
   private idMatrix: IdMatrix;
