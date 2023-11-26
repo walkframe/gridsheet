@@ -189,6 +189,7 @@ export class Table implements UserTable {
   public totalHeight: number = 0;
   public headerWidth: number = 0;
   public headerHeight: number = 0;
+  private currentHistory?: HistoryType;
 
   private head: bigint | number;
   private idMatrix: IdMatrix;
@@ -673,7 +674,7 @@ export class Table implements UserTable {
     );
     strayedHistories.forEach(this.cleanStrayed.bind(this));
     this.histories.push(history);
-    this.lastHistory = history;
+    this.lastHistory = this.currentHistory = history;
     if (this.histories.length > this.historyLimit) {
       const kickedOut = this.histories.splice(0, 1)[0];
       this.cleanObsolete(kickedOut);
@@ -1291,6 +1292,7 @@ export class Table implements UserTable {
       return { history: null, newTable: this as Table };
     }
     const history = this.histories[this.historyIndex--];
+    this.currentHistory = history;
     switch (history.operation) {
       case "UPDATE":
         // diffBefore is guaranteed as total of cell (not partial)
@@ -1365,6 +1367,7 @@ export class Table implements UserTable {
       return { history: null, newTable: this as Table };
     }
     const history = this.histories[++this.historyIndex];
+    this.currentHistory = history;
     switch (history.operation) {
       case "UPDATE":
         this.applyDiff(history.diffAfter!, history.partial);
