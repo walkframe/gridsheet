@@ -89,6 +89,7 @@ export interface UserTable {
   totalHeight: number;
   headerWidth: number;
   headerHeight: number;
+  currentHistory?: HistoryType;
   getRectSize(area: AreaType): ShapeType;
   getAddressById(id: Id, slideY: number, slideX: number): string | undefined;
   getAddressesByIds(ids: CellsByIdType): CellsByAddressType;
