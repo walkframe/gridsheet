@@ -172,6 +172,7 @@ export type HistoryAddRowsType = {
   operation: "ADD_ROWS";
   reflection?: StoreReflectionType;
   y: number;
+  numRows: number;
   idMatrix: IdMatrix;
   diffBefore?: CellsByIdType;
   diffAfter?: CellsByIdType;
@@ -182,6 +183,7 @@ export type HistoryRemoveRowsType = {
   operation: "REMOVE_ROWS";
   reflection?: StoreReflectionType;
   y: number;
+  numRows: number;
   idMatrix: IdMatrix;
 };
 
@@ -189,6 +191,7 @@ export type HistoryAddColsType = {
   operation: "ADD_COLS";
   reflection?: StoreReflectionType;
   x: number;
+  numCols: number;
   idMatrix: IdMatrix;
   diffBefore?: CellsByIdType;
   diffAfter?: CellsByIdType;
@@ -199,6 +202,7 @@ export type HistoryRemoveColsType = {
   operation: "REMOVE_COLS";
   reflection?: StoreReflectionType;
   x: number;
+  numCols: number;
   idMatrix: IdMatrix;
 };
 

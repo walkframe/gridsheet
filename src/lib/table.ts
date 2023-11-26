@@ -1059,6 +1059,7 @@ export class Table implements UserTable {
       operation: "ADD_ROWS",
       reflection,
       y,
+      numRows,
       idMatrix: rows,
     });
     return this.shallowCopy({ copyCache: false });
@@ -1085,6 +1086,7 @@ export class Table implements UserTable {
       operation: "REMOVE_ROWS",
       reflection,
       y,
+      numRows,
       idMatrix: rows,
     });
     return this.shallowCopy({ copyCache: false });
@@ -1161,6 +1163,7 @@ export class Table implements UserTable {
       operation: "ADD_COLS",
       reflection,
       x,
+      numCols,
       idMatrix: rows,
     });
     return this.shallowCopy({ copyCache: false });
@@ -1192,6 +1195,7 @@ export class Table implements UserTable {
       operation: "REMOVE_COLS",
       reflection,
       x,
+      numCols,
       idMatrix: rows,
     });
     return this.shallowCopy({ copyCache: false });
