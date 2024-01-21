@@ -29,7 +29,6 @@ export const Style = () => {
               },
             },
             A: {
-              style: { backgroundColor: "#ffffff" },
             },
             B: {
               style: { backgroundColor: "#eeeeee" },
@@ -59,6 +58,12 @@ export const Style = () => {
             },
             4: {
               style: { color: "#00F" },
+            },
+            "B5:D6": {
+              style: { backgroundColor: "green" },
+            },
+            "20:22": {
+              style: { backgroundColor: "blue" },
             },
             E2: {
               style: {

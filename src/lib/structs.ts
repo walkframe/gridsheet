@@ -10,8 +10,14 @@ import {
   ShapeType,
   MatricesByAddress,
   CellType,
+  Address,
 } from "../types";
-import { a2p, p2a } from "./converters";
+import { 
+  a2p,
+  p2a,
+  x2c,
+  c2x,
+} from "./converters";
 
 export const slideArea = (area: AreaType, y: Y, x: X): AreaType => {
   const { top, left, bottom, right } = area;
@@ -286,9 +292,9 @@ export const upsert = <T>({
   flattenAs?: keyof CellType;
   matrices?: MatricesByAddress<T>;
 }) => {
-  Object.keys(matrices).forEach((address) => {
-    const matrix = matrices[address];
-    const { y: baseY, x: baseX } = a2p(address);
+  Object.keys(matrices).forEach((baseAddress) => {
+    const matrix = matrices[baseAddress];
+    const { y: baseY, x: baseX } = a2p(baseAddress);
     matrix.forEach((row, y) => {
       row.forEach((e, x) => {
         const id = p2a({ y: baseY + y, x: baseX + x });
@@ -347,4 +353,42 @@ export const isSameArea = (area1: AreaType, area2: AreaType) => {
     return false;
   }
   return true;
+}
+
+export const expandRange =(range: string): Address[] => {
+  if (range.indexOf(":") === -1) {
+      return [range];
+  }
+
+  const result: Address[] = [];
+  const isRowRange = /^\d+\:\d+$/.test(range);
+
+  if (isRowRange) {
+    const [startRow, endRow] = range.split(":").map(Number);
+    for (let row = startRow; row <= endRow; row++) {
+      result.push(`${row}`);
+    }
+    return result;
+  }
+  const match = range.match(/^([A-Z]*)(\d+)?\:([A-Z]*)(\d+)?$/);
+  if (!match) {
+    console.error("Invalid range format", range);
+    return [range];
+  }
+
+  const [, startCol, startRow, endCol, endRow] = match;
+  const startColIndex = startCol ? c2x(startCol) : 1;
+  const endColIndex = endCol ? c2x(endCol) : 1;
+
+  for (let col = startColIndex; col <= endColIndex; col++) {
+    const currentColumn = startCol || endCol ? x2c(col) : '';
+    if (startRow && endRow) {
+      for (let row = Number(startRow); row <= Number(endRow); row++) {
+        result.push(`${currentColumn}${row}`);
+      }
+    } else if (!startRow && !endRow) {
+      result.push(currentColumn);
+    }
+  }
+  return result;
 }

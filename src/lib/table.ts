@@ -20,7 +20,7 @@ import {
   StoreReflectionType,
   ShapeType,
 } from "../types";
-import {areaShape, createMatrix, matrixShape, putMatrix} from "./structs";
+import {areaShape, createMatrix, expandRange, matrixShape, putMatrix} from "./structs";
 import { a2p, x2c, p2a, y2r, grantAddressAbsolute } from "./converters";
 import { FunctionMapping } from "../formula/functions/__base";
 import { functions as functionsDefault } from "../formula/mapping";
@@ -245,7 +245,6 @@ export class Table implements UserTable {
     this.headerWidth = headerWidth || 0;
     this.functions = functions;
 
-    const common = cells?.['default'];
     // make idMatrix beforehand
     for (let y = 0; y < numRows + 1; y++) {
       const ids: Ids = [];
@@ -257,6 +256,22 @@ export class Table implements UserTable {
         this.addressesById[id] = address;
       }
     }
+    Object.keys(cells).forEach((address) => {
+      const range = expandRange(address);
+      const data = cells[address];
+      range.forEach((address) => {
+        const origin = this.data[address];
+        cells[address] = {
+          ...origin,
+          ...data,
+          style: {
+            ...origin?.style,
+            ...data?.style,
+          },
+        };
+      });
+    });
+    const common = cells?.['default'];
     for (let y = 0; y < numRows + 1; y++) {
       const rowId = y2r(y);
       const rowDefault = cells?.[rowId];
