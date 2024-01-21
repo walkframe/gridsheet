@@ -19,6 +19,10 @@ import {
   HistoryType,
   StoreReflectionType,
   ShapeType,
+  OperatorType,
+  NullableIdMatrix,
+  NullableIds,
+  NullableId,
 } from "../types";
 import {areaShape, createMatrix, expandRange, matrixShape, putMatrix} from "./structs";
 import { a2p, x2c, p2a, y2r, grantAddressAbsolute } from "./converters";
@@ -29,6 +33,7 @@ import { solveFormula } from "../formula/solver";
 
 import {DEFAULT_HEIGHT, DEFAULT_WIDTH, HISTORY_LIMIT, OVERSCAN_X, OVERSCAN_Y} from "../constants";
 import { shouldTracking } from "../store/helpers";
+import { Prevention, Update, isProtected } from "./protection";
 
 type Props = {
   numRows?: number;
@@ -59,7 +64,9 @@ type GetProps = {
 type MoveProps = {
   src: AreaType;
   dst: AreaType;
+  operator?: OperatorType;
   reflection?: StoreReflectionType;
+  historicize?: boolean;
 };
 
 type GetFlattenProps = GetProps & {
@@ -260,7 +267,7 @@ export class Table implements UserTable {
       const range = expandRange(address);
       const data = cells[address];
       range.forEach((address) => {
-        const origin = this.data[address];
+        const origin = cells[address];
         cells[address] = {
           ...origin,
           ...data,
@@ -268,6 +275,7 @@ export class Table implements UserTable {
             ...origin?.style,
             ...data?.style,
           },
+          protection: (origin?.protection || 0) | (data?.protection || 0),
         };
       });
     });
@@ -292,6 +300,7 @@ export class Table implements UserTable {
             ...colDefault?.style,
             ...cell?.style,
           },
+          protection: (common?.protection || 0) | (rowDefault?.protection || 0) | (colDefault?.protection || 0) | (cell?.protection || 0),
         } as CellType;
         stacked.value = convertFormulaAbsolute({
           value: stacked?.value,
@@ -435,7 +444,10 @@ export class Table implements UserTable {
     return value;
   }
 
-  public getById(id: Id) {
+  public getById(id: NullableId) {
+    if (id == null) {
+      return undefined;
+    }
     return this.data[id];
   }
 
@@ -716,7 +728,9 @@ export class Table implements UserTable {
         const idMatrix = history.lostRows[address];
         idMatrix.map((ids) =>
           ids.forEach((id) => {
-            delete this.data[id];
+            if (id != null) {
+              delete this.data[id];
+            }
           })
         );
       });
@@ -754,9 +768,10 @@ export class Table implements UserTable {
       matrix.push(ids);
       for (let x = left; x <= right; x++) {
         const id = this.idMatrix[y]?.[x];
-        if (id) {
-          ids.push(id);
+        if (id == null) {
+          continue;
         }
+        ids.push(id);
       }
     }
     return matrix;
@@ -805,37 +820,64 @@ export class Table implements UserTable {
   public move({
     src,
     dst,
+    historicize = true,
+    operator = "SYSTEM",
     reflection = {},
   }: MoveProps) {
-    const changedAt = new Date();
+    const matrixNew = this.getNewIdMatrix(src);
     const matrixFrom = this.getIdMatrixFromArea(src);
     const matrixTo = this.getIdMatrixFromArea(dst);
-    const matrixNew = this.getNewIdMatrix(src);
-    putMatrix(this.idMatrix, matrixNew, src);
-    matrixFrom.forEach((ids) => {
-      ids
-        .map(this.getById.bind(this))
-        .filter((c) => c)
-        .forEach((cell) => this.setChangedAt(cell, changedAt));
-    });
-    const lostRows = putMatrix(this.idMatrix, matrixFrom, dst);
-    this.pushHistory({
-      applyed: true,
-      operation: "MOVE",
-      reflection,
+    putMatrix(
+      this.idMatrix, 
+      matrixNew, 
+      src,
+      (_, id) => {
+        const cell = this.data[id];
+        if (operator === 'USER' && isProtected(cell?.protection, Prevention.MoveFrom)) {
+          return false;
+        }
+        return true;
+      }
+    );
+    const lostRows = putMatrix(
+      this.idMatrix,
       matrixFrom,
-      matrixTo,
-      matrixNew,
-      pointFrom: { y: src.top, x: src.left },
-      pointTo: { y: dst.top, x: dst.left },
-      lostRows,
-    });
+      dst,
+      (srcId, dstId) => {
+        const srcCell = this.data[srcId];
+        const dstCell = this.data[dstId];
+        if (operator === 'USER' && (
+            isProtected(srcCell?.protection, Prevention.MoveFrom) ||
+            isProtected(dstCell?.protection, Prevention.MoveTo)
+        )) {
+          return false;
+        }
+        if (srcCell != null) {
+          this.setChangedAt(srcCell, new Date())
+        }
+        return true;
+      }
+    );
+    if (historicize) {
+      this.pushHistory({
+        applyed: true,
+        operation: "MOVE",
+        reflection,
+        src,
+        dst,
+        matrixFrom,
+        matrixTo,
+        matrixNew,
+        lostRows,
+      });
+    }
     return this.shallowCopy({ copyCache: false });
   }
 
   public copy({
     src,
     dst,
+    operator = "SYSTEM",
     reflection = {},
   }: MoveProps) {
     const { height: maxHeight, width: maxWidth } = areaShape({
@@ -881,38 +923,67 @@ export class Table implements UserTable {
         };
       }
     }
-    return this.update({ diff, partial: false, reflection });
+    return this.update({ 
+      diff, 
+      partial: false,
+      operator,
+      reflection,
+    });
   }
 
   private _update({
     diff,
     partial = true,
     updateChangedAt = true,
+    ignoreFields = ['labeler', 'protection'],
+    operator = 'SYSTEM',
   }: {
     diff: CellsByAddressType;
     partial?: boolean;
     updateChangedAt?: boolean;
+    ignoreFields?: (keyof CellType)[];
+    operator?: OperatorType;
   }) {
     const diffBefore: CellsByIdType = {};
     const diffAfter: CellsByIdType = {};
     const changedAt = new Date();
+
     Object.keys(diff).forEach((address) => {
       const cell = { ...diff[address] };
-      if (updateChangedAt) {
-        this.setChangedAt(cell, changedAt);
+      if (operator === 'USER' && isProtected(cell?.protection, Update)) {
+        return;
       }
+
       cell.value = convertFormulaAbsolute({
         value: cell.value,
         table: this,
       });
       const point = a2p(address);
       const id = this.getId(point);
-
+      const current = this.data[id];
+      ignoreFields.forEach((key) => {
+        cell[key] = current?.[key];
+      });
+      if (operator === 'USER' && isProtected(current?.protection, Prevention.Write)) {
+        cell.value = current?.value;
+      }
+      if (operator === 'USER' && isProtected(current?.protection, Prevention.Style)) {
+        cell.style = current?.style;
+        cell.justifyContent = current?.justifyContent;
+        cell.alignItems = current?.alignItems;
+      }
+      if (operator === 'USER' && isProtected(current?.protection, Prevention.Resize)) {
+        cell.width = current?.width;
+        cell.height = current?.height;
+      }
+      if (updateChangedAt) {
+        this.setChangedAt(cell, changedAt);
+      }
       // must not partial
       diffBefore[id] = this.getByPoint(point);
       diffAfter[id] = cell;
       if (partial) {
-        this.data[id] = { ...this.data[id], ...cell };
+        this.data[id] = { ...current, ...cell };
       } else {
         this.data[id] = cell;
       }
@@ -928,28 +999,34 @@ export class Table implements UserTable {
     diff,
     partial = true,
     updateChangedAt = true,
+    historicize = true,
+    operator = "SYSTEM",
     reflection = {},
   }: {
     diff: CellsByAddressType;
     partial?: boolean;
     updateChangedAt?: boolean;
+    historicize?: boolean;
+    operator?: OperatorType;
     reflection?: StoreReflectionType;
   }) {
     const { diffBefore, diffAfter } = this._update({
       diff,
       partial,
+      operator,
       updateChangedAt,
     });
-
-    this.pushHistory({
-      applyed: true,
-      operation: "UPDATE",
-      reflection,
-      diffBefore,
-      diffAfter,
-      partial,
-    });
-
+    
+    if (historicize) {
+      this.pushHistory({
+        applyed: true,
+        operation: "UPDATE",
+        reflection,
+        diffBefore,
+        diffAfter,
+        partial,
+      });
+    }
     return this.shallowCopy({ copyCache: true });
   }
 
@@ -957,11 +1034,15 @@ export class Table implements UserTable {
     point,
     matrix,
     updateChangedAt = true,
+    historicize = true,
+    operator = "SYSTEM",
     reflection = {},
   }: {
     point: PointType;
     matrix: MatrixType<string>;
     updateChangedAt?: boolean;
+    historicize?: boolean;
+    operator?: OperatorType;
     reflection?: StoreReflectionType;
   }) {
     const { y: baseY, x: baseX } = point;
@@ -984,6 +1065,8 @@ export class Table implements UserTable {
       diff,
       partial: true,
       updateChangedAt,
+      historicize,
+      operator,
       reflection,
     });
   }
@@ -992,17 +1075,23 @@ export class Table implements UserTable {
     point,
     value,
     updateChangedAt = true,
+    historicize = true,
+    operator = "SYSTEM",
     reflection = {},
   }: {
     point: PointType;
     value: string;
     updateChangedAt?: boolean;
+    historicize?: boolean;
+    operator?: OperatorType;
     reflection?: StoreReflectionType;
   }) {
     return this.writeMatrix({
       point,
       matrix: [[value]],
       updateChangedAt,
+      historicize,
+      operator,
       reflection,
     });
   }
@@ -1014,6 +1103,7 @@ export class Table implements UserTable {
     diff,
     partial,
     updateChangedAt,
+    operator = "SYSTEM",
     reflection = {},
   }: {
     y: number;
@@ -1022,6 +1112,7 @@ export class Table implements UserTable {
     diff: CellsByAddressType;
     partial?: boolean;
     updateChangedAt?: boolean;
+    operator?: OperatorType;
     reflection?: StoreReflectionType;
   }) {
     const returned = this.addRows({
@@ -1033,7 +1124,7 @@ export class Table implements UserTable {
 
     Object.assign(
       this.lastHistory!,
-      this._update({ diff, partial, updateChangedAt }),
+      this._update({ diff, partial, updateChangedAt, operator }),
       { partial }
     );
 
@@ -1044,11 +1135,13 @@ export class Table implements UserTable {
     y,
     numRows,
     baseY,
+    operator = "SYSTEM",
     reflection = {},
   }: {
     y: number;
     numRows: number;
     baseY: number;
+    operator?: OperatorType;
     reflection?: StoreReflectionType;
   }) {
     if (
@@ -1088,12 +1181,21 @@ export class Table implements UserTable {
   public removeRows({
     y,
     numRows,
+    operator = "SYSTEM",
     reflection = {},
   }: {
     y: number;
     numRows: number;
+    operator?: OperatorType;
     reflection?: StoreReflectionType;
   }) {
+    for (let i = y; i < y + numRows; i++) {
+      const cell = this.getByPoint({ y: i, x: 0 });
+      if (operator === "USER" && isProtected(cell?.protection, Prevention.DeleteRow)) {
+        console.warn(`Cannot delete row ${i}.`);
+        return this;
+      }
+    }
     if (
       this.minNumRows !== -1 &&
       this.getNumRows() - numRows < this.minNumRows
@@ -1101,6 +1203,7 @@ export class Table implements UserTable {
       console.error(`At least ${this.minNumRows} row(s) are required.`);
       return this;
     }
+
     const rows = this.idMatrix.splice(y, numRows);
     this.area.bottom -= numRows;
     this.pushHistory({
@@ -1194,12 +1297,22 @@ export class Table implements UserTable {
   public removeCols({
     x,
     numCols,
+    operator = "SYSTEM",
     reflection = {},
   }: {
     x: number;
     numCols: number;
+    operator?: OperatorType;
     reflection?: StoreReflectionType;
   }) {
+    for (let i = x; i < x + numCols; i++) {
+      const cell = this.getByPoint({ y: 0, x: i });
+      if (operator === "USER" && isProtected(cell?.protection, Prevention.DeleteCol)) {
+        console.warn(`Cannot delete col ${i}.`);
+        return this;
+      }
+    }
+
     if (
       this.minNumCols !== -1 &&
       this.getNumCols() - numCols < this.minNumCols
@@ -1357,8 +1470,8 @@ export class Table implements UserTable {
         break;
       }
       case "MOVE": {
-        const { y: yFrom, x: xFrom } = history.pointFrom;
-        const { y: yTo, x: xTo } = history.pointTo;
+        const { top: yFrom, left: xFrom } = history.src;
+        const { top: yTo, left: xTo } = history.dst;
         const { height: rows, width: cols } = matrixShape({
           matrix: history.matrixFrom,
           base: -1,
@@ -1433,24 +1546,8 @@ export class Table implements UserTable {
         break;
       }
       case "MOVE": {
-        const { y: yFrom, x: xFrom } = history.pointFrom;
-        const { y: yTo, x: xTo } = history.pointTo;
-        const { height: rows, width: cols } = matrixShape({
-          matrix: history.matrixFrom,
-          base: -1,
-        });
-        putMatrix(this.idMatrix, history.matrixNew, {
-          top: yFrom,
-          left: xFrom,
-          bottom: yFrom + rows,
-          right: xFrom + cols,
-        });
-        putMatrix(this.idMatrix, history.matrixFrom, {
-          top: yTo,
-          left: xTo,
-          bottom: yTo + rows,
-          right: xTo + cols,
-        });
+        const {src, dst} = history;
+        this.move({src, dst, operator: "USER", historicize: false}); 
       }
     }
     return {

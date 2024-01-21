@@ -1,8 +1,8 @@
 import React from "react";
 import { Editor } from "./Editor";
 import { Cell } from "./Cell";
-import { HeaderTopCell } from "./HeaderTopCell";
-import { HeaderLeftCell } from "./HeaderLeftCell";
+import { HorizontalHeaderCell } from "./HorizontalHeaderCell";
+import { VerticalHeaderCell } from "./VerticalHeaderCell";
 import { SearchBox } from "./SearchBox";
 
 import { Context } from "../store";
@@ -105,7 +105,7 @@ export const Tabular = ({ tableRef }: Props) => {
                   }}
                 ></th>
                 <th className="gs-adjuster" style={{ width: virtualized?.adjuster?.left }}></th>
-                { virtualized?.xs?.map?.((x) => <HeaderTopCell x={x} key={x} />) }
+                { virtualized?.xs?.map?.((x) => <HorizontalHeaderCell x={x} key={x} />) }
                 <th className="gs-adjuster" style={{ width: virtualized?.adjuster?.right }}></th>
               </tr>
             </thead>
@@ -119,7 +119,7 @@ export const Tabular = ({ tableRef }: Props) => {
               {
                 virtualized?.ys?.map((y, i) => {
                   return (<tr key={y}>
-                    <HeaderLeftCell y={y} />
+                    <VerticalHeaderCell y={y} />
                     <td className="gs-adjuster" />
                     { virtualized?.xs?.map((x) => <Cell key={x} y={y} x={x} />) }
                     <td className="gs-adjuster" />

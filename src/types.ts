@@ -50,6 +50,7 @@ export type CellType<Custom = any> = {
   renderer?: string;
   parser?: string;
   custom?: Custom;
+  protection?: number;
   changedAt?: Date;
 };
 
@@ -102,8 +103,8 @@ export type StoreType = {
   copyingZone: ZoneType;
   selectingZone: ZoneType;
   autofillDraggingTo: PointType | null;
-  headerTopSelecting: boolean;
-  headerLeftSelecting: boolean;
+  verticalHeaderSelecting: boolean;
+  horizontalheaderSelecting: boolean;
   editingCell: string;
   editorRect: RectType;
   resizingRect: RectType;
@@ -136,8 +137,11 @@ export type Props = {
 };
 
 export type Id = string;
+export type NullableId = Id | undefined;
 export type Ids = Id[];
+export type NullableIds = NullableId[];
 export type IdMatrix = Ids[];
+export type NullableIdMatrix = NullableIds[];
 export type Address = string;
 
 export type MatricesByAddress<T> = { [origin: Address]: MatrixType<T> };
@@ -162,12 +166,12 @@ export type HistoryMoveType = {
   operation: "MOVE";
   applyed: boolean;
   reflection?: StoreReflectionType;
-  matrixFrom: IdMatrix;
-  matrixTo: IdMatrix;
-  matrixNew: IdMatrix;
-  pointFrom: PointType;
-  pointTo: PointType;
-  lostRows: MatricesByAddress<Id>;
+  src: AreaType;
+  dst: AreaType;
+  matrixFrom: NullableIdMatrix;
+  matrixTo: NullableIdMatrix;
+  matrixNew: NullableIdMatrix;
+  lostRows: MatricesByAddress<NullableId>;
 };
 
 export type HistoryAddRowsType = {
@@ -225,3 +229,5 @@ export type Virtualization = {
   ys: number[];
   adjuster: AreaType;
 };
+export type OperatorType = 'USER' | 'SYSTEM';
+

@@ -37,10 +37,9 @@ export const Cell: React.FC<Props> = React.memo(
       editingCell,
       choosing,
       selectingZone,
-      headerTopSelecting,
-      headerLeftSelecting,
+      verticalHeaderSelecting,
+      horizontalheaderSelecting,
       copyingZone,
-      cutting,
       searchQuery,
       matchingCells,
       matchingCellIndex,
@@ -179,11 +178,11 @@ export const Cell: React.FC<Props> = React.memo(
             }
             return false;
           }
-          if (headerTopSelecting) {
+          if (verticalHeaderSelecting) {
             dispatch(drag({ y: table.getNumRows(), x }));
             return false;
           }
-          if (headerLeftSelecting) {
+          if (horizontalheaderSelecting) {
             dispatch(drag({ y, x: table.getNumCols() }));
             return false;
           }

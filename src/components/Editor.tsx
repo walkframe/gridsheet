@@ -22,6 +22,7 @@ import {
 import { Context } from "../store";
 import { areaToZone } from "../lib/structs";
 import {DEFAULT_HEIGHT} from "../constants";
+import { Prevention, isProtected } from "../lib/protection";
 
 
 export const Editor: React.FC = () => {
@@ -310,6 +311,10 @@ export const Editor: React.FC = () => {
     if (e.ctrlKey || e.metaKey) {
       return false;
     }
+    if (isProtected(cell?.protection, Prevention.Write)) {
+      console.warn("This cell is protected from writing.");
+      return false;
+    }
     dispatch(setEditingCell(address));
     return false;
   };
@@ -334,6 +339,10 @@ export const Editor: React.FC = () => {
           e.currentTarget.value = "";
         }}
         onDoubleClick={(e) => {
+          if (isProtected(cell?.protection, Prevention.Write)) {
+            console.warn("This cell is protected from writing.");
+            return;
+          }
           const input = e.currentTarget;
           if (!editing) {
             input.value = table.stringify({ y, x }, value);

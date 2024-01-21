@@ -1,10 +1,12 @@
 export { GridSheet } from "./components/GridSheet";
 export { createTableRef } from "./components/Tabular";
-export { Renderer, RendererMixinType } from "./renderers/core";
-export { Parser, ParserMixinType } from "./parsers/core";
+export { Renderer } from "./renderers/core";
+export type { RendererMixinType } from "./renderers/core";
+export { Parser } from "./parsers/core";
+export type { ParserMixinType } from "./parsers/core";
 export { oa2aa, aa2oa, generateInitial, generateInitialSimple } from "./lib/structs";
 export { x2c, c2x, y2r, r2y, p2a, a2p } from "./lib/converters";
-export {
+export type {
   MatrixType,
   CellType,
   FeedbackType,

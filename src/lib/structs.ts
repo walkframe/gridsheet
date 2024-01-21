@@ -197,7 +197,8 @@ export const aa2oa = (
 export const putMatrix = <T = any>(
   dst: T[][],
   src: T[][],
-  dstArea: AreaType
+  dstArea: AreaType,
+  filter: (newValue: T, currentValue: T) => boolean = () => true,
 ) => {
   const lostRows: MatricesByAddress<T> = {};
   const { top, left, bottom, right } = dstArea;
@@ -211,7 +212,9 @@ export const putMatrix = <T = any>(
       const value = src[y - top][x - left];
       // -1 means excluding headers
       if (y < dstNumRows - 1 && x < dstNumCols - 1) {
-        dst[y][x] = value;
+        if (filter(value, dst[y][x])) {
+          dst[y][x] = value;
+        }
         continue;
       }
       if (lostRow.length === 0) {
