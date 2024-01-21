@@ -22,6 +22,7 @@ const Sheet = ({ numRows, numCols, defaultWidth }: Props) => {
           labelers: {
             raw: (n) => String(n),
           },
+          sheetResize: "both",
         }}
         initial={generateInitial({
           cells: {
