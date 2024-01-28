@@ -13,7 +13,7 @@ import {
 import { areaToZone, zoneShape, zoneToArea } from "../lib/structs";
 
 import { Context } from "../store";
-import { Prevention, isProtected } from "../lib/protection";
+import * as protection from "../lib/protection";
 
 export const ContextMenu: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);
@@ -116,7 +116,7 @@ export const ContextMenu: React.FC = () => {
             <li
               className={
                 (table.maxNumRows !== -1 && tableHeight + height > table.maxNumRows) ||
-                isProtected(selectingTopCell?.protection, Prevention.AddRowAbove)
+                protection.isProtected(selectingTopCell?.protection, protection.AddRowAbove)
                   ? "gs-disabled"
                   : "gs-enabled"
               }
@@ -142,7 +142,7 @@ export const ContextMenu: React.FC = () => {
             <li
               className={
                 (table.maxNumRows !== -1 && tableHeight + height > table.maxNumRows) ||
-                isProtected(selectingBottomCell?.protection, Prevention.AddRowBelow)
+                protection.isProtected(selectingBottomCell?.protection, protection.AddRowBelow)
                   ? "gs-disabled"
                   : "gs-enabled"
               }
@@ -175,7 +175,7 @@ export const ContextMenu: React.FC = () => {
             <li
               className={
                 (table.maxNumCols !== -1 && tableWidth + width > table.maxNumCols) ||
-                isProtected(selectingLeftCell?.protection, Prevention.AddColLeft)
+                protection.isProtected(selectingLeftCell?.protection, protection.AddColLeft)
                   ? "gs-disabled"
                   : "gs-enabled"
               }
@@ -204,7 +204,7 @@ export const ContextMenu: React.FC = () => {
             <li
               className={
                 (table.maxNumCols !== -1 && tableWidth + width > table.maxNumCols) ||
-                isProtected(selectingRightCell?.protection, Prevention.AddColRight)
+                protection.isProtected(selectingRightCell?.protection, protection.AddColRight)
                   ? "gs-disabled"
                   : "gs-enabled"
               }
@@ -237,7 +237,7 @@ export const ContextMenu: React.FC = () => {
             <li
               className={
                 (table.minNumRows !== -1 && tableHeight - height < table.minNumRows) ||
-                isProtected(selectingTopCell?.protection, Prevention.DeleteRow)
+                protection.isProtected(selectingTopCell?.protection, protection.DeleteRow)
                   ? "gs-disabled"
                   : "gs-enabled"
               }
@@ -266,7 +266,7 @@ export const ContextMenu: React.FC = () => {
             <li
               className={
                 (table.minNumCols !== -1 && tableWidth - width < table.minNumCols) ||
-                isProtected(selectingRightCell?.protection, Prevention.DeleteCol)
+                protection.isProtected(selectingRightCell?.protection, protection.DeleteCol)
                   ? "gs-disabled"
                   : "gs-enabled"
               }

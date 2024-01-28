@@ -33,7 +33,7 @@ import { solveFormula } from "../formula/solver";
 
 import {DEFAULT_HEIGHT, DEFAULT_WIDTH, HISTORY_LIMIT, OVERSCAN_X, OVERSCAN_Y} from "../constants";
 import { shouldTracking } from "../store/helpers";
-import { Prevention, Update, isProtected } from "./protection";
+import * as protection from "./protection";
 
 type Props = {
   numRows?: number;
@@ -833,7 +833,7 @@ export class Table implements UserTable {
       src,
       (_, id) => {
         const cell = this.data[id];
-        if (operator === 'USER' && isProtected(cell?.protection, Prevention.MoveFrom)) {
+        if (operator === 'USER' && protection.isProtected(cell?.protection, protection.MoveFrom)) {
           return false;
         }
         return true;
@@ -847,8 +847,8 @@ export class Table implements UserTable {
         const srcCell = this.data[srcId];
         const dstCell = this.data[dstId];
         if (operator === 'USER' && (
-            isProtected(srcCell?.protection, Prevention.MoveFrom) ||
-            isProtected(dstCell?.protection, Prevention.MoveTo)
+          protection.isProtected(srcCell?.protection, protection.MoveFrom) ||
+          protection.isProtected(dstCell?.protection, protection.MoveTo)
         )) {
           return false;
         }
@@ -908,6 +908,7 @@ export class Table implements UserTable {
             y: topFrom + (i % maxHeight),
             x: leftFrom + (j % maxWidth),
           }),
+          protection: 0, // Is this okay?
         };
         const value = convertFormulaAbsolute({
           value: cell?.value,
@@ -950,7 +951,7 @@ export class Table implements UserTable {
 
     Object.keys(diff).forEach((address) => {
       const cell = { ...diff[address] };
-      if (operator === 'USER' && isProtected(cell?.protection, Update)) {
+      if (operator === 'USER' && protection.isProtected(cell?.protection, protection.Update)) {
         return;
       }
 
@@ -964,17 +965,23 @@ export class Table implements UserTable {
       ignoreFields.forEach((key) => {
         cell[key] = current?.[key];
       });
-      if (operator === 'USER' && isProtected(current?.protection, Prevention.Write)) {
+      if (operator === 'USER' && protection.isProtected(current?.protection, protection.Write)) {
         cell.value = current?.value;
       }
-      if (operator === 'USER' && isProtected(current?.protection, Prevention.Style)) {
+      if (operator === 'USER' && protection.isProtected(current?.protection, protection.Style)) {
         cell.style = current?.style;
         cell.justifyContent = current?.justifyContent;
         cell.alignItems = current?.alignItems;
       }
-      if (operator === 'USER' && isProtected(current?.protection, Prevention.Resize)) {
+      if (operator === 'USER' && protection.isProtected(current?.protection, protection.Resize)) {
         cell.width = current?.width;
         cell.height = current?.height;
+      }
+      if (operator === 'USER' && protection.isProtected(current?.protection, protection.SetRenderer)) {
+        cell.renderer = current?.renderer;
+      }
+      if (operator === 'USER' && protection.isProtected(current?.protection, protection.SetParser)) {
+        cell.parser = current?.parser;
       }
       if (updateChangedAt) {
         this.setChangedAt(cell, changedAt);
@@ -1191,7 +1198,7 @@ export class Table implements UserTable {
   }) {
     for (let i = y; i < y + numRows; i++) {
       const cell = this.getByPoint({ y: i, x: 0 });
-      if (operator === "USER" && isProtected(cell?.protection, Prevention.DeleteRow)) {
+      if (operator === "USER" && protection.isProtected(cell?.protection, protection.DeleteRow)) {
         console.warn(`Cannot delete row ${i}.`);
         return this;
       }
@@ -1307,7 +1314,7 @@ export class Table implements UserTable {
   }) {
     for (let i = x; i < x + numCols; i++) {
       const cell = this.getByPoint({ y: 0, x: i });
-      if (operator === "USER" && isProtected(cell?.protection, Prevention.DeleteCol)) {
+      if (operator === "USER" && protection.isProtected(cell?.protection, protection.DeleteCol)) {
         console.warn(`Cannot delete col ${i}.`);
         return this;
       }

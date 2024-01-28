@@ -1,7 +1,7 @@
 import React from "react";
 import { ComponentStory } from "@storybook/react";
 import { generateInitial, GridSheet } from "../../../src";
-import { AddCol, Prevention, ReadOnly } from "../../../src/lib/protection";
+import * as protection from "../../../src/lib/protection";
 
 export default {
   title: "Basic",
@@ -25,23 +25,27 @@ const Sheet = ({ numRows, numCols, defaultWidth }: Props) => {
           cells: {
             default: { width: defaultWidth },
             4: {
-              protection: Prevention.DeleteRow,
+              protection: protection.DeleteRow,
             },
             1: {
-              protection: Prevention.Resize,
-            },
-            "A:B": {
-              protection: AddCol | Prevention.DeleteCol,
-            },
-            A: {
-              protection: Prevention.Resize,
-            },
-            B: {
+              protection: protection.Resize,
               style: { backgroundColor: "#eeeeee" },
             },
+            "A:B": {
+              protection: protection.AddCol | protection.DeleteCol,
+              style: { backgroundColor: "#dddddd" },
+            },
+            A: {
+              protection: protection.Resize,
+              style: { backgroundColor: "#eeeeee" },
+            },
+            C: {
+              style: {backgroundColor: "#ffffff"}
+            },
             B2: {
-              value: "b2",
-              protection: ReadOnly,
+              value: "READONLY",
+              protection: protection.ReadOnly,
+              style: { backgroundColor: "#aaaaaa" },
             }
           },
           ensured: { numRows, numCols },

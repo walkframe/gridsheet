@@ -10,7 +10,7 @@ import {
   setResizingPositionX,
 } from "../store/actions";
 import { DUMMY_IMG, DEFAULT_WIDTH } from "../constants";
-import { Prevention, isProtected } from "../lib/protection";
+import * as protection from "../lib/protection";
 
 type Props = {
   x: number;
@@ -106,7 +106,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(
           >
             {col?.labeler ? table.getLabel(col.labeler, x) : colId}
             <div
-              className={`gs-resizer ${isProtected(col?.protection, Prevention.Resize) ? "gs-protected" : ""}`}
+              className={`gs-resizer ${protection.isProtected(col?.protection, protection.Resize) ? "gs-protected" : ""}`}
               style={{ height: headerHeight }}
               onMouseDown={(e) => {
                 dispatch(setResizingPositionX([x, e.clientX, e.clientX]));

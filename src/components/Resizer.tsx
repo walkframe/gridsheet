@@ -75,6 +75,7 @@ export const Resizer: React.FC = React.memo(() => {
     const newTable = table.update({
       diff,
       partial: true,
+      operator: "USER",
       reflection: { selectingZone },
     });
     dispatch(updateTable(newTable));
