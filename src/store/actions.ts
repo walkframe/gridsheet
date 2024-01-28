@@ -22,7 +22,7 @@ import { tsv2matrix, p2a } from "../lib/converters";
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
 import { initSearchStatement, restrictPoints } from "./helpers";
 import { smartScroll } from "../lib/virtualization";
-import * as protection from "../lib/protection";
+import * as prevention from "../lib/prevention";
 
 const actions: { [s: string]: CoreAction<any> } = {};
 
@@ -526,7 +526,7 @@ class ClearAction<T extends null> extends CoreAction<T> {
       for (let x = left; x <= right; x++) {
         const cell = table.getByPoint({ y, x });
         const address = p2a({ y, x });
-        if (protection.isProtected(cell?.protection, protection.Write)) {
+        if (prevention.isPrevented(cell?.prevention, prevention.Write)) {
           continue;
         }
         if (cell?.value != null) {

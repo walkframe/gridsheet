@@ -1,7 +1,7 @@
 import React from "react";
 import { ComponentStory } from "@storybook/react";
 import { generateInitial, GridSheet } from "../../../src";
-import * as protection from "../../../src/lib/protection";
+import * as prevention from "../../../src/lib/prevention";
 
 export default {
   title: "Basic",
@@ -25,18 +25,18 @@ const Sheet = ({ numRows, numCols, defaultWidth }: Props) => {
           cells: {
             default: { width: defaultWidth },
             4: {
-              protection: protection.DeleteRow,
+              prevention: prevention.DeleteRow,
             },
             1: {
-              protection: protection.Resize,
+              prevention: prevention.Resize,
               style: { backgroundColor: "#eeeeee" },
             },
             "A:B": {
-              protection: protection.AddCol | protection.DeleteCol,
+              prevention: prevention.AddCol | prevention.DeleteCol,
               style: { backgroundColor: "#dddddd" },
             },
             A: {
-              protection: protection.Resize,
+              prevention: prevention.Resize,
               style: { backgroundColor: "#eeeeee" },
             },
             C: {
@@ -44,7 +44,7 @@ const Sheet = ({ numRows, numCols, defaultWidth }: Props) => {
             },
             B2: {
               value: "READONLY",
-              protection: protection.ReadOnly,
+              prevention: prevention.ReadOnly,
               style: { backgroundColor: "#aaaaaa" },
             }
           },
@@ -57,5 +57,5 @@ const Sheet = ({ numRows, numCols, defaultWidth }: Props) => {
 
 const Template: ComponentStory<typeof Sheet> = (args) => <Sheet {...args} />;
 
-export const Protection = Template.bind({});
-Protection.args = { numRows: 50, numCols: 20, defaultWidth: 50 };
+export const Prevention = Template.bind({});
+Prevention.args = { numRows: 50, numCols: 20, defaultWidth: 50 };

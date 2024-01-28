@@ -50,7 +50,7 @@ export type CellType<Custom = any> = {
   renderer?: string;
   parser?: string;
   custom?: Custom;
-  protection?: number;
+  prevention?: Prevention;
   changedAt?: Date;
 };
 
@@ -226,3 +226,4 @@ export type Virtualization = {
 };
 export type OperatorType = 'USER' | 'SYSTEM';
 
+export type Prevention = number;

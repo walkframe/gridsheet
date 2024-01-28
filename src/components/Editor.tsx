@@ -22,7 +22,7 @@ import {
 import { Context } from "../store";
 import { areaToZone } from "../lib/structs";
 import {DEFAULT_HEIGHT} from "../constants";
-import * as protection from "../lib/protection";
+import * as prevention from "../lib/prevention";
 
 
 export const Editor: React.FC = () => {
@@ -311,7 +311,7 @@ export const Editor: React.FC = () => {
     if (e.ctrlKey || e.metaKey) {
       return false;
     }
-    if (protection.isProtected(cell?.protection, protection.Write)) {
+    if (prevention.isPrevented(cell?.prevention, prevention.Write)) {
       console.warn("This cell is protected from writing.");
       return false;
     }
@@ -339,7 +339,7 @@ export const Editor: React.FC = () => {
           e.currentTarget.value = "";
         }}
         onDoubleClick={(e) => {
-          if (protection.isProtected(cell?.protection, protection.Write)) {
+          if (prevention.isPrevented(cell?.prevention, prevention.Write)) {
             console.warn("This cell is protected from writing.");
             return;
           }

@@ -30,7 +30,7 @@ import { solveFormula } from "../formula/solver";
 
 import {DEFAULT_HEIGHT, DEFAULT_WIDTH, HISTORY_LIMIT} from "../constants";
 import { shouldTracking } from "../store/helpers";
-import * as protection from "./protection";
+import * as prevention from "./prevention";
 
 type Props = {
   numRows?: number;
@@ -272,7 +272,7 @@ export class Table implements UserTable {
             ...origin?.style,
             ...data?.style,
           },
-          protection: (origin?.protection || 0) | (data?.protection || 0),
+          prevention: (origin?.prevention || 0) | (data?.prevention || 0),
         };
       });
     });
@@ -297,7 +297,7 @@ export class Table implements UserTable {
             ...colDefault?.style,
             ...cell?.style,
           },
-          protection: (common?.protection || 0) | (rowDefault?.protection || 0) | (colDefault?.protection || 0) | (cell?.protection || 0),
+          prevention: (common?.prevention || 0) | (rowDefault?.prevention || 0) | (colDefault?.prevention || 0) | (cell?.prevention || 0),
         } as CellType;
         stacked.value = convertFormulaAbsolute({
           value: stacked?.value,
@@ -827,7 +827,7 @@ export class Table implements UserTable {
       src,
       (_, id) => {
         const cell = this.data[id];
-        if (operator === 'USER' && protection.isProtected(cell?.protection, protection.MoveFrom)) {
+        if (operator === 'USER' && prevention.isPrevented(cell?.prevention, prevention.MoveFrom)) {
           return false;
         }
         return true;
@@ -841,8 +841,8 @@ export class Table implements UserTable {
         const srcCell = this.data[srcId];
         const dstCell = this.data[dstId];
         if (operator === 'USER' && (
-          protection.isProtected(srcCell?.protection, protection.MoveFrom) ||
-          protection.isProtected(dstCell?.protection, protection.MoveTo)
+          prevention.isPrevented(srcCell?.prevention, prevention.MoveFrom) ||
+          prevention.isPrevented(dstCell?.prevention, prevention.MoveTo)
         )) {
           return false;
         }
@@ -902,7 +902,7 @@ export class Table implements UserTable {
             y: topFrom + (i % maxHeight),
             x: leftFrom + (j % maxWidth),
           }),
-          protection: 0, // Is this okay?
+          prevention: 0, // Is this okay?
         };
         const value = convertFormulaAbsolute({
           value: cell?.value,
@@ -930,7 +930,7 @@ export class Table implements UserTable {
     diff,
     partial = true,
     updateChangedAt = true,
-    ignoreFields = ['labeler', 'protection'],
+    ignoreFields = ['labeler', 'prevention'],
     operator = 'SYSTEM',
   }: {
     diff: CellsByAddressType;
@@ -945,7 +945,7 @@ export class Table implements UserTable {
 
     Object.keys(diff).forEach((address) => {
       const cell = { ...diff[address] };
-      if (operator === 'USER' && protection.isProtected(cell?.protection, protection.Update)) {
+      if (operator === 'USER' && prevention.isPrevented(cell?.prevention, prevention.Update)) {
         return;
       }
 
@@ -959,22 +959,22 @@ export class Table implements UserTable {
       ignoreFields.forEach((key) => {
         cell[key] = current?.[key];
       });
-      if (operator === 'USER' && protection.isProtected(current?.protection, protection.Write)) {
+      if (operator === 'USER' && prevention.isPrevented(current?.prevention, prevention.Write)) {
         cell.value = current?.value;
       }
-      if (operator === 'USER' && protection.isProtected(current?.protection, protection.Style)) {
+      if (operator === 'USER' && prevention.isPrevented(current?.prevention, prevention.Style)) {
         cell.style = current?.style;
         cell.justifyContent = current?.justifyContent;
         cell.alignItems = current?.alignItems;
       }
-      if (operator === 'USER' && protection.isProtected(current?.protection, protection.Resize)) {
+      if (operator === 'USER' && prevention.isPrevented(current?.prevention, prevention.Resize)) {
         cell.width = current?.width;
         cell.height = current?.height;
       }
-      if (operator === 'USER' && protection.isProtected(current?.protection, protection.SetRenderer)) {
+      if (operator === 'USER' && prevention.isPrevented(current?.prevention, prevention.SetRenderer)) {
         cell.renderer = current?.renderer;
       }
-      if (operator === 'USER' && protection.isProtected(current?.protection, protection.SetParser)) {
+      if (operator === 'USER' && prevention.isPrevented(current?.prevention, prevention.SetParser)) {
         cell.parser = current?.parser;
       }
       if (updateChangedAt) {
@@ -1201,7 +1201,7 @@ export class Table implements UserTable {
     const ys: number[] = [];
     for (let i = y; i < y + numRows; i++) {
       const cell = this.getByPoint({ y: i, x: 0 });
-      if (operator === "USER" && protection.isProtected(cell?.protection, protection.DeleteRow)) {
+      if (operator === "USER" && prevention.isPrevented(cell?.prevention, prevention.DeleteRow)) {
         console.warn(`Cannot delete row ${i}.`);
         return this;
       }
@@ -1323,7 +1323,7 @@ export class Table implements UserTable {
     const xs: number[] = [];
     for (let i = x; i < x + numCols; i++) {
       const cell = this.getByPoint({ y: 0, x: i });
-      if (operator === "USER" && protection.isProtected(cell?.protection, protection.DeleteCol)) {
+      if (operator === "USER" && prevention.isPrevented(cell?.prevention, prevention.DeleteCol)) {
         console.warn(`Cannot delete col ${i}.`);
         continue;
       }

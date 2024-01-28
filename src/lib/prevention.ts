@@ -1,5 +1,4 @@
-
-export type Prevention = number;
+import { Prevention } from "../types";
 
 export const 
   DeleteRow: Prevention    = 0b00000000000000000000000000000000000000000000000000001, // 1
@@ -52,9 +51,9 @@ export const ReadOnly: Prevention = //
   Move
 ;
 
-export const isProtected = (protection: Prevention | undefined, flag: Prevention) => {
-  if (protection === undefined) {
+export const isPrevented = (prevention: Prevention | undefined, flag: Prevention) => {
+  if (prevention === undefined) {
     return false;
   }
-  return (protection & flag) === flag;
+  return (prevention & flag) === flag;
 };
