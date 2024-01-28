@@ -186,8 +186,8 @@ export type HistoryAddRowsType = {
   partial?: true;
 };
 
-export type HistoryRemoveRowsType = {
-  operation: "REMOVE_ROWS";
+export type HistoryDeleteRowsType = {
+  operation: "DELETE_ROWS";
   applyed: boolean;
   reflection?: StoreReflectionType;
   y: number;
@@ -207,8 +207,8 @@ export type HistoryAddColsType = {
   partial?: true;
 };
 
-export type HistoryRemoveColsType = {
-  operation: "REMOVE_COLS";
+export type HistoryDeleteColsType = {
+  operation: "DELETE_COLS";
   applyed: boolean;
   reflection?: StoreReflectionType;
   x: number;
@@ -220,9 +220,9 @@ export type HistoryType =
   | HistoryUpdateType
   | HistoryMoveType
   | HistoryAddRowsType
-  | HistoryRemoveRowsType
+  | HistoryDeleteRowsType
   | HistoryAddColsType
-  | HistoryRemoveColsType;
+  | HistoryDeleteColsType;
 
 export type Virtualization = {
   xs: number[];

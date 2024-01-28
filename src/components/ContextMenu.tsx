@@ -245,7 +245,7 @@ export const ContextMenu: React.FC = () => {
                 if (e.currentTarget.classList.contains("gs-disabled")) {
                   return;
                 }
-                const newTable = table.removeRows({
+                const newTable = table.deleteRows({
                   y: selectingTop,
                   numRows: height,
                   reflection: {
@@ -257,7 +257,7 @@ export const ContextMenu: React.FC = () => {
               }}
             >
               <div className="gs-menu-name">
-                Remove {height} row{height > 0 && "s"}
+                Delete {height} row{height > 0 && "s"}
               </div>
             </li>
           )}
@@ -271,7 +271,7 @@ export const ContextMenu: React.FC = () => {
                   : "gs-enabled"
               }
               onClick={(e) => {
-                const newTable = table.removeCols({
+                const newTable = table.deleteCols({
                   x: selectingLeft,
                   numCols: width,
                   reflection: {
@@ -283,7 +283,7 @@ export const ContextMenu: React.FC = () => {
               }}
             >
               <div className="gs-menu-name">
-                Remove {width} column{width > 0 && "s"}
+                Delete {width} column{width > 0 && "s"}
               </div>
             </li>
           )}

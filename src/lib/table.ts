@@ -148,7 +148,7 @@ export interface UserTable {
     baseY: number;
     reflection?: StoreReflectionType;
   }): UserTable;
-  removeRows(args: {
+  deleteRows(args: {
     y: number;
     numRows: number;
     reflection?: StoreReflectionType;
@@ -168,7 +168,7 @@ export interface UserTable {
     baseX: number;
     reflection?: StoreReflectionType;
   }): UserTable;
-  removeCols(args: {
+  deleteCols(args: {
     x: number;
     numCols: number;
     reflection?: StoreReflectionType;
@@ -714,8 +714,8 @@ export class Table implements UserTable {
 
   private cleanObsolete(history: HistoryType) {
     if (
-      history.operation === "REMOVE_ROWS" ||
-      history.operation === "REMOVE_COLS"
+      history.operation === "DELETE_ROWS" ||
+      history.operation === "DELETE_COLS"
     ) {
       history.idMatrix.forEach((ids) => {
         ids.forEach((id) => {
@@ -1185,7 +1185,7 @@ export class Table implements UserTable {
     });
     return this.shallowCopy({ copyCache: false });
   }
-  public removeRows({
+  public deleteRows({
     y,
     numRows,
     operator = "SYSTEM",
@@ -1215,7 +1215,7 @@ export class Table implements UserTable {
     this.area.bottom -= numRows;
     this.pushHistory({
       applyed: true,
-      operation: "REMOVE_ROWS",
+      operation: "DELETE_ROWS",
       reflection,
       y,
       numRows,
@@ -1301,7 +1301,7 @@ export class Table implements UserTable {
     });
     return this.shallowCopy({ copyCache: false });
   }
-  public removeCols({
+  public deleteCols({
     x,
     numCols,
     operator = "SYSTEM",
@@ -1336,7 +1336,7 @@ export class Table implements UserTable {
 
     this.pushHistory({
       applyed: true,
-      operation: "REMOVE_COLS",
+      operation: "DELETE_COLS",
       reflection,
       x,
       numCols,
@@ -1462,13 +1462,13 @@ export class Table implements UserTable {
         this.area.right -= width;
         break;
       }
-      case "REMOVE_ROWS": {
+      case "DELETE_ROWS": {
         const { height } = matrixShape({ matrix: history.idMatrix });
         this.idMatrix.splice(history.y, 0, ...history.idMatrix);
         this.area.bottom += height;
         break;
       }
-      case "REMOVE_COLS": {
+      case "DELETE_COLS": {
         const { width } = matrixShape({ matrix: history.idMatrix });
         this.idMatrix.forEach((row, i) => {
           row.splice(history.x, 0, ...history.idMatrix[i]);
@@ -1538,13 +1538,13 @@ export class Table implements UserTable {
         this.area.right += width;
         break;
       }
-      case "REMOVE_ROWS": {
+      case "DELETE_ROWS": {
         const { height } = matrixShape({ matrix: history.idMatrix });
         this.idMatrix.splice(history.y, height);
         this.area.bottom -= height;
         break;
       }
-      case "REMOVE_COLS": {
+      case "DELETE_COLS": {
         const { width } = matrixShape({ matrix: history.idMatrix });
         this.idMatrix.forEach((row) => {
           row.splice(history.x, width);
