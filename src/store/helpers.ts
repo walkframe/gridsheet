@@ -51,9 +51,9 @@ export const shouldTracking = (operation: string) => {
       return true;
     case "ADD_COLS":
       return true;
-    case "REMOVE_ROWS":
+    case "DELETE_ROWS":
       return true;
-    case "REMOVE_COLS":
+    case "DELETE_COLS":
       return true;
     case "MOVE":
       return true;

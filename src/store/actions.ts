@@ -22,6 +22,7 @@ import { tsv2matrix, p2a } from "../lib/converters";
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
 import { initSearchStatement, restrictPoints } from "./helpers";
 import { smartScroll } from "../lib/virtualization";
+import * as prevention from "../lib/prevention";
 
 const actions: { [s: string]: CoreAction<any> } = {};
 
@@ -283,6 +284,8 @@ export const cut = new CutAction().bind();
 class PasteAction<T extends { text: string }> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     const { choosing, copyingZone, selectingZone, cutting, table } = store;
+    const cell = table.getByPoint(choosing);
+
     let selectingArea = zoneToArea(selectingZone);
     const copyingArea = zoneToArea(copyingZone);
 
@@ -306,6 +309,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
       const newTable = table.move({
         src,
         dst,
+        operator: "USER",
         reflection: {
           selectingZone: areaToZone(dst),
           copyingZone,
@@ -354,6 +358,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
       newTable = table.copy({
         src: copyingArea,
         dst: selectingArea,
+        operator: "USER",
         reflection: {
           copyingZone,
           selectingZone,
@@ -378,8 +383,8 @@ class EscapeAction<T extends null> extends CoreAction<T> {
       copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
       cutting: false,
       editingCell: "",
-      headerTopSelecting: false,
-      headerLeftSelecting: false,
+      verticalHeaderSelecting: false,
+      horizontalheaderSelecting: false,
     };
   }
 }
@@ -401,8 +406,8 @@ class SelectAction<T extends ZoneType> extends CoreAction<T> {
     return {
       ...store,
       selectingZone: payload,
-      headerTopSelecting: false,
-      headerLeftSelecting: false,
+      verticalHeaderSelecting: false,
+      horizontalheaderSelecting: false,
     };
   }
 }
@@ -424,8 +429,8 @@ class SelectRowsAction<
       ...store,
       selectingZone,
       choosing: { y: start, x: 0 } as PointType,
-      headerLeftSelecting: true,
-      headerTopSelecting: false,
+      horizontalheaderSelecting: true,
+      verticalHeaderSelecting: false,
     };
   }
 }
@@ -448,8 +453,8 @@ class SelectColsAction<
       ...store,
       selectingZone,
       choosing: { y: 0, x: start } as PointType,
-      headerLeftSelecting: false,
-      headerTopSelecting: true,
+      horizontalheaderSelecting: false,
+      verticalHeaderSelecting: true,
     };
   }
 }
@@ -489,6 +494,7 @@ class WriteAction<T extends string> extends CoreAction<T> {
     const newTable = table.write({
       point: choosing,
       value: payload,
+      operator: "USER",
       reflection: {
         selectingZone,
         choosing,
@@ -515,14 +521,27 @@ class ClearAction<T extends null> extends CoreAction<T> {
     }
     const { top, left, bottom, right } = selectingArea;
     const diff: CellsByAddressType = {};
+    let diffCount = 0;
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        diff[p2a({ y, x })] = { value: null };
+        const cell = table.getByPoint({ y, x });
+        const address = p2a({ y, x });
+        if (prevention.isPrevented(cell?.prevention, prevention.Write)) {
+          continue;
+        }
+        if (cell?.value != null) {
+          diff[address] = { value: null };
+          diffCount++;
+        }
       }
+    }
+    if (diffCount === 0) {
+      return store;
     }
     const newTable = table.update({
       diff,
       partial: true,
+      operator: "USER",
       reflection: {
         selectingZone,
         choosing,

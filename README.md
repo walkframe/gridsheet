@@ -22,6 +22,7 @@
 - Context menu
 - External data manipulation
 - Autofill
+- Protection
 
 ## Installation
 
@@ -81,6 +82,9 @@ $ npm install @gridsheet/react-core --save
 
 - 0.12.x
   - Renamed from https://www.npmjs.com/package/react-gridsheet
+
+- 0.13.x
+  - Support Protection.
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet?ref=badge_large)

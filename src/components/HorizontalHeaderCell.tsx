@@ -10,12 +10,13 @@ import {
   setResizingPositionX,
 } from "../store/actions";
 import { DUMMY_IMG, DEFAULT_WIDTH } from "../constants";
+import * as prevention from "../lib/prevention";
 
 type Props = {
   x: number;
 };
 
-export const HeaderTopCell: React.FC<Props> = React.memo(
+export const HorizontalHeaderCell: React.FC<Props> = React.memo(
   ({ x }) => {
     const { store, dispatch } = React.useContext(Context);
     const colId = x2c(x);
@@ -25,7 +26,7 @@ export const HeaderTopCell: React.FC<Props> = React.memo(
       choosing,
       selectingZone,
       resizingRect,
-      headerTopSelecting,
+      verticalHeaderSelecting,
       headerHeight,
       editorRef,
       autofillDraggingTo,
@@ -39,7 +40,7 @@ export const HeaderTopCell: React.FC<Props> = React.memo(
         className={`gs-header gs-header-horizontal gs-header-top ${choosing.x === x ? "gs-choosing" : ""
         } ${
         between({ start: selectingZone.startX, end: selectingZone.endX }, x)
-          ? headerTopSelecting
+          ? verticalHeaderSelecting
             ? "gs-header-selecting"
             : "gs-selecting"
           : ""
@@ -105,7 +106,7 @@ export const HeaderTopCell: React.FC<Props> = React.memo(
           >
             {col?.labeler ? table.getLabel(col.labeler, x) : colId}
             <div
-              className="gs-resizer"
+              className={`gs-resizer ${prevention.isPrevented(col?.prevention, prevention.Resize) ? "gs-protected" : ""}`}
               style={{ height: headerHeight }}
               onMouseDown={(e) => {
                 dispatch(setResizingPositionX([x, e.clientX, e.clientX]));

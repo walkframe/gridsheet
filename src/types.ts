@@ -50,6 +50,7 @@ export type CellType<Custom = any> = {
   renderer?: string;
   parser?: string;
   custom?: Custom;
+  prevention?: Prevention;
   changedAt?: Date;
 };
 
@@ -102,8 +103,8 @@ export type StoreType = {
   copyingZone: ZoneType;
   selectingZone: ZoneType;
   autofillDraggingTo: PointType | null;
-  headerTopSelecting: boolean;
-  headerLeftSelecting: boolean;
+  verticalHeaderSelecting: boolean;
+  horizontalheaderSelecting: boolean;
   editingCell: string;
   editorRect: RectType;
   resizingRect: RectType;
@@ -162,11 +163,11 @@ export type HistoryMoveType = {
   operation: "MOVE";
   applyed: boolean;
   reflection?: StoreReflectionType;
-  matrixFrom: IdMatrix;
+  src: AreaType;
+  dst: AreaType;
+  matrixFrom:IdMatrix;
   matrixTo: IdMatrix;
   matrixNew: IdMatrix;
-  pointFrom: PointType;
-  pointTo: PointType;
   lostRows: MatricesByAddress<Id>;
 };
 
@@ -182,13 +183,12 @@ export type HistoryAddRowsType = {
   partial?: true;
 };
 
-export type HistoryRemoveRowsType = {
-  operation: "REMOVE_ROWS";
+export type HistoryDeleteRowsType = {
+  operation: "DELETE_ROWS";
   applyed: boolean;
   reflection?: StoreReflectionType;
-  y: number;
-  numRows: number;
-  idMatrix: IdMatrix;
+  ys: number[];
+  deleted: IdMatrix;
 };
 
 export type HistoryAddColsType = {
@@ -203,25 +203,27 @@ export type HistoryAddColsType = {
   partial?: true;
 };
 
-export type HistoryRemoveColsType = {
-  operation: "REMOVE_COLS";
+export type HistoryDeleteColsType = {
+  operation: "DELETE_COLS";
   applyed: boolean;
   reflection?: StoreReflectionType;
-  x: number;
-  numCols: number;
-  idMatrix: IdMatrix;
+  xs: number[];
+  deleted: IdMatrix;
 };
 
 export type HistoryType =
   | HistoryUpdateType
   | HistoryMoveType
   | HistoryAddRowsType
-  | HistoryRemoveRowsType
+  | HistoryDeleteRowsType
   | HistoryAddColsType
-  | HistoryRemoveColsType;
+  | HistoryDeleteColsType;
 
 export type Virtualization = {
   xs: number[];
   ys: number[];
   adjuster: AreaType;
 };
+export type OperatorType = 'USER' | 'SYSTEM';
+
+export type Prevention = number;

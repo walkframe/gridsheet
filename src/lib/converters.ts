@@ -1,4 +1,4 @@
-import { Address, PointType } from "../types";
+import type { Address, PointType } from "../types";
 import { DEFAULT_ALPHABET_CACHE_SIZE } from "../constants";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";

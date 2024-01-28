@@ -2,9 +2,9 @@ import React from "react";
 import {
   isEqual
 } from 'date-fns';
-import {AreaType, CellsByAddressType, CellType, PointType, StoreType} from "../types";
+import type {AreaType, CellsByAddressType, CellType, PointType, StoreType} from "../types";
 import { Table } from "../lib/table";
-import {areaShape, areaToZone, complementSelectingArea, concatAreas, createMatrix, zoneToArea} from "./structs";
+import {areaShape, areaToZone, complementSelectingArea, concatAreas, zoneToArea} from "./structs";
 import {p2a} from "./converters";
 import {convertFormulaAbsolute} from "../formula/evaluator";
 import {TimeDelta} from "./time";
@@ -46,7 +46,7 @@ export class Autofill {
       for (let i = 0; i < dstShape.height; i++) {
         const patterns = this.getChangePatterns(matrix[i]);
         for (let j = 0; j < dstShape.width; j++) {
-          const baseCell = matrix[i % srcShape.height][j % srcShape.width];
+          const baseCell = matrix[i % srcShape.height]?.[j % srcShape.width];
           const x = sign > 0 ? this.dst.left + j : this.dst.right - j;
           const px = sign > 0 ? j % srcShape.width : (srcShape.width - 1 - (j % srcShape.width)) % srcShape.width;
           diff[p2a({y: this.dst.top + i, x})] = {...baseCell, value: patterns[px].next().value};
@@ -56,10 +56,11 @@ export class Autofill {
       for (let i = 0; i < dstShape.width; i++) {
         const patterns = this.getChangePatterns(matrix.map((row) => row[i]));
         for (let j = 0; j < dstShape.height; j++) {
-          const baseCell = matrix[i % srcShape.height][j % srcShape.width];
+          const baseCell = matrix[j % srcShape.height]?.[i % srcShape.width];
           const y = sign > 0 ? this.dst.top + j : this.dst.bottom - j;
           const py = sign > 0 ? j % srcShape.height : (srcShape.height - 1 - (j % srcShape.height)) % srcShape.height;
-          diff[p2a({y, x: this.dst.left + i})] = {...baseCell, value: patterns[py].next().value};
+          const value = patterns[py].next().value;
+          diff[p2a({y, x: this.dst.left + i})] = {...baseCell, value};
         }
       }
     }

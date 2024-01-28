@@ -23,8 +23,8 @@ export const Resizer: React.FC = React.memo(() => {
     resizingPositionY: posY,
     resizingPositionX: posX,
     table,
-    headerTopSelecting,
-    headerLeftSelecting,
+    verticalHeaderSelecting,
+    horizontalheaderSelecting,
     selectingZone,
     editorRef,
     sheetRef,
@@ -54,7 +54,7 @@ export const Resizer: React.FC = React.memo(() => {
     if (x !== -1) {
       let xs = [x];
       if (
-        headerTopSelecting &&
+        verticalHeaderSelecting &&
         between({ start: left, end: right }, x)
       ) {
         xs = makeSequence(left, right + 1);
@@ -65,7 +65,7 @@ export const Resizer: React.FC = React.memo(() => {
     }
     if (y !== -1) {
       let ys = [y];
-      if (headerLeftSelecting && between({ start: top, end: bottom }, y)) {
+      if (horizontalheaderSelecting && between({ start: top, end: bottom }, y)) {
         ys = makeSequence(top, bottom + 1);
       }
       ys.forEach((y, i) => {
@@ -75,6 +75,7 @@ export const Resizer: React.FC = React.memo(() => {
     const newTable = table.update({
       diff,
       partial: true,
+      operator: "USER",
       reflection: { selectingZone },
     });
     dispatch(updateTable(newTable));
