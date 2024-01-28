@@ -19,3 +19,4 @@ export { ThousandSeparatorRendererMixin } from "./renderers/thousand_separator";
 export { CheckboxRendererMixin } from "./renderers/checkbox";
 export { BaseFunction } from "./formula/functions/__base";
 export { Table } from "./lib/table";
+export * as prevention from "./lib/prevention";

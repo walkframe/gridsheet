@@ -1,7 +1,6 @@
 import React from "react";
 import { ComponentStory } from "@storybook/react";
-import { generateInitial, GridSheet } from "../../../src";
-import * as prevention from "../../../src/lib/prevention";
+import { generateInitial, GridSheet, prevention } from "../../../src";
 
 export default {
   title: "Basic",
