@@ -1,4 +1,4 @@
-import { StoreType, AreaType, PointType } from "../types";
+import type { StoreType, AreaType, PointType } from "../types";
 
 import { zoneToArea } from "./structs";
 import { solveTable } from "../formula/solver";

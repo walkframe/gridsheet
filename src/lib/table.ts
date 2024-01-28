@@ -20,9 +20,6 @@ import {
   StoreReflectionType,
   ShapeType,
   OperatorType,
-  NullableIdMatrix,
-  NullableIds,
-  NullableId,
 } from "../types";
 import {areaShape, createMatrix, expandRange, matrixShape, putMatrix} from "./structs";
 import { a2p, x2c, p2a, y2r, grantAddressAbsolute } from "./converters";
@@ -31,7 +28,7 @@ import { functions as functionsDefault } from "../formula/mapping";
 import { convertFormulaAbsolute, Lexer } from "../formula/evaluator";
 import { solveFormula } from "../formula/solver";
 
-import {DEFAULT_HEIGHT, DEFAULT_WIDTH, HISTORY_LIMIT, OVERSCAN_X, OVERSCAN_Y} from "../constants";
+import {DEFAULT_HEIGHT, DEFAULT_WIDTH, HISTORY_LIMIT} from "../constants";
 import { shouldTracking } from "../store/helpers";
 import * as protection from "./protection";
 
@@ -444,10 +441,7 @@ export class Table implements UserTable {
     return value;
   }
 
-  public getById(id: NullableId) {
-    if (id == null) {
-      return undefined;
-    }
+  public getById(id: Id) {
     return this.data[id];
   }
 
@@ -717,7 +711,7 @@ export class Table implements UserTable {
       history.operation === "DELETE_ROWS" ||
       history.operation === "DELETE_COLS"
     ) {
-      history.idMatrix.forEach((ids) => {
+      history.deleted.forEach((ids) => {
         ids.forEach((id) => {
           delete this.data[id];
         });
@@ -1196,13 +1190,6 @@ export class Table implements UserTable {
     operator?: OperatorType;
     reflection?: StoreReflectionType;
   }) {
-    for (let i = y; i < y + numRows; i++) {
-      const cell = this.getByPoint({ y: i, x: 0 });
-      if (operator === "USER" && protection.isProtected(cell?.protection, protection.DeleteRow)) {
-        console.warn(`Cannot delete row ${i}.`);
-        return this;
-      }
-    }
     if (
       this.minNumRows !== -1 &&
       this.getNumRows() - numRows < this.minNumRows
@@ -1211,15 +1198,28 @@ export class Table implements UserTable {
       return this;
     }
 
-    const rows = this.idMatrix.splice(y, numRows);
-    this.area.bottom -= numRows;
+    const ys: number[] = [];
+    for (let i = y; i < y + numRows; i++) {
+      const cell = this.getByPoint({ y: i, x: 0 });
+      if (operator === "USER" && protection.isProtected(cell?.protection, protection.DeleteRow)) {
+        console.warn(`Cannot delete row ${i}.`);
+        return this;
+      }
+      ys.unshift(i);
+    }
+
+    const deleted: MatrixType = [];
+    ys.forEach((y) => {
+      const row = this.idMatrix.splice(y, 1);
+      deleted.unshift(row[0]);
+    });
+    this.area.bottom -= ys.length;
     this.pushHistory({
       applyed: true,
       operation: "DELETE_ROWS",
       reflection,
-      y,
-      numRows,
-      idMatrix: rows,
+      ys: ys.reverse(),
+      deleted,
     });
     return this.shallowCopy({ copyCache: false });
   }
@@ -1312,14 +1312,6 @@ export class Table implements UserTable {
     operator?: OperatorType;
     reflection?: StoreReflectionType;
   }) {
-    for (let i = x; i < x + numCols; i++) {
-      const cell = this.getByPoint({ y: 0, x: i });
-      if (operator === "USER" && protection.isProtected(cell?.protection, protection.DeleteCol)) {
-        console.warn(`Cannot delete col ${i}.`);
-        return this;
-      }
-    }
-
     if (
       this.minNumCols !== -1 &&
       this.getNumCols() - numCols < this.minNumCols
@@ -1327,20 +1319,34 @@ export class Table implements UserTable {
       console.error(`At least ${this.minNumCols} column(s) are required.`);
       return this;
     }
-    const rows: IdMatrix = [];
+
+    const xs: number[] = [];
+    for (let i = x; i < x + numCols; i++) {
+      const cell = this.getByPoint({ y: 0, x: i });
+      if (operator === "USER" && protection.isProtected(cell?.protection, protection.DeleteCol)) {
+        console.warn(`Cannot delete col ${i}.`);
+        continue;
+      }
+      xs.unshift(i);
+    }
+
+    const deleted: MatrixType = [];
     this.idMatrix.forEach((row) => {
-      const deleted = row.splice(x, numCols);
-      rows.push(deleted);
+      const deleting: Ids = [];
+      deleted.push(deleting);
+      // reverse and delete
+      xs.forEach((x) => {
+        deleting.unshift(...row.splice(x, 1));
+      });
     });
-    this.area.right -= numCols;
+    this.area.right -= xs.length;
 
     this.pushHistory({
       applyed: true,
       operation: "DELETE_COLS",
       reflection,
-      x,
-      numCols,
-      idMatrix: rows,
+      xs: xs.reverse(),
+      deleted,
     });
     return this.shallowCopy({ copyCache: false });
   }
@@ -1463,17 +1469,21 @@ export class Table implements UserTable {
         break;
       }
       case "DELETE_ROWS": {
-        const { height } = matrixShape({ matrix: history.idMatrix });
-        this.idMatrix.splice(history.y, 0, ...history.idMatrix);
-        this.area.bottom += height;
+        const { ys, deleted } = history;
+        ys.forEach((y, i) => {
+          this.idMatrix.splice(y, 0, deleted[i]);
+        });
+        this.area.bottom += ys.length;
         break;
       }
       case "DELETE_COLS": {
-        const { width } = matrixShape({ matrix: history.idMatrix });
+        const { xs, deleted } = history;
         this.idMatrix.forEach((row, i) => {
-          row.splice(history.x, 0, ...history.idMatrix[i]);
+          for (let j = 0; j < xs.length; j++) {
+            row.splice(xs[j], 0, deleted[i][j]);
+          }
         });
-        this.area.right += width;
+        this.area.right += xs.length;
         break;
       }
       case "MOVE": {
@@ -1539,17 +1549,21 @@ export class Table implements UserTable {
         break;
       }
       case "DELETE_ROWS": {
-        const { height } = matrixShape({ matrix: history.idMatrix });
-        this.idMatrix.splice(history.y, height);
-        this.area.bottom -= height;
+        const { ys } = history;
+        [...ys].reverse().forEach((y) => {
+          this.idMatrix.splice(y, 1);
+        });
+        this.area.bottom -= ys.length;
         break;
       }
       case "DELETE_COLS": {
-        const { width } = matrixShape({ matrix: history.idMatrix });
-        this.idMatrix.forEach((row) => {
-          row.splice(history.x, width);
+        const { xs } = history;
+        [...xs].reverse().forEach((x) => {
+          this.idMatrix.forEach((row) => {
+            row.splice(x, 1);
+          })
         });
-        this.area.right -= width;
+        this.area.right -= xs.length;
         break;
       }
       case "MOVE": {

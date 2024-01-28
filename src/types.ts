@@ -137,11 +137,8 @@ export type Props = {
 };
 
 export type Id = string;
-export type NullableId = Id | undefined;
 export type Ids = Id[];
-export type NullableIds = NullableId[];
 export type IdMatrix = Ids[];
-export type NullableIdMatrix = NullableIds[];
 export type Address = string;
 
 export type MatricesByAddress<T> = { [origin: Address]: MatrixType<T> };
@@ -168,10 +165,10 @@ export type HistoryMoveType = {
   reflection?: StoreReflectionType;
   src: AreaType;
   dst: AreaType;
-  matrixFrom: NullableIdMatrix;
-  matrixTo: NullableIdMatrix;
-  matrixNew: NullableIdMatrix;
-  lostRows: MatricesByAddress<NullableId>;
+  matrixFrom:IdMatrix;
+  matrixTo: IdMatrix;
+  matrixNew: IdMatrix;
+  lostRows: MatricesByAddress<Id>;
 };
 
 export type HistoryAddRowsType = {
@@ -190,9 +187,8 @@ export type HistoryDeleteRowsType = {
   operation: "DELETE_ROWS";
   applyed: boolean;
   reflection?: StoreReflectionType;
-  y: number;
-  numRows: number;
-  idMatrix: IdMatrix;
+  ys: number[];
+  deleted: IdMatrix;
 };
 
 export type HistoryAddColsType = {
@@ -211,9 +207,8 @@ export type HistoryDeleteColsType = {
   operation: "DELETE_COLS";
   applyed: boolean;
   reflection?: StoreReflectionType;
-  x: number;
-  numCols: number;
-  idMatrix: IdMatrix;
+  xs: number[];
+  deleted: IdMatrix;
 };
 
 export type HistoryType =

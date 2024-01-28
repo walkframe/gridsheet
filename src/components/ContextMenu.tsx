@@ -248,6 +248,7 @@ export const ContextMenu: React.FC = () => {
                 const newTable = table.deleteRows({
                   y: selectingTop,
                   numRows: height,
+                  operator: "USER",
                   reflection: {
                     selectingZone,
                     choosing,
@@ -274,6 +275,7 @@ export const ContextMenu: React.FC = () => {
                 const newTable = table.deleteCols({
                   x: selectingLeft,
                   numCols: width,
+                  operator: "USER",
                   reflection: {
                     selectingZone,
                     choosing,

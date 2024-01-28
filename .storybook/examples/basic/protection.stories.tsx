@@ -58,4 +58,4 @@ const Sheet = ({ numRows, numCols, defaultWidth }: Props) => {
 const Template: ComponentStory<typeof Sheet> = (args) => <Sheet {...args} />;
 
 export const Protection = Template.bind({});
-Protection.args = { numRows: 1000, numCols: 100, defaultWidth: 50 };
+Protection.args = { numRows: 50, numCols: 20, defaultWidth: 50 };

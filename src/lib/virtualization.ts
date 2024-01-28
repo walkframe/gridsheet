@@ -1,7 +1,7 @@
 import {DEFAULT_HEIGHT, DEFAULT_WIDTH, OVERSCAN_X, OVERSCAN_Y} from "../constants";
 import {range} from "./structs";
 import {Table} from "./table";
-import {AreaType, PointType, Virtualization} from "../types";
+import type {PointType, Virtualization} from "../types";
 
 export const getCellRectPositions = (
   table: Table,
