@@ -1,5 +1,5 @@
 import React from "react";
-import { generateInitial, GridSheet } from "../../../src";
+import { generateInitial, GridSheet, prevention } from "../../../src";
 
 export default {
   title: "Formula",
@@ -13,9 +13,27 @@ export const LookUp = () => {
         initial={generateInitial({
           cells: {
             1: { style: { backgroundColor: "#ddd" } },
-            A4: { style: { backgroundColor: "#ddd" } },
-            B4: { style: { backgroundColor: "#ddd" } },
-            C4: { style: { backgroundColor: "#ddd" } },
+            "2:3": { style: {} },
+            "A:E": { width: 50 },
+            "A4:C4": {
+              prevention: prevention.Write,
+              style: {
+                backgroundColor: "#ddd",
+                borderTop: "solid 1px black",
+                borderLeft: "solid 1px black",
+                borderRight: "solid 1px black",
+                borderBottom: "double 3px black",
+                fontWeight: "bold",
+              },
+            },
+            "A5:C9": {
+              style: { 
+                borderTop: "solid 1px black",
+                borderBottom: "solid 1px black",
+                borderLeft: "solid 1px black",
+                borderRight: "solid 1px black",
+              },
+            },
           },
           ensured: { numRows: 10, numCols: 10 },
           matrices: {
