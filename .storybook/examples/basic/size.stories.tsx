@@ -27,6 +27,9 @@ const Sheet = ({ numRows, numCols, defaultWidth }: Props) => {
         initial={generateInitial({
           cells: {
             default: { width: defaultWidth, labeler: "raw" },
+            A1: {
+              value: "A1",
+            },
             B2: {
               value: "b2",
             }

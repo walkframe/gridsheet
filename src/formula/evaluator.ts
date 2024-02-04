@@ -80,8 +80,7 @@ export class Ref extends Entity {
     if (this.value.indexOf("!") !== -1) {
       const [rawSheetName, ref] = this.value.split("!");
       const sheetName = stripSheetName(rawSheetName);
-      const sheetId = table.sheets[sheetName];
-      return { table: table.tables[sheetId], ref: ref.toUpperCase(), sheetName };
+      return { table: table.getTableBySheetName(sheetName), ref: ref.toUpperCase(), sheetName };
     }
     return { table, ref: this.value.toUpperCase(), sheetName: stripSheetName(table.sheetName) };
   }
@@ -123,8 +122,7 @@ export class Range extends Entity<string> {
         refs.push(rawRef.toUpperCase());
         if (i === 0) {
           sheetName = stripSheetName(rawSheetName);
-          const sheetId = table.sheets[sheetName];
-          table = table.tables[sheetId];
+          table = table.getTableBySheetName(sheetName);
         }
         if (table == null) {
           return { table, refs, sheetName };

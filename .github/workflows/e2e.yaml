@@ -1,56 +1,40 @@
 name: e2e
 on:
   push:
-    # pending
-    branches-ignore:
-      - '**'
 
 jobs:
-  build-storybook:
+  run-e2e-tests:
     runs-on: ubuntu-latest
-
+    
     steps:
       - uses: actions/checkout@v3
-      - name: setup
+      - name: setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+      - name: setup node
         uses: actions/setup-node@v3
         with:
           node-version: "16"
+
       - name: cache
         uses: actions/cache@v3
         with:
           path: |
             node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
-      - name: build
+
+      - name: install
         run: |
           yarn install
-          yarn run build-storybook
-      - name: upload storybook
-        uses: actions/upload-artifact@v3
-        with:
-          name: storybook
-          path: ${{ github.workspace }}/storybook-static
-          retention-days: 1
+          npx playwright install --with-deps
 
-  run-e2e-tests:
-    needs: [build-storybook]
-    runs-on: ubuntu-latest
-    services:
-      nginx:
-        image: nginx:1.23.2
-        ports:
-          - 5233:80
-        volumes:
-          - ${{ github.workspace }}/storybook-static:/usr/share/nginx/html/
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
-        id: storybook
-        with:
-          name: storybook
-          path: ${{ github.workspace }}/storybook-static
-      - run: chmod -R 777 ${{ github.workspace }}/storybook-static/
+      - name: build
+        run: yarn run build-storybook
+
+      - name: run server
+        run: |
+          python -m http.server 5233 --directory "${{ github.workspace }}/storybook-static" &
+
       - name: test
-        run: ls -l storybook-static
-      - name: test2
-        run: curl http://localhost:5233/?path=/story/basic--small
+        run: yarn e2e

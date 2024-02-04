@@ -22,7 +22,7 @@
 .gridsheet-1.light .gs-header.gs-selecting {
   background-color: #dddddd;
 }
-.gridsheet-1.light .gs-header.gs-choosing {
+.gridsheet-1.light .gs-header.gs-pointed {
   background-color: #bbbbbb;
 }
 .gridsheet-1.light .gs-header.gs-header-selecting {
@@ -45,7 +45,7 @@
 .gridsheet-1.dark .gs-header.gs-selecting {
   background-color: #777777;
 }
-.gridsheet-1.dark .gs-header.gs-choosing {
+.gridsheet-1.dark .gs-header.gs-pointed {
   background-color: #999999;
 }
 .gridsheet-1.dark .gs-header.gs-header-selecting {

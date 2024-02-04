@@ -40,7 +40,7 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
           ensured: { numRows, numCols },
         })}
       />
-      <input value={sheet1} onChange={(e) => setSheet1(e.target.value)} />
+      <input id="input1" value={sheet1} onChange={(e) => setSheet1(e.target.value)} />
       <hr />
       <GridSheet
         sheetName={sheet2}
@@ -53,7 +53,7 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
           ensured: { numRows, numCols },
         })}
       />
-      <input value={sheet2} onChange={(e) => setSheet2(e.target.value)} />
+      <input id="input2" value={sheet2} onChange={(e) => setSheet2(e.target.value)} />
       <hr />
 
       <GridSheet
@@ -65,7 +65,7 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
           ensured: { numRows, numCols },
         })}
       />
-      <input value={sheet3} onChange={(e) => setSheet3(e.target.value)} />
+      <input id="input3" value={sheet3} onChange={(e) => setSheet3(e.target.value)} />
 
 
     </SheetProvider>
