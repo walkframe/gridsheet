@@ -91,6 +91,7 @@ export type AreaType = { top: Y; left: X; bottom: Y; right: X };
 export type WriterType = (value: string) => void;
 
 export type StoreType = {
+  sheetId: number;
   table: Table;
   tableInitialized: boolean;
   sheetRef: React.MutableRefObject<HTMLDivElement | null>;
@@ -129,6 +130,7 @@ export type StoreType = {
 
 export type Props = {
   initial: CellsByAddressType;
+  sheetName?: string;
   tableRef?: React.MutableRefObject<TableRef | null>;
   options?: OptionsType;
   className?: string;
