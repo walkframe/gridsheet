@@ -18,6 +18,7 @@ import { HEADER_HEIGHT, HEADER_WIDTH, HISTORY_LIMIT } from "../constants";
 import { Table } from "../lib/table";
 import { functions } from "../formula/mapping";
 import { getMaxSizesFromCells } from "../lib/structs";
+import { SheetContext } from "./SheetProvider";
 
 export const StoreInitializer: React.FC<Props> = ({
   initial = {},
@@ -42,7 +43,16 @@ export const StoreInitializer: React.FC<Props> = ({
     onSave,
   } = options;
 
+  const sheetsContext = React.useContext(SheetContext);
   const { store, dispatch } = React.useContext(Context);
+
+  React.useEffect(() => {
+    if (sheetsContext.tables?.current == null || sheetsContext.sheets?.current == null) {
+      return;
+    }
+    store.table.tables = sheetsContext.tables.current;
+    store.table.sheets = sheetsContext.sheets.current;
+  }, [sheetsContext.sheets?.current, sheetsContext.tables?.current]);
 
   React.useEffect(() => {
     const auto = getMaxSizesFromCells(initial);

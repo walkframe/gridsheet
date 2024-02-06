@@ -229,3 +229,6 @@ export type Virtualization = {
 export type OperatorType = 'USER' | 'SYSTEM';
 
 export type Prevention = number;
+
+export type TableMapType = {[key: string]: Table}; // id: table
+export type SheetMapType = {[key: string]: number}; // name: id

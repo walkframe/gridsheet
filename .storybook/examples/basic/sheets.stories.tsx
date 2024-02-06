@@ -30,6 +30,9 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
         initial={generateInitial({
           cells: {
             default: { width: defaultWidth, labeler: "raw" },
+            A1: {
+              value: "=B2+100"
+            },
             B2: {
               value: "b2",
             }
@@ -48,6 +51,7 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
         }}
         initial={generateInitial({
           cells: {
+            A1: {value: 50},
           },
           ensured: { numRows, numCols },
         })}

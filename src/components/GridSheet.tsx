@@ -20,7 +20,7 @@ import { Table } from "../lib/table";
 import { Tabular } from "./Tabular";
 import { getMaxSizesFromCells } from "../lib/structs";
 import { x2c, y2r } from "../lib/converters";
-import {Reducer, ReducerWithoutAction, useEffect} from "react";
+import {Reducer, ReducerWithoutAction} from "react";
 import {embedStyle} from "../styles/embedder";
 import { SheetContext } from "./SheetProvider";
 
@@ -35,16 +35,16 @@ export const GridSheet: React.FC<Props> = ({
 }) => {
   const { sheetResize } = options;
   const [prevSheetName, setPrevSheetName] = React.useState(sheetName);
-  useEffect(() => {
+  React.useEffect(() => {
     embedStyle();
   }, []);
   const sheetRef = React.useRef<HTMLDivElement | null>(null);
   const searchInputRef = React.useRef<HTMLInputElement | null>(null);
   const editorRef = React.useRef<HTMLTextAreaElement | null>(null);
   const gridOuterRef = React.useRef<HTMLDivElement | null>(null);
-  const sheets = React.useContext(SheetContext);
+  const sheetsContext = React.useContext(SheetContext);
   const initialState: StoreType = {
-    sheetId: sheets.head ? sheets.head++ : 1,
+    sheetId: sheetsContext.head ? sheetsContext.head++ : 1,
     table: new Table({}), // temporary (see StoreInitializer for detail)
     tableInitialized: false,
     sheetRef,
@@ -80,25 +80,29 @@ export const GridSheet: React.FC<Props> = ({
   };
 
   const [store, dispatch] = React.useReducer(defaultReducer as ReducerWithoutAction<StoreType>, initialState, () => initialState);
-  useEffect(() => {
-    if (sheets.stores == null) {
+  React.useEffect(() => {
+    if (sheetsContext.tables?.current == null || store.table == null) {
       return;
     }
-    sheets.stores.current[store.sheetId] = store;
-  }, [store]);
+    sheetsContext.tables.current[store.sheetId] = store.table;
+  }, [store.table]);
 
-  useEffect(() => {
-    if (sheets.names == null) {
+  React.useEffect(() => {
+    if (sheetsContext.sheets?.current == null || store.table == null) {
       return;
     }
     if (prevSheetName !== sheetName) {
-      delete sheets.names.current[prevSheetName];
+      delete sheetsContext.sheets.current[prevSheetName];
       setPrevSheetName(sheetName);
     }
     if (sheetName) {
-      sheets.names.current[sheetName] = store.sheetId;
+      sheetsContext.sheets.current[sheetName] = store.sheetId;
     }
-  }, [sheetName]);
+    store.table.sheetId = store.sheetId;
+    store.table.sheetName = sheetName;
+    store.table.tables = sheetsContext.tables.current;
+    store.table.sheets = sheetsContext.sheets.current;
+  }, [sheetName, store.table]);
 
   const [sheetHeight, setSheetHeight] = React.useState(
     options?.sheetHeight || estimateSheetHeight({ options, initial })

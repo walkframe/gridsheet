@@ -20,6 +20,8 @@ import {
   StoreReflectionType,
   ShapeType,
   OperatorType,
+  TableMapType,
+  SheetMapType,
 } from "../types";
 import {areaShape, createMatrix, expandRange, matrixShape, putMatrix} from "./structs";
 import { a2p, x2c, p2a, y2r, grantAddressAbsolute } from "./converters";
@@ -94,6 +96,10 @@ export interface UserTable {
   headerWidth: number;
   headerHeight: number;
   currentHistory?: HistoryType;
+  sheetId: number;
+  sheets: SheetMapType;
+  tables: TableMapType;
+
   getRectSize(area: AreaType): ShapeType;
   getAddressById(id: Id, slideY: number, slideX: number): string | undefined;
   getAddressesByIds(ids: CellsByIdType): CellsByAddressType;
@@ -195,6 +201,10 @@ export class Table implements UserTable {
   public headerWidth: number = 0;
   public headerHeight: number = 0;
   public currentHistory?: HistoryType;
+  public sheetId: number;
+  public sheetName: string;
+  public sheets: SheetMapType;
+  public tables: TableMapType;
 
   private head: bigint | number;
   private idMatrix: IdMatrix;
@@ -248,6 +258,10 @@ export class Table implements UserTable {
     this.headerHeight = headerHeight || 0;
     this.headerWidth = headerWidth || 0;
     this.functions = functions;
+    this.sheetId = 0;
+    this.sheetName = "";
+    this.sheets = {};
+    this.tables = {};
 
     // make idMatrix beforehand
     for (let y = 0; y < numRows + 1; y++) {
@@ -365,6 +379,9 @@ export class Table implements UserTable {
     copied.maxNumCols = this.maxNumCols;
     copied.headerHeight = this.headerHeight;
     copied.headerWidth = this.headerWidth;
+    copied.sheets = this.sheets;
+    copied.tables = this.tables;
+    
     copied.setTotalSize();
     if (copyCache) {
       copied.addressesById = this.addressesById;
@@ -1414,6 +1431,10 @@ export class Table implements UserTable {
     copied.functions = this.functions;
     copied.addressesById = this.addressesById;
     copied.solvedCaches = this.solvedCaches;
+    copied.sheetId = this.sheetId;
+    copied.sheetName = this.sheetName;
+    copied.sheets = this.sheets;
+    copied.tables = this.tables;
     return copied;
   }
 

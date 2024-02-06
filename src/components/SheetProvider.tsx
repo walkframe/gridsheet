@@ -1,14 +1,13 @@
 import React from "react";
 
-import { StoreType } from "../types";
+import { SheetMapType, TableMapType, StoreType } from "../types";
 
-type StoreMap = {[key: string]: StoreType}; // id: table
-type NameMap = {[key: string]: number}; // name: id
+
 
 export type SheetContextType = {
   head: number;
-  names: React.MutableRefObject<NameMap>;
-  stores: React.MutableRefObject<StoreMap>;
+  sheets: React.MutableRefObject<SheetMapType>;
+  tables: React.MutableRefObject<TableMapType>;
 };
 
 export const SheetContext = React.createContext({} as SheetContextType);
@@ -25,11 +24,11 @@ export function SheetProvider({ children }: {
   children: React.ReactNode;
 }) {
   const head = 1;
-  const names = React.useRef<NameMap>({});
-  const tables = React.useRef<StoreMap>({});
+  const sheets = React.useRef<SheetMapType>({});
+  const tables = React.useRef<TableMapType>({});
 
   return (
-    <SheetContext.Provider value={{head, stores: tables, names}}>
+    <SheetContext.Provider value={{head, tables, sheets}}>
       {children}
     </SheetContext.Provider>
   );

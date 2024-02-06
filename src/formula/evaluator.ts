@@ -36,6 +36,24 @@ class Entity<T = any> {
   }
 }
 
+export class SheetName extends Entity {
+  public evaluate({ table }: EvaluateProps) {
+    return table;
+  }
+  public id(table: Table) {
+    return `#${table.sheets[this.value]}!`;
+  }
+}
+
+export class SheetId extends Entity {
+  public evaluate({ table }: EvaluateProps) {
+    return table.tables[this.value];
+  }
+  public name(table: Table) {
+    return table.tables[this.value].sheetName + "!";
+  }
+}
+
 export class Value extends Entity {
   public evaluate({}: EvaluateProps) {
     return this.value;
@@ -56,17 +74,36 @@ export class InvalidRef extends Entity {
 
 export class Ref extends Entity {
   constructor(value: string) {
-    super(value.toUpperCase());
+    super(value);
   }
+  private parse(table: Table): { table: Table, ref: string} {
+    if (this.value.indexOf("!") !== -1) {
+      const [sheet, ref] = this.value.split("!");
+      if (sheet.startsWith("#")) {
+        const sheetId = sheet.slice(1);
+        return { table: table.tables[sheetId], ref: ref.toUpperCase() };
+      }
+      const sheetId = table.sheets[sheet];
+      return { table: table.tables[sheetId], ref: ref.toUpperCase() };
+    }
+    return { table, ref: this.value.toUpperCase() };
+  }
+
   public evaluate({ table }: EvaluateProps): Table {
-    const { y, x } = a2p(this.value);
-    return table.trim({ top: y, left: x, bottom: y, right: x });
+    const parsed = this.parse(table);
+    const { y, x } = a2p(parsed.ref);
+    return parsed.table.trim({ top: y, left: x, bottom: y, right: x });
   }
   public id(table: Table) {
-    const id = table.getIdByAddress(this.value);
+    const parsed = this.parse(table);
+    const id = parsed.table.getIdByAddress(parsed.ref);
     if (id) {
-      return id;
+      if (parsed.table === table) {
+        return id;
+      }
+      return `#${parsed.table.sheetId}!${id}`
     }
+    
     return this.value;
   }
 }
@@ -105,13 +142,25 @@ export class Range extends Entity<string> {
 }
 
 export class Id extends Entity {
+  private parse(table: Table): { table: Table, id: string} {
+    if (this.value.indexOf("!") !== -1) {
+      const [tableId, id] = (this.value as string).split("!");
+      return { table: table.tables[tableId.slice(1)], id: getId(id, false) };
+    }
+    return { table, id: getId(this.value, false) };
+  }
   public evaluate({ table }: EvaluateProps) {
-    const id = getId(this.value);
-    const { y, x } = table.getPointById(id);
-    return table.trim({ top: y, left: x, bottom: y, right: x });
+    const parsed = this.parse(table);
+    const { y, x } = parsed.table.getPointById(parsed.id);
+    return parsed.table.trim({ top: y, left: x, bottom: y, right: x });
   }
   public ref(table: Table, slideY = 0, slideX = 0) {
-    return table.getAddressById(getId(this.value, false), slideY, slideX);
+    const parsed = this.parse(table);
+    const address = parsed.table.getAddressById(parsed.id, slideY, slideX);
+    if (parsed.table.sheetId === table.sheetId) {
+      return address;
+    }
+    return `${parsed.table.sheetName}!${address}`;
   }
   public slide(table: Table, slideY = 0, slideX = 0) {
     const address = this.ref(table, slideY, slideX);
@@ -178,6 +227,8 @@ export type Expression =
 const ZERO = new Value(0);
 
 export type TokenType =
+  | "SHEET_NAME"
+  | "SHEET_ID"
   | "VALUE"
   | "REF"
   | "RANGE"
@@ -251,6 +302,10 @@ export class Token {
       }
       case "FUNCTION":
         return new Function(this.entity);
+      case "SHEET_NAME":
+        return new SheetName(this.entity);
+      case "SHEET_ID":
+        return new SheetId(this.entity);
       case "UNREFERENCED":
         return new Unreferenced(this.entity);
       case "INVALID_REF":
