@@ -1,4 +1,5 @@
 import * as React from "react";
+import { ReducerWithoutAction } from "react";
 
 import { CellsByAddressType, OptionsType, Props, StoreType } from "../types";
 import {
@@ -8,9 +9,11 @@ import {
   HEADER_WIDTH,
   SHEET_HEIGHT,
   SHEET_WIDTH,
+  HISTORY_LIMIT,
 } from "../constants";
+import { functions } from "../formula/mapping";
 import { Context } from "../store";
-import { reducer as defaultReducer } from "../store/actions";
+import { reducer as defaultReducer, initializeTable } from "../store/actions";
 
 import { StoreInitializer } from "./StoreInitializer";
 import { Resizer } from "./Resizer";
@@ -20,67 +23,136 @@ import { Table } from "../lib/table";
 import { Tabular } from "./Tabular";
 import { getMaxSizesFromCells } from "../lib/structs";
 import { x2c, y2r } from "../lib/converters";
-import {Reducer, ReducerWithoutAction, useEffect} from "react";
-import {embedStyle} from "../styles/embedder";
+import { embedStyle } from "../styles/embedder";
+import { useSheetContext } from "./SheetProvider";
+import { FormulaBar } from "./FormulaBar";
 
 export const GridSheet: React.FC<Props> = ({
-  initial,
+  initial: initialData,
+  sheetName = "",
   tableRef,
   options = {},
   className,
   style,
   additionalFunctions = {},
 }) => {
-  const { sheetResize } = options;
-  useEffect(() => {
-    embedStyle();
-  }, []);
+  const { sheetResize, showFormulaBar = true } = options;
+  const [prevSheetName, setPrevSheetName] = React.useState(sheetName);
   const sheetRef = React.useRef<HTMLDivElement | null>(null);
   const searchInputRef = React.useRef<HTMLInputElement | null>(null);
   const editorRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const largeEditorRef = React.useRef<HTMLTextAreaElement | null>(null);
   const gridOuterRef = React.useRef<HTMLDivElement | null>(null);
-  const initialState: StoreType = {
-    table: new Table({}), // temporary (see StoreInitializer for detail)
-    tableInitialized: false,
-    sheetRef,
-    searchInputRef,
-    editorRef,
-    gridOuterRef,
-    choosing: { y: -1, x: -1 },
-    cutting: false,
-    selectingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
-    copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
-    autofillDraggingTo: null,
-    verticalHeaderSelecting: false,
-    horizontalheaderSelecting: false,
-    editingCell: "",
-    editorRect: { y: 0, x: 0, height: 0, width: 0 },
-    resizingRect: { y: -1, x: -1, height: -1, width: -1 },
-    sheetHeight: 0,
-    sheetWidth: 0,
-    headerHeight: 0,
-    headerWidth: 0,
-    entering: false,
-    matchingCells: [],
-    matchingCellIndex: 0,
-    editingOnEnter: true,
-    showAddress: true,
-    contextMenuPosition: { y: -1, x: -1 },
-    resizingPositionY: [-1, -1, -1],
-    resizingPositionX: [-1, -1, -1],
-    minNumRows: 1,
-    maxNumRows: -1,
-    minNumCols: 1,
-    maxNumCols: -1,
-  };
+  const [sheetProvided, sheetContext] = useSheetContext();
+
+  const [initialState] = React.useState<StoreType>(() => {
+    const {
+      headerHeight = HEADER_HEIGHT,
+      headerWidth = HEADER_WIDTH,
+      historyLimit = HISTORY_LIMIT,
+      renderers,
+      parsers,
+      labelers,
+      minNumRows,
+      maxNumRows,
+      minNumCols,
+      maxNumCols,
+    } = options;
+    const table = new Table({
+      historyLimit,
+      parsers,
+      renderers,
+      labelers,
+      minNumRows,
+      maxNumRows,
+      minNumCols,
+      maxNumCols,
+      headerHeight,
+      headerWidth,
+      functions: { ...functions, ...additionalFunctions },
+    });
+    let sheetId = 0;
+    if (sheetProvided) {
+      sheetId = sheetContext.head.current++;
+      table.tables = sheetContext.tables.current;
+      table.sheets = sheetContext.sheets.current;
+    }
+    table.tables[sheetId] = table;
+    table.sheetId = sheetId;
+    table.initialize(initialData);
+    
+    return {
+      sheetId,
+      table, // temporary (see StoreInitializer for detail)
+      tableInitialized: false,
+      sheetRef,
+      searchInputRef,
+      editorRef,
+      largeEditorRef,
+      gridOuterRef,
+      choosing: { y: 1, x: 1 },
+      cutting: false,
+      selectingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
+      copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
+      autofillDraggingTo: null,
+      verticalHeaderSelecting: false,
+      horizontalheaderSelecting: false,
+      editingCell: "",
+      editorRect: { y: 0, x: 0, height: 0, width: 0 },
+      resizingRect: { y: -1, x: -1, height: -1, width: -1 },
+      sheetHeight: 0,
+      sheetWidth: 0,
+      headerHeight: 0,
+      headerWidth: 0,
+      entering: false,
+      matchingCells: [],
+      matchingCellIndex: 0,
+      editingOnEnter: true,
+      showAddress: true,
+      contextMenuPosition: { y: -1, x: -1 },
+      resizingPositionY: [-1, -1, -1],
+      resizingPositionX: [-1, -1, -1],
+      minNumRows: 1,
+      maxNumRows: -1,
+      minNumCols: 1,
+      maxNumCols: -1,
+    };
+  });
 
   const [store, dispatch] = React.useReducer(defaultReducer as ReducerWithoutAction<StoreType>, initialState, () => initialState);
 
+  React.useEffect(() => {
+    embedStyle();
+  }, []);
+
+  React.useEffect(() => {
+    if (!sheetProvided) {
+      return;
+    }
+    sheetContext.tables.current[store.sheetId] = store.table;
+    sheetContext.forceRender();
+  }, [store.table]);
+  
+  React.useEffect(() => {
+    if (!sheetProvided) {
+      return;
+    }
+    if (prevSheetName !== sheetName) {
+      delete sheetContext.sheets.current[prevSheetName];
+      setPrevSheetName(sheetName);
+    }
+    if (sheetName) {
+      sheetContext.sheets.current[sheetName] = store.sheetId;
+    }
+    store.table.sheetName = sheetName;
+  }, [sheetName]);
+  
+
   const [sheetHeight, setSheetHeight] = React.useState(
-    options?.sheetHeight || estimateSheetHeight({ options, initial })
+    options?.sheetHeight || estimateSheetHeight({ options, initialData })
   );
   const [sheetWidth, setSheetWidth] = React.useState(
-    options?.sheetWidth || estimateSheetWidth({ options, initial })
+    options?.sheetWidth || estimateSheetWidth({ options, initialData })
   );
   React.useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -97,31 +169,41 @@ export const GridSheet: React.FC<Props> = ({
   const { onChange, onSelect, mode } = options;
   return (
     <Context.Provider value={{ store, dispatch }}>
-      <div
-        ref={sheetRef}
-        className={`gridsheet-1 ${mode || "light"} ${className || ""} ${
-          sheetWidth > store.table.totalWidth ? 'gs-table-width-smaller' : 'gs-table-width-larger'} ${
-          sheetHeight > store.table.totalHeight ? 'gs-table-height-smaller' : 'gs-table-height-larger'
-        }`}
-        style={{
-          maxWidth: store.table.totalWidth + 3,
-          maxHeight: store.table.totalHeight + 3,
-          ...style, resize: sheetResize,
-          height: sheetHeight,
-          width: sheetWidth,
-        }}
+      <div 
+        className={`gridsheet-1 ${mode || "light"}`}
+        style={{width: sheetWidth}}
       >
-        <Tabular
-          tableRef={tableRef}
-        />
-        <StoreInitializer
-          initial={initial}
-          options={{ ...options, sheetHeight, sheetWidth }}
-          additionalFunctions={additionalFunctions}
-        />
-        <ContextMenu />
-        <Resizer />
-        <Emitter onChange={onChange} onSelect={onSelect} />
+        {showFormulaBar && <FormulaBar width={sheetWidth}/> }
+        <div
+          className={`gs-main ${className || ""}
+          gs-main ${
+            sheetWidth > store.table.totalWidth ? 'gs-table-width-smaller' : 'gs-table-width-larger'} ${
+            sheetHeight > store.table.totalHeight ? 'gs-table-height-smaller' : 'gs-table-height-larger'
+          }`}
+          ref={sheetRef}
+          style={{
+            maxWidth: store.table.totalWidth + 3,
+            maxHeight: store.table.totalHeight + 3,
+            ...style,
+            resize: sheetResize,
+            width: sheetWidth,
+            height: sheetHeight,
+          }}
+        >
+          <Tabular
+              tableRef={tableRef}
+            />
+            <StoreInitializer
+              initial={initialData}
+              options={{ ...options, sheetHeight, sheetWidth }}
+              additionalFunctions={additionalFunctions}
+            />
+            <ContextMenu />
+            <Resizer />
+            <Emitter onChange={onChange} onSelect={onSelect} />
+        </div>
+
+
       </div>
     </Context.Provider>
 
@@ -129,17 +211,19 @@ export const GridSheet: React.FC<Props> = ({
 };
 
 type EstimateProps = {
-  initial: CellsByAddressType;
+  initialData: CellsByAddressType;
   options: OptionsType;
 };
 
-const estimateSheetHeight = ({ initial, options }: EstimateProps) => {
-  const auto = getMaxSizesFromCells(initial);
+const estimateSheetHeight = ({ initialData, options }: EstimateProps) => {
+  const auto = getMaxSizesFromCells(initialData);
   let estimatedHeight = options.headerHeight || HEADER_HEIGHT;
   for (let y = 0; y < auto.numRows; y++) {
     const row = y2r(y);
     const height =
-      initial?.[row]?.height || initial?.default?.height || DEFAULT_HEIGHT;
+      initialData?.[row]?.height || 
+      initialData?.default?.height || 
+      DEFAULT_HEIGHT;
     if (estimatedHeight + height > SHEET_HEIGHT) {
       return SHEET_HEIGHT;
     }
@@ -148,13 +232,15 @@ const estimateSheetHeight = ({ initial, options }: EstimateProps) => {
   return estimatedHeight + 3;
 };
 
-const estimateSheetWidth = ({ initial, options }: EstimateProps) => {
-  const auto = getMaxSizesFromCells(initial);
+const estimateSheetWidth = ({ initialData, options }: EstimateProps) => {
+  const auto = getMaxSizesFromCells(initialData);
   let estimatedWidth = options.headerWidth || HEADER_WIDTH;
   for (let x = 0; x < auto.numCols; x++) {
     const col = x2c(x);
     const width =
-      initial?.[col]?.width || initial?.default?.width || DEFAULT_WIDTH;
+      initialData?.[col]?.width || 
+      initialData?.default?.width || 
+      DEFAULT_WIDTH;
     if (estimatedWidth + width > SHEET_WIDTH) {
       return SHEET_WIDTH;
     }

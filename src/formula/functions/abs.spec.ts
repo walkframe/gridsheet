@@ -3,9 +3,8 @@ import {Table} from "../../lib/table";
 import {FormulaError, Ref, Value} from "../evaluator";
 
 describe('abs', () => {
-  const table = new Table({
-    numRows: 2, numCols: 2, cells: {B2: {value: -222}}
-  });
+  const table = new Table({});
+  table.initialize({B2: {value: -222}});
   describe('normal', () => {
     it('negative to positive', () => {
       const f = new AbsFunction({table, args: [new Value(-111)]});

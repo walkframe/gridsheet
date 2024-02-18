@@ -20,3 +20,4 @@ export { CheckboxRendererMixin } from "./renderers/checkbox";
 export { BaseFunction } from "./formula/functions/__base";
 export { Table } from "./lib/table";
 export * as prevention from "./lib/prevention";
+export { SheetProvider } from "./components/SheetProvider";

@@ -3,10 +3,8 @@ import {Table} from "../../lib/table";
 import {FormulaError, Function, Range, Ref, Value} from "../evaluator";
 
 describe('iferror', () => {
-  const table = new Table({
-    numRows: 5, numCols: 5,
-    cells: {A1: {value: "=100/5"}, B2: {value: "=100/0"}, C3: {value: "C3"}, D4: {value: "A2:E10"}, E5: {value: "=aaaaa"}},
-  });
+  const table = new Table({});
+  table.initialize({A1: {value: "=100/5"}, B2: {value: "=100/0"}, C3: {value: "C3"}, D4: {value: "A2:E10"}, E5: {value: "=aaaaa"}});
 
   describe('normal', () => {
     it('no errors', () => {

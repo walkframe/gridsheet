@@ -37,6 +37,7 @@ export const Editor: React.FC = () => {
     entering,
     searchQuery,
     editorRef,
+    largeEditorRef,
     searchInputRef,
     editingOnEnter,
     onSave,
@@ -51,7 +52,6 @@ export const Editor: React.FC = () => {
   const editing = editingCell === address
 
   const cell = table.getByPoint({ y, x });
-  const headerTop = table.getByPoint({ y: 0, x });
   const value = cell?.value;
   const { y: top, x: left, height, width } = editorRect;
 
@@ -368,6 +368,7 @@ export const Editor: React.FC = () => {
         }}
         onInput={(e) => {
           const input = e.currentTarget;
+          largeEditorRef.current!.value = input.value;
           input.style.width = `${width}px`;
           input.style.width = `${input.scrollWidth}px`;
           input.style.height = `${height}px`;

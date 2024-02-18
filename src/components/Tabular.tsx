@@ -84,7 +84,7 @@ export const Tabular = ({ tableRef }: Props) => {
               width: table.totalWidth,
             }}
           >
-            <thead>
+            <thead className="gs-table-header">
               <tr style={{height: headerHeight}}>
                 <th
                   className="gs-header gs-header-left gs-header-top gs-header-left-top"
@@ -104,25 +104,25 @@ export const Tabular = ({ tableRef }: Props) => {
                     }, 100);
                   }}
                 ></th>
-                <th className="gs-adjuster" style={{ width: virtualized?.adjuster?.left }}></th>
+                <th className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-left" style={{ width: virtualized?.adjuster?.left }}></th>
                 { virtualized?.xs?.map?.((x) => <HorizontalHeaderCell x={x} key={x} />) }
-                <th className="gs-adjuster" style={{ width: virtualized?.adjuster?.right }}></th>
+                <th className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-right" style={{ width: virtualized?.adjuster?.right }}></th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="gs-table-body-adjuster">
               <tr>
                 <th className="gs-header gs-header-left gs-adjuster" style={{height: virtualized?.adjuster?.top }}></th>
                 { virtualized?.xs?.map((x) => <td className="gs-adjuster" key={x} />) }
               </tr>
             </tbody>
-            <tbody>
+            <tbody className="gs-table-body-data">
               {
                 virtualized?.ys?.map((y, i) => {
                   return (<tr key={y}>
                     <VerticalHeaderCell y={y} />
-                    <td className="gs-adjuster" />
+                    <td className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-left" />
                     { virtualized?.xs?.map((x) => <Cell key={x} y={y} x={x} />) }
-                    <td className="gs-adjuster" />
+                    <td className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-right" />
                   </tr>);
                 })
               }

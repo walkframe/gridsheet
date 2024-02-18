@@ -69,6 +69,7 @@ export type OptionsType = {
   headerWidth?: number;
   editingOnEnter?: boolean;
   showAddress?: boolean;
+  showFormulaBar?: boolean;
   minNumRows?: number;
   maxNumRows?: number;
   minNumCols?: number;
@@ -91,10 +92,12 @@ export type AreaType = { top: Y; left: X; bottom: Y; right: X };
 export type WriterType = (value: string) => void;
 
 export type StoreType = {
+  sheetId: number;
   table: Table;
   tableInitialized: boolean;
   sheetRef: React.MutableRefObject<HTMLDivElement | null>;
   editorRef: React.MutableRefObject<HTMLTextAreaElement | null>;
+  largeEditorRef: React.MutableRefObject<HTMLTextAreaElement | null>;
   gridOuterRef: React.MutableRefObject<HTMLDivElement | null>;
   searchInputRef: React.MutableRefObject<HTMLInputElement | null>;
   entering: boolean;
@@ -129,6 +132,7 @@ export type StoreType = {
 
 export type Props = {
   initial: CellsByAddressType;
+  sheetName?: string;
   tableRef?: React.MutableRefObject<TableRef | null>;
   options?: OptionsType;
   className?: string;
@@ -227,3 +231,6 @@ export type Virtualization = {
 export type OperatorType = 'USER' | 'SYSTEM';
 
 export type Prevention = number;
+
+export type TableMapType = {[key: string]: Table}; // id: table
+export type SheetMapType = {[key: string]: number}; // name: id

@@ -284,7 +284,6 @@ export const cut = new CutAction().bind();
 class PasteAction<T extends { text: string }> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     const { choosing, copyingZone, selectingZone, cutting, table } = store;
-    const cell = table.getByPoint(choosing);
 
     let selectingArea = zoneToArea(selectingZone);
     const copyingArea = zoneToArea(copyingZone);
