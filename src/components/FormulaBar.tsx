@@ -73,10 +73,11 @@ export const FormulaBar: React.FC<Props> = ({width}) => {
             break;
           }
           case "Escape": {
+            input.value = origin;
             dispatch(setEditingCell(""));
             e.preventDefault();
             editorRef.current!.focus();
-            input.value = origin;
+
             break;
           }
         }
