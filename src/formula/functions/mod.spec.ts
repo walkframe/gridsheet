@@ -3,10 +3,8 @@ import {Table} from "../../lib/table";
 import {FormulaError, Ref, Value} from "../evaluator";
 
 describe('mod', () => {
-  const table = new Table({
-    numRows: 2, numCols: 2,
-    cells: {A1: {value: 5}, A2: {value: -3}, B2: {value: 25}},
-  });
+  const table = new Table({});
+  table.initialize({A1: {value: 5}, A2: {value: -3}, B2: {value: 25}});
   describe('normal', () => {
     it('divided by positive value', () => {
       {
