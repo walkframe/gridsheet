@@ -21,6 +21,7 @@ export const Labeler = () => {
             3: { labeler: "katakana" },
             4: { labeler: "katakana" },
             5: { labeler: "katakana" },
+            A1: {value: "=SUM($B$1:B2)"}
           },
           ensured: { numRows: 100, numCols: 100 },
         })}

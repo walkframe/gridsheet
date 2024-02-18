@@ -1,17 +1,21 @@
 .gridsheet-1 {
-  overflow: hidden;
-  position: relative;
-  box-sizing: content-box;
-  -webkit-box-sizing: content-box;
-  -moz-box-sizing: content-box;
+  overflow: auto;
   font-family:
-          "SF Pro Text",
-          "SF Pro Icons",
-          "Helvetica Neue",
-          "Helvetica",
-          Arial,
-          Meiryo,
-          sans-serif;
+  "SF Pro Text",
+  "SF Pro Icons",
+  "Helvetica Neue",
+  "Helvetica",
+  Arial,
+  Meiryo,
+  sans-serif;
+  
+  .gs-main {
+    overflow: hidden;
+    position: relative;
+    box-sizing: content-box;
+    -webkit-box-sizing: content-box;
+    -moz-box-sizing: content-box;
+  }
 
   &.light {
     background-color: #f7f7f7;
@@ -54,6 +58,14 @@
         }
       }
     }
+    .gs-large-editor {
+      textarea {
+        color: #dddddd;
+        caret-color: #dddddd;
+      }
+    }
+
+
     .gs-header {
       background-color: #474747;
       color: #eeeeee;
@@ -110,10 +122,10 @@
     }
   }
 
-  &.gs-table-width-larger {
+  .gs-table-width-larger {
     border-right: solid 1px rgba(128,128,128,.5);
   }
-  &.gs-table-height-larger {
+  .gs-table-height-larger {
     border-bottom: solid 1px rgba(128,128,128,.5);
   }
 

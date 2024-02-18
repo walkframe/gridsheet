@@ -6,7 +6,7 @@ import type {AreaType, CellsByAddressType, CellType, PointType, StoreType} from 
 import { Table } from "../lib/table";
 import {areaShape, areaToZone, complementSelectingArea, concatAreas, zoneToArea} from "./structs";
 import {p2a} from "./converters";
-import {convertFormulaAbsolute} from "../formula/evaluator";
+import {absolutizeFormula} from "../formula/evaluator";
 import {TimeDelta} from "./time";
 
 const BORDER_AUTOFILL_DRAGGING = "dashed 1px #000000";
@@ -210,7 +210,7 @@ export class Autofill {
             const skip = cells.length * sign;
             while(true) {
               slide += skip;
-              yield convertFormulaAbsolute({
+              yield absolutizeFormula({
                 value,
                 table,
                 slideY: orientation === "vertical" ? slide : 0,

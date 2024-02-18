@@ -76,32 +76,35 @@ export class Ref extends Entity {
   constructor(value: string) {
     super(value);
   }
-  private parse(table: Table): { table: Table, ref: string} {
+  private parse(table: Table): { table: Table, ref: string, sheetName: string} {
     if (this.value.indexOf("!") !== -1) {
-      const [sheet, ref] = this.value.split("!");
-      if (sheet.startsWith("#")) {
-        const sheetId = sheet.slice(1);
-        return { table: table.tables[sheetId], ref: ref.toUpperCase() };
-      }
-      const sheetId = table.sheets[sheet];
-      return { table: table.tables[sheetId], ref: ref.toUpperCase() };
+      const [rawSheetName, ref] = this.value.split("!");
+      const sheetName = stripSheetName(rawSheetName);
+      const sheetId = table.sheets[sheetName];
+      return { table: table.tables[sheetId], ref: ref.toUpperCase(), sheetName };
     }
-    return { table, ref: this.value.toUpperCase() };
+    return { table, ref: this.value.toUpperCase(), sheetName: stripSheetName(table.sheetName) };
   }
 
   public evaluate({ table }: EvaluateProps): Table {
     const parsed = this.parse(table);
+    if (parsed.table == null) {
+      throw new FormulaError("#REF!", `Unknown sheet: ${parsed.sheetName}`);
+    }
     const { y, x } = a2p(parsed.ref);
     return parsed.table.trim({ top: y, left: x, bottom: y, right: x });
   }
   public id(table: Table) {
     const parsed = this.parse(table);
+    if (parsed.table == null) {
+      return this.value;
+    }
     const id = parsed.table.getIdByAddress(parsed.ref);
     if (id) {
       if (parsed.table === table) {
         return id;
       }
-      return `#${parsed.table.sheetId}!${id}`
+      return `#${parsed.table.sheetId}!${id}`;
     }
     
     return this.value;
@@ -109,22 +112,54 @@ export class Ref extends Entity {
 }
 
 export class Range extends Entity<string> {
-  constructor(value: string) {
-    super(value.toUpperCase());
+  private parse(table: Table): { table: Table, refs: string[], sheetName: string} {
+    const rawRefs = this.value.split(":");
+    const refs: string[] = [];
+    let sheetName = "";
+    for (let i = 0; i < rawRefs.length; i++) {
+      const ref = rawRefs[i];
+      if (ref.indexOf("!") !== -1) {
+        const [rawSheetName, rawRef] = ref.split("!");
+        refs.push(rawRef.toUpperCase());
+        if (i === 0) {
+          sheetName = stripSheetName(rawSheetName);
+          const sheetId = table.sheets[sheetName];
+          table = table.tables[sheetId];
+        }
+        if (table == null) {
+          return { table, refs, sheetName };
+        }
+      } else {
+        refs.push(ref);
+      }
+    }
+    return { table, refs, sheetName: sheetName || table.sheetName };
   }
+
   public evaluate({ table }: EvaluateProps): Table {
-    const area = rangeToArea(this.complementRange(table));
-    return table.trim(area);
+    const parsed = this.parse(table);
+    if (parsed.table == null) {
+      throw new FormulaError("#REF!", `Unknown sheet: ${parsed.sheetName}`);
+    }
+    const area = rangeToArea(this.complementRange(parsed.table, parsed.refs));
+    return parsed.table.trim(area);
   }
   public idRange(table: Table) {
-    return this.value
-      .split(":")
-      .map((ref) => table.getIdByAddress(ref))
+    const parsed = this.parse(table);
+    if (parsed.table == null) {
+      return this.value;
+    }
+    const range = parsed.refs
+      .map((ref) => parsed.table.getIdByAddress(ref))
       .join(":");
+    
+    if (parsed.table === table) {
+      return range;
+    }
+    return `#${parsed.table.sheetId}!${range}`;
   }
-  private complementRange(table: Table) {
-    const cells = this.value.split(":");
-    let [start = "", end = ""] = cells;
+  private complementRange(table: Table, refs: string[]) {
+    let [start = "", end = ""] = refs;
     if (!start.match(/[1-9]\d*/)) {
       start += "1";
     }
@@ -152,7 +187,8 @@ export class Id extends Entity {
   public evaluate({ table }: EvaluateProps) {
     const parsed = this.parse(table);
     const { y, x } = parsed.table.getPointById(parsed.id);
-    return parsed.table.trim({ top: y, left: x, bottom: y, right: x });
+    const [absY, absX] = [Math.abs(y), Math.abs(x)];
+    return parsed.table.trim({ top: absY, left: absX, bottom: absY, right: absX });
   }
   public ref(table: Table, slideY = 0, slideX = 0) {
     const parsed = this.parse(table);
@@ -160,7 +196,8 @@ export class Id extends Entity {
     if (parsed.table.sheetId === table.sheetId) {
       return address;
     }
-    return `${parsed.table.sheetName}!${address}`;
+    const sheetName = wrapSheetName(parsed.table.sheetName);
+    return `${sheetName}!${address}`;
   }
   public slide(table: Table, slideY = 0, slideX = 0) {
     const address = this.ref(table, slideY, slideX);
@@ -172,19 +209,34 @@ export class Id extends Entity {
 }
 
 export class IdRange extends Entity<string> {
+  private parse(table: Table): { table: Table, ids: string[]} {
+    const range = this.value;
+    if (range.indexOf("!") !== -1) {
+      const [sheetId, idRange] = range.split("!");
+      table = table.tables[sheetId.slice(1)];
+      return { table, ids: idRange.split(":") };
+    }
+    return { table, ids: range.split(":") };
+  }
+
   public evaluate({ table }: EvaluateProps): Table {
-    const ids = this.value.split(":");
-    const [p1, p2] = ids
+    const parsed = this.parse(table);
+    const [p1, p2] = parsed.ids
       .map((id) => getId(id))
-      .map((id) => table.getPointById(id));
-    return table.trim({ top: p1.y, left: p1.x, bottom: p2.y, right: p2.x });
+      .map((id) => parsed.table.getPointById(id));
+    return parsed.table.trim({ top: p1.y, left: p1.x, bottom: p2.y, right: p2.x });
   }
   public range(table: Table, slideY = 0, slideX = 0) {
-    return this.value
-      .split(":")
+    const parsed = this.parse(table);
+    const range = parsed.ids
       .map((id) => getId(id, false))
-      .map((id) => table.getAddressById(id, slideY, slideX))
+      .map((id) => parsed.table.getAddressById(id, slideY, slideX))
       .join(":");
+    if (parsed.table.sheetId === table.sheetId) {
+      return range;
+    }
+    const sheetName = wrapSheetName(parsed.table.sheetName);
+    return `${sheetName}!${range}`;
   }
 
   public slide(table: Table, slideY = 0, slideX = 0) {
@@ -338,8 +390,9 @@ const TOKEN_OPEN = new Token("OPEN", "("),
 const BOOLS = { ["true"]: true, ["false"]: false };
 export class Lexer {
   private index: number;
-  public tokens: Token[] = [];
   private formula: string;
+  public tokens: Token[] = [];
+  public foreign: boolean = false;
 
   constructor(formula: string) {
     this.formula = formula;
@@ -409,7 +462,7 @@ export class Lexer {
   public tokenize() {
     while (this.index <= this.formula.length) {
       this.skipSpaces();
-      const char = this.get();
+      let char = this.get();
       this.next();
       switch (char) {
         case undefined:
@@ -476,9 +529,17 @@ export class Lexer {
           this.tokens.push(TOKEN_LT);
           continue;
         case '"': {
-          const buf = this.getString();
+          const buf = this.getString('"');
           this.tokens.push(new Token("VALUE", buf));
           continue;
+        }
+        case "'": {
+          const buf = this.getString("'");
+          char = `'${buf}'`;
+        }
+        case "!": {
+          this.foreign = true;
+          // not continue
         }
       } // switch end
       let buf = char;
@@ -536,7 +597,7 @@ export class Lexer {
     }
   }
 
-  private getString() {
+  private getString(quote='"') {
     let buf = "";
     while (true) {
       const c = this.get();
@@ -544,10 +605,10 @@ export class Lexer {
       if (c == null) {
         break;
       }
-      if (c === '"') {
-        if (this.get() === '"') {
+      if (c === quote) {
+        if (this.get() === quote) {
           // escape
-          buf += '"';
+          buf += quote;
           this.next();
           continue;
         } else {
@@ -668,7 +729,7 @@ export class Parser {
   }
 }
 
-export const convertFormulaAbsolute = ({
+export const absolutizeFormula = ({
   value,
   table,
   slideY = 0,
@@ -687,4 +748,21 @@ export const convertFormulaAbsolute = ({
     }
   }
   return value;
+};
+
+export const stripSheetName = (sheetName: string) => {
+  if (sheetName.charAt(0) === "'") {
+    sheetName = sheetName.slice(1);
+  }
+  if (sheetName.charAt(sheetName.length - 1) === "'") {
+    sheetName = sheetName.slice(0, -1);
+  }
+  return sheetName;
+};
+
+const wrapSheetName = (sheetName: string) => {
+  if (sheetName.indexOf(" ") !== -1) {
+    return `'${sheetName}'`;
+  }
+  return sheetName;
 };

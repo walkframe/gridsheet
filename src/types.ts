@@ -69,6 +69,7 @@ export type OptionsType = {
   headerWidth?: number;
   editingOnEnter?: boolean;
   showAddress?: boolean;
+  showFormulaBar?: boolean;
   minNumRows?: number;
   maxNumRows?: number;
   minNumCols?: number;
@@ -96,6 +97,7 @@ export type StoreType = {
   tableInitialized: boolean;
   sheetRef: React.MutableRefObject<HTMLDivElement | null>;
   editorRef: React.MutableRefObject<HTMLTextAreaElement | null>;
+  largeEditorRef: React.MutableRefObject<HTMLTextAreaElement | null>;
   gridOuterRef: React.MutableRefObject<HTMLDivElement | null>;
   searchInputRef: React.MutableRefObject<HTMLInputElement | null>;
   entering: boolean;

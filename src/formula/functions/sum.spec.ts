@@ -3,10 +3,8 @@ import {Table} from "../../lib/table";
 import {FormulaError, Range, Ref, Value} from "../evaluator";
 
 describe('sum', () => {
-  const table = new Table({
-    numRows: 100, numCols: 100,
-    cells: {A1: {value: 5}, A2: {value: "=-(9 * 10) - 4"}, B50: {value: 25}, C15: {value: "not a number"}, C20: {value: 10}},
-  });
+  const table = new Table({});
+  table.initialize({A1: {value: 5}, A2: {value: "=-(9 * 10) - 4"}, B50: {value: 25}, C15: {value: "not a number"}, C20: {value: 10}});
 
   describe('normal', () => {
     it('sum single values', () => {

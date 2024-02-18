@@ -23,11 +23,11 @@ import {
   TableMapType,
   SheetMapType,
 } from "../types";
-import {areaShape, createMatrix, expandRange, matrixShape, putMatrix} from "./structs";
+import {areaShape, createMatrix, expandRange, getMaxSizesFromCells, matrixShape, putMatrix} from "./structs";
 import { a2p, x2c, p2a, y2r, grantAddressAbsolute } from "./converters";
 import { FunctionMapping } from "../formula/functions/__base";
 import { functions as functionsDefault } from "../formula/mapping";
-import { convertFormulaAbsolute, Lexer } from "../formula/evaluator";
+import { absolutizeFormula, Lexer, stripSheetName } from "../formula/evaluator";
 import { solveFormula } from "../formula/solver";
 
 import {DEFAULT_HEIGHT, DEFAULT_WIDTH, HISTORY_LIMIT} from "../constants";
@@ -35,9 +35,6 @@ import { shouldTracking } from "../store/helpers";
 import * as prevention from "./prevention";
 
 type Props = {
-  numRows?: number;
-  numCols?: number;
-  cells?: CellsByAddressType;
   parsers?: Parsers;
   renderers?: Renderers;
   labelers?: Labelers;
@@ -96,9 +93,6 @@ export interface UserTable {
   headerWidth: number;
   headerHeight: number;
   currentHistory?: HistoryType;
-  sheetId: number;
-  sheets: SheetMapType;
-  tables: TableMapType;
 
   getRectSize(area: AreaType): ShapeType;
   getAddressById(id: Id, slideY: number, slideX: number): string | undefined;
@@ -201,15 +195,15 @@ export class Table implements UserTable {
   public headerWidth: number = 0;
   public headerHeight: number = 0;
   public currentHistory?: HistoryType;
-  public sheetId: number;
-  public sheetName: string;
-  public sheets: SheetMapType;
-  public tables: TableMapType;
+  public sheetId: number = 0;
+  public sheetName: string = "";
+  public sheets: SheetMapType = {};
+  public tables: TableMapType = {};
 
   private head: bigint | number;
   private idMatrix: IdMatrix;
-  private data: CellsByIdType;
-  private area: AreaType;
+  private data: CellsByIdType = {};
+  private area: AreaType = { top: 0, left: 0, bottom: 0, right: 0 };
   private parsers: Parsers;
   private renderers: Renderers;
   private labelers: Labelers;
@@ -220,11 +214,9 @@ export class Table implements UserTable {
   private addressesById: { [id: Id]: Address };
   private historyLimit: number;
   private solvedCaches: { [address: Address]: any };
+  private idsToBeAbsoluted: Id[];
 
   constructor({
-    numRows = 0,
-    numCols = 0,
-    cells = {},
     parsers = {},
     renderers = {},
     labelers = {},
@@ -239,8 +231,6 @@ export class Table implements UserTable {
     functions = functionsDefault,
   }: Props) {
     this.head = useBigInt ? BigInt(0) : 0;
-    this.data = {};
-    this.area = { top: 0, left: 0, bottom: numRows || 0, right: numCols || 0 };
     this.parsers = parsers || {};
     this.renderers = renderers || {};
     this.labelers = labelers || {};
@@ -258,16 +248,18 @@ export class Table implements UserTable {
     this.headerHeight = headerHeight || 0;
     this.headerWidth = headerWidth || 0;
     this.functions = functions;
-    this.sheetId = 0;
-    this.sheetName = "";
-    this.sheets = {};
-    this.tables = {};
+    this.idsToBeAbsoluted = [];
+  }
+
+  public initialize(cells: CellsByAddressType) {
+    const auto = getMaxSizesFromCells(cells);
+    this.area = { top: 0, left: 0, bottom: auto.numRows || 0, right: auto.numCols || 0 };
 
     // make idMatrix beforehand
-    for (let y = 0; y < numRows + 1; y++) {
+    for (let y = 0; y < auto.numRows + 1; y++) {
       const ids: Ids = [];
       this.idMatrix.push(ids);
-      for (let x = 0; x < numCols + 1; x++) {
+      for (let x = 0; x < auto.numCols + 1; x++) {
         const id = this.generateId();
         ids.push(id);
         const address = p2a({ y, x });
@@ -290,11 +282,12 @@ export class Table implements UserTable {
         };
       });
     });
+
     const common = cells?.['default'];
-    for (let y = 0; y < numRows + 1; y++) {
+    for (let y = 0; y < auto.numRows + 1; y++) {
       const rowId = y2r(y);
       const rowDefault = cells?.[rowId];
-      for (let x = 0; x < numCols + 1; x++) {
+      for (let x = 0; x < auto.numCols + 1; x++) {
         const id = this.getId({ y, x });
         const address = p2a({ y, x });
         const colId = x2c(x);
@@ -313,10 +306,10 @@ export class Table implements UserTable {
           },
           prevention: (common?.prevention || 0) | (rowDefault?.prevention || 0) | (colDefault?.prevention || 0) | (cell?.prevention || 0),
         } as CellType;
-        stacked.value = convertFormulaAbsolute({
-          value: stacked?.value,
-          table: this,
-        });
+
+        if (stacked?.value?.startsWith?.("=")) {
+          this.idsToBeAbsoluted.push(id);
+        }
         if (y === 0) {
           if (stacked.width == null) {
             stacked.width = DEFAULT_WIDTH;
@@ -334,6 +327,19 @@ export class Table implements UserTable {
       }
     }
     this.setTotalSize();
+  }
+
+  public absolutizeFormula() {
+    this.idsToBeAbsoluted.forEach((id) => {
+      const cell = this.data[id];
+      if (cell == null) {
+        return;
+      }
+      cell.value = absolutizeFormula({
+        value: cell?.value,
+        table: this,
+      });
+    });
   }
 
   private generateId() {
@@ -357,35 +363,12 @@ export class Table implements UserTable {
     this.totalHeight = height + this.headerHeight;
   }
 
-  private shallowCopy({ copyCache = true }: { copyCache?: boolean } = {}) {
-    const copied = new Table({});
+  public shallowCopy({ copyCache = true }: { copyCache?: boolean } = {}) {
+    const copied: Table = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     copied.changedAt = new Date();
-    copied.lastChangedAt = this.changedAt;
-    copied.head = this.head;
-    copied.idMatrix = this.idMatrix;
-    copied.data = this.data;
-    copied.area = this.area;
-    copied.parsers = this.parsers;
-    copied.renderers = this.renderers;
-    copied.labelers = this.labelers;
-    copied.functions = this.functions;
-    copied.histories = this.histories;
-    copied.currentHistory = this.currentHistory;
-    copied.historyLimit = this.historyLimit;
-    copied.historyIndex = this.historyIndex;
-    copied.minNumRows = this.minNumRows;
-    copied.maxNumRows = this.maxNumRows;
-    copied.minNumCols = this.minNumCols;
-    copied.maxNumCols = this.maxNumCols;
-    copied.headerHeight = this.headerHeight;
-    copied.headerWidth = this.headerWidth;
-    copied.sheets = this.sheets;
-    copied.tables = this.tables;
-    
     copied.setTotalSize();
-    if (copyCache) {
-      copied.addressesById = this.addressesById;
-    } else {
+    copied.idsToBeAbsoluted = [];
+    if (!copyCache) {
       // force reset
       this.addressesById = {};
     }
@@ -442,7 +425,7 @@ export class Table implements UserTable {
   }
   private getId(point: PointType) {
     const { y, x } = point;
-    return this.idMatrix[y]?.[x];
+    return this.idMatrix[Math.abs(y)]?.[Math.abs(x)];
   }
 
   public getByPoint(point: PointType) {
@@ -921,7 +904,7 @@ export class Table implements UserTable {
           }),
           prevention: 0, // Is this okay?
         };
-        const value = convertFormulaAbsolute({
+        const value = absolutizeFormula({
           value: cell?.value,
           table: this,
           slideY,
@@ -966,10 +949,10 @@ export class Table implements UserTable {
         return;
       }
 
-      cell.value = convertFormulaAbsolute({
+      cell.value = absolutizeFormula({
         value: cell.value,
         table: this,
-      });
+      });      
       const point = a2p(address);
       const id = this.getId(point);
       const current = this.data[id];
@@ -1421,28 +1404,24 @@ export class Table implements UserTable {
   }
 
   public trim(area: AreaType): Table {
-    const copied = new Table({});
+    const copied: Table = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     copied.area = area;
-    copied.idMatrix = this.idMatrix;
-    copied.data = this.data;
-    copied.parsers = this.parsers;
-    copied.renderers = this.renderers;
-    copied.labelers = this.labelers;
-    copied.functions = this.functions;
-    copied.addressesById = this.addressesById;
-    copied.solvedCaches = this.solvedCaches;
-    copied.sheetId = this.sheetId;
-    copied.sheetName = this.sheetName;
-    copied.sheets = this.sheets;
-    copied.tables = this.tables;
     return copied;
   }
 
   public getIdByAddress(address: Address) {
+    let table: Table = this;
+    if (address.indexOf("!") !== -1) {
+      const [sheetName, addr] = address.split("!");
+      const sheetId = this.sheets[stripSheetName(sheetName)];
+      table = this.tables[sheetId];
+      address = addr;
+    }
     const { y, x } = a2p(address);
-    const id = this.getId({ y: Math.abs(y), x: Math.abs(x) });
+    const id = table.getId({ y, x });
     if (id) {
-      return `#${x < 0 ? "$" : ""}${id}${y < 0 ? "$" : ""}`;
+      const prefix = table === this ? "" : `#${table.sheetId}!`;
+      return `${prefix}#${x < 0 ? "$" : ""}${id}${y < 0 ? "$" : ""}`;
     }
   }
 

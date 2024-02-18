@@ -15,65 +15,37 @@ import {
 } from "../store/actions";
 
 import { HEADER_HEIGHT, HEADER_WIDTH, HISTORY_LIMIT } from "../constants";
-import { Table } from "../lib/table";
-import { functions } from "../formula/mapping";
-import { getMaxSizesFromCells } from "../lib/structs";
-import { SheetContext } from "./SheetProvider";
+import { useSheetContext } from "./SheetProvider";
 
 export const StoreInitializer: React.FC<Props> = ({
-  initial = {},
   options = {},
-  additionalFunctions = {},
 }) => {
   const {
     headerHeight = HEADER_HEIGHT,
     headerWidth = HEADER_WIDTH,
-    historyLimit = HISTORY_LIMIT,
     sheetHeight,
     sheetWidth,
     editingOnEnter,
     showAddress,
-    renderers,
-    parsers,
-    labelers,
-    minNumRows,
-    maxNumRows,
-    minNumCols,
-    maxNumCols,
     onSave,
   } = options;
 
-  const sheetsContext = React.useContext(SheetContext);
-  const { store, dispatch } = React.useContext(Context);
+  const [sheetProvided, sheetContext] = useSheetContext();
+  const { store, dispatch } = React.useContext(Context);  
 
   React.useEffect(() => {
-    if (sheetsContext.tables?.current == null || sheetsContext.sheets?.current == null) {
+    const { table, tableInitialized } = store;
+    if (table == null || tableInitialized) {
       return;
     }
-    store.table.tables = sheetsContext.tables.current;
-    store.table.sheets = sheetsContext.sheets.current;
-  }, [sheetsContext.sheets?.current, sheetsContext.tables?.current]);
 
-  React.useEffect(() => {
-    const auto = getMaxSizesFromCells(initial);
-    const table = new Table({
-      numRows: auto.numRows,
-      numCols: auto.numCols,
-      cells: initial,
-      historyLimit,
-      parsers,
-      renderers,
-      labelers,
-      minNumRows,
-      maxNumRows,
-      minNumCols,
-      maxNumCols,
-      headerHeight,
-      headerWidth,
-      functions: { ...functions, ...additionalFunctions },
-    });
-    dispatch(initializeTable(table));
-  }, []);
+    if (!sheetProvided || sheetContext.mounted) {
+      table.absolutizeFormula();
+      dispatch(initializeTable(table.shallowCopy()))
+    }
+  }, [sheetContext.mounted]);
+
+
   React.useEffect(() => {
     if (sheetHeight) {
       dispatch(setSheetHeight(sheetHeight));
@@ -109,5 +81,6 @@ export const StoreInitializer: React.FC<Props> = ({
       dispatch(setOnSave(onSave));
     }
   }, [onSave]);
+
   return <></>;
 };
