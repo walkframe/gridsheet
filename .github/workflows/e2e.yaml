@@ -36,5 +36,10 @@ jobs:
         run: |
           python -m http.server 5233 --directory "${{ github.workspace }}/storybook-static" &
 
-      - name: test
+      - name: e2e test
         run: yarn e2e
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: test-results
