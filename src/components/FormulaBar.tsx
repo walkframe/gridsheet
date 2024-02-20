@@ -38,7 +38,7 @@ export const FormulaBar: React.FC<Props> = ({width}) => {
   return <label className="gs-formula-bar" style={{width}}>
     <div className="gs-selecting-address">{address}</div>
     <div className="gs-fx" style={{
-      height: largeEditorRef.current?.scrollHeight || 0,
+      height: largeEditorRef.current?.clientHeight || 0,
     }}>Fx</div>
     <textarea
       rows={1} ref={largeEditorRef}

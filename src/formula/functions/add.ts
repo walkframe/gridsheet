@@ -47,6 +47,12 @@ export class AddFunction extends BaseFunction {
     if (typeof v1  === "number" && v2 instanceof Date) {
       return addSeconds(v2, v1);
     }
+    if (!v1) {
+      return v2;
+    }
+    if (!v2) {
+      return v1;
+    }
     throw new FormulaError(
       "#VALUE!",
       "Mismatched types for augend and addend."

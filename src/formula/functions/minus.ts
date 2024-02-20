@@ -50,6 +50,12 @@ export class MinusFunction extends BaseFunction {
     if (v1 instanceof Date && typeof v2 === "number") {
       return subSeconds(v1, v2);
     }
+    if (!v1) {
+      return -v2;
+    }
+    if (!v2) {
+      return v1;
+    }
     throw new FormulaError(
       "#VALUE!",
       "Mismatched types for minuend and subtrahend."
