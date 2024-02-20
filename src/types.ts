@@ -131,7 +131,7 @@ export type StoreType = {
 };
 
 export type Props = {
-  initial: CellsByAddressType;
+  initialCells: CellsByAddressType;
   sheetName?: string;
   tableRef?: React.MutableRefObject<TableRef | null>;
   options?: OptionsType;

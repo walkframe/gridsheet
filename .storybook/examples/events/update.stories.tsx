@@ -37,7 +37,7 @@ export const Update = () => {
       <button onClick={update}>Update!</button>
       <GridSheet
         tableRef={tableRef}
-        initial={generateInitial({
+        initialCells={generateInitial({
           cells: {},
           ensured: {
             numRows: 10,
@@ -74,7 +74,7 @@ export const AddRowsAndUpdate = () => {
       <button onClick={add}>Add!</button>
       <GridSheet
         tableRef={tableRef}
-        initial={generateInitial({
+        initialCells={generateInitial({
           cells: {
             B: { style: { color: "#F00" } },
             B7: { value: "test1" },
@@ -116,7 +116,7 @@ export const AddColsAndUpdate = () => {
       <button onClick={add}>Add!</button>
       <GridSheet
         tableRef={tableRef}
-        initial={generateInitial({
+        initialCells={generateInitial({
           cells: {
             B: { style: { color: "#F00" } },
             B7: { value: "test1" },

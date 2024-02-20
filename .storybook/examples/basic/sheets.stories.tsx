@@ -20,7 +20,7 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
     <SheetProvider>
       <GridSheet
         sheetName={sheet1}
-        initial={generateInitial({
+        initialCells={generateInitial({
           cells: {
             default: { width: defaultWidth },
             A1: {
@@ -44,7 +44,7 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
       <hr />
       <GridSheet
         sheetName={sheet2}
-        initial={generateInitial({
+        initialCells={generateInitial({
           cells: {
             A1: {value: 50},
             B2: {value: 1200},
@@ -58,7 +58,7 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
 
       <GridSheet
         sheetName={sheet3}
-        initial={generateInitial({
+        initialCells={generateInitial({
           cells: {
             A1: {value: 555},
           },

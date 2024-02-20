@@ -14,7 +14,7 @@ const Sheet = ({ showAddress }: Props) => {
   return (
     <>
       <GridSheet
-        initial={generateInitial({
+        initialCells={generateInitial({
           ensured: { numRows: 100, numCols: 100 },
         })}
         options={{ showAddress }}

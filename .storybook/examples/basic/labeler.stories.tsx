@@ -9,7 +9,7 @@ export const Labeler = () => {
   return (
     <>
       <GridSheet
-        initial={generateInitial({
+        initialCells={generateInitial({
           cells: {
             A: { labeler: "hiragana" },
             B: { labeler: "hiragana" },

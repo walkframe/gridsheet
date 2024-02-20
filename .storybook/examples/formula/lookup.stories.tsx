@@ -10,7 +10,7 @@ export const LookUp = () => {
     <>
       <h1>HLOOKUP</h1>
       <GridSheet
-        initial={generateInitial({
+        initialCells={generateInitial({
           cells: {
             1: { style: { backgroundColor: "#ddd" } },
             "2:3": { style: {} },
@@ -120,7 +120,7 @@ export const LookUp = () => {
       />
       <h1>VLOOKUP</h1>
       <GridSheet
-        initial={generateInitial({
+        initialCells={generateInitial({
           cells: {
             A: { width: 30 },
             C: { width: 40 },

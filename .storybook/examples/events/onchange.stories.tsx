@@ -19,7 +19,7 @@ export const SheetOnChange = () => {
         <div style={{ flex: 1 }}>
           <GridSheet
             tableRef={tableRef}
-            initial={generateInitial({
+            initialCells={generateInitial({
               matrices: {
                 A1: [
                   [1, 2, 3, 4, 5],

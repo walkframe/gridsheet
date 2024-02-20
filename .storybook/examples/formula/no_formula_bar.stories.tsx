@@ -9,7 +9,7 @@ export const NoFormulaBar = () => {
   return (
     <>
       <GridSheet
-        initial={generateInitial({
+        initialCells={generateInitial({
           matrices: {},
           cells: {
             default: {

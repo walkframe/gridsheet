@@ -9,7 +9,7 @@ export const SimpleCalculation = () => {
   return (
     <>
       <GridSheet
-        initial={generateInitial({
+        initialCells={generateInitial({
           matrices: {
             A1: [
               ["'=100 + 5", "'=A2 - 60", "'=B2 * A2"],

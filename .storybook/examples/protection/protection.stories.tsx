@@ -20,7 +20,7 @@ const Sheet = ({ numRows, numCols, defaultWidth }: Props) => {
           headerHeight: 50,
           headerWidth: 150,
         }}
-        initial={generateInitial({
+        initialCells={generateInitial({
           cells: {
             default: { width: defaultWidth },
             4: {

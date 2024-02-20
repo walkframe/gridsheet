@@ -9,7 +9,7 @@ export const Row = () => {
   return (
     <>
       <GridSheet
-        initial={generateInitial({
+        initialCells={generateInitial({
           cells: {
             A1: { value: "=ROW()" },
             A2: { value: "=ROW()" },

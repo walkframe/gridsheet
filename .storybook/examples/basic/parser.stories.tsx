@@ -33,7 +33,7 @@ export const ParseAsList = () => {
   return (
     <>
       <GridSheet
-        initial={generateInitial({
+        initialCells={generateInitial({
           matrices: {
             A1: [
               [

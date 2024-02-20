@@ -28,7 +28,7 @@ const Sheet = ({ x, y, value }: Props) => {
     <>
       <GridSheet
         tableRef={tableRef}
-        initial={generateInitial({
+        initialCells={generateInitial({
           cells: {},
           ensured: {
             numRows: 50,

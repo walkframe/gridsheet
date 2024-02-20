@@ -15,7 +15,7 @@ const Sheet = ({ mode }: Props) => {
   return (
     <>
       <GridSheet
-        initial={generateInitial({
+        initialCells={generateInitial({
           ensured: { numRows: 10, numCols: 10 },
         })}
         options={{ mode }}

@@ -22,7 +22,7 @@ export const CustomFunction = () => {
   return (
     <>
       <GridSheet
-        initial={generateInitial({
+        initialCells={generateInitial({
           cells: {
             default: { width: 200 },
             B2: { value: '=HOPE("WORLD PEACE") & "!"' },

@@ -15,7 +15,7 @@ export const ResizeSheets = () => {
               {" "}
               <GridSheet
                 style={{ maxWidth: "100%", maxHeight: "150px" }}
-                initial={generateInitial({
+                initialCells={generateInitial({
                   matrices: {
                     A1: [
                       ["resizable", "both", "!"],
@@ -36,7 +36,7 @@ export const ResizeSheets = () => {
               {" "}
               <GridSheet
                 style={{ maxWidth: "100%", maxHeight: "150px" }}
-                initial={generateInitial({
+                initialCells={generateInitial({
                   matrices: {
                     A1: [
                       ["resizable", "vertically", "!"],
@@ -59,7 +59,7 @@ export const ResizeSheets = () => {
               {" "}
               <GridSheet
                 style={{ maxWidth: "100%", maxHeight: "150px" }}
-                initial={generateInitial({
+                initialCells={generateInitial({
                   matrices: {
                     A1: [
                       ["resizable", "horizontally", "!"],
@@ -80,7 +80,7 @@ export const ResizeSheets = () => {
               {" "}
               <GridSheet
                 style={{ maxWidth: "100%", maxHeight: "150px" }}
-                initial={generateInitial({
+                initialCells={generateInitial({
                   matrices: {
                     A1: [
                       ["not", "resizable", "!!!"],

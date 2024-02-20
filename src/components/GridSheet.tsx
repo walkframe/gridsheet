@@ -28,7 +28,7 @@ import { useSheetContext } from "./SheetProvider";
 import { FormulaBar } from "./FormulaBar";
 
 export const GridSheet: React.FC<Props> = ({
-  initial: initialData,
+  initialCells: initialData,
   sheetName = "",
   tableRef,
   options = {},
@@ -195,7 +195,7 @@ export const GridSheet: React.FC<Props> = ({
               tableRef={tableRef}
             />
             <StoreInitializer
-              initial={initialData}
+              initialCells={initialData}
               options={{ ...options, sheetHeight, sheetWidth }}
               additionalFunctions={additionalFunctions}
             />
