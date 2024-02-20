@@ -35,7 +35,7 @@ export const FormulaBar: React.FC<Props> = ({width}) => {
     editorRef.current!.focus();
   }
 
-  return <label className="gs-large-editor" style={{width}}>
+  return <label className="gs-formula-bar" style={{width}}>
     <div className="gs-selecting-address">{address}</div>
     <div className="gs-fx" style={{
       height: largeEditorRef.current?.scrollHeight || 0,

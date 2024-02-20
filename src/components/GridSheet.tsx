@@ -172,6 +172,7 @@ export const GridSheet: React.FC<Props> = ({
       <div 
         className={`gridsheet-1 ${mode || "light"}`}
         style={{width: sheetWidth}}
+        data-sheet-name={sheetName}
       >
         {showFormulaBar && <FormulaBar width={sheetWidth}/> }
         <div

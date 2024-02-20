@@ -22,4 +22,4 @@ jobs:
           yarn install
       - name: test
         run: |
-          yarn test
+          yarn jest

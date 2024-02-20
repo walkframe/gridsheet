@@ -37,7 +37,8 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(
 
     return (
       <th
-        className={`gs-header gs-header-vertical gs-header-left ${choosing.y === y ? "gs-choosing" : ""
+        data-y={y}
+        className={`gs-header gs-header-vertical gs-header-left ${choosing.y === y ? "gs-pointed" : ""
         } ${
           between({ start: selectingZone.startY, end: selectingZone.endY }, y)
             ? horizontalheaderSelecting

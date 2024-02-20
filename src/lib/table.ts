@@ -110,6 +110,7 @@ export interface UserTable {
   getObject(args?: GetProps): CellsByAddressType;
   getRows(args?: GetProps): CellsByAddressType[];
   getCols(args?: GetProps): CellsByAddressType[];
+  getTableBySheetName(sheetName: string): UserTable;
   move(args: MoveProps): UserTable;
   copy(args: MoveProps): UserTable;
   update(args: {
@@ -249,6 +250,11 @@ export class Table implements UserTable {
     this.headerWidth = headerWidth || 0;
     this.functions = functions;
     this.idsToBeAbsoluted = [];
+  }
+
+  public getTableBySheetName(sheetName: string) {
+    const sheetId = this.sheets[sheetName];
+    return this.tables[sheetId];
   }
 
   public initialize(cells: CellsByAddressType) {

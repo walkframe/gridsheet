@@ -107,3 +107,6 @@ typings/
 stories/
 storybook-static/
 .idea
+
+# Playwright
+test-results/
