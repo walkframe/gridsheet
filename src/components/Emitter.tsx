@@ -1,7 +1,7 @@
-import React from "react";
+import React from 'react';
 
-import { Context } from "../store";
-import { FeedbackType } from "../types";
+import { Context } from '../store';
+import { FeedbackType } from '../types';
 
 type Props = {
   onChange?: FeedbackType;
@@ -10,12 +10,7 @@ type Props = {
 
 export const Emitter: React.FC<Props> = ({ onChange, onSelect }) => {
   const { store } = React.useContext(Context);
-  const {
-    choosing: pointing,
-    selectingZone: zone,
-    table,
-    tableInitialized,
-  } = store;
+  const { choosing: pointing, selectingZone: zone, table, tableInitialized } = store;
 
   React.useEffect(() => {
     tableInitialized &&

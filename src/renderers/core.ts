@@ -1,12 +1,14 @@
-import { CellType, PointType, WriterType } from "../types";
-import {Table, UserTable} from "../lib/table";
-import { solveFormula } from "../formula/solver";
-import { FormulaError } from "../formula/evaluator";
-import { p2a } from "../lib/converters";
-import { TimeDelta } from "../lib/time";
-import { format as formatDate } from "date-fns";
+import { CellType, PointType, WriterType } from '../types';
+import { Table, UserTable } from '../lib/table';
+import { solveFormula } from '../formula/solver';
+import { FormulaError } from '../formula/evaluator';
+import { p2a } from '../lib/converters';
+import { TimeDelta } from '../lib/time';
+import { format as formatDate } from 'date-fns';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Condition = (value: any) => boolean;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Stringify = (value: any) => string;
 
 type Props = {
@@ -16,7 +18,7 @@ type Props = {
 };
 
 export interface RendererMixinType {
-  render?(value: any, table: UserTable, writer?: WriterType): any
+  render?(value: any, table: UserTable, writer?: WriterType): any;
   stringify?(cell: CellType): string;
   string?(value: string, table: UserTable, writer?: WriterType): any;
   bool?(value: boolean, writer?: WriterType): any;
@@ -30,9 +32,9 @@ export interface RendererMixinType {
 }
 
 export class Renderer implements RendererMixinType {
-  public datetimeFormat: string = "yyyy-MM-dd HH:mm:ss";
-  public dateFormat: string = "yyyy-MM-dd";
-  public timeDeltaFormat: string = "HH:mm";
+  public datetimeFormat: string = 'yyyy-MM-dd HH:mm:ss';
+  public dateFormat: string = 'yyyy-MM-dd';
+  public timeDeltaFormat: string = 'HH:mm';
   private condition?: Condition;
   private complement?: Stringify;
 
@@ -52,7 +54,7 @@ export class Renderer implements RendererMixinType {
     }
     for (const mixin of mixins) {
       for (const key in mixin) {
-        // @ts-ignore
+        // @ts-expect-error mixin has the same fields as this
         this[key] = mixin[key];
       }
     }
@@ -63,20 +65,16 @@ export class Renderer implements RendererMixinType {
     const cache = table.getSolvedCache(address);
     const value = cache || table.getByPoint(point)?.value;
     const { y, x } = point;
-    return this.render(
-      value,
-      table.trim({ top: y, left: x, bottom: y, right: x }),
-      writer
-    );
+    return this.render(value, table.trim({ top: y, left: x, bottom: y, right: x }), writer);
   }
 
   public render(value: any, table: Table, writer?: WriterType): any {
     if (this.condition && !this.condition(value)) {
-      return this.complement ? this.complement(value) : this.stringify(value);
+      return this.complement ? this.complement(value) : this.stringify({ value });
     }
 
     switch (typeof value) {
-      case "object":
+      case 'object':
         if (value instanceof Date) {
           return this.date(value, writer);
         }
@@ -87,11 +85,7 @@ export class Renderer implements RendererMixinType {
           return this.null(value, writer);
         }
         if (value instanceof Table) {
-          return this.render(
-            value.getByPoint({ y: value.top, x: value.left })?.value,
-            table,
-            writer
-          );
+          return this.render(value.getByPoint({ y: value.top, x: value.left })?.value, table, writer);
         }
         if (Array.isArray(value)) {
           return this.array(value, writer);
@@ -100,18 +94,19 @@ export class Renderer implements RendererMixinType {
           throw value;
         }
         return this.object(value, writer);
-      case "string":
+      case 'string':
         return this.string(value, table, writer);
-      case "number":
+      case 'number':
         return this.number(value, writer);
-      case "boolean":
+      case 'boolean':
         return this.bool(value, writer);
-      case "undefined":
+      case 'undefined':
         return this.undefined(value, writer);
-      case "function":
+      case 'function':
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         return value() as string;
     }
-    return "";
+    return '';
   }
 
   stringify(cell: CellType): string {
@@ -123,8 +118,9 @@ export class Renderer implements RendererMixinType {
       return this.timedelta(value);
     }
     if (value == null) {
-      return "";
+      return '';
     }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     return value.toString();
   }
 
@@ -132,34 +128,39 @@ export class Renderer implements RendererMixinType {
     if (value[0] === "'") {
       return value.substring(1);
     }
-    if (value[0] === "=") {
+    if (value[0] === '=') {
       const result = solveFormula({ value, table, raise: true });
-      if (result == null) {
-        // @ts-ignore
-        return this[String(result)](result);
+      if (result === null) {
+        return this.null(null);
       }
-      if (result.constructor.name === "Boolean") {
+      if (result === undefined) {
+        return this.undefined(undefined);
+      }
+      if (result.constructor.name === 'Boolean') {
         return String(result).toUpperCase();
       }
-      if (result.constructor.name === "Date") {
-        return this.date(result);
+      if (result.constructor.name === 'Date') {
+        return this.date(result as Date);
       }
       return this.render(result, table, writer);
     }
     return value;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   bool(value: boolean, writer?: WriterType): any {
-    return value ? "TRUE" : "FALSE";
+    return value ? 'TRUE' : 'FALSE';
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   number(value: number, writer?: WriterType): any {
     if (isNaN(value)) {
-      return "NaN";
+      return 'NaN';
     }
     return value;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   date(value: Date, writer?: WriterType): any {
     if (value.getHours() + value.getMinutes() + value.getSeconds() === 0) {
       return formatDate(value, this.dateFormat);
@@ -167,23 +168,28 @@ export class Renderer implements RendererMixinType {
     return formatDate(value, this.datetimeFormat);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   timedelta(value: TimeDelta, writer?: WriterType): any {
     return value.stringify(this.timeDeltaFormat);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   array(value: any[], writer?: WriterType): any {
-    return value.map((v) => this.stringify({ value: v })).join(",");
+    return value.map((v) => this.stringify({ value: v })).join(',');
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   object(value: any, writer?: WriterType): any {
     return JSON.stringify(value);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   null(value: any, writer?: WriterType): any {
-    return "";
+    return '';
   }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   undefined(value: undefined, writer?: WriterType): any {
-    return "";
+    return '';
   }
 }
 

@@ -1,5 +1,5 @@
-import React from "react";
-import {WriterType} from "../types";
+import React from 'react';
+import { WriterType } from '../types';
 
 export const CheckboxRendererMixin = {
   bool(value: boolean, writer?: WriterType): any {
@@ -13,5 +13,5 @@ export const CheckboxRendererMixin = {
         }}
       />
     );
-  }
-}
+  },
+};

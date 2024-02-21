@@ -1,8 +1,6 @@
-import React from "react";
+import React from 'react';
 
-import { SheetMapType, TableMapType, StoreType } from "../types";
-
-
+import { SheetMapType, TableMapType } from '../types';
 
 export type SheetContextType = {
   mounted: boolean;
@@ -26,13 +24,11 @@ export function useSheetDispatch() {
   const dispatch = React.useContext(SheetContext);
   if (!dispatch) {
     return undefined;
-  };
+  }
   return dispatch;
 }
 
-export function SheetProvider({ children }: {
-  children: React.ReactNode;
-}) {
+export function SheetProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = React.useState(false);
   const [version, setVersion] = React.useState(0);
   const head = React.useRef(1);
@@ -44,13 +40,15 @@ export function SheetProvider({ children }: {
   }, []);
 
   return (
-    <SheetContext.Provider value={{
-      mounted,
-      tables,
-      sheets,
-      head,
-      forceRender: () => setVersion(version + 1),
-    }}>
+    <SheetContext.Provider
+      value={{
+        mounted,
+        tables,
+        sheets,
+        head,
+        forceRender: () => setVersion(version + 1),
+      }}
+    >
       {children}
     </SheetContext.Provider>
   );

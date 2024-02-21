@@ -1,4 +1,4 @@
-import {CSS, LAST_MODIFIED} from "./minified";
+import { CSS, LAST_MODIFIED } from './minified';
 
 export const embedStyle = () => {
   if (typeof window === 'undefined') {
@@ -8,7 +8,7 @@ export const embedStyle = () => {
   if (exists) {
     return;
   }
-  const style = document.createElement("style");
+  const style = document.createElement('style');
   document.head.appendChild(style);
   style.setAttribute('class', 'gs-styling');
   style.setAttribute('data-modified-at', `${LAST_MODIFIED}`);

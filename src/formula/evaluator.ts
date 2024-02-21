@@ -1,6 +1,6 @@
-import { rangeToArea } from "../lib/structs";
-import { a2p, x2c } from "../lib/converters";
-import { Table } from "../lib/table";
+import { rangeToArea } from '../lib/structs';
+import { a2p, x2c } from '../lib/converters';
+import { Table } from '../lib/table';
 
 type EvaluateProps = {
   table: Table;
@@ -9,10 +9,10 @@ type EvaluateProps = {
 // strip sharp and dollars
 const getId = (idString: string, stripAbsolute = true) => {
   let id = idString.slice(1);
-  if (stripAbsolute && id.startsWith("$")) {
+  if (stripAbsolute && id.startsWith('$')) {
     id = id.slice(1);
   }
-  if (stripAbsolute && id.endsWith("$")) {
+  if (stripAbsolute && id.endsWith('$')) {
     id = id.slice(0, -1);
   }
   return id;
@@ -36,59 +36,53 @@ class Entity<T = any> {
   }
 }
 
-export class SheetName extends Entity {
-  public evaluate({ table }: EvaluateProps) {
-    return table;
-  }
-  public id(table: Table) {
-    return `#${table.sheets[this.value]}!`;
-  }
-}
-
-export class SheetId extends Entity {
-  public evaluate({ table }: EvaluateProps) {
-    return table.tables[this.value];
-  }
-  public name(table: Table) {
-    return table.tables[this.value].sheetName + "!";
-  }
-}
-
-export class Value extends Entity {
-  public evaluate({}: EvaluateProps) {
+export class ValueEntity extends Entity {
+  public evaluate() {
     return this.value;
   }
 }
 
-export class Unreferenced extends Entity {
-  public evaluate({}: EvaluateProps) {
-    throw new FormulaError("#REF!", `Reference does not exist.`);
+export class UnreferencedEntity extends Entity {
+  public evaluate() {
+    throw new FormulaError('#REF!', `Reference does not exist.`);
   }
 }
 
-export class InvalidRef extends Entity {
-  public evaluate({}: EvaluateProps) {
-    throw new FormulaError("#NAME?", `Invalid ref: ${this.value}`);
+export class InvalidRefEntity extends Entity<string> {
+  public evaluate() {
+    throw new FormulaError('#NAME?', `Invalid ref: ${this.value}`);
   }
 }
 
-export class Ref extends Entity {
+export class RefEntity extends Entity<string> {
   constructor(value: string) {
     super(value);
   }
-  private parse(table: Table): { table: Table, ref: string, sheetName: string} {
-    if (this.value.indexOf("!") !== -1) {
-      const [rawSheetName, ref] = this.value.split("!");
+  private parse(table: Table): {
+    table: Table;
+    ref: string;
+    sheetName: string;
+  } {
+    if (this.value.indexOf('!') !== -1) {
+      const [rawSheetName, ref] = this.value.split('!');
       const sheetName = stripSheetName(rawSheetName);
-      return { table: table.getTableBySheetName(sheetName), ref: ref.toUpperCase(), sheetName };
+      return {
+        table: table.getTableBySheetName(sheetName),
+        ref: ref.toUpperCase(),
+        sheetName,
+      };
     }
-    return { table, ref: this.value.toUpperCase(), sheetName: stripSheetName(table.sheetName) };
+    return {
+      table,
+      ref: this.value.toUpperCase(),
+      sheetName: stripSheetName(table.sheetName),
+    };
   }
 
   public evaluate({ table }: EvaluateProps): Table {
     const parsed = this.parse(table);
     if (parsed.table == null) {
-      throw new FormulaError("#REF!", `Unknown sheet: ${parsed.sheetName}`);
+      throw new FormulaError('#REF!', `Unknown sheet: ${parsed.sheetName}`);
     }
     const { y, x } = a2p(parsed.ref);
     return parsed.table.trim({ top: y, left: x, bottom: y, right: x });
@@ -105,20 +99,24 @@ export class Ref extends Entity {
       }
       return `#${parsed.table.sheetId}!${id}`;
     }
-    
+
     return this.value;
   }
 }
 
-export class Range extends Entity<string> {
-  private parse(table: Table): { table: Table, refs: string[], sheetName: string} {
-    const rawRefs = this.value.split(":");
+export class RangeEntity extends Entity<string> {
+  private parse(table: Table): {
+    table: Table;
+    refs: string[];
+    sheetName: string;
+  } {
+    const rawRefs = this.value.split(':');
     const refs: string[] = [];
-    let sheetName = "";
+    let sheetName = '';
     for (let i = 0; i < rawRefs.length; i++) {
       const ref = rawRefs[i];
-      if (ref.indexOf("!") !== -1) {
-        const [rawSheetName, rawRef] = ref.split("!");
+      if (ref.indexOf('!') !== -1) {
+        const [rawSheetName, rawRef] = ref.split('!');
         refs.push(rawRef.toUpperCase());
         if (i === 0) {
           sheetName = stripSheetName(rawSheetName);
@@ -137,7 +135,7 @@ export class Range extends Entity<string> {
   public evaluate({ table }: EvaluateProps): Table {
     const parsed = this.parse(table);
     if (parsed.table == null) {
-      throw new FormulaError("#REF!", `Unknown sheet: ${parsed.sheetName}`);
+      throw new FormulaError('#REF!', `Unknown sheet: ${parsed.sheetName}`);
     }
     const area = rangeToArea(this.complementRange(parsed.table, parsed.refs));
     return parsed.table.trim(area);
@@ -147,22 +145,20 @@ export class Range extends Entity<string> {
     if (parsed.table == null) {
       return this.value;
     }
-    const range = parsed.refs
-      .map((ref) => parsed.table.getIdByAddress(ref))
-      .join(":");
-    
+    const range = parsed.refs.map((ref) => parsed.table.getIdByAddress(ref)).join(':');
+
     if (parsed.table === table) {
       return range;
     }
     return `#${parsed.table.sheetId}!${range}`;
   }
   private complementRange(table: Table, refs: string[]) {
-    let [start = "", end = ""] = refs;
+    let [start = '', end = ''] = refs;
     if (!start.match(/[1-9]\d*/)) {
-      start += "1";
+      start += '1';
     }
     if (!start.match(/[a-zA-Z]/)) {
-      start = "A" + start;
+      start = 'A' + start;
     }
     if (!end.match(/[1-9]\d*/)) {
       end += table.getNumRows();
@@ -174,10 +170,10 @@ export class Range extends Entity<string> {
   }
 }
 
-export class Id extends Entity {
-  private parse(table: Table): { table: Table, id: string} {
-    if (this.value.indexOf("!") !== -1) {
-      const [tableId, id] = (this.value as string).split("!");
+export class IdEntity extends Entity<string> {
+  private parse(table: Table): { table: Table; id: string } {
+    if (this.value.indexOf('!') !== -1) {
+      const [tableId, id] = this.value.split('!');
       return { table: table.tables[tableId.slice(1)], id: getId(id, false) };
     }
     return { table, id: getId(this.value, false) };
@@ -186,7 +182,12 @@ export class Id extends Entity {
     const parsed = this.parse(table);
     const { y, x } = parsed.table.getPointById(parsed.id);
     const [absY, absX] = [Math.abs(y), Math.abs(x)];
-    return parsed.table.trim({ top: absY, left: absX, bottom: absY, right: absX });
+    return parsed.table.trim({
+      top: absY,
+      left: absX,
+      bottom: absY,
+      right: absX,
+    });
   }
   public ref(table: Table, slideY = 0, slideX = 0) {
     const parsed = this.parse(table);
@@ -200,36 +201,39 @@ export class Id extends Entity {
   public slide(table: Table, slideY = 0, slideX = 0) {
     const address = this.ref(table, slideY, slideX);
     if (address == null || address.length < 2) {
-      return "#REF!";
+      return '#REF!';
     }
     return table.getIdByAddress(address);
   }
 }
 
-export class IdRange extends Entity<string> {
-  private parse(table: Table): { table: Table, ids: string[]} {
+export class IdRangeEntity extends Entity<string> {
+  private parse(table: Table): { table: Table; ids: string[] } {
     const range = this.value;
-    if (range.indexOf("!") !== -1) {
-      const [sheetId, idRange] = range.split("!");
+    if (range.indexOf('!') !== -1) {
+      const [sheetId, idRange] = range.split('!');
       table = table.tables[sheetId.slice(1)];
-      return { table, ids: idRange.split(":") };
+      return { table, ids: idRange.split(':') };
     }
-    return { table, ids: range.split(":") };
+    return { table, ids: range.split(':') };
   }
 
   public evaluate({ table }: EvaluateProps): Table {
     const parsed = this.parse(table);
-    const [p1, p2] = parsed.ids
-      .map((id) => getId(id))
-      .map((id) => parsed.table.getPointById(id));
-    return parsed.table.trim({ top: p1.y, left: p1.x, bottom: p2.y, right: p2.x });
+    const [p1, p2] = parsed.ids.map((id) => getId(id)).map((id) => parsed.table.getPointById(id));
+    return parsed.table.trim({
+      top: p1.y,
+      left: p1.x,
+      bottom: p2.y,
+      right: p2.x,
+    });
   }
   public range(table: Table, slideY = 0, slideX = 0) {
     const parsed = this.parse(table);
     const range = parsed.ids
       .map((id) => getId(id, false))
       .map((id) => parsed.table.getAddressById(id, slideY, slideX))
-      .join(":");
+      .join(':');
     if (parsed.table.sheetId === table.sheetId) {
       return range;
     }
@@ -239,15 +243,15 @@ export class IdRange extends Entity<string> {
 
   public slide(table: Table, slideY = 0, slideX = 0) {
     const range = this.range(table, slideY, slideX);
-    return new Range(range).idRange(table);
+    return new RangeEntity(range).idRange(table);
   }
 }
 
-export class Function {
+export class FunctionEntity {
   public args: Expression[];
   public name: string;
   public precedence: number;
-  constructor(name: string, precedence = 0, args: Expression[]=[]) {
+  constructor(name: string, precedence = 0, args: Expression[] = []) {
     this.name = name;
     this.precedence = precedence;
     this.args = args;
@@ -257,7 +261,7 @@ export class Function {
     const name = this.name.toLowerCase();
     const Func = table.getFunction(name);
     if (Func == null) {
-      throw new FormulaError("#NAME?", `Unknown function: ${name}`);
+      throw new FormulaError('#NAME?', `Unknown function: ${name}`);
     }
     const func = new Func({ args: this.args, table });
     return func.call();
@@ -265,52 +269,50 @@ export class Function {
 }
 
 export type Expression =
-  | Value
-  | Ref
-  | Range
-  | Id
-  | IdRange
-  | Function
-  | Unreferenced
-  | InvalidRef;
+  | ValueEntity
+  | RefEntity
+  | RangeEntity
+  | IdEntity
+  | IdRangeEntity
+  | FunctionEntity
+  | UnreferencedEntity
+  | InvalidRefEntity;
 
-const ZERO = new Value(0);
+const ZERO = new ValueEntity(0);
 
 export type TokenType =
-  | "SHEET_NAME"
-  | "SHEET_ID"
-  | "VALUE"
-  | "REF"
-  | "RANGE"
-  | "ID"
-  | "ID_RANGE"
-  | "FUNCTION"
-  | "PREFIX_OPERATOR"
-  | "INFIX_OPERATOR"
-  | "OPEN"
-  | "CLOSE"
-  | "COMMA"
-  | "SPACE"
-  | "UNREFERENCED"
-  | "INVALID_REF";
+  | 'VALUE'
+  | 'REF'
+  | 'RANGE'
+  | 'ID'
+  | 'ID_RANGE'
+  | 'FUNCTION'
+  | 'PREFIX_OPERATOR'
+  | 'INFIX_OPERATOR'
+  | 'OPEN'
+  | 'CLOSE'
+  | 'COMMA'
+  | 'SPACE'
+  | 'UNREFERENCED'
+  | 'INVALID_REF';
 
 const INFIX_FUNCTION_NAME_MAP = {
-  "+": "add",
-  "-": "minus",
-  "/": "divide",
-  "*": "multiply",
-  "^": "power",
-  "&": "concat",
-  "=": "eq",
-  "<>": "ne",
-  ">": "gt",
-  ">=": "gte",
-  "<": "lt",
-  "<=": "lte",
+  '+': 'add',
+  '-': 'minus',
+  '/': 'divide',
+  '*': 'multiply',
+  '^': 'power',
+  '&': 'concat',
+  '=': 'eq',
+  '<>': 'ne',
+  '>': 'gt',
+  '>=': 'gte',
+  '<': 'lt',
+  '<=': 'lte',
 };
 
 const PREFIX_FUNCTION_NAME_MAP = {
-  "-": "uminus",
+  '-': 'uminus',
 };
 
 export class Token {
@@ -326,66 +328,66 @@ export class Token {
 
   public convert() {
     switch (this.type) {
-      case "VALUE":
-        return new Value(this.entity);
-      case "ID":
-        return new Id(this.entity);
-      case "ID_RANGE":
-        return new IdRange(this.entity);
-      case "REF":
-        return new Ref(this.entity);
-      case "RANGE":
-        return new Range(this.entity);
-      case "INFIX_OPERATOR": {
-        const name =
-          INFIX_FUNCTION_NAME_MAP[
-            this.entity as keyof typeof INFIX_FUNCTION_NAME_MAP
-          ];
-        return new Function(name, this.precedence);
+      case 'VALUE':
+        return new ValueEntity(this.entity);
+      // eslint-disable-next-line no-fallthrough
+      case 'ID':
+        return new IdEntity(this.entity as string);
+      // eslint-disable-next-line no-fallthrough
+      case 'ID_RANGE':
+        return new IdRangeEntity(this.entity as string);
+      // eslint-disable-next-line no-fallthrough
+      case 'REF':
+        return new RefEntity(this.entity as string);
+      // eslint-disable-next-line no-fallthrough
+      case 'RANGE':
+        return new RangeEntity(this.entity as string);
+      // eslint-disable-next-line no-fallthrough
+      case 'INFIX_OPERATOR': {
+        const name = INFIX_FUNCTION_NAME_MAP[this.entity as keyof typeof INFIX_FUNCTION_NAME_MAP];
+        return new FunctionEntity(name, this.precedence);
+        // eslint-disable-next-line no-fallthrough
       }
-      case "PREFIX_OPERATOR": {
-        const name =
-          PREFIX_FUNCTION_NAME_MAP[
-            this.entity as keyof typeof PREFIX_FUNCTION_NAME_MAP
-          ];
-        return new Function(name, this.precedence);
+      case 'PREFIX_OPERATOR': {
+        const name = PREFIX_FUNCTION_NAME_MAP[this.entity as keyof typeof PREFIX_FUNCTION_NAME_MAP];
+        return new FunctionEntity(name, this.precedence);
+        // eslint-disable-next-line no-fallthrough
       }
-      case "FUNCTION":
-        return new Function(this.entity);
-      case "SHEET_NAME":
-        return new SheetName(this.entity);
-      case "SHEET_ID":
-        return new SheetId(this.entity);
-      case "UNREFERENCED":
-        return new Unreferenced(this.entity);
-      case "INVALID_REF":
-        return new InvalidRef(this.entity);
+      case 'FUNCTION':
+        return new FunctionEntity(this.entity as string);
+      // eslint-disable-next-line no-fallthrough
+      case 'UNREFERENCED':
+        return new UnreferencedEntity(this.entity);
+      // eslint-disable-next-line no-fallthrough
+      case 'INVALID_REF':
+        return new InvalidRefEntity(this.entity as string);
+      // eslint-disable-next-line no-fallthrough
     }
   }
 }
 
 const isWhiteSpace = (char: string) => {
-  return char === " " || char === "\n" || char === "\t";
+  return char === ' ' || char === '\n' || char === '\t';
 };
 
-const TOKEN_OPEN = new Token("OPEN", "("),
-  TOKEN_CLOSE = new Token("CLOSE", ")"),
-  TOKEN_COMMA = new Token("COMMA", ","),
-  TOKEN_ADD = new Token("INFIX_OPERATOR", "+", 3),
-  TOKEN_MINUS = new Token("INFIX_OPERATOR", "-", 3),
-  TOKEN_UMINUS = new Token("PREFIX_OPERATOR", "-", 6),
-  TOKEN_DIVIDE = new Token("INFIX_OPERATOR", "/", 4),
-  TOKEN_MULTIPLY = new Token("INFIX_OPERATOR", "*", 4),
-  TOKEN_POWER = new Token("INFIX_OPERATOR", "^", 5),
-  TOKEN_CONCAT = new Token("INFIX_OPERATOR", "&", 4),
-  TOKEN_GTE = new Token("INFIX_OPERATOR", ">=", 2),
-  TOKEN_GT = new Token("INFIX_OPERATOR", ">", 2),
-  TOKEN_LTE = new Token("INFIX_OPERATOR", "<=", 2),
-  TOKEN_LT = new Token("INFIX_OPERATOR", "<", 2),
-  TOKEN_NE = new Token("INFIX_OPERATOR", "<>", 1),
-  TOKEN_EQ = new Token("INFIX_OPERATOR", "=", 1);
+const TOKEN_OPEN = new Token('OPEN', '('),
+  TOKEN_CLOSE = new Token('CLOSE', ')'),
+  TOKEN_COMMA = new Token('COMMA', ','),
+  TOKEN_ADD = new Token('INFIX_OPERATOR', '+', 3),
+  TOKEN_MINUS = new Token('INFIX_OPERATOR', '-', 3),
+  TOKEN_UMINUS = new Token('PREFIX_OPERATOR', '-', 6),
+  TOKEN_DIVIDE = new Token('INFIX_OPERATOR', '/', 4),
+  TOKEN_MULTIPLY = new Token('INFIX_OPERATOR', '*', 4),
+  TOKEN_POWER = new Token('INFIX_OPERATOR', '^', 5),
+  TOKEN_CONCAT = new Token('INFIX_OPERATOR', '&', 4),
+  TOKEN_GTE = new Token('INFIX_OPERATOR', '>=', 2),
+  TOKEN_GT = new Token('INFIX_OPERATOR', '>', 2),
+  TOKEN_LTE = new Token('INFIX_OPERATOR', '<=', 2),
+  TOKEN_LT = new Token('INFIX_OPERATOR', '<', 2),
+  TOKEN_NE = new Token('INFIX_OPERATOR', '<>', 1),
+  TOKEN_EQ = new Token('INFIX_OPERATOR', '=', 1);
 
-const BOOLS = { ["true"]: true, ["false"]: false };
+const BOOLS: { [s: string]: boolean } = { ['true']: true, ['false']: false };
 export class Lexer {
   private index: number;
   private formula: string;
@@ -419,42 +421,47 @@ export class Lexer {
     return this.tokens
       .map((t) => {
         switch (t.type) {
-          case "VALUE":
-            if (typeof t.entity === "number" || typeof t.entity === "boolean") {
+          case 'VALUE':
+            if (typeof t.entity === 'number' || typeof t.entity === 'boolean') {
               return t.entity;
             }
             return `"${t.entity}"`;
-          case "ID":
-            return new Id(t.entity).slide(table, slideY, slideX);
-          case "ID_RANGE":
-            return new IdRange(t.entity).slide(table, slideY, slideX);
-          case "REF":
-            return new Ref(t.entity).id(table);
-          case "RANGE":
-            return new Range(t.entity).idRange(table);
+          // eslint-disable-next-line no-fallthrough
+          case 'ID':
+            return new IdEntity(t.entity as string).slide(table, slideY, slideX);
+          // eslint-disable-next-line no-fallthrough
+          case 'ID_RANGE':
+            return new IdRangeEntity(t.entity as string).slide(table, slideY, slideX);
+          // eslint-disable-next-line no-fallthrough
+          case 'REF':
+            return new RefEntity(t.entity as string).id(table);
+          // eslint-disable-next-line no-fallthrough
+          case 'RANGE':
+            return new RangeEntity(t.entity as string).idRange(table);
+          // eslint-disable-next-line no-fallthrough
         }
         return t.entity;
       })
-      .join("");
+      .join('');
   }
 
   public stringifyToRef(table: Table) {
     return this.tokens
       .map((t) => {
         switch (t.type) {
-          case "VALUE":
-            if (typeof t.entity === "number" || typeof t.entity === "boolean") {
+          case 'VALUE':
+            if (typeof t.entity === 'number' || typeof t.entity === 'boolean') {
               return t.entity;
             }
             return `"${t.entity}"`;
-          case "ID":
-            return new Id(t.entity).ref(table);
-          case "ID_RANGE":
-            return new IdRange(t.entity).range(table);
+          case 'ID':
+            return new IdEntity(t.entity as string).ref(table);
+          case 'ID_RANGE':
+            return new IdRangeEntity(t.entity as string).range(table);
         }
         return t.entity;
       })
-      .join("");
+      .join('');
   }
 
   public tokenize() {
@@ -465,61 +472,58 @@ export class Lexer {
       switch (char) {
         case undefined:
           return;
-        case "(":
+        case '(':
           this.tokens.push(TOKEN_OPEN);
           continue;
-        case ")":
+        case ')':
           this.tokens.push(TOKEN_CLOSE);
           continue;
-        case ",":
+        case ',':
           this.tokens.push(TOKEN_COMMA);
           continue;
-        case "+":
+        case '+':
           this.tokens.push(TOKEN_ADD);
           continue;
-        case "-": {
+        case '-': {
           const prev1 = this.getToken(-1)?.type;
           const prev2 = this.getToken(-2)?.type;
-          if (
-            prev1 === "INFIX_OPERATOR" ||
-            (prev1 === "SPACE" && prev2 === "INFIX_OPERATOR")
-          ) {
+          if (prev1 === 'INFIX_OPERATOR' || (prev1 === 'SPACE' && prev2 === 'INFIX_OPERATOR')) {
             this.tokens.push(TOKEN_UMINUS);
           } else {
             this.tokens.push(TOKEN_MINUS);
           }
           continue;
         }
-        case "/":
+        case '/':
           this.tokens.push(TOKEN_DIVIDE);
           continue;
-        case "*":
+        case '*':
           this.tokens.push(TOKEN_MULTIPLY);
           continue;
-        case "^":
+        case '^':
           this.tokens.push(TOKEN_POWER);
           continue;
-        case "&":
+        case '&':
           this.tokens.push(TOKEN_CONCAT);
           continue;
-        case "=":
+        case '=':
           this.tokens.push(TOKEN_EQ);
           continue;
-        case ">":
-          if (this.get() === "=") {
+        case '>':
+          if (this.get() === '=') {
             this.next();
             this.tokens.push(TOKEN_GTE);
             continue;
           }
           this.tokens.push(TOKEN_GT);
           continue;
-        case "<":
-          if (this.get() === "=") {
+        case '<':
+          if (this.get() === '=') {
             this.next();
             this.tokens.push(TOKEN_LTE);
             continue;
           }
-          if (this.get() === ">") {
+          if (this.get() === '>') {
             this.next();
             this.tokens.push(TOKEN_NE);
             continue;
@@ -528,23 +532,26 @@ export class Lexer {
           continue;
         case '"': {
           const buf = this.getString('"');
-          this.tokens.push(new Token("VALUE", buf));
+          this.tokens.push(new Token('VALUE', buf));
           continue;
         }
         case "'": {
           const buf = this.getString("'");
           char = `'${buf}'`;
+          break;
         }
-        case "!": {
+        case '!': {
           this.foreign = true;
+          break;
           // not continue
         }
       } // switch end
       let buf = char;
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         const c = this.get();
-        if (c === "(") {
-          this.tokens.push(new Token("FUNCTION", buf), TOKEN_OPEN);
+        if (c === '(') {
+          this.tokens.push(new Token('FUNCTION', buf), TOKEN_OPEN);
           this.next();
           break;
         }
@@ -553,28 +560,26 @@ export class Lexer {
             break;
           }
           if (buf.match(/^[+-]?(\d*[.])?\d+$/)) {
-            this.tokens.push(new Token("VALUE", parseFloat(buf)));
+            this.tokens.push(new Token('VALUE', parseFloat(buf)));
           } else {
-            // @ts-ignore
             const bool = BOOLS[buf.toLowerCase()];
             if (bool != null) {
-              this.tokens.push(new Token("VALUE", bool));
-            } else if (buf.startsWith("#")) {
-              if (buf === "#REF!") {
-                this.tokens.push(new Token("UNREFERENCED", buf));
-              } else if (buf.indexOf(":") !== -1) {
-                this.tokens.push(new Token("ID_RANGE", buf));
+              this.tokens.push(new Token('VALUE', bool));
+            } else if (buf.startsWith('#')) {
+              if (buf === '#REF!') {
+                this.tokens.push(new Token('UNREFERENCED', buf));
+              } else if (buf.indexOf(':') !== -1) {
+                this.tokens.push(new Token('ID_RANGE', buf));
               } else {
-                this.tokens.push(new Token("ID", buf));
+                this.tokens.push(new Token('ID', buf));
               }
-            } else if (buf.indexOf(":") !== -1) {
-              this.tokens.push(new Token("RANGE", buf));
+            } else if (buf.indexOf(':') !== -1) {
+              this.tokens.push(new Token('RANGE', buf));
             } else {
-              // @ts-ignore
-              if (isNaN(buf[buf.length - 1])) {
-                this.tokens.push(new Token("INVALID_REF", buf));
+              if (isNaN(buf[buf.length - 1] as unknown as number)) {
+                this.tokens.push(new Token('INVALID_REF', buf));
               } else {
-                this.tokens.push(new Token("REF", buf));
+                this.tokens.push(new Token('REF', buf));
               }
             }
           }
@@ -586,17 +591,18 @@ export class Lexer {
     }
   }
   private skipSpaces() {
-    let space: string = "";
+    let space: string = '';
     while (this.isWhiteSpace()) {
       space += this.formula[this.index++];
     }
-    if (space !== "") {
-      this.tokens.push(new Token("SPACE", space));
+    if (space !== '') {
+      this.tokens.push(new Token('SPACE', space));
     }
   }
 
-  private getString(quote='"') {
-    let buf = "";
+  private getString(quote = '"') {
+    let buf = '';
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const c = this.get();
       this.next();
@@ -634,7 +640,7 @@ export class Parser {
 
   private parse(underFunction: boolean) {
     const stack: Expression[] = [];
-    let lastOperator: undefined | Function;
+    let lastOperator: undefined | FunctionEntity;
 
     const complement = (hasNext = false) => {
       if (lastOperator) {
@@ -646,30 +652,31 @@ export class Parser {
 
     while (this.tokens.length > this.index) {
       const token = this.tokens[this.index++];
-      if (token.type === "SPACE") {
+      if (token.type === 'SPACE') {
         continue;
       }
-      if (token.type === "COMMA") {
+      if (token.type === 'COMMA') {
         if (!underFunction) {
-          throw new FormulaError("#ERROR!", "Invalid comma");
+          throw new FormulaError('#ERROR!', 'Invalid comma');
         }
         return complement(true);
       } else if (
-        token.type === "VALUE" ||
-        token.type === "ID" ||
-        token.type === "ID_RANGE" ||
-        token.type === "REF" ||
-        token.type === "RANGE" ||
-        token.type === "UNREFERENCED" ||
-        token.type === "INVALID_REF"
+        token.type === 'VALUE' ||
+        token.type === 'ID' ||
+        token.type === 'ID_RANGE' ||
+        token.type === 'REF' ||
+        token.type === 'RANGE' ||
+        token.type === 'UNREFERENCED' ||
+        token.type === 'INVALID_REF'
       ) {
         const expr = token.convert();
         stack.push(expr!);
-      } else if (token.type === "FUNCTION") {
+      } else if (token.type === 'FUNCTION') {
         this.index++;
         this.depth++;
-        const func = token.convert() as Function;
+        const func = token.convert() as FunctionEntity;
         stack.push(func);
+        // eslint-disable-next-line no-constant-condition
         while (true) {
           const { expr, hasNext } = this.parse(true);
           if (expr) {
@@ -679,23 +686,23 @@ export class Parser {
             break;
           }
         }
-      } else if (token.type === "OPEN") {
+      } else if (token.type === 'OPEN') {
         this.depth++;
         const { expr } = this.parse(false);
         stack.push(expr!);
-      } else if (token.type === "CLOSE") {
+      } else if (token.type === 'CLOSE') {
         if (this.depth-- === 0) {
-          throw new FormulaError("#ERROR!", "Unexpected end paren");
+          throw new FormulaError('#ERROR!', 'Unexpected end paren');
         }
         return complement();
-      } else if (token.type === "INFIX_OPERATOR") {
-        const operator = token.convert() as Function;
+      } else if (token.type === 'INFIX_OPERATOR') {
+        const operator = token.convert() as FunctionEntity;
         let left = stack.pop();
         if (left == null) {
-          if (operator.name === "minus" || operator.name === "add") {
+          if (operator.name === 'minus' || operator.name === 'add') {
             left = ZERO;
           } else {
-            throw new FormulaError("#ERROR!", "Missing left expression");
+            throw new FormulaError('#ERROR!', 'Missing left expression');
           }
         }
 
@@ -713,8 +720,8 @@ export class Parser {
           stack.unshift(operator);
         }
         lastOperator = operator;
-      } else if (token.type === "PREFIX_OPERATOR") {
-        const operator = token.convert() as Function;
+      } else if (token.type === 'PREFIX_OPERATOR') {
+        const operator = token.convert() as FunctionEntity;
         if (lastOperator) {
           lastOperator.args.push(operator);
         } else {
@@ -738,11 +745,11 @@ export const absolutizeFormula = ({
   slideY?: number;
   slideX?: number;
 }) => {
-  if (typeof value === "string" || value instanceof String) {
-    if (value.charAt(0) === "=") {
+  if (typeof value === 'string' || value instanceof String) {
+    if (value.charAt(0) === '=') {
       const lexer = new Lexer(value.substring(1));
       lexer.tokenize();
-      return "=" + lexer.stringifyToId(table, slideY, slideX);
+      return '=' + lexer.stringifyToId(table, slideY, slideX);
     }
   }
   return value;
@@ -759,7 +766,7 @@ export const stripSheetName = (sheetName: string) => {
 };
 
 const wrapSheetName = (sheetName: string) => {
-  if (sheetName.indexOf(" ") !== -1) {
+  if (sheetName.indexOf(' ') !== -1) {
     return `'${sheetName}'`;
   }
   return sheetName;

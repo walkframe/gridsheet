@@ -1,6 +1,6 @@
-import React from "react";
-import { x2c, y2r } from "../lib/converters";
-import { clip } from "../lib/clipboard";
+import React from 'react';
+import { x2c, y2r } from '../lib/converters';
+import { clip } from '../lib/clipboard';
 import {
   blur,
   clear,
@@ -17,13 +17,12 @@ import {
   paste,
   setSearchQuery,
   setEntering,
-} from "../store/actions";
+} from '../store/actions';
 
-import { Context } from "../store";
-import { areaToZone } from "../lib/structs";
-import {DEFAULT_HEIGHT} from "../constants";
-import * as prevention from "../lib/prevention";
-
+import { Context } from '../store';
+import { areaToZone } from '../lib/structs';
+import { DEFAULT_HEIGHT } from '../constants';
+import * as prevention from '../lib/prevention';
 
 export const Editor: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);
@@ -44,22 +43,22 @@ export const Editor: React.FC = () => {
     table,
   } = store;
 
-  let { y, x } = choosing;
+  const { y, x } = choosing;
   const rowId = `${y2r(y)}`;
   const colId = x2c(x);
   const address = `${colId}${rowId}`;
-  const [before, setBefore] = React.useState("");
-  const editing = editingCell === address
+  const [before, setBefore] = React.useState('');
+  const editing = editingCell === address;
 
   const cell = table.getByPoint({ y, x });
-  const value = cell?.value;
+  const value: any = cell?.value;
   const { y: top, x: left, height, width } = editorRect;
 
   const writeCell = (value: string) => {
     if (before !== value) {
       dispatch(write(value));
     }
-    setBefore("");
+    setBefore('');
   };
 
   const [isKeyDown, setIsKeyDown] = React.useState(false);
@@ -68,7 +67,7 @@ export const Editor: React.FC = () => {
       return;
     }
     // do not debounce it if control key is down.
-    if (!(e.key === "Meta" || e.key === "Control")) {
+    if (!(e.key === 'Meta' || e.key === 'Control')) {
       setIsKeyDown(true);
       const timeout = window.setTimeout(() => {
         setIsKeyDown(false);
@@ -78,12 +77,12 @@ export const Editor: React.FC = () => {
     const input = e.currentTarget;
     const shiftKey = e.shiftKey;
     switch (e.key) {
-      case "Tab": // TAB
+      case 'Tab': // TAB
         e.preventDefault();
         if (editing) {
           writeCell(input.value);
-          dispatch(setEditingCell(""));
-          input.value = "";
+          dispatch(setEditingCell(''));
+          input.value = '';
         }
         dispatch(
           walk({
@@ -91,11 +90,12 @@ export const Editor: React.FC = () => {
             numCols: table.getNumCols(),
             deltaY: 0,
             deltaX: shiftKey ? -1 : 1,
-          })
+          }),
         );
-        dispatch(setEditingCell(""));
+        dispatch(setEditingCell(''));
         return false;
-      case "Enter": // ENTER
+      // eslint-disable-next-line no-fallthrough
+      case 'Enter': // ENTER
         if (editing) {
           if (e.altKey) {
             input.value = `${input.value}\n`;
@@ -106,12 +106,12 @@ export const Editor: React.FC = () => {
               return false;
             }
             writeCell(input.value);
-            dispatch(setEditingCell(""));
-            input.value = "";
+            dispatch(setEditingCell(''));
+            input.value = '';
           }
         } else if (editingOnEnter && selectingZone.startY === -1) {
-          const dblclick = document.createEvent("MouseEvents");
-          dblclick.initEvent("dblclick", true, true);
+          const dblclick = document.createEvent('MouseEvents');
+          dblclick.initEvent('dblclick', true, true);
           input.dispatchEvent(dblclick);
           e.preventDefault();
           return false;
@@ -122,32 +122,40 @@ export const Editor: React.FC = () => {
             numCols: table.getNumCols(),
             deltaY: shiftKey ? -1 : 1,
             deltaX: 0,
-          })
+          }),
         );
         e.preventDefault();
         return false;
-      case "Backspace": // BACKSPACE
+      // eslint-disable-next-line no-fallthrough
+      case 'Backspace': // BACKSPACE
         if (!editing) {
           dispatch(clear(null));
           return false;
         }
-      case "Shift": // SHIFT
+        break;
+      case 'Shift': // SHIFT
         return false;
-      case "Control": // CTRL
+      // eslint-disable-next-line no-fallthrough
+      case 'Control': // CTRL
         return false;
-      case "Alt": // OPTION
+      // eslint-disable-next-line no-fallthrough
+      case 'Alt': // OPTION
         return false;
-      case "Meta": // COMMAND
+      // eslint-disable-next-line no-fallthrough
+      case 'Meta': // COMMAND
         return false;
-      case "NumLock": // NUMLOCK
+      // eslint-disable-next-line no-fallthrough
+      case 'NumLock': // NUMLOCK
         return false;
-      case "Escape": // ESCAPE
+      // eslint-disable-next-line no-fallthrough
+      case 'Escape': // ESCAPE
         dispatch(escape(null));
         dispatch(setSearchQuery(undefined));
-        input.value = "";
+        input.value = '';
         // input.blur();
         return false;
-      case "ArrowLeft": // LEFT
+      // eslint-disable-next-line no-fallthrough
+      case 'ArrowLeft': // LEFT
         if (!editing) {
           dispatch(
             arrow({
@@ -156,11 +164,12 @@ export const Editor: React.FC = () => {
               numCols: table.getNumCols(),
               deltaY: 0,
               deltaX: -1,
-            })
+            }),
           );
           return false;
         }
-      case "ArrowUp": // UP
+        break;
+      case 'ArrowUp': // UP
         if (!editing) {
           dispatch(
             arrow({
@@ -169,11 +178,12 @@ export const Editor: React.FC = () => {
               numCols: table.getNumCols(),
               deltaY: -1,
               deltaX: 0,
-            })
+            }),
           );
           return false;
         }
-      case "ArrowRight": // RIGHT
+        break;
+      case 'ArrowRight': // RIGHT
         if (!editing) {
           dispatch(
             arrow({
@@ -182,11 +192,12 @@ export const Editor: React.FC = () => {
               numCols: table.getNumCols(),
               deltaY: 0,
               deltaX: 1,
-            })
+            }),
           );
           return false;
         }
-      case "ArrowDown": // DOWN
+        break;
+      case 'ArrowDown': // DOWN
         if (!editing) {
           dispatch(
             arrow({
@@ -195,26 +206,28 @@ export const Editor: React.FC = () => {
               numCols: table.getNumCols(),
               deltaY: 1,
               deltaX: 0,
-            })
+            }),
           );
           return false;
         }
-      case "a": // A
+        break;
+      case 'a': // A
         if (e.ctrlKey || e.metaKey) {
           if (!editing) {
             e.preventDefault();
             dispatch(
               select({
-                startY: 0,
-                startX: 0,
+                startY: 1,
+                startX: 1,
                 endY: table.getNumRows(),
                 endX: table.getNumCols(),
-              })
+              }),
             );
             return false;
           }
         }
-      case "c": // C
+        break;
+      case 'c': // C
         if (e.ctrlKey || e.metaKey) {
           if (!editing) {
             e.preventDefault();
@@ -223,59 +236,64 @@ export const Editor: React.FC = () => {
             input.focus(); // refocus
             return false;
           }
+          // eslint-disable-next-line no-fallthrough
         }
-
-      case "f": // F
+        break;
+      case 'f': // F
         if (e.ctrlKey || e.metaKey) {
           if (!editing) {
             e.preventDefault();
-            if (typeof searchQuery === "undefined") {
-              dispatch(setSearchQuery(""));
+            if (typeof searchQuery === 'undefined') {
+              dispatch(setSearchQuery(''));
             }
             dispatch(setEntering(false));
             window.setTimeout(() => searchInputRef.current!.focus(), 100);
             return false;
           }
         }
-      case "r": // R
+        break;
+      case 'r': // R
         if (e.ctrlKey || e.metaKey) {
           if (!editing) {
             e.preventDefault();
             dispatch(redo(null));
-            window.setTimeout(() => (input.value = ""), 100); // resetting textarea
+            window.setTimeout(() => (input.value = ''), 100); // resetting textarea
             return false;
           }
         }
-      case "s": // S
+        break;
+      case 's': // S
         if (e.ctrlKey || e.metaKey) {
           if (!editing) {
             e.preventDefault();
             onSave &&
-            onSave(table, {
-              pointing: choosing,
-              selectingFrom: {
-                y: selectingZone.startY,
-                x: selectingZone.startX,
-              },
-              selectingTo: {
-                y: selectingZone.endY,
-                x: selectingZone.endX,
-              },
-            });
+              onSave(table, {
+                pointing: choosing,
+                selectingFrom: {
+                  y: selectingZone.startY,
+                  x: selectingZone.startX,
+                },
+                selectingTo: {
+                  y: selectingZone.endY,
+                  x: selectingZone.endX,
+                },
+              });
             return false;
           }
         }
-      case "v": // V
+        break;
+      case 'v': // V
         if (e.ctrlKey || e.metaKey) {
           if (!editing) {
             window.setTimeout(() => {
-              dispatch(paste({text: input.value}));
-              input.value = "";
+              dispatch(paste({ text: input.value }));
+              input.value = '';
             }, 50);
             return false;
           }
         }
-      case "x": // X
+        break;
+      case 'x': // X
         if (e.ctrlKey || e.metaKey) {
           if (!editing) {
             e.preventDefault();
@@ -286,20 +304,22 @@ export const Editor: React.FC = () => {
             return false;
           }
         }
-      case "z": // Z
+        break;
+      case 'z': // Z
         if (e.ctrlKey || e.metaKey) {
           if (!editing) {
             e.preventDefault();
             if (e.shiftKey) {
               dispatch(redo(null));
-              window.setTimeout(() => (input.value = ""), 100); // resetting textarea
+              window.setTimeout(() => (input.value = ''), 100); // resetting textarea
             } else {
               dispatch(undo(null));
             }
             return false;
           }
         }
-      case ";": // semicolon
+        break;
+      case ';': // semicolon
         if (e.ctrlKey || e.metaKey) {
           if (!editing) {
             e.preventDefault();
@@ -307,12 +327,13 @@ export const Editor: React.FC = () => {
             writeCell(new Date().toDateString());
           }
         }
+        break;
     }
     if (e.ctrlKey || e.metaKey) {
       return false;
     }
     if (prevention.isPrevented(cell?.prevention, prevention.Write)) {
-      console.warn("This cell is protected from writing.");
+      console.warn('This cell is protected from writing.');
       return false;
     }
     dispatch(setEditingCell(address));
@@ -320,10 +341,7 @@ export const Editor: React.FC = () => {
   };
 
   return (
-    <div
-      className={`gs-editor ${editing ? "gs-editing" : ""}`}
-      style={editing ? { top, left, height, width } : {}}
-    >
+    <div className={`gs-editor ${editing ? 'gs-editing' : ''}`} style={editing ? { top, left, height, width } : {}}>
       {showAddress && <div className="gs-cell-label">{address}</div>}
       <textarea
         autoFocus
@@ -333,14 +351,14 @@ export const Editor: React.FC = () => {
           ...cell?.style,
           height,
           width,
-      }}
-        rows={typeof value === "string" ? value.split("\n").length : 1}
+        }}
+        rows={typeof value === 'string' ? value.split('\n').length : 1}
         onFocus={(e) => {
-          e.currentTarget.value = "";
+          e.currentTarget.value = '';
         }}
         onDoubleClick={(e) => {
           if (prevention.isPrevented(cell?.prevention, prevention.Write)) {
-            console.warn("This cell is protected from writing.");
+            console.warn('This cell is protected from writing.');
             return;
           }
           const input = e.currentTarget;
@@ -362,7 +380,7 @@ export const Editor: React.FC = () => {
           if (editing) {
             writeCell(e.target.value);
           }
-          e.target.value = "";
+          e.target.value = '';
           dispatch(blur(null));
           window.setTimeout(() => entering && e.target.focus(), 100);
         }}

@@ -1,21 +1,12 @@
-import React from "react";
+import React from 'react';
 
-import { Context } from "../store";
-import {
-  setResizingPositionY,
-  setResizingPositionX,
-  updateTable,
-} from "../store/actions";
+import { Context } from '../store';
+import { setResizingPositionY, setResizingPositionX, updateTable } from '../store/actions';
 
-import {
-  DEFAULT_HEIGHT,
-  DEFAULT_WIDTH,
-  MIN_WIDTH,
-  MIN_HEIGHT,
-} from "../constants";
-import { zoneToArea, makeSequence, between } from "../lib/structs";
-import { CellsByAddressType } from "../types";
-import { p2a } from "../lib/converters";
+import { DEFAULT_HEIGHT, DEFAULT_WIDTH, MIN_WIDTH, MIN_HEIGHT } from '../constants';
+import { zoneToArea, makeSequence, between } from '../lib/structs';
+import { CellsByAddressType } from '../types';
+import { p2a } from '../lib/converters';
 
 export const Resizer: React.FC = React.memo(() => {
   const { store, dispatch } = React.useContext(Context);
@@ -39,7 +30,7 @@ export const Resizer: React.FC = React.memo(() => {
     return null;
   }
   const cell = table.getByPoint({ y: y === -1 ? 0 : y, x: x === -1 ? 0 : x });
-  const { y: offsetY, x: offsetX } = sheetRef.current!.getBoundingClientRect();
+  const { y: offsetY, x: offsetX } = sheetRef.current.getBoundingClientRect();
 
   const baseWidth = cell?.width || DEFAULT_WIDTH;
   const baseHeight = cell?.height || DEFAULT_HEIGHT;
@@ -53,13 +44,10 @@ export const Resizer: React.FC = React.memo(() => {
     const diff: CellsByAddressType = {};
     if (x !== -1) {
       let xs = [x];
-      if (
-        verticalHeaderSelecting &&
-        between({ start: left, end: right }, x)
-      ) {
+      if (verticalHeaderSelecting && between({ start: left, end: right }, x)) {
         xs = makeSequence(left, right + 1);
       }
-      xs.forEach((x, i) => {
+      xs.forEach((x) => {
         diff[p2a({ y: 0, x })] = { width };
       });
     }
@@ -68,14 +56,14 @@ export const Resizer: React.FC = React.memo(() => {
       if (horizontalheaderSelecting && between({ start: top, end: bottom }, y)) {
         ys = makeSequence(top, bottom + 1);
       }
-      ys.forEach((y, i) => {
+      ys.forEach((y) => {
         diff[p2a({ y, x: 0 })] = { height };
       });
     }
     const newTable = table.update({
       diff,
       partial: true,
-      operator: "USER",
+      operator: 'USER',
       reflection: { selectingZone },
     });
     dispatch(updateTable(newTable));
@@ -102,19 +90,15 @@ export const Resizer: React.FC = React.memo(() => {
   };
 
   return (
-    <div
-      className="gs-resizing"
-      onMouseUp={handleResizeEnd}
-      onMouseMove={handleResizeMove}
-    >
+    <div className="gs-resizing" onMouseUp={handleResizeEnd} onMouseMove={handleResizeMove}>
       {x !== -1 && (
-        <div className={'gs-line'} style={{ width: 1, height: "100%", left: endX - offsetX }}>
-          <span style={{ left: "-50%" }}>{width}px</span>
+        <div className={'gs-line'} style={{ width: 1, height: '100%', left: endX - offsetX }}>
+          <span style={{ left: '-50%' }}>{width}px</span>
         </div>
       )}
       {y !== -1 && (
-        <div className={'gs-line'} style={{ width: "100%", height: 1, top: endY - offsetY }}>
-          <span style={{ top: "-50%" }}>{height}px</span>
+        <div className={'gs-line'} style={{ width: '100%', height: 1, top: endY - offsetY }}>
+          <span style={{ top: '-50%' }}>{height}px</span>
         </div>
       )}
     </div>

@@ -1,17 +1,14 @@
-import { FormulaError } from "../evaluator";
-import { BaseFunction } from "./__base";
+import { FormulaError } from '../evaluator';
+import { BaseFunction } from './__base';
 
 export class PiFunction extends BaseFunction {
-  example = "PI()";
-  helpText = ["Returns the value of pi."];
+  example = 'PI()';
+  helpText = ['Returns the value of pi.'];
   helpArgs = [];
 
   protected validate() {
     if (this.bareArgs.length !== 0) {
-      throw new FormulaError(
-        "#N/A",
-        "Number of arguments for PI is incorrect."
-      );
+      throw new FormulaError('#N/A', 'Number of arguments for PI is incorrect.');
     }
   }
 

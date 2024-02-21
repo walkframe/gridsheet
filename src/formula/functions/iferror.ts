@@ -1,23 +1,23 @@
 // DO NOT COPY THIS CODE FOR THE OTHER.
 
-import { Table } from "../../lib/table";
-import {Expression, FormulaError} from "../evaluator";
-import { FunctionProps } from "./__base";
-import {stripTable} from "./__utils";
+import { Table } from '../../lib/table';
+import { Expression, FormulaError } from '../evaluator';
+import { FunctionProps } from './__base';
+import { stripTable } from './__utils';
 
 export class IfErrorFunction {
   example = 'IFERROR(A1, "Error in cell A1")';
   helpText = [
-    "Returns the first argument if it is not an error value, otherwise returns the second argument if present, or a blank if the second argument is absent.",
+    'Returns the first argument if it is not an error value, otherwise returns the second argument if present, or a blank if the second argument is absent.',
   ];
   helpArgs = [
     {
-      name: "value",
-      description: "The value to return if value itself is not an error.",
+      name: 'value',
+      description: 'The value to return if value itself is not an error.',
     },
     {
-      name: "value_if_error",
-      description: "The value the function returns if value is an error.",
+      name: 'value_if_error',
+      description: 'The value the function returns if value is an error.',
       optional: true,
     },
   ];
@@ -34,8 +34,8 @@ export class IfErrorFunction {
       return;
     }
     throw new FormulaError(
-      "#N/A",
-      "Number of arguments for IFERROR is incorrect. 1 or 2 argument(s) must be specified."
+      '#N/A',
+      'Number of arguments for IFERROR is incorrect. 1 or 2 argument(s) must be specified.',
     );
   }
 
@@ -44,9 +44,9 @@ export class IfErrorFunction {
     const [value, valueIfError] = this.args;
 
     try {
-      return stripTable(value.evaluate({table: this.table}));
+      return stripTable(value.evaluate({ table: this.table }));
     } catch (e) {
-      return stripTable(valueIfError?.evaluate({table: this.table}));
+      return stripTable(valueIfError?.evaluate({ table: this.table }));
     }
   }
 }

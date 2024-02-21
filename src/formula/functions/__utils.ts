@@ -1,9 +1,9 @@
-import { solveTable } from "../solver";
-import { Table } from "../../lib/table";
-import { FormulaError } from "../evaluator";
+import { solveTable } from '../solver';
+import { Table } from '../../lib/table';
+import { FormulaError } from '../evaluator';
 
 export const ensureNumber = (value: any, alternative?: number): number => {
-  if (typeof value === "undefined" && typeof alternative !== "undefined") {
+  if (typeof value === 'undefined' && typeof alternative !== 'undefined') {
     return alternative;
   }
   if (!value) {
@@ -14,30 +14,29 @@ export const ensureNumber = (value: any, alternative?: number): number => {
     const v = stripTable(value, 0, 0);
     return ensureNumber(v, alternative);
   }
-  const num = parseFloat(value);
+  const num = parseFloat(value as string);
   if (isNaN(num)) {
-    throw new FormulaError(
-      "#VALUE!",
-      `${value} cannot be converted to a number`
-    );
+    throw new FormulaError('#VALUE!', `${value} cannot be converted to a number`);
   }
   return num;
 };
 
 export const ensureString = (value: any): string => {
   if (!value) {
-    return "";
+    return '';
   }
   if (value instanceof Table) {
     const v = stripTable(value, 0, 0);
     return ensureString(v);
   }
   switch (value.constructor.name) {
-    case "Date":
-      if (value.getHours() + value.getMinutes() + value.getSeconds() === 0) {
-        return value.toLocaleDateString();
+    case 'Date': {
+      const d: Date = value;
+      if (d.getHours() + d.getMinutes() + d.getSeconds() === 0) {
+        return d.toLocaleDateString();
       }
-      return value.toLocaleString();
+      return d.toLocaleString();
+    }
     default:
       return String(value);
   }
@@ -46,9 +45,9 @@ export const ensureString = (value: any): string => {
 export const ensureBoolean = (
   value: any,
 
-  alternative?: boolean
+  alternative?: boolean,
 ): boolean => {
-  if (typeof value === "undefined" && typeof alternative !== "undefined") {
+  if (typeof value === 'undefined' && typeof alternative !== 'undefined') {
     return alternative;
   }
   if (value === null) {
@@ -58,13 +57,10 @@ export const ensureBoolean = (
     const v = stripTable(value, 0, 0);
     return ensureBoolean(v, alternative);
   }
-  if (typeof value === "string" || value instanceof String) {
+  if (typeof value === 'string' || value instanceof String) {
     const bool = { true: true, false: false }[value.toLowerCase()];
     if (bool == null) {
-      throw new FormulaError(
-        "#VALUE!",
-        `text '${value}' cannot be converted to a boolean`
-      );
+      throw new FormulaError('#VALUE!', `text '${value as string}' cannot be converted to a boolean`);
     }
     return bool;
   }
@@ -82,40 +78,39 @@ const CONDITION_REGEX = /^(?<expr>|<=|>=|<>|>|<|=)?(?<target>.*)$/;
 
 export const check = (value: any, condition: string) => {
   const m = condition.match(CONDITION_REGEX);
-  const { expr = "", target = "" } = m?.groups!;
+  // eslint-disable-next-line no-unsafe-optional-chaining
+  // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+  const { expr = '', target = '' } = m?.groups || {};
 
   const comparison = parseFloat(target);
-  if (expr === ">" || expr === "<" || expr === ">=" || expr === "<=") {
-    if (isNaN(comparison) === (typeof value === "number")) {
+  if (expr === '>' || expr === '<' || expr === '>=' || expr === '<=') {
+    if (isNaN(comparison) === (typeof value === 'number')) {
       return false;
     }
     switch (expr) {
-      case ">":
+      case '>':
         return value > target;
-      case ">=":
+      case '>=':
         return value >= target;
-      case "<":
+      case '<':
         return value < target;
-      case "<=":
+      case '<=':
         return value <= target;
     }
   }
 
-  const equals = expr === "" || expr === "=";
-  if (target === "") {
+  const equals = expr === '' || expr === '=';
+  if (target === '') {
     return !value === equals;
   }
 
-  if (
-    isNaN(comparison) &&
-    (typeof value === "string" || value instanceof String)
-  ) {
+  if (isNaN(comparison) && (typeof value === 'string' || value instanceof String)) {
     const replaced = target
-      .replace(/~\*/g, "(\\*)")
-      .replace(/~\?/g, "(\\?)")
-      .replace(/\*/g, "(.*)")
-      .replace(/\?/g, "(.?)");
-    const regex = RegExp(`^${replaced}$`, "i");
+      .replace(/~\*/g, '(\\*)')
+      .replace(/~\?/g, '(\\?)')
+      .replace(/\*/g, '(.*)')
+      .replace(/\?/g, '(.?)');
+    const regex = RegExp(`^${replaced}$`, 'i');
     return regex.test(value as string) === equals;
   }
   return (value == comparison) === equals;

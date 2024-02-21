@@ -1,19 +1,11 @@
-import React from "react";
-import { clip } from "../lib/clipboard";
+import React from 'react';
+import { clip } from '../lib/clipboard';
 
-import {
-  undo,
-  redo,
-  copy,
-  cut,
-  paste,
-  setContextMenuPosition,
-  updateTable,
-} from "../store/actions";
-import { areaToZone, zoneShape, zoneToArea } from "../lib/structs";
+import { undo, redo, copy, cut, paste, setContextMenuPosition, updateTable } from '../store/actions';
+import { areaToZone, zoneShape, zoneToArea } from '../lib/structs';
 
-import { Context } from "../store";
-import * as prevention from "../lib/prevention";
+import { Context } from '../store';
+import * as prevention from '../lib/prevention';
 
 export const ContextMenu: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);
@@ -36,12 +28,7 @@ export const ContextMenu: React.FC = () => {
     right: selectingRight,
   } = zoneToArea(selectingZone);
   if (selectingTop === -1) {
-    [selectingTop, selectingLeft, selectingBottom, selectingRight] = [
-      y,
-      x,
-      y,
-      x,
-    ];
+    [selectingTop, selectingLeft, selectingBottom, selectingRight] = [y, x, y, x];
   }
 
   const [tableHeight, tableWidth] = [table.getNumRows(), table.getNumCols()];
@@ -99,8 +86,8 @@ export const ContextMenu: React.FC = () => {
           </li>
           <li
             className="gs-enabled"
-            onClick={async () => {
-              const text = editorRef.current?.value || "";
+            onClick={() => {
+              const text = editorRef.current?.value || '';
               dispatch(paste({ text }));
             }}
           >
@@ -117,10 +104,10 @@ export const ContextMenu: React.FC = () => {
               className={
                 (table.maxNumRows !== -1 && tableHeight + height > table.maxNumRows) ||
                 prevention.isPrevented(selectingTopCell?.prevention, prevention.AddRowAbove)
-                  ? "gs-disabled"
-                  : "gs-enabled"
+                  ? 'gs-disabled'
+                  : 'gs-enabled'
               }
-              onClick={(e) => {
+              onClick={() => {
                 const newTable = table.addRows({
                   y: selectingTop,
                   numRows: height,
@@ -134,7 +121,7 @@ export const ContextMenu: React.FC = () => {
               }}
             >
               <div className="gs-menu-name">
-                Insert {height} row{height > 0 && "s"} above
+                Insert {height} row{height > 0 && 's'} above
               </div>
             </li>
           )}
@@ -143,11 +130,11 @@ export const ContextMenu: React.FC = () => {
               className={
                 (table.maxNumRows !== -1 && tableHeight + height > table.maxNumRows) ||
                 prevention.isPrevented(selectingBottomCell?.prevention, prevention.AddRowBelow)
-                  ? "gs-disabled"
-                  : "gs-enabled"
+                  ? 'gs-disabled'
+                  : 'gs-enabled'
               }
               onClick={(e) => {
-                if (e.currentTarget.classList.contains("gs-disabled")) {
+                if (e.currentTarget.classList.contains('gs-disabled')) {
                   return;
                 }
                 selectingZone.startY += height;
@@ -166,7 +153,7 @@ export const ContextMenu: React.FC = () => {
               }}
             >
               <div className="gs-menu-name">
-                Insert {height} row{height > 0 && "s"} below
+                Insert {height} row{height > 0 && 's'} below
               </div>
             </li>
           )}
@@ -176,11 +163,11 @@ export const ContextMenu: React.FC = () => {
               className={
                 (table.maxNumCols !== -1 && tableWidth + width > table.maxNumCols) ||
                 prevention.isPrevented(selectingLeftCell?.prevention, prevention.AddColLeft)
-                  ? "gs-disabled"
-                  : "gs-enabled"
+                  ? 'gs-disabled'
+                  : 'gs-enabled'
               }
               onClick={(e) => {
-                if (e.currentTarget.classList.contains("gs-disabled")) {
+                if (e.currentTarget.classList.contains('gs-disabled')) {
                   return;
                 }
                 const newTable = table.addCols({
@@ -196,7 +183,7 @@ export const ContextMenu: React.FC = () => {
               }}
             >
               <div className="gs-menu-name">
-                Insert {width} column{width > 0 && "s"} left
+                Insert {width} column{width > 0 && 's'} left
               </div>
             </li>
           )}
@@ -205,11 +192,11 @@ export const ContextMenu: React.FC = () => {
               className={
                 (table.maxNumCols !== -1 && tableWidth + width > table.maxNumCols) ||
                 prevention.isPrevented(selectingRightCell?.prevention, prevention.AddColRight)
-                  ? "gs-disabled"
-                  : "gs-enabled"
+                  ? 'gs-disabled'
+                  : 'gs-enabled'
               }
               onClick={(e) => {
-                if (e.currentTarget.classList.contains("gs-disabled")) {
+                if (e.currentTarget.classList.contains('gs-disabled')) {
                   return;
                 }
                 selectingZone.startX += width;
@@ -228,7 +215,7 @@ export const ContextMenu: React.FC = () => {
               }}
             >
               <div className="gs-menu-name">
-                Insert {width} column{width > 0 && "s"} right
+                Insert {width} column{width > 0 && 's'} right
               </div>
             </li>
           )}
@@ -238,17 +225,17 @@ export const ContextMenu: React.FC = () => {
               className={
                 (table.minNumRows !== -1 && tableHeight - height < table.minNumRows) ||
                 prevention.isPrevented(selectingTopCell?.prevention, prevention.DeleteRow)
-                  ? "gs-disabled"
-                  : "gs-enabled"
+                  ? 'gs-disabled'
+                  : 'gs-enabled'
               }
               onClick={(e) => {
-                if (e.currentTarget.classList.contains("gs-disabled")) {
+                if (e.currentTarget.classList.contains('gs-disabled')) {
                   return;
                 }
                 const newTable = table.deleteRows({
                   y: selectingTop,
                   numRows: height,
-                  operator: "USER",
+                  operator: 'USER',
                   reflection: {
                     selectingZone,
                     choosing,
@@ -258,7 +245,7 @@ export const ContextMenu: React.FC = () => {
               }}
             >
               <div className="gs-menu-name">
-                Delete {height} row{height > 0 && "s"}
+                Delete {height} row{height > 0 && 's'}
               </div>
             </li>
           )}
@@ -268,14 +255,14 @@ export const ContextMenu: React.FC = () => {
               className={
                 (table.minNumCols !== -1 && tableWidth - width < table.minNumCols) ||
                 prevention.isPrevented(selectingRightCell?.prevention, prevention.DeleteCol)
-                  ? "gs-disabled"
-                  : "gs-enabled"
+                  ? 'gs-disabled'
+                  : 'gs-enabled'
               }
-              onClick={(e) => {
+              onClick={() => {
                 const newTable = table.deleteCols({
                   x: selectingLeft,
                   numCols: width,
-                  operator: "USER",
+                  operator: 'USER',
                   reflection: {
                     selectingZone,
                     choosing,
@@ -285,18 +272,16 @@ export const ContextMenu: React.FC = () => {
               }}
             >
               <div className="gs-menu-name">
-                Delete {width} column{width > 0 && "s"}
+                Delete {width} column{width > 0 && 's'}
               </div>
             </li>
           )}
 
-          {(historyIndex > -1 || historyIndex < table.getHistorySize() - 1) && (
-            <li className="gs-menu-divider" />
-          )}
+          {(historyIndex > -1 || historyIndex < table.getHistorySize() - 1) && <li className="gs-menu-divider" />}
 
           {historyIndex > -1 && (
             <li
-              onClick={async () => {
+              onClick={() => {
                 dispatch(undo(null));
               }}
             >
@@ -308,7 +293,7 @@ export const ContextMenu: React.FC = () => {
           )}
           {historyIndex < table.getHistorySize() - 1 && (
             <li
-              onClick={async () => {
+              onClick={() => {
                 dispatch(redo(null));
               }}
             >

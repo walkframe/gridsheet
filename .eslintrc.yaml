@@ -1,10 +1,7 @@
 extends:
   - "eslint:recommended"
-  - "plugin:@typescript-eslint/eslint-recommended"
   - "plugin:@typescript-eslint/recommended"
-  - "plugin:prettier/recommended"
-  - "prettier"
-  - "prettier/@typescript-eslint"
+  - "plugin:@typescript-eslint/recommended-requiring-type-checking"
 plugins:
   - "@typescript-eslint"
   - "prettier"
@@ -12,20 +9,14 @@ plugins:
 env:
   node: true
   es6: true
-parser: "@typescript-eslint/parser"
+
 parserOptions:
   sourceType: module
   project: "./tsconfig.json"
 rules:
   semi: error
-  node/no-missing-import: error
   prettier/prettier: error
-  quotes:
-    - warn
-    - single
-    - double
-  no-unused-vars:
-    - 2
-    - argsIgnorePattern: "^_"
-    - ignore-pattern: "^_"
-  "@typescript-eslint/no-unused-vars": ["error"]
+  "@typescript-eslint/no-explicit-any": off
+  "@typescript-eslint/no-unsafe-assignment": off
+  "@typescript-eslint/no-unsafe-member-access": off
+  "@typescript-eslint/no-unsafe-return": off

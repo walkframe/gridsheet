@@ -1,35 +1,32 @@
-import { FormulaError } from "../evaluator";
-import { solveTable } from "../solver";
-import { Table } from "../../lib/table";
-import { BaseFunction } from "./__base";
-import { check } from "./__utils";
-import { AreaType } from "../../types";
+import { FormulaError } from '../evaluator';
+import { solveTable } from '../solver';
+import { Table } from '../../lib/table';
+import { BaseFunction } from './__base';
+import { check } from './__utils';
+import { AreaType } from '../../types';
 
 export class SumifFunction extends BaseFunction {
   example = 'SUMIF(A1:A10,">20")';
-  helpText = ["Returns the sum of a series of cells."];
+  helpText = ['Returns the sum of a series of cells.'];
   helpArgs = [
-    { name: "range1", description: "A condition range." },
+    { name: 'range1', description: 'A condition range.' },
     {
-      name: "condition",
-      description: "A condition for summarization.",
+      name: 'condition',
+      description: 'A condition for summarization.',
     },
     {
-      name: "range2",
-      description: "A range to be summarized.",
+      name: 'range2',
+      description: 'A range to be summarized.',
       optional: true,
     },
   ];
 
   protected validate() {
     if (this.bareArgs.length !== 2 && this.bareArgs.length !== 3) {
-      throw new FormulaError(
-        "#N/A",
-        "Number of arguments for SUMIF is incorrect."
-      );
+      throw new FormulaError('#N/A', 'Number of arguments for SUMIF is incorrect.');
     }
     if (this.bareArgs[2] != undefined && this.bareArgs[2] instanceof Table) {
-      throw new FormulaError("#N/A", "3rd argument must be range.");
+      throw new FormulaError('#N/A', '3rd argument must be range.');
     }
   }
 
@@ -53,10 +50,10 @@ export class SumifFunction extends BaseFunction {
     conditionMatrix.forEach((row, y) =>
       row.forEach((c, x) => {
         const s = sumMatrix[y]?.[x] || 0;
-        if (typeof s === "number" && check(c, condition)) {
+        if (typeof s === 'number' && check(c, condition)) {
           total += s;
         }
-      })
+      }),
     );
     return total;
   }

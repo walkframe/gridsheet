@@ -1,13 +1,13 @@
-import type { StoreType, AreaType, PointType } from "../types";
+import type { StoreType, AreaType } from '../types';
 
-import { zoneToArea } from "./structs";
-import { solveTable } from "../formula/solver";
-import { Table } from "./table";
+import { zoneToArea } from './structs';
+import { solveTable } from '../formula/solver';
+import { Table } from './table';
 
 export const clip = (store: StoreType): AreaType => {
   const { selectingZone, choosing, editorRef, table } = store;
   const { y, x } = choosing;
-  let selectingArea = zoneToArea(selectingZone);
+  const selectingArea = zoneToArea(selectingZone);
   let area = selectingArea;
   if (area.left === -1) {
     area = { top: y, left: x, bottom: y, right: x };
@@ -17,13 +17,14 @@ export const clip = (store: StoreType): AreaType => {
   const tsv = table2tsv(trimmed);
 
   if (navigator.clipboard) {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     navigator.clipboard.writeText(tsv);
   } else if (input != null) {
     input.value = tsv;
     input.focus();
     input.select();
-    document.execCommand("copy");
-    input.value = "";
+    document.execCommand('copy');
+    input.value = '';
     input.blur();
   }
   return area;
@@ -36,13 +37,13 @@ const table2tsv = (table: Table): string => {
     const cols: string[] = [];
     row.forEach((col, j) => {
       const value = table.stringify({ y: i, x: j }, col);
-      if (value.indexOf("\n") !== -1) {
+      if (value.indexOf('\n') !== -1) {
         cols.push(`"${value.replace(/"/g, '""')}"`);
       } else {
         cols.push(value);
       }
     });
-    lines.push(cols.join("\t"));
+    lines.push(cols.join('\t'));
   });
-  return lines.join("\n");
+  return lines.join('\n');
 };

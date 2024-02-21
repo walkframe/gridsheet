@@ -1,16 +1,16 @@
-import React from "react";
-import { Editor } from "./Editor";
-import { Cell } from "./Cell";
-import { HorizontalHeaderCell } from "./HorizontalHeaderCell";
-import { VerticalHeaderCell } from "./VerticalHeaderCell";
-import { SearchBox } from "./SearchBox";
+import React from 'react';
+import { Editor } from './Editor';
+import { Cell } from './Cell';
+import { HorizontalHeaderCell } from './HorizontalHeaderCell';
+import { VerticalHeaderCell } from './VerticalHeaderCell';
+import { SearchBox } from './SearchBox';
 
-import { Context } from "../store";
-import { choose, select, setEntering, updateTable } from "../store/actions";
+import { Context } from '../store';
+import { choose, select, setEntering, updateTable } from '../store/actions';
 
-import { Table } from "../lib/table";
-import {TableRef, Virtualization} from "../types";
-import { virtualize } from "../lib/virtualization";
+import { Table } from '../lib/table';
+import { TableRef, Virtualization } from '../types';
+import { virtualize } from '../lib/virtualization';
 
 type Props = {
   tableRef: React.MutableRefObject<TableRef | null> | undefined;
@@ -20,16 +20,7 @@ export const createTableRef = () => React.useRef<TableRef | null>(null);
 
 export const Tabular = ({ tableRef }: Props) => {
   const { store, dispatch } = React.useContext(Context);
-  const {
-    sheetHeight,
-    sheetWidth,
-    headerHeight,
-    headerWidth,
-    table,
-    tableInitialized,
-    gridOuterRef,
-    sheetRef,
-  } = store;
+  const { sheetHeight, sheetWidth, headerHeight, headerWidth, table, tableInitialized, gridOuterRef, sheetRef } = store;
 
   React.useEffect(() => {
     if (tableRef && tableInitialized) {
@@ -44,11 +35,7 @@ export const Tabular = ({ tableRef }: Props) => {
   const [virtualized, setVirtualized] = React.useState<Virtualization | null>(null);
   React.useEffect(() => {
     setVirtualized(virtualize(table, gridOuterRef.current));
-  }, [
-    gridOuterRef.current,
-    table,
-    sheetRef.current?.clientHeight, sheetRef.current?.clientWidth,
-  ]);
+  }, [gridOuterRef.current, table, sheetRef.current?.clientHeight, sheetRef.current?.clientWidth]);
 
   return (
     <>
@@ -72,7 +59,7 @@ export const Tabular = ({ tableRef }: Props) => {
         }}
       >
         <div
-          className={"gs-tabular-inner"}
+          className={'gs-tabular-inner'}
           style={{
             width: table.totalWidth,
             height: table.totalHeight,
@@ -85,10 +72,10 @@ export const Tabular = ({ tableRef }: Props) => {
             }}
           >
             <thead className="gs-table-header">
-              <tr style={{height: headerHeight}}>
+              <tr style={{ height: headerHeight }}>
                 <th
                   className="gs-header gs-header-left gs-header-top gs-header-left-top"
-                  style={{width: headerWidth, position: "sticky"}}
+                  style={{ width: headerWidth, position: 'sticky' }}
                   onClick={() => {
                     dispatch(choose({ y: -1, x: -1 }));
                     window.setTimeout(() => {
@@ -99,33 +86,42 @@ export const Tabular = ({ tableRef }: Props) => {
                           startX: 1,
                           endY: table.getNumRows(),
                           endX: table.getNumCols(),
-                        })
+                        }),
                       );
                     }, 100);
                   }}
                 ></th>
-                <th className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-left" style={{ width: virtualized?.adjuster?.left }}></th>
-                { virtualized?.xs?.map?.((x) => <HorizontalHeaderCell x={x} key={x} />) }
-                <th className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-right" style={{ width: virtualized?.adjuster?.right }}></th>
+                <th
+                  className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-left"
+                  style={{ width: virtualized?.adjuster?.left }}
+                ></th>
+                {virtualized?.xs?.map?.((x) => <HorizontalHeaderCell x={x} key={x} />)}
+                <th
+                  className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-right"
+                  style={{ width: virtualized?.adjuster?.right }}
+                ></th>
               </tr>
             </thead>
             <tbody className="gs-table-body-adjuster">
               <tr>
-                <th className="gs-header gs-header-left gs-adjuster" style={{height: virtualized?.adjuster?.top }}></th>
-                { virtualized?.xs?.map((x) => <td className="gs-adjuster" key={x} />) }
+                <th
+                  className="gs-header gs-header-left gs-adjuster"
+                  style={{ height: virtualized?.adjuster?.top }}
+                ></th>
+                {virtualized?.xs?.map((x) => <td className="gs-adjuster" key={x} />)}
               </tr>
             </tbody>
             <tbody className="gs-table-body-data">
-              {
-                virtualized?.ys?.map((y, i) => {
-                  return (<tr key={y}>
+              {virtualized?.ys?.map((y) => {
+                return (
+                  <tr key={y}>
                     <VerticalHeaderCell y={y} />
                     <td className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-left" />
-                    { virtualized?.xs?.map((x) => <Cell key={x} y={y} x={x} />) }
+                    {virtualized?.xs?.map((x) => <Cell key={x} y={y} x={x} />)}
                     <td className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-right" />
-                  </tr>);
-                })
-              }
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

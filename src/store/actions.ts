@@ -8,28 +8,19 @@ import {
   CellsByAddressType,
   AreaType,
   PositionType,
-} from "../types";
-import {
-  zoneToArea,
-  superposeArea,
-  matrixShape,
-  areaShape,
-  areaToZone,
-} from "../lib/structs";
-import { Table } from "../lib/table";
+} from '../types';
+import { zoneToArea, superposeArea, matrixShape, areaShape, areaToZone } from '../lib/structs';
+import { Table } from '../lib/table';
 
-import { tsv2matrix, p2a } from "../lib/converters";
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants";
-import { initSearchStatement, restrictPoints } from "./helpers";
-import { smartScroll } from "../lib/virtualization";
-import * as prevention from "../lib/prevention";
+import { tsv2matrix, p2a } from '../lib/converters';
+import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '../constants';
+import { initSearchStatement, restrictPoints } from './helpers';
+import { smartScroll } from '../lib/virtualization';
+import * as prevention from '../lib/prevention';
 
-const actions: { [s: string]: CoreAction<any> } = {};
+const actions: { [s: string]: CoreAction<any> } = {}; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-export const reducer = <T>(
-  store: StoreType,
-  action: { type: number; value: T }
-): StoreType => {
+export const reducer = <T>(store: StoreType, action: { type: number; value: T }): StoreType => {
   const act: CoreAction<T> | undefined = actions[action.type];
   if (act == null) {
     return store;
@@ -41,6 +32,7 @@ export class CoreAction<T> {
   static head = 1;
   private actionId: number = 1;
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public reduce(store: StoreType, payload: T): StoreType {
     return store;
   }
@@ -110,9 +102,7 @@ class SetShowAddressAction<T extends boolean> extends CoreAction<T> {
 }
 export const setShowAddress = new SetShowAddressAction().bind();
 
-class SetContextMenuPositionAction<
-  T extends PositionType
-> extends CoreAction<T> {
+class SetContextMenuPositionAction<T extends PositionType> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -122,9 +112,7 @@ class SetContextMenuPositionAction<
 }
 export const setContextMenuPosition = new SetContextMenuPositionAction().bind();
 
-class SetResizingPositionYAction<
-  T extends [number, number, number]
-> extends CoreAction<T> {
+class SetResizingPositionYAction<T extends [number, number, number]> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -134,9 +122,7 @@ class SetResizingPositionYAction<
 }
 export const setResizingPositionY = new SetResizingPositionYAction().bind();
 
-class SetResizingPositionXAction<
-  T extends [number, number, number]
-> extends CoreAction<T> {
+class SetResizingPositionXAction<T extends [number, number, number]> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
@@ -250,10 +236,11 @@ class SetResizingRectAction<T extends RectType> extends CoreAction<T> {
 export const setResizingRect = new SetResizingRectAction().bind();
 
 class BlurAction<T extends null> extends CoreAction<T> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
-      editingCell: "",
+      editingCell: '',
     };
   }
 }
@@ -308,7 +295,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
       const newTable = table.move({
         src,
         dst,
-        operator: "USER",
+        operator: 'USER',
         reflection: {
           selectingZone: areaToZone(dst),
           copyingZone,
@@ -330,7 +317,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
     const { text } = payload;
     if (copyingArea.top === -1) {
       const matrixFrom = tsv2matrix(text);
-      let { height, width } = matrixShape({ matrix: matrixFrom, base: -1 });
+      const { height, width } = matrixShape({ matrix: matrixFrom, base: -1 });
       selectingArea = {
         top: y,
         left: x,
@@ -357,7 +344,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
       newTable = table.copy({
         src: copyingArea,
         dst: selectingArea,
-        operator: "USER",
+        operator: 'USER',
         reflection: {
           copyingZone,
           selectingZone,
@@ -376,12 +363,13 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
 export const paste = new PasteAction().bind();
 
 class EscapeAction<T extends null> extends CoreAction<T> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
       copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
       cutting: false,
-      editingCell: "",
+      editingCell: '',
       verticalHeaderSelecting: false,
       horizontalheaderSelecting: false,
     };
@@ -412,9 +400,7 @@ class SelectAction<T extends ZoneType> extends CoreAction<T> {
 }
 export const select = new SelectAction().bind();
 
-class SelectRowsAction<
-  T extends { range: RangeType; numCols: number }
-> extends CoreAction<T> {
+class SelectRowsAction<T extends { range: RangeType; numCols: number }> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     const { range, numCols } = payload;
     const { start, end } = range;
@@ -435,9 +421,7 @@ class SelectRowsAction<
 }
 export const selectRows = new SelectRowsAction().bind();
 
-class SelectColsAction<
-  T extends { range: RangeType; numRows: number }
-> extends CoreAction<T> {
+class SelectColsAction<T extends { range: RangeType; numRows: number }> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     const { range, numRows } = payload;
     const { start, end } = range;
@@ -475,7 +459,8 @@ export const drag = new DragAction().bind();
 
 class SearchAction<T extends number> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
-    let { matchingCells, matchingCellIndex } = store;
+    const { matchingCells } = store;
+    let { matchingCellIndex } = store;
     matchingCellIndex += payload;
     if (matchingCellIndex >= matchingCells.length) {
       matchingCellIndex = 0;
@@ -493,7 +478,7 @@ class WriteAction<T extends string> extends CoreAction<T> {
     const newTable = table.write({
       point: choosing,
       value: payload,
-      operator: "USER",
+      operator: 'USER',
       reflection: {
         selectingZone,
         choosing,
@@ -510,6 +495,7 @@ class WriteAction<T extends string> extends CoreAction<T> {
 export const write = new WriteAction().bind();
 
 class ClearAction<T extends null> extends CoreAction<T> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   reduce(store: StoreType, payload: T): StoreType {
     const { choosing, selectingZone, table } = store;
 
@@ -540,7 +526,7 @@ class ClearAction<T extends null> extends CoreAction<T> {
     const newTable = table.update({
       diff,
       partial: true,
-      operator: "USER",
+      operator: 'USER',
       reflection: {
         selectingZone,
         choosing,
@@ -556,13 +542,14 @@ class ClearAction<T extends null> extends CoreAction<T> {
 export const clear = new ClearAction().bind();
 
 class UndoAction<T extends null> extends CoreAction<T> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   reduce(store: StoreType, payload: T): StoreType {
     const { table } = store;
     const { history, newTable } = table.undo();
     if (history == null) {
       return store;
     }
-    const { reflection, operation } = history;
+    const { reflection } = history;
     return {
       ...store,
       ...restrictPoints(store, table),
@@ -575,13 +562,14 @@ class UndoAction<T extends null> extends CoreAction<T> {
 export const undo = new UndoAction().bind();
 
 class RedoAction<T extends null> extends CoreAction<T> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   reduce(store: StoreType, payload: T): StoreType {
     const { table } = store;
     const { history, newTable } = table.redo();
     if (history == null) {
       return store;
     }
-    const { reflection, operation } = history;
+    const { reflection } = history;
     return {
       ...store,
       ...reflection,
@@ -600,14 +588,15 @@ class ArrowAction<
     deltaX: number;
     numRows: number;
     numCols: number;
-  }
+  },
 > extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     const { shiftKey, deltaY, deltaX, numRows, numCols } = payload;
-    let { choosing, selectingZone, table, gridOuterRef } = store;
+    const { choosing, table, gridOuterRef } = store;
+    let { selectingZone } = store;
     const { y, x } = choosing;
     if (shiftKey) {
-      let [dragEndY, dragEndX] = [
+      const [dragEndY, dragEndX] = [
         selectingZone.endY === -1 ? y : selectingZone.endY,
         selectingZone.endX === -1 ? x : selectingZone.endX,
       ];
@@ -669,11 +658,12 @@ class WalkAction<
     deltaX: number;
     numRows: number;
     numCols: number;
-  }
+  },
 > extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
-    let { deltaY, deltaX, numRows, numCols } = payload;
-    let { choosing, selectingZone, table, gridOuterRef } = store;
+    const { numRows, numCols } = payload;
+    let { deltaY, deltaX } = payload;
+    const { choosing, selectingZone, table, gridOuterRef } = store;
     let { y: editorTop, x: editorLeft, height, width } = store.editorRect;
     const { y, x } = choosing;
     const selectingArea = zoneToArea(selectingZone);
@@ -748,7 +738,7 @@ class WalkAction<
     const cell = table.getByPoint({ y: nextY, x: nextX });
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
-    smartScroll(table, gridOuterRef.current, { y: nextY, x: nextX});
+    smartScroll(table, gridOuterRef.current, { y: nextY, x: nextX });
     return {
       ...store,
       choosing: { y: nextY, x: nextX } as PointType,

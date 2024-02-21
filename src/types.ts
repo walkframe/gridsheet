@@ -1,8 +1,8 @@
-import { RendererType } from "./renderers/core";
-import { ParserType } from "./parsers/core";
-import { UserTable, Table } from "./lib/table";
-import { FunctionMapping } from "./formula/functions/__base";
-import React from "react";
+import { RendererType } from './renderers/core';
+import { ParserType } from './parsers/core';
+import { UserTable, Table } from './lib/table';
+import { FunctionMapping } from './formula/functions/__base';
+import React from 'react';
 
 export type Y = number;
 export type X = number;
@@ -33,11 +33,11 @@ export type FeedbackType = (
     pointing: PointType;
     selectingFrom: PointType;
     selectingTo: PointType;
-  }
+  },
 ) => void;
 
-export type Mode = "light" | "dark";
-export type Headers = "both" | "vertical" | "horizontal" | "none";
+export type Mode = 'light' | 'dark';
+export type Headers = 'both' | 'vertical' | 'horizontal' | 'none';
 
 export type CellType<Custom = any> = {
   value?: any;
@@ -58,7 +58,6 @@ export type CellFilter = (cell: CellType) => boolean;
 
 export type CellsByAddressType = { [address: string]: CellType };
 export type CellsByIdType = { [id: Id]: CellType | undefined };
-
 
 export type OptionsType = {
   sheetHeight?: number;
@@ -155,7 +154,7 @@ export type StoreReflectionType = {
 };
 
 export type HistoryUpdateType = {
-  operation: "UPDATE";
+  operation: 'UPDATE';
   applyed: boolean;
   reflection?: StoreReflectionType;
   diffBefore: CellsByIdType;
@@ -164,19 +163,19 @@ export type HistoryUpdateType = {
 };
 
 export type HistoryMoveType = {
-  operation: "MOVE";
+  operation: 'MOVE';
   applyed: boolean;
   reflection?: StoreReflectionType;
   src: AreaType;
   dst: AreaType;
-  matrixFrom:IdMatrix;
+  matrixFrom: IdMatrix;
   matrixTo: IdMatrix;
   matrixNew: IdMatrix;
   lostRows: MatricesByAddress<Id>;
 };
 
 export type HistoryAddRowsType = {
-  operation: "ADD_ROWS";
+  operation: 'ADD_ROWS';
   applyed: boolean;
   reflection?: StoreReflectionType;
   y: number;
@@ -188,7 +187,7 @@ export type HistoryAddRowsType = {
 };
 
 export type HistoryDeleteRowsType = {
-  operation: "DELETE_ROWS";
+  operation: 'DELETE_ROWS';
   applyed: boolean;
   reflection?: StoreReflectionType;
   ys: number[];
@@ -196,7 +195,7 @@ export type HistoryDeleteRowsType = {
 };
 
 export type HistoryAddColsType = {
-  operation: "ADD_COLS";
+  operation: 'ADD_COLS';
   applyed: boolean;
   reflection?: StoreReflectionType;
   x: number;
@@ -208,7 +207,7 @@ export type HistoryAddColsType = {
 };
 
 export type HistoryDeleteColsType = {
-  operation: "DELETE_COLS";
+  operation: 'DELETE_COLS';
   applyed: boolean;
   reflection?: StoreReflectionType;
   xs: number[];
@@ -232,5 +231,5 @@ export type OperatorType = 'USER' | 'SYSTEM';
 
 export type Prevention = number;
 
-export type TableMapType = {[key: string]: Table}; // id: table
-export type SheetMapType = {[key: string]: number}; // name: id
+export type TableMapType = { [key: string]: Table }; // id: table
+export type SheetMapType = { [key: string]: number }; // name: id

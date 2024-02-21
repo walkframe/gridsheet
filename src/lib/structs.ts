@@ -11,23 +11,15 @@ import type {
   MatricesByAddress,
   CellType,
   Address,
-} from "../types";
-import { 
-  a2p,
-  p2a,
-  x2c,
-  c2x,
-} from "./converters";
+} from '../types';
+import { a2p, p2a, x2c, c2x } from './converters';
 
 export const slideArea = (area: AreaType, y: Y, x: X): AreaType => {
   const { top, left, bottom, right } = area;
   return { top: top + y, left: left + x, bottom: bottom + y, right: right + x };
 };
 
-export const superposeArea = (
-  srcArea: AreaType,
-  dstArea: AreaType
-): ShapeType => {
+export const superposeArea = (srcArea: AreaType, dstArea: AreaType): ShapeType => {
   const { height: srcHeight, width: srcWidth } = areaShape(srcArea);
   const { height: dstHeight, width: dstWidth } = areaShape(dstArea);
 
@@ -38,11 +30,8 @@ export const superposeArea = (
   };
 };
 
-export const concatAreas = (
-  area1: AreaType,
-  area2: AreaType
-): AreaType => {
-  const result: AreaType = {...area1};
+export const concatAreas = (area1: AreaType, area2: AreaType): AreaType => {
+  const result: AreaType = { ...area1 };
   if (area2.left < area1.left) {
     result.left = area2.left;
   }
@@ -58,16 +47,9 @@ export const concatAreas = (
   return result;
 };
 
-
 export const zoneToArea = (zone: ZoneType): AreaType => {
-  const [top, bottom] =
-    zone.startY < zone.endY
-      ? [zone.startY, zone.endY]
-      : [zone.endY, zone.startY];
-  const [left, right] =
-    zone.startX < zone.endX
-      ? [zone.startX, zone.endX]
-      : [zone.endX, zone.startX];
+  const [top, bottom] = zone.startY < zone.endY ? [zone.startY, zone.endY] : [zone.endY, zone.startY];
+  const [left, right] = zone.startX < zone.endX ? [zone.startX, zone.endX] : [zone.endX, zone.startX];
   return { top, left, bottom, right };
 };
 
@@ -89,30 +71,27 @@ export const areaToRange = (area: AreaType): string => {
 };
 
 export const rangeToArea = (range: string): AreaType => {
-  const cells = range.split(":");
+  const cells = range.split(':');
   const [start, end] = cells;
   const { y: top, x: left } = a2p(start);
   const { y: bottom, x: right } = a2p(end);
-  return { top: Math.abs(top), left: Math.abs(left), bottom: Math.abs(bottom), right: Math.abs(right) };
+  return {
+    top: Math.abs(top),
+    left: Math.abs(left),
+    bottom: Math.abs(bottom),
+    right: Math.abs(right),
+  };
 };
 
 export const between = (range: RangeType, index: number) => {
   if (range.start === -1 || range.end === -1) {
     return false;
   }
-  return (
-    (range.start <= index && index <= range.end) ||
-    (range.end <= index && index <= range.start)
-  );
+  return (range.start <= index && index <= range.end) || (range.end <= index && index <= range.start);
 };
 
 export const among = (area: AreaType, point: PointType) => {
-  if (
-    area.top === -1 ||
-    area.left === -1 ||
-    area.bottom === -1 ||
-    area.right === -1
-  ) {
+  if (area.top === -1 || area.left === -1 || area.bottom === -1 || area.right === -1) {
     return false;
   }
   const { y, x } = point;
@@ -122,30 +101,21 @@ export const among = (area: AreaType, point: PointType) => {
 
 type ShapeExtension = { base?: number };
 
-export const zoneShape = ({
-  base = 0,
-  ...zone
-}: ZoneType & ShapeExtension): ShapeType => {
+export const zoneShape = ({ base = 0, ...zone }: ZoneType & ShapeExtension): ShapeType => {
   return {
     height: base + Math.abs(zone.startY - zone.endY),
     width: base + Math.abs(zone.startX - zone.endX),
   };
 };
 
-export const areaShape = ({
-  base = 0,
-  ...area
-}: AreaType & ShapeExtension): ShapeType => {
+export const areaShape = ({ base = 0, ...area }: AreaType & ShapeExtension): ShapeType => {
   return {
     height: base + Math.abs(area.top - area.bottom),
     width: base + Math.abs(area.left - area.right),
   };
 };
 
-export const matrixShape = ({
-  base = 0,
-  matrix,
-}: { matrix: MatrixType } & ShapeExtension): ShapeType => {
+export const matrixShape = ({ base = 0, matrix }: { matrix: MatrixType } & ShapeExtension): ShapeType => {
   const h = matrix.length;
   if (h === 0) {
     return { height: 0, width: 0 };
@@ -154,16 +124,10 @@ export const matrixShape = ({
 };
 
 export const makeSequence = (start: number, stop: number, step: number = 1) => {
-  return Array.from(
-    { length: (stop - start - 1) / step + 1 },
-    (_, i) => start + i * step
-  );
+  return Array.from({ length: (stop - start - 1) / step + 1 }, (_, i) => start + i * step);
 };
 
-export const oa2aa = (
-  oa: { [s: string]: any }[],
-  fields: string[]
-): MatrixType => {
+export const oa2aa = (oa: { [s: string]: any }[], fields: string[]): MatrixType => {
   const aa: any[][] = [];
   oa.forEach((o) => {
     const a: any[] = [];
@@ -175,10 +139,7 @@ export const oa2aa = (
   return aa;
 };
 
-export const aa2oa = (
-  aa: MatrixType,
-  fields: string[],
-): { [s: string]: any }[] => {
+export const aa2oa = (aa: MatrixType, fields: string[]): { [s: string]: any }[] => {
   const oa: { [s: string]: any }[] = [];
   aa.forEach((a) => {
     const o: { [s: string]: any } = {};
@@ -232,39 +193,36 @@ export const createMatrix = <T = any>(numRows: number, numCols: number, fill?: T
 
 export const cropMatrix = <T = any>(matrix: T[][], area: AreaType): T[][] => {
   const { top, left, bottom, right } = area;
-  return matrix
-    .slice(top, bottom + 1)
-    .map((cols) => cols.slice(left, right + 1));
+  return matrix.slice(top, bottom + 1).map((cols) => cols.slice(left, right + 1));
 };
 
-export const constructInitialCellsOrigin = <T>(
-  {
-    cells = {},
-    ensured = {},
-    matrix = [],
-    flattenAs = "value",
-  }: {
-    cells?: CellsByAddressType;
-    ensured?: {
-      numRows?: number;
-      numCols?: number;
-    };
-    flattenAs?: keyof CellType;
-    matrix?: MatrixType;
-  }) => {
+export const constructInitialCellsOrigin = ({
+  cells = {},
+  ensured = {},
+  matrix = [],
+  flattenAs = 'value',
+}: {
+  cells?: CellsByAddressType;
+  ensured?: {
+    numRows?: number;
+    numCols?: number;
+  };
+  flattenAs?: keyof CellType;
+  matrix?: MatrixType;
+}) => {
   return constructInitialCells({
     cells,
     ensured,
-    matrices: {A1: matrix},
+    matrices: { A1: matrix },
     flattenAs,
   });
-}
+};
 
 export const constructInitialCells = ({
   cells = {},
   ensured = {},
   matrices = {},
-  flattenAs = "value",
+  flattenAs = 'value',
 }: {
   cells?: CellsByAddressType;
   ensured?: {
@@ -275,10 +233,7 @@ export const constructInitialCells = ({
   matrices?: MatricesByAddress<any>;
 } = {}) => {
   upsert({ cells, flattenAs, matrices });
-  const { numRows, numCols } = Object.assign(
-    { numRows: 1, numCols: 1 },
-    ensured
-  );
+  const { numRows, numCols } = Object.assign({ numRows: 1, numCols: 1 }, ensured);
   const rightBottom = p2a({ y: numRows, x: numCols });
   if (cells[rightBottom] == null) {
     cells[rightBottom] = {};
@@ -333,14 +288,19 @@ export const range = (start: number, end: number) => {
     list.push(i);
   }
   return list;
-}
+};
 
 export const complementSelectingArea = (selectingArea: AreaType, choosing: PointType) => {
   if (selectingArea.left === -1) {
-    selectingArea = {left: choosing.x, top: choosing.y, right: choosing.x, bottom: choosing.y};
+    selectingArea = {
+      left: choosing.x,
+      top: choosing.y,
+      right: choosing.x,
+      bottom: choosing.y,
+    };
   }
   return selectingArea;
-}
+};
 
 export const isSameArea = (area1: AreaType, area2: AreaType) => {
   if (area1.top !== area2.top) {
@@ -356,26 +316,28 @@ export const isSameArea = (area1: AreaType, area2: AreaType) => {
     return false;
   }
   return true;
-}
+};
 
-export const expandRange =(range: string): Address[] => {
-  if (range.indexOf(":") === -1) {
-      return [range];
+export const expandRange = (range: string): Address[] => {
+  if (range.indexOf(':') === -1) {
+    return [range];
   }
 
   const result: Address[] = [];
+  // eslint-disable-next-line no-useless-escape
   const isRowRange = /^\d+\:\d+$/.test(range);
 
   if (isRowRange) {
-    const [startRow, endRow] = range.split(":").map(Number);
+    const [startRow, endRow] = range.split(':').map(Number);
     for (let row = startRow; row <= endRow; row++) {
       result.push(`${row}`);
     }
     return result;
   }
+  // eslint-disable-next-line no-useless-escape
   const match = range.match(/^([A-Z]*)(\d+)?\:([A-Z]*)(\d+)?$/);
   if (!match) {
-    console.error("Invalid range format", range);
+    console.error('Invalid range format', range);
     return [range];
   }
 
@@ -394,4 +356,4 @@ export const expandRange =(range: string): Address[] => {
     }
   }
   return result;
-}
+};

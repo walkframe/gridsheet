@@ -1,7 +1,7 @@
-import * as React from "react";
-import { ReducerWithoutAction } from "react";
+import * as React from 'react';
+import { ReducerWithoutAction } from 'react';
 
-import { CellsByAddressType, OptionsType, Props, StoreType } from "../types";
+import { CellsByAddressType, OptionsType, Props, StoreType } from '../types';
 import {
   DEFAULT_HEIGHT,
   DEFAULT_WIDTH,
@@ -10,26 +10,26 @@ import {
   SHEET_HEIGHT,
   SHEET_WIDTH,
   HISTORY_LIMIT,
-} from "../constants";
-import { functions } from "../formula/mapping";
-import { Context } from "../store";
-import { reducer as defaultReducer, initializeTable } from "../store/actions";
+} from '../constants';
+import { functions } from '../formula/mapping';
+import { Context } from '../store';
+import { reducer as defaultReducer } from '../store/actions';
 
-import { StoreInitializer } from "./StoreInitializer";
-import { Resizer } from "./Resizer";
-import { Emitter } from "./Emitter";
-import { ContextMenu } from "./ContextMenu";
-import { Table } from "../lib/table";
-import { Tabular } from "./Tabular";
-import { getMaxSizesFromCells } from "../lib/structs";
-import { x2c, y2r } from "../lib/converters";
-import { embedStyle } from "../styles/embedder";
-import { useSheetContext } from "./SheetProvider";
-import { FormulaBar } from "./FormulaBar";
+import { StoreInitializer } from './StoreInitializer';
+import { Resizer } from './Resizer';
+import { Emitter } from './Emitter';
+import { ContextMenu } from './ContextMenu';
+import { Table } from '../lib/table';
+import { Tabular } from './Tabular';
+import { getMaxSizesFromCells } from '../lib/structs';
+import { x2c, y2r } from '../lib/converters';
+import { embedStyle } from '../styles/embedder';
+import { useSheetContext } from './SheetProvider';
+import { FormulaBar } from './FormulaBar';
 
 export const GridSheet: React.FC<Props> = ({
   initialCells: initialData,
-  sheetName = "",
+  sheetName = '',
   tableRef,
   options = {},
   className,
@@ -80,7 +80,7 @@ export const GridSheet: React.FC<Props> = ({
     table.tables[sheetId] = table;
     table.sheetId = sheetId;
     table.initialize(initialData);
-    
+
     return {
       sheetId,
       table, // temporary (see StoreInitializer for detail)
@@ -97,7 +97,7 @@ export const GridSheet: React.FC<Props> = ({
       autofillDraggingTo: null,
       verticalHeaderSelecting: false,
       horizontalheaderSelecting: false,
-      editingCell: "",
+      editingCell: '',
       editorRect: { y: 0, x: 0, height: 0, width: 0 },
       resizingRect: { y: -1, x: -1, height: -1, width: -1 },
       sheetHeight: 0,
@@ -119,7 +119,11 @@ export const GridSheet: React.FC<Props> = ({
     };
   });
 
-  const [store, dispatch] = React.useReducer(defaultReducer as ReducerWithoutAction<StoreType>, initialState, () => initialState);
+  const [store, dispatch] = React.useReducer(
+    defaultReducer as ReducerWithoutAction<StoreType>,
+    initialState,
+    () => initialState,
+  );
 
   React.useEffect(() => {
     embedStyle();
@@ -132,7 +136,7 @@ export const GridSheet: React.FC<Props> = ({
     sheetContext.tables.current[store.sheetId] = store.table;
     sheetContext.forceRender();
   }, [store.table]);
-  
+
   React.useEffect(() => {
     if (!sheetProvided) {
       return;
@@ -146,13 +150,12 @@ export const GridSheet: React.FC<Props> = ({
     }
     store.table.sheetName = sheetName;
   }, [sheetName]);
-  
 
   const [sheetHeight, setSheetHeight] = React.useState(
-    options?.sheetHeight || estimateSheetHeight({ options, initialData })
+    options?.sheetHeight || estimateSheetHeight({ options, initialData }),
   );
   const [sheetWidth, setSheetWidth] = React.useState(
-    options?.sheetWidth || estimateSheetWidth({ options, initialData })
+    options?.sheetWidth || estimateSheetWidth({ options, initialData }),
   );
   React.useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -169,16 +172,12 @@ export const GridSheet: React.FC<Props> = ({
   const { onChange, onSelect, mode } = options;
   return (
     <Context.Provider value={{ store, dispatch }}>
-      <div 
-        className={`gridsheet-1 ${mode || "light"}`}
-        data-sheet-name={sheetName}
-      >
-        {showFormulaBar && <FormulaBar width={sheetWidth}/> }
+      <div className={`gridsheet-1 ${mode || 'light'}`} data-sheet-name={sheetName}>
+        {showFormulaBar && <FormulaBar width={sheetWidth} />}
         <div
-          className={`gs-main ${className || ""} ${
-            sheetWidth > store.table.totalWidth ? 'gs-table-width-smaller' : 'gs-table-width-larger'} ${
-            sheetHeight > store.table.totalHeight ? 'gs-table-height-smaller' : 'gs-table-height-larger'
-          }`}
+          className={`gs-main ${className || ''} ${
+            sheetWidth > store.table.totalWidth ? 'gs-table-width-smaller' : 'gs-table-width-larger'
+          } ${sheetHeight > store.table.totalHeight ? 'gs-table-height-smaller' : 'gs-table-height-larger'}`}
           ref={sheetRef}
           style={{
             maxWidth: store.table.totalWidth + 2,
@@ -189,21 +188,18 @@ export const GridSheet: React.FC<Props> = ({
             height: sheetHeight,
           }}
         >
-          <Tabular
-              tableRef={tableRef}
-            />
-            <StoreInitializer
-              initialCells={initialData}
-              options={{ ...options, sheetHeight, sheetWidth }}
-              additionalFunctions={additionalFunctions}
-            />
-            <ContextMenu />
-            <Resizer />
-            <Emitter onChange={onChange} onSelect={onSelect} />
+          <Tabular tableRef={tableRef} />
+          <StoreInitializer
+            initialCells={initialData}
+            options={{ ...options, sheetHeight, sheetWidth }}
+            additionalFunctions={additionalFunctions}
+          />
+          <ContextMenu />
+          <Resizer />
+          <Emitter onChange={onChange} onSelect={onSelect} />
         </div>
       </div>
     </Context.Provider>
-
   );
 };
 
@@ -217,10 +213,7 @@ const estimateSheetHeight = ({ initialData, options }: EstimateProps) => {
   let estimatedHeight = options.headerHeight || HEADER_HEIGHT;
   for (let y = 0; y < auto.numRows; y++) {
     const row = y2r(y);
-    const height =
-      initialData?.[row]?.height || 
-      initialData?.default?.height || 
-      DEFAULT_HEIGHT;
+    const height = initialData?.[row]?.height || initialData?.default?.height || DEFAULT_HEIGHT;
     if (estimatedHeight + height > SHEET_HEIGHT) {
       return SHEET_HEIGHT;
     }
@@ -234,10 +227,7 @@ const estimateSheetWidth = ({ initialData, options }: EstimateProps) => {
   let estimatedWidth = options.headerWidth || HEADER_WIDTH;
   for (let x = 0; x < auto.numCols; x++) {
     const col = x2c(x);
-    const width =
-      initialData?.[col]?.width || 
-      initialData?.default?.width || 
-      DEFAULT_WIDTH;
+    const width = initialData?.[col]?.width || initialData?.default?.width || DEFAULT_WIDTH;
     if (estimatedWidth + width > SHEET_WIDTH) {
       return SHEET_WIDTH;
     }

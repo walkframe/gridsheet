@@ -1,23 +1,15 @@
-import { Special } from "../constants";
-import { Table } from "../lib/table";
-import { MatrixType } from "../types";
-import { FormulaError, Lexer, Parser } from "./evaluator";
-import { p2a } from "../lib/converters";
+import { Special } from '../constants';
+import { Table } from '../lib/table';
+import { MatrixType } from '../types';
+import { FormulaError, Lexer, Parser } from './evaluator';
+import { p2a } from '../lib/converters';
 
-const SOLVING = new Special("solving");
+const SOLVING = new Special('solving');
 
-export const solveFormula = ({
-  value,
-  table,
-  raise = true,
-}: {
-  value: any;
-  table: Table;
-  raise?: boolean;
-}) => {
+export const solveFormula = ({ value, table, raise = true }: { value: any; table: Table; raise?: boolean }) => {
   let solved = value;
-  if (typeof value === "string") {
-    if (value.charAt(0) === "=") {
+  if (typeof value === 'string') {
+    if (value.charAt(0) === '=') {
       try {
         const lexer = new Lexer(value.substring(1));
         lexer.tokenize();
@@ -38,13 +30,7 @@ export const solveFormula = ({
   return solved;
 };
 
-export const solveTable = ({
-  table,
-  raise = true,
-}: {
-  table: Table;
-  raise?: boolean;
-}): MatrixType => {
+export const solveTable = ({ table, raise = true }: { table: Table; raise?: boolean }): MatrixType => {
   const area = table.getArea();
   return table.getMatrixFlatten({ area, evaluates: false }).map((row, i) => {
     const y = area.top + i;
@@ -55,11 +41,7 @@ export const solveTable = ({
 
       try {
         if (cache === SOLVING) {
-          throw new FormulaError(
-            "#RFF!",
-            "References are circulating.",
-            new Error(value)
-          );
+          throw new FormulaError('#RFF!', 'References are circulating.', new Error(value as string));
         } else if (cache instanceof FormulaError) {
           throw cache;
         } else if (cache != null) {

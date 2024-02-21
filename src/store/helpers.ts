@@ -1,6 +1,6 @@
-import { x2c, y2r } from "../lib/converters";
-import { Table } from "../lib/table";
-import { Address, PointType, StoreType, ZoneType } from "../types";
+import { x2c, y2r } from '../lib/converters';
+import { Table } from '../lib/table';
+import { Address, PointType, StoreType } from '../types';
 
 export const restrictPoints = (store: StoreType, table: Table) => {
   const { choosing, selectingZone, copyingZone } = store;
@@ -47,15 +47,15 @@ export const restrictPoints = (store: StoreType, table: Table) => {
 
 export const shouldTracking = (operation: string) => {
   switch (operation) {
-    case "ADD_ROWS":
+    case 'ADD_ROWS':
       return true;
-    case "ADD_COLS":
+    case 'ADD_COLS':
       return true;
-    case "DELETE_ROWS":
+    case 'DELETE_ROWS':
       return true;
-    case "DELETE_COLS":
+    case 'DELETE_COLS':
       return true;
-    case "MOVE":
+    case 'MOVE':
       return true;
   }
   return false;
@@ -64,7 +64,7 @@ export const shouldTracking = (operation: string) => {
 export const initSearchStatement = (table: Table, store: StoreType) => {
   const { searchQuery } = store;
   if (!searchQuery) {
-    return {matchingCells: []};
+    return { matchingCells: [] };
   }
   const matchingCells: Address[] = [];
   for (let y = 1; y <= table.bottom; y++) {
@@ -75,9 +75,6 @@ export const initSearchStatement = (table: Table, store: StoreType) => {
       }
     }
   }
-  const matchingCellIndex =
-    matchingCells.length === store.matchingCells.length
-      ? store.matchingCellIndex
-      : 0;
+  const matchingCellIndex = matchingCells.length === store.matchingCells.length ? store.matchingCellIndex : 0;
   return { matchingCells, searchQuery, matchingCellIndex };
 };
