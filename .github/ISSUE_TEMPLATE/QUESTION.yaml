@@ -1,0 +1,21 @@
+name: "❓ Question"
+description: Create a new ticket for a question.
+title: "❓ [QUESTION] - <title>"
+labels: [
+  "question"
+]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: "Description"
+      description: Please enter an explicit description of your question
+      placeholder: Short and explicit description of your question...
+    validations:
+      required: true
+  - type: input
+    id: reprod-url
+    attributes:
+      label: "Reproduction URL"
+      description: Please enter your GitHub URL to provide a reproduction of the question
+      placeholder: ex.
