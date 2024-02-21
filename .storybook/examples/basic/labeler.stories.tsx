@@ -1,5 +1,5 @@
 import React from "react";
-import { generateInitial, GridSheet } from "../../../src";
+import { constructInitialCells, GridSheet } from "../../../src";
 
 export default {
   title: "Basic",
@@ -9,7 +9,7 @@ export const Labeler = () => {
   return (
     <>
       <GridSheet
-        initialCells={generateInitial({
+        initialCells={constructInitialCells({
           cells: {
             A: { labeler: "hiragana" },
             B: { labeler: "hiragana" },

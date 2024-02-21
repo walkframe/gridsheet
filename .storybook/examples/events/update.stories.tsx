@@ -1,7 +1,7 @@
 import React from "react";
 
 import { GridSheet } from "../../../src";
-import { generateInitial } from "../../../src/lib/structs";
+import { constructInitialCells } from "../../../src/lib/structs";
 import { createTableRef } from "../../../src/components/Tabular";
 
 export default {
@@ -37,7 +37,7 @@ export const Update = () => {
       <button onClick={update}>Update!</button>
       <GridSheet
         tableRef={tableRef}
-        initialCells={generateInitial({
+        initialCells={constructInitialCells({
           cells: {},
           ensured: {
             numRows: 10,
@@ -74,7 +74,7 @@ export const AddRowsAndUpdate = () => {
       <button onClick={add}>Add!</button>
       <GridSheet
         tableRef={tableRef}
-        initialCells={generateInitial({
+        initialCells={constructInitialCells({
           cells: {
             B: { style: { color: "#F00" } },
             B7: { value: "test1" },
@@ -116,7 +116,7 @@ export const AddColsAndUpdate = () => {
       <button onClick={add}>Add!</button>
       <GridSheet
         tableRef={tableRef}
-        initialCells={generateInitial({
+        initialCells={constructInitialCells({
           cells: {
             B: { style: { color: "#F00" } },
             B7: { value: "test1" },

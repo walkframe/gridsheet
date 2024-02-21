@@ -1,6 +1,6 @@
 import React from "react";
 import { ComponentStory } from "@storybook/react";
-import { generateInitial, GridSheet, SheetProvider } from "../../../src";
+import { constructInitialCells, GridSheet, SheetProvider } from "../../../src";
 
 export default {
   title: "Sheets",
@@ -20,7 +20,7 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
     <SheetProvider>
       <GridSheet
         sheetName={sheet1}
-        initialCells={generateInitial({
+        initialCells={constructInitialCells({
           cells: {
             default: { width: defaultWidth },
             A1: {
@@ -40,11 +40,12 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
           ensured: { numRows, numCols },
         })}
       />
+      <br />
       <input id="input1" value={sheet1} onChange={(e) => setSheet1(e.target.value)} />
       <hr />
       <GridSheet
         sheetName={sheet2}
-        initialCells={generateInitial({
+        initialCells={constructInitialCells({
           cells: {
             A1: {value: 50},
             B2: {value: 1200},
@@ -52,19 +53,24 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
           },
           ensured: { numRows, numCols },
         })}
+        options={{
+          sheetResize: "both",
+        }}
       />
+      <br />
       <input id="input2" value={sheet2} onChange={(e) => setSheet2(e.target.value)} />
       <hr />
 
       <GridSheet
         sheetName={sheet3}
-        initialCells={generateInitial({
+        initialCells={constructInitialCells({
           cells: {
             A1: {value: 555},
           },
           ensured: { numRows, numCols },
         })}
       />
+      <br />
       <input id="input3" value={sheet3} onChange={(e) => setSheet3(e.target.value)} />
 
 

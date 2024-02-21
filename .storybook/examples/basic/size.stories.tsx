@@ -1,6 +1,6 @@
 import React from "react";
 import { ComponentStory } from "@storybook/react";
-import { generateInitial, GridSheet } from "../../../src";
+import { constructInitialCells, GridSheet } from "../../../src";
 
 export default {
   title: "Basic",
@@ -24,7 +24,7 @@ const Sheet = ({ numRows, numCols, defaultWidth }: Props) => {
           },
           sheetResize: "both",
         }}
-        initialCells={generateInitial({
+        initialCells={constructInitialCells({
           cells: {
             default: { width: defaultWidth, labeler: "raw" },
             A1: {

@@ -1,5 +1,5 @@
 import React from "react";
-import { generateInitial, GridSheet, prevention } from "../../../src";
+import { constructInitialCells, GridSheet, prevention } from "../../../src";
 
 export default {
   title: "Formula",
@@ -10,7 +10,7 @@ export const LookUp = () => {
     <>
       <h1>HLOOKUP</h1>
       <GridSheet
-        initialCells={generateInitial({
+        initialCells={constructInitialCells({
           cells: {
             1: { style: { backgroundColor: "#ddd" } },
             "2:3": { style: {} },
@@ -120,7 +120,7 @@ export const LookUp = () => {
       />
       <h1>VLOOKUP</h1>
       <GridSheet
-        initialCells={generateInitial({
+        initialCells={constructInitialCells({
           cells: {
             A: { width: 30 },
             C: { width: 40 },

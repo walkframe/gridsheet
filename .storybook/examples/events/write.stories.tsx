@@ -1,7 +1,7 @@
 import React from "react";
 import { ComponentStory } from "@storybook/react";
 import { GridSheet } from "../../../src";
-import { generateInitial } from "../../../src/lib/structs";
+import { constructInitialCells } from "../../../src/lib/structs";
 import { createTableRef } from "../../../src/components/Tabular";
 
 export default {
@@ -28,7 +28,7 @@ const Sheet = ({ x, y, value }: Props) => {
     <>
       <GridSheet
         tableRef={tableRef}
-        initialCells={generateInitial({
+        initialCells={constructInitialCells({
           cells: {},
           ensured: {
             numRows: 50,

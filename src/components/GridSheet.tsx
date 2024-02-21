@@ -157,10 +157,10 @@ export const GridSheet: React.FC<Props> = ({
   React.useEffect(() => {
     const intervalId = window.setInterval(() => {
       if (sheetRef.current?.clientHeight) {
-        setSheetHeight(sheetRef.current?.clientHeight || 0);
+        setSheetHeight(sheetRef.current.clientHeight);
       }
       if (sheetRef.current?.clientWidth) {
-        setSheetWidth(sheetRef.current?.clientWidth || 0);
+        setSheetWidth(sheetRef.current.clientWidth);
       }
     }, 1000);
     return () => window.clearInterval(intervalId);
@@ -171,20 +171,18 @@ export const GridSheet: React.FC<Props> = ({
     <Context.Provider value={{ store, dispatch }}>
       <div 
         className={`gridsheet-1 ${mode || "light"}`}
-        style={{width: sheetWidth}}
         data-sheet-name={sheetName}
       >
         {showFormulaBar && <FormulaBar width={sheetWidth}/> }
         <div
-          className={`gs-main ${className || ""}
-          gs-main ${
+          className={`gs-main ${className || ""} ${
             sheetWidth > store.table.totalWidth ? 'gs-table-width-smaller' : 'gs-table-width-larger'} ${
             sheetHeight > store.table.totalHeight ? 'gs-table-height-smaller' : 'gs-table-height-larger'
           }`}
           ref={sheetRef}
           style={{
-            maxWidth: store.table.totalWidth + 3,
-            maxHeight: store.table.totalHeight + 3,
+            maxWidth: store.table.totalWidth + 2,
+            maxHeight: store.table.totalHeight + 2,
             ...style,
             resize: sheetResize,
             width: sheetWidth,
@@ -203,8 +201,6 @@ export const GridSheet: React.FC<Props> = ({
             <Resizer />
             <Emitter onChange={onChange} onSelect={onSelect} />
         </div>
-
-
       </div>
     </Context.Provider>
 

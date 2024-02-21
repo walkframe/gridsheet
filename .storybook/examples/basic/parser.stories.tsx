@@ -1,5 +1,5 @@
 import React from "react";
-import { generateInitial, GridSheet, Parser, Renderer } from "../../../src";
+import { constructInitialCells, GridSheet, Parser, Renderer } from "../../../src";
 
 export default {
   title: "Basic",
@@ -33,7 +33,7 @@ export const ParseAsList = () => {
   return (
     <>
       <GridSheet
-        initialCells={generateInitial({
+        initialCells={constructInitialCells({
           matrices: {
             A1: [
               [

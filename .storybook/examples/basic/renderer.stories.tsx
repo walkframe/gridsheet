@@ -1,5 +1,5 @@
 import React from "react";
-import { generateInitial, GridSheet, Renderer } from "../../../src";
+import { constructInitialCells, GridSheet, Renderer } from "../../../src";
 import {RendererMixinType} from "../../../src/renderers/core";
 import {CheckboxRendererMixin} from "../../../src/renderers/checkbox";
 
@@ -49,7 +49,7 @@ export const RenderToKanji = () => {
   return (
     <>
       <GridSheet
-        initialCells={generateInitial({
+        initialCells={constructInitialCells({
           matrices: {
             A1: [[true, false]],
             B3: [[100], [200, 300], [400, 500, 600], [800, 900, 1000, 1100]],

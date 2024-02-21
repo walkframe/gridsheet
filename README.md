@@ -72,7 +72,7 @@ $ npm install @gridsheet/react-core --save
   - Add tests.
   - BREAKING CHANGE:
       - cell.verticalAlign -> cell.alignItems.
-      - generateInitial's arg matrixes -> matrices.
+      - constructInitialCells's arg matrixes -> matrices.
 
 - 0.11.x
   - Support Autofill.

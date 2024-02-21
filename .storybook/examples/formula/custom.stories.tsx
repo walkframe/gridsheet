@@ -1,6 +1,6 @@
 import React from "react";
 import { BaseFunction } from "../../../src";
-import { generateInitial, GridSheet } from "../../../src";
+import { constructInitialCells, GridSheet } from "../../../src";
 
 export default {
   title: "Formula",
@@ -22,7 +22,7 @@ export const CustomFunction = () => {
   return (
     <>
       <GridSheet
-        initialCells={generateInitial({
+        initialCells={constructInitialCells({
           cells: {
             default: { width: 200 },
             B2: { value: '=HOPE("WORLD PEACE") & "!"' },

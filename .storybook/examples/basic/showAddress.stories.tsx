@@ -1,6 +1,6 @@
 import React from "react";
 import { ComponentStory } from "@storybook/react";
-import { generateInitial, GridSheet } from "../../../src";
+import { constructInitialCells, GridSheet } from "../../../src";
 
 export default {
   title: "Basic",
@@ -14,7 +14,7 @@ const Sheet = ({ showAddress }: Props) => {
   return (
     <>
       <GridSheet
-        initialCells={generateInitial({
+        initialCells={constructInitialCells({
           ensured: { numRows: 100, numCols: 100 },
         })}
         options={{ showAddress }}
