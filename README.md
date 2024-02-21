@@ -1,5 +1,7 @@
-![unittest workflow](https://github.com/walkframe/gridsheet/actions/workflows/unittest.yaml/badge.svg?branch=master)
 [![NPM](https://nodei.co/npm/@gridsheet/react-core.png?mini=true)](https://www.npmjs.com/package/@gridsheet/react-core)
+
+![unittest workflow](https://github.com/walkframe/gridsheet/actions/workflows/unittest.yaml/badge.svg?branch=master)
+![e2e workflow](https://github.com/walkframe/gridsheet/actions/workflows/e2e.yaml/badge.svg?branch=master)
 
 ## Introduction
 
@@ -14,7 +16,8 @@
 - Cut & Paste
 - Undo & Redo
 - Add rows and columns
-- Displaying formulas
+- Calculating formula
+  - Refer to separate sheets.
 - Cell styling
 - Custom renderer
 - Custom parser
@@ -85,6 +88,11 @@ $ npm install @gridsheet/react-core --save
 
 - 0.13.x
   - Support Protection.
+
+- 1.0.x
+  - It is now possible to refer to another sheet.
+  - Formula bar.
+  - Add E2E tests.
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet?ref=badge_large)
