@@ -8,7 +8,7 @@ export {
   oa2aa,
   aa2oa,
   constructInitialCells,
-  constructInitialCellsOrigin as constructInitialCellsSimple,
+  constructInitialCellsOrigin,
 } from './lib/structs';
 export { x2c, c2x, y2r, r2y, p2a, a2p } from './lib/converters';
 export type {
