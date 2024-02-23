@@ -52,6 +52,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
 
   const selectingArea = zoneToArea(selectingZone); // (top, left) -> (bottom, right)
   const copyingArea = zoneToArea(copyingZone); // (top, left) -> (bottom, right)
+  const autofill = autofillDraggingTo ? new Autofill(store, autofillDraggingTo) : null;
   const editing = editingCell === address;
   const pointed = choosing.y === y && choosing.x === x;
   const _setEditorRect = React.useCallback(() => {
@@ -112,7 +113,9 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
         among(selectingArea, { y, x }) ? 'gs-selected' : ''
       } ${pointed ? 'gs-pointed' : ''} ${editing ? 'gs-editing' : ''} ${
         matching ? 'gs-matching' : ''
-      } ${matchingCell === address ? 'gs-searching' : ''}`}
+      } ${matchingCell === address ? 'gs-searching' : ''} ${
+        autofill ? (among(autofill.wholeArea, { y, x }) ? 'gs-autofill-dragging' : '') : ''
+      }`}
       style={{
         ...cell?.style,
         ...getCellStyle({
@@ -121,8 +124,8 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
           pointed,
           selectingArea,
           copyingArea,
-          autofillDraggingTo,
         }),
+        ...autofill?.getCellStyle?.({ y, x }),
       }}
       onContextMenu={(e) => {
         e.preventDefault();
@@ -233,20 +236,14 @@ const getCellStyle = ({
   selectingArea,
   copyingArea,
   store,
-  autofillDraggingTo,
 }: {
   target: PointType;
   pointed: boolean;
   selectingArea: AreaType;
   copyingArea: AreaType;
   store: StoreType;
-  autofillDraggingTo: PointType | null;
 }): React.CSSProperties => {
   const style: React.CSSProperties = {};
-  if (autofillDraggingTo) {
-    const autofill = new Autofill(store, autofillDraggingTo);
-    Object.assign(style, autofill.getCellStyle(target));
-  }
   const { cutting } = store;
   const { y, x } = target;
   if (pointed) {

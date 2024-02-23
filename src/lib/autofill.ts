@@ -7,7 +7,7 @@ import { p2a } from './converters';
 import { absolutizeFormula } from '../formula/evaluator';
 import { TimeDelta } from './time';
 
-const BORDER_AUTOFILL_DRAGGING = 'dashed 1px #000000';
+const BORDER_AUTOFILL_DRAGGING = 'dashed 1px #888888';
 
 type Direction = 'left' | 'right' | 'up' | 'down';
 type Orientation = 'horizontal' | 'vertical';
@@ -67,6 +67,7 @@ export class Autofill {
     }
     const table = this.table.update({
       diff,
+      operator: 'USER',
       reflection: {
         selectingZone: areaToZone(this.src),
       },
