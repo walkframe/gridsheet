@@ -373,6 +373,7 @@ export class Table implements UserTable {
     copied.changedAt = new Date();
     copied.setTotalSize();
     copied.idsToBeAbsoluted = [];
+    copied.solvedCaches = {};
     if (!copyCache) {
       // force reset
       this.addressesById = {};
@@ -1335,6 +1336,7 @@ export class Table implements UserTable {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const copied: Table = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     copied.area = area;
+    copied.solvedCaches = {};
     return copied;
   }
 

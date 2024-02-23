@@ -28,6 +28,10 @@ export const CustomFunction = () => {
             B2: { value: '=HOPE("WORLD PEACE") & "!"' },
             A3: { value: "=test()" },
           },
+          ensured: {
+            numRows: 10,
+            numCols: 10,
+          },
         })}
         additionalFunctions={{
           hope: HopeFunction,

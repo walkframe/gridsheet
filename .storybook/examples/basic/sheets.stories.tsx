@@ -3,7 +3,7 @@ import { ComponentStory } from "@storybook/react";
 import { constructInitialCells, GridSheet, SheetProvider } from "../../../src";
 
 export default {
-  title: "Sheets",
+  title: "Basic",
 };
 
 type Props = {
@@ -27,7 +27,7 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
               value: "=Sheet2!A1+100"
             },
             A2: {
-              value: "=SUM(Sheet2!B2:B3)"
+              value: "=SUM(Sheet2!B2:B4)"
             },
             A3: {
               value: "='Sheet 3'!A1 + 1000",
@@ -35,7 +35,12 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
             B1: {
               value: "=SUM('Invalid Sheet'!B2:B3)"
             },
-            
+            C1: {
+              value: 333,
+            },
+            C2: {
+              value: "=C1+100"
+            }
           },
           ensured: { numRows, numCols },
         })}
@@ -48,6 +53,7 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
         initialCells={constructInitialCells({
           cells: {
             A1: {value: 50},
+            B1: {value: 999},
             B2: {value: 1200},
             B3: {value: 30},
           },

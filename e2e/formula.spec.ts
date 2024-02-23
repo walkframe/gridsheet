@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('render', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=sheets--multiple-sheet&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=basic--multiple-sheet&viewMode=story');
   const sheet1 = page.locator('[data-sheet-name="Sheet1"]');
   const a11 = sheet1.locator("[data-address='A1']");
   const a21 = sheet1.locator("[data-address='A2']");
