@@ -44,7 +44,7 @@ export const Editor: React.FC = () => {
   } = store;
 
   React.useEffect(() => {
-    editorRef?.current?.focus?.();
+    editorRef?.current?.focus?.({ preventScroll: true });
   }, [editorRef]);
 
   const { y, x } = choosing;
