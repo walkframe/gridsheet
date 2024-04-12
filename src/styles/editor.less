@@ -52,12 +52,14 @@
 }
 
 .gs-formula-bar {
-  display: flex;
+  display: table;
   align-items: center;
   justify-content: center;
   background-color: rgba(128, 128, 128, 0.1);
   
   .gs-selecting-address {
+    display: table-cell;
+    vertical-align: middle;
     width: 50px;
     color: rgba(200, 200, 200);
     font-size: 13px;
@@ -65,20 +67,26 @@
   }
 
   .gs-fx {
+    display: table-cell;
+    vertical-align: middle;
     width: 30px;
     color: rgba(200, 200, 200);
     font-style: italic;
     font-family: cursive;
     text-align: center;
-
     border-left: solid 1px rgba(200, 200, 200, 0.3);
   }
+  .gs-formula-bar-textarea-wrapper {
+    display: table-cell;
+    padding: 0;
+  }
   textarea {
+    width: 100%;
+    vertical-align: bottom;
     color: rgba(155, 155, 155);
-    flex: 1;
     border: none;
     background-color: transparent;
-    
+    padding: 0;
     outline: none;
     -webkit-box-shadow: none;
     -moz-box-shadow: none;

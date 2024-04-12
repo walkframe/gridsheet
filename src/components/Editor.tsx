@@ -43,6 +43,10 @@ export const Editor: React.FC = () => {
     table,
   } = store;
 
+  React.useEffect(() => {
+    editorRef?.current?.focus?.();
+  }, [editorRef]);
+
   const { y, x } = choosing;
   const rowId = `${y2r(y)}`;
   const colId = x2c(x);
@@ -344,7 +348,6 @@ export const Editor: React.FC = () => {
     <div className={`gs-editor ${editing ? 'gs-editing' : ''}`} style={editing ? { top, left, height, width } : {}}>
       {showAddress && <div className="gs-cell-label">{address}</div>}
       <textarea
-        autoFocus
         draggable={false}
         ref={editorRef}
         style={{
