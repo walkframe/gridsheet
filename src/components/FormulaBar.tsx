@@ -40,8 +40,7 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
       >
         Fx
       </div>
-      <div className="gs-formula-bar-textarea-wrapper">
-        <textarea
+      <textarea
           rows={1}
           ref={largeEditorRef}
           onInput={(e) => {
@@ -90,7 +89,6 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
             return false;
           }}
         ></textarea>
-      </div>
 
     </label>
   );
