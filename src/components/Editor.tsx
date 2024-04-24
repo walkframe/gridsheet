@@ -102,7 +102,11 @@ export const Editor: React.FC = () => {
       case 'Enter': // ENTER
         if (editing) {
           if (e.altKey) {
-            input.value = `${input.value}\n`;
+            const selectPoint = input.selectionEnd;
+            const before = input.value.slice(0, selectPoint);
+            const after = input.value.slice(selectPoint);
+            input.value = `${before}\n${after}`;
+            input.selectionEnd = before.length + 1;
             input.style.height = `${input.clientHeight + DEFAULT_HEIGHT}px`;
             return false;
           } else {
