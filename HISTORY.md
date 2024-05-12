@@ -17,5 +17,7 @@
 - Bugfix: FormulaBar style.
 
 ### 1.0.5
-- Bugfix: Autofill does not work when multiple cells are selected. #55, #56
+- Bugfix: Autofill does not work when multiple cells are selected.
 
+### 1.0.6
+- Bugfix: Lines are broken at the end of the line regardless of the cursor position. #55, #56
