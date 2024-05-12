@@ -64,3 +64,23 @@ test('walk', async ({ page }) => {
   expect(await address.textContent()).toBe('B2');
 });
 
+test('enter key with alt', async ({ page }) => {
+  await page.goto('http://localhost:5233/iframe.html?id=basic--small&viewMode=story');
+
+  await page.keyboard.type('HelloWorld');
+
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowLeft');
+
+  await page.keyboard.down('Alt');
+  await page.keyboard.press('Enter');
+  await page.keyboard.up('Alt');
+
+  await page.keyboard.press('Enter');
+
+  const a1 = page.locator("[data-address='A1']");
+  expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('Hello\nWorld');
+});

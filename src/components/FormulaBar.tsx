@@ -3,6 +3,7 @@ import { Context } from '../store';
 import { p2a } from '../lib/converters';
 import { blur, setEditingCell, walk, write } from '../store/actions';
 import * as prevention from '../lib/prevention';
+import { insertNewLineAtCursor } from '../lib/input';
 
 type Props = {
   width: number;
@@ -56,7 +57,7 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
             switch (e.key) {
               case 'Enter': {
                 if (e.altKey) {
-                  input.value = `${input.value}\n`;
+                  insertNewLineAtCursor(input);
                 } else {
                   writeCell(input.value);
                   dispatch(
