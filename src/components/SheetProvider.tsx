@@ -28,7 +28,7 @@ export function useSheetDispatch() {
   return dispatch;
 }
 
-export function SheetProvider({ children }: { children: React.ReactNode }) {
+export function SheetProvider({ children }: { children: JSX.Element }) {
   const [mounted, setMounted] = React.useState(false);
   const [version, setVersion] = React.useState(0);
   const head = React.useRef(1);

@@ -27,7 +27,7 @@ import { embedStyle } from '../styles/embedder';
 import { useSheetContext } from './SheetProvider';
 import { FormulaBar } from './FormulaBar';
 
-export const GridSheet: React.FC<Props> = ({
+export function GridSheet({
   initialCells: initialData,
   sheetName = '',
   tableRef,
@@ -35,7 +35,7 @@ export const GridSheet: React.FC<Props> = ({
   className,
   style,
   additionalFunctions = {},
-}) => {
+}: Props) {
   const { sheetResize, showFormulaBar = true } = options;
   const [prevSheetName, setPrevSheetName] = React.useState(sheetName);
   const sheetRef = React.useRef<HTMLDivElement | null>(null);
