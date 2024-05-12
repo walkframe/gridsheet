@@ -16,7 +16,8 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 
 - [ ] Visual operation check - `yarn storybook`
 - [ ] Test - `yarn test`
-- [ ] Lint - `yarn format`
+- [ ] Lint - `yarn eslint`
+  - Format the code in advance with prettier. - `yarn prettier`
 
 ## Additional Context
 Add any other context or screenshots about the pull request here.
