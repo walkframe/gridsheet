@@ -37,20 +37,7 @@ $ npm install @gridsheet/react-core --save
 
 - [ReactGridsheet document](https://docs.walkframe.com/products/gridsheet/react/)
 - [Examples](https://docs.walkframe.com/products/gridsheet/examples/)
-
-## History
-
-
-- 1.0.0
-  - It is now possible to refer to another sheet.
-  - Formula bar.
-  - Add E2E tests.
-
-- 1.0.1
-  - Bugfix: Cells referenced by formulas do not revert to their original state with undo.
-
-- 1.0.2
-  - Bugfix: AutoFill overwrites protected cells.
+- [Histories](./HISTORY.md)
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet?ref=badge_large)

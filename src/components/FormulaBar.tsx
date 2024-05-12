@@ -3,6 +3,7 @@ import { Context } from '../store';
 import { p2a } from '../lib/converters';
 import { blur, setEditingCell, walk, write } from '../store/actions';
 import * as prevention from '../lib/prevention';
+import { insertNewLineAtCursor } from '../lib/input';
 
 type Props = {
   width: number;
@@ -32,64 +33,57 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
 
   return (
     <label className="gs-formula-bar" style={{ width }}>
-      <div className="gs-selecting-address">
-        {address}
-      </div>
-      <div
-        className="gs-fx"
-      >
-        Fx
-      </div>
+      <div className="gs-selecting-address">{address}</div>
+      <div className="gs-fx">Fx</div>
       <textarea
-          rows={1}
-          ref={largeEditorRef}
-          onInput={(e) => {
-            dispatch(setEditingCell(address));
-            editorRef.current!.value = e.currentTarget.value;
-          }}
-          onBlur={(e) => {
-            writeCell(e.currentTarget.value);
-            dispatch(blur(null));
-          }}
-          onKeyDown={(e) => {
-            const input = e.currentTarget;
-            switch (e.key) {
-              case 'Enter': {
-                if (e.altKey) {
-                  input.value = `${input.value}\n`;
-                } else {
-                  writeCell(input.value);
-                  dispatch(
-                    walk({
-                      numRows: table.getNumRows(),
-                      numCols: table.getNumCols(),
-                      deltaY: 1,
-                      deltaX: 0,
-                    }),
-                  );
-                  e.preventDefault();
-                  return false;
-                }
-                break;
-              }
-              case 'Escape': {
-                input.value = origin;
-                dispatch(setEditingCell(''));
+        rows={1}
+        ref={largeEditorRef}
+        onInput={(e) => {
+          dispatch(setEditingCell(address));
+          editorRef.current!.value = e.currentTarget.value;
+        }}
+        onBlur={(e) => {
+          writeCell(e.currentTarget.value);
+          dispatch(blur(null));
+        }}
+        onKeyDown={(e) => {
+          const input = e.currentTarget;
+          switch (e.key) {
+            case 'Enter': {
+              if (e.altKey) {
+                insertNewLineAtCursor(input);
+              } else {
+                writeCell(input.value);
+                dispatch(
+                  walk({
+                    numRows: table.getNumRows(),
+                    numCols: table.getNumCols(),
+                    deltaY: 1,
+                    deltaX: 0,
+                  }),
+                );
                 e.preventDefault();
-                editorRef.current!.focus();
-  
-                break;
+                return false;
               }
+              break;
             }
-            const cell = table.getByPoint(choosing);
-            if (prevention.isPrevented(cell?.prevention, prevention.Write)) {
-              console.warn('This cell is protected from writing.');
+            case 'Escape': {
+              input.value = origin;
+              dispatch(setEditingCell(''));
               e.preventDefault();
-            }
-            return false;
-          }}
-        ></textarea>
+              editorRef.current!.focus();
 
+              break;
+            }
+          }
+          const cell = table.getByPoint(choosing);
+          if (prevention.isPrevented(cell?.prevention, prevention.Write)) {
+            console.warn('This cell is protected from writing.');
+            e.preventDefault();
+          }
+          return false;
+        }}
+      ></textarea>
     </label>
   );
 };
