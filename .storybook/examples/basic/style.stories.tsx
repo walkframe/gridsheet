@@ -31,7 +31,10 @@ export const Style = () => {
             A: {
             },
             B: {
-              style: { backgroundColor: "#eeeeee" },
+              style: { 
+                backgroundColor: "#eeeeee", 
+                fontSize: 30, color: "#fff", fontFamily: 'fantasy', letterSpacing: 20, lineHeight: "60px",
+              },
               width: 200,
             },
             C: {
