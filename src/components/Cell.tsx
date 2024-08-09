@@ -205,7 +205,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
         >
           {errorMessage && <div className="formula-error-triangle" title={errorMessage} />}
           {showAddress && <div className="gs-cell-label">{address}</div>}
-          <div className="gs-cell-rendered">{rendered}</div>
+          <div className="gs-cell-rendered" style={cell?.style}>{rendered}</div>
         </div>
         {((pointed && selectingArea.bottom === -1) || (selectingArea.bottom === y && selectingArea.right === x)) && (
           <div
