@@ -445,10 +445,10 @@ export const selectCols = new SelectColsAction().bind();
 
 class DragAction<T extends PointType> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
-    const { y, x } = store.choosing;
+    const { startY, startX } = store.selectingZone;
     const selectingZone = {
-      startY: y,
-      startX: x,
+      startY,
+      startX,
       endY: payload.y,
       endX: payload.x,
     };
@@ -747,3 +747,13 @@ class WalkAction<
   }
 }
 export const walk = new WalkAction().bind();
+
+class SetLastEditedAction<T extends string> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreType {
+    return {
+      ...store,
+      lastEdited: payload,
+    };
+  }
+}
+export const setLastEdited = new SetLastEditedAction().bind();

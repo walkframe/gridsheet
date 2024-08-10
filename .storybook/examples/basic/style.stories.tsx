@@ -38,7 +38,7 @@ export const Style = () => {
               width: 200,
             },
             C: {
-              style: { backgroundColor: "#dddddd" },
+              style: { backgroundColor: "#dddddd", textDecoration: "underline" },   
             },
             D: {
               style: { backgroundColor: "#cccccc" },

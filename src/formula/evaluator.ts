@@ -417,6 +417,32 @@ export class Lexer {
     return this.tokens[this.tokens.length + base];
   }
 
+  public getTokenIndexByCharPosition(pos: number) {
+    let start = 0, end = 0;
+
+    for (let i = 0; i < this.tokens.length; i++) {
+      const token = this.tokens[i];
+      end += new String(token.entity).length;
+      if (start <= pos && pos <= end) {
+        return i;
+      }
+      start = end + 1;
+    }
+    return -1;
+  }
+
+  public getCharPositionByTokenIndex(index: number) {
+    let pos = 0;
+    for (let i = 0; i < index; i++) {
+      pos += new String(this.tokens[i].entity).length;
+    }
+    return pos;
+  }
+
+  public stringify() {
+    return this.tokens.map((t) => t.entity).join('');
+  }
+
   public stringifyToId(table: Table, slideY = 0, slideX = 0) {
     return this.tokens
       .map((t) => {
@@ -555,7 +581,7 @@ export class Lexer {
           this.next();
           break;
         }
-        if (c == null || c.match(/[ +\-/*^&=<>),]/)) {
+        if (c == null || c.match(/[\s+\-/*^&=<>),]/)) {
           if (buf.length === 0) {
             break;
           }

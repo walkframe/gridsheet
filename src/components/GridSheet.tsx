@@ -116,6 +116,7 @@ export function GridSheet({
       maxNumRows: -1,
       minNumCols: 1,
       maxNumCols: -1,
+      lastEdited: '',
     };
   });
 

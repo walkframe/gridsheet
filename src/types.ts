@@ -126,6 +126,7 @@ export type StoreType = {
   contextMenuPosition: PositionType;
   resizingPositionY: [Y, Y, Y]; // indexY, startY, endY
   resizingPositionX: [X, X, X]; // indexX, startX, endX
+  lastEdited: string;
   onSave?: FeedbackType;
 };
 

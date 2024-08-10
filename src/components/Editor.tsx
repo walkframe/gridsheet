@@ -17,13 +17,14 @@ import {
   paste,
   setSearchQuery,
   setEntering,
+  setLastEdited,
 } from '../store/actions';
 
 import { Context } from '../store';
 import { areaToZone } from '../lib/structs';
 import { DEFAULT_HEIGHT } from '../constants';
 import * as prevention from '../lib/prevention';
-import { insertNewLineAtCursor } from '../lib/input';
+import { expandInput, insertTextAtCursor } from '../lib/input';
 
 export const Editor: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);
@@ -52,7 +53,7 @@ export const Editor: React.FC = () => {
   const rowId = `${y2r(y)}`;
   const colId = x2c(x);
   const address = `${colId}${rowId}`;
-  const [before, setBefore] = React.useState('');
+  const [origin, setOrigin] = React.useState('');
   const editing = editingCell === address;
 
   const cell = table.getByPoint({ y, x });
@@ -60,10 +61,10 @@ export const Editor: React.FC = () => {
   const { y: top, x: left, height, width } = editorRect;
 
   const writeCell = (value: string) => {
-    if (before !== value) {
+    if (origin !== value) {
       dispatch(write(value));
     }
-    setBefore('');
+    //setBefore('');
   };
 
   const [isKeyDown, setIsKeyDown] = React.useState(false);
@@ -103,7 +104,7 @@ export const Editor: React.FC = () => {
       case 'Enter': // ENTER
         if (editing) {
           if (e.altKey) {
-            insertNewLineAtCursor(input);
+            insertTextAtCursor(input, '\n');
             input.style.height = `${input.clientHeight + DEFAULT_HEIGHT}px`;
             return false;
           } else {
@@ -358,7 +359,12 @@ export const Editor: React.FC = () => {
         }}
         rows={typeof value === 'string' ? value.split('\n').length : 1}
         onFocus={(e) => {
-          e.currentTarget.value = '';
+          const input = e.currentTarget;
+          if (input.value.startsWith('=')) {
+            
+          } else {
+            e.currentTarget.value = '';
+          }
         }}
         onDoubleClick={(e) => {
           if (prevention.isPrevented(cell?.prevention, prevention.Write)) {
@@ -368,7 +374,7 @@ export const Editor: React.FC = () => {
           const input = e.currentTarget;
           if (!editing) {
             input.value = table.stringify({ y, x }, value);
-            setBefore(input.value);
+            setOrigin(input.value);
             dispatch(setEditingCell(address));
             input.style.width = `${width}px`;
             input.style.height = `${height}px`;
@@ -381,20 +387,19 @@ export const Editor: React.FC = () => {
           }
         }}
         onBlur={(e) => {
-          if (editing) {
-            writeCell(e.target.value);
+          dispatch(setLastEdited(origin));
+          if (e.target.value.startsWith('=')) {
+            return false;
+          } else {
+            if (editing) {
+              writeCell(e.target.value);
+            }
           }
-          e.target.value = '';
-          dispatch(blur(null));
-          window.setTimeout(() => entering && e.target.focus(), 100);
         }}
         onInput={(e) => {
           const input = e.currentTarget;
           largeEditorRef.current!.value = input.value;
-          input.style.width = `${width}px`;
-          input.style.width = `${input.scrollWidth}px`;
-          input.style.height = `${height}px`;
-          input.style.height = `${input.scrollHeight}px`;
+          expandInput(e.currentTarget);
         }}
         onKeyDown={handleKeyDown}
       />
