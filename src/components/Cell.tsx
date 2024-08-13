@@ -73,7 +73,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
     if (pointed) {
       _setEditorRect();
     }
-  }, [pointed]);
+  }, [pointed, editing]);
   const cell = table.getByPoint({ y, x });
   const writeCell = (value: string) => {
     if (before !== value) {

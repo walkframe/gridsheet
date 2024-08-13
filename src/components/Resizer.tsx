@@ -17,7 +17,6 @@ export const Resizer: React.FC = React.memo(() => {
     verticalHeaderSelecting,
     horizontalheaderSelecting,
     selectingZone,
-    editorRect,
     editorRef,
     sheetRef,
   } = store;
@@ -70,12 +69,6 @@ export const Resizer: React.FC = React.memo(() => {
     dispatch(updateTable(newTable));
     dispatch(setResizingPositionY([-1, -1, -1]));
     dispatch(setResizingPositionX([-1, -1, -1]));
-    dispatch(setEditorRect({
-      y: editorRect.y,
-      x: editorRect.x,
-      height, 
-      width,
-    }))
     editorRef.current!.focus();
   };
   const handleResizeMove = (e: React.MouseEvent) => {
