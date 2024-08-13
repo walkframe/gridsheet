@@ -34,6 +34,14 @@ body:
       render: bash
     validations:
       required: true
+  - type: input
+    id: version
+    attributes:
+      label: "Version"
+      description: What version of the gridsheet are you using ?
+      placeholder: ex. 1.0.0
+    validations:
+      required: true
   - type: textarea
     id: screenshot
     attributes:
