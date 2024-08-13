@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Context } from '../store';
-import { setResizingPositionY, setResizingPositionX, updateTable } from '../store/actions';
+import { setResizingPositionY, setResizingPositionX, updateTable, setEditorRect } from '../store/actions';
 
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH, MIN_WIDTH, MIN_HEIGHT } from '../constants';
 import { zoneToArea, makeSequence, between } from '../lib/structs';
@@ -17,6 +17,7 @@ export const Resizer: React.FC = React.memo(() => {
     verticalHeaderSelecting,
     horizontalheaderSelecting,
     selectingZone,
+    editorRect,
     editorRef,
     sheetRef,
   } = store;
@@ -69,6 +70,12 @@ export const Resizer: React.FC = React.memo(() => {
     dispatch(updateTable(newTable));
     dispatch(setResizingPositionY([-1, -1, -1]));
     dispatch(setResizingPositionX([-1, -1, -1]));
+    dispatch(setEditorRect({
+      y: editorRect.y,
+      x: editorRect.x,
+      height, 
+      width,
+    }))
     editorRef.current!.focus();
   };
   const handleResizeMove = (e: React.MouseEvent) => {
