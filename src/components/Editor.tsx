@@ -74,7 +74,7 @@ export const Editor: React.FC = () => {
   const rowId = `${y2r(y)}`;
   const colId = x2c(x);
   const address = `${colId}${rowId}`;
-  const [origin, setOrigin] = React.useState('');
+  const [before, setBefore] = React.useState('');
   const editing = editingCell === address;
 
   const cell = table.getByPoint({ y, x });
@@ -82,7 +82,7 @@ export const Editor: React.FC = () => {
   const { y: top, x: left, height, width } = editorRect;
 
   const writeCell = (value: string) => {
-    if (origin !== value) {
+    if (before !== value) {
       dispatch(write(value));
     }
     //setBefore('');
@@ -398,7 +398,7 @@ export const Editor: React.FC = () => {
           const input = e.currentTarget;
           if (!editing) {
             input.value = table.stringify({ y, x }, value);
-            setOrigin(input.value);
+            setBefore(input.value);
             dispatch(setEditingCell(address));
             input.style.width = `${width}px`;
             input.style.height = `${height}px`;
@@ -411,7 +411,7 @@ export const Editor: React.FC = () => {
           }
         }}
         onBlur={(e) => {
-          dispatch(setLastEdited(origin));
+          dispatch(setLastEdited(before));
           if (e.target.value.startsWith('=')) {
             return true;
           } else {

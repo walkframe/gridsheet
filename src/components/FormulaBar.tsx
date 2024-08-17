@@ -12,7 +12,7 @@ type Props = {
 
 export const FormulaBar: React.FC<Props> = ({ width }) => {
   const { store, dispatch } = React.useContext(Context);
-  const [origin, setOrigin] = React.useState('');
+  const [before, setBefore] = React.useState('');
   const { choosing, editorRef, largeEditorRef, table } = store;
 
   const [, sheetContext] = useSheetContext();
@@ -23,11 +23,11 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
     // debug to remove this line
     value = table.stringify(choosing, value);
     largeEditorRef.current!.value = value;
-    setOrigin(value as string);
+    setBefore(value as string);
   }, [address, table]);
 
   const writeCell = (value: string) => {
-    if (origin !== value) {
+    if (before !== value) {
       dispatch(write(value));
     }
     dispatch(setEditingCell(''));
@@ -63,7 +63,7 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
         onFocus={sync}
         onChange={sync}
         onBlur={(e) => {
-          dispatch(setLastEdited(origin));
+          dispatch(setLastEdited(before));
           if (e.target.value.startsWith('=')) {
             return true;
           } else {
@@ -94,7 +94,7 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
               break;
             }
             case 'Escape': {
-              input.value = origin;
+              input.value = before;
               dispatch(setEditingCell(''));
               e.preventDefault();
               editorRef.current!.focus();
