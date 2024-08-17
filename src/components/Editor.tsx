@@ -59,6 +59,19 @@ export const Editor: React.FC = () => {
     }
   }, [editorRef.current?.value]);
 
+  React.useEffect(() => {
+    if (!sheetContext?.lastFocusedRef) {
+      return;
+    }
+    if (sheetContext.lastFocusedRef === editorRef) {
+      return;
+    }
+    if (sheetContext.lastFocusedRef === largeEditorRef) {
+      return;
+    }
+    dispatch(setEditingCell(''));
+  }, [sheetContext?.lastFocusedRef]);
+
   const { y, x } = choosing;
   const rowId = `${y2r(y)}`;
   const colId = x2c(x);
@@ -356,6 +369,9 @@ export const Editor: React.FC = () => {
     dispatch(setEditingCell(address));
     return false;
   };
+
+
+
 
   return (
     <div className={`gs-editor ${editing ? 'gs-editing' : ''}`} style={editing ? { top, left, height, width } : {}}>

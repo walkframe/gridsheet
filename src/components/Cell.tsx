@@ -159,7 +159,15 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
         if (inserted) {
           insertRef(largeInput, address);
           lastInput?.focus();
-          return true;
+          /*
+          // MEMO: when different sheet focused, choose the cell.
+          
+          // It is uncomfortable to be selected only for different sheets. Therefore, it is not supported at this time.
+          if (sheetContext?.lastFocusedRef && sheetContext.lastFocusedRef !== store.lastFocusedRef) {
+            dispatch(choose({ y, x }));
+          }
+          */
+          return false;
         } else if (inserted != null) {
           writeCell(input.value);
         }
