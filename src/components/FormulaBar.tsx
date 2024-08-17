@@ -15,7 +15,7 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
   const [origin, setOrigin] = React.useState('');
   const { choosing, editorRef, largeEditorRef, table } = store;
 
-  const [sheetProvided, sheetContext] = useSheetContext()
+  const [, sheetContext] = useSheetContext();
 
   const address = choosing.x === -1 ? '' : p2a(choosing);
   React.useEffect(() => {
@@ -36,7 +36,7 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
 
   const largeInput = largeEditorRef.current;
 
-  const sync = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+  const sync = () => {
     if (!largeInput) {
       return;
     }
@@ -48,9 +48,9 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
       const start = largeInput.selectionStart;
       editorRef.current!.value = largeInput.value;
       editorRef.current!.selectionStart = start;
-    }, 0)
+    }, 0);
     expandInput(largeInput);
-  }
+  };
 
   return (
     <label className="gs-formula-bar" style={{ width: width - 1 }}>
@@ -70,7 +70,6 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
             writeCell(e.target.value);
           }
         }}
-
         onKeyDown={(e) => {
           const input = e.currentTarget;
           switch (e.key) {

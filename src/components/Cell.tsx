@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { x2c, y2r } from '../lib/converters';
 import { zoneToArea, among, zoneShape, areaToZone, areaToRange } from '../lib/structs';
 import {
@@ -207,7 +207,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
         }
         dispatch(choose({ y, x }));
         input.focus();
-        input.value = '';     
+        input.value = '';
       }}
       onDragEnd={() => {
         if (autofillDraggingTo) {
@@ -248,8 +248,8 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
           dispatch(drag({ y, x: table.getNumCols() }));
           return false;
         }
-        
-        const newArea = zoneToArea({...selectingZone, endY: y, endX: x});
+
+        const newArea = zoneToArea({ ...selectingZone, endY: y, endX: x });
         const fullRange = `${table.sheetPrefix(!differentSheetFocused)}${areaToRange(newArea)}`;
 
         insertRef(lastInput, fullRange);
@@ -270,7 +270,9 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
         >
           {errorMessage && <div className="formula-error-triangle" title={errorMessage} />}
           {showAddress && <div className="gs-cell-label">{address}</div>}
-          <div className="gs-cell-rendered" style={cell?.style}>{rendered}</div>
+          <div className="gs-cell-rendered" style={cell?.style}>
+            {rendered}
+          </div>
         </div>
         {((pointed && selectingArea.bottom === -1) || (selectingArea.bottom === y && selectingArea.right === x)) && (
           <div

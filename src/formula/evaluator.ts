@@ -430,7 +430,8 @@ export class Lexer {
   }
 
   public getTokenIndexByCharPosition(pos: number) {
-    let start = 0, end = 0;
+    let start = 0,
+      end = 0;
 
     for (let i = 0; i < this.tokens.length; i++) {
       const token = this.tokens[i];

@@ -1535,7 +1535,7 @@ export class Table implements UserTable {
     }
     return sheetName;
   }
-  public sheetPrefix(omit=false) {
+  public sheetPrefix(omit = false) {
     if (omit) {
       return '';
     }

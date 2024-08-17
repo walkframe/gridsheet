@@ -204,7 +204,7 @@ export function GridSheet({
       </div>
     </Context.Provider>
   );
-};
+}
 
 type EstimateProps = {
   initialData: CellsByAddressType;

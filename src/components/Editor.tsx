@@ -2,7 +2,6 @@ import React from 'react';
 import { x2c, y2r } from '../lib/converters';
 import { clip } from '../lib/clipboard';
 import {
-  blur,
   clear,
   escape,
   select,
@@ -37,7 +36,6 @@ export const Editor: React.FC = () => {
     editingCell,
     choosing,
     selectingZone,
-    entering,
     searchQuery,
     editorRef,
     largeEditorRef,
@@ -47,7 +45,7 @@ export const Editor: React.FC = () => {
     table,
   } = store;
 
-  const [sheetProvided, sheetContext] = useSheetContext()
+  const [, sheetContext] = useSheetContext();
 
   React.useEffect(() => {
     editorRef?.current?.focus?.({ preventScroll: true });
@@ -55,7 +53,7 @@ export const Editor: React.FC = () => {
 
   React.useEffect(() => {
     if (largeEditorRef.current) {
-      largeEditorRef.current!.value = editorRef.current!.value;
+      largeEditorRef.current.value = editorRef.current!.value;
     }
   }, [editorRef.current?.value]);
 
@@ -370,9 +368,6 @@ export const Editor: React.FC = () => {
     return false;
   };
 
-
-
-
   return (
     <div className={`gs-editor ${editing ? 'gs-editing' : ''}`} style={editing ? { top, left, height, width } : {}}>
       {showAddress && <div className="gs-cell-label">{address}</div>}
@@ -390,7 +385,7 @@ export const Editor: React.FC = () => {
           dispatch(setLastFocusedRef(editorRef));
           sheetContext?.setLastFocusedRef?.(editorRef);
           if (input.value.startsWith('=')) {
-            
+            // do nothing
           } else {
             e.currentTarget.value = '';
           }
@@ -426,8 +421,6 @@ export const Editor: React.FC = () => {
           }
         }}
         onInput={(e) => {
-          const input = e.currentTarget;
-          //largeEditorRef.current!.value = input.value;
           expandInput(e.currentTarget);
         }}
         onKeyDown={handleKeyDown}
