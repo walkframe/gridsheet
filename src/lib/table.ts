@@ -1336,7 +1336,8 @@ export class Table implements UserTable {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const copied: Table = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     copied.area = area;
-    copied.solvedCaches = {};
+    // this causes RangeError on circular reference(maximum call stack size exceeded)
+    // copied.solvedCaches = {};
     return copied;
   }
 
@@ -1526,5 +1527,21 @@ export class Table implements UserTable {
   }
   public setSolvedCache(key: string, value: any) {
     this.solvedCaches[key] = value;
+  }
+  public wrappedSheetName() {
+    const sheetName = this.sheetName;
+    if (sheetName.indexOf(' ') !== -1) {
+      return `'${sheetName}'`;
+    }
+    return sheetName;
+  }
+  public sheetPrefix(omit = false) {
+    if (omit) {
+      return '';
+    }
+    if (this.sheetName) {
+      return `${this.wrappedSheetName()}!`;
+    }
+    return '';
   }
 }

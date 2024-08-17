@@ -99,6 +99,8 @@ export type StoreType = {
   largeEditorRef: React.MutableRefObject<HTMLTextAreaElement | null>;
   gridOuterRef: React.MutableRefObject<HTMLDivElement | null>;
   searchInputRef: React.MutableRefObject<HTMLInputElement | null>;
+  lastFocusedRef: React.MutableRefObject<HTMLTextAreaElement | null>;
+  lastEdited: string;
   entering: boolean;
   choosing: PointType;
   cutting: boolean;

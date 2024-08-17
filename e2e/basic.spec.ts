@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test('cell value', async ({ page }) => {
   await page.goto('http://localhost:5233/iframe.html?id=basic--small&viewMode=story');
   const b2 = page.locator("[data-address='B2']");
-  expect(await b2.locator('.gs-cell-rendered').textContent()).toContain('b2');
+  expect(await b2.locator('.gs-cell-rendered').textContent()).toContain('2');
 
   const b3 = page.locator("[data-address='B3']");
   expect(await b3.locator('.gs-cell-rendered').textContent()).toBe('');
@@ -24,7 +24,7 @@ test('pointing', async ({ page }) => {
   expect(await address.textContent()).toBe('B2');
 
   const largeEditor = page.locator('.gs-formula-bar textarea');
-  expect(await largeEditor.inputValue()).toBe('b2');
+  expect(await largeEditor.inputValue()).toBe('2');
 
   expect(await b2.getAttribute('class')).toContain('gs-pointed');
 

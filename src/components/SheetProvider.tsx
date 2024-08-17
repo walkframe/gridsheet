@@ -7,6 +7,8 @@ export type SheetContextType = {
   sheets: React.MutableRefObject<SheetMapType>;
   tables: React.MutableRefObject<TableMapType>;
   head: React.MutableRefObject<number>;
+  lastFocusedRef: React.MutableRefObject<HTMLTextAreaElement | null>;
+  setLastFocusedRef: (ref: React.MutableRefObject<HTMLTextAreaElement | null>) => void;
   forceRender: () => void;
 };
 
@@ -34,6 +36,8 @@ export function SheetProvider({ children }: { children: React.ReactNode }) {
   const head = React.useRef(1);
   const sheets = React.useRef<SheetMapType>({});
   const tables = React.useRef<TableMapType>({});
+  const lastFocusedRefInitial = React.useRef<HTMLTextAreaElement | null>(null);
+  const [lastFocusedRef, setLastFocusedRef] = React.useState(lastFocusedRefInitial);
 
   React.useEffect(() => {
     setMounted(true);
@@ -46,7 +50,15 @@ export function SheetProvider({ children }: { children: React.ReactNode }) {
         tables,
         sheets,
         head,
-        forceRender: () => setVersion(version + 1),
+        lastFocusedRef,
+        setLastFocusedRef,
+        forceRender: () => {
+          if (version === Number.MAX_SAFE_INTEGER) {
+            setVersion(0);
+            return;
+          }
+          setVersion(version + 1);
+        },
       }}
     >
       {children}

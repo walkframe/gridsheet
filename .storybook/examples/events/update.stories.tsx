@@ -61,7 +61,7 @@ export const AddRowsAndUpdate = () => {
           numRows: 1,
           baseY: 5,
           diff: {
-            C5: { value: "added" },
+            C5: { value: "added", style: {textDecoration: 'underline'} },
           },
         })
       );

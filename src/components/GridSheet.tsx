@@ -43,6 +43,7 @@ export function GridSheet({
   const editorRef = React.useRef<HTMLTextAreaElement | null>(null);
   const largeEditorRef = React.useRef<HTMLTextAreaElement | null>(null);
   const gridOuterRef = React.useRef<HTMLDivElement | null>(null);
+  const lastFocusedRef = React.useRef<HTMLTextAreaElement | null>(null);
   const [sheetProvided, sheetContext] = useSheetContext();
 
   const [initialState] = React.useState<StoreType>(() => {
@@ -90,6 +91,7 @@ export function GridSheet({
       editorRef,
       largeEditorRef,
       gridOuterRef,
+      lastFocusedRef,
       choosing: { y: 1, x: 1 },
       cutting: false,
       selectingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
@@ -116,6 +118,7 @@ export function GridSheet({
       maxNumRows: -1,
       minNumCols: 1,
       maxNumCols: -1,
+      lastEdited: '',
     };
   });
 
@@ -201,7 +204,7 @@ export function GridSheet({
       </div>
     </Context.Provider>
   );
-};
+}
 
 type EstimateProps = {
   initialData: CellsByAddressType;

@@ -2,7 +2,6 @@ import React from 'react';
 import { x2c, y2r } from '../lib/converters';
 import { clip } from '../lib/clipboard';
 import {
-  blur,
   clear,
   escape,
   select,
@@ -17,13 +16,16 @@ import {
   paste,
   setSearchQuery,
   setEntering,
+  setLastEdited,
+  setLastFocusedRef,
 } from '../store/actions';
 
 import { Context } from '../store';
 import { areaToZone } from '../lib/structs';
 import { DEFAULT_HEIGHT } from '../constants';
 import * as prevention from '../lib/prevention';
-import { insertNewLineAtCursor } from '../lib/input';
+import { expandInput, insertTextAtCursor } from '../lib/input';
+import { useSheetContext } from './SheetProvider';
 
 export const Editor: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);
@@ -34,7 +36,6 @@ export const Editor: React.FC = () => {
     editingCell,
     choosing,
     selectingZone,
-    entering,
     searchQuery,
     editorRef,
     largeEditorRef,
@@ -44,9 +45,30 @@ export const Editor: React.FC = () => {
     table,
   } = store;
 
+  const [, sheetContext] = useSheetContext();
+
   React.useEffect(() => {
     editorRef?.current?.focus?.({ preventScroll: true });
   }, [editorRef]);
+
+  React.useEffect(() => {
+    if (largeEditorRef.current) {
+      largeEditorRef.current.value = editorRef.current!.value;
+    }
+  }, [editorRef.current?.value]);
+
+  React.useEffect(() => {
+    if (!sheetContext?.lastFocusedRef) {
+      return;
+    }
+    if (sheetContext.lastFocusedRef === editorRef) {
+      return;
+    }
+    if (sheetContext.lastFocusedRef === largeEditorRef) {
+      return;
+    }
+    dispatch(setEditingCell(''));
+  }, [sheetContext?.lastFocusedRef]);
 
   const { y, x } = choosing;
   const rowId = `${y2r(y)}`;
@@ -63,7 +85,7 @@ export const Editor: React.FC = () => {
     if (before !== value) {
       dispatch(write(value));
     }
-    setBefore('');
+    //setBefore('');
   };
 
   const [isKeyDown, setIsKeyDown] = React.useState(false);
@@ -80,6 +102,7 @@ export const Editor: React.FC = () => {
       }, 10);
     }
     const input = e.currentTarget;
+
     const shiftKey = e.shiftKey;
     switch (e.key) {
       case 'Tab': // TAB
@@ -103,7 +126,7 @@ export const Editor: React.FC = () => {
       case 'Enter': // ENTER
         if (editing) {
           if (e.altKey) {
-            insertNewLineAtCursor(input);
+            insertTextAtCursor(input, '\n');
             input.style.height = `${input.clientHeight + DEFAULT_HEIGHT}px`;
             return false;
           } else {
@@ -358,7 +381,14 @@ export const Editor: React.FC = () => {
         }}
         rows={typeof value === 'string' ? value.split('\n').length : 1}
         onFocus={(e) => {
-          e.currentTarget.value = '';
+          const input = e.currentTarget;
+          dispatch(setLastFocusedRef(editorRef));
+          sheetContext?.setLastFocusedRef?.(editorRef);
+          if (input.value.startsWith('=')) {
+            // do nothing
+          } else {
+            e.currentTarget.value = '';
+          }
         }}
         onDoubleClick={(e) => {
           if (prevention.isPrevented(cell?.prevention, prevention.Write)) {
@@ -381,20 +411,17 @@ export const Editor: React.FC = () => {
           }
         }}
         onBlur={(e) => {
-          if (editing) {
-            writeCell(e.target.value);
+          dispatch(setLastEdited(before));
+          if (e.target.value.startsWith('=')) {
+            return true;
+          } else {
+            if (editing) {
+              writeCell(e.target.value);
+            }
           }
-          e.target.value = '';
-          dispatch(blur(null));
-          window.setTimeout(() => entering && e.target.focus(), 100);
         }}
         onInput={(e) => {
-          const input = e.currentTarget;
-          largeEditorRef.current!.value = input.value;
-          input.style.width = `${width}px`;
-          input.style.width = `${input.scrollWidth}px`;
-          input.style.height = `${height}px`;
-          input.style.height = `${input.scrollHeight}px`;
+          expandInput(e.currentTarget);
         }}
         onKeyDown={handleKeyDown}
       />

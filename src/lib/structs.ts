@@ -64,7 +64,7 @@ export const areaToZone = (area: AreaType): ZoneType => {
 
 export const areaToRange = (area: AreaType): string => {
   const { top, left, bottom, right } = area;
-  return `${p2a({ y: top, x: left })}${p2a({
+  return `${p2a({ y: top, x: left })}:${p2a({
     y: bottom,
     x: right,
   })}`;

@@ -41,7 +41,7 @@ export const solveTable = ({ table, raise = true }: { table: Table; raise?: bool
 
       try {
         if (cache === SOLVING) {
-          throw new FormulaError('#RFF!', 'References are circulating.', new Error(value as string));
+          throw new FormulaError('#REF!', 'References are circulating.', new Error(value as string));
         } else if (cache instanceof FormulaError) {
           throw cache;
         } else if (cache != null) {

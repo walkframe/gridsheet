@@ -1,6 +1,6 @@
 import React from 'react';
 import { x2c, y2r } from '../lib/converters';
-import { zoneToArea, among, zoneShape, areaToZone } from '../lib/structs';
+import { zoneToArea, among, zoneShape, areaToZone, areaToRange } from '../lib/structs';
 import {
   choose,
   select,
@@ -10,6 +10,7 @@ import {
   setContextMenuPosition,
   setAutofillDraggingTo,
   updateTable,
+  setEditingCell,
 } from '../store/actions';
 
 import { DUMMY_IMG } from '../constants';
@@ -18,6 +19,8 @@ import { AreaType, PointType, StoreType } from '../types';
 import { Context } from '../store';
 import { FormulaError } from '../formula/evaluator';
 import { Autofill } from '../lib/autofill';
+import { insertRef } from '../lib/input';
+import { useSheetContext } from './SheetProvider';
 
 type Props = {
   y: number;
@@ -29,6 +32,8 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
   const colId = x2c(x);
   const address = `${colId}${rowId}`;
   const { store, dispatch } = React.useContext(Context);
+
+  const [sheetProvided, sheetContext] = useSheetContext();
 
   const cellRef = React.useRef<HTMLTableCellElement | null>(null);
   const {
@@ -43,11 +48,17 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
     matchingCells,
     matchingCellIndex,
     editorRef,
+    largeEditorRef,
     showAddress,
     autofillDraggingTo,
+    lastEdited,
   } = store;
 
-  const [before, setBefore] = React.useState('');
+  // Whether the focus is on another sheet
+  const differentSheetFocused = sheetProvided && sheetContext?.lastFocusedRef !== store.lastFocusedRef;
+
+  const lastFocusedRef = sheetContext?.lastFocusedRef || store.lastFocusedRef;
+
   const matchingCell = matchingCells[matchingCellIndex];
 
   const selectingArea = zoneToArea(selectingZone); // (top, left) -> (bottom, right)
@@ -76,10 +87,10 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
   }, [pointed, editing]);
   const cell = table.getByPoint({ y, x });
   const writeCell = (value: string) => {
-    if (before !== value) {
+    if (lastEdited !== value) {
       dispatch(write(value));
+      return;
     }
-    setBefore('');
   };
 
   let matching = false;
@@ -102,6 +113,13 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
     }
     // TODO: debug flag
   }
+  const lastInput = lastFocusedRef.current;
+  const input = editorRef.current;
+  const largeInput = largeEditorRef.current;
+  if (!input) {
+    return null;
+  }
+
   return (
     <td
       key={x}
@@ -136,6 +154,24 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
         if (autofillDraggingTo) {
           return false;
         }
+        const fullAddress = `${table.sheetPrefix(!differentSheetFocused)}${address}`;
+        const inserted = insertRef(lastInput, fullAddress);
+        if (inserted) {
+          insertRef(largeInput, address);
+          lastInput?.focus();
+          /*
+          // MEMO: when different sheet focused, choose the cell.
+          
+          // It is uncomfortable to be selected only for different sheets. Therefore, it is not supported at this time.
+          if (sheetContext?.lastFocusedRef && sheetContext.lastFocusedRef !== store.lastFocusedRef) {
+            dispatch(choose({ y, x }));
+          }
+          */
+          return false;
+        } else if (inserted != null) {
+          writeCell(input.value);
+        }
+        dispatch(setEditingCell(''));
         dispatch(setContextMenuPosition({ y: -1, x: -1 }));
         if (e.shiftKey) {
           dispatch(drag({ y, x }));
@@ -143,13 +179,14 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
           dispatch(choose({ y, x }));
           dispatch(select({ startY: -1, startX: -1, endY: -1, endX: -1 }));
         }
-        editorRef.current!.focus();
+        input.focus();
+        input.value = '';
       }}
       onDoubleClick={(e) => {
         e.preventDefault();
         const dblclick = document.createEvent('MouseEvents');
         dblclick.initEvent('dblclick', true, true);
-        editorRef.current!.dispatchEvent(dblclick);
+        input.dispatchEvent(dblclick);
         return false;
       }}
       draggable
@@ -158,8 +195,19 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
           return false;
         }
         e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
-        dispatch(choose({ y, x }));
         dispatch(select({ startY: y, startX: x, endY: y, endX: x }));
+        const fullAddress = `${table.sheetPrefix(!differentSheetFocused)}${address}`;
+        const inserted = insertRef(lastInput, fullAddress);
+        if (inserted) {
+          insertRef(largeInput, address);
+          lastInput?.focus();
+          return true;
+        } else if (inserted != null) {
+          writeCell(input.value);
+        }
+        dispatch(choose({ y, x }));
+        input.focus();
+        input.value = '';
       }}
       onDragEnd={() => {
         if (autofillDraggingTo) {
@@ -174,6 +222,15 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
         const { height: h, width: w } = zoneShape(selectingZone);
         if (h + w === 0) {
           dispatch(select({ startY: -1, startX: -1, endY: -1, endX: -1 }));
+        }
+
+        const inserted = insertRef(input, areaToRange(selectingArea));
+        if (inserted != null) {
+          if (inserted) {
+            insertRef(largeInput, areaToRange(selectingArea));
+            dispatch(select({ startY: -1, startX: -1, endY: -1, endX: -1 }));
+            lastInput?.focus();
+          }
         }
       }}
       onDragEnter={() => {
@@ -191,7 +248,15 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
           dispatch(drag({ y, x: table.getNumCols() }));
           return false;
         }
+
+        const newArea = zoneToArea({ ...selectingZone, endY: y, endX: x });
+        const fullRange = `${table.sheetPrefix(!differentSheetFocused)}${areaToRange(newArea)}`;
+
+        insertRef(lastInput, fullRange);
+        insertRef(input, fullRange);
+        insertRef(largeInput, fullRange);
         dispatch(drag({ y, x }));
+        sheetContext?.forceRender(); // Force drawing because the formula is not reflected in largeInput
         return false;
       }}
     >
@@ -205,7 +270,9 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
         >
           {errorMessage && <div className="formula-error-triangle" title={errorMessage} />}
           {showAddress && <div className="gs-cell-label">{address}</div>}
-          <div className="gs-cell-rendered" style={cell?.style}>{rendered}</div>
+          <div className="gs-cell-rendered" style={cell?.style}>
+            {rendered}
+          </div>
         </div>
         {((pointed && selectingArea.bottom === -1) || (selectingArea.bottom === y && selectingArea.right === x)) && (
           <div

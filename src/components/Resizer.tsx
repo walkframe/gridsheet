@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Context } from '../store';
-import { setResizingPositionY, setResizingPositionX, updateTable, setEditorRect } from '../store/actions';
+import { setResizingPositionY, setResizingPositionX, updateTable } from '../store/actions';
 
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH, MIN_WIDTH, MIN_HEIGHT } from '../constants';
 import { zoneToArea, makeSequence, between } from '../lib/structs';
