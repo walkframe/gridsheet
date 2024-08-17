@@ -106,12 +106,12 @@ test('insert ref by selection', async ({ page }) => {
   const c1 = page.locator("[data-address='C1']");
 
 
-  await a1.dblclick();
+  await a1.click();
   await editor.fill('=A1');
   await b2.click();
   await editor.press('Enter');
 
-  await b1.dblclick();
+  await b1.click();
   await editor.fill('=sum(');
   await page.locator("[data-address='B2']").hover();
   await page.mouse.down();
@@ -120,7 +120,7 @@ test('insert ref by selection', async ({ page }) => {
   await editor.press(')');
   await editor.press('Enter');
 
-  await c1.dblclick();
+  await c1.click();
   await editor.fill('=sum()');
   await page.locator("[data-address='B2']").hover();
   await page.mouse.down();
@@ -130,4 +130,43 @@ test('insert ref by selection', async ({ page }) => {
   expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('2');
   expect(await b1.locator('.gs-cell-rendered').textContent()).toBe('5');
   expect(await c1.locator('.gs-cell-rendered').textContent()).toBe('#N/A');
+});
+
+test('insert ref by selection in multiple sheets', async ({ page }) => {
+  await page.goto('http://localhost:5233/iframe.html?id=demo--first-demo&viewMode=story');
+
+  const sheet1 = page.locator('[data-sheet-name="criteria"]');
+  const sheet2 = page.locator('[data-sheet-name="grades"]');
+  const sheet3 = page.locator('[data-sheet-name="other"]');
+  const editor3 = sheet3.locator('.gs-editor textarea');
+  const largeEditor3 = sheet3.locator('.gs-formula-bar textarea');
+
+  const b3 = sheet3.locator("[data-address='B3']");
+  await b3.click();
+  await editor3.fill('=sum(');
+  await sheet1.locator("[data-address='E1']").hover();
+  await page.mouse.down();
+  await sheet1.locator("[data-address='F1']").hover();
+  await page.mouse.up();
+
+  expect(await largeEditor3.inputValue()).toBe('=sum(criteria!E1:F1');
+
+  await editor3.press(')');
+  await editor3.press('Enter');
+
+  expect(await b3.locator('.gs-cell-rendered').textContent()).toBe('185');
+
+  const b5 = sheet3.locator("[data-address='B5']");
+  expect(await b5.locator('.gs-cell-rendered').textContent()).toBe('3');
+  
+  await b5.dblclick();
+  // blur because the cursor is at the end
+  await sheet2.locator("[data-address='B4']").click();
+  expect(await b5.locator('.gs-cell-rendered').textContent()).toBe('3');
+
+  await b5.dblclick();
+  await page.keyboard.press('ArrowLeft');
+  await sheet2.locator("[data-address='B4']").click();
+  await editor3.press('Enter');
+  expect(await b5.locator('.gs-cell-rendered').textContent()).toBe('2');
 });
