@@ -757,3 +757,14 @@ class SetLastEditedAction<T extends string> extends CoreAction<T> {
   }
 }
 export const setLastEdited = new SetLastEditedAction().bind();
+
+class SetLastFocusedRefAction<T extends React.RefObject<HTMLTextAreaElement>> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreType {
+    return {
+      ...store,
+      lastFocusedRef: payload,
+    };
+  }
+}
+
+export const setLastFocusedRef = new SetLastFocusedRefAction().bind();

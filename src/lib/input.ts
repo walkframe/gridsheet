@@ -9,12 +9,12 @@ export const insertTextAtCursor = (input: HTMLTextAreaElement, text: string) => 
 };
 
 export const insertRef = (input: HTMLTextAreaElement | null, ref: string) => {
-  if (!input?.value?.startsWith('=')) {
+  if (!input?.value?.startsWith('=') || input.selectionStart === 0) {
     return null;
   }
   const lexer = new Lexer(input.value.substring(1));
   lexer.tokenize();
-  const tokenIndex = lexer.getTokenIndexByCharPosition(input.selectionStart - 1);
+  const tokenIndex = lexer.getTokenIndexByCharPosition(input.selectionStart-1);
   let token = lexer.tokens[tokenIndex];
   if (token?.type === 'SPACE') {
     token = lexer.tokens[tokenIndex - 1];

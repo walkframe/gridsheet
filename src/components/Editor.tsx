@@ -18,6 +18,7 @@ import {
   setSearchQuery,
   setEntering,
   setLastEdited,
+  setLastFocusedRef,
 } from '../store/actions';
 
 import { Context } from '../store';
@@ -25,6 +26,7 @@ import { areaToZone } from '../lib/structs';
 import { DEFAULT_HEIGHT } from '../constants';
 import * as prevention from '../lib/prevention';
 import { expandInput, insertTextAtCursor } from '../lib/input';
+import { useSheetContext } from './SheetProvider';
 
 export const Editor: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);
@@ -45,9 +47,17 @@ export const Editor: React.FC = () => {
     table,
   } = store;
 
+  const [sheetProvided, sheetContext] = useSheetContext()
+
   React.useEffect(() => {
     editorRef?.current?.focus?.({ preventScroll: true });
   }, [editorRef]);
+
+  React.useEffect(() => {
+    if (largeEditorRef.current) {
+      largeEditorRef.current!.value = editorRef.current!.value;
+    }
+  }, [editorRef.current?.value]);
 
   const { y, x } = choosing;
   const rowId = `${y2r(y)}`;
@@ -81,6 +91,7 @@ export const Editor: React.FC = () => {
       }, 10);
     }
     const input = e.currentTarget;
+
     const shiftKey = e.shiftKey;
     switch (e.key) {
       case 'Tab': // TAB
@@ -360,6 +371,8 @@ export const Editor: React.FC = () => {
         rows={typeof value === 'string' ? value.split('\n').length : 1}
         onFocus={(e) => {
           const input = e.currentTarget;
+          dispatch(setLastFocusedRef(editorRef));
+          sheetContext?.setLastFocusedRef?.(editorRef);
           if (input.value.startsWith('=')) {
             
           } else {
@@ -389,7 +402,7 @@ export const Editor: React.FC = () => {
         onBlur={(e) => {
           dispatch(setLastEdited(origin));
           if (e.target.value.startsWith('=')) {
-            return false;
+            return true;
           } else {
             if (editing) {
               writeCell(e.target.value);
@@ -398,7 +411,7 @@ export const Editor: React.FC = () => {
         }}
         onInput={(e) => {
           const input = e.currentTarget;
-          largeEditorRef.current!.value = input.value;
+          //largeEditorRef.current!.value = input.value;
           expandInput(e.currentTarget);
         }}
         onKeyDown={handleKeyDown}

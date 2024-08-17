@@ -1,9 +1,10 @@
 import React from 'react';
 import { Context } from '../store';
 import { p2a } from '../lib/converters';
-import { setEditingCell, setLastEdited, walk, write } from '../store/actions';
+import { setEditingCell, setLastEdited, setLastFocusedRef, walk, write } from '../store/actions';
 import * as prevention from '../lib/prevention';
 import { expandInput, insertTextAtCursor } from '../lib/input';
+import { useSheetContext } from './SheetProvider';
 
 type Props = {
   width: number;
@@ -13,6 +14,8 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
   const { store, dispatch } = React.useContext(Context);
   const [origin, setOrigin] = React.useState('');
   const { choosing, editorRef, largeEditorRef, table } = store;
+
+  const [sheetProvided, sheetContext] = useSheetContext()
 
   const address = choosing.x === -1 ? '' : p2a(choosing);
   React.useEffect(() => {
@@ -31,8 +34,15 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
     editorRef.current!.focus();
   };
 
+  const largeInput = largeEditorRef.current;
+
   const sync = (e: React.FocusEvent<HTMLTextAreaElement>) => {
-    const largeInput = e.currentTarget;
+    if (!largeInput) {
+      return;
+    }
+    dispatch(setEditingCell(address));
+    dispatch(setLastFocusedRef(largeEditorRef));
+    sheetContext?.setLastFocusedRef?.(largeEditorRef);
     // Cursor position is not synchronized properly and is delayed by setTimeout
     window.setTimeout(() => {
       const start = largeInput.selectionStart;
@@ -55,7 +65,7 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
         onBlur={(e) => {
           dispatch(setLastEdited(origin));
           if (e.target.value.startsWith('=')) {
-            return false;
+            return true;
           } else {
             writeCell(e.target.value);
           }

@@ -195,8 +195,7 @@ export class IdEntity extends Entity<string> {
     if (parsed.table.sheetId === table.sheetId) {
       return address;
     }
-    const sheetName = wrapSheetName(parsed.table.sheetName);
-    return `${sheetName}!${address}`;
+    return `${parsed.table.sheetPrefix()}${address}`;
   }
   public slide(table: Table, slideY = 0, slideX = 0) {
     const address = this.ref(table, slideY, slideX);
@@ -237,8 +236,7 @@ export class IdRangeEntity extends Entity<string> {
     if (parsed.table.sheetId === table.sheetId) {
       return range;
     }
-    const sheetName = wrapSheetName(parsed.table.sheetName);
-    return `${sheetName}!${range}`;
+    return `${parsed.table.sheetPrefix()}${range}`;
   }
 
   public slide(table: Table, slideY = 0, slideX = 0) {
@@ -324,6 +322,20 @@ export class Token {
     this.type = type;
     this.entity = entity;
     this.precedence = precedence;
+  }
+
+  public length() {
+    if (this.type === 'VALUE' && typeof this.entity === 'string') {
+      return this.entity.length + 2;
+    }
+    return new String(this.entity).length;
+  }
+
+  public stringify() {
+    if (this.type === 'VALUE' && typeof this.entity === 'string') {
+      return `"${this.entity}"`;
+    }
+    return this.entity;
   }
 
   public convert() {
@@ -422,11 +434,11 @@ export class Lexer {
 
     for (let i = 0; i < this.tokens.length; i++) {
       const token = this.tokens[i];
-      end += new String(token.entity).length;
+      end = start + token.length();
       if (start <= pos && pos <= end) {
         return i;
       }
-      start = end + 1;
+      start = end;
     }
     return -1;
   }
@@ -434,13 +446,13 @@ export class Lexer {
   public getCharPositionByTokenIndex(index: number) {
     let pos = 0;
     for (let i = 0; i < index; i++) {
-      pos += new String(this.tokens[i].entity).length;
+      pos += this.tokens[i].length();
     }
     return pos;
   }
 
   public stringify() {
-    return this.tokens.map((t) => t.entity).join('');
+    return this.tokens.map((t) => t.stringify()).join('');
   }
 
   public stringifyToId(table: Table, slideY = 0, slideX = 0) {
@@ -787,13 +799,6 @@ export const stripSheetName = (sheetName: string) => {
   }
   if (sheetName.charAt(sheetName.length - 1) === "'") {
     sheetName = sheetName.slice(0, -1);
-  }
-  return sheetName;
-};
-
-const wrapSheetName = (sheetName: string) => {
-  if (sheetName.indexOf(' ') !== -1) {
-    return `'${sheetName}'`;
   }
   return sheetName;
 };

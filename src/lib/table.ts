@@ -1528,4 +1528,20 @@ export class Table implements UserTable {
   public setSolvedCache(key: string, value: any) {
     this.solvedCaches[key] = value;
   }
+  public wrappedSheetName() {
+    const sheetName = this.sheetName;
+    if (sheetName.indexOf(' ') !== -1) {
+      return `'${sheetName}'`;
+    }
+    return sheetName;
+  }
+  public sheetPrefix(omit=false) {
+    if (omit) {
+      return '';
+    }
+    if (this.sheetName) {
+      return `${this.wrappedSheetName()}!`;
+    }
+    return '';
+  }
 }

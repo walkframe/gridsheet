@@ -20,6 +20,7 @@ import { Context } from '../store';
 import { FormulaError } from '../formula/evaluator';
 import { Autofill } from '../lib/autofill';
 import { insertRef } from '../lib/input';
+import { useSheetContext } from './SheetProvider';
 
 type Props = {
   y: number;
@@ -31,6 +32,8 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
   const colId = x2c(x);
   const address = `${colId}${rowId}`;
   const { store, dispatch } = React.useContext(Context);
+
+  const [sheetProvided, sheetContext] = useSheetContext();
 
   const cellRef = React.useRef<HTMLTableCellElement | null>(null);
   const {
@@ -50,6 +53,11 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
     autofillDraggingTo,
     lastEdited,
   } = store;
+
+  // Whether the focus is on another sheet
+  const differentSheetFocused = sheetProvided && sheetContext?.lastFocusedRef !== store.lastFocusedRef;
+
+  const lastFocusedRef = sheetContext?.lastFocusedRef || store.lastFocusedRef;
 
   const matchingCell = matchingCells[matchingCellIndex];
 
@@ -105,8 +113,9 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
     }
     // TODO: debug flag
   }
+  const lastInput = lastFocusedRef.current;
   const input = editorRef.current;
-  const input2 = largeEditorRef.current;
+  const largeInput = largeEditorRef.current;
   if (!input) {
     return null;
   }
@@ -145,10 +154,11 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
         if (autofillDraggingTo) {
           return false;
         }
-        const inserted = insertRef(input, address);
+        const fullAddress = `${table.sheetPrefix(!differentSheetFocused)}${address}`;
+        const inserted = insertRef(lastInput, fullAddress);
         if (inserted) {
-          insertRef(input2, address);
-          input.focus();
+          insertRef(largeInput, address);
+          lastInput?.focus();
           return true;
         } else if (inserted != null) {
           writeCell(input.value);
@@ -178,10 +188,11 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
         }
         e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
         dispatch(select({ startY: y, startX: x, endY: y, endX: x }));
-        const inserted = insertRef(input, address);
+        const fullAddress = `${table.sheetPrefix(!differentSheetFocused)}${address}`;
+        const inserted = insertRef(lastInput, fullAddress);
         if (inserted) {
-          insertRef(input2, address);
-          input.focus();
+          insertRef(largeInput, address);
+          lastInput?.focus();
           return true;
         } else if (inserted != null) {
           writeCell(input.value);
@@ -208,9 +219,9 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
         const inserted = insertRef(input, areaToRange(selectingArea));
         if (inserted != null) {
           if (inserted) {
-            insertRef(input2, areaToRange(selectingArea));
+            insertRef(largeInput, areaToRange(selectingArea));
             dispatch(select({ startY: -1, startX: -1, endY: -1, endX: -1 }));
-            input.focus();
+            lastInput?.focus();
           }
         }
       }}
@@ -229,10 +240,15 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
           dispatch(drag({ y, x: table.getNumCols() }));
           return false;
         }
-        dispatch(drag({ y, x }));
+        
         const newArea = zoneToArea({...selectingZone, endY: y, endX: x});
-        insertRef(input, areaToRange(newArea));
-        insertRef(input2, areaToRange(newArea));
+        const fullRange = `${table.sheetPrefix(!differentSheetFocused)}${areaToRange(newArea)}`;
+
+        insertRef(lastInput, fullRange);
+        insertRef(input, fullRange);
+        insertRef(largeInput, fullRange);
+        dispatch(drag({ y, x }));
+        sheetContext?.forceRender(); // Force drawing because the formula is not reflected in largeInput
         return false;
       }}
     >
