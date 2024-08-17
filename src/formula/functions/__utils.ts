@@ -22,6 +22,9 @@ export const ensureNumber = (value: any, alternative?: number): number => {
 };
 
 export const ensureString = (value: any): string => {
+  if (value === 0) {
+    return '0';
+  }
   if (!value) {
     return '';
   }
