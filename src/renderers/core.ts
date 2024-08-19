@@ -64,8 +64,7 @@ export class Renderer implements RendererMixinType {
     const address = p2a(point);
     const cache = table.getSolvedCache(address);
     const value = cache || table.getByPoint(point)?.value;
-    const { y, x } = point;
-    return this.render(value, table.trim({ top: y, left: x, bottom: y, right: x }), writer);
+    return this.render(value, table, writer);
   }
 
   public render(value: any, table: Table, writer?: WriterType): any {

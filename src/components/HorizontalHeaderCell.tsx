@@ -1,10 +1,12 @@
 import React from 'react';
 import { x2c } from '../lib/converters';
-import { between } from '../lib/structs';
+import { areaToRange, between, zoneToArea } from '../lib/structs';
 import { Context } from '../store';
-import { choose, drag, selectCols, setContextMenuPosition, setResizingPositionX } from '../store/actions';
+import { choose, drag, select, selectCols, setContextMenuPosition, setResizingPositionX } from '../store/actions';
 import { DUMMY_IMG, DEFAULT_WIDTH } from '../constants';
 import * as prevention from '../lib/prevention';
+import { useSheetContext } from './SheetProvider';
+import { insertRef, isRefInsertable } from '../lib/input';
 
 type Props = {
   x: number;
@@ -28,6 +30,12 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({ x }) => {
   const col = table.getByPoint({ y: 0, x });
   const width = col?.width || DEFAULT_WIDTH;
 
+  const [sheetProvided, sheetContext] = useSheetContext();
+  const differentSheetFocused = sheetProvided && sheetContext?.lastFocusedRef !== store.lastFocusedRef;
+
+  const lastFocusedRef = sheetContext?.lastFocusedRef || store.lastFocusedRef;
+  const lastInput = lastFocusedRef.current;
+
   return (
     <th
       data-x={x}
@@ -44,6 +52,12 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({ x }) => {
         if (startX === -1) {
           startX = choosing.x;
         }
+        const fullColId = `${table.sheetPrefix(!differentSheetFocused)}${colId}:${colId}`;
+        const inserted = insertRef(lastInput, fullColId);
+        if (inserted) {
+          return false;
+        }
+
         dispatch(
           selectCols({
             range: { start: startX, end: x },
@@ -66,6 +80,11 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({ x }) => {
         draggable
         onDragStart={(e) => {
           e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
+          const insertable = isRefInsertable(lastInput);
+          if (insertable) {
+            dispatch(select({ startY: table.getNumRows(), startX: x, endY: 0, endX: x }));
+            return false;
+          }
           dispatch(
             selectCols({
               range: { start: x, end: x },
@@ -75,7 +94,17 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({ x }) => {
           dispatch(choose({ y: 1, x }));
           return false;
         }}
+        onDragEnd={() => {
+          if (isRefInsertable(lastInput)) {
+            dispatch(select({ startY: -1, startX: -1, endY: -1, endX: -1 }));
+          }
+        }}
         onDragEnter={() => {
+          const newArea = zoneToArea({ ...selectingZone, endY: 1, endX: x });
+          const [left, right] = [x2c(newArea.left), x2c(newArea.right)];
+          const fullRange = `${table.sheetPrefix(!differentSheetFocused)}${left}:${right}`;
+          insertRef(lastInput, fullRange);
+
           if (resizingRect.x === -1 && autofillDraggingTo == null) {
             const { startY } = selectingZone;
             if (startY === 1) {
