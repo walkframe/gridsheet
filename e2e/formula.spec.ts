@@ -106,7 +106,7 @@ test('insert ref by selection', async ({ page }) => {
   const c1 = page.locator("[data-address='C1']");
 
 
-  await a1.click();
+  await a1.dblclick();
   await editor.fill('=A1');
   await b2.click();
   await editor.press('Enter');
@@ -162,13 +162,13 @@ test('insert ref by selection in multiple sheets', async ({ page }) => {
   await b5.dblclick();
   // blur because the cursor is at the end
   await sheet2.locator("[data-address='B4']").click();
-  await editor3.press('Enter');
+  await editor3.press('Tab');
   expect(await b5.locator('.gs-cell-rendered').textContent()).toBe('3');
 
   await b5.dblclick();
   await page.keyboard.press('ArrowLeft');
   await sheet2.locator("[data-address='B4']").click();
-  await editor3.press('Enter');
+  await editor3.press('Tab');
   expect(await b5.locator('.gs-cell-rendered').textContent()).toBe('2');
 });
 
@@ -177,14 +177,12 @@ test('insert cols range, rows range by selection in multiple sheets', async ({ p
 
   const sheet1 = page.locator('[data-sheet-name="criteria"]');
   const sheet2 = page.locator('[data-sheet-name="grades"]');
-
-  const y1 = sheet1.locator("[data-address='1']");
-  const xb = sheet2.locator("[data-address='B']");
   const editor2 = sheet2.locator('.gs-editor textarea');
 
   const d3 = sheet2.locator("[data-address='D3']");
   await d3.click();
   await editor2.fill('=sum(');
+  const y1 = sheet1.locator("th[data-y='1']");
   await y1.click();
   await editor2.press(')');
   await editor2.press('Enter');
@@ -193,6 +191,7 @@ test('insert cols range, rows range by selection in multiple sheets', async ({ p
   const d4 = sheet2.locator("[data-address='D4']");
   await d4.click();
   await editor2.fill('=sum(');
+  const xb = sheet2.locator("th[data-x='2']");
   await xb.click();
   await editor2.press(')');
   await editor2.press('Enter');
