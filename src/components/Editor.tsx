@@ -52,12 +52,6 @@ export const Editor: React.FC = () => {
   }, [editorRef]);
 
   React.useEffect(() => {
-    if (largeEditorRef.current) {
-      largeEditorRef.current.value = editorRef.current!.value;
-    }
-  }, [editorRef.current?.value]);
-
-  React.useEffect(() => {
     if (!sheetContext?.lastFocusedRef) {
       return;
     }
@@ -421,7 +415,11 @@ export const Editor: React.FC = () => {
           }
         }}
         onInput={(e) => {
-          expandInput(e.currentTarget);
+          const input = e.currentTarget;
+          expandInput(input);
+          if (largeEditorRef.current) {
+            largeEditorRef.current.value = input.value;
+          }
         }}
         onKeyDown={handleKeyDown}
       />

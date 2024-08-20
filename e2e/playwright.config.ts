@@ -6,7 +6,7 @@ export default defineConfig({
     trace: 'on-first-retry',
     video: 'retain-on-failure',
     launchOptions: {
-      slowMo: 200,
+      slowMo: 250,
     },
   },
 });
