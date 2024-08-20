@@ -3,7 +3,7 @@ import { Context } from '../store';
 import { p2a } from '../lib/converters';
 import { setEditingCell, setLastEdited, setLastFocusedRef, walk, write } from '../store/actions';
 import * as prevention from '../lib/prevention';
-import { expandInput, insertTextAtCursor } from '../lib/input';
+import { copyInput, expandInput, insertTextAtCursor } from '../lib/input';
 import { useSheetContext } from './SheetProvider';
 
 type Props = {
@@ -36,21 +36,19 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
 
   const largeInput = largeEditorRef.current;
 
-  const sync = () => {
+  const handleFocus = () => {
     if (!largeInput) {
       return;
     }
+    copyInput(largeInput, editorRef.current!);
     dispatch(setEditingCell(address));
     dispatch(setLastFocusedRef(largeEditorRef));
     sheetContext?.setLastFocusedRef?.(largeEditorRef);
-    // Cursor position is not synchronized properly and is delayed by setTimeout
-    window.setTimeout(() => {
-      const start = largeInput.selectionStart;
-      editorRef.current!.value = largeInput.value;
-      editorRef.current!.selectionStart = start;
-    }, 0);
-    expandInput(largeInput);
   };
+  const handleChange = () => {
+    copyInput(largeInput, editorRef.current!);
+    sheetContext?.forceRender?.();
+  }
 
   return (
     <label className="gs-formula-bar" style={{ width: width - 1 }}>
@@ -59,9 +57,9 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
       <textarea
         rows={1}
         ref={largeEditorRef}
-        onInput={sync}
-        onFocus={sync}
-        onChange={sync}
+        onInput={handleChange}
+        //onChange={handleChange}
+        onFocus={handleFocus}
         onBlur={(e) => {
           dispatch(setLastEdited(before));
           if (e.target.value.startsWith('=')) {

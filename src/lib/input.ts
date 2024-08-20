@@ -6,6 +6,7 @@ export const insertTextAtCursor = (input: HTMLTextAreaElement, text: string) => 
   const after = input.value.slice(selectPoint);
   input.value = `${before}${text}${after}`;
   input.selectionStart = before.length + text.length;
+  input.focus();
 };
 
 export const insertRef = (input: HTMLTextAreaElement | null, ref: string) => {
@@ -36,6 +37,8 @@ export const insertRef = (input: HTMLTextAreaElement | null, ref: string) => {
   } else {
     return false;
   }
+  const event = new Event("input", { bubbles: true, composed: true });
+  input.dispatchEvent(event);
   input.focus();
   return true;
 };
@@ -60,7 +63,17 @@ export const isRefInsertable = (input: HTMLTextAreaElement | null) => {
   token.type === 'RANGE';
 }
 
+export const copyInput = (from?: HTMLTextAreaElement | null, to?: HTMLTextAreaElement | null) => {
+  if (!from || !to) {
+    return;
+  }
+  to.value = from.value;
+  to.selectionStart = from.selectionStart;
+  to.selectionEnd = from.selectionEnd;
+};
+
 export const expandInput = (input: HTMLTextAreaElement) => {
   input.style.width = `${input.scrollWidth}px`;
   input.style.height = `${input.scrollHeight}px`;
 };
+

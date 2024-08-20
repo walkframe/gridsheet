@@ -238,16 +238,13 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
           dispatch(drag({ y, x: table.getNumCols() }));
           return false;
         }
+        dispatch(drag({ y, x }));
 
         const newArea = zoneToArea({ ...selectingZone, endY: y, endX: x });
         const fullRange = `${table.sheetPrefix(!differentSheetFocused)}${areaToRange(newArea)}`;
-
         insertRef(lastInput, fullRange);
-        //insertRef(input, fullRange);
-        //insertRef(largeInput, fullRange);
-        dispatch(drag({ y, x }));
         sheetContext?.forceRender?.(); // Force drawing because the formula is not reflected in largeInput
-        return false;
+        return true;
       }}
     >
       <div className={`gs-cell-rendered-wrapper-outer`}>
