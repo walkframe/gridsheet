@@ -70,8 +70,6 @@ export const copyInput = (from?: HTMLTextAreaElement | null, to?: HTMLTextAreaEl
     return;
   }
   to.value = from.value;
-  to.selectionStart = from.selectionStart;
-  to.selectionEnd = from.selectionEnd;
 };
 
 export const expandInput = (input: HTMLTextAreaElement) => {
