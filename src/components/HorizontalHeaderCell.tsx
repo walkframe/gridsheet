@@ -1,6 +1,6 @@
 import React from 'react';
 import { x2c } from '../lib/converters';
-import { areaToRange, between, zoneToArea } from '../lib/structs';
+import { between, zoneToArea } from '../lib/structs';
 import { Context } from '../store';
 import { choose, drag, select, selectCols, setContextMenuPosition, setResizingPositionX } from '../store/actions';
 import { DUMMY_IMG, DEFAULT_WIDTH } from '../constants';

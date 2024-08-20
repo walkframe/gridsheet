@@ -3,7 +3,7 @@ import { Context } from '../store';
 import { p2a } from '../lib/converters';
 import { setEditingCell, setLastEdited, setLastFocusedRef, walk, write } from '../store/actions';
 import * as prevention from '../lib/prevention';
-import { copyInput, expandInput, insertTextAtCursor } from '../lib/input';
+import { copyInput, insertTextAtCursor } from '../lib/input';
 import { useSheetContext } from './SheetProvider';
 
 type Props = {
@@ -40,15 +40,15 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
     if (!largeInput) {
       return;
     }
-    copyInput(largeInput, editorRef.current!);
+    copyInput(largeInput, editorRef.current);
     dispatch(setEditingCell(address));
     dispatch(setLastFocusedRef(largeEditorRef));
     sheetContext?.setLastFocusedRef?.(largeEditorRef);
   };
   const handleChange = () => {
-    copyInput(largeInput, editorRef.current!);
+    copyInput(largeInput, editorRef.current);
     sheetContext?.forceRender?.();
-  }
+  };
 
   return (
     <label className="gs-formula-bar" style={{ width: width - 1 }}>

@@ -48,7 +48,6 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
     matchingCells,
     matchingCellIndex,
     editorRef,
-    largeEditorRef,
     showAddress,
     autofillDraggingTo,
     lastEdited,
@@ -115,7 +114,6 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
   }
   const lastInput = lastFocusedRef.current;
   const input = editorRef.current;
-  const largeInput = largeEditorRef.current;
   if (!input) {
     return null;
   }

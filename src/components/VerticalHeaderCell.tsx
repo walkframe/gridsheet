@@ -36,7 +36,6 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({ y }) => {
   const lastFocusedRef = sheetContext?.lastFocusedRef || store.lastFocusedRef;
   const lastInput = lastFocusedRef.current;
 
-
   return (
     <th
       data-y={y}

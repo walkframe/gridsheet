@@ -37,7 +37,7 @@ export const insertRef = (input: HTMLTextAreaElement | null, ref: string) => {
   } else {
     return false;
   }
-  const event = new Event("input", { bubbles: true, composed: true });
+  const event = new Event('input', { bubbles: true, composed: true });
   input.dispatchEvent(event);
   input.focus();
   return true;
@@ -54,14 +54,16 @@ export const isRefInsertable = (input: HTMLTextAreaElement | null) => {
   if (token?.type === 'SPACE') {
     token = lexer.tokens[tokenIndex - 1];
   }
-  return token == null ||
-  token.type === 'OPEN' ||
-  token.type === 'COMMA' ||
-  token.type === 'INFIX_OPERATOR' ||
-  token.type === 'PREFIX_OPERATOR' ||
-  token.type === 'REF' ||
-  token.type === 'RANGE';
-}
+  return (
+    token == null ||
+    token.type === 'OPEN' ||
+    token.type === 'COMMA' ||
+    token.type === 'INFIX_OPERATOR' ||
+    token.type === 'PREFIX_OPERATOR' ||
+    token.type === 'REF' ||
+    token.type === 'RANGE'
+  );
+};
 
 export const copyInput = (from?: HTMLTextAreaElement | null, to?: HTMLTextAreaElement | null) => {
   if (!from || !to) {
@@ -76,4 +78,3 @@ export const expandInput = (input: HTMLTextAreaElement) => {
   input.style.width = `${input.scrollWidth}px`;
   input.style.height = `${input.scrollHeight}px`;
 };
-
