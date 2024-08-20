@@ -106,7 +106,7 @@ test('insert ref by selection', async ({ page }) => {
   const c1 = page.locator("[data-address='C1']");
 
 
-  await a1.click();
+  await a1.dblclick();
   await editor.fill('=A1');
   await b2.click();
   await editor.press('Enter');
@@ -140,20 +140,19 @@ test('insert ref by selection in multiple sheets', async ({ page }) => {
   const sheet3 = page.locator('[data-sheet-name="other"]');
   const editor3 = sheet3.locator('.gs-editor textarea');
   const largeEditor3 = sheet3.locator('.gs-formula-bar textarea');
-
+  
   const b3 = sheet3.locator("[data-address='B3']");
   await b3.click();
-  await editor3.fill('=sum(');
+  await largeEditor3.fill('=sum(');
   await sheet1.locator("[data-address='E1']").hover();
   await page.mouse.down();
   await sheet1.locator("[data-address='F1']").hover();
   await page.mouse.up();
-
+  // Confirm that the contents of largeEditor is copied to editor
+  expect(await editor3.inputValue()).toBe('=sum(criteria!E1:F1');
   expect(await largeEditor3.inputValue()).toBe('=sum(criteria!E1:F1');
-
-  await editor3.press(')');
-  await editor3.press('Enter');
-
+  await largeEditor3.press(')');
+  await largeEditor3.press('Enter');
   expect(await b3.locator('.gs-cell-rendered').textContent()).toBe('185');
 
   const b5 = sheet3.locator("[data-address='B5']");
@@ -162,11 +161,43 @@ test('insert ref by selection in multiple sheets', async ({ page }) => {
   await b5.dblclick();
   // blur because the cursor is at the end
   await sheet2.locator("[data-address='B4']").click();
+  await editor3.press('Tab');
   expect(await b5.locator('.gs-cell-rendered').textContent()).toBe('3');
 
   await b5.dblclick();
   await page.keyboard.press('ArrowLeft');
   await sheet2.locator("[data-address='B4']").click();
-  await editor3.press('Enter');
+  await editor3.press('Tab');
   expect(await b5.locator('.gs-cell-rendered').textContent()).toBe('2');
+});
+
+test('insert cols range and rows range by selection in multiple sheets', async ({ page }) => {
+  await page.goto('http://localhost:5233/iframe.html?id=demo--first-demo&viewMode=story');
+
+  const sheet1 = page.locator('[data-sheet-name="criteria"]');
+  const sheet2 = page.locator('[data-sheet-name="grades"]');
+  const editor2 = sheet2.locator('.gs-editor textarea');
+  const largeEditor2 = sheet2.locator('.gs-formula-bar textarea');
+
+  const d3 = sheet2.locator("[data-address='D3']");
+  await d3.click();
+  await editor2.fill('=sum(');
+  const y1 = sheet1.locator("th[data-y='1']");
+  await y1.click();
+  await editor2.press(')');
+  await editor2.press('Enter');
+  expect(await d3.locator('.gs-cell-rendered').textContent()).toBe('395');
+
+  const d4 = sheet2.locator("[data-address='D4']");
+  await d4.click();
+  await editor2.fill('=sum(');
+  await sheet2.locator("th[data-x='2']").hover();
+  await page.mouse.down();
+  await sheet2.locator("th[data-x='3']").hover();
+  await page.mouse.up();
+  expect(await editor2.inputValue()).toBe('=sum(B:C');
+  expect(await largeEditor2.inputValue()).toBe('=sum(B:C');
+  await editor2.press(')');
+  await editor2.press('Enter');
+  expect(await d4.locator('.gs-cell-rendered').textContent()).toBe('370');
 });

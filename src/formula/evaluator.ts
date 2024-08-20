@@ -220,12 +220,13 @@ export class IdRangeEntity extends Entity<string> {
   public evaluate({ table }: EvaluateProps): Table {
     const parsed = this.parse(table);
     const [p1, p2] = parsed.ids.map((id) => getId(id)).map((id) => parsed.table.getPointById(id));
-    return parsed.table.trim({
-      top: p1.y,
-      left: p1.x,
-      bottom: p2.y,
-      right: p2.x,
-    });
+    const [top, left, bottom, right] = [
+      p1.y,
+      p1.x,
+      p2.y || parsed.table.getNumRows(),
+      p2.x || parsed.table.getNumCols(),
+    ];
+    return parsed.table.trim({ top, left, bottom, right });
   }
   public range(table: Table, slideY = 0, slideX = 0) {
     const parsed = this.parse(table);

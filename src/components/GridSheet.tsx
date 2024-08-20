@@ -137,7 +137,7 @@ export function GridSheet({
       return;
     }
     sheetContext.tables.current[store.sheetId] = store.table;
-    sheetContext.forceRender();
+    sheetContext?.forceRender?.();
   }, [store.table]);
 
   React.useEffect(() => {

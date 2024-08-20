@@ -30,6 +30,9 @@ const Sheet = ({ numRows, numCols, defaultWidth }: Props) => {
             A1: {
               value: "A1",
             },
+            B1: {
+              value: "B1",
+            },
             B2: {
               value: 2,
             },

@@ -44,9 +44,11 @@ test('walk', async ({ page }) => {
   const a1 = page.locator("[data-address='A1']");
   await a1.click();
 
+  const editor = page.locator('.gs-editor textarea');
+  const largeEditor = page.locator('.gs-formula-bar textarea');
+
   const address = page.locator('.gs-selecting-address');
   expect(await address.textContent()).toBe('A1');
-  const editor = page.locator('.gs-editor textarea');
   await editor.press('ArrowDown');
   expect(await address.textContent()).toBe('A2');
   await editor.press('Enter'); // editing
@@ -62,6 +64,15 @@ test('walk', async ({ page }) => {
   expect(await address.textContent()).toBe('C2');
   await editor.press('ArrowLeft');
   expect(await address.textContent()).toBe('B2');
+
+  // formulabar must not be empty after ENTER
+  const b1 = page.locator("[data-address='B1']");
+  await b1.dblclick();
+  await editor.press('Enter');
+  // B2 must be "2"
+  expect(await largeEditor.inputValue()).toBe('2');
+  await page.locator("[data-address='B5']").click();
+
 });
 
 test('enter key with alt', async ({ page }) => {

@@ -1,10 +1,12 @@
 import React from 'react';
 import { y2r } from '../lib/converters';
-import { between } from '../lib/structs';
+import { between, zoneToArea } from '../lib/structs';
 import { Context } from '../store';
-import { choose, drag, selectRows, setContextMenuPosition, setResizingPositionY } from '../store/actions';
+import { choose, drag, select, selectRows, setContextMenuPosition, setResizingPositionY } from '../store/actions';
 import { DUMMY_IMG, DEFAULT_HEIGHT } from '../constants';
 import * as prevention from '../lib/prevention';
+import { insertRef, isRefInsertable } from '../lib/input';
+import { useSheetContext } from './SheetProvider';
 
 type Props = {
   y: number;
@@ -28,6 +30,12 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({ y }) => {
   const row = table.getByPoint({ y, x: 0 });
   const height = row?.height || DEFAULT_HEIGHT;
 
+  const [sheetProvided, sheetContext] = useSheetContext();
+  const differentSheetFocused = sheetProvided && sheetContext?.lastFocusedRef !== store.lastFocusedRef;
+
+  const lastFocusedRef = sheetContext?.lastFocusedRef || store.lastFocusedRef;
+  const lastInput = lastFocusedRef.current;
+
   return (
     <th
       data-y={y}
@@ -44,6 +52,12 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({ y }) => {
         if (startY === -1) {
           startY = choosing.y;
         }
+        const fullColId = `${table.sheetPrefix(!differentSheetFocused)}${rowId}:${rowId}`;
+        const inserted = insertRef(lastInput, fullColId);
+        if (inserted) {
+          return false;
+        }
+
         dispatch(
           selectRows({
             range: { start: startY, end: y },
@@ -66,6 +80,11 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({ y }) => {
         draggable
         onDragStart={(e) => {
           e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
+          const insertable = isRefInsertable(lastInput);
+          if (insertable) {
+            dispatch(select({ startY: y, startX: table.getNumCols(), endY: y, endX: 0 }));
+            return false;
+          }
           dispatch(
             selectRows({
               range: { start: y, end: y },
@@ -75,7 +94,17 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({ y }) => {
           dispatch(choose({ y, x: 1 }));
           return false;
         }}
+        onDragEnd={() => {
+          if (isRefInsertable(lastInput)) {
+            dispatch(select({ startY: -1, startX: -1, endY: -1, endX: -1 }));
+          }
+        }}
         onDragEnter={() => {
+          const newArea = zoneToArea({ ...selectingZone, endY: y, endX: 1 });
+          const [top, bottom] = [y2r(newArea.top), y2r(newArea.bottom)];
+          const fullRange = `${table.sheetPrefix(!differentSheetFocused)}${top}:${bottom}`;
+          insertRef(lastInput, fullRange);
+
           if (resizingRect.y === -1 && autofillDraggingTo == null) {
             const { startX } = selectingZone;
             if (startX === 1) {
