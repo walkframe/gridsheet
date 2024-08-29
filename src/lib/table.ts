@@ -371,6 +371,7 @@ export class Table implements UserTable {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const copied: Table = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     copied.changedAt = new Date();
+    copied.lastChangedAt = this.changedAt;
     copied.setTotalSize();
     copied.idsToBeAbsoluted = [];
     copied.solvedCaches = {};

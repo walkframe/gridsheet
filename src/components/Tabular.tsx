@@ -20,7 +20,7 @@ export const createTableRef = () => React.useRef<TableRef | null>(null);
 
 export const Tabular = ({ tableRef }: Props) => {
   const { store, dispatch } = React.useContext(Context);
-  const { sheetHeight, sheetWidth, headerHeight, headerWidth, table, tableInitialized, gridOuterRef, sheetRef } = store;
+  const { sheetHeight, sheetWidth, table, tableInitialized, gridOuterRef, sheetRef } = store;
 
   React.useEffect(() => {
     if (tableRef && tableInitialized) {
@@ -72,10 +72,10 @@ export const Tabular = ({ tableRef }: Props) => {
             }}
           >
             <thead className="gs-table-header">
-              <tr style={{ height: headerHeight }}>
+              <tr>
                 <th
                   className="gs-header gs-header-left gs-header-top gs-header-left-top"
-                  style={{ width: headerWidth, position: 'sticky' }}
+                  style={{ position: 'sticky' }}
                   onClick={() => {
                     dispatch(choose({ y: -1, x: -1 }));
                     window.setTimeout(() => {

@@ -288,6 +288,7 @@ export type TokenType =
   | 'FUNCTION'
   | 'PREFIX_OPERATOR'
   | 'INFIX_OPERATOR'
+  | 'POSTFIX_OPERATOR'
   | 'OPEN'
   | 'CLOSE'
   | 'COMMA'
@@ -313,6 +314,9 @@ const INFIX_FUNCTION_NAME_MAP = {
 const PREFIX_FUNCTION_NAME_MAP = {
   '-': 'uminus',
 };
+
+const WHITESPACE_CHARS = new Set([' ', '\n', '\r', '\t', '\f']);
+const SPECIAL_CHARS = new Set([...WHITESPACE_CHARS, '+', '-', '/', '*', '^', '&', '=', '<', '>', ')', ',', '%']);
 
 export class Token {
   type: TokenType;
@@ -380,7 +384,7 @@ export class Token {
 }
 
 const isWhiteSpace = (char: string) => {
-  return char === ' ' || char === '\n' || char === '\t';
+  return WHITESPACE_CHARS.has(char);
 };
 
 const TOKEN_OPEN = new Token('OPEN', '('),
@@ -585,6 +589,10 @@ export class Lexer {
           break;
           // not continue
         }
+        case '%': {
+          this.tokens.push(new Token('POSTFIX_OPERATOR', '%', 4));
+          continue;
+        }
       } // switch end
       let buf = char;
       // eslint-disable-next-line no-constant-condition
@@ -595,7 +603,7 @@ export class Lexer {
           this.next();
           break;
         }
-        if (c == null || c.match(/[\s+\-/*^&=<>),]/)) {
+        if (c == null || SPECIAL_CHARS.has(c)) {
           if (buf.length === 0) {
             break;
           }
@@ -711,6 +719,13 @@ export class Parser {
       ) {
         const expr = token.convert();
         stack.push(expr!);
+      } else if (token.type === 'POSTFIX_OPERATOR' && token.entity === '%') {
+        const expr = stack.pop();
+        if (!expr) {
+          throw new FormulaError('#ERROR!', 'Missing expression before %');
+        }
+        const divideBy100 = new FunctionEntity('divide', 4, [expr, new ValueEntity(100)]);
+        stack.push(divideBy100);
       } else if (token.type === 'FUNCTION') {
         this.index++;
         this.depth++;
