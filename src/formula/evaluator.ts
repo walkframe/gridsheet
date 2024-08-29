@@ -315,7 +315,8 @@ const PREFIX_FUNCTION_NAME_MAP = {
   '-': 'uminus',
 };
 
-const SPECIAL_CHARS = new Set([' ', '+', '-', '/', '*', '^', '&', '=', '<', '>', ')', ',', '%']);
+const WHITESPACE_CHARS = new Set([' ', '\n', '\r', '\t', '\f']);
+const SPECIAL_CHARS = new Set([...WHITESPACE_CHARS, '+', '-', '/', '*', '^', '&', '=', '<', '>', ')', ',', '%']);
 
 export class Token {
   type: TokenType;
@@ -383,7 +384,7 @@ export class Token {
 }
 
 const isWhiteSpace = (char: string) => {
-  return char === ' ' || char === '\n' || char === '\t';
+  return WHITESPACE_CHARS.has(char);
 };
 
 const TOKEN_OPEN = new Token('OPEN', '('),
