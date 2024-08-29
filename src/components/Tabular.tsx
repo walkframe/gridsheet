@@ -72,10 +72,10 @@ export const Tabular = ({ tableRef }: Props) => {
             }}
           >
             <thead className="gs-table-header">
-              <tr style={{ height: headerHeight }}>
+              <tr>
                 <th
                   className="gs-header gs-header-left gs-header-top gs-header-left-top"
-                  style={{ width: headerWidth, position: 'sticky' }}
+                  style={{ position: 'sticky' }}
                   onClick={() => {
                     dispatch(choose({ y: -1, x: -1 }));
                     window.setTimeout(() => {
