@@ -20,7 +20,7 @@ export const createTableRef = () => React.useRef<TableRef | null>(null);
 
 export const Tabular = ({ tableRef }: Props) => {
   const { store, dispatch } = React.useContext(Context);
-  const { sheetHeight, sheetWidth, headerHeight, headerWidth, table, tableInitialized, gridOuterRef, sheetRef } = store;
+  const { sheetHeight, sheetWidth, table, tableInitialized, gridOuterRef, sheetRef } = store;
 
   React.useEffect(() => {
     if (tableRef && tableInitialized) {

@@ -209,6 +209,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
             const autofill = new Autofill(store, autofillDraggingTo);
             dispatch(updateTable(autofill.applied));
             dispatch(select(areaToZone(autofill.wholeArea)));
+            input.focus();
           }
           dispatch(setAutofillDraggingTo(null));
           return false;
