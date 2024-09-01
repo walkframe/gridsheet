@@ -51,7 +51,7 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
   };
 
   return (
-    <label className="gs-formula-bar" style={{ width: width - 1 }}>
+    <label className="gs-formula-bar" style={{ width: width + 1 }}>
       <div className="gs-selecting-address">{address}</div>
       <div className="gs-fx">Fx</div>
       <textarea

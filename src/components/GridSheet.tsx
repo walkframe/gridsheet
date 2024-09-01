@@ -183,7 +183,7 @@ export function GridSheet({
           } ${sheetHeight > store.table.totalHeight ? 'gs-table-height-smaller' : 'gs-table-height-larger'}`}
           ref={sheetRef}
           style={{
-            maxWidth: store.table.totalWidth + 2,
+            maxWidth: store.table.totalWidth,
             maxHeight: store.table.totalHeight + 2,
             ...style,
             resize: sheetResize,
