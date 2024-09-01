@@ -187,8 +187,6 @@ export function GridSheet({
             maxHeight: store.table.totalHeight + 2,
             ...style,
             resize: sheetResize,
-            width: sheetWidth,
-            height: sheetHeight,
           }}
         >
           <Tabular tableRef={tableRef} />
