@@ -99,7 +99,7 @@ test('enter key with alt', async ({ page }) => {
 test('escape key', async ({ page }) => {
   await page.goto('http://localhost:5233/iframe.html?id=basic--small&viewMode=story');
 
-  await page.keyboard.type('Change!');
+  await page.keyboard.type('Change');
   await page.keyboard.press('Escape');
 
   const a1 = page.locator("[data-address='A1']");
@@ -107,4 +107,14 @@ test('escape key', async ({ page }) => {
 
   const largeEditor = page.locator('.gs-formula-bar textarea');
   expect(await largeEditor.inputValue()).toBe('A1');
+
+  await page.keyboard.type('Change1');
+  await page.keyboard.press('Enter');
+
+  await a1.click();
+  await page.keyboard.type('Change2');
+  await page.keyboard.press('Escape');
+  expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('Change1');
+  expect(await largeEditor.inputValue()).toBe('Change1');
+
 });

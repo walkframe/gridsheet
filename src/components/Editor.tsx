@@ -72,14 +72,19 @@ export const Editor: React.FC = () => {
 
   const cell = table.getByPoint({ y, x });
   const value: any = cell?.value;
-  const [before, setBefore] = React.useState(value);
+  const valueString = table.stringify({ y, x }, value);
+  const [before, setBefore] = React.useState<string>(valueString);
+  React.useEffect(() => {
+    setBefore(valueString);
+  }, [choosing]);
+
   const { y: top, x: left, height, width } = editorRect;
 
   const writeCell = (value: string) => {
     if (before !== value) {
       dispatch(write(value));
     }
-    //setBefore('');
+    setBefore(value);
   };
 
   const [isKeyDown, setIsKeyDown] = React.useState(false);
@@ -176,7 +181,7 @@ export const Editor: React.FC = () => {
         if (largeEditorRef.current) {
           largeEditorRef.current.value = before;
         }
-        // input.value = '';
+        input.value = '';
         // input.blur();
         return false;
       // eslint-disable-next-line no-fallthrough
@@ -376,7 +381,7 @@ export const Editor: React.FC = () => {
           height,
           width,
         }}
-        rows={typeof value === 'string' ? value.split('\n').length : 1}
+        rows={valueString.split('\n').length}
         onFocus={(e) => {
           const input = e.currentTarget;
           dispatch(setLastFocusedRef(editorRef));
@@ -394,15 +399,14 @@ export const Editor: React.FC = () => {
           }
           const input = e.currentTarget;
           if (!editing) {
-            input.value = table.stringify({ y, x }, value);
-            setBefore(input.value);
+            input.value = valueString;
             dispatch(setEditingCell(address));
             input.style.width = `${width}px`;
             input.style.height = `${height}px`;
             window.setTimeout(() => {
               input.style.width = `${input.scrollWidth}px`;
               input.style.height = `${input.scrollHeight}px`;
-              const length = new String(input.value).length;
+              const length = new String(valueString).length;
               input.setSelectionRange(length, length);
             }, 20);
           }
