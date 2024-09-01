@@ -19,7 +19,7 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
 
   const address = choosing.x === -1 ? '' : p2a(choosing);
   React.useEffect(() => {
-    let value = table.getByPoint(choosing)?.value || '';
+    let value = table.getByPoint(choosing)?.value ?? '';
     // debug to remove this line
     value = table.stringify(choosing, value);
     largeEditorRef.current!.value = value;

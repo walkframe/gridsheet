@@ -10,23 +10,6 @@
 ![gridsheet](https://github.com/walkframe/gridsheet/raw/master/gridsheet.png)
 
 
-### Supporting features
-
-- Copy & Paste
-- Cut & Paste
-- Undo & Redo
-- Add rows and columns
-- Calculating formula
-  - Refer to separate sheets.
-- Cell styling
-- Custom renderer
-- Custom parser
-- Basic shortcut keys
-- Context menu
-- External data manipulation
-- Autofill
-- Protection
-
 ## Installation
 
 ```sh
@@ -35,8 +18,8 @@ $ npm install @gridsheet/react-core --save
 
 ## Docs
 
-- [ReactGridsheet document](https://docs.walkframe.com/products/gridsheet/react/)
-- [Examples](https://docs.walkframe.com/products/gridsheet/examples/)
+- [ReactGridsheet document](https://docs.walkframe.com/gridsheet/react)
+- [Examples](https://docs.walkframe.com/gridsheet/Examples/react-case1)
 - [Histories](./HISTORY.md)
 
 ## License

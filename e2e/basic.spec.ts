@@ -95,3 +95,16 @@ test('enter key with alt', async ({ page }) => {
   const a1 = page.locator("[data-address='A1']");
   expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('Hello\nWorld');
 });
+
+test('escape key', async ({ page }) => {
+  await page.goto('http://localhost:5233/iframe.html?id=basic--small&viewMode=story');
+
+  await page.keyboard.type('Change!');
+  await page.keyboard.press('Escape');
+
+  const a1 = page.locator("[data-address='A1']");
+  expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('A1');
+
+  const largeEditor = page.locator('.gs-formula-bar textarea');
+  expect(await largeEditor.inputValue()).toBe('A1');
+});

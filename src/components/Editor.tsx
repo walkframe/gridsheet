@@ -68,11 +68,11 @@ export const Editor: React.FC = () => {
   const rowId = `${y2r(y)}`;
   const colId = x2c(x);
   const address = `${colId}${rowId}`;
-  const [before, setBefore] = React.useState('');
   const editing = editingCell === address;
 
   const cell = table.getByPoint({ y, x });
   const value: any = cell?.value;
+  const [before, setBefore] = React.useState(value);
   const { y: top, x: left, height, width } = editorRect;
 
   const writeCell = (value: string) => {
@@ -173,7 +173,10 @@ export const Editor: React.FC = () => {
       case 'Escape': // ESCAPE
         dispatch(escape(null));
         dispatch(setSearchQuery(undefined));
-        input.value = '';
+        if (largeEditorRef.current) {
+          largeEditorRef.current.value = before;
+        }
+        // input.value = '';
         // input.blur();
         return false;
       // eslint-disable-next-line no-fallthrough

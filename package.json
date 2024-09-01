@@ -38,7 +38,7 @@
   "bugs": {
     "url": "https://github.com/walkframe/gridsheet/issues"
   },
-  "homepage": "https://docs.walkframe.com/products/gridsheet/react",
+  "homepage": "https://docs.walkframe.com/gridsheet/react",
   "devDependencies": {
     "@babel/cli": "^7.14.3",
     "@babel/core": "^7.14.3",
