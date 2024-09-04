@@ -250,13 +250,14 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
         <div
           className={'gs-cell-rendered-wrapper-inner'}
           style={{
+            ...cell?.style,
             justifyContent: cell?.justifyContent || 'left',
             alignItems: cell?.alignItems || 'start',
           }}
         >
           {errorMessage && <div className="formula-error-triangle" title={errorMessage} />}
           {showAddress && <div className="gs-cell-label">{address}</div>}
-          <div className="gs-cell-rendered" style={cell?.style}>
+          <div className="gs-cell-rendered">
             {rendered}
           </div>
         </div>
