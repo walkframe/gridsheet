@@ -2,7 +2,7 @@ import React from 'react';
 import { y2r } from '../lib/converters';
 import { between, zoneToArea } from '../lib/structs';
 import { Context } from '../store';
-import { choose, drag, select, selectRows, setContextMenuPosition, setResizingPositionY } from '../store/actions';
+import { choose, drag, select, selectRows, setContextMenuPosition, setEditingCell, setResizingPositionY } from '../store/actions';
 import { DUMMY_IMG, DEFAULT_HEIGHT } from '../constants';
 import * as prevention from '../lib/prevention';
 import { insertRef, isRefInsertable } from '../lib/input';
@@ -66,6 +66,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({ y }) => {
         );
         dispatch(setContextMenuPosition({ y: -1, x: -1 }));
         dispatch(choose({ y: startY, x: 1 }));
+        dispatch(setEditingCell(''));
         editorRef.current!.focus();
         return false;
       }}
