@@ -2,7 +2,7 @@ import React from 'react';
 import { x2c } from '../lib/converters';
 import { between, zoneToArea } from '../lib/structs';
 import { Context } from '../store';
-import { choose, drag, select, selectCols, setContextMenuPosition, setResizingPositionX } from '../store/actions';
+import { choose, drag, select, selectCols, setContextMenuPosition, setEditingCell, setResizingPositionX } from '../store/actions';
 import { DUMMY_IMG, DEFAULT_WIDTH } from '../constants';
 import * as prevention from '../lib/prevention';
 import { useSheetContext } from './SheetProvider';
@@ -66,6 +66,7 @@ export const HorizontalHeaderCell: React.FC<Props> = React.memo(({ x }) => {
         );
         dispatch(setContextMenuPosition({ y: -1, x: -1 }));
         dispatch(choose({ y: 1, x: startX }));
+        dispatch(setEditingCell(''));
         editorRef.current!.focus();
         return false;
       }}

@@ -3,6 +3,7 @@ Please include a summary of the change or the feature being introduced. Detail h
 
 ## Type of Change
 - [ ] Bug fix
+- [ ] Improvement
 - [ ] New feature
 - [ ] Breaking change
 - [ ] Reword
