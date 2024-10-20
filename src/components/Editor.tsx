@@ -388,7 +388,7 @@ export const Editor: React.FC = () => {
           sheetContext?.setLastFocusedRef?.(editorRef);
           if (input.value.startsWith('=')) {
             // do nothing
-          } else {
+          } else if (!editing) {
             e.currentTarget.value = '';
           }
         }}
