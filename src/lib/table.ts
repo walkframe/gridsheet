@@ -1545,4 +1545,28 @@ export class Table implements UserTable {
     }
     return '';
   }
+  public rangeToArea(range: string) {
+    const cells = range.split(':');
+    let [start, end] = cells;
+    if (start.match(/[a-zA-Z]$/)) {
+      start += '1';
+    }
+    if (start.match(/^[1-9]/)) {
+      start = `A${start}`;
+    }
+    if (end?.match(/[a-zA-Z]$/)) {
+      end += this.bottom;
+    }
+    if (end?.match(/^[1-9]/)) {
+      end = `${x2c(this.right)}${end}`;
+    }
+    const { y: top, x: left } = a2p(start);
+    const { y: bottom, x: right } = a2p(end || start);
+    return {
+      top: Math.abs(top),
+      left: Math.abs(left),
+      bottom: Math.abs(bottom),
+      right: Math.abs(right),
+    };
+  }
 }

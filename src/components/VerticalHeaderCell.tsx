@@ -2,7 +2,7 @@ import React from 'react';
 import { y2r } from '../lib/converters';
 import { between, zoneToArea } from '../lib/structs';
 import { Context } from '../store';
-import { choose, drag, select, selectRows, setContextMenuPosition, setEditingCell, setResizingPositionY } from '../store/actions';
+import { choose, drag, select, selectRows, setContextMenuPosition, setEditingCell, setInputting, setResizingPositionY } from '../store/actions';
 import { DUMMY_IMG, DEFAULT_HEIGHT } from '../constants';
 import * as prevention from '../lib/prevention';
 import { insertRef, isRefInsertable } from '../lib/input';

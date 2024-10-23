@@ -18,6 +18,7 @@ import {
   setEntering,
   setLastEdited,
   setLastFocusedRef,
+  setInputting,
 } from '../store/actions';
 
 import { Context } from '../store';
@@ -26,6 +27,8 @@ import { DEFAULT_HEIGHT } from '../constants';
 import * as prevention from '../lib/prevention';
 import { expandInput, insertTextAtCursor } from '../lib/input';
 import { useSheetContext } from './SheetProvider';
+import { Lexer } from '../formula/evaluator';
+import { REF_PALETTE } from '../lib/palette';
 
 export const Editor: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);
@@ -35,6 +38,7 @@ export const Editor: React.FC = () => {
     editorRect,
     editingCell,
     choosing,
+    inputting,
     selectingZone,
     searchQuery,
     editorRef,
@@ -63,6 +67,9 @@ export const Editor: React.FC = () => {
     }
     dispatch(setEditingCell(''));
   }, [sheetContext?.lastFocusedRef]);
+  React.useEffect(() => {
+    sheetContext?.setEditingCell?.(editingCell);
+  }, [editingCell]);
 
   const { y, x } = choosing;
   const rowId = `${y2r(y)}`;
@@ -87,6 +94,8 @@ export const Editor: React.FC = () => {
     setBefore(value);
   };
 
+  const numLines = valueString.split('\n').length;
+
   const [isKeyDown, setIsKeyDown] = React.useState(false);
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (isKeyDown) {
@@ -109,7 +118,7 @@ export const Editor: React.FC = () => {
         if (editing) {
           writeCell(input.value);
           dispatch(setEditingCell(''));
-          input.value = '';
+          dispatch(setInputting(''));
         }
         dispatch(
           walk({
@@ -125,8 +134,10 @@ export const Editor: React.FC = () => {
       case 'Enter': // ENTER
         if (editing) {
           if (e.altKey) {
-            insertTextAtCursor(input, '\n');
-            input.style.height = `${input.clientHeight + DEFAULT_HEIGHT}px`;
+            const v = insertTextAtCursor(input, '\n');
+            dispatch(setInputting(v));
+            //input.style.height = `${input.clientHeight + DEFAULT_HEIGHT}px`;
+            e.preventDefault();
             return false;
           } else {
             if (e.nativeEvent.isComposing) {
@@ -134,7 +145,7 @@ export const Editor: React.FC = () => {
             }
             writeCell(input.value);
             dispatch(setEditingCell(''));
-            input.value = '';
+            //dispatch(setInputting(''));
           }
         } else if (editingOnEnter && selectingZone.startY === -1) {
           const dblclick = document.createEvent('MouseEvents');
@@ -178,10 +189,6 @@ export const Editor: React.FC = () => {
       case 'Escape': // ESCAPE
         dispatch(escape(null));
         dispatch(setSearchQuery(undefined));
-        if (largeEditorRef.current) {
-          largeEditorRef.current.value = before;
-        }
-        input.value = '';
         // input.blur();
         return false;
       // eslint-disable-next-line no-fallthrough
@@ -287,7 +294,7 @@ export const Editor: React.FC = () => {
           if (!editing) {
             e.preventDefault();
             dispatch(redo(null));
-            window.setTimeout(() => (input.value = ''), 100); // resetting textarea
+            window.setTimeout(() => dispatch(setInputting('')), 100); // resetting textarea
             return false;
           }
         }
@@ -317,7 +324,7 @@ export const Editor: React.FC = () => {
           if (!editing) {
             window.setTimeout(() => {
               dispatch(paste({ text: input.value }));
-              input.value = '';
+              dispatch(setInputting(''));
             }, 50);
             return false;
           }
@@ -341,7 +348,7 @@ export const Editor: React.FC = () => {
             e.preventDefault();
             if (e.shiftKey) {
               dispatch(redo(null));
-              window.setTimeout(() => (input.value = ''), 100); // resetting textarea
+              //window.setTimeout(() => dispatch(setInputting('')), 100); // resetting textarea
             } else {
               dispatch(undo(null));
             }
@@ -367,30 +374,37 @@ export const Editor: React.FC = () => {
       return false;
     }
     dispatch(setEditingCell(address));
+    if (!editing) {
+      dispatch(setInputting(''));
+    }
     return false;
   };
 
   return (
     <div className={`gs-editor ${editing ? 'gs-editing' : ''}`} style={editing ? { top, left, height, width } : {}}>
       {showAddress && <div className="gs-cell-label">{address}</div>}
+      <div className="gs-editor-inner">
+      <pre
+        className="gs-editor-hl"
+        style={{
+          //...cell?.style,
+          height: editorRef.current?.scrollHeight,
+          width: editorRef.current?.scrollWidth! - 4,
+        }}
+      >{editorStyle(inputting)}</pre>
       <textarea
+        spellCheck={false}
         draggable={false}
         ref={editorRef}
         style={{
-          ...cell?.style,
-          height,
           width,
         }}
-        rows={valueString.split('\n').length}
+        rows={numLines}
         onFocus={(e) => {
           const input = e.currentTarget;
           dispatch(setLastFocusedRef(editorRef));
           sheetContext?.setLastFocusedRef?.(editorRef);
-          if (input.value.startsWith('=')) {
-            // do nothing
-          } else if (!editing) {
-            e.currentTarget.value = '';
-          }
+          //input.style.width = `${width}px`;
         }}
         onDoubleClick={(e) => {
           if (prevention.isPrevented(cell?.prevention, prevention.Write)) {
@@ -399,7 +413,7 @@ export const Editor: React.FC = () => {
           }
           const input = e.currentTarget;
           if (!editing) {
-            input.value = valueString;
+            dispatch(setInputting(valueString));
             dispatch(setEditingCell(address));
             input.style.width = `${width}px`;
             input.style.height = `${height}px`;
@@ -421,15 +435,53 @@ export const Editor: React.FC = () => {
             }
           }
         }}
-        onInput={(e) => {
+        value={inputting}
+        onChange={(e) => {
           const input = e.currentTarget;
           expandInput(input);
           if (largeEditorRef.current) {
-            largeEditorRef.current.value = input.value;
+            //largeEditorRef.current.value = input.value;
           }
+          dispatch(setInputting(e.currentTarget.value));
         }}
         onKeyDown={handleKeyDown}
       />
+      </div>
     </div>
   );
 };
+
+export const editorStyle = (text: string) => {
+  if (text[0] !== '=') {
+    return <>{text}</>
+  }
+  const lexer = new Lexer(text.substring(1));
+  lexer.tokenize();
+  let palletIndex = 0;
+  const exists: {[ref: string]: number} = {};
+  return <>={
+    lexer.tokens.map((token, i) => {
+      if (token.type === 'REF' || token.type === 'RANGE') {
+        const normalizedToken = token.stringify();
+        const existsIndex = exists[normalizedToken];
+        if (existsIndex !== undefined) {
+          return <span key={i} style={{color: REF_PALETTE[existsIndex % REF_PALETTE.length]}}>{token.stringify()}</span>;
+        }
+        const color = REF_PALETTE[palletIndex % REF_PALETTE.length];
+        exists[normalizedToken] = palletIndex++;
+        return <span 
+          key={i}
+          style={{color}}
+          className={`gs-token-type-${token.type}`}
+        >{normalizedToken}</span>;
+      }
+
+      return <span 
+        key={i}
+        className={`gs-token-type-${token.type} gs-token-entity-type-${typeof token.entity}`}
+      >{token.stringify()}</span>;
+    })
+  }</>
+};
+
+

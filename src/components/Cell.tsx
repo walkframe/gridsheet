@@ -11,10 +11,10 @@ import {
   setAutofillDraggingTo,
   updateTable,
   setEditingCell,
+  setInputting,
 } from '../store/actions';
 
 import { DUMMY_IMG } from '../constants';
-import { AreaType, PointType, StoreType } from '../types';
 
 import { Context } from '../store';
 import { FormulaError } from '../formula/evaluator';
@@ -25,9 +25,10 @@ import { useSheetContext } from './SheetProvider';
 type Props = {
   y: number;
   x: number;
+  operationStyle?: React.CSSProperties;
 };
 
-export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
+export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
   const rowId = y2r(y);
   const colId = x2c(x);
   const address = `${colId}${rowId}`;
@@ -82,6 +83,9 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
   React.useEffect(() => {
     if (pointed) {
       _setEditorRect();
+      if (!editing) {
+        dispatch(setInputting(table.stringify({ y, x })));
+      }
     }
   }, [pointed, editing]);
   const cell = table.getByPoint({ y, x });
@@ -92,10 +96,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
     }
   };
 
-  let matching = false;
-  if (searchQuery && table.stringify({ y, x }).indexOf(searchQuery) !== -1) {
-    matching = true;
-  }
+
 
   let errorMessage = '';
   let rendered;
@@ -125,22 +126,15 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
       data-x={x}
       data-y={y}
       data-address={address}
-      className={`gs-cell ${among(copyingArea, { y, x }) ? 'gs-copying' : ''} ${
-        among(selectingArea, { y, x }) ? 'gs-selected' : ''
-      } ${pointed ? 'gs-pointed' : ''} ${editing ? 'gs-editing' : ''} ${
-        matching ? 'gs-matching' : ''
-      } ${matchingCell === address ? 'gs-searching' : ''} ${
+      className={`gs-cell ${
+        among(selectingArea, { y, x }) ? 'gs-selected' : ''} ${
+        pointed ? 'gs-pointed' : ''} ${
+        editing ? 'gs-editing' : ''} ${
         autofill ? (among(autofill.wholeArea, { y, x }) ? 'gs-autofill-dragging' : '') : ''
       }`}
       style={{
         ...cell?.style,
-        ...getCellStyle({
-          target: { y, x },
-          store,
-          pointed,
-          selectingArea,
-          copyingArea,
-        }),
+        ...operationStyle,
         ...autofill?.getCellStyle?.({ y, x }),
       }}
       onContextMenu={(e) => {
@@ -152,21 +146,14 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
         if (autofillDraggingTo) {
           return false;
         }
+        
         const fullAddress = `${table.sheetPrefix(!differentSheetFocused)}${address}`;
-        const inserted = insertRef(lastInput, fullAddress);
-        if (inserted) {
-          lastInput?.focus();
-          /*
-          // MEMO: when different sheet focused, choose the cell.
-          
-          // It is uncomfortable to be selected only for different sheets. Therefore, it is not supported at this time.
-          if (sheetContext?.lastFocusedRef && sheetContext.lastFocusedRef !== store.lastFocusedRef) {
-            dispatch(choose({ y, x }));
+        const editing = !!(sheetContext?.editingCell || editingCell);
+        if (editing) {
+          const inserted = insertRef(lastInput, fullAddress);
+          if (inserted) {
+            return false;
           }
-          */
-          return false;
-        } else if (inserted != null) {
-          writeCell(input.value);
         }
         dispatch(setEditingCell(''));
         dispatch(setContextMenuPosition({ y: -1, x: -1 }));
@@ -177,7 +164,8 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
           dispatch(select({ startY: -1, startX: -1, endY: -1, endX: -1 }));
         }
         input.focus();
-        input.value = '';
+        const valueString = table.stringify({ y, x });
+        dispatch(setInputting(valueString));
       }}
       onDoubleClick={(e) => {
         e.preventDefault();
@@ -201,7 +189,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
         }
         dispatch(choose({ y, x }));
         input.focus();
-        input.value = '';
+        dispatch(setInputting(''));
       }}
       onDragEnd={() => {
         if (autofillDraggingTo) {
@@ -221,6 +209,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
         if (isRefInsertable(lastInput)) {
           dispatch(select({ startY: -1, startX: -1, endY: -1, endX: -1 }));
         }
+        lastFocusedRef.current?.focus();
       }}
       onDragEnter={() => {
         if (autofillDraggingTo) {
@@ -238,7 +227,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
           return false;
         }
         dispatch(drag({ y, x }));
-
+        
         const newArea = zoneToArea({ ...selectingZone, endY: y, endX: x });
         const fullRange = `${table.sheetPrefix(!differentSheetFocused)}${areaToRange(newArea)}`;
         insertRef(lastInput, fullRange);
@@ -261,7 +250,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
             {rendered}
           </div>
         </div>
-        {((pointed && selectingArea.bottom === -1) || (selectingArea.bottom === y && selectingArea.right === x)) && (
+        {(!editing && (pointed && selectingArea.bottom === -1) || (selectingArea.bottom === y && selectingArea.right === x)) && (
           <div
             className="gs-autofill-drag"
             draggable
@@ -278,65 +267,3 @@ export const Cell: React.FC<Props> = React.memo(({ y, x }) => {
     </td>
   );
 });
-
-const BORDER_POINTED = 'solid 2px #0077ff';
-const BORDER_SELECTED = 'solid 1px #0077ff';
-const BORDER_CUTTING = 'dotted 2px #0077ff';
-const BORDER_COPYING = 'dashed 2px #0077ff';
-
-const getCellStyle = ({
-  target,
-  pointed,
-  selectingArea,
-  copyingArea,
-  store,
-}: {
-  target: PointType;
-  pointed: boolean;
-  selectingArea: AreaType;
-  copyingArea: AreaType;
-  store: StoreType;
-}): React.CSSProperties => {
-  const style: React.CSSProperties = {};
-  const { cutting } = store;
-  const { y, x } = target;
-  if (pointed) {
-    style.borderTop = BORDER_POINTED;
-    style.borderBottom = BORDER_POINTED;
-    style.borderLeft = BORDER_POINTED;
-    style.borderRight = BORDER_POINTED;
-  } else {
-    // selecting style
-    const { top, left, bottom, right } = selectingArea;
-    if (top === y && left <= x && x <= right) {
-      style.borderTop = BORDER_SELECTED;
-    }
-    if (bottom === y && left <= x && x <= right) {
-      style.borderBottom = BORDER_SELECTED;
-    }
-    if (left === x && top <= y && y <= bottom) {
-      style.borderLeft = BORDER_SELECTED;
-    }
-    if (right === x && top <= y && y <= bottom) {
-      style.borderRight = BORDER_SELECTED;
-    }
-  }
-  // copy or cut style
-  {
-    const { top, left, bottom, right } = copyingArea;
-    const border = cutting ? BORDER_CUTTING : BORDER_COPYING;
-    if (top === y && left <= x && x <= right) {
-      style.borderTop = border;
-    }
-    if (bottom === y && left <= x && x <= right) {
-      style.borderBottom = border;
-    }
-    if (left === x && top <= y && y <= bottom) {
-      style.borderLeft = border;
-    }
-    if (right === x && top <= y && y <= bottom) {
-      style.borderRight = border;
-    }
-  }
-  return style;
-};

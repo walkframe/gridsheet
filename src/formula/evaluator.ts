@@ -1,4 +1,3 @@
-import { rangeToArea } from '../lib/structs';
 import { a2p, x2c } from '../lib/converters';
 import { Table } from '../lib/table';
 
@@ -58,6 +57,10 @@ export class RefEntity extends Entity<string> {
   constructor(value: string) {
     super(value);
   }
+  public stringify() {
+    return this.value.toUpperCase();
+  }
+
   private parse(table: Table): {
     table: Table;
     ref: string;
@@ -131,13 +134,16 @@ export class RangeEntity extends Entity<string> {
     }
     return { table, refs, sheetName: sheetName || table.sheetName };
   }
+  public stringify() {
+    return this.value.toUpperCase();
+  }
 
   public evaluate({ table }: EvaluateProps): Table {
     const parsed = this.parse(table);
     if (parsed.table == null) {
       throw new FormulaError('#REF!', `Unknown sheet: ${parsed.sheetName}`);
     }
-    const area = rangeToArea(this.complementRange(parsed.table, parsed.refs));
+    const area = parsed.table.rangeToArea(parsed.refs.join(':'));
     return parsed.table.trim(area);
   }
   public idRange(table: Table) {
@@ -151,22 +157,6 @@ export class RangeEntity extends Entity<string> {
       return range;
     }
     return `#${parsed.table.sheetId}!${range}`;
-  }
-  private complementRange(table: Table, refs: string[]) {
-    let [start = '', end = ''] = refs;
-    if (!start.match(/[1-9]\d*/)) {
-      start += '1';
-    }
-    if (!start.match(/[a-zA-Z]/)) {
-      start = 'A' + start;
-    }
-    if (!end.match(/[1-9]\d*/)) {
-      end += table.getNumRows();
-    }
-    if (!end.match(/[a-zA-Z]/)) {
-      end = x2c(table.getNumCols() + 1) + end;
-    }
-    return `${start}:${end}`;
   }
 }
 
@@ -337,8 +327,13 @@ export class Token {
   }
 
   public stringify() {
-    if (this.type === 'VALUE' && typeof this.entity === 'string') {
-      return `"${this.entity}"`;
+    if (this.type === 'VALUE') {
+      if (typeof this.entity === 'string') {
+        return `"${this.entity}"`;
+      }
+      if (typeof this.entity === 'boolean') {
+        return this.entity ? 'TRUE' : 'FALSE';
+      }
     }
     return this.entity;
   }
@@ -456,6 +451,16 @@ export class Lexer {
     }
     return pos;
   }
+
+  public getTokenPositionRange(index: number): [number, number] {
+    let start = 0, end = 0;
+    for (let i = 0; i < index; i++) {
+      start = end;
+      end += this.tokens[i].length();
+    }
+    return [start, end];
+  }
+
 
   public stringify() {
     return this.tokens.map((t) => t.stringify()).join('');

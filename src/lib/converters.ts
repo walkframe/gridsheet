@@ -142,3 +142,7 @@ export const grantAddressAbsolute = (address: Address, absCol: boolean, absRow: 
   const [, col, row] = m.slice();
   return `${absCol ? '$' : ''}${col}${absRow ? '$' : ''}${row}`;
 };
+
+export const stripAddressAbsolute = (address: Address) => {
+  return address.replace(/\$/g, '');
+}

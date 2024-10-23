@@ -1,26 +1,45 @@
+
+.gs-editor-hl {
+  padding: 0 2px;
+  position: absolute;
+  font-family: monospace, Arial;
+  font-size: 12px;
+  line-height: 24px;
+  letter-spacing: 1.0px;
+}
+
 .gs-editor {
   position: fixed;
   opacity: 0;
   z-index: -1;
-  background-color: #aaaaaa;
+  .gs-editor-inner {
+    position: relative;
+  }
+  .gs-editor-hl {
+    box-sizing: content-box;
+    border: solid 2px #0077ff;
+    margin: -2px -1px;
+  }
   textarea {
     width: 100%;
     padding: 0 2px;
     position: absolute;
-    font-size: 13px;
+    font-size: 12px;
+    font-family: monospace, Arial;
     line-height: 24px;
-    letter-spacing: 1px;
+    letter-spacing: 1.0px;
     top: 0;
     left: 0;
     border: none;
     outline: none;
     background-color: transparent;
+    color: transparent;
     resize: none;
     box-sizing: border-box;
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     overflow: hidden;
-    caret-color: transparent;
+    //caret-color: transparent;
     cursor: default;
   }
   &.gs-editing {
@@ -31,7 +50,7 @@
       cursor: text;
       min-width: 100%;
       white-space: pre;
-      outline: solid 2px #0077ff;
+      outline: none;
       border: none !important;
       height: auto;
     }
@@ -81,23 +100,50 @@
     text-align: center;
     border-left: solid 1px rgba(128, 128, 128, 0.5);
   }
+  .gs-editor-hl {
+    z-index: 0;
+    box-sizing: border-box;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
   textarea {
     display: table-cell;
+    position: relative;
+    z-index: 1;
     width: 100%;
     vertical-align: bottom;
-    color: rgba(155, 155, 155);
+    color: transparent;
     border: none;
     background-color: transparent;
-    padding: 0;
+    padding: 0 2px;
+    box-sizing: border-box;
     outline: none;
     -webkit-box-shadow: none;
     -moz-box-shadow: none;
     box-shadow: none;
-    font-size: 13px;
+    font-size: 12px;
+    font-family: monospace, Arial;
     height: 24px;
     line-height: 24px;
     min-height: 24px;
-    letter-spacing: 1px;
+    letter-spacing: 1.0px;
     resize: vertical;
+    caret-color:rgba(128, 128, 128);
+    white-space: pre-wrap;
+    word-break: break-all;
   }
 }
+
+.gs-token-type-INVALID_REF {
+  color: #ff0000;
+}
+.gs-token-type-VALUE {
+  &.gs-token-entity-type-number, &.gs-token-entity-type-boolean {
+    color: #3399ff;
+  }
+  &.gs-token-entity-type-string {
+    color: #009900;
+  }
+}
+

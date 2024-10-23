@@ -104,6 +104,7 @@ export type StoreType = {
   entering: boolean;
   choosing: PointType;
   cutting: boolean;
+  inputting: string;
   copyingZone: ZoneType;
   selectingZone: ZoneType;
   autofillDraggingTo: PointType | null;
@@ -235,3 +236,5 @@ export type Prevention = number;
 
 export type TableMapType = { [key: string]: Table }; // id: table
 export type SheetMapType = { [key: string]: number }; // name: id
+
+export type RefPaletteType = { [ref: string]: number };

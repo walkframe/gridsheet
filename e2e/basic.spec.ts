@@ -10,7 +10,7 @@ test('cell value', async ({ page }) => {
   
   await b3.dblclick();
   const editor = page.locator('.gs-editor textarea');
-  await editor.fill('b3');
+  page.keyboard.type('b3');
   await editor.blur();
   expect(await b3.locator('.gs-cell-rendered').textContent()).toBe('b3');
 });
@@ -77,7 +77,9 @@ test('walk', async ({ page }) => {
 
 test('enter key with alt', async ({ page }) => {
   await page.goto('http://localhost:5233/iframe.html?id=basic--small&viewMode=story');
-
+  const a1 = page.locator("[data-address='A1']");
+  await a1.click();
+  
   await page.keyboard.type('HelloWorld');
 
   await page.keyboard.press('ArrowLeft');
@@ -91,8 +93,6 @@ test('enter key with alt', async ({ page }) => {
   await page.keyboard.up('Alt');
 
   await page.keyboard.press('Enter');
-
-  const a1 = page.locator("[data-address='A1']");
   expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('Hello\nWorld');
 });
 

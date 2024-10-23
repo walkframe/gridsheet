@@ -1,12 +1,12 @@
 import { Lexer, Token } from '../formula/evaluator';
 
 export const insertTextAtCursor = (input: HTMLTextAreaElement, text: string) => {
-  const selectPoint = input.selectionStart;
-  const before = input.value.slice(0, selectPoint);
-  const after = input.value.slice(selectPoint);
-  input.value = `${before}${text}${after}`;
-  input.selectionStart = before.length + text.length;
-  input.focus();
+  const deprecated = !document.execCommand?.('insertText', false, text);
+  if (!deprecated) {
+    return input.value;
+  }
+  input.setRangeText(text, input.selectionStart, input.selectionEnd, 'end');
+  return input.value;
 };
 
 export const insertRef = (input: HTMLTextAreaElement | null, ref: string) => {
@@ -29,18 +29,17 @@ export const insertRef = (input: HTMLTextAreaElement | null, ref: string) => {
   ) {
     insertTextAtCursor(input, ref);
   } else if (token.type === 'REF' || token.type === 'RANGE') {
-    // MEMO: There is concern that REF fixation may become a problem in the future (in that case, RANGE needs to be supported).
-    const newToken = new Token('REF', ref);
-    lexer.tokens[tokenIndex] = newToken;
-    input.value = `=${lexer.stringify()}`;
-    input.selectionEnd = lexer.getCharPositionByTokenIndex(tokenIndex + 1) + 1;
+    const [start, end] = lexer.getTokenPositionRange(tokenIndex + 1);
+    input.focus();
+    input.setSelectionRange(start + 1, end + 1);
+    insertTextAtCursor(input, ref);
   } else {
-    return false;
+    return '';
   }
   const event = new Event('input', { bubbles: true, composed: true });
   input.dispatchEvent(event);
   input.focus();
-  return true;
+  return input.value;
 };
 
 export const isRefInsertable = (input: HTMLTextAreaElement | null) => {
@@ -63,13 +62,6 @@ export const isRefInsertable = (input: HTMLTextAreaElement | null) => {
     token.type === 'REF' ||
     token.type === 'RANGE'
   );
-};
-
-export const copyInput = (from?: HTMLTextAreaElement | null, to?: HTMLTextAreaElement | null) => {
-  if (!from || !to) {
-    return;
-  }
-  to.value = from.value;
 };
 
 export const expandInput = (input: HTMLTextAreaElement) => {

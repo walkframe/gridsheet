@@ -70,19 +70,6 @@ export const areaToRange = (area: AreaType): string => {
   })}`;
 };
 
-export const rangeToArea = (range: string): AreaType => {
-  const cells = range.split(':');
-  const [start, end] = cells;
-  const { y: top, x: left } = a2p(start);
-  const { y: bottom, x: right } = a2p(end);
-  return {
-    top: Math.abs(top),
-    left: Math.abs(left),
-    bottom: Math.abs(bottom),
-    right: Math.abs(right),
-  };
-};
-
 export const between = (range: RangeType, index: number) => {
   if (range.start === -1 || range.end === -1) {
     return false;
