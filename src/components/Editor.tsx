@@ -135,7 +135,6 @@ export const Editor: React.FC = () => {
           if (e.altKey) {
             const v = insertTextAtCursor(input, '\n');
             dispatch(setInputting(v));
-            //input.style.height = `${input.clientHeight + DEFAULT_HEIGHT}px`;
             e.preventDefault();
             return false;
           } else {
@@ -144,7 +143,6 @@ export const Editor: React.FC = () => {
             }
             writeCell(input.value);
             dispatch(setEditingCell(''));
-            //dispatch(setInputting(''));
           }
         } else if (editingOnEnter && selectingZone.startY === -1) {
           const dblclick = document.createEvent('MouseEvents');
