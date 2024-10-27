@@ -15,7 +15,6 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
   const { store, dispatch } = React.useContext(Context);
   const [before, setBefore] = React.useState('');
   const { choosing, editorRef, largeEditorRef, table, inputting, editingCell } = store;
-
   const [, sheetContext] = useSheetContext();
 
   const address = choosing.x === -1 ? '' : p2a(choosing);
@@ -58,7 +57,6 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
         <div
           className="gs-editor-hl"
           style={{
-            //...cell?.style,
             height: largeEditorRef.current?.scrollHeight,
             width: largeEditorRef.current?.scrollWidth,
           }}
@@ -71,7 +69,6 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
           ref={largeEditorRef}
           value={inputting}
           onInput={handleInput}
-          //onChange={handleChange}
           onFocus={handleFocus}
           onBlur={(e) => {
             dispatch(setLastEdited(before));

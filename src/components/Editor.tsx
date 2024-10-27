@@ -436,9 +436,6 @@ export const Editor: React.FC = () => {
           onChange={(e) => {
             const input = e.currentTarget;
             expandInput(input);
-            if (largeEditorRef.current) {
-              //largeEditorRef.current.value = input.value;
-            }
             dispatch(setInputting(e.currentTarget.value));
           }}
           onKeyDown={handleKeyDown}

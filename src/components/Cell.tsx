@@ -245,8 +245,6 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
               e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
               dispatch(setAutofillDraggingTo({ x, y }));
               e.stopPropagation();
-              //e.preventDefault();
-              //return false;
             }}
           ></div>
         )}
