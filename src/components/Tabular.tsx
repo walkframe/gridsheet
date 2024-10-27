@@ -16,6 +16,7 @@ import { zoneToArea } from '../lib/structs';
 import { Lexer } from '../formula/evaluator';
 import { REF_PALETTE } from '../lib/palette';
 import { useSheetContext } from './SheetProvider';
+import { Autofill } from '../lib/autofill';
 
 type Props = {
   tableRef: React.MutableRefObject<TableRef | null> | undefined;
@@ -189,6 +190,7 @@ const BORDER_CUTTING = 'dotted 2px #0077ff';
 const BORDER_COPYING = 'dashed 2px #0077ff';
 const SEARCH_MATCHING_BACKGROUND = 'rgba(0,200,100,.2)';
 const SEARCH_MATCHING_BORDER = 'solid 2px #00aa78';
+const AUTOFILL_BORDER = 'dashed 1px #444444';
 
 const useOperationStyles = (store: StoreType, refs: RefPaletteType) => {
   const cellStyles: { [key: string]: React.CSSProperties } = {};
@@ -197,7 +199,7 @@ const useOperationStyles = (store: StoreType, refs: RefPaletteType) => {
     cellStyles[address] = cellStyles[address] || {};
     Object.assign(cellStyles[address], style);
   };
-  const { choosing, selectingZone, copyingZone, cutting, matchingCells, matchingCellIndex, table } = store;
+  const { choosing, selectingZone, copyingZone, cutting, matchingCells, matchingCellIndex, table, autofillDraggingTo } = store;
   {
     // selecting
     const { top, left, bottom, right } = zoneToArea(selectingZone);
@@ -212,6 +214,22 @@ const useOperationStyles = (store: StoreType, refs: RefPaletteType) => {
       updateStyle({ y: top, x }, { borderTop: BORDER_SELECTED });
       updateStyle({ y: bottom, x }, { borderBottom: BORDER_SELECTED });
       updateStyle({ y: bottom + 1, x }, { borderTop: BORDER_SELECTED });
+    }
+  }
+  if (autofillDraggingTo) {
+    const autofill = new Autofill(store, autofillDraggingTo);
+    const { top, left, bottom, right } = autofill.wholeArea;
+    for (let y = top; y <= bottom; y++) {
+      updateStyle({ y, x: left - 1 }, { borderRight: AUTOFILL_BORDER });
+      updateStyle({ y, x: left }, { borderLeft: AUTOFILL_BORDER });
+      updateStyle({ y, x: right }, { borderRight: AUTOFILL_BORDER });
+      updateStyle({ y, x: right + 1 }, { borderLeft: AUTOFILL_BORDER });
+    }
+    for (let x = left; x <= right; x++) {
+      updateStyle({ y: top - 1, x }, { borderBottom: AUTOFILL_BORDER });
+      updateStyle({ y: top, x }, { borderTop: AUTOFILL_BORDER });
+      updateStyle({ y: bottom, x }, { borderBottom: AUTOFILL_BORDER });
+      updateStyle({ y: bottom + 1, x }, { borderTop: AUTOFILL_BORDER });
     }
   }
   {

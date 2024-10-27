@@ -56,7 +56,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
   const lastFocusedRef = sheetContext?.lastFocusedRef || store.lastFocusedRef;
 
   const selectingArea = zoneToArea(selectingZone); // (top, left) -> (bottom, right)
-  const autofill = autofillDraggingTo ? new Autofill(store, autofillDraggingTo) : null;
+  
   const editing = editingCell === address;
   const pointed = choosing.y === y && choosing.x === x;
   const _setEditorRect = React.useCallback(() => {
@@ -119,11 +119,10 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
       data-address={address}
       className={`gs-cell ${among(selectingArea, { y, x }) ? 'gs-selected' : ''} ${pointed ? 'gs-pointed' : ''} ${
         editing ? 'gs-editing' : ''
-      } ${autofill ? (among(autofill.wholeArea, { y, x }) ? 'gs-autofill-dragging' : '') : ''}`}
+      }`}
       style={{
         ...cell?.style,
         ...operationStyle,
-        ...autofill?.getCellStyle?.({ y, x }),
       }}
       onContextMenu={(e) => {
         e.preventDefault();
