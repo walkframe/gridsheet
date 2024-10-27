@@ -1,20 +1,20 @@
 export const REF_PALETTE = [
   // orange
-  "#FF6600",
+  '#FF6600',
   // purple
-  "#AA44FF",
+  '#AA44FF',
   // emeraldblue
-  "#00CCCC",
+  '#00CCCC',
   // peach
-  "#EEAAEE",
+  '#EEAAEE',
   // yellow
-  "#DDDD00",
+  '#DDDD00',
   // winered
-  "#AA4444",
+  '#AA4444',
   // lightgreen
-  "#00FF00",
+  '#00FF00',
   // pink
-  "#FF00FF",
+  '#FF00FF',
   // navy
-  "#3366FF",
+  '#3366FF',
 ];

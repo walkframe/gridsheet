@@ -23,7 +23,6 @@ import {
 
 import { Context } from '../store';
 import { areaToZone } from '../lib/structs';
-import { DEFAULT_HEIGHT } from '../constants';
 import * as prevention from '../lib/prevention';
 import { expandInput, insertTextAtCursor } from '../lib/input';
 import { useSheetContext } from './SheetProvider';
@@ -384,68 +383,68 @@ export const Editor: React.FC = () => {
     <div className={`gs-editor ${editing ? 'gs-editing' : ''}`} style={editing ? { top, left, height, width } : {}}>
       {showAddress && <div className="gs-cell-label">{address}</div>}
       <div className="gs-editor-inner">
-      <pre
-        className="gs-editor-hl"
-        style={{
-          //...cell?.style,
-          height: editorRef.current?.scrollHeight,
-          width: editorRef.current?.scrollWidth! - 4,
-        }}
-      >{editorStyle(inputting)}</pre>
-      <textarea
-        spellCheck={false}
-        draggable={false}
-        ref={editorRef}
-        style={{
-          width,
-        }}
-        rows={numLines}
-        onFocus={(e) => {
-          const input = e.currentTarget;
-          dispatch(setLastFocusedRef(editorRef));
-          sheetContext?.setLastFocusedRef?.(editorRef);
-          //input.style.width = `${width}px`;
-        }}
-        onDoubleClick={(e) => {
-          if (prevention.isPrevented(cell?.prevention, prevention.Write)) {
-            console.warn('This cell is protected from writing.');
-            return;
-          }
-          const input = e.currentTarget;
-          if (!editing) {
-            dispatch(setInputting(valueString));
-            dispatch(setEditingCell(address));
-            input.style.width = `${width}px`;
-            input.style.height = `${height}px`;
-            window.setTimeout(() => {
-              input.style.width = `${input.scrollWidth}px`;
-              input.style.height = `${input.scrollHeight}px`;
-              const length = new String(valueString).length;
-              input.setSelectionRange(length, length);
-            }, 20);
-          }
-        }}
-        onBlur={(e) => {
-          dispatch(setLastEdited(before));
-          if (e.target.value.startsWith('=')) {
-            return true;
-          } else {
-            if (editing) {
-              writeCell(e.target.value);
+        <pre
+          className="gs-editor-hl"
+          style={{
+            //...cell?.style,
+            height: editorRef.current?.scrollHeight,
+            width: (editorRef.current?.scrollWidth ?? 0) - 4,
+          }}
+        >
+          {editorStyle(inputting)}
+        </pre>
+        <textarea
+          spellCheck={false}
+          draggable={false}
+          ref={editorRef}
+          style={{
+            width,
+          }}
+          rows={numLines}
+          onFocus={() => {
+            dispatch(setLastFocusedRef(editorRef));
+            sheetContext?.setLastFocusedRef?.(editorRef);
+          }}
+          onDoubleClick={(e) => {
+            if (prevention.isPrevented(cell?.prevention, prevention.Write)) {
+              console.warn('This cell is protected from writing.');
+              return;
             }
-          }
-        }}
-        value={inputting}
-        onChange={(e) => {
-          const input = e.currentTarget;
-          expandInput(input);
-          if (largeEditorRef.current) {
-            //largeEditorRef.current.value = input.value;
-          }
-          dispatch(setInputting(e.currentTarget.value));
-        }}
-        onKeyDown={handleKeyDown}
-      />
+            const input = e.currentTarget;
+            if (!editing) {
+              dispatch(setInputting(valueString));
+              dispatch(setEditingCell(address));
+              input.style.width = `${width}px`;
+              input.style.height = `${height}px`;
+              window.setTimeout(() => {
+                input.style.width = `${input.scrollWidth}px`;
+                input.style.height = `${input.scrollHeight}px`;
+                const length = new String(valueString).length;
+                input.setSelectionRange(length, length);
+              }, 20);
+            }
+          }}
+          onBlur={(e) => {
+            dispatch(setLastEdited(before));
+            if (e.target.value.startsWith('=')) {
+              return true;
+            } else {
+              if (editing) {
+                writeCell(e.target.value);
+              }
+            }
+          }}
+          value={inputting}
+          onChange={(e) => {
+            const input = e.currentTarget;
+            expandInput(input);
+            if (largeEditorRef.current) {
+              //largeEditorRef.current.value = input.value;
+            }
+            dispatch(setInputting(e.currentTarget.value));
+          }}
+          onKeyDown={handleKeyDown}
+        />
       </div>
     </div>
   );
@@ -453,35 +452,41 @@ export const Editor: React.FC = () => {
 
 export const editorStyle = (text: string) => {
   if (text[0] !== '=') {
-    return <>{text}</>
+    return <>{text}</>;
   }
   const lexer = new Lexer(text.substring(1));
   lexer.tokenize();
   let palletIndex = 0;
-  const exists: {[ref: string]: number} = {};
-  return <>={
-    lexer.tokens.map((token, i) => {
-      if (token.type === 'REF' || token.type === 'RANGE') {
-        const normalizedToken = token.stringify();
-        const existsIndex = exists[normalizedToken];
-        if (existsIndex !== undefined) {
-          return <span key={i} style={{color: REF_PALETTE[existsIndex % REF_PALETTE.length]}}>{token.stringify()}</span>;
+  const exists: { [ref: string]: number } = {};
+  return (
+    <>
+      =
+      {lexer.tokens.map((token, i) => {
+        if (token.type === 'REF' || token.type === 'RANGE') {
+          const normalizedToken = token.stringify();
+          const existsIndex = exists[normalizedToken];
+          if (existsIndex !== undefined) {
+            return (
+              <span key={i} style={{ color: REF_PALETTE[existsIndex % REF_PALETTE.length] }}>
+                {token.stringify()}
+              </span>
+            );
+          }
+          const color = REF_PALETTE[palletIndex % REF_PALETTE.length];
+          exists[normalizedToken] = palletIndex++;
+          return (
+            <span key={i} style={{ color }} className={`gs-token-type-${token.type}`}>
+              {normalizedToken}
+            </span>
+          );
         }
-        const color = REF_PALETTE[palletIndex % REF_PALETTE.length];
-        exists[normalizedToken] = palletIndex++;
-        return <span 
-          key={i}
-          style={{color}}
-          className={`gs-token-type-${token.type}`}
-        >{normalizedToken}</span>;
-      }
 
-      return <span 
-        key={i}
-        className={`gs-token-type-${token.type} gs-token-entity-type-${typeof token.entity}`}
-      >{token.stringify()}</span>;
-    })
-  }</>
+        return (
+          <span key={i} className={`gs-token-type-${token.type} gs-token-entity-type-${typeof token.entity}`}>
+            {token.stringify()}
+          </span>
+        );
+      })}
+    </>
+  );
 };
-
-

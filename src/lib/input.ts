@@ -1,4 +1,4 @@
-import { Lexer, Token } from '../formula/evaluator';
+import { Lexer } from '../formula/evaluator';
 
 export const insertTextAtCursor = (input: HTMLTextAreaElement, text: string) => {
   const deprecated = !document.execCommand?.('insertText', false, text);

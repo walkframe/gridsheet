@@ -8,15 +8,7 @@ import { smartScroll } from '../lib/virtualization';
 export const SearchBox: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);
 
-  const { 
-    editorRef, 
-    searchInputRef, 
-    gridOuterRef, 
-    searchQuery, 
-    matchingCellIndex, 
-    matchingCells, 
-    table,
-  } = store;
+  const { editorRef, searchInputRef, gridOuterRef, searchQuery, matchingCellIndex, matchingCells, table } = store;
 
   const matchingCell = matchingCells[matchingCellIndex];
   React.useEffect(() => {
@@ -74,10 +66,14 @@ export const SearchBox: React.FC = () => {
         </div>
       </div>
       <div className="gs-search-close">
-        <a onClick={() => {
-          dispatch(setSearchQuery(undefined));
-          editorRef.current?.focus();
-        }}>Close</a>
+        <a
+          onClick={() => {
+            dispatch(setSearchQuery(undefined));
+            editorRef.current?.focus();
+          }}
+        >
+          Close
+        </a>
       </div>
     </div>
   );

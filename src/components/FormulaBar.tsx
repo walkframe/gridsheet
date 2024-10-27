@@ -62,7 +62,9 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
             height: largeEditorRef.current?.scrollHeight,
             width: largeEditorRef.current?.scrollWidth,
           }}
-        >{editorStyle(inputting)}</div>
+        >
+          {editorStyle(inputting)}
+        </div>
         <textarea
           rows={1}
           spellCheck={false}
@@ -108,7 +110,7 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
                 dispatch(setEditingCell(''));
                 e.preventDefault();
                 editorRef.current!.focus();
-  
+
                 break;
               }
             }
@@ -121,7 +123,6 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
           }}
         ></textarea>
       </div>
-
     </label>
   );
 };

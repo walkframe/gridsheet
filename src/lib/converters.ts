@@ -145,4 +145,4 @@ export const grantAddressAbsolute = (address: Address, absCol: boolean, absRow: 
 
 export const stripAddressAbsolute = (address: Address) => {
   return address.replace(/\$/g, '');
-}
+};

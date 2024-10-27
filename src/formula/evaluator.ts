@@ -1,4 +1,4 @@
-import { a2p, x2c } from '../lib/converters';
+import { a2p } from '../lib/converters';
 import { Table } from '../lib/table';
 
 type EvaluateProps = {
@@ -335,7 +335,7 @@ export class Token {
         return this.entity ? 'TRUE' : 'FALSE';
       }
     }
-    return this.entity;
+    return this.entity as string;
   }
 
   public convert() {
@@ -453,14 +453,14 @@ export class Lexer {
   }
 
   public getTokenPositionRange(index: number): [number, number] {
-    let start = 0, end = 0;
+    let start = 0,
+      end = 0;
     for (let i = 0; i < index; i++) {
       start = end;
       end += this.tokens[i].length();
     }
     return [start, end];
   }
-
 
   public stringify() {
     return this.tokens.map((t) => t.stringify()).join('');

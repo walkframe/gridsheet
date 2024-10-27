@@ -144,7 +144,7 @@ export class Parser implements ParserMixinType {
     if (value[value.length - 1].match(/[0-9Z]/) == null) {
       return;
     }
-    if (value.match(/[=*&#@!?\[\]{}"'\(\)\|%\\<>~\+\r\n]/)) {
+    if (value.match(/[=*&#@!?[\]{}"'()|%\\<>~+\r\n]/)) {
       return;
     }
     let timeZone = 'UTC';

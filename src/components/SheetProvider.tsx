@@ -9,8 +9,8 @@ export type SheetContextType = {
   head: React.MutableRefObject<number>;
   editingCell: string;
   setEditingCell: (cell: string) => void;
-  externalRefs?: {[sheetName: string]: RefPaletteType};
-  setExternalRefs?: (refs: {[sheetName: string]: RefPaletteType}) => void;
+  externalRefs?: { [sheetName: string]: RefPaletteType };
+  setExternalRefs?: (refs: { [sheetName: string]: RefPaletteType }) => void;
   lastFocusedRef: React.MutableRefObject<HTMLTextAreaElement | null>;
   setLastFocusedRef: (ref: React.MutableRefObject<HTMLTextAreaElement | null>) => void;
   forceRender: () => void;
@@ -41,7 +41,7 @@ export function SheetProvider({ children }: { children: React.ReactNode }) {
   const sheets = React.useRef<SheetMapType>({});
   const tables = React.useRef<TableMapType>({});
   const [editingCell, setEditingCell] = React.useState('');
-  const [externalRefs, setExternalRefs] = React.useState<{[sheetName: string]: RefPaletteType}>({});
+  const [externalRefs, setExternalRefs] = React.useState<{ [sheetName: string]: RefPaletteType }>({});
   const lastFocusedRefInitial = React.useRef<HTMLTextAreaElement | null>(null);
   const [lastFocusedRef, setLastFocusedRef] = React.useState(lastFocusedRefInitial);
 

@@ -44,10 +44,6 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
     selectingZone,
     verticalHeaderSelecting,
     horizontalheaderSelecting,
-    copyingZone,
-    searchQuery,
-    matchingCells,
-    matchingCellIndex,
     editorRef,
     showAddress,
     autofillDraggingTo,
@@ -59,10 +55,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
 
   const lastFocusedRef = sheetContext?.lastFocusedRef || store.lastFocusedRef;
 
-  const matchingCell = matchingCells[matchingCellIndex];
-
   const selectingArea = zoneToArea(selectingZone); // (top, left) -> (bottom, right)
-  const copyingArea = zoneToArea(copyingZone); // (top, left) -> (bottom, right)
   const autofill = autofillDraggingTo ? new Autofill(store, autofillDraggingTo) : null;
   const editing = editingCell === address;
   const pointed = choosing.y === y && choosing.x === x;
@@ -96,8 +89,6 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
     }
   };
 
-
-
   let errorMessage = '';
   let rendered;
   try {
@@ -126,12 +117,9 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
       data-x={x}
       data-y={y}
       data-address={address}
-      className={`gs-cell ${
-        among(selectingArea, { y, x }) ? 'gs-selected' : ''} ${
-        pointed ? 'gs-pointed' : ''} ${
-        editing ? 'gs-editing' : ''} ${
-        autofill ? (among(autofill.wholeArea, { y, x }) ? 'gs-autofill-dragging' : '') : ''
-      }`}
+      className={`gs-cell ${among(selectingArea, { y, x }) ? 'gs-selected' : ''} ${pointed ? 'gs-pointed' : ''} ${
+        editing ? 'gs-editing' : ''
+      } ${autofill ? (among(autofill.wholeArea, { y, x }) ? 'gs-autofill-dragging' : '') : ''}`}
       style={{
         ...cell?.style,
         ...operationStyle,
@@ -146,7 +134,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
         if (autofillDraggingTo) {
           return false;
         }
-        
+
         const fullAddress = `${table.sheetPrefix(!differentSheetFocused)}${address}`;
         const editing = !!(sheetContext?.editingCell || editingCell);
         if (editing) {
@@ -227,7 +215,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
           return false;
         }
         dispatch(drag({ y, x }));
-        
+
         const newArea = zoneToArea({ ...selectingZone, endY: y, endX: x });
         const fullRange = `${table.sheetPrefix(!differentSheetFocused)}${areaToRange(newArea)}`;
         insertRef(lastInput, fullRange);
@@ -246,11 +234,10 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
         >
           {errorMessage && <div className="formula-error-triangle" title={errorMessage} />}
           {showAddress && <div className="gs-cell-label">{address}</div>}
-          <div className="gs-cell-rendered">
-            {rendered}
-          </div>
+          <div className="gs-cell-rendered">{rendered}</div>
         </div>
-        {(!editing && (pointed && selectingArea.bottom === -1) || (selectingArea.bottom === y && selectingArea.right === x)) && (
+        {((!editing && pointed && selectingArea.bottom === -1) ||
+          (selectingArea.bottom === y && selectingArea.right === x)) && (
           <div
             className="gs-autofill-drag"
             draggable

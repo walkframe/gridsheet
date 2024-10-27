@@ -24,8 +24,8 @@ type Props = {
 export const createTableRef = () => React.useRef<TableRef | null>(null);
 
 export const Tabular = ({ tableRef }: Props) => {
-  const [ refs, setRefs ] = React.useState<RefPaletteType>({});
-  const [, {externalRefs = {}, setExternalRefs }] = useSheetContext();
+  const [refs, setRefs] = React.useState<RefPaletteType>({});
+  const [, { externalRefs = {}, setExternalRefs }] = useSheetContext();
   const { store, dispatch } = React.useContext(Context);
   const { sheetHeight, sheetWidth, table, tableInitialized, gridOuterRef, sheetRef } = store;
 
@@ -34,7 +34,7 @@ export const Tabular = ({ tableRef }: Props) => {
   React.useEffect(() => {
     if (editingCell && inputting.startsWith('=')) {
       const refs: RefPaletteType = {};
-      const externalRefs: {[sheetName: string]: RefPaletteType} = {};
+      const externalRefs: { [sheetName: string]: RefPaletteType } = {};
       const lexer = new Lexer(inputting.substring(1));
       lexer.tokenize();
 
@@ -43,12 +43,12 @@ export const Tabular = ({ tableRef }: Props) => {
         if (token.type === 'REF' || token.type === 'RANGE') {
           const normalizedRef = stripAddressAbsolute(token.stringify());
           if (normalizedRef.includes('!')) {
-            let [sheetName, ref] = normalizedRef.split('!');
+            const [sheetName, ref] = normalizedRef.split('!');
             const upperRef = ref.toUpperCase();
             if (externalRefs[sheetName] == null) {
               externalRefs[sheetName] = {};
             }
-            if (externalRefs[sheetName][upperRef] == null) { 
+            if (externalRefs[sheetName][upperRef] == null) {
               externalRefs[sheetName][upperRef] = i++;
             }
           } else {
@@ -168,7 +168,9 @@ export const Tabular = ({ tableRef }: Props) => {
                   <tr key={y}>
                     <VerticalHeaderCell y={y} />
                     <td className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-left" />
-                    {virtualized?.xs?.map((x) => <Cell key={x} y={y} x={x} operationStyle={operationStyles[p2a({y, x})]} />)}
+                    {virtualized?.xs?.map((x) => (
+                      <Cell key={x} y={y} x={x} operationStyle={operationStyles[p2a({ y, x })]} />
+                    ))}
                     <td className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-right" />
                   </tr>
                 );
@@ -194,19 +196,8 @@ const useOperationStyles = (store: StoreType, refs: RefPaletteType) => {
     const address = p2a(point);
     cellStyles[address] = cellStyles[address] || {};
     Object.assign(cellStyles[address], style);
-  }
-  const { 
-    choosing, 
-    selectingZone, 
-    copyingZone, 
-    cutting, 
-    editingCell,
-    matchingCells,
-    matchingCellIndex, 
-    table,
-  } = store;
-  const choosingAddress = p2a(choosing);
-  const editing = editingCell === choosingAddress;
+  };
+  const { choosing, selectingZone, copyingZone, cutting, matchingCells, matchingCellIndex, table } = store;
   {
     // selecting
     const { top, left, bottom, right } = zoneToArea(selectingZone);
@@ -226,7 +217,15 @@ const useOperationStyles = (store: StoreType, refs: RefPaletteType) => {
   {
     // choosing
     const { y, x } = choosing;
-    updateStyle({ y, x }, { borderLeft: BORDER_POINTED, borderRight: BORDER_POINTED, borderTop: BORDER_POINTED, borderBottom: BORDER_POINTED });
+    updateStyle(
+      { y, x },
+      {
+        borderLeft: BORDER_POINTED,
+        borderRight: BORDER_POINTED,
+        borderTop: BORDER_POINTED,
+        borderBottom: BORDER_POINTED,
+      },
+    );
     updateStyle({ y, x: x - 1 }, { borderRight: BORDER_POINTED });
     updateStyle({ y, x: x + 1 }, { borderLeft: BORDER_POINTED });
     updateStyle({ y: y - 1, x }, { borderBottom: BORDER_POINTED });
@@ -273,11 +272,19 @@ const useOperationStyles = (store: StoreType, refs: RefPaletteType) => {
   });
   if (matchingCells.length > 0) {
     const { y, x } = a2p(matchingCells[matchingCellIndex]);
-    updateStyle({ y, x }, { borderLeft: SEARCH_MATCHING_BORDER, borderRight: SEARCH_MATCHING_BORDER, borderTop: SEARCH_MATCHING_BORDER, borderBottom: SEARCH_MATCHING_BORDER });
+    updateStyle(
+      { y, x },
+      {
+        borderLeft: SEARCH_MATCHING_BORDER,
+        borderRight: SEARCH_MATCHING_BORDER,
+        borderTop: SEARCH_MATCHING_BORDER,
+        borderBottom: SEARCH_MATCHING_BORDER,
+      },
+    );
     updateStyle({ y, x: x - 1 }, { borderRight: SEARCH_MATCHING_BORDER });
     updateStyle({ y, x: x + 1 }, { borderLeft: SEARCH_MATCHING_BORDER });
     updateStyle({ y: y - 1, x }, { borderBottom: SEARCH_MATCHING_BORDER });
     updateStyle({ y: y + 1, x }, { borderTop: SEARCH_MATCHING_BORDER });
-  }  
+  }
   return cellStyles;
-}
+};
