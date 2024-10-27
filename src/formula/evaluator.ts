@@ -444,22 +444,14 @@ export class Lexer {
     return -1;
   }
 
-  public getCharPositionByTokenIndex(index: number) {
-    let pos = 0;
-    for (let i = 0; i < index; i++) {
-      pos += this.tokens[i].length();
-    }
-    return pos;
-  }
-
-  public getTokenPositionRange(index: number): [number, number] {
+  public getTokenPositionRange(index: number, slide = 1): [number, number] {
     let start = 0,
       end = 0;
     for (let i = 0; i < index; i++) {
       start = end;
       end += this.tokens[i].length();
     }
-    return [start, end];
+    return [start + slide, end + slide];
   }
 
   public stringify() {

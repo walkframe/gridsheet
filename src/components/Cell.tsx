@@ -170,7 +170,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
         e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
         dispatch(select({ startY: y, startX: x, endY: y, endX: x }));
         const insertable = isRefInsertable(lastInput);
-        if (isRefInsertable(lastInput)) {
+        if (insertable) {
           return true;
         } else if (insertable != null) {
           writeCell(input.value);

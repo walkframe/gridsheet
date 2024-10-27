@@ -133,8 +133,8 @@ export const Editor: React.FC = () => {
       case 'Enter': // ENTER
         if (editing) {
           if (e.altKey) {
-            const v = insertTextAtCursor(input, '\n');
-            dispatch(setInputting(v));
+            insertTextAtCursor(input, '\n');
+            dispatch(setInputting(input.value));
             e.preventDefault();
             return false;
           } else {
