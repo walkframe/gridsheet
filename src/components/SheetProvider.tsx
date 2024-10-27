@@ -1,12 +1,16 @@
 import React from 'react';
 
-import { SheetMapType, TableMapType } from '../types';
+import { RefPaletteType, SheetMapType, TableMapType } from '../types';
 
 export type SheetContextType = {
   mounted: boolean;
   sheets: React.MutableRefObject<SheetMapType>;
   tables: React.MutableRefObject<TableMapType>;
   head: React.MutableRefObject<number>;
+  editingCell: string;
+  setEditingCell: (cell: string) => void;
+  externalRefs?: { [sheetName: string]: RefPaletteType };
+  setExternalRefs?: (refs: { [sheetName: string]: RefPaletteType }) => void;
   lastFocusedRef: React.MutableRefObject<HTMLTextAreaElement | null>;
   setLastFocusedRef: (ref: React.MutableRefObject<HTMLTextAreaElement | null>) => void;
   forceRender: () => void;
@@ -36,6 +40,8 @@ export function SheetProvider({ children }: { children: React.ReactNode }) {
   const head = React.useRef(1);
   const sheets = React.useRef<SheetMapType>({});
   const tables = React.useRef<TableMapType>({});
+  const [editingCell, setEditingCell] = React.useState('');
+  const [externalRefs, setExternalRefs] = React.useState<{ [sheetName: string]: RefPaletteType }>({});
   const lastFocusedRefInitial = React.useRef<HTMLTextAreaElement | null>(null);
   const [lastFocusedRef, setLastFocusedRef] = React.useState(lastFocusedRefInitial);
 
@@ -50,10 +56,14 @@ export function SheetProvider({ children }: { children: React.ReactNode }) {
         tables,
         sheets,
         head,
+        editingCell,
+        setEditingCell,
+        externalRefs,
+        setExternalRefs,
         lastFocusedRef,
         setLastFocusedRef,
         forceRender: () => {
-          if (version === Number.MAX_SAFE_INTEGER) {
+          if (version >= Number.MAX_SAFE_INTEGER) {
             setVersion(0);
             return;
           }

@@ -94,6 +94,7 @@ export function GridSheet({
       lastFocusedRef,
       choosing: { y: 1, x: 1 },
       cutting: false,
+      inputting: '',
       selectingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
       copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
       autofillDraggingTo: null,

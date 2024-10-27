@@ -7,8 +7,8 @@ describe('iferror', () => {
   table.initialize({
     A1: { value: '=100/5' },
     B2: { value: '=100/0' },
-    C3: { value: 'C3' },
-    D4: { value: 'A2:E10' },
+    C3: { value: '=C3' },
+    D4: { value: '=A2:E10' },
     E5: { value: '=aaaaa' },
   });
 

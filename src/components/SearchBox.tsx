@@ -66,7 +66,14 @@ export const SearchBox: React.FC = () => {
         </div>
       </div>
       <div className="gs-search-close">
-        <a onClick={() => dispatch(setSearchQuery(undefined))}>Close</a>
+        <a
+          onClick={() => {
+            dispatch(setSearchQuery(undefined));
+            editorRef.current?.focus();
+          }}
+        >
+          Close
+        </a>
       </div>
     </div>
   );

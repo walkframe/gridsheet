@@ -21,8 +21,8 @@ test('render', async ({ page }) => {
   const sheet2 = page.locator('[data-sheet-name="Sheet2"]');
   const editor2 = sheet2.locator('.gs-editor textarea');
   const a12 = sheet2.locator("[data-address='A1']");
-  await a12.dblclick();
-  await editor2.fill('500');
+  await a12.click();
+  await page.keyboard.type('500');
   await editor2.blur();
   expect(await a11.locator('.gs-cell-rendered').textContent()).toBe('600');
 
@@ -30,8 +30,8 @@ test('render', async ({ page }) => {
   const sheet3 = page.locator('[data-sheet-name="Sheet 3"]');
   const editor3 = sheet3.locator('.gs-editor textarea');
   const a13 = sheet3.locator("[data-address='A1']");
-  await a13.dblclick();
-  await editor3.fill('777');
+  await a13.click();
+  await page.keyboard.type('777');
   await editor3.blur();
   expect(await a31.locator('.gs-cell-rendered').textContent()).toBe('1777');
 
@@ -54,36 +54,36 @@ test('circular referencing error', async ({ page }) => {
   const b3 = page.locator("[data-address='B3']");
   const b4 = page.locator("[data-address='B4']");
 
-  await a1.dblclick();
-  await editor.fill('=A1');
+  await a1.click();
+  await page.keyboard.type('=A1');
   await editor.press('Enter');
 
-  await a2.dblclick();
-  await editor.fill('=A1');
+  await a2.click();
+  await page.keyboard.type('=A1');
   await editor.press('Enter');
 
-  await a3.dblclick();
-  await editor.fill('=A4');
+  await a3.click();
+  await page.keyboard.type('=A4');
   await editor.press('Enter');
 
-  await a4.dblclick();
-  await editor.fill('=A3');
+  await a4.click();
+  await page.keyboard.type('=A3');
   await editor.press('Enter');
 
-  await b1.dblclick();
-  await editor.fill('10001');
+  await b1.click();
+  await page.keyboard.type('10001');
   await editor.press('Enter');
 
-  await b2.dblclick();
-  await editor.fill('=B1');
+  await b2.click();
+  await page.keyboard.type('=B1');
   await editor.press('Enter');
 
-  await b3.dblclick();
-  await editor.fill('=SUM(B1:B2)');
+  await b3.click();
+  await page.keyboard.type('=SUM(B1:B2)');
   await editor.press('Enter');
 
-  await b4.dblclick();
-  await editor.fill('=SUM(B1:B4)');
+  await b4.click();
+  await page.keyboard.type('=SUM(B1:B4)');
   await editor.press('Enter');
 
   expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('#REF!');
@@ -105,14 +105,15 @@ test('insert ref by selection', async ({ page }) => {
   const b2 = page.locator("[data-address='B2']");
   const c1 = page.locator("[data-address='C1']");
 
-
   await a1.dblclick();
-  await editor.fill('=A1');
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('=');
   await b2.click();
   await editor.press('Enter');
 
   await b1.click();
-  await editor.fill('=sum(');
+  await page.keyboard.type('=sum(');
   await page.locator("[data-address='B2']").hover();
   await page.mouse.down();
   await page.locator("[data-address='C3']").hover();
@@ -121,7 +122,7 @@ test('insert ref by selection', async ({ page }) => {
   await editor.press('Enter');
 
   await c1.click();
-  await editor.fill('=sum()');
+  await page.keyboard.type('=sum()');
   await page.locator("[data-address='B2']").hover();
   await page.mouse.down();
   await page.locator("[data-address='C3']").hover();
@@ -181,7 +182,7 @@ test('insert cols range and rows range by selection in multiple sheets', async (
 
   const d3 = sheet2.locator("[data-address='D3']");
   await d3.click();
-  await editor2.fill('=sum(');
+  await page.keyboard.type('=sum(');
   const y1 = sheet1.locator("th[data-y='1']");
   await y1.click();
   await editor2.press(')');
@@ -190,7 +191,7 @@ test('insert cols range and rows range by selection in multiple sheets', async (
 
   const d4 = sheet2.locator("[data-address='D4']");
   await d4.click();
-  await editor2.fill('=sum(');
+  await page.keyboard.type('=sum(');
   await sheet2.locator("th[data-x='2']").hover();
   await page.mouse.down();
   await sheet2.locator("th[data-x='3']").hover();

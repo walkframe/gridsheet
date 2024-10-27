@@ -1,4 +1,4 @@
-import { x2c, y2r } from '../lib/converters';
+import { a2p, x2c, y2r } from '../lib/converters';
 import { Table } from '../lib/table';
 import { Address, PointType, StoreType } from '../types';
 
@@ -63,6 +63,7 @@ export const shouldTracking = (operation: string) => {
 
 export const initSearchStatement = (table: Table, store: StoreType) => {
   const { searchQuery } = store;
+  let { choosing } = store;
   if (!searchQuery) {
     return { matchingCells: [] };
   }
@@ -76,5 +77,9 @@ export const initSearchStatement = (table: Table, store: StoreType) => {
     }
   }
   const matchingCellIndex = matchingCells.length === store.matchingCells.length ? store.matchingCellIndex : 0;
-  return { matchingCells, searchQuery, matchingCellIndex };
+  if (matchingCells.length > 0) {
+    const address = matchingCells[matchingCellIndex];
+    choosing = a2p(address);
+  }
+  return { matchingCells, searchQuery, matchingCellIndex, choosing };
 };

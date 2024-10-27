@@ -26,14 +26,22 @@ export const SheetOnChange = () => {
                   [6, 7, 8, 9, 10],
                 ],
               },
-              cells: {},
+              cells: {
+                default: {
+                  width: 50,
+                },
+                E: {
+                  style: { backgroundColor: "#ddf" },
+                }
+              },
               ensured: {
                 numRows: 50,
                 numCols: 50,
               },
             })}
             options={{
-              sheetWidth: 500,
+              sheetWidth: 300,
+              sheetHeight: 300,
               onChange: (table, positions) => {
                 setDiff(
                   table.getObjectFlatten({
@@ -55,13 +63,17 @@ export const SheetOnChange = () => {
             }}
           />
           <div>Diff:</div>
-          <pre id="diff">{JSON.stringify(diff)}</pre>
+          <textarea 
+            id="diff"
+            style={{width: '300px', height: '100px'}}
+            value={JSON.stringify(diff, null, 2)}
+          ></textarea>
         </div>
         <ul className="histories">
           {histories.map((history, i) => (
-            <li key={i}>
-              [{history.operation}]
-              {(() => {
+            <li key={i} style={{display: 'flex', lineHeight: "20px", borderBottom: 'solid 1px #777', marginBottom: '10px'}}>
+              <div style={{color: '#09a'}}>[{history.operation}]</div>
+              <pre style={{margin: 0}}>{(() => {
                 if (history.operation === "UPDATE") {
                   return JSON.stringify(
                     tableRef.current?.table!.getAddressesByIds(
@@ -69,7 +81,7 @@ export const SheetOnChange = () => {
                     )
                   );
                 }
-              })()}
+              })()}</pre>
             </li>
           ))}
         </ul>

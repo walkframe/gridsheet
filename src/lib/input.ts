@@ -1,17 +1,19 @@
-import { Lexer, Token } from '../formula/evaluator';
+import { Lexer } from '../formula/evaluator';
 
 export const insertTextAtCursor = (input: HTMLTextAreaElement, text: string) => {
-  const selectPoint = input.selectionStart;
-  const before = input.value.slice(0, selectPoint);
-  const after = input.value.slice(selectPoint);
-  input.value = `${before}${text}${after}`;
-  input.selectionStart = before.length + text.length;
   input.focus();
+  const deprecated = !document.execCommand?.('insertText', false, text);
+  if (!deprecated) {
+    return;
+  }
+  input.setRangeText(text, input.selectionStart, input.selectionEnd, 'end');
+  return;
 };
 
-export const insertRef = (input: HTMLTextAreaElement | null, ref: string) => {
+export const insertRef = (input: HTMLTextAreaElement | null, ref: string, dryRun = false): boolean => {
+  // dryRun is used to check if the ref can be inserted without actually inserting it
   if (!input?.value?.startsWith('=') || input.selectionStart === 0) {
-    return null;
+    return false;
   }
   const lexer = new Lexer(input.value.substring(1));
   lexer.tokenize();
@@ -27,49 +29,23 @@ export const insertRef = (input: HTMLTextAreaElement | null, ref: string) => {
     token.type === 'INFIX_OPERATOR' ||
     token.type === 'PREFIX_OPERATOR'
   ) {
-    insertTextAtCursor(input, ref);
+    if (!dryRun) {
+      insertTextAtCursor(input, ref);
+    }
   } else if (token.type === 'REF' || token.type === 'RANGE') {
-    // MEMO: There is concern that REF fixation may become a problem in the future (in that case, RANGE needs to be supported).
-    const newToken = new Token('REF', ref);
-    lexer.tokens[tokenIndex] = newToken;
-    input.value = `=${lexer.stringify()}`;
-    input.selectionEnd = lexer.getCharPositionByTokenIndex(tokenIndex + 1) + 1;
+    if (!dryRun) {
+      const [start, end] = lexer.getTokenPositionRange(tokenIndex + 1, 1);
+      input.setSelectionRange(start, end);
+      insertTextAtCursor(input, ref);
+    }
   } else {
     return false;
   }
-  const event = new Event('input', { bubbles: true, composed: true });
-  input.dispatchEvent(event);
-  input.focus();
   return true;
 };
 
-export const isRefInsertable = (input: HTMLTextAreaElement | null) => {
-  if (!input?.value?.startsWith('=') || input.selectionStart === 0) {
-    return null;
-  }
-  const lexer = new Lexer(input.value.substring(1));
-  lexer.tokenize();
-  const tokenIndex = lexer.getTokenIndexByCharPosition(input.selectionStart - 1);
-  let token = lexer.tokens[tokenIndex];
-  if (token?.type === 'SPACE') {
-    token = lexer.tokens[tokenIndex - 1];
-  }
-  return (
-    token == null ||
-    token.type === 'OPEN' ||
-    token.type === 'COMMA' ||
-    token.type === 'INFIX_OPERATOR' ||
-    token.type === 'PREFIX_OPERATOR' ||
-    token.type === 'REF' ||
-    token.type === 'RANGE'
-  );
-};
-
-export const copyInput = (from?: HTMLTextAreaElement | null, to?: HTMLTextAreaElement | null) => {
-  if (!from || !to) {
-    return;
-  }
-  to.value = from.value;
+export const isRefInsertable = (input: HTMLTextAreaElement | null): boolean => {
+  return insertRef(input, '', true);
 };
 
 export const expandInput = (input: HTMLTextAreaElement) => {

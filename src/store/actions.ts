@@ -12,7 +12,7 @@ import {
 import { zoneToArea, superposeArea, matrixShape, areaShape, areaToZone } from '../lib/structs';
 import { Table } from '../lib/table';
 
-import { tsv2matrix, p2a } from '../lib/converters';
+import { tsv2matrix, p2a, a2p } from '../lib/converters';
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '../constants';
 import { initSearchStatement, restrictPoints } from './helpers';
 import { smartScroll } from '../lib/virtualization';
@@ -460,14 +460,19 @@ export const drag = new DragAction().bind();
 class SearchAction<T extends number> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     const { matchingCells } = store;
-    let { matchingCellIndex } = store;
+    let { matchingCellIndex, choosing } = store;
     matchingCellIndex += payload;
     if (matchingCellIndex >= matchingCells.length) {
       matchingCellIndex = 0;
     } else if (matchingCellIndex < 0) {
       matchingCellIndex = matchingCells.length - 1;
     }
-    return { ...store, matchingCells, matchingCellIndex };
+
+    if (matchingCells.length > 0) {
+      const address = matchingCells[matchingCellIndex];
+      choosing = a2p(address);
+    }
+    return { ...store, matchingCells, matchingCellIndex, choosing };
   }
 }
 export const search = new SearchAction().bind();
@@ -768,3 +773,14 @@ class SetLastFocusedRefAction<T extends React.RefObject<HTMLTextAreaElement>> ex
 }
 
 export const setLastFocusedRef = new SetLastFocusedRefAction().bind();
+
+class SetInputtingAction<T extends string> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreType {
+    return {
+      ...store,
+      inputting: payload,
+    };
+  }
+}
+
+export const setInputting = new SetInputtingAction().bind();

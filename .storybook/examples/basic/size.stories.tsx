@@ -1,6 +1,6 @@
 import React from "react";
 import { ComponentStory } from "@storybook/react";
-import { constructInitialCells, GridSheet } from "../../../src";
+import { CellsByAddressType, constructInitialCells, GridSheet } from "../../../src";
 
 export default {
   title: "Basic",
@@ -10,9 +10,10 @@ type Props = {
   numRows: number;
   numCols: number;
   defaultWidth: number;
+  initialCells?: CellsByAddressType,
 };
 
-const Sheet = ({ numRows, numCols, defaultWidth }: Props) => {
+const Sheet = ({ numRows, numCols, defaultWidth, initialCells }: Props) => {
   return (
     <>
       <GridSheet
@@ -39,6 +40,7 @@ const Sheet = ({ numRows, numCols, defaultWidth }: Props) => {
             C3: {
               value: 3,
             },
+            ...initialCells,
           },
           ensured: { numRows, numCols },
         })}
@@ -49,8 +51,11 @@ const Sheet = ({ numRows, numCols, defaultWidth }: Props) => {
 
 const Template: ComponentStory<typeof Sheet> = (args) => <Sheet {...args} />;
 
-export const Large = Template.bind({});
-Large.args = { numRows: 1000, numCols: 100, defaultWidth: 50 };
-
 export const Small = Template.bind({});
 Small.args = { numRows: 5, numCols: 3, defaultWidth: 100 };
+
+export const Large = Template.bind({});
+Large.args = { 
+  numRows: 1000, numCols: 100, defaultWidth: 50,
+  initialCells: {A500: {value: "aa"}, A1000: {value: "aaa"}, CV1000: {value: "aaaa"}},
+};
