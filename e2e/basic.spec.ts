@@ -39,6 +39,36 @@ test('pointing', async ({ page }) => {
 
 });
 
+test('select', async ({ page }) => {
+  await page.goto('http://localhost:5233/iframe.html?id=basic--small&viewMode=story');
+  const a1 = page.locator("[data-address='A1']");
+  const b2 = page.locator("[data-address='B2']");
+  const b3 = page.locator("[data-address='B3']");
+  await a1.click();
+  await page.locator("[data-address='A1']").hover();
+  await page.mouse.down();
+  await page.locator("[data-address='B3']").hover();
+  await page.mouse.up();
+  expect(await a1.getAttribute('class')).toContain('gs-selected');
+  expect(await b2.getAttribute('class')).toContain('gs-selected');
+  expect(await b3.getAttribute('class')).toContain('gs-selected');
+});
+
+test('select by shift', async ({ page }) => {
+  await page.goto('http://localhost:5233/iframe.html?id=basic--small&viewMode=story');
+  const a1 = page.locator("[data-address='A1']");
+  const b2 = page.locator("[data-address='B2']");
+  const b3 = page.locator("[data-address='B3']");
+  await a1.click();
+  await page.keyboard.down('Shift');
+  await b3.click();
+  await page.keyboard.up('Shift');
+  expect(await a1.getAttribute('class')).toContain('gs-selected');
+  expect(await b2.getAttribute('class')).toContain('gs-selected');
+  expect(await b3.getAttribute('class')).toContain('gs-selected');
+});
+
+
 test('walk', async ({ page }) => {
   await page.goto('http://localhost:5233/iframe.html?id=basic--small&viewMode=story');
   const a1 = page.locator("[data-address='A1']");

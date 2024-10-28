@@ -56,7 +56,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
   const lastFocusedRef = sheetContext?.lastFocusedRef || store.lastFocusedRef;
 
   const selectingArea = zoneToArea(selectingZone); // (top, left) -> (bottom, right)
-  
+
   const editing = editingCell === address;
   const pointed = choosing.y === y && choosing.x === x;
   const _setEditorRect = React.useCallback(() => {
@@ -146,9 +146,10 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
         dispatch(setContextMenuPosition({ y: -1, x: -1 }));
         if (e.shiftKey) {
           dispatch(drag({ y, x }));
+          return;
         } else {
           dispatch(choose({ y, x }));
-          dispatch(select({ startY: -1, startX: -1, endY: -1, endX: -1 }));
+          dispatch(select({ startY: y, startX: x, endY: -1, endX: -1 }));
         }
         input.focus();
         const valueString = table.stringify({ y, x });

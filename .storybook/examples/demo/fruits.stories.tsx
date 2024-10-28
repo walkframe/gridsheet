@@ -8,8 +8,8 @@ import {
 } from "../../../src";
 
 export default {
-    title: "Demo",
-  };
+  title: "Demo",
+};
 
 class HopeFunction extends BaseFunction {
   // @ts-ignore

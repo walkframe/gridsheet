@@ -48,6 +48,9 @@ export const concatAreas = (area1: AreaType, area2: AreaType): AreaType => {
 };
 
 export const zoneToArea = (zone: ZoneType): AreaType => {
+  if (zone.endY === -1 || zone.endX === -1) {
+    return { top: -1, left: -1, bottom: -1, right: -1 };
+  }
   const [top, bottom] = zone.startY < zone.endY ? [zone.startY, zone.endY] : [zone.endY, zone.startY];
   const [left, right] = zone.startX < zone.endX ? [zone.startX, zone.endX] : [zone.endX, zone.startX];
   return { top, left, bottom, right };
