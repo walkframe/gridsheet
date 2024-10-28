@@ -12,6 +12,7 @@ export const SheetOnChange = () => {
   const [diff, setDiff] = React.useState<Record<string, any>>({});
   const [histories, setHistories] = React.useState<HistoryType[]>([]);
   const tableRef = createTableRef();
+  const table = tableRef.current?.table;
 
   return (
     <>
@@ -71,12 +72,18 @@ export const SheetOnChange = () => {
         </div>
         <ul className="histories">
           {histories.map((history, i) => (
-            <li key={i} style={{display: 'flex', lineHeight: "20px", borderBottom: 'solid 1px #777', marginBottom: '10px'}}>
+            <li key={i} style={{
+              display: 'flex', 
+              lineHeight: "20px", 
+              borderBottom: 'solid 1px #777', 
+              marginBottom: '10px',
+              backgroundColor: table?.getHistoryIndex() === i ? '#fdd' : 'transparent'
+            }}>
               <div style={{color: '#09a'}}>[{history.operation}]</div>
               <pre style={{margin: 0}}>{(() => {
                 if (history.operation === "UPDATE") {
                   return JSON.stringify(
-                    tableRef.current?.table!.getAddressesByIds(
+                    table?.getAddressesByIds(
                       history.diffAfter
                     )
                   );

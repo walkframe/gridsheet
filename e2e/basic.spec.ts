@@ -54,11 +54,13 @@ test('select', async ({ page }) => {
   expect(await b3.getAttribute('class')).toContain('gs-selected');
 });
 
-test('select by shift', async ({ page }) => {
+test('select by shift, copy and paste', async ({ page }) => {
   await page.goto('http://localhost:5233/iframe.html?id=basic--small&viewMode=story');
   const a1 = page.locator("[data-address='A1']");
   const b2 = page.locator("[data-address='B2']");
   const b3 = page.locator("[data-address='B3']");
+  const b5 = page.locator("[data-address='B5']");
+  const c5 = page.locator("[data-address='C5']");
   await a1.click();
   await page.keyboard.down('Shift');
   await b3.click();
@@ -66,6 +68,21 @@ test('select by shift', async ({ page }) => {
   expect(await a1.getAttribute('class')).toContain('gs-selected');
   expect(await b2.getAttribute('class')).toContain('gs-selected');
   expect(await b3.getAttribute('class')).toContain('gs-selected');
+
+  // Copy A1:B3
+  await page.keyboard.down('Control');
+  await page.keyboard.press('c');
+  await page.keyboard.up('Control');
+
+  // Paste to B5
+  await b5.click();
+  await page.keyboard.down('Control');
+  await page.keyboard.press('v');
+  await page.keyboard.up('Control');
+
+  expect(await b5.locator('.gs-cell-rendered').textContent()).toBe('A1');
+  expect(await c5.locator('.gs-cell-rendered').textContent()).toBe('B1');
+
 });
 
 

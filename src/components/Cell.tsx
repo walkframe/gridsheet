@@ -144,6 +144,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
         }
         dispatch(setEditingCell(''));
         dispatch(setContextMenuPosition({ y: -1, x: -1 }));
+        input.focus();
         if (e.shiftKey) {
           dispatch(drag({ y, x }));
           return;
@@ -151,7 +152,6 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
           dispatch(choose({ y, x }));
           dispatch(select({ startY: y, startX: x, endY: -1, endX: -1 }));
         }
-        input.focus();
         const valueString = table.stringify({ y, x });
         dispatch(setInputting(valueString));
       }}

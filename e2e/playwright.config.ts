@@ -8,5 +8,6 @@ export default defineConfig({
     launchOptions: {
       slowMo: 250,
     },
+    permissions: ['clipboard-read'],
   },
 });
