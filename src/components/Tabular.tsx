@@ -28,7 +28,7 @@ export const Tabular = ({ tableRef }: Props) => {
   const [refs, setRefs] = React.useState<RefPaletteType>({});
   const [, { externalRefs = {}, setExternalRefs }] = useSheetContext();
   const { store, dispatch } = React.useContext(Context);
-  const { sheetHeight, sheetWidth, table, tableInitialized, gridOuterRef, sheetRef } = store;
+  const { sheetHeight, sheetWidth, table, tableInitialized, gridOuterRef, sheetRef, headerWidth, headerHeight } = store;
 
   const { editingCell, inputting } = store;
 
@@ -127,7 +127,7 @@ export const Tabular = ({ tableRef }: Props) => {
               <tr>
                 <th
                   className="gs-header gs-header-left gs-header-top gs-header-left-top"
-                  style={{ position: 'sticky' }}
+                  style={{ position: 'sticky', width: headerWidth, height: headerHeight }}
                   onClick={() => {
                     dispatch(choose({ y: -1, x: -1 }));
                     window.setTimeout(() => {
