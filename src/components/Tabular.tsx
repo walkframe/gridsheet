@@ -1,8 +1,8 @@
 import React from 'react';
 import { Editor } from './Editor';
 import { Cell } from './Cell';
-import { HorizontalHeaderCell } from './HorizontalHeaderCell';
-import { VerticalHeaderCell } from './VerticalHeaderCell';
+import { HeaderCellTop } from './HeaderCellTop';
+import { HeaderCellLeft } from './HeaderCellLeft';
 import { SearchBox } from './SearchBox';
 
 import { Context } from '../store';
@@ -28,9 +28,18 @@ export const Tabular = ({ tableRef }: Props) => {
   const [refs, setRefs] = React.useState<RefPaletteType>({});
   const [, { externalRefs = {}, setExternalRefs }] = useSheetContext();
   const { store, dispatch } = React.useContext(Context);
-  const { sheetHeight, sheetWidth, table, tableInitialized, gridOuterRef, sheetRef, headerWidth, headerHeight } = store;
-
-  const { editingCell, inputting } = store;
+  const {
+    sheetHeight,
+    sheetWidth,
+    table,
+    tableInitialized,
+    gridOuterRef,
+    sheetRef,
+    headerWidth,
+    headerHeight,
+    editingCell,
+    inputting,
+  } = store;
 
   React.useEffect(() => {
     if (editingCell && inputting.startsWith('=')) {
@@ -113,8 +122,8 @@ export const Tabular = ({ tableRef }: Props) => {
         <div
           className={'gs-tabular-inner'}
           style={{
-            width: table.totalWidth,
-            height: table.totalHeight,
+            width: table.totalWidth + 1,
+            height: table.totalHeight + 1,
           }}
         >
           <table
@@ -123,10 +132,10 @@ export const Tabular = ({ tableRef }: Props) => {
               width: table.totalWidth,
             }}
           >
-            <thead className="gs-table-header">
-              <tr>
+            <thead className="gs-thead" style={{ height: headerHeight }}>
+              <tr className="gs-row">
                 <th
-                  className="gs-header gs-header-left gs-header-top gs-header-left-top"
+                  className="gs-th gs-th-left gs-th-top"
                   style={{ position: 'sticky', width: headerWidth, height: headerHeight }}
                   onClick={() => {
                     dispatch(choose({ y: -1, x: -1 }));
@@ -142,32 +151,38 @@ export const Tabular = ({ tableRef }: Props) => {
                       );
                     }, 100);
                   }}
-                ></th>
+                >
+                  <div className="gs-th-inner"></div>
+                </th>
                 <th
                   className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-left"
-                  style={{ width: virtualized?.adjuster?.left }}
+                  style={{ width: virtualized?.adjuster?.left || 1 }}
                 ></th>
-                {virtualized?.xs?.map?.((x) => <HorizontalHeaderCell x={x} key={x} />)}
+                {virtualized?.xs?.map?.((x) => <HeaderCellTop x={x} key={x} />)}
                 <th
                   className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-right"
                   style={{ width: virtualized?.adjuster?.right }}
                 ></th>
               </tr>
             </thead>
+
             <tbody className="gs-table-body-adjuster">
-              <tr>
+              <tr className="gs-row">
                 <th
-                  className="gs-header gs-header-left gs-adjuster"
-                  style={{ height: virtualized?.adjuster?.top }}
+                  className={`gs-adjuster gs-adjuster-horizontal gs-adjuster-vertical`}
+                  style={{ height: virtualized?.adjuster?.top || 1 }}
                 ></th>
-                {virtualized?.xs?.map((x) => <td className="gs-adjuster" key={x} />)}
+                <td className="gs-adjuster gs-adjuster-vertical"></td>
+                {virtualized?.xs?.map((x) => <td className="gs-adjuster gs-adjuster-vertical" key={x}></td>)}
+                <th className={`gs-adjuster gs-adjuster-horizontal gs-adjuster-vertical`}></th>
               </tr>
             </tbody>
+
             <tbody className="gs-table-body-data">
               {virtualized?.ys?.map((y) => {
                 return (
-                  <tr key={y}>
-                    <VerticalHeaderCell y={y} />
+                  <tr key={y} className="gs-row">
+                    <HeaderCellLeft y={y} />
                     <td className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-left" />
                     {virtualized?.xs?.map((x) => (
                       <Cell key={x} y={y} x={x} operationStyle={operationStyles[p2a({ y, x })]} />

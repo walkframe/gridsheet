@@ -18,6 +18,7 @@ const Sheet = ({ numRows, numCols, defaultWidth, initialCells }: Props) => {
     <>
       <GridSheet
         options={{
+          // mode: "dark",
           headerHeight: 50,
           headerWidth: 150,
           labelers: {

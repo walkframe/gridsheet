@@ -7,11 +7,7 @@ import { insertTextAtCursor } from '../lib/input';
 import { useSheetContext } from './SheetProvider';
 import { editorStyle } from './Editor';
 
-type Props = {
-  width: number;
-};
-
-export const FormulaBar: React.FC<Props> = ({ width }) => {
+export const FormulaBar: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);
   const [before, setBefore] = React.useState('');
   const { choosing, editorRef, largeEditorRef, table, inputting, editingCell } = store;
@@ -50,7 +46,7 @@ export const FormulaBar: React.FC<Props> = ({ width }) => {
   };
 
   return (
-    <label className="gs-formula-bar" style={{ width: width + 1 }}>
+    <label className="gs-formula-bar">
       <div className="gs-selecting-address">{address}</div>
       <div className="gs-fx">Fx</div>
       <div className="gs-formula-bar-editor-inner">

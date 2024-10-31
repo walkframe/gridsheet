@@ -26,6 +26,7 @@ export const ResizeSheets = () => {
                   cells: { A3: { value: "four" } },
                 })}
                 options={{
+                  mode: "dark",
                   sheetResize: "both",
                   sheetHeight: 500,
                   sheetWidth: 500,

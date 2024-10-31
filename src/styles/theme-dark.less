@@ -1,0 +1,86 @@
+@dark_text_color: #eeeeee;
+@dark_border_color: #5a5a5a;
+@dark_cell_color: #212121;
+@dark_bg_color: #3f3f3f;
+@dark_header_color: #4f4f4f;
+@dark_header_text_color: #eeeeee;
+@dark_header_selecting_color: #606060;
+@dark_header_selecting_color_rev: #aaaaaa;
+@dark_header_choosing_color: #777777;
+@dark_formulabar_bg_color: #4f4f4f;
+@dark_formulabar_text_color: #bbbbbb;
+
+&[data-theme="dark"] {
+  background-color: @dark_bg_color;
+  color: @dark_text_color;
+  .gs-main {
+    background-color: @dark_bg_color;
+    border-right: solid 1px @dark_border_color;
+    border-bottom: solid 1px @dark_border_color;
+  }
+  .gs-tabular {
+    background-color: @dark_bg_color;
+  }
+  .gs-formula-bar {
+    background-color: @dark_formulabar_bg_color;
+  }
+  .gs-formula-bar-editor-inner {
+    color: @dark_formulabar_text_color;
+  }
+  .gs-cell {
+    border-top: solid 1px @dark_border_color;
+    border-left: solid 1px @dark_border_color;
+  }
+  .gs-adjuster {
+    background-color: @dark_border_color;
+  }
+  .gs-tabular-inner {
+    background-color: @dark_cell_color;
+  }
+  .gs-editor {
+    &.gs-editing {
+      textarea {
+        caret-color: @dark_text_color;
+      }
+      .gs-editor-hl {
+        color: @dark_text_color;
+      }
+    }
+  }
+  .gs-large-editor {
+    textarea {
+      color: @dark_text_color;
+      caret-color: @dark_text_color;
+    }
+  }
+  .gs-th {
+    background-color: @dark_header_color;
+    color: @dark_header_text_color;
+    &.gs-selecting {
+      background-color: @dark_header_selecting_color;
+    }
+    &.gs-choosing {
+      background-color: @dark_header_choosing_color;
+    }
+    &.gs-th-selecting {
+      background-color: @dark_header_selecting_color_rev;
+      color: #444444;
+    }
+  }
+  .gs-th-top {
+    .gs-th-inner {
+      border-top: solid 1px @dark_border_color;
+    }
+    .gs-th-inner-wrap {
+      border-left: solid 1px @dark_border_color;
+    }
+  }
+  .gs-th-left {
+    .gs-th-inner {
+      border-left: solid 1px @dark_border_color;
+    }
+    .gs-th-inner-wrap {
+      border-top: solid 1px @dark_border_color;
+    }
+  }
+}
