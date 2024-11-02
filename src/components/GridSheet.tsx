@@ -163,29 +163,22 @@ export function GridSheet({
   );
   React.useEffect(() => {
     const intervalId = window.setInterval(() => {
-      if (sheetRef.current?.clientHeight) {
-        setSheetHeight(sheetRef.current.clientHeight);
-      }
-      if (sheetRef.current?.clientWidth) {
-        setSheetWidth(sheetRef.current.clientWidth);
-      }
+      setSheetHeight(sheetRef.current?.clientHeight || 0);
+      setSheetWidth(sheetRef.current?.clientWidth || 0);
     }, 1000);
     return () => window.clearInterval(intervalId);
   }, []);
-
   const { onChange, onSelect, mode } = options;
   return (
     <Context.Provider value={{ store, dispatch }}>
-      <div className={`gridsheet-1 ${mode || 'light'}`} data-sheet-name={sheetName}>
-        {showFormulaBar && <FormulaBar width={sheetWidth} />}
+      <div className={`gs-root1`} data-sheet-name={sheetName} data-theme={mode || 'light'}>
+        {showFormulaBar && <FormulaBar />}
         <div
-          className={`gs-main ${className || ''} ${
-            sheetWidth > store.table.totalWidth ? 'gs-table-width-smaller' : 'gs-table-width-larger'
-          } ${sheetHeight > store.table.totalHeight ? 'gs-table-height-smaller' : 'gs-table-height-larger'}`}
+          className={`gs-main ${className || ''}`}
           ref={sheetRef}
           style={{
-            maxWidth: store.table.totalWidth,
-            maxHeight: store.table.totalHeight + 2,
+            maxWidth: store.table.totalWidth + 1,
+            maxHeight: store.table.totalHeight + 1,
             ...style,
             resize: sheetResize,
           }}

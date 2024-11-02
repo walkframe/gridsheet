@@ -82,7 +82,7 @@ export function FirstDemo() {
                 style: {
                   borderTop: "solid 1px black",
                   borderLeft: "solid 1px black",
-                  borderRight: "solid 1px black",
+                  //borderRight: "solid 1px black",
                   borderBottom: "double 3px black",
                   fontWeight: "bold",
                   backgroundColor: "#aaa",
@@ -91,9 +91,9 @@ export function FirstDemo() {
               "A2:D6": {
                 style: {
                   borderTop: "solid 1px black",
-                  borderBottom: "solid 1px black",
+                  //borderBottom: "solid 1px black",
                   borderLeft: "solid 1px black",
-                  borderRight: "solid 1px black",
+                  //borderRight: "solid 1px black",
                 },
               },
             },

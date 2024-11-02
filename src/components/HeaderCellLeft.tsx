@@ -20,7 +20,7 @@ type Props = {
   y: number;
 };
 
-export const VerticalHeaderCell: React.FC<Props> = React.memo(({ y }) => {
+export const HeaderCellLeft: React.FC<Props> = React.memo(({ y }) => {
   const rowId = `${y2r(y)}`;
   const { store, dispatch } = React.useContext(Context);
 
@@ -47,13 +47,13 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({ y }) => {
   return (
     <th
       data-y={y}
-      className={`gs-header gs-header-vertical gs-header-left ${choosing.y === y ? 'gs-pointed' : ''} ${
+      className={`gs-th gs-th-left ${choosing.y === y ? 'gs-choosing' : ''} ${
         between({ start: selectingZone.startY, end: selectingZone.endY }, y)
           ? horizontalheaderSelecting
-            ? 'gs-header-selecting'
+            ? 'gs-th-selecting'
             : 'gs-selecting'
           : ''
-      } ${y === table.getNumRows() ? 'gs-header-left-end' : ''}`}
+      }`}
       style={{ height }}
       onClick={(e) => {
         let startY = e.shiftKey ? selectingZone.startY : y;
@@ -85,7 +85,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({ y }) => {
       }}
     >
       <div
-        className="gs-header-outer"
+        className="gs-th-inner-wrap"
         draggable
         onDragStart={(e) => {
           e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
@@ -129,7 +129,7 @@ export const VerticalHeaderCell: React.FC<Props> = React.memo(({ y }) => {
           e.preventDefault();
         }}
       >
-        <div className="gs-header-inner" style={{ width: headerWidth, position: 'relative' }}>
+        <div className="gs-th-inner" style={{ width: headerWidth, position: 'relative' }}>
           {row?.labeler ? table.getLabel(row.labeler, y) : rowId}
           <div
             className={`gs-resizer ${prevention.isPrevented(row?.prevention, prevention.Resize) ? 'gs-protected' : ''}`}

@@ -1,7 +1,4 @@
 .gs-cell {
-  background-clip: content-box;
-  border-top: solid 1px rgba(128, 128, 128, 0.3);
-  border-left: solid 1px rgba(128, 128, 128, 0.3);
   padding: 0;
   margin: 0;
   box-sizing: border-box;
@@ -10,21 +7,27 @@
   letter-spacing: 1px;
   line-height: 24px;
   
+  .gs-cell-inner-wrap {
+    &.gs-selecting {
+      background-color: rgba(0, 128, 255, 0.2);
+    }
+  }
+
   &.gs-copying {
     textarea:focus {
       outline: solid 1px #0077ff;
     }
   }
-  &.gs-selected {
+  &.gs-selecting {
     z-index: 1;
-    .gs-cell-rendered-wrapper-inner {
+    .gs-cell-inner {
       background-color: rgba(0, 128, 255, 0.2);
     }
     .gs-cell-label {
       display: block;
     }
   }
-  &.gs-pointed {
+  &.gs-choosing {
     margin-top: -1px;
     margin-left: -1px;
     z-index: 1;
@@ -37,7 +40,7 @@
     }
   }
 
-  .formula-error-triangle {
+  .gs-formula-error-triangle {
     position: absolute;
     top: 0;
     right: 0;
@@ -64,14 +67,14 @@
     display: none;
     opacity: 0.7;
   }
-  .gs-cell-rendered-wrapper-outer {
+  .gs-cell-inner-wrap {
     width: 100%;
     height: 100%;
     position: absolute;
     top: 0;
     left: 0;
   }
-  .gs-cell-rendered-wrapper-inner {
+  .gs-cell-inner {
     width: 100%;
     height: 100%;
     overflow: hidden;
@@ -106,4 +109,24 @@
     cursor: crosshair;
     z-index: 1;
   }
+}
+
+.gs-th[data-x="1"] {
+  .gs-th-inner-wrap {
+    border-left: none;
+  }
+}
+
+.gs-th[data-y="1"] {
+  .gs-th-inner-wrap {
+    border-top: none;
+  }
+}
+
+.gs-cell[data-x="1"] {
+  border-left: none;
+}
+
+.gs-cell[data-y="1"] {
+  border-top: none;
 }

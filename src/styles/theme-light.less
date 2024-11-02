@@ -1,0 +1,83 @@
+@light_text_color: #000000;
+@light_border_color: #dddddd;
+@light_cell_color: #f7f7f7;
+@light_bg_color: #e2e2e2;
+@light_header_color: #efefef;
+@light_header_text_color: #666666;
+@light_header_selecting_color: #d2d2d2;
+@light_header_selecting_color_rev: #555555;
+@light_header_choosing_color: #bbbbbb;
+@light_formulabar_bg_color: #efefef;
+@light_formulabar_text_color: #555555;
+
+&[data-theme="light"] {
+  background-color: @light_bg_color;
+  color: @light_text_color;
+
+  .gs-main {
+    background-color: @light_bg_color;
+    border-right: solid 1px @light_border_color;
+    border-bottom: solid 1px @light_border_color;
+  }
+  .gs-tabular {
+    background-color: @light_bg_color;
+  }
+  .gs-formula-bar {
+    background-color: @light_formulabar_bg_color;
+  }
+  .gs-formula-bar-editor-inner {
+    color: @light_formulabar_text_color;
+  }
+  .gs-cell {
+    border-top: solid 1px @light_border_color;
+    border-left: solid 1px @light_border_color;
+  }
+  .gs-adjuster {
+    background-color: @light_border_color;
+  }
+  .gs-tabular-inner {
+    background-color: @light_cell_color;
+  }
+  .gs-editor {
+    &.gs-editing {
+      textarea {
+        caret-color: @light_text_color;
+      }
+      .gs-editor-hl {
+        background-color: @light_cell_color;
+        color: @light_text_color;
+      }
+    }
+  }
+
+  .gs-th {
+    background-color: @light_header_color;
+    color: @light_header_text_color;
+    &.gs-selecting {
+      background-color: @light_header_selecting_color;
+    }
+    &.gs-choosing {
+      background-color: @light_header_choosing_color;
+    }
+    &.gs-th-selecting {
+      background-color: @light_header_selecting_color_rev;
+      color: #ffffff;
+    }
+  }
+  .gs-th-top {
+    .gs-th-inner {
+      border-top: solid 1px @light_border_color;
+    }
+    .gs-th-inner-wrap {
+      border-left: solid 1px @light_border_color;
+    }
+  }
+  .gs-th-left {
+    .gs-th-inner {
+      border-left: solid 1px @light_border_color;
+    }
+    .gs-th-inner-wrap {
+      border-top: solid 1px @light_border_color;
+    }
+  }
+}

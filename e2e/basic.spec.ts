@@ -26,16 +26,16 @@ test('pointing', async ({ page }) => {
   const largeEditor = page.locator('.gs-formula-bar textarea');
   expect(await largeEditor.inputValue()).toBe('2');
 
-  expect(await b2.getAttribute('class')).toContain('gs-pointed');
+  expect(await b2.getAttribute('class')).toContain('gs-choosing');
 
-  const hor = page.locator(".gs-header-horizontal[data-x='2']");
-  expect(await hor.getAttribute('class')).toContain('gs-pointed');
+  const hor = page.locator(".gs-th-top[data-x='2']");
+  expect(await hor.getAttribute('class')).toContain('gs-choosing');
 
-  const ver = page.locator(".gs-header-vertical[data-y='2']");
-  expect(await ver.getAttribute('class')).toContain('gs-pointed');
+  const ver = page.locator(".gs-th-left[data-y='2']");
+  expect(await ver.getAttribute('class')).toContain('gs-choosing');
 
   const b3 = page.locator("[data-address='B3']");
-  expect(await b3.getAttribute('class')).not.toContain('gs-pointed');
+  expect(await b3.getAttribute('class')).not.toContain('gs-choosing');
 
 });
 
@@ -49,9 +49,9 @@ test('select', async ({ page }) => {
   await page.mouse.down();
   await page.locator("[data-address='B3']").hover();
   await page.mouse.up();
-  expect(await a1.getAttribute('class')).toContain('gs-selected');
-  expect(await b2.getAttribute('class')).toContain('gs-selected');
-  expect(await b3.getAttribute('class')).toContain('gs-selected');
+  expect(await a1.getAttribute('class')).toContain('gs-selecting');
+  expect(await b2.getAttribute('class')).toContain('gs-selecting');
+  expect(await b3.getAttribute('class')).toContain('gs-selecting');
 });
 
 test('select by shift, copy and paste', async ({ page }) => {
@@ -65,9 +65,9 @@ test('select by shift, copy and paste', async ({ page }) => {
   await page.keyboard.down('Shift');
   await b3.click();
   await page.keyboard.up('Shift');
-  expect(await a1.getAttribute('class')).toContain('gs-selected');
-  expect(await b2.getAttribute('class')).toContain('gs-selected');
-  expect(await b3.getAttribute('class')).toContain('gs-selected');
+  expect(await a1.getAttribute('class')).toContain('gs-selecting');
+  expect(await b2.getAttribute('class')).toContain('gs-selecting');
+  expect(await b3.getAttribute('class')).toContain('gs-selecting');
 
   // Copy A1:B3
   await page.keyboard.down('Control');

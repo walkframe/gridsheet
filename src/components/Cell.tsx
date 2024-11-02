@@ -117,7 +117,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
       data-x={x}
       data-y={y}
       data-address={address}
-      className={`gs-cell ${among(selectingArea, { y, x }) ? 'gs-selected' : ''} ${pointed ? 'gs-pointed' : ''} ${
+      className={`gs-cell ${among(selectingArea, { y, x }) ? 'gs-selecting' : ''} ${pointed ? 'gs-choosing' : ''} ${
         editing ? 'gs-editing' : ''
       }`}
       style={{
@@ -223,16 +223,16 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
         return true;
       }}
     >
-      <div className={`gs-cell-rendered-wrapper-outer`}>
+      <div className={`gs-cell-inner-wrap`}>
         <div
-          className={'gs-cell-rendered-wrapper-inner'}
+          className={'gs-cell-inner'}
           style={{
             ...cell?.style,
             justifyContent: cell?.justifyContent || 'left',
             alignItems: cell?.alignItems || 'start',
           }}
         >
-          {errorMessage && <div className="formula-error-triangle" title={errorMessage} />}
+          {errorMessage && <div className="gs-formula-error-triangle" title={errorMessage} />}
           {showAddress && <div className="gs-cell-label">{address}</div>}
           <div className="gs-cell-rendered">{rendered}</div>
         </div>
