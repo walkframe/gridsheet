@@ -45,19 +45,13 @@
     -moz-box-sizing: border-box;
     overflow: hidden;
     cursor: default;
+    white-space: pre;
+    height: auto;
   }
   &.gs-editing {
     z-index: 3;
     opacity: 1;
-
-    textarea {
-      cursor: text;
-      min-width: 100%;
-      white-space: pre;
-      outline: none;
-      border: none !important;
-      height: auto;
-    }
+    
     .gs-cell-label {
       pointer-events: none;
       font-family: math, monospace, serif;

@@ -22,53 +22,52 @@
     color: #555555;
     margin: 0;
     padding: 0;
+  }
+  li {
+    padding: 5px 10px;
+    list-style-type: none;
 
-    li {
-      padding: 5px 10px;
-      list-style-type: none;
-
-      &.gs-enabled {
-        cursor: pointer;
-        &:hover {
-          background-color: #eeeeee;
-        }
+    &.gs-enabled {
+      cursor: pointer;
+      &:hover {
+        background-color: #eeeeee;
       }
-      &.gs-disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
+    }
+    &.gs-disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &.gs-menu-divider {
+      background-color: #aaaaaa;
+      margin: 10px 0;
+      padding: 0;
+      height: 1px;
+    }
+
+    display: flex;
+
+    .gs-menu-name {
+      flex: 1;
+      font-size: 15px;
+      letter-spacing: 1px;
+    }
+
+    .gs-menu-shortcut {
+      font-size: 10px;
+      line-height: 15px;
+      color: #999999;
+      width: 15px;
+
+      &:before {
+        content: "(";
+      }
+      &:after {
+        content: ")";
       }
 
-      &.gs-menu-divider {
-        background-color: #aaaaaa;
-        margin: 10px 0;
-        padding: 0;
-        height: 1px;
-      }
-
-      display: flex;
-
-      .gs-menu-name {
-        flex: 1;
-        font-size: 15px;
-        letter-spacing: 1px;
-      }
-
-      .gs-menu-shortcut {
-        font-size: 10px;
-        line-height: 15px;
-        color: #999999;
-        width: 15px;
-
-        &:before {
-          content: "(";
-        }
-        &:after {
-          content: ")";
-        }
-
-        .gs-menu-underline {
-          text-decoration: underline;
-        }
+      .gs-menu-underline {
+        text-decoration: underline;
       }
     }
   }
