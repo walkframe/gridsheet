@@ -378,9 +378,15 @@ export const Editor: React.FC = () => {
   };
 
   return (
-    <div className={`gs-editor ${editing ? 'gs-editing' : ''}`} style={editing ? { top, left, height, width } : {}}>
+    <div className={`gs-editor ${editing ? 'gs-editing' : ''}`} style={editing ? { top, left, height } : {}}>
       {showAddress && <div className="gs-cell-label">{address}</div>}
-      <div className="gs-editor-inner">
+      <div
+        className="gs-editor-inner"
+        style={{
+          minWidth: width,
+          width: editorRef.current?.scrollWidth ?? 0,
+        }}
+      >
         <pre
           className="gs-editor-hl"
           style={{
@@ -395,9 +401,6 @@ export const Editor: React.FC = () => {
           spellCheck={false}
           draggable={false}
           ref={editorRef}
-          style={{
-            width,
-          }}
           rows={numLines}
           onFocus={() => {
             dispatch(setLastFocusedRef(editorRef));

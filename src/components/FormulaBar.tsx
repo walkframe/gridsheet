@@ -12,6 +12,7 @@ export const FormulaBar: React.FC = () => {
   const [before, setBefore] = React.useState('');
   const { choosing, editorRef, largeEditorRef, table, inputting, editingCell } = store;
   const [, sheetContext] = useSheetContext();
+  const hlRef = React.useRef<HTMLDivElement | null>(null);
 
   const address = choosing.x === -1 ? '' : p2a(choosing);
   React.useEffect(() => {
@@ -29,6 +30,17 @@ export const FormulaBar: React.FC = () => {
     dispatch(setEditingCell(''));
     editorRef.current!.focus();
   };
+  React.useEffect(() => {
+    const observer = new ResizeObserver((entries) => {
+      entries.forEach(updateScroll);
+    });
+    if (largeEditorRef.current) {
+      observer.observe(largeEditorRef.current);
+    }
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   const largeInput = largeEditorRef.current;
 
@@ -45,16 +57,28 @@ export const FormulaBar: React.FC = () => {
     sheetContext?.forceRender?.();
   };
 
+  const updateScroll = () => {
+    if (!hlRef.current || !largeEditorRef.current) {
+      return;
+    }
+    hlRef.current.style.height = `${largeEditorRef.current.clientHeight}px`;
+    hlRef.current.scrollLeft = largeEditorRef.current!.scrollLeft;
+    hlRef.current.scrollTop = largeEditorRef.current!.scrollTop;
+  };
+
   return (
-    <label className="gs-formula-bar">
+    <label 
+      className="gs-formula-bar"
+    >
       <div className="gs-selecting-address">{address}</div>
       <div className="gs-fx">Fx</div>
       <div className="gs-formula-bar-editor-inner">
         <div
           className="gs-editor-hl"
+          ref={hlRef}
           style={{
-            height: largeEditorRef.current?.scrollHeight,
-            width: largeEditorRef.current?.scrollWidth,
+            height: largeEditorRef.current?.clientHeight,
+            width: largeEditorRef.current?.clientWidth,
           }}
         >
           {editorStyle(inputting)}
@@ -107,13 +131,17 @@ export const FormulaBar: React.FC = () => {
                 break;
               }
             }
+
             const cell = table.getByPoint(choosing);
             if (prevention.isPrevented(cell?.prevention, prevention.Write)) {
               console.warn('This cell is protected from writing.');
               e.preventDefault();
             }
+            updateScroll();
             return false;
           }}
+          onKeyUp={updateScroll}
+          onScroll={updateScroll}
         ></textarea>
       </div>
     </label>
