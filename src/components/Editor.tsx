@@ -135,6 +135,7 @@ export const Editor: React.FC<Props> = ({ mode }: Props) => {
           }),
         );
         dispatch(setEditingCell(''));
+        resetSize(e.currentTarget);
         return false;
       // eslint-disable-next-line no-fallthrough
       case 'Enter': // ENTER
@@ -151,6 +152,7 @@ export const Editor: React.FC<Props> = ({ mode }: Props) => {
             writeCell(input.value);
             dispatch(setEditingCell(''));
           }
+          resetSize(e.currentTarget);
         } else if (editingOnEnter && selectingZone.endY === -1) {
           const dblclick = document.createEvent('MouseEvents');
           dblclick.initEvent('dblclick', true, true);
@@ -392,13 +394,7 @@ export const Editor: React.FC<Props> = ({ mode }: Props) => {
       style={editing ? { top, left, height } : {}}
     >
       {showAddress && <div className="gs-cell-label">{address}</div>}
-      <div
-        className="gs-editor-inner"
-        style={{
-          minWidth: width,
-          width: editorRef.current?.scrollWidth ?? 0,
-        }}
-      >
+      <div className="gs-editor-inner" style={{ width }}>
         <pre
           className="gs-editor-hl"
           style={{
@@ -418,17 +414,17 @@ export const Editor: React.FC<Props> = ({ mode }: Props) => {
             dispatch(setLastFocusedRef(editorRef));
             sheetContext?.setLastFocusedRef?.(editorRef);
           }}
+          style={{ minWidth: width }}
           onDoubleClick={(e) => {
             if (prevention.isPrevented(cell?.prevention, prevention.Write)) {
               console.warn('This cell is protected from writing.');
               return;
             }
             const input = e.currentTarget;
+            resetSize(input);
             if (!editing) {
               dispatch(setInputting(valueString));
               dispatch(setEditingCell(address));
-              input.style.width = `${width}px`;
-              input.style.height = `${height}px`;
               window.setTimeout(() => {
                 input.style.width = `${input.scrollWidth}px`;
                 input.style.height = `${input.scrollHeight}px`;
@@ -446,6 +442,7 @@ export const Editor: React.FC<Props> = ({ mode }: Props) => {
                 writeCell(e.target.value);
               }
             }
+            resetSize(e.target);
           }}
           value={inputting}
           onChange={(e) => {
@@ -500,4 +497,9 @@ export const editorStyle = (text: string) => {
       })}
     </>
   );
+};
+
+const resetSize = (input: HTMLTextAreaElement) => {
+  input.style.width = '0px';
+  input.style.height = '0px';
 };
