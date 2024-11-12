@@ -64,7 +64,8 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
     const rect = cellRef.current?.getBoundingClientRect();
     const outerRect = gridOuterRef.current?.getBoundingClientRect();
     if (
-      rect && outerRect &&
+      rect &&
+      outerRect &&
       rect.top < outerRect.bottom &&
       rect.bottom > outerRect.top &&
       rect.left < outerRect.right &&

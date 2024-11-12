@@ -1,5 +1,4 @@
 import React from 'react';
-import { createPortal } from 'react-dom';
 
 import { Cell } from './Cell';
 import { HeaderCellTop } from './HeaderCellTop';

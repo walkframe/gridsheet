@@ -33,9 +33,9 @@ import { Mode } from '../types';
 
 type Props = {
   mode?: Mode;
-}
+};
 
-export const Editor: React.FC<Props> = ({mode}: Props) => {
+export const Editor: React.FC<Props> = ({ mode }: Props) => {
   const { store, dispatch } = React.useContext(Context);
 
   const {
@@ -385,7 +385,7 @@ export const Editor: React.FC<Props> = ({mode}: Props) => {
   };
 
   return createPortal(
-    <div 
+    <div
       className={`gs-editor ${editing ? 'gs-editing' : ''}`}
       data-mode={mode || 'light'}
       data-sheet-id={sheetId}
