@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { x2c, y2r } from '../lib/converters';
 import { clip } from '../lib/clipboard';
 import {
@@ -28,8 +29,13 @@ import { expandInput, insertTextAtCursor } from '../lib/input';
 import { useSheetContext } from './SheetProvider';
 import { Lexer } from '../formula/evaluator';
 import { REF_PALETTE } from '../lib/palette';
+import { Mode } from '../types';
 
-export const Editor: React.FC = () => {
+type Props = {
+  mode?: Mode;
+};
+
+export const Editor: React.FC<Props> = ({ mode }: Props) => {
   const { store, dispatch } = React.useContext(Context);
 
   const {
@@ -46,6 +52,7 @@ export const Editor: React.FC = () => {
     editingOnEnter,
     onSave,
     table,
+    sheetId,
   } = store;
 
   const [, sheetContext] = useSheetContext();
@@ -128,6 +135,7 @@ export const Editor: React.FC = () => {
           }),
         );
         dispatch(setEditingCell(''));
+        resetSize(e.currentTarget);
         return false;
       // eslint-disable-next-line no-fallthrough
       case 'Enter': // ENTER
@@ -144,7 +152,8 @@ export const Editor: React.FC = () => {
             writeCell(input.value);
             dispatch(setEditingCell(''));
           }
-        } else if (editingOnEnter && selectingZone.startY === -1) {
+          resetSize(e.currentTarget);
+        } else if (editingOnEnter && selectingZone.endY === -1) {
           const dblclick = document.createEvent('MouseEvents');
           dblclick.initEvent('dblclick', true, true);
           input.dispatchEvent(dblclick);
@@ -377,16 +386,15 @@ export const Editor: React.FC = () => {
     return false;
   };
 
-  return (
-    <div className={`gs-editor ${editing ? 'gs-editing' : ''}`} style={editing ? { top, left, height } : {}}>
+  return createPortal(
+    <div
+      className={`gs-editor ${editing ? 'gs-editing' : ''}`}
+      data-mode={mode || 'light'}
+      data-sheet-id={sheetId}
+      style={editing ? { top, left, height } : {}}
+    >
       {showAddress && <div className="gs-cell-label">{address}</div>}
-      <div
-        className="gs-editor-inner"
-        style={{
-          minWidth: width,
-          width: editorRef.current?.scrollWidth ?? 0,
-        }}
-      >
+      <div className="gs-editor-inner" style={{ width }}>
         <pre
           className="gs-editor-hl"
           style={{
@@ -406,17 +414,17 @@ export const Editor: React.FC = () => {
             dispatch(setLastFocusedRef(editorRef));
             sheetContext?.setLastFocusedRef?.(editorRef);
           }}
+          style={{ minWidth: width }}
           onDoubleClick={(e) => {
             if (prevention.isPrevented(cell?.prevention, prevention.Write)) {
               console.warn('This cell is protected from writing.');
               return;
             }
             const input = e.currentTarget;
+            resetSize(input);
             if (!editing) {
               dispatch(setInputting(valueString));
               dispatch(setEditingCell(address));
-              input.style.width = `${width}px`;
-              input.style.height = `${height}px`;
               window.setTimeout(() => {
                 input.style.width = `${input.scrollWidth}px`;
                 input.style.height = `${input.scrollHeight}px`;
@@ -434,6 +442,7 @@ export const Editor: React.FC = () => {
                 writeCell(e.target.value);
               }
             }
+            resetSize(e.target);
           }}
           value={inputting}
           onChange={(e) => {
@@ -444,7 +453,8 @@ export const Editor: React.FC = () => {
           onKeyDown={handleKeyDown}
         />
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
 
@@ -487,4 +497,9 @@ export const editorStyle = (text: string) => {
       })}
     </>
   );
+};
+
+const resetSize = (input: HTMLTextAreaElement) => {
+  input.style.width = '0px';
+  input.style.height = '0px';
 };

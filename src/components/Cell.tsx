@@ -44,6 +44,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
     selectingZone,
     verticalHeaderSelecting,
     horizontalheaderSelecting,
+    gridOuterRef,
     editorRef,
     showAddress,
     autofillDraggingTo,
@@ -61,11 +62,19 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
   const pointed = choosing.y === y && choosing.x === x;
   const _setEditorRect = React.useCallback(() => {
     const rect = cellRef.current?.getBoundingClientRect();
-    if (rect) {
+    const outerRect = gridOuterRef.current?.getBoundingClientRect();
+    if (
+      rect &&
+      outerRect &&
+      rect.top < outerRect.bottom &&
+      rect.bottom > outerRect.top &&
+      rect.left < outerRect.right &&
+      rect.right > outerRect.left
+    ) {
       dispatch(
         setEditorRect({
-          y: rect.top,
-          x: rect.left,
+          y: rect.y,
+          x: rect.x,
           height: rect.height,
           width: rect.width,
         }),
@@ -74,12 +83,17 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
   }, []);
 
   React.useEffect(() => {
+    let timeoutId: number;
     if (pointed) {
-      _setEditorRect();
+      // Delay to account for coordinate shifts caused by unintentional redrawing due to virtualization.
+      timeoutId = window.setTimeout(_setEditorRect, 300);
       if (!editing) {
         dispatch(setInputting(table.stringify({ y, x })));
       }
     }
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   }, [pointed, editing]);
   const cell = table.getByPoint({ y, x });
   const writeCell = (value: string) => {
@@ -151,6 +165,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
         } else {
           dispatch(choose({ y, x }));
           dispatch(select({ startY: y, startX: x, endY: -1, endX: -1 }));
+          _setEditorRect();
         }
         const valueString = table.stringify({ y, x });
         dispatch(setInputting(valueString));

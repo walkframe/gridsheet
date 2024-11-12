@@ -62,14 +62,12 @@ export const FormulaBar: React.FC = () => {
       return;
     }
     hlRef.current.style.height = `${largeEditorRef.current.clientHeight}px`;
-    hlRef.current.scrollLeft = largeEditorRef.current!.scrollLeft;
-    hlRef.current.scrollTop = largeEditorRef.current!.scrollTop;
+    hlRef.current.scrollLeft = largeEditorRef.current.scrollLeft;
+    hlRef.current.scrollTop = largeEditorRef.current.scrollTop;
   };
 
   return (
-    <label 
-      className="gs-formula-bar"
-    >
+    <label className="gs-formula-bar">
       <div className="gs-selecting-address">{address}</div>
       <div className="gs-fx">Fx</div>
       <div className="gs-formula-bar-editor-inner">

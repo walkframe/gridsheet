@@ -25,6 +25,7 @@ const Sheet = ({ numRows, numCols, defaultWidth, initialCells }: Props) => {
             raw: (n) => String(n),
           },
           sheetResize: "both",
+          editingOnEnter: true,
         }}
         initialCells={constructInitialCells({
           cells: {

@@ -10,7 +10,7 @@
 @dark_formulabar_bg_color: #4f4f4f;
 @dark_formulabar_text_color: #bbbbbb;
 
-&[data-theme="dark"] {
+.gs-root1[data-mode="dark"] {
   background-color: @dark_bg_color;
   color: @dark_text_color;
   .gs-main {
@@ -36,17 +36,6 @@
   }
   .gs-tabular-inner {
     background-color: @dark_cell_color;
-  }
-  .gs-editor {
-    &.gs-editing {
-      textarea {
-        caret-color: @dark_text_color;
-      }
-      .gs-editor-hl {
-        background-color: @dark_cell_color;
-        color: @dark_text_color;
-      }
-    }
   }
   .gs-large-editor {
     textarea {
@@ -82,6 +71,18 @@
     }
     .gs-th-inner-wrap {
       border-top: solid 1px @dark_border_color;
+    }
+  }
+}
+
+.gs-editor[data-mode="dark"] {
+  &.gs-editing {
+    textarea {
+      caret-color: @dark_text_color;
+    }
+    .gs-editor-hl {
+      background-color: @dark_cell_color;
+      color: @dark_text_color;
     }
   }
 }

@@ -50,3 +50,23 @@ test('escape key should cancel the editing', async ({ page }) => {
   expect(await histories.count()).toBe(0);
   expect(await b2.locator('.gs-cell-rendered').textContent()).toBe('7');
 });
+
+test('edit on enter', async ({ page }) => {
+  await page.goto('http://localhost:5233/iframe.html?id=basic--small&viewMode=story');
+  const address = page.locator('.gs-selecting-address');
+  const editor = page.locator('.gs-editor');
+  const b2 = page.locator("[data-address='B2']");
+  await b2.click();
+
+  expect(await address.textContent()).toBe('B2');
+  expect(await editor.getAttribute('class')).not.toContain('gs-editing');
+  await page.keyboard.press('Enter');
+  expect(await address.textContent()).toBe('B2');
+  expect(await editor.getAttribute('class')).toContain('gs-editing');
+  await page.keyboard.press('Enter');
+  expect(await address.textContent()).toBe('B3');
+  expect(await editor.getAttribute('class')).not.toContain('gs-editing');
+  await page.keyboard.press('Enter');
+  expect(await address.textContent()).toBe('B3');
+  expect(await editor.getAttribute('class')).toContain('gs-editing');
+});

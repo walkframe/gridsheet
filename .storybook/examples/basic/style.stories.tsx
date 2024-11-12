@@ -7,7 +7,7 @@ export default {
 
 export const Style = () => {
   return (
-    <>
+    <div style={{transform: 'translate(50px, 50px)'}}>
       <GridSheet
         initialCells={constructInitialCells({
           matrices: {
@@ -89,6 +89,6 @@ export const Style = () => {
         })}
         options={{}}
       />
-    </>
+    </div>
   );
 };

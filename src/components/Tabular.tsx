@@ -1,5 +1,5 @@
 import React from 'react';
-import { Editor } from './Editor';
+
 import { Cell } from './Cell';
 import { HeaderCellTop } from './HeaderCellTop';
 import { HeaderCellLeft } from './HeaderCellLeft';
@@ -100,7 +100,6 @@ export const Tabular = ({ tableRef }: Props) => {
 
   return (
     <>
-      <Editor />
       <SearchBox />
       <div
         className="gs-tabular"
