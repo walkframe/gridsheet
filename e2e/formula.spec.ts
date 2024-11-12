@@ -139,7 +139,7 @@ test('insert ref by selection in multiple sheets', async ({ page }) => {
   const sheet1 = page.locator('[data-sheet-name="criteria"]');
   const sheet2 = page.locator('[data-sheet-name="grades"]');
   const sheet3 = page.locator('[data-sheet-name="other"]');
-  const editor3 = sheet3.locator('.gs-editor textarea');
+  const editor3 = page.locator('.gs-editor[data-sheet-id="3"] textarea');
   const largeEditor3 = sheet3.locator('.gs-formula-bar textarea');
   
   const b3 = sheet3.locator("[data-address='B3']");
@@ -177,7 +177,7 @@ test('insert cols range and rows range by selection in multiple sheets', async (
 
   const sheet1 = page.locator('[data-sheet-name="criteria"]');
   const sheet2 = page.locator('[data-sheet-name="grades"]');
-  const editor2 = sheet2.locator('.gs-editor textarea');
+  const editor2 = page.locator('.gs-editor[data-sheet-id="2"] textarea');
   const largeEditor2 = sheet2.locator('.gs-formula-bar textarea');
 
   const d3 = sheet2.locator("[data-address='D3']");

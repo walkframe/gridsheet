@@ -52,6 +52,7 @@ export const Editor: React.FC<Props> = ({mode}: Props) => {
     editingOnEnter,
     onSave,
     table,
+    sheetId,
   } = store;
 
   const [, sheetContext] = useSheetContext();
@@ -387,6 +388,7 @@ export const Editor: React.FC<Props> = ({mode}: Props) => {
     <div 
       className={`gs-editor ${editing ? 'gs-editing' : ''}`}
       data-mode={mode || 'light'}
+      data-sheet-id={sheetId}
       style={editing ? { top, left, height } : {}}
     >
       {showAddress && <div className="gs-cell-label">{address}</div>}
