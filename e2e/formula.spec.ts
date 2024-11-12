@@ -23,7 +23,7 @@ test('render', async ({ page }) => {
   const a12 = sheet2.locator("[data-address='A1']");
   await a12.click();
   await page.keyboard.type('500');
-  await editor2.blur();
+  await page.keyboard.press('Enter');
   expect(await a11.locator('.gs-cell-rendered').textContent()).toBe('600');
 
   // update sheet3
@@ -32,7 +32,7 @@ test('render', async ({ page }) => {
   const a13 = sheet3.locator("[data-address='A1']");
   await a13.click();
   await page.keyboard.type('777');
-  await editor3.blur();
+  await page.keyboard.press('Enter');
   expect(await a31.locator('.gs-cell-rendered').textContent()).toBe('1777');
 
   const input3 = page.locator('#input3');
@@ -110,7 +110,7 @@ test('insert ref by selection', async ({ page }) => {
   await page.keyboard.press('ArrowLeft');
   await page.keyboard.press('=');
   await b2.click();
-  await editor.press('Enter');
+  await page.keyboard.press('Enter');
 
   await b1.click();
   await page.keyboard.type('=sum(');
@@ -118,8 +118,8 @@ test('insert ref by selection', async ({ page }) => {
   await page.mouse.down();
   await page.locator("[data-address='C3']").hover();
   await page.mouse.up();
-  await editor.press(')');
-  await editor.press('Enter');
+  await page.keyboard.type(')');
+  await page.keyboard.press('Enter');
 
   await c1.click();
   await page.keyboard.type('=sum()');
@@ -144,7 +144,7 @@ test('insert ref by selection in multiple sheets', async ({ page }) => {
   
   const b3 = sheet3.locator("[data-address='B3']");
   await b3.click();
-  await largeEditor3.fill('=sum(');
+  await page.keyboard.type('=sum(');
   await sheet1.locator("[data-address='E1']").hover();
   await page.mouse.down();
   await sheet1.locator("[data-address='F1']").hover();
@@ -152,8 +152,8 @@ test('insert ref by selection in multiple sheets', async ({ page }) => {
   // Confirm that the contents of largeEditor is copied to editor
   expect(await editor3.inputValue()).toBe('=sum(criteria!E1:F1');
   expect(await largeEditor3.inputValue()).toBe('=sum(criteria!E1:F1');
-  await largeEditor3.press(')');
-  await largeEditor3.press('Enter');
+  await page.keyboard.type(')');
+  await page.keyboard.press('Enter');
   expect(await b3.locator('.gs-cell-rendered').textContent()).toBe('185');
 
   const b5 = sheet3.locator("[data-address='B5']");

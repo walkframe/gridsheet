@@ -150,7 +150,7 @@ export const Editor: React.FC<Props> = ({mode}: Props) => {
             writeCell(input.value);
             dispatch(setEditingCell(''));
           }
-        } else if (editingOnEnter && selectingZone.startY === -1) {
+        } else if (editingOnEnter && selectingZone.endY === -1) {
           const dblclick = document.createEvent('MouseEvents');
           dblclick.initEvent('dblclick', true, true);
           input.dispatchEvent(dblclick);
