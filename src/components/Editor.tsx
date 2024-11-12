@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { x2c, y2r } from '../lib/converters';
 import { clip } from '../lib/clipboard';
 import {
@@ -28,8 +29,13 @@ import { expandInput, insertTextAtCursor } from '../lib/input';
 import { useSheetContext } from './SheetProvider';
 import { Lexer } from '../formula/evaluator';
 import { REF_PALETTE } from '../lib/palette';
+import { Mode } from '../types';
 
-export const Editor: React.FC = () => {
+type Props = {
+  mode?: Mode;
+}
+
+export const Editor: React.FC<Props> = ({mode}: Props) => {
   const { store, dispatch } = React.useContext(Context);
 
   const {
@@ -377,8 +383,12 @@ export const Editor: React.FC = () => {
     return false;
   };
 
-  return (
-    <div className={`gs-editor ${editing ? 'gs-editing' : ''}`} style={editing ? { top, left, height } : {}}>
+  return createPortal(
+    <div 
+      className={`gs-editor ${editing ? 'gs-editing' : ''}`}
+      data-mode={mode || 'light'}
+      style={editing ? { top, left, height } : {}}
+    >
       {showAddress && <div className="gs-cell-label">{address}</div>}
       <div
         className="gs-editor-inner"
@@ -444,7 +454,8 @@ export const Editor: React.FC = () => {
           onKeyDown={handleKeyDown}
         />
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
 

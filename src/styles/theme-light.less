@@ -1,4 +1,5 @@
 @light_text_color: #000000;
+@light_text_color_selecting: #ffffff;
 @light_border_color: #dddddd;
 @light_cell_color: #f7f7f7;
 @light_bg_color: #e2e2e2;
@@ -10,7 +11,7 @@
 @light_formulabar_bg_color: #efefef;
 @light_formulabar_text_color: #555555;
 
-&[data-theme="light"] {
+&[data-mode="light"] {
   background-color: @light_bg_color;
   color: @light_text_color;
 
@@ -38,17 +39,6 @@
   .gs-tabular-inner {
     background-color: @light_cell_color;
   }
-  .gs-editor {
-    &.gs-editing {
-      textarea {
-        caret-color: @light_text_color;
-      }
-      .gs-editor-hl {
-        background-color: @light_cell_color;
-        color: @light_text_color;
-      }
-    }
-  }
 
   .gs-th {
     background-color: @light_header_color;
@@ -61,7 +51,7 @@
     }
     &.gs-th-selecting {
       background-color: @light_header_selecting_color_rev;
-      color: #ffffff;
+      color: @light_text_color_selecting;
     }
   }
   .gs-th-top {
@@ -78,6 +68,18 @@
     }
     .gs-th-inner-wrap {
       border-top: solid 1px @light_border_color;
+    }
+  }
+}
+
+.gs-editor[data-mode="light"] {
+  &.gs-editing {
+    textarea {
+      caret-color: @light_text_color;
+    }
+    .gs-editor-hl {
+      background-color: @light_cell_color;
+      color: @light_text_color;
     }
   }
 }

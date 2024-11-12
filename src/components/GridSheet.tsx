@@ -15,6 +15,7 @@ import { functions } from '../formula/mapping';
 import { Context } from '../store';
 import { reducer as defaultReducer } from '../store/actions';
 
+import { Editor } from './Editor';
 import { StoreInitializer } from './StoreInitializer';
 import { Resizer } from './Resizer';
 import { Emitter } from './Emitter';
@@ -171,7 +172,7 @@ export function GridSheet({
   const { onChange, onSelect, mode } = options;
   return (
     <Context.Provider value={{ store, dispatch }}>
-      <div className={`gs-root1`} data-sheet-name={sheetName} data-theme={mode || 'light'}>
+      <div className={`gs-root1`} data-sheet-name={sheetName} data-mode={mode || 'light'}>
         {showFormulaBar && <FormulaBar />}
         <div
           className={`gs-main ${className || ''}`}
@@ -183,6 +184,7 @@ export function GridSheet({
             resize: sheetResize,
           }}
         >
+          <Editor mode={mode} />
           <Tabular tableRef={tableRef} />
           <StoreInitializer
             initialCells={initialData}
