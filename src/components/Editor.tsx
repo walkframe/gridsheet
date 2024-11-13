@@ -386,6 +386,10 @@ export const Editor: React.FC<Props> = ({ mode }: Props) => {
     return false;
   };
 
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
   return createPortal(
     <div
       className={`gs-editor ${editing ? 'gs-editing' : ''}`}
