@@ -414,7 +414,7 @@ export const Editor: React.FC<Props> = ({ mode }: Props) => {
             dispatch(setLastFocusedRef(editorRef));
             sheetContext?.setLastFocusedRef?.(editorRef);
           }}
-          style={{ minWidth: width }}
+          style={{ minWidth: width, minHeight: height }}
           onDoubleClick={(e) => {
             if (prevention.isPrevented(cell?.prevention, prevention.Write)) {
               console.warn('This cell is protected from writing.');

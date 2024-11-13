@@ -33,6 +33,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
   const colId = x2c(x);
   const address = `${colId}${rowId}`;
   const { store, dispatch } = React.useContext(Context);
+  const isFirstPointed = React.useRef(true);
 
   const [sheetProvided, sheetContext] = useSheetContext();
 
@@ -44,7 +45,6 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
     selectingZone,
     verticalHeaderSelecting,
     horizontalheaderSelecting,
-    gridOuterRef,
     editorRef,
     showAddress,
     autofillDraggingTo,
@@ -61,39 +61,27 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
   const editing = editingCell === address;
   const pointed = choosing.y === y && choosing.x === x;
   const _setEditorRect = React.useCallback(() => {
-    const rect = cellRef.current?.getBoundingClientRect();
-    const outerRect = gridOuterRef.current?.getBoundingClientRect();
-    if (
-      rect &&
-      outerRect &&
-      rect.top < outerRect.bottom &&
-      rect.bottom > outerRect.top &&
-      rect.left < outerRect.right &&
-      rect.right > outerRect.left
-    ) {
-      dispatch(
-        setEditorRect({
-          y: rect.y,
-          x: rect.x,
-          height: rect.height,
-          width: rect.width,
-        }),
-      );
-    }
+    const rect = cellRef.current!.getBoundingClientRect();
+    dispatch(
+      setEditorRect({
+        y: rect.y,
+        x: rect.x,
+        height: rect.height,
+        width: rect.width,
+      }),
+    );
   }, []);
 
   React.useEffect(() => {
-    let timeoutId: number;
-    if (pointed) {
-      // Delay to account for coordinate shifts caused by unintentional redrawing due to virtualization.
-      timeoutId = window.setTimeout(_setEditorRect, 300);
+    // Avoid setting coordinates on the initial render to account for shifts caused by redrawing due to virtualization.
+    if (pointed && !isFirstPointed.current) {
+      _setEditorRect();
       if (!editing) {
         dispatch(setInputting(table.stringify({ y, x })));
       }
+      return;
     }
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
+    isFirstPointed.current = false;
   }, [pointed, editing]);
   const cell = table.getByPoint({ y, x });
   const writeCell = (value: string) => {
