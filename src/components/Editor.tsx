@@ -404,9 +404,7 @@ export const Editor: React.FC<Props> = ({ mode }: Props) => {
             height: editorRef.current?.scrollHeight,
             width: (editorRef.current?.scrollWidth ?? 0) - 4,
           }}
-        >
-          {editorStyle(inputting)}
-        </pre>
+        >{editorStyle(inputting)}</pre>
         <textarea
           autoFocus={true}
           spellCheck={false}
