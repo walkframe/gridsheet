@@ -30,6 +30,7 @@ import { useSheetContext } from './SheetProvider';
 import { Lexer } from '../formula/evaluator';
 import { REF_PALETTE } from '../lib/palette';
 import { Mode } from '../types';
+import { useDocument } from './hooks';
 
 type Props = {
   mode?: Mode;
@@ -37,7 +38,6 @@ type Props = {
 
 export const Editor: React.FC<Props> = ({ mode }: Props) => {
   const { store, dispatch } = React.useContext(Context);
-
   const {
     showAddress,
     editorRect,
@@ -56,7 +56,6 @@ export const Editor: React.FC<Props> = ({ mode }: Props) => {
   } = store;
 
   const [, sheetContext] = useSheetContext();
-
   React.useEffect(() => {
     editorRef?.current?.focus?.({ preventScroll: true });
   }, [editorRef]);
@@ -101,8 +100,11 @@ export const Editor: React.FC<Props> = ({ mode }: Props) => {
   };
 
   const numLines = valueString.split('\n').length;
-
   const [isKeyDown, setIsKeyDown] = React.useState(false);
+  const document = useDocument();
+  if (document == null) {
+    return null;
+  }
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (isKeyDown) {
       return;
@@ -386,10 +388,6 @@ export const Editor: React.FC<Props> = ({ mode }: Props) => {
     return false;
   };
 
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
   return createPortal(
     <div
       className={`gs-editor ${editing ? 'gs-editing' : ''}`}
@@ -410,6 +408,7 @@ export const Editor: React.FC<Props> = ({ mode }: Props) => {
           {editorStyle(inputting)}
         </pre>
         <textarea
+          autoFocus={true}
           spellCheck={false}
           draggable={false}
           ref={editorRef}
