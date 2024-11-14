@@ -15,6 +15,7 @@ import { functions } from '../formula/mapping';
 import { Context } from '../store';
 import { reducer as defaultReducer } from '../store/actions';
 
+import { SearchBox } from './SearchBox';
 import { Editor } from './Editor';
 import { StoreInitializer } from './StoreInitializer';
 import { Resizer } from './Resizer';
@@ -39,11 +40,12 @@ export function GridSheet({
 }: Props) {
   const { sheetResize, showFormulaBar = true } = options;
   const [prevSheetName, setPrevSheetName] = React.useState(sheetName);
-  const sheetRef = React.useRef<HTMLDivElement | null>(null);
+  const rootRef = React.useRef<HTMLDivElement | null>(null);
+  const mainRef = React.useRef<HTMLDivElement | null>(null);
   const searchInputRef = React.useRef<HTMLInputElement | null>(null);
   const editorRef = React.useRef<HTMLTextAreaElement | null>(null);
   const largeEditorRef = React.useRef<HTMLTextAreaElement | null>(null);
-  const gridOuterRef = React.useRef<HTMLDivElement | null>(null);
+  const tabularRef = React.useRef<HTMLDivElement | null>(null);
   const lastFocusedRef = React.useRef<HTMLTextAreaElement | null>(null);
   const [sheetProvided, sheetContext] = useSheetContext();
 
@@ -87,11 +89,12 @@ export function GridSheet({
       sheetId,
       table, // temporary (see StoreInitializer for detail)
       tableInitialized: false,
-      sheetRef,
+      rootRef,
+      mainRef,
       searchInputRef,
       editorRef,
       largeEditorRef,
-      gridOuterRef,
+      tabularRef,
       lastFocusedRef,
       choosing: { y: 1, x: 1 },
       cutting: false,
@@ -164,19 +167,23 @@ export function GridSheet({
   );
   React.useEffect(() => {
     const intervalId = window.setInterval(() => {
-      setSheetHeight(sheetRef.current?.clientHeight || 0);
-      setSheetWidth(sheetRef.current?.clientWidth || 0);
+      setSheetHeight(mainRef.current?.clientHeight || 0);
+      setSheetWidth(mainRef.current?.clientWidth || 0);
     }, 1000);
     return () => window.clearInterval(intervalId);
   }, []);
-  const { onChange, onSelect, mode } = options;
+  const { onChange, onSelect, mode = 'light' } = options;
   return (
     <Context.Provider value={{ store, dispatch }}>
-      <div className={`gs-root1`} data-sheet-name={sheetName} data-mode={mode || 'light'}>
+      <div 
+        className={`gs-root1`}
+        ref={rootRef}
+        data-sheet-name={sheetName} data-mode={mode}>
         {showFormulaBar && <FormulaBar />}
+        <SearchBox />
         <div
           className={`gs-main ${className || ''}`}
-          ref={sheetRef}
+          ref={mainRef}
           style={{
             maxWidth: store.table.totalWidth + 1,
             maxHeight: store.table.totalHeight + 1,

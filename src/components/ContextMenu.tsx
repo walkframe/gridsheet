@@ -6,6 +6,7 @@ import { areaToZone, zoneShape, zoneToArea } from '../lib/structs';
 
 import { Context } from '../store';
 import * as prevention from '../lib/prevention';
+import { Fixed } from './Fixed';
 
 export const ContextMenu: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);
@@ -44,9 +45,9 @@ export const ContextMenu: React.FC = () => {
   const historyIndex = table.getHistoryIndex();
 
   return (
-    <div
+    <Fixed
       className="gs-contextmenu-modal"
-      onClick={(e) => {
+      onClick={(e: React.MouseEvent<HTMLDivElement>) => {
         e.preventDefault();
         dispatch(setContextMenuPosition({ y: -1, x: -1 }));
         return false;
@@ -305,6 +306,6 @@ export const ContextMenu: React.FC = () => {
           )}
         </ul>
       </div>
-    </div>
+    </Fixed>
   );
 };

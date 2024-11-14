@@ -4,11 +4,11 @@ import React from 'react';
 import { Context } from '../store';
 import { setSearchQuery, search } from '../store/actions';
 import { smartScroll } from '../lib/virtualization';
+import { Fixed } from './Fixed';
 
 export const SearchBox: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);
-
-  const { editorRef, searchInputRef, gridOuterRef, searchQuery, matchingCellIndex, matchingCells, table } = store;
+  const { rootRef, editorRef, searchInputRef, tabularRef, searchQuery, matchingCellIndex, matchingCells, table } = store;
 
   const matchingCell = matchingCells[matchingCellIndex];
   React.useEffect(() => {
@@ -19,14 +19,25 @@ export const SearchBox: React.FC = () => {
     if (typeof point === 'undefined') {
       return;
     }
-    smartScroll(table, gridOuterRef.current, point);
+    smartScroll(table, tabularRef.current, point);
   }, [searchQuery, matchingCellIndex]);
 
   if (typeof searchQuery === 'undefined') {
     return null;
   }
+  if (rootRef.current === null) {
+    return null;
+  }
+  const diff = rootRef.current.offsetLeft + rootRef.current.offsetWidth - window.innerWidth;
   return (
-    <div className="gs-search">
+    <Fixed 
+      className="gs-search"
+      style={{
+        top: rootRef.current.offsetTop,
+        left: 'unset',
+        right: diff > 0 ? diff : 20,
+      }}
+    >
       <div className="gs-searchbox" title={"Press 'Enter' to next, 'Enter + Shift' to previous."}>
         <input
           type="text"
@@ -75,6 +86,6 @@ export const SearchBox: React.FC = () => {
           Close
         </a>
       </div>
-    </div>
+    </Fixed>
   );
 };

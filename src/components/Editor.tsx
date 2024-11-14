@@ -1,5 +1,4 @@
 import React from 'react';
-import { createPortal } from 'react-dom';
 import { x2c, y2r } from '../lib/converters';
 import { clip } from '../lib/clipboard';
 import {
@@ -30,10 +29,10 @@ import { useSheetContext } from './SheetProvider';
 import { Lexer } from '../formula/evaluator';
 import { REF_PALETTE } from '../lib/palette';
 import { Mode } from '../types';
-import { useDocument } from './hooks';
+import { Fixed } from './Fixed';
 
 type Props = {
-  mode?: Mode;
+  mode: Mode;
 };
 
 export const Editor: React.FC<Props> = ({ mode }: Props) => {
@@ -101,10 +100,6 @@ export const Editor: React.FC<Props> = ({ mode }: Props) => {
 
   const numLines = valueString.split('\n').length;
   const [isKeyDown, setIsKeyDown] = React.useState(false);
-  const document = useDocument();
-  if (document == null) {
-    return null;
-  }
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (isKeyDown) {
       return;
@@ -388,12 +383,14 @@ export const Editor: React.FC<Props> = ({ mode }: Props) => {
     return false;
   };
 
-  return createPortal(
-    <div
+  return (
+    <Fixed
       className={`gs-editor ${editing ? 'gs-editing' : ''}`}
-      data-mode={mode || 'light'}
-      data-sheet-id={sheetId}
       style={editing ? { top, left, height } : {}}
+      {...{
+        'data-mode': mode,
+        'data-sheet-id': sheetId,
+      }}
     >
       {showAddress && <div className="gs-cell-label">{address}</div>}
       <div className="gs-editor-inner" style={{ width }}>
@@ -404,7 +401,9 @@ export const Editor: React.FC<Props> = ({ mode }: Props) => {
             height: editorRef.current?.scrollHeight,
             width: (editorRef.current?.scrollWidth ?? 0) - 4,
           }}
-        >{editorStyle(inputting)}</pre>
+        >
+          {editorStyle(inputting)}
+        </pre>
         <textarea
           autoFocus={true}
           spellCheck={false}
@@ -454,8 +453,7 @@ export const Editor: React.FC<Props> = ({ mode }: Props) => {
           onKeyDown={handleKeyDown}
         />
       </div>
-    </div>,
-    document.body,
+    </Fixed>
   );
 };
 

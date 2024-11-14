@@ -3,7 +3,6 @@ import React from 'react';
 import { Cell } from './Cell';
 import { HeaderCellTop } from './HeaderCellTop';
 import { HeaderCellLeft } from './HeaderCellLeft';
-import { SearchBox } from './SearchBox';
 
 import { Context } from '../store';
 import { choose, select, setEntering, updateTable, setInputting } from '../store/actions';
@@ -33,8 +32,8 @@ export const Tabular = ({ tableRef }: Props) => {
     sheetWidth,
     table,
     tableInitialized,
-    gridOuterRef,
-    sheetRef,
+    tabularRef,
+    mainRef,
     headerWidth,
     headerHeight,
     editingCell,
@@ -93,21 +92,20 @@ export const Tabular = ({ tableRef }: Props) => {
   }, [table, store.choosing]);
   const [virtualized, setVirtualized] = React.useState<Virtualization | null>(null);
   React.useEffect(() => {
-    setVirtualized(virtualize(table, gridOuterRef.current));
-  }, [gridOuterRef.current, table, sheetRef.current?.clientHeight, sheetRef.current?.clientWidth]);
+    setVirtualized(virtualize(table, tabularRef.current));
+  }, [tabularRef.current, table, mainRef.current?.clientHeight, mainRef.current?.clientWidth]);
 
   const operationStyles = useOperationStyles(store, { ...refs, ...externalRefs[table.sheetName] });
 
   return (
     <>
-      <SearchBox />
       <div
         className="gs-tabular"
         style={{
           width: sheetWidth,
           height: sheetHeight,
         }}
-        ref={gridOuterRef}
+        ref={tabularRef}
         onMouseEnter={() => {
           dispatch(setEntering(true));
         }}

@@ -18,7 +18,7 @@ export const Resizer: React.FC = React.memo(() => {
     horizontalheaderSelecting,
     selectingZone,
     editorRef,
-    sheetRef,
+    mainRef,
   } = store;
 
   const [y, startY, endY] = posY;
@@ -26,11 +26,11 @@ export const Resizer: React.FC = React.memo(() => {
   if (y === -1 && x === -1) {
     return null;
   }
-  if (sheetRef.current == null || editorRef.current == null) {
+  if (mainRef.current == null || editorRef.current == null) {
     return null;
   }
   const cell = table.getByPoint({ y: y === -1 ? 0 : y, x: x === -1 ? 0 : x });
-  const { y: offsetY, x: offsetX } = sheetRef.current.getBoundingClientRect();
+  const { y: offsetY, x: offsetX } = mainRef.current.getBoundingClientRect();
 
   const baseWidth = cell?.width || DEFAULT_WIDTH;
   const baseHeight = cell?.height || DEFAULT_HEIGHT;

@@ -94,10 +94,11 @@ export type StoreType = {
   sheetId: number;
   table: Table;
   tableInitialized: boolean;
-  sheetRef: React.MutableRefObject<HTMLDivElement | null>;
+  rootRef: React.MutableRefObject<HTMLDivElement | null>;
+  mainRef: React.MutableRefObject<HTMLDivElement | null>;
   editorRef: React.MutableRefObject<HTMLTextAreaElement | null>;
   largeEditorRef: React.MutableRefObject<HTMLTextAreaElement | null>;
-  gridOuterRef: React.MutableRefObject<HTMLDivElement | null>;
+  tabularRef: React.MutableRefObject<HTMLDivElement | null>;
   searchInputRef: React.MutableRefObject<HTMLInputElement | null>;
   lastFocusedRef: React.MutableRefObject<HTMLTextAreaElement | null>;
   lastEdited: string;

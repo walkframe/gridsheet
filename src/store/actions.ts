@@ -597,7 +597,7 @@ class ArrowAction<
 > extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     const { shiftKey, deltaY, deltaX, numRows, numCols } = payload;
-    const { choosing, table, gridOuterRef } = store;
+    const { choosing, table, tabularRef } = store;
     let { selectingZone } = store;
     const { y, x } = choosing;
     if (shiftKey) {
@@ -646,7 +646,7 @@ class ArrowAction<
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
 
-    smartScroll(table, gridOuterRef.current, { y: nextY, x: nextX });
+    smartScroll(table, tabularRef.current, { y: nextY, x: nextX });
     return {
       ...store,
       selectingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
@@ -668,7 +668,7 @@ class WalkAction<
   reduce(store: StoreType, payload: T): StoreType {
     const { numRows, numCols } = payload;
     let { deltaY, deltaX } = payload;
-    const { choosing, selectingZone, table, gridOuterRef } = store;
+    const { choosing, selectingZone, table, tabularRef: gridOuterRef } = store;
     let { y: editorTop, x: editorLeft, height, width } = store.editorRect;
     const { y, x } = choosing;
     const selectingArea = zoneToArea(selectingZone);
