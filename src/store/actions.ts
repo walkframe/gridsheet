@@ -62,6 +62,19 @@ class SetSearchQueryAction<T extends string | undefined> extends CoreAction<T> {
 }
 export const setSearchQuery = new SetSearchQueryAction().bind();
 
+class SetSearchCaseSensitiveAction<T extends boolean> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreType {
+    const searchCaseSensitive = payload;
+    const { table } = store;
+    return {
+      ...store,
+      ...initSearchStatement(table, { ...store, searchCaseSensitive }),
+      searchCaseSensitive,
+    };
+  }
+}
+export const setSearchCaseSensitive = new SetSearchCaseSensitiveAction().bind();
+
 class SetEditingCellAction<T extends string> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     return {

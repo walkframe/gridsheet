@@ -62,7 +62,7 @@ export const shouldTracking = (operation: string) => {
 };
 
 export const initSearchStatement = (table: Table, store: StoreType) => {
-  const { searchQuery } = store;
+  const { searchQuery, searchCaseSensitive } = store;
   let { choosing } = store;
   if (!searchQuery) {
     return { matchingCells: [] };
@@ -70,8 +70,10 @@ export const initSearchStatement = (table: Table, store: StoreType) => {
   const matchingCells: Address[] = [];
   for (let y = 1; y <= table.bottom; y++) {
     for (let x = 1; x <= table.right; x++) {
-      const s = table.stringify({ y, x }, undefined, true);
-      if (s.indexOf(searchQuery) !== -1) {
+      const v = table.stringify({ y, x }, undefined, true);
+      const s = searchCaseSensitive ? v : v.toLowerCase();
+      const q = searchCaseSensitive ? searchQuery : searchQuery.toLowerCase();
+      if (s.indexOf(q) !== -1) {
         matchingCells.push(`${x2c(x)}${y2r(y)}`);
       }
     }

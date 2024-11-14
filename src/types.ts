@@ -99,7 +99,7 @@ export type StoreType = {
   editorRef: React.MutableRefObject<HTMLTextAreaElement | null>;
   largeEditorRef: React.MutableRefObject<HTMLTextAreaElement | null>;
   tabularRef: React.MutableRefObject<HTMLDivElement | null>;
-  searchInputRef: React.MutableRefObject<HTMLInputElement | null>;
+  searchInputRef: React.MutableRefObject<HTMLTextAreaElement | null>;
   lastFocusedRef: React.MutableRefObject<HTMLTextAreaElement | null>;
   lastEdited: string;
   entering: boolean;
@@ -123,6 +123,7 @@ export type StoreType = {
   minNumCols: number;
   maxNumCols: number;
   searchQuery?: string;
+  searchCaseSensitive: boolean;
   matchingCells: string[];
   matchingCellIndex: number;
   editingOnEnter: boolean;

@@ -1,47 +1,87 @@
+.gs-search-bar {
+  width: 100%;
+  display: table;
+  align-items: center;
+  justify-content: center;
+  border-top: solid 1px rgba(128, 128, 128, 0.3);
+  border-left: solid 1px rgba(128, 128, 128, 0.3);
+  border-right: solid 1px rgba(128, 128, 128, 0.3);
+  box-sizing: border-box;
+  background-color: rgba(200, 50, 0, 0.2);
 
-.gs-search {
-  width: 300px;
-  box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px,
-    rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
-  display: flex;
-  background-color: #fdfdfd;
-  border: solid 2px #eeeeee;
-  border-radius: 5px;
-  padding: 10px;
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  z-index: 5;
-
-  .gs-searchbox {
-    display: flex;
-    position: relative;
-    border: solid 2px #0077ff;
-    border-radius: 5px;
-    flex: 1;
-    input[type="text"] {
-      padding: 5px;
-      background-color: transparent;
-      border: none;
-      outline: 0;
-      z-index: 1;
-      flex: 1;
-    }
-  }
-  .gs-search-progress {
-    color: #999999;
-    padding: 6px 3px;
-    font-size: 13px;
-    text-align: right;
+  &.gs-search-found {
+    background-color: rgba(0, 200, 100, 0.2);
   }
 
-  .gs-search-close {
-    margin: 6px 5px;
-    cursor: pointer;
-    color: #dddddd;
-    width: 50px;
-    text-align: center;
+  .gs-search-bar-inner {
+    vertical-align: middle;
+    border-left: solid 1px rgba(128, 128, 128, 0.5);
+  }
+
+  .gs-search-bar-icon {
+    border-left: solid 1px rgba(128, 128, 128, 0.3);
+    display: table-cell;
+    vertical-align: middle;
+    width: 30px;
+  }
+
+  textarea {
+    background-color: transparent;
+    border: none;
+    padding: 0 2px;
+    box-sizing: border-box;
+    outline: none;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    font-size: 12px;
+    font-family: monospace, Arial;
+    height: 24px;
+    line-height: 24px;
+    min-height: 24px;
+    letter-spacing: 1.0px;
+    caret-color:rgba(128, 128, 128);
+    white-space: pre-wrap;
+    word-break: break-all;
+    display: table-cell;
+    vertical-align: middle;
+    width: 100%;
+    resize: none;
   }
 }
 
+.gs-search-progress {
+  display: table-cell;
+  color: #999999;
+  font-size: 13px;
+  width: 60px;
+  vertical-align: middle;
+  white-space: nowrap;
+  text-align: center;
+}
 
+.gs-search-close {
+  display: table-cell;
+  cursor: pointer;
+  vertical-align: middle;
+  width: 24px;
+}
+
+.gs-search-casesensitive {
+  display: table-cell;
+  cursor: pointer;
+  vertical-align: middle;
+  width: 30px;
+  
+  span {
+    font-size: 14px;
+    padding: 0 3px;
+    &.gs-search-casesensitive-on {
+      color: #0077ff;
+      background-color: rgba(200, 200, 255, 0.5);
+      border-radius: 3px;
+    }
+  }
+
+  
+}

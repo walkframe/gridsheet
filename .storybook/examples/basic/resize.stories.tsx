@@ -74,6 +74,7 @@ export const ResizeSheets = () => {
                   sheetResize: "horizontal",
                   sheetHeight: 500,
                   sheetWidth: 500,
+                  showFormulaBar: false,
                 }}
               />
             </td>
@@ -95,6 +96,7 @@ export const ResizeSheets = () => {
                   sheetResize: "none",
                   sheetHeight: 500,
                   sheetWidth: 500,
+                  showFormulaBar: false,
                 }}
               />
             </td>
