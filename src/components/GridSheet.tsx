@@ -15,7 +15,6 @@ import { functions } from '../formula/mapping';
 import { Context } from '../store';
 import { reducer as defaultReducer } from '../store/actions';
 
-import { SearchBox } from './SearchBox';
 import { Editor } from './Editor';
 import { StoreInitializer } from './StoreInitializer';
 import { Resizer } from './Resizer';
@@ -28,6 +27,7 @@ import { x2c, y2r } from '../lib/converters';
 import { embedStyle } from '../styles/embedder';
 import { useSheetContext } from './SheetProvider';
 import { FormulaBar } from './FormulaBar';
+import { SearchBar } from './SearchBar';
 
 export function GridSheet({
   initialCells: initialData,
@@ -42,7 +42,7 @@ export function GridSheet({
   const [prevSheetName, setPrevSheetName] = React.useState(sheetName);
   const rootRef = React.useRef<HTMLDivElement | null>(null);
   const mainRef = React.useRef<HTMLDivElement | null>(null);
-  const searchInputRef = React.useRef<HTMLInputElement | null>(null);
+  const searchInputRef = React.useRef<HTMLTextAreaElement | null>(null);
   const editorRef = React.useRef<HTMLTextAreaElement | null>(null);
   const largeEditorRef = React.useRef<HTMLTextAreaElement | null>(null);
   const tabularRef = React.useRef<HTMLDivElement | null>(null);
@@ -114,6 +114,7 @@ export function GridSheet({
       entering: false,
       matchingCells: [],
       matchingCellIndex: 0,
+      searchCaseSensitive: false,
       editingOnEnter: true,
       showAddress: true,
       contextMenuPosition: { y: -1, x: -1 },
@@ -176,8 +177,7 @@ export function GridSheet({
   return (
     <Context.Provider value={{ store, dispatch }}>
       <div className={`gs-root1`} ref={rootRef} data-sheet-name={sheetName} data-mode={mode}>
-        {showFormulaBar && <FormulaBar />}
-        <SearchBox />
+        {typeof store.searchQuery === 'undefined' ? showFormulaBar && <FormulaBar /> : <SearchBar />}
         <div
           className={`gs-main ${className || ''}`}
           ref={mainRef}

@@ -3,14 +3,14 @@ import { test, expect } from '@playwright/test';
 test('search and next', async ({ page }) => {
   await page.goto('http://localhost:5233/iframe.html?id=basic--large&viewMode=story');
 
-  const searchBox = page.locator('.gs-searchbox');
+  const searchBar = page.locator('.gs-search-bar');
   const progress = page.locator('.gs-search-progress');
-  expect(await searchBox.count()).toBe(0);
+  expect(await searchBar.count()).toBe(0);
 
   await page.keyboard.down('Control');
   await page.keyboard.press('f');
 
-  expect(await searchBox.count()).toBe(1);
+  expect(await searchBar.count()).toBe(1);
   expect(await progress.textContent()).toBe('0 / 0');
 
   await page.keyboard.up('Control');
@@ -44,5 +44,5 @@ test('search and next', async ({ page }) => {
   expect(await a1000.getAttribute('class')).toContain('gs-choosing');
 
   await page.keyboard.press('Escape');
-  expect(await searchBox.count()).toBe(0);
+  expect(await searchBar.count()).toBe(0);
 });
