@@ -8,7 +8,8 @@ import { Fixed } from './Fixed';
 
 export const SearchBox: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);
-  const { rootRef, editorRef, searchInputRef, tabularRef, searchQuery, matchingCellIndex, matchingCells, table } = store;
+  const { rootRef, editorRef, searchInputRef, tabularRef, searchQuery, matchingCellIndex, matchingCells, table } =
+    store;
 
   const matchingCell = matchingCells[matchingCellIndex];
   React.useEffect(() => {
@@ -30,7 +31,7 @@ export const SearchBox: React.FC = () => {
   }
   const diff = rootRef.current.offsetLeft + rootRef.current.offsetWidth - window.innerWidth;
   return (
-    <Fixed 
+    <Fixed
       className="gs-search"
       style={{
         top: rootRef.current.offsetTop,

@@ -14,8 +14,8 @@ export const Resizer: React.FC = React.memo(() => {
     resizingPositionY: posY,
     resizingPositionX: posX,
     table,
-    verticalHeaderSelecting,
-    horizontalheaderSelecting,
+    leftHeaderSelecting,
+    topHeaderSelecting,
     selectingZone,
     editorRef,
     mainRef,
@@ -44,7 +44,7 @@ export const Resizer: React.FC = React.memo(() => {
     const diff: CellsByAddressType = {};
     if (x !== -1) {
       let xs = [x];
-      if (verticalHeaderSelecting && between({ start: left, end: right }, x)) {
+      if (leftHeaderSelecting && between({ start: left, end: right }, x)) {
         xs = makeSequence(left, right + 1);
       }
       xs.forEach((x) => {
@@ -53,7 +53,7 @@ export const Resizer: React.FC = React.memo(() => {
     }
     if (y !== -1) {
       let ys = [y];
-      if (horizontalheaderSelecting && between({ start: top, end: bottom }, y)) {
+      if (topHeaderSelecting && between({ start: top, end: bottom }, y)) {
         ys = makeSequence(top, bottom + 1);
       }
       ys.forEach((y) => {

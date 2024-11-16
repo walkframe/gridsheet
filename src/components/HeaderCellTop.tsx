@@ -29,7 +29,7 @@ export const HeaderCellTop: React.FC<Props> = React.memo(({ x }) => {
     choosing,
     selectingZone,
     resizingRect,
-    verticalHeaderSelecting,
+    topHeaderSelecting,
     headerHeight,
     editorRef,
     autofillDraggingTo,
@@ -49,7 +49,7 @@ export const HeaderCellTop: React.FC<Props> = React.memo(({ x }) => {
       data-x={x}
       className={`gs-th gs-th-top ${choosing.x === x ? 'gs-choosing' : ''} ${
         between({ start: selectingZone.startX, end: selectingZone.endX }, x)
-          ? verticalHeaderSelecting
+          ? topHeaderSelecting
             ? 'gs-th-selecting'
             : 'gs-selecting'
           : ''

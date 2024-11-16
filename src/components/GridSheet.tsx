@@ -102,8 +102,8 @@ export function GridSheet({
       selectingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
       copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
       autofillDraggingTo: null,
-      verticalHeaderSelecting: false,
-      horizontalheaderSelecting: false,
+      leftHeaderSelecting: false,
+      topHeaderSelecting: false,
       editingCell: '',
       editorRect: { y: 0, x: 0, height: 0, width: 0 },
       resizingRect: { y: -1, x: -1, height: -1, width: -1 },
@@ -175,10 +175,7 @@ export function GridSheet({
   const { onChange, onSelect, mode = 'light' } = options;
   return (
     <Context.Provider value={{ store, dispatch }}>
-      <div 
-        className={`gs-root1`}
-        ref={rootRef}
-        data-sheet-name={sheetName} data-mode={mode}>
+      <div className={`gs-root1`} ref={rootRef} data-sheet-name={sheetName} data-mode={mode}>
         {showFormulaBar && <FormulaBar />}
         <SearchBox />
         <div

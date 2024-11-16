@@ -11,15 +11,8 @@ import { Fixed } from './Fixed';
 export const ContextMenu: React.FC = () => {
   const { store, dispatch } = React.useContext(Context);
 
-  const {
-    table,
-    choosing,
-    selectingZone,
-    verticalHeaderSelecting,
-    horizontalheaderSelecting,
-    editorRef,
-    contextMenuPosition,
-  } = store;
+  const { table, choosing, selectingZone, leftHeaderSelecting, topHeaderSelecting, editorRef, contextMenuPosition } =
+    store;
 
   const { y, x } = choosing;
   let {
@@ -98,9 +91,9 @@ export const ContextMenu: React.FC = () => {
             </div>
           </li>
 
-          <li className="gs-menu-divider" />
+          {(leftHeaderSelecting || topHeaderSelecting) && <li className="gs-menu-divider" />}
 
-          {!verticalHeaderSelecting && (
+          {leftHeaderSelecting && (
             <li
               className={
                 (table.maxNumRows !== -1 && tableHeight + height > table.maxNumRows) ||
@@ -122,11 +115,11 @@ export const ContextMenu: React.FC = () => {
               }}
             >
               <div className="gs-menu-name">
-                Insert {height} row{height > 0 && 's'} above
+                Insert {height} row{height > 1 && 's'} above
               </div>
             </li>
           )}
-          {!verticalHeaderSelecting && (
+          {leftHeaderSelecting && (
             <li
               className={
                 (table.maxNumRows !== -1 && tableHeight + height > table.maxNumRows) ||
@@ -154,12 +147,11 @@ export const ContextMenu: React.FC = () => {
               }}
             >
               <div className="gs-menu-name">
-                Insert {height} row{height > 0 && 's'} below
+                Insert {height} row{height > 1 && 's'} below
               </div>
             </li>
           )}
-
-          {!horizontalheaderSelecting && (
+          {topHeaderSelecting && (
             <li
               className={
                 (table.maxNumCols !== -1 && tableWidth + width > table.maxNumCols) ||
@@ -184,11 +176,11 @@ export const ContextMenu: React.FC = () => {
               }}
             >
               <div className="gs-menu-name">
-                Insert {width} column{width > 0 && 's'} left
+                Insert {width} column{width > 1 && 's'} left
               </div>
             </li>
           )}
-          {!horizontalheaderSelecting && (
+          {topHeaderSelecting && (
             <li
               className={
                 (table.maxNumCols !== -1 && tableWidth + width > table.maxNumCols) ||
@@ -216,12 +208,11 @@ export const ContextMenu: React.FC = () => {
               }}
             >
               <div className="gs-menu-name">
-                Insert {width} column{width > 0 && 's'} right
+                Insert {width} column{width > 1 && 's'} right
               </div>
             </li>
           )}
-
-          {!verticalHeaderSelecting && (
+          {leftHeaderSelecting && (
             <li
               className={
                 (table.minNumRows !== -1 && tableHeight - height < table.minNumRows) ||
@@ -246,12 +237,11 @@ export const ContextMenu: React.FC = () => {
               }}
             >
               <div className="gs-menu-name">
-                Delete {height} row{height > 0 && 's'}
+                Delete {height} row{height > 1 && 's'}
               </div>
             </li>
           )}
-
-          {!horizontalheaderSelecting && (
+          {topHeaderSelecting && (
             <li
               className={
                 (table.minNumCols !== -1 && tableWidth - width < table.minNumCols) ||
@@ -282,6 +272,7 @@ export const ContextMenu: React.FC = () => {
 
           {historyIndex > -1 && (
             <li
+              className="gs-enabled"
               onClick={() => {
                 dispatch(undo(null));
               }}
@@ -294,6 +285,7 @@ export const ContextMenu: React.FC = () => {
           )}
           {historyIndex < table.getHistorySize() - 1 && (
             <li
+              className="gs-enabled"
               onClick={() => {
                 dispatch(redo(null));
               }}

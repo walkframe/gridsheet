@@ -370,8 +370,8 @@ class EscapeAction<T extends null> extends CoreAction<T> {
       copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
       cutting: false,
       editingCell: '',
-      verticalHeaderSelecting: false,
-      horizontalheaderSelecting: false,
+      leftHeaderSelecting: false,
+      topHeaderSelecting: false,
     };
   }
 }
@@ -393,8 +393,8 @@ class SelectAction<T extends ZoneType> extends CoreAction<T> {
     return {
       ...store,
       selectingZone: payload,
-      verticalHeaderSelecting: false,
-      horizontalheaderSelecting: false,
+      leftHeaderSelecting: false,
+      topHeaderSelecting: false,
     };
   }
 }
@@ -413,9 +413,9 @@ class SelectRowsAction<T extends { range: RangeType; numCols: number }> extends 
     return {
       ...store,
       selectingZone,
-      choosing: { y: start, x: 0 } as PointType,
-      horizontalheaderSelecting: true,
-      verticalHeaderSelecting: false,
+      choosing: { y: start, x: 0 },
+      leftHeaderSelecting: true,
+      topHeaderSelecting: false,
     };
   }
 }
@@ -435,9 +435,9 @@ class SelectColsAction<T extends { range: RangeType; numRows: number }> extends 
     return {
       ...store,
       selectingZone,
-      choosing: { y: 0, x: start } as PointType,
-      horizontalheaderSelecting: false,
-      verticalHeaderSelecting: true,
+      choosing: { y: 0, x: start },
+      leftHeaderSelecting: false,
+      topHeaderSelecting: true,
     };
   }
 }

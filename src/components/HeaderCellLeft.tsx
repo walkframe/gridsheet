@@ -27,7 +27,7 @@ export const HeaderCellLeft: React.FC<Props> = React.memo(({ y }) => {
   const {
     choosing,
     selectingZone,
-    horizontalheaderSelecting,
+    leftHeaderSelecting,
     resizingRect,
     headerWidth,
     editorRef,
@@ -49,7 +49,7 @@ export const HeaderCellLeft: React.FC<Props> = React.memo(({ y }) => {
       data-y={y}
       className={`gs-th gs-th-left ${choosing.y === y ? 'gs-choosing' : ''} ${
         between({ start: selectingZone.startY, end: selectingZone.endY }, y)
-          ? horizontalheaderSelecting
+          ? leftHeaderSelecting
             ? 'gs-th-selecting'
             : 'gs-selecting'
           : ''
