@@ -16,6 +16,7 @@ import {
 
 import { HEADER_HEIGHT, HEADER_WIDTH } from '../constants';
 import { useSheetContext } from './SheetProvider';
+import { usePluginContext } from './PluginBase';
 
 export const StoreInitializer: React.FC<Props> = ({ options = {} }) => {
   const {
@@ -78,6 +79,15 @@ export const StoreInitializer: React.FC<Props> = ({ options = {} }) => {
       dispatch(setOnSave(onSave));
     }
   }, [onSave]);
+
+  const [pluginProvided, pluginContext] = usePluginContext();
+  React.useEffect(() => {
+    if (!pluginProvided) {
+      return;
+    }
+    pluginContext.setStore(store);
+    pluginContext.setDispatch(() => dispatch);
+  }, [store, dispatch]);
 
   return <></>;
 };
