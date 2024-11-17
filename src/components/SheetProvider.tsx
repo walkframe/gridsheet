@@ -34,7 +34,11 @@ export function useSheetDispatch() {
   return dispatch;
 }
 
-export function SheetProvider({ children }: { children: React.ReactNode }) {
+type Props = {
+  children: React.ReactNode;
+};
+
+export function SheetProvider({ children }: Props) {
   const [mounted, setMounted] = React.useState(false);
   const [version, setVersion] = React.useState(0);
   const head = React.useRef(1);

@@ -173,6 +173,17 @@ export function GridSheet({
     }, 1000);
     return () => window.clearInterval(intervalId);
   }, []);
+  React.useEffect(() => {
+    if (options.sheetHeight) {
+      setSheetHeight(options.sheetHeight);
+    }
+  }, [options.sheetHeight]);
+  React.useEffect(() => {
+    if (options.sheetWidth) {
+      setSheetWidth(options.sheetWidth);
+    }
+  }, [options.sheetWidth]);
+
   const { onChange, onSelect, mode = 'light' } = options;
   return (
     <Context.Provider value={{ store, dispatch }}>
