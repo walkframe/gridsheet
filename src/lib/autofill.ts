@@ -1,5 +1,5 @@
 import React from 'react';
-import { isEqual } from 'date-fns';
+import dayjs from 'dayjs';
 import type { AreaType, CellsByAddressType, CellType, PointType, StoreType } from '../types';
 import { Table } from '../lib/table';
 import { areaShape, areaToZone, complementSelectingArea, concatAreas, zoneToArea } from './structs';
@@ -379,7 +379,7 @@ class TypedGroup {
     switch (this.kind) {
       case 'date': {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        const eq = this.nexts.every((v, i) => i === 0 || isEqual(v, this.timeDelta.add(this.nexts[i - 1])));
+        const eq = this.nexts.every((v, i) => i === 0 || dayjs(v).isSame(this.timeDelta.add(this.nexts[i - 1])));
         this.equidistant = eq;
         return [];
       }

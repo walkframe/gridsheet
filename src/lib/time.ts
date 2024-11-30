@@ -1,24 +1,14 @@
-import {
-  addYears,
-  addMonths,
-  addDays,
-  addHours,
-  addMinutes,
-  addSeconds,
-  addMilliseconds,
-  subYears,
-  subMonths,
-  subDays,
-  subHours,
-  subMinutes,
-  subSeconds,
-  subMilliseconds,
-} from 'date-fns';
+import dayjs from 'dayjs';
 
 export const BASE_DATE = new Date('2345-01-02T03:04:05Z');
 type DiffFunction = (date: Date | number, amount: number) => Date;
-const ADD_FNS = [addYears, addMonths, addDays, addHours, addMinutes, addSeconds, addMilliseconds] as DiffFunction[];
-const SUB_FNS = [subYears, subMonths, subDays, subHours, subMinutes, subSeconds, subMilliseconds] as DiffFunction[];
+const UNITS = ['year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond'] as const;
+const ADD_FNS = UNITS.map(
+  (unit) => (date: Date, amount: number) => dayjs(date).add(amount, unit).toDate(),
+) as DiffFunction[];
+const SUB_FNS = UNITS.map(
+  (unit) => (date: Date, amount: number) => dayjs(date).subtract(amount, unit).toDate(),
+) as DiffFunction[];
 
 type Diff = [number, number, number, number, number, number, number];
 
@@ -40,7 +30,7 @@ export class TimeDelta {
     ];
     this.date1 = date1;
     this.date2 = date2;
-    this.format = 'HH:mm';
+    this.format = 'HH:mm:ss';
   }
   public add(date: Date) {
     this.diff.forEach((n, i) => {

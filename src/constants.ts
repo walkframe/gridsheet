@@ -31,3 +31,6 @@ export class Special {
     this.name = name;
   }
 }
+
+export const SECONDS_IN_DAY = 86400;
+export const FULLDATE_FORMAT_UTC = 'YYYY-MM-DDTHH:mm:ss.SSSZ';

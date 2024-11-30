@@ -1,5 +1,6 @@
 import { FormulaError } from '../evaluator';
 import { BaseFunction } from './__base';
+import { eq } from './__utils';
 
 export class EqFunction extends BaseFunction {
   example = 'EQ(6, 7)';
@@ -18,7 +19,7 @@ export class EqFunction extends BaseFunction {
     }
   }
 
-  protected main(v1: number, v2: number) {
-    return v1 === v2;
+  protected main(v1: any, v2: any) {
+    return eq(v1, v2);
   }
 }

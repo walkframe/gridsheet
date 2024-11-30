@@ -2,7 +2,7 @@ import { FormulaError } from '../evaluator';
 import { solveTable } from '../solver';
 import { Table } from '../../lib/table';
 import { BaseFunction } from './__base';
-import { check } from './__utils';
+import { check, ensureString } from './__utils';
 import { AreaType } from '../../types';
 
 export class SumifFunction extends BaseFunction {
@@ -28,6 +28,7 @@ export class SumifFunction extends BaseFunction {
     if (this.bareArgs[2] != undefined && this.bareArgs[2] instanceof Table) {
       throw new FormulaError('#N/A', '3rd argument must be range.');
     }
+    this.bareArgs[1] = ensureString(this.bareArgs[1]);
   }
 
   protected main(range: Table, condition: string, sumRange: Table) {

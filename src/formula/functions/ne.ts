@@ -1,5 +1,6 @@
 import { FormulaError } from '../evaluator';
 import { BaseFunction } from './__base';
+import { ne } from './__utils';
 
 export class NeFunction extends BaseFunction {
   example = 'NE(6, 7)';
@@ -19,6 +20,6 @@ export class NeFunction extends BaseFunction {
   }
 
   protected main(v1: number, v2: number) {
-    return v1 !== v2;
+    return ne(v1, v2);
   }
 }
