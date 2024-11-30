@@ -6,7 +6,7 @@ describe('countif', () => {
   const table = new Table({});
   table.initialize({
     A1: { value: 1 },
-    B1: { value: 5 },
+    B1: { value: 10 },
     C1: { value: 3 },
     D1: { value: 2 },
     E1: { value: 3 },
