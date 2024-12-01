@@ -83,8 +83,7 @@
     "react-dom": ">=16.9.0"
   },
   "dependencies": {
-    "date-fns": "^2.28.0",
-    "date-fns-timezone": "^0.1.4"
+    "dayjs": "^1.11.13"
   },
   "resolutions": {
     "trim": "^0.0.3",

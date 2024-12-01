@@ -1,6 +1,6 @@
 import { FormulaError } from '../evaluator';
 import { BaseFunction } from './__base';
-import { ensureNumber } from './__utils';
+import { lte } from './__utils';
 
 export class LteFunction extends BaseFunction {
   example = 'LTE(3, 6)';
@@ -17,10 +17,9 @@ export class LteFunction extends BaseFunction {
     if (this.bareArgs.length !== 2) {
       throw new FormulaError('#N/A', 'Number of arguments for LTE is incorrect.');
     }
-    this.bareArgs = this.bareArgs.map((arg) => ensureNumber(arg));
   }
 
   protected main(v1: number, v2: number) {
-    return v1 <= v2;
+    return lte(v1, v2);
   }
 }

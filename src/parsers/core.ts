@@ -1,6 +1,10 @@
-import { parseFromTimeZone } from 'date-fns-timezone';
 import { CellType } from '../types';
 import { TimeDelta } from '../lib/time';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+dayjs.extend(timezone);
+dayjs.extend(utc);
 
 type Condition = (value: string) => boolean;
 type Stringify = (value: string) => any;
@@ -12,6 +16,10 @@ type Props = {
 };
 
 const BOOLS = { true: true, false: false } as { [s: string]: boolean };
+const NUMS = new Set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
+const NUMS_Z = new Set([...NUMS, 'Z', 'z']);
+const JFMASOND = new Set(['J', 'F', 'M', 'A', 'S', 'O', 'N', 'D', ...NUMS]);
+const NBRYNLGPTVC = new Set(['N', 'B', 'R', 'Y', 'N', 'L', 'G', 'P', 'T', 'V', 'C', ...NUMS_Z]);
 
 export interface ParserMixinType {
   functions?: ((value: string, cell?: CellType) => any)[];
@@ -138,10 +146,10 @@ export class Parser implements ParserMixinType {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   date(value: string, cell?: CellType): Date | undefined {
     const first = value[0];
-    if (first == null || first.match(/[JFMASOND0-9]/) == null) {
+    if (first == null || !JFMASOND.has(first.toUpperCase())) {
       return;
     }
-    if (value[value.length - 1].match(/[0-9Z]/) == null) {
+    if (!NBRYNLGPTVC.has(value[value.length - 1].toUpperCase())) {
       return;
     }
     if (value.match(/[=*&#@!?[\]{}"'()|%\\<>~+\r\n]/)) {
@@ -153,11 +161,12 @@ export class Parser implements ParserMixinType {
     } catch (e) {
       // eslint-disable-next-line no-empty
     }
-    const d = parseFromTimeZone(value, { timeZone });
-    if (d.toString() === 'Invalid Date') {
-      return;
+    try {
+      const day = dayjs.tz(value, timeZone);
+      return day.toDate();
+    } catch (e) {
+      // eslint-disable-next-line no-empty
     }
-    return d;
   }
 }
 

@@ -1,10 +1,11 @@
-import { subSeconds } from 'date-fns';
+import dayjs from 'dayjs';
 
 import { FormulaError } from '../evaluator';
 import { TimeDelta } from '../../lib/time';
 import { BaseFunction } from './__base';
 import { ensureNumber, stripTable } from './__utils';
 import { Table } from '../../lib/table';
+import { SECONDS_IN_DAY } from '../../constants';
 
 export class MinusFunction extends BaseFunction {
   example = 'MINUS(8, 3)';
@@ -40,7 +41,9 @@ export class MinusFunction extends BaseFunction {
       return v1.sub(v2);
     }
     if (v1 instanceof Date && typeof v2 === 'number') {
-      return subSeconds(v1, v2);
+      return dayjs(v1)
+        .subtract(v2 * SECONDS_IN_DAY, 'second')
+        .toDate();
     }
     if (!v1) {
       return -v2;

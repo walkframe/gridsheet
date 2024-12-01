@@ -1,10 +1,11 @@
+import dayjs from 'dayjs';
+
 import { CellType, PointType, WriterType } from '../types';
 import { Table, UserTable } from '../lib/table';
 import { solveFormula } from '../formula/solver';
 import { FormulaError } from '../formula/evaluator';
 import { p2a } from '../lib/converters';
 import { TimeDelta } from '../lib/time';
-import { format as formatDate } from 'date-fns';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Condition = (value: any) => boolean;
@@ -32,9 +33,9 @@ export interface RendererMixinType {
 }
 
 export class Renderer implements RendererMixinType {
-  public datetimeFormat: string = 'yyyy-MM-dd HH:mm:ss';
-  public dateFormat: string = 'yyyy-MM-dd';
-  public timeDeltaFormat: string = 'HH:mm';
+  public datetimeFormat: string = 'YYYY-MM-DD HH:mm:ss';
+  public dateFormat: string = 'YYYY-MM-DD';
+  public timeDeltaFormat: string = 'HH:mm:ss';
   private condition?: Condition;
   private complement?: Stringify;
 
@@ -162,9 +163,9 @@ export class Renderer implements RendererMixinType {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   date(value: Date, writer?: WriterType): any {
     if (value.getHours() + value.getMinutes() + value.getSeconds() === 0) {
-      return formatDate(value, this.dateFormat);
+      return dayjs(value).format(this.dateFormat);
     }
-    return formatDate(value, this.datetimeFormat);
+    return dayjs(value).format(this.datetimeFormat);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

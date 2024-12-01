@@ -1,9 +1,11 @@
+import dayjs from 'dayjs';
+
 import { FormulaError } from '../evaluator';
 import { BaseFunction } from './__base';
 import { ensureNumber, stripTable } from './__utils';
 import { Table } from '../../lib/table';
 import { TimeDelta } from '../../lib/time';
-import { addSeconds } from 'date-fns';
+import { SECONDS_IN_DAY } from '../../constants';
 
 export class AddFunction extends BaseFunction {
   example = 'ADD(2, 3)';
@@ -36,10 +38,14 @@ export class AddFunction extends BaseFunction {
       return v1.add(v2);
     }
     if (v1 instanceof Date && typeof v2 === 'number') {
-      return addSeconds(v1, v2);
+      return dayjs(v1)
+        .add(v2 * SECONDS_IN_DAY, 'second')
+        .toDate();
     }
     if (typeof v1 === 'number' && v2 instanceof Date) {
-      return addSeconds(v2, v1);
+      return dayjs(v2)
+        .add(v1 * SECONDS_IN_DAY, 'second')
+        .toDate();
     }
     if (!v1) {
       return v2;
