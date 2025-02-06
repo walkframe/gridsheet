@@ -10,9 +10,23 @@ export default {
 
 export const SheetOnChange = () => {
   const [diff, setDiff] = React.useState<Record<string, any>>({});
+  const [evaluates, setEvaluates] = React.useState<boolean>(true);
   const [histories, setHistories] = React.useState<HistoryType[]>([]);
   const tableRef = createTableRef();
   const table = tableRef.current?.table;
+  React.useEffect(() => {
+    if (table == null) {
+      return;
+    }
+    setDiff(
+      table.getObjectFlatten({
+        evaluates,
+        filter: (cell) =>
+          !!cell?.changedAt &&
+          cell.changedAt > table.lastChangedAt!,
+      })
+    );
+  }, [table, evaluates]);
 
   return (
     <>
@@ -36,21 +50,14 @@ export const SheetOnChange = () => {
                 }
               },
               ensured: {
-                numRows: 50,
-                numCols: 50,
+                numRows: 20,
+                numCols: 10,
               },
             })}
             options={{
               sheetWidth: 300,
               sheetHeight: 300,
               onChange: (table, positions) => {
-                setDiff(
-                  table.getObjectFlatten({
-                    filter: (cell) =>
-                      !!cell?.changedAt &&
-                      cell.changedAt > table.lastChangedAt!,
-                  })
-                );
                 const histories = table.getHistories();
                 setHistories(histories);
                 const h = histories[histories.length - 1];
@@ -60,15 +67,22 @@ export const SheetOnChange = () => {
                     table.getAddressesByIds(h.diffAfter)
                   );
                 }
+                console.log("matrix", table.getMatrixFlatten({evaluates}));
               },
             }}
           />
           <div>Diff:</div>
           <textarea 
-            id="diff"
+            id="changes"
             style={{width: '300px', height: '100px'}}
             value={JSON.stringify(diff, null, 2)}
           ></textarea>
+          Changes: <input
+            id="evaluates"
+            type="checkbox"
+            checked={evaluates}
+            onChange={() => setEvaluates(!evaluates)}
+          />
         </div>
         <ul className="histories">
           {histories.map((history, i) => (

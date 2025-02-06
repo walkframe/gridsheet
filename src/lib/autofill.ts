@@ -35,7 +35,7 @@ export class Autofill {
 
   public get applied(): Table {
     const [orientation, sign] = DirectionMapping[this.direction];
-    const matrix = this.table.getMatrix({ area: this.src, evaluates: false });
+    const matrix = this.table.getMatrix({ area: this.src, evaluates: null });
     const srcShape = areaShape({ ...this.src, base: 1 });
     const dstShape = areaShape({ ...this.dst, base: 1 });
 
