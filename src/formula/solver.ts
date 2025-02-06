@@ -13,12 +13,7 @@ type SolveFormulaType = {
   evaluates?: boolean | null;
 };
 
-export const solveFormula = ({ 
-    value, 
-    table, 
-    raise = true,
-    evaluates = true,
-  }: SolveFormulaType) => {
+export const solveFormula = ({ value, table, raise = true, evaluates = true }: SolveFormulaType) => {
   if (evaluates === null) {
     return value;
   }
