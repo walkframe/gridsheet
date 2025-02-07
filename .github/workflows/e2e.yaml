@@ -21,12 +21,19 @@ jobs:
         with:
           node-version: "22"
 
-      - name: cache
+      - name: cache1
         uses: actions/cache@v3
         with:
           path: |
             node_modules
-          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-${{ hashFiles('./yarn.lock') }}
+
+      - name: cache2
+        uses: actions/cache@v3
+        with:
+          path: |
+            storybook/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('./storybook/yarn.lock') }}
 
       - name: install
         run: |
@@ -34,7 +41,10 @@ jobs:
           npx playwright install --with-deps
 
       - name: build
-        run: yarn run storybook:build
+        run: |
+          cd storybook
+          yarn install
+          yarn run build
 
       - name: run server
         run: |
