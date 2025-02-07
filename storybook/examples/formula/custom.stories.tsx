@@ -1,6 +1,6 @@
 import React from "react";
-import { BaseFunction } from "../../../src";
-import { constructInitialCells, GridSheet } from "../../../src";
+import { BaseFunction } from "@gridsheet/react-core";
+import { constructInitialCells, GridSheet } from "@gridsheet/react-core";
 
 export default {
   title: "Formula",

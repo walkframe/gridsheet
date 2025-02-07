@@ -1,11 +1,18 @@
 import React from "react";
-import { constructInitialCells, GridSheet } from "../../../src";
+import { constructInitialCells, GridSheet } from "@gridsheet/react-core";
 
 export default {
   title: "Basic",
 };
 
 export const Labeler = () => {
+  const [width, setWidth] = React.useState(500);
+  React.useEffect(() => {
+    setInterval(() => {
+      setWidth(width - 50);
+    }, 10000);
+  })
+
   return (
     <>
       <GridSheet
@@ -30,6 +37,7 @@ export const Labeler = () => {
             hiragana: (n) => "あいうえおかきくけこ".slice(n - 1, n),
             katakana: (n) => "アイウエオカキクケコ".slice(n - 1, n),
           },
+          sheetWidth: width,
         }}
       />
     </>

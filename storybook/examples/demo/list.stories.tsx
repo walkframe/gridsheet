@@ -6,7 +6,7 @@ import {
   MatrixType,
   constructInitialCells,
   aa2oa, RendererMixinType, ParserMixinType, CheckboxRendererMixin,
-} from "../../../src";
+} from "@gridsheet/react-core";
 
 export default {
   title: "Demo",
