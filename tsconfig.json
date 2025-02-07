@@ -19,5 +19,8 @@
     "forceConsistentCasingInFileNames": true
   },
   "exclude": ["node_modules", "src/stories", "*.stories.tsx", "dist", "e2e"],
-  "include": ["**/*.ts", "**/*.tsx"]
+  "include": ["**/*.ts", "**/*.tsx"],
+  "paths": {
+    "@gridsheet/react-core": ["./src"]
+  }
 }

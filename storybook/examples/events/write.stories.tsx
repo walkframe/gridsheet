@@ -1,8 +1,6 @@
 import React from "react";
 import { ComponentStory } from "@storybook/react";
-import { GridSheet } from "../../../src";
-import { constructInitialCells } from "../../../src/lib/structs";
-import { createTableRef } from "../../../src/components/Tabular";
+import { GridSheet, constructInitialCells, createTableRef, HistoryType } from "@gridsheet/react-core";
 
 export default {
   title: "Table operations",

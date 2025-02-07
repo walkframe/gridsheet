@@ -1,5 +1,5 @@
 import React from "react";
-import { constructInitialCells, GridSheet, prevention } from "../../../src";
+import { constructInitialCells, GridSheet, prevention } from "@gridsheet/react-core";
 
 export default {
   title: "Formula",

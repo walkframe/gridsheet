@@ -5,7 +5,7 @@ import {
   BaseFunction,
   prevention,
   SheetProvider,
-} from "../../../src";
+} from "@gridsheet/react-core";
 
 export default {
   title: "Demo",

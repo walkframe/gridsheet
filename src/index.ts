@@ -14,6 +14,7 @@ export type {
   WriterType,
   CellsByAddressType,
   CellsByIdType,
+  HistoryType,
 } from './types';
 export { ThousandSeparatorRendererMixin } from './renderers/thousand_separator';
 export { CheckboxRendererMixin } from './renderers/checkbox';
