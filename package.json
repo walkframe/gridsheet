@@ -7,8 +7,8 @@
   "scripts": {
     "build": "rm -rf ./dist || true && tsc --project ./src/index.ts -p ./tsconfig.json",
     "audit-fix": "yarn-audit-fix --force",
-    "storybook": "start-storybook -p 5233",
-    "build-storybook": "build-storybook",
+    "storybook:run": "cd storybook && yarn run run",
+    "storybook:build": "cd storybook && yarn run build",
     "less": "lessc --clean-css ./src/styles/root.less ./src/styles/root.min.css",
     "generate-style": "node ./generate-style.js",
     "playwright": "npx playwright test --ui",

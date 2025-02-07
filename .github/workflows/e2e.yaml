@@ -17,9 +17,9 @@ jobs:
         with:
           python-version: "3.12"
       - name: setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: "16"
+          node-version: "22"
 
       - name: cache
         uses: actions/cache@v3
@@ -34,11 +34,11 @@ jobs:
           npx playwright install --with-deps
 
       - name: build
-        run: yarn run build-storybook
+        run: yarn run storybook:build
 
       - name: run server
         run: |
-          python -m http.server 5233 --directory "${{ github.workspace }}/storybook-static" &
+          python -m http.server 5233 --directory "${{ github.workspace }}/storybook/storybook-static" &
 
       - name: e2e test
         run: yarn e2e

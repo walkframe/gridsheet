@@ -4,8 +4,8 @@
   "main": "dist/index.js",
   "module": "dist/index.js",
   "scripts": {
-    "storybook": "start-storybook -p 5233",
-    "build-storybook": "build-storybook"
+    "run": "start-storybook -p 5233",
+    "build": "build-storybook"
   },
   "devDependencies": {
     "@babel/cli": "^7.14.3",
