@@ -4,12 +4,15 @@ import { jsonMinify, jsonQuery } from './utils';
 test('show the diff', async ({ page }) => {
   await page.goto('http://localhost:5233/iframe.html?id=table-operations--sheet-on-change&viewMode=story');
   const b2 = page.locator("[data-address='B2']");
-  await b2.dblclick();
-  await page.keyboard.type('777');
+  await b2.click();
+  await page.keyboard.type('=sum(C1:E1)+10');
   await page.keyboard.press('Enter');
 
-  const diff = page.locator('#diff');
-  expect(jsonMinify(await diff.inputValue())).toContain('{"B2":7777}');
+  const diff = page.locator('#changes');
+  expect(jsonMinify(await diff.inputValue())).toContain('{"B2":22}');
+  const evaluates = page.locator('#evaluates');
+  await evaluates.uncheck();
+  expect(jsonMinify(await diff.inputValue())).toContain('{"B2":"=sum(C1:E1)+10"}');
 });
 
 test('1 operation makes 1 diff history', async ({ page }) => {

@@ -1,23 +1,23 @@
 import React from "react";
 import { ComponentStory } from "@storybook/react";
-import { constructInitialCells, GridSheet } from "../../../src";
+import { constructInitialCells, GridSheet, ModeType } from "@gridsheet/react-core";
 
 export default {
   title: "Basic",
 };
 
 type Props = {
-  showAddress: boolean;
+  mode: ModeType;
 };
 
-const Sheet = ({ showAddress }: Props) => {
+const Sheet = ({ mode }: Props) => {
   return (
     <>
       <GridSheet
         initialCells={constructInitialCells({
-          ensured: { numRows: 100, numCols: 100 },
+          ensured: { numRows: 10, numCols: 10 },
         })}
-        options={{ showAddress }}
+        options={{ mode }}
       />
     </>
   );
@@ -25,5 +25,5 @@ const Sheet = ({ showAddress }: Props) => {
 
 const Template: ComponentStory<typeof Sheet> = (args) => <Sheet {...args} />;
 
-export const ShowAddress = Template.bind({});
-ShowAddress.args = { showAddress: true };
+export const Dark = Template.bind({});
+Dark.args = { mode: "dark" };

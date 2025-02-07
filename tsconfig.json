@@ -18,6 +18,9 @@
     "baseUrl": "./src/",
     "forceConsistentCasingInFileNames": true
   },
-  "exclude": ["node_modules", "src/stories", "*.stories.tsx", "dist", "e2e"],
-  "include": ["**/*.ts", "**/*.tsx"]
+  "exclude": ["node_modules", "storybook", "dist", "e2e"],
+  "include": ["**/*.ts", "**/*.tsx"],
+  "paths": {
+    "@gridsheet/react-core": ["./src"]
+  }
 }

@@ -6,7 +6,17 @@ import { p2a } from '../lib/converters';
 
 const SOLVING = new Special('solving');
 
-export const solveFormula = ({ value, table, raise = true }: { value: any; table: Table; raise?: boolean }) => {
+type SolveFormulaType = {
+  value: any;
+  table: Table;
+  raise?: boolean;
+  evaluates?: boolean | null;
+};
+
+export const solveFormula = ({ value, table, raise = true, evaluates = true }: SolveFormulaType) => {
+  if (evaluates === null) {
+    return value;
+  }
   let solved = value;
   if (typeof value === 'string') {
     if (value.charAt(0) === '=') {
@@ -14,6 +24,9 @@ export const solveFormula = ({ value, table, raise = true }: { value: any; table
         const lexer = new Lexer(value.substring(1));
         lexer.tokenize();
         const parser = new Parser(lexer.tokens);
+        if (evaluates === false) {
+          return '=' + lexer.stringifyToRef(table);
+        }
         const expr = parser.build();
         solved = expr?.evaluate?.({ table });
       } catch (e) {
@@ -32,7 +45,7 @@ export const solveFormula = ({ value, table, raise = true }: { value: any; table
 
 export const solveTable = ({ table, raise = true }: { table: Table; raise?: boolean }): MatrixType => {
   const area = table.getArea();
-  return table.getMatrixFlatten({ area, evaluates: false }).map((row, i) => {
+  return table.getMatrixFlatten({ area, evaluates: null }).map((row, i) => {
     const y = area.top + i;
     return row.map((value, j) => {
       const x = area.left + j;

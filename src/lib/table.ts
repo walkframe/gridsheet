@@ -52,7 +52,8 @@ type Props = {
 const noFilter: CellFilter = () => true;
 
 type GetProps = {
-  evaluates?: boolean;
+  // null for the system, do not use it
+  evaluates?: boolean | null;
   raise?: boolean;
   filter?: CellFilter;
 };
@@ -495,13 +496,12 @@ export class Table implements UserTable {
         if (!filter(cell)) {
           continue;
         }
-        matrix[y - top][x - left] = evaluates
-          ? solveFormula({
-              value: cell[key],
-              table: this,
-              raise,
-            })
-          : cell[key];
+        matrix[y - top][x - left] = solveFormula({
+          value: cell[key],
+          table: this,
+          raise,
+          evaluates,
+        });
       }
     }
     return matrix;
@@ -513,13 +513,12 @@ export class Table implements UserTable {
       for (let x = left; x <= right; x++) {
         const cell = this.getByPoint({ y: y - top, x: x - left });
         if (cell != null && filter(cell)) {
-          result[p2a({ y, x })] = evaluates
-            ? solveFormula({
-                value: cell[key],
-                table: this,
-                raise,
-              })
-            : cell[key];
+          result[p2a({ y, x })] = solveFormula({
+            value: cell[key],
+            table: this,
+            raise,
+            evaluates,
+          });
         }
       }
     }
@@ -534,13 +533,12 @@ export class Table implements UserTable {
       for (let x = left; x <= right; x++) {
         const cell = this.getByPoint({ y: y - top, x: x - left });
         if (cell != null && filter(cell)) {
-          row[x2c(x) || y2r(y)] = evaluates
-            ? solveFormula({
-                value: cell[key],
-                table: this,
-                raise,
-              })
-            : cell[key];
+          row[x2c(x) || y2r(y)] = solveFormula({
+            value: cell[key],
+            table: this,
+            raise,
+            evaluates,
+          });
         }
       }
     }
@@ -555,13 +553,12 @@ export class Table implements UserTable {
       for (let y = top; y <= bottom; y++) {
         const cell = this.getByPoint({ y: y - top, x: x - left });
         if (cell != null && filter(cell)) {
-          col[y2r(y) || x2c(x)] = evaluates
-            ? solveFormula({
-                value: cell[key],
-                table: this,
-                raise,
-              })
-            : cell[key];
+          col[y2r(y) || x2c(x)] = solveFormula({
+            value: cell[key],
+            table: this,
+            raise,
+            evaluates,
+          });
         }
       }
     }
@@ -586,13 +583,12 @@ export class Table implements UserTable {
         if (cell != null && filter(cell)) {
           matrix[y - top][x - left] = {
             ...cell,
-            value: evaluates
-              ? solveFormula({
-                  value: cell?.value,
-                  table: this,
-                  raise,
-                })
-              : cell?.value,
+            value: solveFormula({
+              value: cell?.value,
+              table: this,
+              raise,
+              evaluates,
+            }),
           };
         }
       }
@@ -608,13 +604,12 @@ export class Table implements UserTable {
         if (cell != null && filter(cell)) {
           result[p2a({ y, x })] = {
             ...cell,
-            value: evaluates
-              ? solveFormula({
-                  value: cell?.value,
-                  table: this,
-                  raise,
-                })
-              : cell?.value,
+            value: solveFormula({
+              value: cell?.value,
+              table: this,
+              raise,
+              evaluates,
+            }),
           };
         }
       }
@@ -632,13 +627,12 @@ export class Table implements UserTable {
         if (cell != null && filter(cell)) {
           row[x2c(x) || y2r(y)] = {
             ...cell,
-            value: evaluates
-              ? solveFormula({
-                  value: cell?.value,
-                  table: this,
-                  raise,
-                })
-              : cell?.value,
+            value: solveFormula({
+              value: cell?.value,
+              table: this,
+              raise,
+              evaluates,
+            }),
           };
         }
       }
@@ -656,13 +650,12 @@ export class Table implements UserTable {
         if (cell != null && filter(cell)) {
           col[y2r(y) || x2c(x)] = {
             ...cell,
-            value: evaluates
-              ? solveFormula({
-                  value: cell?.value,
-                  table: this,
-                  raise,
-                })
-              : cell?.value,
+            value: solveFormula({
+              value: cell?.value,
+              table: this,
+              raise,
+              evaluates,
+            }),
           };
         }
       }
@@ -1324,7 +1317,7 @@ export class Table implements UserTable {
 
     if (s[0] === '=') {
       if (evaluates) {
-        return String(solveFormula({ value: s, table: this, raise: false }));
+        return String(solveFormula({ value: s, table: this, raise: false, evaluates }));
       }
       const lexer = new Lexer(s.substring(1));
       lexer.tokenize();

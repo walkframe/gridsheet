@@ -1,7 +1,5 @@
 import React from "react";
-import { constructInitialCells, GridSheet, Renderer } from "../../../src";
-import {RendererMixinType} from "../../../src/renderers/core";
-import {CheckboxRendererMixin} from "../../../src/renderers/checkbox";
+import { constructInitialCells, GridSheet, Renderer, RendererMixinType, CheckboxRendererMixin } from "@gridsheet/react-core";
 
 export default {
   title: "Basic",

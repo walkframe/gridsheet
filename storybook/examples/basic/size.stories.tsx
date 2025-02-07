@@ -1,6 +1,7 @@
 import React from "react";
 import { ComponentStory } from "@storybook/react";
-import { CellsByAddressType, constructInitialCells, GridSheet } from "../../../src";
+
+import { CellsByAddressType, constructInitialCells, GridSheet } from "@gridsheet/react-core";
 import { TimeDelta } from "../../../src/lib/time";
 
 export default {

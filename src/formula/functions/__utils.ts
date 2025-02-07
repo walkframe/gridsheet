@@ -40,7 +40,7 @@ export const eq = (left: any, right: any): boolean => {
 
 export const ne = (left: any, right: any): boolean => {
   return !eq(left, right);
-}
+};
 
 export const ensureNumber = (value: any, alternative?: number): number => {
   if (typeof value === 'undefined' && typeof alternative !== 'undefined') {

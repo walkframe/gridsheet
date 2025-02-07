@@ -1,6 +1,6 @@
 import React from "react";
 import { ComponentStory } from "@storybook/react";
-import { constructInitialCells, GridSheet, SheetProvider } from "../../../src";
+import { constructInitialCells, GridSheet, SheetProvider } from "@gridsheet/react-core";
 
 export default {
   title: "Basic",
