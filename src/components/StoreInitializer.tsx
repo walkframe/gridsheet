@@ -12,6 +12,7 @@ import {
   setShowAddress,
   setOnSave,
   initializeTable,
+  setMode,
 } from '../store/actions';
 
 import { HEADER_HEIGHT, HEADER_WIDTH } from '../constants';
@@ -26,6 +27,7 @@ export const StoreInitializer: React.FC<Props> = ({ options = {} }) => {
     sheetWidth,
     editingOnEnter,
     showAddress,
+    mode,
     onSave,
   } = options;
 
@@ -74,6 +76,13 @@ export const StoreInitializer: React.FC<Props> = ({ options = {} }) => {
       dispatch(setShowAddress(showAddress));
     }
   }, [showAddress]);
+
+  React.useEffect(() => {
+    if (mode) {
+      dispatch(setMode(mode));
+    }
+  }, [mode]);
+
   React.useEffect(() => {
     if (typeof onSave !== 'undefined') {
       dispatch(setOnSave(onSave));

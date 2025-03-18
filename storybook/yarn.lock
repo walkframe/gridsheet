@@ -1247,6 +1247,9 @@
 "@gridsheet/react-core@file:../src":
   version "0.0.0"
 
+"@gridsheet/react-right-menu@file:../plugins/react-right-menu":
+  version "0.0.1"
+
 "@humanwhocodes/config-array@^0.13.0":
   version "0.13.0"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.13.0.tgz#fb907624df3256d04b9aa2df50d7aa97ec648748"

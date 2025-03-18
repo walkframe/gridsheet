@@ -80,6 +80,7 @@ export type OptionsType = {
   onSave?: FeedbackType;
   onChange?: FeedbackType;
   onSelect?: FeedbackType;
+  onInit?: (table: UserTable) => void;
 };
 
 export type RangeType = { start: number; end: number }; // [start, end]
@@ -122,6 +123,7 @@ export type StoreType = {
   maxNumRows: number;
   minNumCols: number;
   maxNumCols: number;
+  mode: ModeType;
   searchQuery?: string;
   searchCaseSensitive: boolean;
   matchingCells: string[];

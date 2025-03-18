@@ -38,7 +38,8 @@ export function GridSheet({
   style,
   additionalFunctions = {},
 }: Props) {
-  const { sheetResize, showFormulaBar = true, mode = 'light' } = options;
+
+  const { sheetResize, showFormulaBar = true, onInit, mode = 'light' } = options;
   const [prevSheetName, setPrevSheetName] = React.useState(sheetName);
   const rootRef = React.useRef<HTMLDivElement | null>(null);
   const mainRef = React.useRef<HTMLDivElement | null>(null);
@@ -84,7 +85,7 @@ export function GridSheet({
     table.tables[sheetId] = table;
     table.sheetId = sheetId;
     table.initialize(initialCells);
-
+    onInit?.(table);
     return {
       sheetId,
       table, // temporary (see StoreInitializer for detail)
@@ -130,7 +131,7 @@ export function GridSheet({
   });
 
   const [store, dispatch] = React.useReducer(
-    defaultReducer as ReducerWithoutAction<StoreType>,
+    defaultReducer as unknown as ReducerWithoutAction<StoreType>,
     initialState,
     () => initialState,
   );

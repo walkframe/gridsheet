@@ -7,6 +7,7 @@ module.exports = {
     config.resolve.alias = {
       ...config.resolve.alias,
       '@gridsheet/react-core': path.resolve(__dirname, '../../src'),
+      '@gridsheet/react-right-menu': path.resolve(__dirname, '../../plugins/react-right-menu'),
     };
     config.module.rules.push({
       test: /\.tsx?$/,

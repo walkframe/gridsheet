@@ -14,6 +14,7 @@
     "@babel/preset-react": "^7.13.13",
     "@babel/preset-typescript": "^7.13.0",
     "@gridsheet/react-core": "file:../src",
+    "@gridsheet/react-right-menu": "file:../plugins/react-right-menu",
     "@storybook/addon-essentials": "^6.5.12",
     "@storybook/addon-links": "^6.5.12",
     "@storybook/react": "^6.5.12",

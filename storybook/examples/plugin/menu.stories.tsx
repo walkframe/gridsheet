@@ -1,11 +1,11 @@
 import React from "react";
 import { ComponentStory } from "@storybook/react";
-
 import { CellsByAddressType, constructInitialCells, GridSheet } from "@gridsheet/react-core";
-import { TimeDelta } from "../../../src/lib/time";
+
+import { RightMenu as RightMenuComponent } from "@gridsheet/react-right-menu";
 
 export default {
-  title: "Basic",
+  title: "Plugin",
 };
 
 type Props = {
@@ -17,20 +17,17 @@ type Props = {
 
 const Sheet = ({ numRows, numCols, defaultWidth, initialCells }: Props) => {
   return (
-    <>
+    <div>
+    <RightMenuComponent>
       <GridSheet
         options={{
-          // mode: "dark",
-          headerHeight: 50,
-          headerWidth: 150,
+          mode: "dark",
+          headerWidth: 100,
           labelers: {
             raw: (n) => String(n),
           },
           sheetResize: "both",
           editingOnEnter: true,
-          onInit(table) {
-            console.log("onInit", table);
-          },
         }}
         initialCells={constructInitialCells({
           cells: {
@@ -47,34 +44,40 @@ const Sheet = ({ numRows, numCols, defaultWidth, initialCells }: Props) => {
             C3: {
               value: 3,
             },
-            A4: {
-              value: new Date("2022-03-05T12:34:56+09:00")
-            },
-            B4: {
-              value: TimeDelta.create(11, 11, 11),
-            },
-            C4: {
-              value: "=A4+B4",
-            },
-            A5: {
-              value: "=A4-13/24",
-            },
             ...initialCells,
           },
           ensured: { numRows, numCols },
         })}
       />
-    </>
+    </RightMenuComponent>
+    <br />
+
+    <RightMenuComponent>
+      <GridSheet
+        options={{
+          mode: "light",
+          headerHeight: 50,
+          headerWidth: 100,
+          labelers: {
+            raw: (n) => String(n),
+          },
+          sheetResize: "both",
+          editingOnEnter: true,
+        }}
+        initialCells={constructInitialCells({
+          ensured: { numRows: 5, numCols: 5 },
+        })}
+      />
+    </RightMenuComponent>
+
+    </div>
+
   );
 };
 
 const Template: ComponentStory<typeof Sheet> = (args) => <Sheet {...args} />;
 
-export const Small = Template.bind({});
-Small.args = { numRows: 5, numCols: 3, defaultWidth: 100 };
-
-export const Large = Template.bind({});
-Large.args = { 
-  numRows: 1000, numCols: 100, defaultWidth: 50,
-  initialCells: {A500: {value: "aa"}, A1000: {value: "aaa"}, CV1000: {value: "aaaa"}},
+export const RightMenu = Template.bind({});
+RightMenu.args = { 
+  numRows: 100, numCols: 100, defaultWidth: 50,
 };

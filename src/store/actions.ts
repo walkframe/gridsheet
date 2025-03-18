@@ -8,6 +8,7 @@ import {
   CellsByAddressType,
   AreaType,
   PositionType,
+  ModeType,
 } from '../types';
 import { zoneToArea, superposeArea, matrixShape, areaShape, areaToZone } from '../lib/structs';
 import { Table } from '../lib/table';
@@ -797,3 +798,13 @@ class SetInputtingAction<T extends string> extends CoreAction<T> {
 }
 
 export const setInputting = new SetInputtingAction().bind();
+
+class SetModeAction<T extends ModeType> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreType {
+    return {
+      ...store,
+      mode: payload,
+    };
+  }
+}
+export const setMode = new SetModeAction().bind();
