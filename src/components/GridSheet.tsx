@@ -30,7 +30,7 @@ import { FormulaBar } from './FormulaBar';
 import { SearchBar } from './SearchBar';
 
 export function GridSheet({
-  initialCells: initialData,
+  initialCells,
   sheetName = '',
   tableRef,
   options = {},
@@ -38,7 +38,7 @@ export function GridSheet({
   style,
   additionalFunctions = {},
 }: Props) {
-  const { sheetResize, showFormulaBar = true } = options;
+  const { sheetResize, showFormulaBar = true, mode = "light" } = options;
   const [prevSheetName, setPrevSheetName] = React.useState(sheetName);
   const rootRef = React.useRef<HTMLDivElement | null>(null);
   const mainRef = React.useRef<HTMLDivElement | null>(null);
@@ -83,7 +83,7 @@ export function GridSheet({
     }
     table.tables[sheetId] = table;
     table.sheetId = sheetId;
-    table.initialize(initialData);
+    table.initialize(initialCells);
 
     return {
       sheetId,
@@ -124,6 +124,7 @@ export function GridSheet({
       maxNumRows: -1,
       minNumCols: 1,
       maxNumCols: -1,
+      mode: 'light',
       lastEdited: '',
     };
   });
@@ -161,10 +162,10 @@ export function GridSheet({
   }, [sheetName]);
 
   const [sheetHeight, setSheetHeight] = React.useState(
-    options?.sheetHeight || estimateSheetHeight({ options, initialData }),
+    options?.sheetHeight || estimateSheetHeight({ options, initialData: initialCells }),
   );
   const [sheetWidth, setSheetWidth] = React.useState(
-    options?.sheetWidth || estimateSheetWidth({ options, initialData }),
+    options?.sheetWidth || estimateSheetWidth({ options, initialData: initialCells }),
   );
   React.useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -184,17 +185,23 @@ export function GridSheet({
     }
   }, [options.sheetWidth]);
 
-  const { onChange, onSelect, mode = 'light' } = options;
+  const { onChange, onSelect } = options;
   return (
     <Context.Provider value={{ store, dispatch }}>
-      <div className={`gs-root1`} ref={rootRef} data-sheet-name={sheetName} data-mode={mode}>
+      <div 
+        className={`gs-root1`}
+        ref={rootRef}
+        data-sheet-name={sheetName}
+        data-mode={mode}
+        style={{ maxWidth: `min(100%, ${store.table.totalWidth + 2}px)` }}
+      >
         {typeof store.searchQuery === 'undefined' ? showFormulaBar && <FormulaBar /> : <SearchBar />}
         <div
           className={`gs-main ${className || ''}`}
           ref={mainRef}
           style={{
-            maxWidth: store.table.totalWidth + 1,
-            maxHeight: store.table.totalHeight + 1,
+            maxWidth: `min(100%-1px, ${store.table.totalWidth + 2}px)`,
+            maxHeight: store.table.totalHeight + 2,
             ...style,
             resize: sheetResize,
           }}
@@ -202,7 +209,7 @@ export function GridSheet({
           <Editor mode={mode} />
           <Tabular tableRef={tableRef} />
           <StoreInitializer
-            initialCells={initialData}
+            initialCells={initialCells}
             options={{ ...options, sheetHeight, sheetWidth }}
             additionalFunctions={additionalFunctions}
           />

@@ -28,11 +28,11 @@ import { expandInput, insertTextAtCursor } from '../lib/input';
 import { useSheetContext } from './SheetProvider';
 import { Lexer } from '../formula/evaluator';
 import { REF_PALETTE } from '../lib/palette';
-import { Mode } from '../types';
+import { ModeType } from '../types';
 import { Fixed } from './Fixed';
 
 type Props = {
-  mode: Mode;
+  mode: ModeType;
 };
 
 export const Editor: React.FC<Props> = ({ mode }: Props) => {

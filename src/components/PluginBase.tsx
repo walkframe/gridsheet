@@ -47,5 +47,9 @@ type Props = {
 };
 
 export function PluginBase({ children, context }: Props) {
+  const [provided] = usePluginContext();
+  if (provided) {
+    return <>{children}</>;
+  }
   return <PluginContext.Provider value={context}>{children}</PluginContext.Provider>;
 }

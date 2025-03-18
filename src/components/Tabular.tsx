@@ -102,7 +102,7 @@ export const Tabular = ({ tableRef }: Props) => {
       <div
         className="gs-tabular"
         style={{
-          width: sheetWidth,
+          //width: sheetWidth,
           height: sheetHeight,
         }}
         ref={tabularRef}

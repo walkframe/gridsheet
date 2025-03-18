@@ -30,7 +30,7 @@ import { functions as functionsDefault } from '../formula/mapping';
 import { absolutizeFormula, Lexer, stripSheetName } from '../formula/evaluator';
 import { solveFormula } from '../formula/solver';
 
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH, HISTORY_LIMIT } from '../constants';
+import { DEFAULT_HEIGHT, DEFAULT_WIDTH, HEADER_HEIGHT, HEADER_WIDTH, HISTORY_LIMIT } from '../constants';
 import { shouldTracking } from '../store/helpers';
 import * as prevention from './prevention';
 
@@ -210,8 +210,8 @@ export class Table implements UserTable {
     maxNumRows = -1,
     minNumCols = 1,
     maxNumCols = -1,
-    headerWidth = -1,
-    headerHeight = -1,
+    headerWidth = HEADER_WIDTH,
+    headerHeight = HEADER_HEIGHT,
     functions = functionsDefault,
   }: Props) {
     this.head = useBigInt ? BigInt(0) : 0;
@@ -229,8 +229,8 @@ export class Table implements UserTable {
     this.minNumCols = minNumCols || 0;
     this.maxNumCols = maxNumCols || 0;
     this.solvedCaches = {};
-    this.headerHeight = headerHeight || 0;
-    this.headerWidth = headerWidth || 0;
+    this.headerHeight = headerHeight;
+    this.headerWidth = headerWidth;
     this.functions = functions;
     this.idsToBeAbsoluted = [];
   }

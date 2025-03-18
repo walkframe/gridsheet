@@ -6,6 +6,8 @@ export { Parser } from './parsers/core';
 export type { ParserMixinType } from './parsers/core';
 export { oa2aa, aa2oa, constructInitialCells, constructInitialCellsOrigin } from './lib/structs';
 export { x2c, c2x, y2r, r2y, p2a, a2p } from './lib/converters';
+export { updateTable } from './store/actions';
+export { PluginBase, useInitialPluginContext, usePluginContext } from './components/PluginBase';
 export type {
   MatrixType,
   CellType,
@@ -14,8 +16,13 @@ export type {
   WriterType,
   CellsByAddressType,
   CellsByIdType,
+  ModeType,
+  HeadersType,
   HistoryType,
+  StoreType,
 } from './types';
+
+export { Dispatcher } from './store';
 export { ThousandSeparatorRendererMixin } from './renderers/thousand_separator';
 export { CheckboxRendererMixin } from './renderers/checkbox';
 export { BaseFunction } from './formula/functions/__base';

@@ -36,8 +36,8 @@ export type FeedbackType = (
   },
 ) => void;
 
-export type Mode = 'light' | 'dark';
-export type Headers = 'both' | 'vertical' | 'horizontal' | 'none';
+export type ModeType = 'light' | 'dark';
+export type HeadersType = 'both' | 'vertical' | 'horizontal' | 'none';
 
 export type CellType<Custom = any> = {
   value?: any;
@@ -73,7 +73,7 @@ export type OptionsType = {
   maxNumRows?: number;
   minNumCols?: number;
   maxNumCols?: number;
-  mode?: Mode;
+  mode?: ModeType;
   renderers?: Renderers;
   parsers?: Parsers;
   labelers?: Labelers;
