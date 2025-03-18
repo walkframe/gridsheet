@@ -29,7 +29,6 @@ export const Tabular = ({ tableRef }: Props) => {
   const { store, dispatch } = React.useContext(Context);
   const {
     sheetHeight,
-    sheetWidth,
     table,
     tableInitialized,
     tabularRef,

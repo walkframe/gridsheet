@@ -38,7 +38,7 @@ export function GridSheet({
   style,
   additionalFunctions = {},
 }: Props) {
-  const { sheetResize, showFormulaBar = true, mode = "light" } = options;
+  const { sheetResize, showFormulaBar = true, mode = 'light' } = options;
   const [prevSheetName, setPrevSheetName] = React.useState(sheetName);
   const rootRef = React.useRef<HTMLDivElement | null>(null);
   const mainRef = React.useRef<HTMLDivElement | null>(null);
@@ -188,7 +188,7 @@ export function GridSheet({
   const { onChange, onSelect } = options;
   return (
     <Context.Provider value={{ store, dispatch }}>
-      <div 
+      <div
         className={`gs-root1`}
         ref={rootRef}
         data-sheet-name={sheetName}
