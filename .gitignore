@@ -23,7 +23,7 @@ coverage
 *.lcov
 
 # nyc test coverage
-/dist
+dist
 .nyc_output
 
 # Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
@@ -104,9 +104,10 @@ typings/
 .tern-port
 
 # Storybook
-stories/
 storybook-static/
 .idea
 
 # Playwright
 test-results/
+
+*storybook.log

@@ -7,4 +7,4 @@ export const jsonQuery = (json: string, keys: string[]) => {
   return keys.reduce((acc, key) => {
     return acc[key];
   }, obj);
-}
+};

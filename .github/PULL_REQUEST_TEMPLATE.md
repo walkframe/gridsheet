@@ -15,10 +15,9 @@ Please describe the areas of the project that may be affected by your changes. T
 ## How Has This Been Tested?
 Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce. Please also list any relevant details for your test configuration.
 
-- [ ] Visual operation check - `yarn storybook`
-- [ ] Test - `yarn test`
-- [ ] Lint - `yarn eslint`
-  - Format the code in advance with prettier. - `yarn prettier`
+- [ ] Visual operation check - `pnpm storybook`
+- [ ] Test - `pnpm test`
+- [ ] Lint - `pnpm eslint:fix`
 
 ## Additional Context
 Add any other context or screenshots about the pull request here.

@@ -15,7 +15,7 @@ jobs:
       - name: setup python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.12"
+          python-version: "3.13"
       - name: setup node
         uses: actions/setup-node@v4
         with:
@@ -26,32 +26,32 @@ jobs:
         with:
           path: |
             node_modules
-          key: ${{ runner.os }}-${{ hashFiles('./yarn.lock') }}
+          key: ${{ runner.os }}-${{ hashFiles('./pnpm-lock.yaml') }}
 
       - name: cache2
         uses: actions/cache@v3
         with:
           path: |
             storybook/node_modules
-          key: ${{ runner.os }}-${{ hashFiles('./storybook/yarn.lock') }}
+          key: ${{ runner.os }}-${{ hashFiles('./storybook/pnpm-lock.yaml') }}
 
       - name: install
         run: |
-          yarn install
+          pnpm install
           npx playwright install --with-deps
 
       - name: build
         run: |
-          cd storybook
-          yarn install
-          yarn run build
+          cd packages/storybook
+          pnpm install
+          pnpm build
 
       - name: run server
         run: |
           python -m http.server 5233 --directory "${{ github.workspace }}/storybook/storybook-static" &
 
       - name: e2e test
-        run: yarn e2e
+        run: pnpm e2e
 
       - uses: actions/upload-artifact@v4
         with:

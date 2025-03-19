@@ -20,10 +20,10 @@ jobs:
         with:
           path: |
             node_modules
-          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
       - name: install
         run: |
-          yarn install
+          pnpm install
       - name: test
         run: |
-          yarn jest
+          pnpm jest

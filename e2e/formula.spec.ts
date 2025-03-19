@@ -141,7 +141,7 @@ test('insert ref by selection in multiple sheets', async ({ page }) => {
   const sheet3 = page.locator('[data-sheet-name="other"]');
   const editor3 = page.locator('.gs-editor[data-sheet-id="3"] textarea');
   const largeEditor3 = sheet3.locator('.gs-formula-bar textarea');
-  
+
   const b3 = sheet3.locator("[data-address='B3']");
   await b3.click();
   await page.keyboard.type('=sum(');
@@ -158,7 +158,7 @@ test('insert ref by selection in multiple sheets', async ({ page }) => {
 
   const b5 = sheet3.locator("[data-address='B5']");
   expect(await b5.locator('.gs-cell-rendered').textContent()).toBe('3');
-  
+
   await b5.dblclick();
   // blur because the cursor is at the end
   await sheet2.locator("[data-address='B4']").click();
