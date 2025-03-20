@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2015",
-    "module": "CommonJS",
+    "module": "ES2015",
     "moduleResolution": "node",
-    "lib": ["DOM", "ES2015", "DOM.Iterable", "ScriptHost", "ES2016.Array.Include"],
+    "lib": ["DOM", "ESNext", "DOM.Iterable", "ScriptHost", "ES2016.Array.Include"],
     "declaration": true,
     "declarationMap": true,
     "allowJs": true,
@@ -19,8 +19,5 @@
     "forceConsistentCasingInFileNames": true
   },
   "exclude": ["node_modules", "storybook", "dist", "e2e"],
-  "include": ["**/*.ts", "**/*.tsx"],
-  "paths": {
-    "@gridsheet/react-core": ["./src"]
-  }
+  "include": ["**/*.ts", "**/*.tsx"]
 }

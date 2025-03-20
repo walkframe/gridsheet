@@ -18,14 +18,14 @@ test('show the diff', async ({ page }) => {
 test('1 operation makes 1 diff history', async ({ page }) => {
   await page.goto('http://localhost:5233/iframe.html?id=table-operations--sheet-on-change&viewMode=story');
   const histories = page.locator('.histories li');
-  
+
   const b4 = page.locator("[data-address='B4']");
   await b4.click();
   await page.keyboard.type('4444');
   await page.keyboard.press('Enter');
 
   expect(await histories.count()).toBe(1);
-  
+
   const c1 = page.locator("[data-address='C1']");
   await c1.click();
   await page.keyboard.press('Backspace');
@@ -41,7 +41,7 @@ test('1 operation makes 1 diff history', async ({ page }) => {
 
 test('escape key should cancel the editing', async ({ page }) => {
   await page.goto('http://localhost:5233/iframe.html?id=table-operations--sheet-on-change&viewMode=story');
-  
+
   const histories = page.locator('.histories li');
 
   const b2 = page.locator("[data-address='B2']");

@@ -9,21 +9,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: setup
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
 
       - name: cache
         uses: actions/cache@v3
         with:
           path: |
             node_modules
-          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: install
         run: |
-          yarn install
+          pnpm install
       - name: check
         run: |
-          yarn run tsc
+          pnpm typecheck:all

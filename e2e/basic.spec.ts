@@ -7,7 +7,7 @@ test('cell value', async ({ page }) => {
 
   const b3 = page.locator("[data-address='B3']");
   expect(await b3.locator('.gs-cell-rendered').textContent()).toBe('');
-  
+
   await b3.dblclick();
   const editor = page.locator('.gs-editor textarea');
   page.keyboard.type('b3');
@@ -36,7 +36,6 @@ test('pointing', async ({ page }) => {
 
   const b3 = page.locator("[data-address='B3']");
   expect(await b3.getAttribute('class')).not.toContain('gs-choosing');
-
 });
 
 test('select', async ({ page }) => {
@@ -82,9 +81,7 @@ test('select by shift, copy and paste', async ({ page }) => {
 
   expect(await b5.locator('.gs-cell-rendered').textContent()).toBe('A1');
   expect(await c5.locator('.gs-cell-rendered').textContent()).toBe('B1');
-
 });
-
 
 test('walk', async ({ page }) => {
   await page.goto('http://localhost:5233/iframe.html?id=basic--small&viewMode=story');
@@ -119,14 +116,13 @@ test('walk', async ({ page }) => {
   // B2 must be "2"
   expect(await largeEditor.inputValue()).toBe('2');
   await page.locator("[data-address='B5']").click();
-
 });
 
 test('enter key with alt', async ({ page }) => {
   await page.goto('http://localhost:5233/iframe.html?id=basic--small&viewMode=story');
   const a1 = page.locator("[data-address='A1']");
   await a1.click();
-  
+
   await page.keyboard.type('HelloWorld');
 
   await page.keyboard.press('ArrowLeft');
@@ -163,5 +159,4 @@ test('escape key', async ({ page }) => {
   await page.keyboard.press('Escape');
   expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('Change1');
   expect(await largeEditor.inputValue()).toBe('Change1');
-
 });
