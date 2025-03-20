@@ -23,7 +23,7 @@
     "typecheck:core": "cd packages/react-core && pnpm typecheck",
     "typecheck:right-menu": "cd packages/react-right-menu && pnpm typecheck",
     "typecheck:all": "pnpm typecheck:core && pnpm typecheck:right-menu",
-    "e2e": "cd e2e && npx playwright test -c playwright.config.ts --workers 6",
+    "e2e": "cd e2e && npx playwright test -c playwright.config.ts --workers 4",
     "jest:core": "cd packages/react-core && pnpm jest",
     "jest": "pnpm jest:core",
     "test": "pnpm jest && pnpm e2e",
