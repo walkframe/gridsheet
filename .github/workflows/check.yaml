@@ -9,10 +9,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: setup
-        uses: actions/setup-node@v4
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
         with:
-          node-version: "22"
+          version: 10
 
       - name: cache
         uses: actions/cache@v3
