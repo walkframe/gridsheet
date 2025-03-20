@@ -17,7 +17,7 @@
   "scripts": {
     "dev": "cd packages/storybook && pnpm dev",
     "build:core": "cd packages/react-core && pnpm build --mode development",
-    "build:right-menu": "cd packages/react-right-menu && pnpm build  --mode development",
+    "build:right-menu": "cd packages/react-right-menu && pnpm build --mode development",
     "build:storybook": "cd packages/storybook && pnpm build",
     "build:all": "pnpm build:core && pnpm build:right-menu && pnpm build:storybook",
     "typecheck:core": "cd packages/react-core && pnpm typecheck",
