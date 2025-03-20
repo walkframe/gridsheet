@@ -39,15 +39,11 @@ jobs:
           pnpm install
           npx playwright install --with-deps
 
-      - name: build
+      - name: server
         run: |
           cd packages/storybook
           pnpm install
-          pnpm build
-
-      - name: run server
-        run: |
-          python -m http.server 5233 --directory "packages/storybook/storybook-static" &
+          pnpm dev &
 
       - name: e2e test
         run: pnpm e2e
