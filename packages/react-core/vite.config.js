@@ -13,7 +13,14 @@ export default defineConfig(({ mode }) => ({
     },
     outDir: 'dist',
     rollupOptions: {
-      external: [/^react/, /^@?react-dom/, /^dayjs/],
+      external: (id) => {
+        return (
+          /^react/.test(id) ||
+          /^@?react-dom/.test(id) ||
+          id === 'dayjs' ||
+          id.startsWith('dayjs/plugin/')
+        );
+      },
       output: {
         preserveModules: true,
         preserveModulesRoot: process.cwd(),
