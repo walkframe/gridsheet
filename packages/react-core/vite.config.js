@@ -10,6 +10,7 @@ export default defineConfig(({ mode }) => ({
       outputDir: 'dist',
       preserveModules: true,
       preserveModulesRoot: process.cwd(),
+      exclude: ['node_modules'],
     }),
   ],
   build: {
@@ -18,10 +19,11 @@ export default defineConfig(({ mode }) => ({
       name: "GridSheet",
       formats: ["es"],
       fileName: (_, name) => `${name}.js`,
+      exclude: ['node_modules'],
     },
     outDir: 'dist',
     rollupOptions: {
-      external: ["react", "react-dom"],
+      external: [/^react/, /^@?react-dom/, /^dayjs/],
       output: {
         preserveModules: true,
         preserveModulesRoot: process.cwd(),
