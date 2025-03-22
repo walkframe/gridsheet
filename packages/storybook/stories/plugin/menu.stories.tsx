@@ -17,6 +17,26 @@ const Sheet = ({ numRows, numCols, defaultWidth, initialCells }: Props) => {
       <RightMenuComponent>
         <GridSheet
           options={{
+            mode: 'light',
+            headerHeight: 50,
+            headerWidth: 100,
+            labelers: {
+              raw: (n) => String(n),
+            },
+            sheetResize: 'both',
+            editingOnEnter: true,
+          }}
+          initialCells={constructInitialCells({
+            ensured: { numRows: 5, numCols: 5 },
+          })}
+        />
+      </RightMenuComponent>
+      <br />
+
+
+      <RightMenuComponent>
+        <GridSheet
+          options={{
             mode: 'dark',
             headerWidth: 100,
             labelers: {
@@ -48,23 +68,7 @@ const Sheet = ({ numRows, numCols, defaultWidth, initialCells }: Props) => {
       </RightMenuComponent>
       <br />
 
-      <RightMenuComponent>
-        <GridSheet
-          options={{
-            mode: 'light',
-            headerHeight: 50,
-            headerWidth: 100,
-            labelers: {
-              raw: (n) => String(n),
-            },
-            sheetResize: 'both',
-            editingOnEnter: true,
-          }}
-          initialCells={constructInitialCells({
-            ensured: { numRows: 5, numCols: 5 },
-          })}
-        />
-      </RightMenuComponent>
+
     </div>
   );
 };
