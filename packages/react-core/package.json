@@ -1,13 +1,7 @@
 {
   "name": "@gridsheet/react-core",
-  "version": "1.4.0-alpha.2",
+  "version": "1.4.0-alpha.3",
   "description": "Spreadsheet component for React",
-  "exports": {
-    "development": "./index.ts",
-    "main": "./dist/index.js",
-    "module": "./dist/index.js",
-    "types": "./dist/index.d.ts"
-  },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
