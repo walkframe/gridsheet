@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => ({
       fileName: (_, name) => `${name}.js`,
     },
     rollupOptions: {
-      external: ["react", "react-dom", "@gridsheet/react-core"],
+      external: [/^react/, /^@?react-dom/, "@gridsheet/react-core"],
       output: {
         preserveModules: true,
         preserveModulesRoot: process.cwd(),
