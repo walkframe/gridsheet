@@ -18,17 +18,17 @@ type Props = {
 };
 
 export interface RendererMixinType {
-  render?(value: any, table: UserTable, writer?: WriterType): any;
+  render?(value: any, table: UserTable, writer?: WriterType, position?: PointType): any;
   stringify?(cell: CellType): string;
-  string?(value: string, table: UserTable, writer?: WriterType): any;
-  bool?(value: boolean, writer?: WriterType): any;
-  number?(value: number, writer?: WriterType): any;
-  date?(value: Date, writer?: WriterType): any;
-  timedelta?(value: TimeDelta, writer?: WriterType): any;
-  array?(value: any[], writer?: WriterType): any;
-  object?(value: any, writer?: WriterType): any;
-  null?(value: null, writer?: WriterType): any;
-  undefined?(value: undefined, writer?: WriterType): any;
+  string?(value: string, table: UserTable, writer?: WriterType, position?: PointType): any;
+  bool?(value: boolean, writer?: WriterType, position?: PointType): any;
+  number?(value: number, writer?: WriterType, position?: PointType): any;
+  date?(value: Date, writer?: WriterType, position?: PointType): any;
+  timedelta?(value: TimeDelta, writer?: WriterType, position?: PointType): any;
+  array?(value: any[], writer?: WriterType, position?: PointType): any;
+  object?(value: any, writer?: WriterType, position?: PointType): any;
+  null?(value: null, writer?: WriterType, position?: PointType): any;
+  undefined?(value: undefined, writer?: WriterType, position?: PointType): any;
 }
 
 export class Renderer implements RendererMixinType {
@@ -64,10 +64,10 @@ export class Renderer implements RendererMixinType {
     const address = p2a(point);
     const cache = table.getSolvedCache(address);
     const value = cache || table.getByPoint(point)?.value;
-    return this.render(value, table, writer);
+    return this.render(value, table, writer, point);
   }
 
-  public render(value: any, table: Table, writer?: WriterType): any {
+  public render(value: any, table: Table, writer?: WriterType, position?: PointType): any {
     if (this.condition && !this.condition(value)) {
       return this.complement ? this.complement(value) : this.stringify({ value });
     }
@@ -75,39 +75,39 @@ export class Renderer implements RendererMixinType {
     switch (typeof value) {
       case 'object':
         if (value instanceof Date) {
-          return this.date(value, writer);
+          return this.date(value, writer, position);
         }
         if (value instanceof TimeDelta) {
-          return this.timedelta(value, writer);
+          return this.timedelta(value, writer, position);
         }
         if (value == null) {
-          return this.null(value, writer);
+          return this.null(value, writer, position);
         }
         if (value instanceof Table) {
-          return this.render(value.getByPoint({ y: value.top, x: value.left })?.value, table, writer);
+          return this.render(value.getByPoint({ y: value.top, x: value.left })?.value, table, writer, position);
         }
         if (Array.isArray(value)) {
-          return this.array(value, writer);
+          return this.array(value, writer, position);
         }
         if (value instanceof FormulaError) {
           throw value;
         }
-        return this.object(value, writer);
+        return this.object(value, writer, position);
       case 'string':
-        return this.string(value, table, writer);
+        return this.string(value, table, writer, position);
       case 'number':
-        return this.number(value, writer);
+        return this.number(value, writer, position);
       case 'boolean':
-        return this.bool(value, writer);
+        return this.bool(value, writer, position);
       case 'undefined':
-        return this.undefined(value, writer);
+        return this.undefined(value, writer, position);
       case 'function':
         return value() as string;
     }
     return '';
   }
 
-  stringify(cell: CellType): string {
+  stringify(cell: CellType, position?: PointType): string {
     const { value } = cell;
     if (value instanceof Date) {
       return this.date(value);
@@ -122,7 +122,7 @@ export class Renderer implements RendererMixinType {
     return value.toString();
   }
 
-  string(value: string, table: Table, writer?: WriterType): any {
+  string(value: string, table: Table, writer?: WriterType, position?: PointType): any {
     if (value[0] === "'") {
       return value.substring(1);
     }
@@ -145,41 +145,41 @@ export class Renderer implements RendererMixinType {
     return value;
   }
 
-  bool(value: boolean, writer?: WriterType): any {
+  bool(value: boolean, writer?: WriterType, position?: PointType): any {
     return value ? 'TRUE' : 'FALSE';
   }
 
-  number(value: number, writer?: WriterType): any {
+  number(value: number, writer?: WriterType, position?: PointType): any {
     if (isNaN(value)) {
       return 'NaN';
     }
     return value;
   }
 
-  date(value: Date, writer?: WriterType): any {
+  date(value: Date, writer?: WriterType, position?: PointType): any {
     if (value.getHours() + value.getMinutes() + value.getSeconds() === 0) {
       return dayjs(value).format(this.dateFormat);
     }
     return dayjs(value).format(this.datetimeFormat);
   }
 
-  timedelta(value: TimeDelta, writer?: WriterType): any {
+  timedelta(value: TimeDelta, writer?: WriterType, position?: PointType): any {
     return value.stringify(this.timeDeltaFormat);
   }
 
-  array(value: any[], writer?: WriterType): any {
+  array(value: any[], writer?: WriterType, position?: PointType): any {
     return value.map((v) => this.stringify({ value: v })).join(',');
   }
 
-  object(value: any, writer?: WriterType): any {
+  object(value: any, writer?: WriterType, position?: PointType): any {
     return JSON.stringify(value);
   }
 
-  null(value: any, writer?: WriterType): any {
+  null(value: any, writer?: WriterType, position?: PointType): any {
     return '';
   }
 
-  undefined(value: undefined, writer?: WriterType): any {
+  undefined(value: undefined, writer?: WriterType, position?: PointType): any {
     return '';
   }
 }

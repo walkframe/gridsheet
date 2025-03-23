@@ -33,7 +33,6 @@ const Sheet = ({ numRows, numCols, defaultWidth, initialCells }: Props) => {
       </RightMenuComponent>
       <br />
 
-
       <RightMenuComponent>
         <GridSheet
           options={{
@@ -67,8 +66,6 @@ const Sheet = ({ numRows, numCols, defaultWidth, initialCells }: Props) => {
         />
       </RightMenuComponent>
       <br />
-
-
     </div>
   );
 };

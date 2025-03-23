@@ -30,6 +30,9 @@ export type {
   HeadersType,
   HistoryType,
   StoreType,
+  PointType,
+  AreaType,
+  ZoneType,
 } from './types';
 
 export type { Dispatcher } from './store';

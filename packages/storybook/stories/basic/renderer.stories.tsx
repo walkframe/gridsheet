@@ -5,6 +5,8 @@ import {
   Renderer,
   RendererMixinType,
   CheckboxRendererMixin,
+  PointType,
+  p2a,
 } from '@gridsheet/react-core';
 
 export default {
@@ -23,6 +25,15 @@ const kanjiMap: { [s: string]: string } = {
   '8': '八',
   '9': '九',
   '.': '.',
+};
+
+const NullMixin: RendererMixinType = {
+  null(value: null, writer?: any, position?: PointType) {
+    return <span style={{ opacity: 0.3 }}>{p2a(position)}</span>;
+  },
+  undefined(value: null, writer?: any, position?: PointType) {
+    return <span style={{ opacity: 0.3 }}>{p2a(position)}</span>;
+  },
 };
 
 const KanjiRendererMixin: RendererMixinType = {
@@ -68,7 +79,7 @@ export const RenderToKanji = () => {
         options={{
           renderers: {
             kanji: new Renderer({
-              mixins: [KanjiRendererMixin, CheckboxRendererMixin],
+              mixins: [KanjiRendererMixin, CheckboxRendererMixin, NullMixin],
             }),
           },
         }}

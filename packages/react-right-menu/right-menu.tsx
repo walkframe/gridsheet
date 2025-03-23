@@ -36,8 +36,8 @@ export const SideMenuItems = () => {
   const { largeEditorRef, mainRef } = store;
 
   return (
-    <div 
-      className={`gs-rightmenu-main`} 
+    <div
+      className={`gs-rightmenu-main`}
       data-mode={store.mode}
       style={{
         maxHeight: (largeEditorRef.current?.clientHeight ?? 0) + (mainRef.current?.clientHeight ?? 0) + 2,
