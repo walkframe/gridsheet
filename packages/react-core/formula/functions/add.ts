@@ -31,11 +31,11 @@ export class AddFunction extends BaseFunction {
     if (typeof v1 === 'number' && typeof v2 === 'number') {
       return v1 + v2;
     }
-    if (v1 instanceof Date && v2 instanceof TimeDelta) {
-      return v2.add(v1);
+    if (v1 instanceof Date && TimeDelta.is(v2)) {
+      return TimeDelta.ensure(v2).add(v1);
     }
-    if (v1 instanceof TimeDelta && v2 instanceof Date) {
-      return v1.add(v2);
+    if (TimeDelta.is(v1) && v2 instanceof Date) {
+      return TimeDelta.ensure(v1).add(v2);
     }
     if (v1 instanceof Date && typeof v2 === 'number') {
       return dayjs(v1)

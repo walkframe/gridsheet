@@ -33,10 +33,10 @@ const table2tsv = (table: Table): string => {
   const lines: string[] = [];
   const matrix = solveTable({ table, raise: false });
   matrix.forEach((row, i) => {
-    const x = table.left + i;
+    const y = table.top + i;
     const cols: string[] = [];
     row.forEach((col, j) => {
-      const y = table.top + j;
+      const x = table.left + j;
       const value = table.stringify({ y, x }, col);
       if (value.indexOf('\n') !== -1) {
         cols.push(`"${value.replace(/"/g, '""')}"`);

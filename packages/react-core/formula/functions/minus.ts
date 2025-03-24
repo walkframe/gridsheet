@@ -34,11 +34,11 @@ export class MinusFunction extends BaseFunction {
     if (v1 instanceof Date && v2 instanceof Date) {
       return new TimeDelta(v1, v2);
     }
-    if (v1 instanceof Date && v2 instanceof TimeDelta) {
-      return v2.sub(v1);
+    if (v1 instanceof Date && TimeDelta.is(v2)) {
+      return TimeDelta.ensure(v2).sub(v1);
     }
-    if (v1 instanceof TimeDelta && v2 instanceof Date) {
-      return v1.sub(v2);
+    if (TimeDelta.is(v1) && v2 instanceof Date) {
+      return TimeDelta.ensure(v1).sub(v2);
     }
     if (v1 instanceof Date && typeof v2 === 'number') {
       return dayjs(v1)

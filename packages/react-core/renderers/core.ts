@@ -18,6 +18,10 @@ type Props = {
 };
 
 export interface RendererMixinType {
+  datetimeFormat?: string;
+  dateFormat?: string;
+  timeDeltaFormat?: string;
+
   render?(value: any, table: UserTable, writer?: WriterType, position?: PointType): any;
   stringify?(cell: CellType): string;
   string?(value: string, table: UserTable, writer?: WriterType, position?: PointType): any;
@@ -77,8 +81,8 @@ export class Renderer implements RendererMixinType {
         if (value instanceof Date) {
           return this.date(value, writer, position);
         }
-        if (value instanceof TimeDelta) {
-          return this.timedelta(value, writer, position);
+        if (TimeDelta.is(value)) {
+          return this.timedelta(TimeDelta.ensure(value), writer, position);
         }
         if (value == null) {
           return this.null(value, writer, position);
