@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+      - fix/*
 
 jobs:
   package-release:
