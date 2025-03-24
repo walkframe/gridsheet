@@ -33,8 +33,17 @@ export const SideMenuItems = () => {
   if (store == null || dispatch == null) {
     return null;
   }
+  const { largeEditorRef, mainRef } = store;
+
   return (
-    <div className={`gs-rightmenu-main`} data-mode={store.mode}>
+    <div
+      className={`gs-rightmenu-main`}
+      data-mode={store.mode}
+      style={{
+        maxHeight: (largeEditorRef.current?.clientHeight ?? 0) + (mainRef.current?.clientHeight ?? 0) + 2,
+        overflow: 'auto',
+      }}
+    >
       <div className="gs-rightmenu-items">
         <div className="gs-rightmenu-item">
           <AddRows store={store} dispatch={dispatch} />

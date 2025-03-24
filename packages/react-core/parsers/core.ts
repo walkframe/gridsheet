@@ -1,8 +1,8 @@
 import { CellType } from '../types';
 import { TimeDelta } from '../lib/time';
 import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc.js';
+import timezone from 'dayjs/plugin/timezone.js';
 dayjs.extend(timezone);
 dayjs.extend(utc);
 
@@ -109,35 +109,7 @@ export class Parser implements ParserMixinType {
     if (value.length < 4 || isNaN(value[value.length - 1] as unknown as number)) {
       return;
     }
-    {
-      const match = value.match(/^([+-]?)(\d+):(\d{2})$/);
-      if (match) {
-        const [, _sign, hours, minutes] = match;
-        const sign = _sign === '-' ? -1 : 1;
-        return TimeDelta.create(sign * Number(hours), sign * Number(minutes));
-      }
-    }
-    {
-      const match = value.match(/^([+-]?)(\d+):(\d{2}):(\d{2})$/);
-      if (match) {
-        const [, _sign, hours, minutes, seconds] = match;
-        const sign = _sign === '-' ? -1 : 1;
-        return TimeDelta.create(sign * Number(hours), sign * Number(minutes), sign * Number(seconds));
-      }
-    }
-    {
-      const match = value.match(/^([+-]?)(\d+):(\d{2}):(\d{2})\.(\d+)$/);
-      if (match) {
-        const [, _sign, hours, minutes, seconds, msecs] = match;
-        const sign = _sign === '-' ? -1 : 1;
-        return TimeDelta.create(
-          sign * Number(hours),
-          sign * Number(minutes),
-          sign * Number(seconds),
-          sign * Number(msecs),
-        );
-      }
-    }
+    return TimeDelta.parse(value);
   }
 
   date(value: string, cell?: CellType): Date | undefined {

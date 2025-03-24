@@ -1,6 +1,6 @@
 import { Special } from '../constants';
 import { Table } from '../lib/table';
-import { MatrixType } from '../types';
+import { MatrixType, PointType } from '../types';
 import { FormulaError, Lexer, Parser } from './evaluator';
 import { p2a } from '../lib/converters';
 
@@ -11,9 +11,10 @@ type SolveFormulaType = {
   table: Table;
   raise?: boolean;
   evaluates?: boolean | null;
+  origin?: PointType;
 };
 
-export const solveFormula = ({ value, table, raise = true, evaluates = true }: SolveFormulaType) => {
+export const solveFormula = ({ value, table, raise = true, evaluates = true, origin }: SolveFormulaType) => {
   if (evaluates === null) {
     return value;
   }
@@ -21,7 +22,7 @@ export const solveFormula = ({ value, table, raise = true, evaluates = true }: S
   if (typeof value === 'string') {
     if (value.charAt(0) === '=') {
       try {
-        const lexer = new Lexer(value.substring(1));
+        const lexer = new Lexer(value.substring(1), { origin });
         lexer.tokenize();
         const parser = new Parser(lexer.tokens);
         if (evaluates === false) {
@@ -61,7 +62,7 @@ export const solveTable = ({ table, raise = true }: { table: Table; raise?: bool
           return cache;
         }
         table.setSolvedCache(address, SOLVING);
-        const solved = solveFormula({ value, table, raise });
+        const solved = solveFormula({ value, table, raise, origin: { y, x } });
         table.setSolvedCache(address, solved);
         return solved;
       } catch (e) {

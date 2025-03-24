@@ -1,13 +1,7 @@
 {
   "name": "@gridsheet/react-core",
-  "version": "1.4.0-alpha.0",
+  "version": "1.4.0-alpha.13",
   "description": "Spreadsheet component for React",
-  "exports": {
-    "development": "./index.ts",
-    "main": "./dist/index.js",
-    "module": "./dist/index.js",
-    "types": "./dist/index.d.ts"
-  },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -60,7 +54,8 @@
   },
   "peerDependencies": {
     "react": ">=16.9.0",
-    "react-dom": ">=16.9.0"
+    "react-dom": ">=16.9.0",
+    "dayjs": "^1.11.13"
   },
   "dependencies": {
     "dayjs": "^1.11.13"

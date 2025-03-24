@@ -9,6 +9,7 @@ import {
   AreaType,
   PositionType,
   ModeType,
+  Renderers,
 } from '../types';
 import { zoneToArea, superposeArea, matrixShape, areaShape, areaToZone } from '../lib/structs';
 import { Table } from '../lib/table';

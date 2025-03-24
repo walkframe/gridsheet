@@ -1,5 +1,7 @@
 import dayjs from 'dayjs';
 
+export const defaultTimeDeltaFormat = 'HH:mm:ss';
+
 export const BASE_DATE = new Date('2345-01-02T03:04:05Z');
 type DiffFunction = (date: Date | number, amount: number) => Date;
 const UNITS = ['year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond'] as const;
@@ -13,12 +15,13 @@ const SUB_FNS = UNITS.map(
 type Diff = [number, number, number, number, number, number, number];
 
 export class TimeDelta {
+  public __type = 'TimeDelta';
   protected diff: Diff = [0, 0, 0, 0, 0, 0, 0];
   private date1: Date;
   private date2: Date;
   public format: string;
 
-  constructor(date1: Date, date2: Date) {
+  constructor(date1: Date, date2: Date, format = defaultTimeDeltaFormat) {
     this.diff = [
       date1.getFullYear() - date2.getFullYear(),
       date1.getMonth() - date2.getMonth(),
@@ -30,7 +33,7 @@ export class TimeDelta {
     ];
     this.date1 = date1;
     this.date2 = date2;
-    this.format = 'HH:mm:ss';
+    this.format = format;
   }
   public add(date: Date) {
     this.diff.forEach((n, i) => {
@@ -84,4 +87,98 @@ export class TimeDelta {
     });
     return new TimeDelta(date, BASE_DATE);
   }
+
+  static is(obj: any): boolean {
+    if (obj instanceof TimeDelta) {
+      return true;
+    }
+    if (obj?.__type === 'TimeDelta') {
+      return true;
+    }
+    return false;
+  }
+
+  static ensure(obj: any) {
+    if (obj instanceof TimeDelta) {
+      return obj;
+    }
+    if (obj?.__type === 'TimeDelta') {
+      return TimeDelta.fromObject(obj);
+    }
+    return TimeDelta.create();
+  }
+  static fromObject(obj: any) {
+    return new TimeDelta(new Date(obj.date1), new Date(obj.date2));
+  }
+  static parse(value: string, format = defaultTimeDeltaFormat, strict = false): TimeDelta | undefined {
+    {
+      const formattedMatcher = dayjsFormatToNamedRegex(format);
+      const match = value.match(formattedMatcher);
+      if (match?.groups) {
+        return TimeDelta.create(
+          Number(match.groups.HH || match.groups.H || 0),
+          Number(match.groups.mm || match.groups.m || 0),
+          Number(match.groups.ss || match.groups.s || 0),
+          Number(match.groups.SSS || match.groups.SS || match.groups.S || 0),
+        );
+      }
+    }
+    if (strict) {
+      return;
+    }
+    {
+      const match = value.match(/^([+-]?)(\d+):(\d{2})$/);
+      if (match) {
+        const [, _sign, hours, minutes] = match;
+        const sign = _sign === '-' ? -1 : 1;
+        return TimeDelta.create(sign * Number(hours), sign * Number(minutes));
+      }
+    }
+    {
+      const match = value.match(/^([+-]?)(\d+):(\d{2}):(\d{2})$/);
+      if (match) {
+        const [, _sign, hours, minutes, seconds] = match;
+        const sign = _sign === '-' ? -1 : 1;
+        return TimeDelta.create(sign * Number(hours), sign * Number(minutes), sign * Number(seconds));
+      }
+    }
+    {
+      const match = value.match(/^([+-]?)(\d+):(\d{2}):(\d{2})\.(\d+)$/);
+      if (match) {
+        const [, _sign, hours, minutes, seconds, msecs] = match;
+        const sign = _sign === '-' ? -1 : 1;
+        return TimeDelta.create(
+          sign * Number(hours),
+          sign * Number(minutes),
+          sign * Number(seconds),
+          sign * Number(msecs),
+        );
+      }
+    }
+  }
+}
+
+const tokenRegexMap: Record<string, { group: string; pattern: string }> = {
+  HH: { group: 'HH', pattern: '(?<HH>\\d+)' },
+  H: { group: 'H', pattern: '(?<HH>\\d+)' },
+  mm: { group: 'mm', pattern: '(?<mm>[0-5]\\d)' },
+  m: { group: 'm', pattern: '(?<m>\\d|[1-5]\\d)' },
+  ss: { group: 'ss', pattern: '(?<ss>[0-5]\\d)' },
+  s: { group: 's', pattern: '(?<s>\\d|[1-5]\\d)' },
+  SSS: { group: 'SSS', pattern: '(?<SSS>\\d{3})' },
+  SS: { group: 'SS', pattern: '(?<SS>\\d{2})' },
+  S: { group: 'S', pattern: '(?<S>\\d)' },
+};
+
+function dayjsFormatToNamedRegex(format: string): RegExp {
+  const sortedTokens = Object.keys(tokenRegexMap).sort((a, b) => b.length - a.length);
+  const tokenPattern = new RegExp(sortedTokens.join('|'), 'g');
+
+  const escapedFormat = format.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+
+  const regexSource = escapedFormat.replace(tokenPattern, (match) => {
+    return tokenRegexMap[match]?.pattern ?? match;
+  });
+
+  return new RegExp(`^${regexSource}$`);
 }

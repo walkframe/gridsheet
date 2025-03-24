@@ -160,3 +160,18 @@ test('escape key', async ({ page }) => {
   expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('Change1');
   expect(await largeEditor.inputValue()).toBe('Change1');
 });
+
+test('rendered cell', async ({ page }) => {
+  const largeEditor = page.locator('.gs-formula-bar textarea');
+  await page.goto('http://localhost:5233/iframe.html?id=basic--render-to-kanji&viewMode=story');
+  const c5 = page.locator("[data-address='C5']");
+  await c5.click();
+  expect(await c5.locator('.gs-cell-rendered').textContent()).toBe('五〇〇');
+  expect(await largeEditor.inputValue()).toBe('500');
+
+  // undefined renderer
+  const a9 = page.locator("[data-address='A9']");
+  await a9.click();
+  expect(await a9.locator('.gs-cell-rendered').textContent()).toBe('A9');
+  expect(await largeEditor.inputValue()).toBe('');
+});

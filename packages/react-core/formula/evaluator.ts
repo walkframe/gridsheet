@@ -1,5 +1,6 @@
 import { a2p } from '../lib/converters';
 import { Table } from '../lib/table';
+import { PointType } from '../types';
 
 type EvaluateProps = {
   table: Table;
@@ -240,10 +241,12 @@ export class FunctionEntity {
   public args: Expression[];
   public name: string;
   public precedence: number;
-  constructor(name: string, precedence = 0, args: Expression[] = []) {
+  private origin?: PointType;
+  constructor(name: string, precedence = 0, args: Expression[] = [], origin?: PointType) {
     this.name = name;
     this.precedence = precedence;
     this.args = args;
+    this.origin = origin;
   }
 
   public evaluate({ table }: EvaluateProps): any {
@@ -252,7 +255,7 @@ export class FunctionEntity {
     if (Func == null) {
       throw new FormulaError('#NAME?', `Unknown function: ${name}`);
     }
-    const func = new Func({ args: this.args, table });
+    const func = new Func({ args: this.args, table, origin: this.origin });
     return func.call();
   }
 }
@@ -312,11 +315,13 @@ export class Token {
   type: TokenType;
   entity: any;
   precedence: number;
+  private origin?: PointType;
 
-  constructor(type: TokenType, entity: any, precedence = 0) {
+  constructor(type: TokenType, entity: any, precedence = 0, origin?: PointType) {
     this.type = type;
     this.entity = entity;
     this.precedence = precedence;
+    this.origin = origin;
   }
 
   public length() {
@@ -364,7 +369,7 @@ export class Token {
         return new FunctionEntity(name, this.precedence);
       }
       case 'FUNCTION':
-        return new FunctionEntity(this.entity as string);
+        return new FunctionEntity(this.entity as string, 0, [], this.origin);
 
       case 'UNREFERENCED':
         return new UnreferencedEntity(this.entity);
@@ -397,16 +402,25 @@ const TOKEN_OPEN = new Token('OPEN', '('),
   TOKEN_EQ = new Token('INFIX_OPERATOR', '=', 1);
 
 const BOOLS: { [s: string]: boolean } = { ['true']: true, ['false']: false };
+
+type LexerOption = {
+  origin?: PointType;
+};
+
 export class Lexer {
   private index: number;
   private formula: string;
   public tokens: Token[] = [];
   public foreign: boolean = false;
+  private origin?: PointType;
 
-  constructor(formula: string) {
+  constructor(formula: string, options?: LexerOption) {
     this.formula = formula;
     this.index = 0;
     this.tokens = [];
+    if (options?.origin) {
+      this.origin = options.origin;
+    }
   }
 
   private isWhiteSpace() {
@@ -592,7 +606,7 @@ export class Lexer {
       while (true) {
         const c = this.get();
         if (c === '(') {
-          this.tokens.push(new Token('FUNCTION', buf), TOKEN_OPEN);
+          this.tokens.push(new Token('FUNCTION', buf, 0, this.origin), TOKEN_OPEN);
           this.next();
           break;
         }

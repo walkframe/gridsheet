@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+      - fix/*
 
 jobs:
   package-release:
@@ -26,7 +27,7 @@ jobs:
         run: |
           cd packages/react-core
           pnpm install
-          pnpm build
+          pnpm build --mode development
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
           npm publish --access public || true
 
@@ -34,6 +35,6 @@ jobs:
         run: |
           cd packages/react-right-menu
           pnpm install
-          pnpm build
+          pnpm build --mode development
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
           npm publish || true

@@ -1,13 +1,7 @@
 {
   "name": "@gridsheet/react-right-menu",
-  "version": "0.0.1-alpha.0",
+  "version": "0.0.1-alpha.4",
   "description": "GridSheet right menu for React",
-  "exports": {
-    "development": "./index.ts",
-    "main": "./dist/index.js",
-    "module": "./dist/index.js",
-    "types": "./dist/index.d.ts"
-  },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",

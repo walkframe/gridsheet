@@ -15,14 +15,16 @@ export class RowFunction extends BaseFunction {
 
   protected validate() {
     if (this.bareArgs.length === 0) {
-      this.bareArgs = [this.table];
+      this.bareArgs = [this.origin?.y ?? 1];
     } else if (this.bareArgs.length === 1) {
+      const table = this.bareArgs[0] as Table;
+      this.bareArgs = [table.top];
     } else {
       throw new FormulaError('#N/A', 'Number of arguments for ROW is incorrect.');
     }
   }
 
-  protected main(trimmed: Table) {
-    return trimmed.top;
+  protected main(top: number) {
+    return top;
   }
 }

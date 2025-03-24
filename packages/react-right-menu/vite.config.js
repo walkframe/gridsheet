@@ -9,16 +9,13 @@ export default defineConfig(({ mode }) => ({
       entry: "./index.ts",
       name: "RightMenu",
       formats: ["es"],
-      fileName: (format) => {
-        if (format === "es") {
-          return "index.js";
-        }
-        return `index.${format}.js`;
-      },
+      fileName: (_, name) => `${name}.js`,
     },
     rollupOptions: {
-      external: ["react", "react-dom", "@gridsheet/react-core"],
+      external: [/^react/, /^@?react-dom/, "@gridsheet/react-core"],
       output: {
+        preserveModules: true,
+        preserveModulesRoot: process.cwd(),
         globals: {
           react: "React",
           "react-dom": "ReactDOM",

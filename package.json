@@ -17,7 +17,7 @@
   "scripts": {
     "dev": "cd packages/storybook && pnpm dev",
     "build:core": "cd packages/react-core && pnpm build --mode development",
-    "build:right-menu": "cd packages/react-right-menu && pnpm build  --mode development",
+    "build:right-menu": "cd packages/react-right-menu && pnpm build --mode development",
     "build:storybook": "cd packages/storybook && pnpm build",
     "build:all": "pnpm build:core && pnpm build:right-menu && pnpm build:storybook",
     "typecheck:core": "cd packages/react-core && pnpm typecheck",
@@ -29,6 +29,17 @@
     "test": "pnpm jest && pnpm e2e",
     "prettier": "prettier --write '**/*.{ts,tsx}'",
     "eslint": "eslint --ext .ts,.tsx .",
-    "eslint:fix": "pnpm eslint --fix && pnpm prettier"
+    "eslint:fix": "pnpm eslint --fix && pnpm prettier",
+    "remove:root": "rm -rf node_modules",
+    "remove:core": "cd packages/react-core && rm -rf node_modules",
+    "remove:right-menu": "cd packages/react-right-menu && rm -rf node_modules",
+    "remove:storybook": "cd packages/storybook && rm -rf node_modules",
+    "remove:all": "pnpm remove:core && pnpm remove:right-menu && pnpm remove:storybook",
+    "install:root": "pnpm install",
+    "install:core": "cd packages/react-core && pnpm install",
+    "install:right-menu": "cd packages/react-right-menu && pnpm install",
+    "install:storybook": "cd packages/storybook && pnpm install",
+    "install:all": "pnpm install:core && pnpm install:right-menu && pnpm install:storybook",
+    "reset:all": "pnpm remove:all && pnpm install:all"
   }
 }

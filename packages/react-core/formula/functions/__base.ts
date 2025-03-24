@@ -1,9 +1,11 @@
 import { Table } from '../../lib/table';
+import type { PointType } from '../../types';
 import { Expression } from '../evaluator';
 
 export type FunctionProps = {
   args: Expression[];
   table: Table;
+  origin?: PointType;
 };
 
 export class BaseFunction {
@@ -12,10 +14,12 @@ export class BaseFunction {
   public helpArgs = [{ name: 'value1', description: '' }];
   protected bareArgs: any[];
   protected table: Table;
+  protected origin?: PointType;
 
-  constructor({ args, table }: FunctionProps) {
+  constructor({ args, table, origin }: FunctionProps) {
     this.bareArgs = args.map((a) => a.evaluate({ table }));
     this.table = table;
+    this.origin = origin;
   }
   protected validate() {}
 

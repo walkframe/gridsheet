@@ -9,16 +9,14 @@ export default defineConfig(({ mode }) => ({
       entry: "./index.ts",
       name: "GridSheet",
       formats: ["es"],
-      fileName: (format) => {
-        if (format === "es") {
-          return "index.js";
-        }
-        return `index.${format}.js`;
-      },
+      fileName: (_, name) => `${name}.js`,
     },
+    outDir: 'dist',
     rollupOptions: {
-      external: ["react", "react-dom"],
+      external: [/^react/, /^@?react-dom/],
       output: {
+        preserveModules: true,
+        preserveModulesRoot: process.cwd(),
         globals: {
           react: "React",
           "react-dom": "ReactDOM",

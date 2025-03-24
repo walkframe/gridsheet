@@ -499,6 +499,7 @@ export class Table implements UserTable {
           table: this,
           raise,
           evaluates,
+          origin: { y, x },
         });
       }
     }
@@ -516,6 +517,7 @@ export class Table implements UserTable {
             table: this,
             raise,
             evaluates,
+            origin: { y, x },
           });
         }
       }
@@ -536,6 +538,7 @@ export class Table implements UserTable {
             table: this,
             raise,
             evaluates,
+            origin: { y, x },
           });
         }
       }
@@ -556,6 +559,7 @@ export class Table implements UserTable {
             table: this,
             raise,
             evaluates,
+            origin: { y, x },
           });
         }
       }
@@ -586,6 +590,7 @@ export class Table implements UserTable {
               table: this,
               raise,
               evaluates,
+              origin: { y, x },
             }),
           };
         }
@@ -607,6 +612,7 @@ export class Table implements UserTable {
               table: this,
               raise,
               evaluates,
+              origin: { y, x },
             }),
           };
         }
@@ -630,6 +636,7 @@ export class Table implements UserTable {
               table: this,
               raise,
               evaluates,
+              origin: { y, x },
             }),
           };
         }
@@ -653,6 +660,7 @@ export class Table implements UserTable {
               table: this,
               raise,
               evaluates,
+              origin: { y, x },
             }),
           };
         }
@@ -1315,7 +1323,7 @@ export class Table implements UserTable {
 
     if (s[0] === '=') {
       if (evaluates) {
-        return String(solveFormula({ value: s, table: this, raise: false, evaluates }));
+        return String(solveFormula({ value: s, table: this, raise: false, evaluates, origin: point }));
       }
       const lexer = new Lexer(s.substring(1));
       lexer.tokenize();

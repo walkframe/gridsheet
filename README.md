@@ -1,20 +1,11 @@
-[![NPM](https://nodei.co/npm/@gridsheet/react-core.png?mini=true)](https://www.npmjs.com/package/@gridsheet/react-core)
-
 ![unittest workflow](https://github.com/walkframe/gridsheet/actions/workflows/unittest.yaml/badge.svg?branch=master)
 ![e2e workflow](https://github.com/walkframe/gridsheet/actions/workflows/e2e.yaml/badge.svg?branch=master)
 
-## Introduction
-
-@gridsheet/react-core is a simple yet highly functional spreadsheet component for ReactJS.
-
 ![gridsheet](https://github.com/walkframe/gridsheet/raw/master/gridsheet.png)
 
-
-## Installation
-
-```sh
-$ npm install @gridsheet/react-core --save
-```
+## Packages
+- [@gridsheet/react-core](https://github.com/walkframe/gridsheet/tree/master/packages/react-core)
+- [@gridsheet/react-right-menu](https://github.com/walkframe/gridsheet/tree/master/packages/react-right-menu)
 
 ## Docs
 
