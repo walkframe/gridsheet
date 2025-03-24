@@ -21,7 +21,7 @@ export class TimeDelta {
   private date2: Date;
   public format: string;
 
-  constructor(date1: Date, date2: Date, format=defaultTimeDeltaFormat) {
+  constructor(date1: Date, date2: Date, format = defaultTimeDeltaFormat) {
     this.diff = [
       date1.getFullYear() - date2.getFullYear(),
       date1.getMonth() - date2.getMonth(),
@@ -110,13 +110,13 @@ export class TimeDelta {
   static fromObject(obj: any) {
     return new TimeDelta(new Date(obj.date1), new Date(obj.date2));
   }
-  static parse(value: string, format=defaultTimeDeltaFormat, strict=false): TimeDelta | undefined {
+  static parse(value: string, format = defaultTimeDeltaFormat, strict = false): TimeDelta | undefined {
     {
       const formattedMatcher = dayjsFormatToNamedRegex(format);
       const match = value.match(formattedMatcher);
       if (match?.groups) {
         return TimeDelta.create(
-          Number(match.groups.HH || match.groups.H || 0 ),
+          Number(match.groups.HH || match.groups.H || 0),
           Number(match.groups.mm || match.groups.m || 0),
           Number(match.groups.ss || match.groups.s || 0),
           Number(match.groups.SSS || match.groups.SS || match.groups.S || 0),
@@ -158,7 +158,7 @@ export class TimeDelta {
   }
 }
 
-const tokenRegexMap: Record<string, { group: string, pattern: string }> = {
+const tokenRegexMap: Record<string, { group: string; pattern: string }> = {
   HH: { group: 'HH', pattern: '(?<HH>\\d+)' },
   H: { group: 'H', pattern: '(?<HH>\\d+)' },
   mm: { group: 'mm', pattern: '(?<mm>[0-5]\\d)' },

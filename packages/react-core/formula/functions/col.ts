@@ -15,14 +15,16 @@ export class ColFunction extends BaseFunction {
 
   protected validate() {
     if (this.bareArgs.length === 0) {
-      this.bareArgs = [this.table];
+      this.bareArgs = [this.origin?.x ?? 1];
     } else if (this.bareArgs.length === 1) {
+      const table = this.bareArgs[0] as Table;
+      this.bareArgs = [table.left];
     } else {
       throw new FormulaError('#N/A', 'Number of arguments for COL is incorrect.');
     }
   }
 
-  protected main(trimmed: Table) {
-    return trimmed.left;
+  protected main(left: number) {
+    return left;
   }
 }

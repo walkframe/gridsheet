@@ -96,6 +96,7 @@ export const functions: FunctionMapping = {
   hlookup: HlookupFunction,
   row: RowFunction,
   col: ColFunction,
+  column: ColFunction,
   now: NowFunction,
   rand: RandFunction,
   log: LogFunction,

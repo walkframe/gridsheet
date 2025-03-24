@@ -131,7 +131,7 @@ export class Renderer implements RendererMixinType {
       return value.substring(1);
     }
     if (value[0] === '=') {
-      const result = solveFormula({ value, table, raise: true });
+      const result = solveFormula({ value, table, raise: true, origin: position });
       if (result === null) {
         return this.null(null);
       }
