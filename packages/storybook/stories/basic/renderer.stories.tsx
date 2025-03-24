@@ -29,10 +29,10 @@ const kanjiMap: { [s: string]: string } = {
 
 const NullMixin: RendererMixinType = {
   null(value: null, writer?: any, position?: PointType) {
-    return <span style={{ opacity: 0.3 }}>{p2a(position)}</span>;
+    return <span style={{ opacity: 0.3 }}>{p2a(position!)}</span>;
   },
-  undefined(value: null, writer?: any, position?: PointType) {
-    return <span style={{ opacity: 0.3 }}>{p2a(position)}</span>;
+  undefined(value: undefined, writer?: any, position?: PointType) {
+    return <span style={{ opacity: 0.3 }}>{p2a(position!)}</span>;
   },
 };
 
