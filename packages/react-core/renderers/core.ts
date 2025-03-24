@@ -116,8 +116,8 @@ export class Renderer implements RendererMixinType {
     if (value instanceof Date) {
       return this.date(value);
     }
-    if (value instanceof TimeDelta) {
-      return this.timedelta(value);
+    if (TimeDelta.is(value)) {
+      return this.timedelta(TimeDelta.ensure(value));
     }
     if (value == null) {
       return '';
