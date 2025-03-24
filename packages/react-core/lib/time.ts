@@ -15,7 +15,7 @@ const SUB_FNS = UNITS.map(
 type Diff = [number, number, number, number, number, number, number];
 
 export class TimeDelta {
-  public __type = 'TimeDelta';
+  public gsType = 'TimeDelta';
   protected diff: Diff = [0, 0, 0, 0, 0, 0, 0];
   private date1: Date;
   private date2: Date;
@@ -92,7 +92,7 @@ export class TimeDelta {
     if (obj instanceof TimeDelta) {
       return true;
     }
-    if (obj?.__type === 'TimeDelta') {
+    if (obj?.gsType === 'TimeDelta') {
       return true;
     }
     return false;
@@ -102,7 +102,7 @@ export class TimeDelta {
     if (obj instanceof TimeDelta) {
       return obj;
     }
-    if (obj?.__type === 'TimeDelta') {
+    if (obj?.gsType === 'TimeDelta') {
       return TimeDelta.fromObject(obj);
     }
     return TimeDelta.create();
