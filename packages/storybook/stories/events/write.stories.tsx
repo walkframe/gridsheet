@@ -29,6 +29,14 @@ const Sheet = ({ x, y, value }: Props) => {
             numCols: 50,
           },
         })}
+        options={{
+          onKeyUp: (e, points) => {
+            console.log('onKeyUp', e.currentTarget.value, points.pointing);
+          },
+          onInit: (table) => {
+            console.debug('onInit', table);
+          },
+        }}
       />
     </>
   );
