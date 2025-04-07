@@ -39,6 +39,8 @@ export const Tabular = ({ tableRef }: Props) => {
     inputting,
   } = store;
 
+  const [sheetProvided, sheetContext] = useSheetContext();
+
   React.useEffect(() => {
     const formulaEditing = editingCell && inputting.startsWith('=');
     if (!formulaEditing) {
@@ -93,6 +95,9 @@ export const Tabular = ({ tableRef }: Props) => {
     const v = table.stringify(store.choosing);
     dispatch(setInputting(v || ''));
   }, [table, store.choosing]);
+  React.useEffect(() => {
+    sheetContext?.setChoosingCell?.(p2a(store.choosing));
+  }, [store.choosing]);
   const [virtualized, setVirtualized] = React.useState<Virtualization | null>(null);
   React.useEffect(() => {
     setVirtualized(virtualize(table, tabularRef.current));

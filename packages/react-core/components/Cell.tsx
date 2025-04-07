@@ -158,7 +158,6 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
         }
         const valueString = table.stringify({ y, x });
         dispatch(setInputting(valueString));
-        sheetContext?.setChoosingCell?.(address);
       }}
       onDoubleClick={(e) => {
         e.preventDefault();
