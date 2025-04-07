@@ -73,6 +73,7 @@ export function GridSheet({
       maxNumCols,
       headerHeight,
       headerWidth,
+      sheetName,
       functions: { ...functions, ...additionalFunctions },
     });
     let sheetId = 0;
@@ -185,7 +186,7 @@ export function GridSheet({
     }
   }, [options.sheetWidth]);
 
-  const { onChange, onSelect } = options;
+  const { onChange, onSelect, onKeyUp } = options;
   return (
     <Context.Provider value={{ store, dispatch }}>
       <div
@@ -206,7 +207,7 @@ export function GridSheet({
             resize: sheetResize,
           }}
         >
-          <Editor mode={mode} />
+          <Editor mode={mode} handleKeyUp={onKeyUp} />
           <Tabular tableRef={tableRef} />
           <StoreInitializer
             initialCells={initialCells}

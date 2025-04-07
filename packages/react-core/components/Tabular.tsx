@@ -12,7 +12,7 @@ import { RefPaletteType, PointType, StoreType, TableRef, Virtualization } from '
 import { virtualize } from '../lib/virtualization';
 import { a2p, p2a, stripAddressAbsolute } from '../lib/converters';
 import { zoneToArea } from '../lib/structs';
-import { Lexer } from '../formula/evaluator';
+import { Lexer, stripSheetName } from '../formula/evaluator';
 import { REF_PALETTE } from '../lib/palette';
 import { useSheetContext } from './SheetProvider';
 import { Autofill } from '../lib/autofill';
@@ -40,39 +40,43 @@ export const Tabular = ({ tableRef }: Props) => {
   } = store;
 
   React.useEffect(() => {
-    if (editingCell && inputting.startsWith('=')) {
-      const refs: RefPaletteType = {};
-      const externalRefs: { [sheetName: string]: RefPaletteType } = {};
-      const lexer = new Lexer(inputting.substring(1));
-      lexer.tokenize();
+    const formulaEditing = editingCell && inputting.startsWith('=');
+    if (!formulaEditing) {
+      setRefs({});
+      setExternalRefs?.({});
+      return;
+    }
+    const refs: RefPaletteType = {};
+    const externalRefs: { [sheetName: string]: RefPaletteType } = {};
+    const lexer = new Lexer(inputting.substring(1));
+    lexer.tokenize();
 
-      let i = 0;
-      for (const token of lexer.tokens) {
-        if (token.type === 'REF' || token.type === 'RANGE') {
-          const normalizedRef = stripAddressAbsolute(token.stringify());
-          if (normalizedRef.includes('!')) {
-            const [sheetName, ref] = normalizedRef.split('!');
-            const upperRef = ref.toUpperCase();
-            if (externalRefs[sheetName] == null) {
-              externalRefs[sheetName] = {};
-            }
-            if (externalRefs[sheetName][upperRef] == null) {
-              externalRefs[sheetName][upperRef] = i++;
-            }
-          } else {
-            const upperRef = normalizedRef.toUpperCase();
-            if (refs[upperRef] == null) {
-              refs[upperRef] = i++;
-            }
+    let i = 0;
+    for (const token of lexer.tokens) {
+      if (token.type === 'REF' || token.type === 'RANGE') {
+        const normalizedRef = stripAddressAbsolute(token.stringify());
+        const splitterIndex = normalizedRef.indexOf('!');
+        if (splitterIndex !== -1) {
+          const sheetName = normalizedRef.substring(0, splitterIndex);
+          const ref = normalizedRef.substring(splitterIndex + 1);
+          const stripped = stripSheetName(sheetName);
+          const upperRef = ref.toUpperCase();
+          if (externalRefs[stripped] == null) {
+            externalRefs[stripped] = {};
+          }
+          if (externalRefs[stripped][upperRef] == null) {
+            externalRefs[stripped][upperRef] = i++;
+          }
+        } else {
+          const upperRef = normalizedRef.toUpperCase();
+          if (refs[upperRef] == null) {
+            refs[upperRef] = i++;
           }
         }
       }
-      setRefs(refs);
-      setExternalRefs?.(externalRefs);
-    } else {
-      setRefs({});
-      setExternalRefs?.({});
     }
+    setRefs(refs);
+    setExternalRefs?.(externalRefs);
   }, [store.inputting, store.editingCell]);
 
   React.useEffect(() => {

@@ -73,3 +73,25 @@ test('edit on enter', async ({ page }) => {
   expect(await address.textContent()).toBe('B3');
   expect(await editor.getAttribute('class')).toContain('gs-editing');
 });
+
+test('onKeyUp', async ({ page }) => {
+  const logs: any[][] = [];
+  page.on('console', async (msg) => {
+    if (msg.type() === 'log') {
+      const values = await Promise.all(msg.args().map((arg) => arg.jsonValue()));
+      logs.push(values);
+    }
+  });
+
+  await page.goto('http://localhost:5233/iframe.html?id=table-operations--write');
+  const c2 = page.locator("[data-address='C2']");
+  await c2.click();
+
+  await page.keyboard.type('abc');
+
+  expect(logs).toStrictEqual([
+    ['onKeyUp', 'a', { x: 3, y: 2 }],
+    ['onKeyUp', 'ab', { x: 3, y: 2 }],
+    ['onKeyUp', 'abc', { x: 3, y: 2 }],
+  ]);
+});

@@ -47,6 +47,7 @@ type Props = {
   headerHeight?: number;
   headerWidth?: number;
   functions?: FunctionMapping;
+  sheetName?: string;
 };
 
 const noFilter: CellFilter = () => true;
@@ -213,6 +214,7 @@ export class Table implements UserTable {
     headerWidth = HEADER_WIDTH,
     headerHeight = HEADER_HEIGHT,
     functions = functionsDefault,
+    sheetName,
   }: Props) {
     this.head = useBigInt ? BigInt(0) : 0;
     this.parsers = parsers || {};
@@ -233,6 +235,7 @@ export class Table implements UserTable {
     this.headerWidth = headerWidth;
     this.functions = functions;
     this.idsToBeAbsoluted = [];
+    this.sheetName = sheetName || '';
   }
 
   public getTableBySheetName(sheetName: string) {
@@ -378,6 +381,7 @@ export class Table implements UserTable {
       // force reset
       this.addressesById = {};
     }
+    copied.sheetName = this.sheetName;
     return copied;
   }
 

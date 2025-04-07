@@ -59,6 +59,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
   const selectingArea = zoneToArea(selectingZone); // (top, left) -> (bottom, right)
 
   const editing = editingCell === address;
+  const xEditing = !sheetProvided || sheetContext?.editingCell === sheetContext?.choosingCell;
   const pointed = choosing.y === y && choosing.x === x;
   const _setEditorRect = React.useCallback(() => {
     const rect = cellRef.current!.getBoundingClientRect();
@@ -144,7 +145,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
             return false;
           }
         }
-        dispatch(setEditingCell(''));
+
         dispatch(setContextMenuPosition({ y: -1, x: -1 }));
         input.focus();
         if (e.shiftKey) {
@@ -157,9 +158,11 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
         }
         const valueString = table.stringify({ y, x });
         dispatch(setInputting(valueString));
+        sheetContext?.setChoosingCell?.(address);
       }}
       onDoubleClick={(e) => {
         e.preventDefault();
+        setEditingCell(address);
         const dblclick = document.createEvent('MouseEvents');
         dblclick.initEvent('dblclick', true, true);
         input.dispatchEvent(dblclick);
@@ -173,7 +176,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
         e.dataTransfer.setDragImage(DUMMY_IMG, 0, 0);
         dispatch(select({ startY: y, startX: x, endY: y, endX: x }));
         const insertable = isRefInsertable(lastInput);
-        if (insertable) {
+        if (insertable && xEditing) {
           return true;
         } else if (insertable != null) {
           writeCell(input.value);

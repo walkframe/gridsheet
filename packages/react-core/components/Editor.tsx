@@ -22,20 +22,21 @@ import {
 } from '../store/actions';
 
 import { Context } from '../store';
-import { areaToZone } from '../lib/structs';
+import { areaToZone, zoneToArea } from '../lib/structs';
 import * as prevention from '../lib/prevention';
 import { expandInput, insertTextAtCursor } from '../lib/input';
 import { useSheetContext } from './SheetProvider';
 import { Lexer } from '../formula/evaluator';
 import { REF_PALETTE } from '../lib/palette';
-import { ModeType } from '../types';
+import { CursorStateType, ModeType } from '../types';
 import { Fixed } from './Fixed';
 
 type Props = {
   mode: ModeType;
+  handleKeyUp?: (e: React.KeyboardEvent<HTMLTextAreaElement>, points: CursorStateType) => void;
 };
 
-export const Editor: React.FC<Props> = ({ mode }: Props) => {
+export const Editor: React.FC<Props> = ({ mode, handleKeyUp }: Props) => {
   const { store, dispatch } = React.useContext(Context);
   const {
     showAddress,
@@ -450,6 +451,15 @@ export const Editor: React.FC<Props> = ({ mode }: Props) => {
             dispatch(setInputting(e.currentTarget.value));
           }}
           onKeyDown={handleKeyDown}
+          onKeyUp={(e) => {
+            const input = e.currentTarget;
+            const selectingArea = zoneToArea(store.selectingZone);
+            handleKeyUp?.(e, {
+              pointing: choosing,
+              selectingFrom: { y: selectingArea.top, x: selectingArea.left },
+              selectingTo: { y: selectingArea.bottom, x: selectingArea.right },
+            });
+          }}
         />
       </div>
     </Fixed>

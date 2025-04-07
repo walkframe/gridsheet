@@ -27,14 +27,13 @@ export type TableRef = {
   dispatch: (table: UserTable) => void;
 };
 
-export type FeedbackType = (
-  table: UserTable,
-  points?: {
-    pointing: PointType;
-    selectingFrom: PointType;
-    selectingTo: PointType;
-  },
-) => void;
+export type CursorStateType = {
+  pointing: PointType;
+  selectingFrom: PointType;
+  selectingTo: PointType;
+};
+
+export type FeedbackType = (table: UserTable, points?: CursorStateType) => void;
 
 export type ModeType = 'light' | 'dark';
 export type HeadersType = 'both' | 'vertical' | 'horizontal' | 'none';
@@ -80,6 +79,7 @@ export type OptionsType = {
   onSave?: FeedbackType;
   onChange?: FeedbackType;
   onSelect?: FeedbackType;
+  onKeyUp?: (e: React.KeyboardEvent<HTMLTextAreaElement>, points: CursorStateType) => void;
   onInit?: (table: UserTable) => void;
 };
 
