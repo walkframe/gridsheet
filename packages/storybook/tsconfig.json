@@ -21,7 +21,7 @@
   "exclude": ["node_modules", "storybook", "dist", "e2e"],
   "include": ["**/*.ts", "**/*.tsx"],
   "paths": {
-    "@gridsheet/react-core": ["../react-core"],
+    "@gridsheet/react-core": ["../react-core/src"],
     "@gridsheet/react-right-menu": ["../react-right-menu"]
   }
 }

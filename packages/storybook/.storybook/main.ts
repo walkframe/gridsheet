@@ -25,12 +25,19 @@ const config: StorybookConfig = {
       plugins: [tsconfigPaths()],
       resolve: {
         conditions: ['development', 'import', 'require'],
+        //dedupe: ['react', 'react-dom'],
+      },
+      optimizeDeps: {
+        include: ['react', 'react-dom'],
+        exclude: [
+          '@gridsheet/react-core',
+        ],
       },
     });
     config.resolve = config.resolve || {};
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
-      '@gridsheet/react-core': path.resolve(__dirname, '../../react-core/index.ts'),
+      '@gridsheet/react-core': path.resolve(__dirname, '../../react-core/src/index.ts'),
       '@gridsheet/react-right-menu': path.resolve(__dirname, '../../react-right-menu/index.ts'),
     };
     return config;

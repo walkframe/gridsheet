@@ -5,6 +5,7 @@ import {
   Renderer,
   RendererMixinType,
   CheckboxRendererMixin,
+  RenderProps,
   PointType,
   p2a,
 } from '@gridsheet/react-core';
@@ -28,19 +29,16 @@ const kanjiMap: { [s: string]: string } = {
 };
 
 const NullMixin: RendererMixinType = {
-  null(value: null, writer?: any, position?: PointType) {
-    return <span style={{ opacity: 0.3 }}>{p2a(position!)}</span>;
-  },
-  undefined(value: undefined, writer?: any, position?: PointType) {
-    return <span style={{ opacity: 0.3 }}>{p2a(position!)}</span>;
+  null({value, point}: RenderProps<null>) {
+    return <span style={{ opacity: 0.3 }}>{p2a(point!)}</span>;
   },
 };
 
 const KanjiRendererMixin: RendererMixinType = {
-  string(value: string): string {
+  string({value}: RenderProps<string>): string {
     return value;
   },
-  number(value: number): string {
+  number({value}: RenderProps<number>) {
     const minus = value < 0;
 
     let kanji = '';
@@ -53,13 +51,13 @@ const KanjiRendererMixin: RendererMixinType = {
       kanji += kanjiMap[int[i]];
     }
     if (fraction == null) {
-      return minus ? `-${kanji}` : kanji;
+      return minus ? <span>{kanji}</span> : <span>{kanji}</span>;
     }
     kanji += '.';
     for (let i = 0; i < fraction.length; i++) {
       kanji += kanjiMap[fraction[i]];
     }
-    return minus ? `-${kanji}` : kanji;
+    return minus ? <span>{kanji}</span> : <span>{kanji}</span>;
   },
 };
 
@@ -85,7 +83,7 @@ export const RenderToKanji = () => {
         options={{
           renderers: {
             kanji: new Renderer({
-              mixins: [KanjiRendererMixin, CheckboxRendererMixin, NullMixin],
+              mixins: [KanjiRendererMixin, NullMixin],
             }),
           },
         }}

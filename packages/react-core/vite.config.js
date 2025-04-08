@@ -3,24 +3,20 @@ import react from "@vitejs/plugin-react";
 import dts from "vite-plugin-dts";
 
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), dts({ insertTypesEntry: true })],
+  plugins: [react(), dts({ insertTypesEntry: true, exclude: ['**/*.spec.ts', '**/*.spec.tsx'] })],
   build: {
     lib: {
-      entry: "./index.ts",
+      entry: "./src/index.ts",
       name: "GridSheet",
       formats: ["es"],
       fileName: (_, name) => `${name}.js`,
     },
     outDir: 'dist',
     rollupOptions: {
-      external: [/^react/, /^@?react-dom/],
+      external: [/^react/, /^@?react-dom/, "@gridsheet/react-core"],
       output: {
-        preserveModules: true,
-        preserveModulesRoot: process.cwd(),
-        globals: {
-          react: "React",
-          "react-dom": "ReactDOM",
-        },
+        preserveModules: false,
+        //preserveModulesRoot: process.cwd(),
       },
     },
     sourcemap: mode === "development",

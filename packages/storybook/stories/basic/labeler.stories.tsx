@@ -8,10 +8,11 @@ export default {
 export const Labeler = () => {
   const [width, setWidth] = React.useState(500);
   React.useEffect(() => {
-    setInterval(() => {
+    const id = window.setInterval(() => {
       setWidth(width - 50);
-    }, 10000);
-  });
+    }, 500);
+    return () => window.clearInterval(id);
+  }, []);
 
   return (
     <>

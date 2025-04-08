@@ -18,7 +18,7 @@
     "baseUrl": "./src/",
     "forceConsistentCasingInFileNames": true,
     "paths": {
-      "@gridsheet/react-core": ["../react-core"],
+      "@gridsheet/react-core": ["../react-core/src"],
       "@gridsheet/react-right-menu": ["./"]
     }
   },

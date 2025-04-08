@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { GridSheet, constructInitialCells, BaseFunction, prevention, SheetProvider } from '@gridsheet/react-core';
+import { GridSheet, constructInitialCells, BaseFunction, prevention, useConnector } from '@gridsheet/react-core';
 
 export default {
   title: 'Demo',
@@ -13,14 +13,15 @@ class HopeFunction extends BaseFunction {
 }
 
 export function FirstDemo() {
+  const connector = useConnector()
   const [sheetName1, setSheetName1] = React.useState('criteria');
   const [sheetName2, setSheetName2] = React.useState('grades');
   const [sheetName3, setSheetName3] = React.useState('other');
 
   return (
     <div className="App">
-      <SheetProvider>
         <GridSheet
+          connector={connector}
           sheetName={sheetName1}
           initialCells={constructInitialCells({
             matrices: {
@@ -49,6 +50,7 @@ export function FirstDemo() {
         reference points are readonly.
         <hr />
         <GridSheet
+          connector={connector}
           sheetName={sheetName2}
           initialCells={constructInitialCells({
             matrices: {
@@ -96,6 +98,7 @@ export function FirstDemo() {
         Ranks are derived using the HLOOKUP function with a {sheetName1} sheet.
         <hr />
         <GridSheet
+          connector={connector}
           sheetName={sheetName3}
           initialCells={constructInitialCells({
             matrices: {
@@ -122,7 +125,6 @@ export function FirstDemo() {
         <br />
         Sheet name: <input value={sheetName3} onChange={(e) => setSheetName3(e.target.value)} />
         <br />
-      </SheetProvider>
     </div>
   );
 }
