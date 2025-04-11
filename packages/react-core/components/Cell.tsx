@@ -145,7 +145,7 @@ export const Cell: React.FC<Props> = React.memo(({ y, x, operationStyle }) => {
             return false;
           }
         }
-
+        dispatch(setEditingCell(''));
         dispatch(setContextMenuPosition({ y: -1, x: -1 }));
         input.focus();
         if (e.shiftKey) {
