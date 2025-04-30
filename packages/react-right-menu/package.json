@@ -18,7 +18,7 @@
     "@types/react": ">=16.9.0",
     "@types/react-dom": ">=16.9.0",
     "typescript": "^5.8.2",
-    "vite": "^6.2.2",
+    "vite": "^6.2.7",
     "vite-plugin-dts": "^4.5.3"
   },
   "peerDependencies": {
