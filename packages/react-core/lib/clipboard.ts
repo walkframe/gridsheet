@@ -67,7 +67,13 @@ const table2html = (table: Table): string => {
     row.forEach((col, j) => {
       const x = table.left + j;
       const value = table.stringify({ y, x }, col);
-      cols.push(`<td>${value}</td>`);
+      const valueEscaped = value
+        .replaceAll('&', '&amp;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&apos;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;');
+      cols.push(`<td>${valueEscaped}</td>`);
     });
     lines.push(`<tr>${cols.join('')}</tr>`);
   });
