@@ -18,14 +18,14 @@ export const clip = (store: StoreType): AreaType => {
   const html = table2html(trimmed);
 
   if (navigator.clipboard) {
-    const tsvBlob = new Blob([tsv], { type: "text/plain" });
-    const htmlBlob = new Blob([html], { type: "text/html" });
+    const tsvBlob = new Blob([tsv], { type: 'text/plain' });
+    const htmlBlob = new Blob([html], { type: 'text/html' });
 
     navigator.clipboard.write([
       new ClipboardItem({
-        "text/plain": tsvBlob,
-        "text/html": htmlBlob
-      })
+        'text/plain': tsvBlob,
+        'text/html': htmlBlob,
+      }),
     ]);
   } else if (input != null) {
     input.value = tsv;
@@ -67,9 +67,9 @@ const table2html = (table: Table): string => {
     row.forEach((col, j) => {
       const x = table.left + j;
       const value = table.stringify({ y, x }, col);
-      cols.push(`<td>${ value }</td>`);
+      cols.push(`<td>${value}</td>`);
     });
-    lines.push(`<tr>${ cols.join("") }</tr>`);
+    lines.push(`<tr>${cols.join('')}</tr>`);
   });
-  return `<table>${ lines.join("") }</table>`;
+  return `<table>${lines.join('')}</table>`;
 };
