@@ -49,6 +49,7 @@ export type CellType<Custom = any> = {
   renderer?: string;
   parser?: string;
   custom?: Custom;
+  disableFormula?: boolean;
   prevention?: Prevention;
   changedAt?: Date;
 };

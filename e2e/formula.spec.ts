@@ -202,3 +202,25 @@ test('insert cols range and rows range by selection in multiple sheets', async (
   await editor2.press('Enter');
   expect(await d4.locator('.gs-cell-rendered').textContent()).toBe('370');
 });
+
+test('disable formula', async ({ page }) => {
+  await page.goto('http://localhost:5233/iframe.html?id=formula--disabled&viewMode=story');
+  const a1 = page.locator("[data-address='A1']");
+  const b1 = page.locator("[data-address='B1']");
+  const a2 = page.locator("[data-address='A2']");
+  const b2 = page.locator("[data-address='B2']");
+  const a3 = page.locator("[data-address='A3']");
+  const b3 = page.locator("[data-address='B3']");
+  const a4 = page.locator("[data-address='A4']");
+  const b4 = page.locator("[data-address='B4']");
+
+  expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('=1+1');
+  expect(await b1.locator('.gs-cell-rendered').textContent()).toBe('2');
+  expect(await a2.locator('.gs-cell-rendered').textContent()).toBe("'quote");
+  expect(await b2.locator('.gs-cell-rendered').textContent()).toBe("quote");
+  expect(await a3.locator('.gs-cell-rendered').textContent()).toBe("'0123");
+  expect(await b3.locator('.gs-cell-rendered').textContent()).toBe('0123');
+  expect(await a4.locator('.gs-cell-rendered').textContent()).toBe('0123');
+  expect(await b4.locator('.gs-cell-rendered').textContent()).toBe('0123');
+
+});
