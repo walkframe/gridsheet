@@ -71,5 +71,5 @@ const table2html = (table: Table): string => {
     });
     lines.push(`<tr>${ cols.join("") }</tr>`);
   });
-  return lines.join("");
+  return `<table>${ lines.join("") }</table>`;
 };
