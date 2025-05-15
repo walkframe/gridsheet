@@ -15,9 +15,18 @@ export const clip = (store: StoreType): AreaType => {
   const input = editorRef.current;
   const trimmed = table.trim(area);
   const tsv = table2tsv(trimmed);
+  const html = table2html(trimmed);
 
   if (navigator.clipboard) {
-    navigator.clipboard.writeText(tsv);
+    const tsvBlob = new Blob([tsv], { type: "text/plain" });
+    const htmlBlob = new Blob([html], { type: "text/html" });
+
+    navigator.clipboard.write([
+      new ClipboardItem({
+        "text/plain": tsvBlob,
+        "text/html": htmlBlob
+      })
+    ]);
   } else if (input != null) {
     input.value = tsv;
     input.focus();
@@ -47,4 +56,20 @@ const table2tsv = (table: Table): string => {
     lines.push(cols.join('\t'));
   });
   return lines.join('\n');
+};
+
+const table2html = (table: Table): string => {
+  const lines: string[] = [];
+  const matrix = solveTable({ table, raise: false });
+  matrix.forEach((row, i) => {
+    const y = table.top + i;
+    const cols: string[] = [];
+    row.forEach((col, j) => {
+      const x = table.left + j;
+      const value = table.stringify({ y, x }, col);
+      cols.push(`<td>${ value }</td>`);
+    });
+    lines.push(`<tr>${ cols.join("") }</tr>`);
+  });
+  return lines.join("");
 };
