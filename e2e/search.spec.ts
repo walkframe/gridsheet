@@ -9,7 +9,7 @@ test('search and next', async ({ page }) => {
 
   await page.keyboard.down('Control');
   await page.keyboard.press('f');
-  await page.waitForTimeout(500);
+  await page.waitForSelector('.gs-search-bar', { timeout: 3000 });
 
   expect(await searchBar.count()).toBe(1);
   expect(await progress.textContent()).toBe('0 / 0');
