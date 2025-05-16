@@ -7,8 +7,7 @@ test('search and next', async ({ page }) => {
   const progress = page.locator('.gs-search-progress');
   expect(await searchBar.count()).toBe(0);
 
-  await page.keyboard.down('Control');
-  await page.keyboard.press('f');
+  await page.keyboard.press('Control+f');
   await page.waitForSelector('.gs-search-bar', { timeout: 3000 });
 
   expect(await searchBar.count()).toBe(1);
