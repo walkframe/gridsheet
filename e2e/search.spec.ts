@@ -2,6 +2,8 @@ import { test, expect } from '@playwright/test';
 
 test('search and next', async ({ page }) => {
   await page.goto('http://localhost:5233/iframe.html?id=basic--large&viewMode=story');
+  const a1 = page.locator("[data-address='A1']");
+  await a1.click();
 
   const searchBar = page.locator('.gs-search-bar');
   const progress = page.locator('.gs-search-progress');
