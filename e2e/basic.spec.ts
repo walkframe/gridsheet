@@ -174,4 +174,8 @@ test('rendered cell', async ({ page }) => {
   await a9.click();
   expect(await a9.locator('.gs-cell-rendered').textContent()).toBe('A9');
   expect(await largeEditor.inputValue()).toBe('');
+
+  // fix #97
+  const b10 = page.locator("[data-address='B10']");
+  expect(await b10.locator('.gs-cell-rendered').textContent()).toBe('一〇,八〇〇');
 });

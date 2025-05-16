@@ -68,11 +68,11 @@ const table2html = (table: Table): string => {
       const x = table.left + j;
       const value = table.stringify({ y, x }, col);
       const valueEscaped = value
-        .replaceAll('&', '&amp;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&apos;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;');
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
       cols.push(`<td>${valueEscaped}</td>`);
     });
     lines.push(`<tr>${cols.join('')}</tr>`);

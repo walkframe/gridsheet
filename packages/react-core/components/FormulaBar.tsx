@@ -15,6 +15,7 @@ export const FormulaBar: React.FC = () => {
   const hlRef = React.useRef<HTMLDivElement | null>(null);
 
   const address = choosing.x === -1 ? '' : p2a(choosing);
+  const cell = table.getByPoint(choosing);
   React.useEffect(() => {
     let value = table.getByPoint(choosing)?.value ?? '';
     // debug to remove this line
@@ -79,7 +80,7 @@ export const FormulaBar: React.FC = () => {
             width: largeEditorRef.current?.clientWidth,
           }}
         >
-          {editorStyle(inputting)}
+          {cell?.disableFormula ? inputting : editorStyle(inputting)}
         </div>
         <textarea
           rows={1}

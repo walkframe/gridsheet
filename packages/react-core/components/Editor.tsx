@@ -402,7 +402,7 @@ export const Editor: React.FC<Props> = ({ mode, handleKeyUp }: Props) => {
             width: (editorRef.current?.scrollWidth ?? 0) - 4,
           }}
         >
-          {editorStyle(inputting)}
+          {cell?.disableFormula ? inputting : editorStyle(inputting)}
         </pre>
         <textarea
           autoFocus={true}

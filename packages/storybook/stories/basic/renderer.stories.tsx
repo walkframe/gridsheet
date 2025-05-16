@@ -37,6 +37,9 @@ const NullMixin: RendererMixinType = {
 };
 
 const KanjiRendererMixin: RendererMixinType = {
+  string(value: string): string {
+    return value;
+  },
   number(value: number): string {
     const minus = value < 0;
 
@@ -73,6 +76,9 @@ export const RenderToKanji = () => {
             default: {
               renderer: 'kanji',
             },
+            B10: {
+              value: '=B6+10000',
+            }
           },
           ensured: { numRows: 30, numCols: 20 },
         })}

@@ -67,7 +67,15 @@ export class Renderer implements RendererMixinType {
   public call(table: Table, point: PointType, writer?: WriterType): any {
     const address = p2a(point);
     const cache = table.getSolvedCache(address);
-    const value = cache || table.getByPoint(point)?.value;
+    const cell = table.getByPoint(point);
+    let value = cache || cell?.value;
+    if (typeof value === 'string' && !cell?.disableFormula) {
+      if (value[0] === "'") {
+        value = value.substring(1);
+      } else if (value[0] === '=') {
+        value = solveFormula({ value, table, raise: true, origin: point });
+      }
+    }
     return this.render(value, table, writer, point);
   }
 
@@ -127,25 +135,6 @@ export class Renderer implements RendererMixinType {
   }
 
   string(value: string, table: Table, writer?: WriterType, position?: PointType): any {
-    if (value[0] === "'") {
-      return value.substring(1);
-    }
-    if (value[0] === '=') {
-      const result = solveFormula({ value, table, raise: true, origin: position });
-      if (result === null) {
-        return this.null(null);
-      }
-      if (result === undefined) {
-        return this.undefined(undefined);
-      }
-      if (result.constructor.name === 'Boolean') {
-        return String(result).toUpperCase();
-      }
-      if (result.constructor.name === 'Date') {
-        return this.date(result as Date);
-      }
-      return this.render(result, table, writer);
-    }
     return value;
   }
 
