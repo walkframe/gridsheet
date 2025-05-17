@@ -1,6 +1,5 @@
-
-import { createContext, ReactNode } from 'react';
-import { useContext, useEffect, useState, useRef, useReducer } from 'react';
+import type { ReactNode } from 'react';
+import { createContext, useContext, useState } from 'react';
 
 import { StoreType } from '../types';
 import { Dispatcher } from '../store';

@@ -20,6 +20,6 @@
     "baseUrl": "./src/",
     "forceConsistentCasingInFileNames": true
   },
-  "exclude": ["node_modules", "storybook", "dist", "e2e", "plugins", "**/*.spec.ts"],
+  "exclude": ["node_modules", "storybook", "dist", "e2e", "plugins"],
   "include": ["**/*.ts", "**/*.tsx"]
 }

@@ -149,7 +149,7 @@ export const putMatrix = <T = any>(
   dst: T[][],
   src: T[][],
   dstArea: AreaType,
-  filter: (newValue: T, currentValue: T) => boolean = () => true,
+  filter: (srcValue: T, dstValue: T) => boolean = () => true,
 ) => {
   const lostRows: MatricesByAddress<T> = {};
   const { top, left, bottom, right } = dstArea;

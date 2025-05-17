@@ -70,7 +70,7 @@ export const initSearchStatement = (table: Table, store: StoreType) => {
   const matchingCells: Address[] = [];
   for (let y = 1; y <= table.bottom; y++) {
     for (let x = 1; x <= table.right; x++) {
-      const v = table.stringify({ y, x }, undefined, true);
+      const v = table.stringify({point: { y, x }});
       const s = searchCaseSensitive ? v : v.toLowerCase();
       const q = searchCaseSensitive ? searchQuery : searchQuery.toLowerCase();
       if (s.indexOf(q) !== -1) {

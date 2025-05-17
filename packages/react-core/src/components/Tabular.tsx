@@ -1,5 +1,5 @@
 
-import {useEffect} from 'react';
+import { useEffect } from 'react';
 
 import { Cell } from './Cell';
 import { HeaderCellTop } from './HeaderCellTop';
@@ -90,7 +90,7 @@ export const Tabular = ({ tableRef }: Props) => {
     }
   }, [table]);
   useEffect(() => {
-    const v = table.stringify(choosing);
+    const v = table.stringify({point: choosing, evaluates: false});
     dispatch(setInputting(v || ''));
   }, [table, choosing]);
   useEffect(() => {

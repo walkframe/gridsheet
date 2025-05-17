@@ -29,20 +29,20 @@ const kanjiMap: { [s: string]: string } = {
 };
 
 const NullMixin: RendererMixinType = {
-  null({value, point}: RenderProps<null>) {
+  null({cell, point}: RenderProps<null>) {
     return <span style={{ opacity: 0.3 }}>{p2a(point!)}</span>;
   },
 };
 
 const KanjiRendererMixin: RendererMixinType = {
-  string({value}: RenderProps<string>): string {
-    return value;
+  string({cell}: RenderProps<string>): string {
+    return cell.value!;
   },
-  number({value}: RenderProps<number>) {
-    const minus = value < 0;
+  number({cell}: RenderProps<number>) {
+    const minus = cell.value! < 0;
 
     let kanji = '';
-    let [int, fraction] = String(Math.abs(value)).split('.');
+    let [int, fraction] = String(Math.abs(cell.value!)).split('.');
     for (let i = 0; i < int.length; i++) {
       const j = int.length - i;
       if (j % 3 === 0 && i !== 0) {

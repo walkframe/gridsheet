@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState, useRef, useReducer } from 'react';
+import { useEffect, useState } from 'react';
 
 // Return the document object with SSR.
 export const useBrowser = () => {

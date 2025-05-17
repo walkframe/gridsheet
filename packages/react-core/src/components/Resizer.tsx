@@ -1,6 +1,3 @@
-
-import { createContext, MouseEventHandler, ReactNode } from 'react';
-
 import { useContext, MouseEvent } from 'react';
 
 import { Context } from '../store';

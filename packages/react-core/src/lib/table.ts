@@ -22,6 +22,8 @@ import {
   OperatorType,
   TablesBySheetId,
   SheetIdsByName,
+  OperationType,
+  Policies,
 } from '../types';
 import { areaShape, createMatrix, expandRange, getMaxSizesFromCells, matrixShape, putMatrix } from './structs';
 import { a2p, x2c, p2a, y2r, grantAddressAbsolute } from './converters';
@@ -32,14 +34,16 @@ import { solveFormula } from '../formula/solver';
 
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH, HEADER_HEIGHT, HEADER_WIDTH, HISTORY_LIMIT } from '../constants';
 import { shouldTracking } from '../store/helpers';
-import * as prevention from './prevention';
+import * as operation from './operation';
 import { SheetConnector, createConnector } from './connector';
 import { safeQueueMicrotask } from './time';
+import { defaultPolicy, PolicyType } from '../policy/core';
 
 type Props = {
   parsers?: Parsers;
   renderers?: Renderers;
   labelers?: Labelers;
+  policies?: Policies;
   useBigInt?: boolean;
   historyLimit?: number;
   minNumRows?: number;
@@ -104,6 +108,7 @@ export interface UserTable {
   getAddressesByIds(ids: CellsByIdType): CellsByAddressType;
   getPointById(id: Id): PointType;
   getByPoint(point: PointType): CellType | undefined;
+  getId(point: PointType): Id;
   getById(id: Id): CellType | undefined;
   getNumRows(base?: number): number;
   getNumCols(base?: number): number;
@@ -169,6 +174,7 @@ export interface UserTable {
   getHistories(): HistoryType[];
   getHistoryIndex(): number;
   getHistorySize(): number;
+  stringify(props: {point: PointType, cell?: CellType, evaluates?: boolean}): string;
 }
 
 export class Table implements UserTable {
@@ -195,11 +201,12 @@ export class Table implements UserTable {
   private parsers: Parsers;
   private renderers: Renderers;
   private labelers: Labelers;
+  private policies: Policies;
   private functions: FunctionMapping = {};
   private lastHistory?: HistoryType;
   private histories: HistoryType[];
   private historyIndex: number;
-  private addressesById: { [id: Id]: Address };
+  private addressCache: { [id: Id]: Address };
   private historyLimit: number;
   private idsToBeAbsoluted: Id[];
 
@@ -207,6 +214,7 @@ export class Table implements UserTable {
     parsers = {},
     renderers = {},
     labelers = {},
+    policies = {},
     useBigInt = false,
     historyLimit: historyLimit,
     minNumRows = 1,
@@ -223,10 +231,11 @@ export class Table implements UserTable {
     this.parsers = parsers || {};
     this.renderers = renderers || {};
     this.labelers = labelers || {};
+    this.policies = policies || {};
     this.idMatrix = [];
     this.histories = [];
     this.historyIndex = -1;
-    this.addressesById = {};
+    this.addressCache = {};
     this.historyLimit = historyLimit || HISTORY_LIMIT;
     this.changedAt = new Date();
     this.minNumRows = minNumRows || 0;
@@ -252,6 +261,7 @@ export class Table implements UserTable {
 
   public initialize(cells: CellsByAddressType) {
     const auto = getMaxSizesFromCells(cells);
+    const changedAt = new Date();
     this.area = {
       top: 0,
       left: 0,
@@ -267,7 +277,7 @@ export class Table implements UserTable {
         const id = this.generateId();
         ids.push(id);
         const address = p2a({ y, x });
-        this.addressesById[id] = address;
+        this.addressCache[id] = address;
       }
     }
     Object.keys(cells).forEach((address) => {
@@ -331,10 +341,18 @@ export class Table implements UserTable {
           delete stacked.width;
           delete stacked.labeler;
         }
+        stacked.system = { id, changedAt, dependents: new Set() };
         this.data[id] = stacked;
       }
     }
     this.setTotalSize();
+  }
+
+  public incrementVersion() {
+    this.version++;
+    if (this.version >= Number.MAX_SAFE_INTEGER) {
+      this.version = 1;
+    }
   }
 
   public absolutizeFormula() {
@@ -348,6 +366,8 @@ export class Table implements UserTable {
         table: this,
       });
     });
+
+    this.incrementVersion();
   }
 
   private generateId() {
@@ -377,11 +397,8 @@ export class Table implements UserTable {
     this.totalHeight = height + this.headerHeight;
   }
 
-  public shallowCopy({ copyCache = true }: { copyCache?: boolean } = {}) {
-    this.version++;
-    if (this.version >= Number.MAX_SAFE_INTEGER) {
-      this.version = 0;
-    }
+  public clone({ keepAddressCache = true }: { keepAddressCache?: boolean } = {}) {
+    this.incrementVersion();
     const copied: Table = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     copied.changedAt = new Date();
     copied.lastChangedAt = this.changedAt;
@@ -391,19 +408,22 @@ export class Table implements UserTable {
     safeQueueMicrotask(() => {
       copied.conn.solvedCaches = {};
       copied.conn.renderedCaches = {};
-      copied.conn.reflect({...copied.conn})
+      copied.conn.reflect({...copied.conn});
     });
 
-    if (!copyCache) {
+    if (!keepAddressCache) {
       // force reset
-      this.addressesById = {};
+      copied.addressCache = {};
     }
     // TODO: delete
     //copied.sheetName = this.sheetName;
     return copied;
   }
 
-  public getAddressById(id: Id, slideY = 0, slideX = 0): string | undefined {
+  public getPointById(id: Id, slideY = 0, slideX = 0): PointType & {
+    absCol: boolean;
+    absRow: boolean;
+  } {
     const absCol = id.startsWith('$');
     if (absCol) {
       id = id.slice(1);
@@ -414,22 +434,39 @@ export class Table implements UserTable {
       id = id.slice(0, -1);
       slideY = 0;
     }
+    const cache = this.addressCache[id];
+    if (cache) {
+      const p = a2p(cache);
+      return { y: p.y + slideY, x: p.x + slideX, absCol, absRow };
+    }
 
     for (let y = 0; y < this.idMatrix.length; y++) {
       const ids = this.idMatrix[y];
       for (let x = 0; x < ids.length; x++) {
         const existing = ids[x];
         const address = p2a({ y, x });
-        this.addressesById[existing] = address;
+        this.addressCache[existing] = address;
         if (existing === id) {
-          const slidedAddress = p2a({
+          return {
             y: y + slideY,
             x: x + slideX,
-          });
-          return grantAddressAbsolute(slidedAddress, absCol, absRow);
+            absCol,
+            absRow,
+          };
         }
       }
     }
+    return { y: 0, x: 0, absCol, absRow };
+  }
+
+  public getAddressById(id: Id, slideY = 0, slideX = 0): string | undefined {
+    const {
+      y,
+      x,
+      absCol,
+      absRow,
+    } = this.getPointById(id, slideY, slideX);
+    return grantAddressAbsolute(p2a({ y, x }), absCol, absRow);
   }
 
   public getAddressesByIds(ids: CellsByIdType) {
@@ -444,14 +481,7 @@ export class Table implements UserTable {
     return addresses;
   }
 
-  public getPointById(id: Id): PointType {
-    const address = this.getAddressById(id);
-    if (address) {
-      return a2p(address);
-    }
-    return { y: 0, x: 0 };
-  }
-  private getId(point: PointType) {
+  public getId(point: PointType) {
     const { y, x } = point;
     return this.idMatrix[Math.abs(y)]?.[Math.abs(x)];
   }
@@ -774,10 +804,10 @@ export class Table implements UserTable {
   }
 
   private setChangedAt(cell?: CellType, changedAt?: Date) {
-    if (cell == null) {
+    if (cell?.system == null) {
       return null;
     }
-    cell.changedAt = changedAt || new Date();
+    cell.system!.changedAt = changedAt || new Date();
     return cell;
   }
 
@@ -817,28 +847,67 @@ export class Table implements UserTable {
     const matrixNew = this.getNewIdMatrix(src);
     const matrixFrom = this.getIdMatrixFromArea(src);
     const matrixTo = this.getIdMatrixFromArea(dst);
-    putMatrix(this.idMatrix, matrixNew, src, (_, id) => {
-      const cell = this.data[id];
-      if (operator === 'USER' && prevention.isPrevented(cell?.prevention, prevention.MoveFrom)) {
-        return false;
-      }
-      return true;
-    });
+
+    // to dst(to)
     const lostRows = putMatrix(this.idMatrix, matrixFrom, dst, (srcId, dstId) => {
       const srcCell = this.data[srcId];
       const dstCell = this.data[dstId];
       if (
         operator === 'USER' &&
-        (prevention.isPrevented(srcCell?.prevention, prevention.MoveFrom) ||
-          prevention.isPrevented(dstCell?.prevention, prevention.MoveTo))
+        (operation.hasOperation(srcCell?.prevention, operation.MoveFrom) ||
+          operation.hasOperation(dstCell?.prevention, operation.MoveTo))
       ) {
         return false;
+      }
+      const policy = this.policies[dstCell?.policy!] ?? defaultPolicy;
+      const patch = policy.onChange({
+        table: this,
+        point: this.getPointById(dstId),
+        patch: srcCell,
+        original: dstCell,
+        operation: operation.MoveTo,
+      });
+      if (patch) {
+        this.data[srcId] = {
+          ...srcCell,
+          ...patch,
+          system: { 
+            id: srcId, 
+            changedAt: new Date(),
+            dependents: srcCell?.system?.dependents ?? new Set(),
+          },
+        };
       }
       if (srcCell != null) {
         this.setChangedAt(srcCell, new Date());
       }
       return true;
     });
+
+    // to src(from)
+    putMatrix(this.idMatrix, matrixNew, src, (_, id) => {
+      const srcCell = this.data[id];
+      if (operator === 'USER' && operation.hasOperation(srcCell?.prevention, operation.MoveFrom)) {
+        return false;
+      }
+      const policy = this.policies[srcCell?.policy!] ?? defaultPolicy;
+      const patch = policy.onChange({
+        table: this,
+        point: this.getPointById(id),
+        patch: undefined,
+        original: srcCell,
+        operation: operation.MoveFrom,
+      });
+      if (patch) {
+        this.data[id] = {
+          ...srcCell,
+          ...patch,
+          system: { id, changedAt: new Date(), dependents: new Set() },
+        };
+      }
+      return true;
+    });
+
     if (historicize) {
       this.pushHistory({
         applyed: true,
@@ -852,7 +921,7 @@ export class Table implements UserTable {
         lostRows,
       });
     }
-    return this.shallowCopy({ copyCache: false });
+    return this.clone({ keepAddressCache: false });
   }
 
   public copy({ src, dst, operator = 'SYSTEM', reflection = {} }: MoveProps) {
@@ -904,8 +973,17 @@ export class Table implements UserTable {
       diff,
       partial: false,
       operator,
+      operation: operation.Copy,
       reflection,
     });
+  }
+
+  public getPolicyByPoint(point: PointType): PolicyType {
+    const cell = this.getByPoint(point);
+    if (cell?.policy == null) {
+      return defaultPolicy;
+    }
+    return this.policies[cell.policy] ?? defaultPolicy;
   }
 
   private _update({
@@ -914,61 +992,75 @@ export class Table implements UserTable {
     updateChangedAt = true,
     ignoreFields = ['labeler', 'prevention'],
     operator = 'SYSTEM',
+    operation: op = operation.Update,
+    formulaAbsolutize = true,
   }: {
     diff: CellsByAddressType;
     partial?: boolean;
     updateChangedAt?: boolean;
     ignoreFields?: (keyof CellType)[];
     operator?: OperatorType;
+    operation?: OperationType;
+    formulaAbsolutize?: boolean;
   }) {
     const diffBefore: CellsByIdType = {};
     const diffAfter: CellsByIdType = {};
     const changedAt = new Date();
 
     Object.keys(diff).forEach((address) => {
-      const cell = { ...diff[address] };
-      if (operator === 'USER' && prevention.isPrevented(cell?.prevention, prevention.Update)) {
+      const point = a2p(address);
+      const id = this.getId(point);
+      const original = this.data[id]!;
+      let patch = { ...diff[address] };
+      if (operator === 'USER' && operation.hasOperation(original.prevention, operation.Update)) {
         return;
       }
 
-      cell.value = absolutizeFormula({
-        value: cell.value,
-        table: this,
-      });
-      const point = a2p(address);
-      const id = this.getId(point);
-      const current = this.data[id];
+      if (formulaAbsolutize) {
+        patch.value = absolutizeFormula({
+          value: patch.value,
+          table: this,
+        });
+      }
       ignoreFields.forEach((key) => {
-        cell[key] = current?.[key];
+        patch[key] = original?.[key];
       });
-      if (operator === 'USER' && prevention.isPrevented(current?.prevention, prevention.Write)) {
-        cell.value = current?.value;
+      if (operator === 'USER' && operation.hasOperation(original?.prevention, operation.Write)) {
+        delete patch.value;
       }
-      if (operator === 'USER' && prevention.isPrevented(current?.prevention, prevention.Style)) {
-        cell.style = current?.style;
-        cell.justifyContent = current?.justifyContent;
-        cell.alignItems = current?.alignItems;
+      if (operator === 'USER' && operation.hasOperation(original?.prevention, operation.Style)) {
+        delete patch?.style?.justifyContent;
+        delete patch?.style?.alignItems;
       }
-      if (operator === 'USER' && prevention.isPrevented(current?.prevention, prevention.Resize)) {
-        cell.width = current?.width;
-        cell.height = current?.height;
+      if (operator === 'USER' && operation.hasOperation(original?.prevention, operation.Resize)) {
+        delete patch?.style?.width;
+        delete patch?.style?.height;
       }
-      if (operator === 'USER' && prevention.isPrevented(current?.prevention, prevention.SetRenderer)) {
-        cell.renderer = current?.renderer;
+      if (operator === 'USER' && operation.hasOperation(original?.prevention, operation.SetRenderer)) {
+        delete patch?.renderer;
       }
-      if (operator === 'USER' && prevention.isPrevented(current?.prevention, prevention.SetParser)) {
-        cell.parser = current?.parser;
+      if (operator === 'USER' && operation.hasOperation(original?.prevention, operation.SetParser)) {
+        delete patch?.parser;
       }
       if (updateChangedAt) {
-        this.setChangedAt(cell, changedAt);
+        this.setChangedAt(patch, changedAt);
       }
       // must not partial
-      diffBefore[id] = this.getByPoint(point);
-      diffAfter[id] = cell;
+      diffBefore[id] = {...original};
+
+      const policy = this.policies[original.policy!] ?? defaultPolicy;
+      const p = policy.onChange({
+        table: this,
+        point,
+        patch,
+        original,
+        operation: op,
+      });
+      patch = {...patch, ...p, system: { ...original.system!, changedAt }};
       if (partial) {
-        this.data[id] = { ...current, ...cell };
+        diffAfter[id] = this.data[id] = { ...original, ...patch };
       } else {
-        this.data[id] = cell;
+        diffAfter[id] = this.data[id] = patch;
       }
     });
     this.conn.solvedCaches = {};
@@ -984,6 +1076,7 @@ export class Table implements UserTable {
     updateChangedAt = true,
     historicize = true,
     operator = 'SYSTEM',
+    operation: op = operation.Update,
     reflection = {},
   }: {
     diff: CellsByAddressType;
@@ -991,12 +1084,14 @@ export class Table implements UserTable {
     updateChangedAt?: boolean;
     historicize?: boolean;
     operator?: OperatorType;
+    operation?: OperationType;
     reflection?: StoreReflectionType;
   }) {
     const { diffBefore, diffAfter } = this._update({
       diff,
       partial,
       operator,
+      operation: op,
       updateChangedAt,
     });
 
@@ -1010,7 +1105,7 @@ export class Table implements UserTable {
         partial,
       });
     }
-    return this.shallowCopy({ copyCache: true });
+    return this.clone({ keepAddressCache: true });
   }
 
   public writeMatrix({
@@ -1050,6 +1145,7 @@ export class Table implements UserTable {
       updateChangedAt,
       historicize,
       operator,
+      operation: operation.Write,
       reflection,
     });
   }
@@ -1137,7 +1233,7 @@ export class Table implements UserTable {
         row.push(id);
         const cell = this.getByPoint({ y: baseY, x: j });
         const copied = this.copyCellLayout(cell);
-        this.data[id] = { ...copied, changedAt };
+        this.data[id] = { ...copied, system: { id, changedAt, dependents: new Set() } };
       }
       rows.push(row);
     }
@@ -1152,7 +1248,7 @@ export class Table implements UserTable {
       numRows,
       idMatrix: rows,
     });
-    return this.shallowCopy({ copyCache: false });
+    return this.clone({ keepAddressCache: false });
   }
   public deleteRows({
     y,
@@ -1173,7 +1269,7 @@ export class Table implements UserTable {
     const ys: number[] = [];
     for (let i = y; i < y + numRows; i++) {
       const cell = this.getByPoint({ y: i, x: 0 });
-      if (operator === 'USER' && prevention.isPrevented(cell?.prevention, prevention.DeleteRow)) {
+      if (operator === 'USER' && operation.hasOperation(cell?.prevention, operation.DeleteRow)) {
         console.warn(`Cannot delete row ${i}.`);
         return this;
       }
@@ -1193,7 +1289,7 @@ export class Table implements UserTable {
       ys: ys.reverse(),
       deleted,
     });
-    return this.shallowCopy({ copyCache: false });
+    return this.clone({ keepAddressCache: false });
   }
 
   public addColsAndUpdate({
@@ -1250,7 +1346,7 @@ export class Table implements UserTable {
         const cell = this.getByPoint({ y: i, x: baseX });
         const copied = this.copyCellLayout(cell);
         this.idMatrix[i].splice(x, 0, id);
-        this.data[id] = { ...copied, changedAt };
+        this.data[id] = { ...copied, system: { id, changedAt, dependents: new Set() } };
       }
       rows.push(row);
     }
@@ -1264,7 +1360,7 @@ export class Table implements UserTable {
       numCols,
       idMatrix: rows,
     });
-    return this.shallowCopy({ copyCache: false });
+    return this.clone({ keepAddressCache: false });
   }
   public deleteCols({
     x,
@@ -1285,7 +1381,7 @@ export class Table implements UserTable {
     const xs: number[] = [];
     for (let i = x; i < x + numCols; i++) {
       const cell = this.getByPoint({ y: 0, x: i });
-      if (operator === 'USER' && prevention.isPrevented(cell?.prevention, prevention.DeleteCol)) {
+      if (operator === 'USER' && operation.hasOperation(cell?.prevention, operation.DeleteCol)) {
         console.warn(`Cannot delete col ${i}.`);
         continue;
       }
@@ -1310,7 +1406,7 @@ export class Table implements UserTable {
       xs: xs.reverse(),
       deleted,
     });
-    return this.shallowCopy({ copyCache: false });
+    return this.clone({ keepAddressCache: false });
   }
   public getHistories() {
     return [...this.histories];
@@ -1346,17 +1442,23 @@ export class Table implements UserTable {
     return renderer.call({ table: this, point, writer, renderedRef });
   }
 
-  public stringify(point: PointType, value?: any, evaluates = false) {
-    const cell = this.getByPoint(point);
+  public stringify({
+    point,
+    cell,
+    evaluates = true,
+  }: {point: PointType, cell?: CellType, evaluates?: boolean}) {
+    if (cell == null) {
+      cell = this.getByPoint(point);
+    }
     if (cell == null) {
       return '';
     }
     const renderer = this.renderers[cell?.renderer ?? ''] ?? defaultRenderer;
-    const s = renderer.stringify(cell, { value, table: this, point });
+    const s = renderer.stringify(cell, { cell, table: this, point });
 
     if (s[0] === '=') {
       if (evaluates) {
-        return String(solveFormula({ value: s, table: this, raise: false, evaluates, origin: point }));
+        return String(solveFormula({ value: s, table: this, raise: false, evaluates, origin: point }) ?? '');
       }
       const lexer = new Lexer(s.substring(1));
       lexer.tokenize();
@@ -1474,8 +1576,8 @@ export class Table implements UserTable {
     }
     return {
       history,
-      newTable: this.shallowCopy({
-        copyCache: !shouldTracking(history.operation),
+      newTable: this.clone({
+        keepAddressCache: !shouldTracking(history.operation),
       }),
     };
   }
@@ -1537,8 +1639,8 @@ export class Table implements UserTable {
     }
     return {
       history,
-      newTable: this.shallowCopy({
-        copyCache: !shouldTracking(history.operation),
+      newTable: this.clone({
+        keepAddressCache: !shouldTracking(history.operation),
       }),
     };
   }

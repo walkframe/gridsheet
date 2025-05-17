@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext } from 'react';
 
 import { clip } from '../lib/clipboard';
 
@@ -6,7 +6,7 @@ import { undo, redo, copy, cut, paste, setContextMenuPosition, updateTable } fro
 import { areaToZone, zoneShape, zoneToArea } from '../lib/structs';
 
 import { Context } from '../store';
-import * as prevention from '../lib/prevention';
+import * as prevention from '../lib/operation';
 import { Fixed } from './Fixed';
 
 export const ContextMenu = () => {
@@ -98,7 +98,7 @@ export const ContextMenu = () => {
             <li
               className={
                 (table.maxNumRows !== -1 && tableHeight + height > table.maxNumRows) ||
-                prevention.isPrevented(selectingTopCell?.prevention, prevention.AddRowAbove)
+                prevention.hasOperation(selectingTopCell?.prevention, prevention.AddRowAbove)
                   ? 'gs-disabled'
                   : 'gs-enabled'
               }
@@ -124,7 +124,7 @@ export const ContextMenu = () => {
             <li
               className={
                 (table.maxNumRows !== -1 && tableHeight + height > table.maxNumRows) ||
-                prevention.isPrevented(selectingBottomCell?.prevention, prevention.AddRowBelow)
+                prevention.hasOperation(selectingBottomCell?.prevention, prevention.AddRowBelow)
                   ? 'gs-disabled'
                   : 'gs-enabled'
               }
@@ -156,7 +156,7 @@ export const ContextMenu = () => {
             <li
               className={
                 (table.maxNumCols !== -1 && tableWidth + width > table.maxNumCols) ||
-                prevention.isPrevented(selectingLeftCell?.prevention, prevention.AddColLeft)
+                prevention.hasOperation(selectingLeftCell?.prevention, prevention.AddColLeft)
                   ? 'gs-disabled'
                   : 'gs-enabled'
               }
@@ -185,7 +185,7 @@ export const ContextMenu = () => {
             <li
               className={
                 (table.maxNumCols !== -1 && tableWidth + width > table.maxNumCols) ||
-                prevention.isPrevented(selectingRightCell?.prevention, prevention.AddColRight)
+                prevention.hasOperation(selectingRightCell?.prevention, prevention.AddColRight)
                   ? 'gs-disabled'
                   : 'gs-enabled'
               }
@@ -217,7 +217,7 @@ export const ContextMenu = () => {
             <li
               className={
                 (table.minNumRows !== -1 && tableHeight - height < table.minNumRows) ||
-                prevention.isPrevented(selectingTopCell?.prevention, prevention.DeleteRow)
+                prevention.hasOperation(selectingTopCell?.prevention, prevention.DeleteRow)
                   ? 'gs-disabled'
                   : 'gs-enabled'
               }
@@ -246,7 +246,7 @@ export const ContextMenu = () => {
             <li
               className={
                 (table.minNumCols !== -1 && tableWidth - width < table.minNumCols) ||
-                prevention.isPrevented(selectingRightCell?.prevention, prevention.DeleteCol)
+                prevention.hasOperation(selectingRightCell?.prevention, prevention.DeleteCol)
                   ? 'gs-disabled'
                   : 'gs-enabled'
               }

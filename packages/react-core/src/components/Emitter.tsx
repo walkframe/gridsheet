@@ -1,4 +1,5 @@
-import { FC, useContext, useEffect, useState } from 'react';
+import type { FC } from 'react';
+import { useContext, useEffect } from 'react';
 import { Context } from '../store';
 import { FeedbackType } from '../types';
 

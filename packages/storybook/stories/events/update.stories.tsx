@@ -14,6 +14,7 @@ export const Update = () => {
   }`);
 
   const update = () => {
+    console.log("update", tableRef.current)
     if (tableRef.current) {
       const { table, dispatch } = tableRef.current;
       const diff = JSON.parse(json);

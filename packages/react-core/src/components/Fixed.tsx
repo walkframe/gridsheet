@@ -1,5 +1,5 @@
 
-import { CSSProperties, FC, JSX, ReactNode } from 'react';
+import type { CSSProperties, FC, ReactNode } from 'react';
 import { useBrowser } from './hooks';
 import { createPortal } from 'react-dom';
 

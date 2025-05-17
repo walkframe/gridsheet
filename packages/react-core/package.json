@@ -8,8 +8,8 @@
   "scripts": {
     "build": "rm -rf ./dist || true && vite build",
     "typecheck": "pnpm tsc --noEmit",
-    "less": "lessc --clean-css ./styles/root.less ./styles/root.min.css",
-    "generate-style": "node ./generate-style.js",
+    "less": "lessc --clean-css ./src/styles/root.less ./src/styles/root.min.css",
+    "generate-style": "node ./src/generate-style.js",
     "jest": "jest"
   },
   "repository": {

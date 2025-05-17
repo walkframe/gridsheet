@@ -12,10 +12,10 @@ export default {
 };
 
 class ListRenderer extends Renderer {
-  array({value}: RenderProps<any[]>) {
+  array({cell}: RenderProps<any[]>) {
     return (
       <ul>
-        {value.map((v, i) => (
+        {cell.value!.map((v, i) => (
           <li key={i}>{v}</li>
         ))}
       </ul>

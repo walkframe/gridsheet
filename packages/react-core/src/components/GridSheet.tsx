@@ -1,6 +1,6 @@
-import { useContext, useEffect, useState, useRef, useReducer, useMemo } from 'react';
+import { useEffect, useState, useRef, useReducer, useMemo } from 'react';
 
-import { CellsByAddressType, OptionsType, Props, StoreType } from '../types';
+import type { CellsByAddressType, OptionsType, Props, StoreType } from '../types';
 import {
   DEFAULT_HEIGHT,
   DEFAULT_WIDTH,
@@ -35,9 +35,14 @@ export function GridSheet({
   className,
   style,
   connector: initialConnector,
-  additionalFunctions = {},
 }: Props) {
-  const { sheetResize, showFormulaBar = true, onInit, mode = 'light', externalRender } = options;
+  const { 
+    sheetResize, 
+    showFormulaBar = true, 
+    onInit, 
+    mode = 'light',
+    additionalFunctions = {},
+  } = options;
   const [prevSheetName, setPrevSheetName] = useState(sheetName);
   const rootRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
@@ -134,7 +139,6 @@ export function GridSheet({
       maxNumCols: -1,
       mode: 'light',
       lastEdited: '',
-      externalRender: !!externalRender,
     };
   });
 
@@ -210,7 +214,6 @@ export function GridSheet({
           <StoreInitializer
             initialCells={initialCells}
             options={{ ...options, sheetHeight, sheetWidth }}
-            additionalFunctions={additionalFunctions}
           />
           <ContextMenu />
           <Resizer />

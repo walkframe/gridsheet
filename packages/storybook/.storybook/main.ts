@@ -38,6 +38,7 @@ const config: StorybookConfig = {
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
       '@gridsheet/react-core': path.resolve(__dirname, '../../react-core/src/index.ts'),
+      '@gridsheet/preact-core': path.resolve(__dirname, '../../preact-core/dist/index.js'),
       '@gridsheet/react-right-menu': path.resolve(__dirname, '../../react-right-menu/index.ts'),
     };
     return config;

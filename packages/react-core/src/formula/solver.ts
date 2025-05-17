@@ -34,7 +34,7 @@ export const solveFormula = ({ value, table, raise = true, evaluates = true, ori
         if (raise) {
           throw e;
         }
-        return null;
+        return undefined;
       }
     }
   }

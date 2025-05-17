@@ -22,7 +22,7 @@ import { Autofill } from '../lib/autofill';
 import { insertRef, isRefInsertable } from '../lib/input';
 import { isDifferentSheetFocused } from '../store/helpers';
 import type { CleanupRef } from '../renderers/core';
-import { CSSProperties, FC } from 'react';
+import type { CSSProperties, FC } from 'react';
 
 type Props = {
   y: number;
@@ -52,7 +52,6 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
     showAddress,
     autofillDraggingTo,
     lastEdited,
-    externalRender,
   } = store;
 
   // Whether the focus is on another sheet
@@ -81,7 +80,8 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
     if (pointed && !isFirstPointed.current) {
       _setEditorRect();
       if (!editing) {
-        dispatch(setInputting(table.stringify({ y, x })));
+        const valueString = table.stringify({point: { y, x }, evaluates: false});
+        dispatch(setInputting(valueString));
       }
       return;
     }
@@ -145,7 +145,7 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
         }
         const fullAddress = `${table.sheetPrefix(!differentSheetFocused)}${address}`;
         if (editingAnywhere) {
-          const inserted = insertRef(lastFocused, fullAddress);
+          const inserted = insertRef({input: lastFocused, ref: fullAddress});
           if (inserted) {
             return false;
           }
@@ -161,7 +161,7 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
           dispatch(select({ startY: y, startX: x, endY: -1, endX: -1 }));
           _setEditorRect();
         }
-        const valueString = table.stringify({ y, x });
+        const valueString = table.stringify({point: { y, x }, evaluates: false});
         dispatch(setInputting(valueString));
       }}
       onDoubleClick={(e) => {
@@ -230,7 +230,7 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
         if (editingAnywhere) {
           const newArea = zoneToArea({ ...selectingZone, endY: y, endX: x });
           const fullRange = `${table.sheetPrefix(!differentSheetFocused)}${areaToRange(newArea)}`;
-          insertRef(lastFocused, fullRange);
+          insertRef({input: lastFocused, ref: fullRange, edgeInsertable: true});
           return true;
         }
         return false;
@@ -250,17 +250,10 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
         >
           {errorMessage && <div className="gs-formula-error-triangle" title={errorMessage} />}
           {showAddress && <div className="gs-cell-label">{address}</div>}
-          {cell?.renderer && externalRender ? 
-            (<div 
-              className="gs-cell-rendered"
-              dangerouslySetInnerHTML={{__html: `<div class="gs-cell-rendered-raw"></div>`}}
-              ref={renderedRef}
-            />) :
-            (<div 
-              className="gs-cell-rendered"
-              ref={renderedRef}
-            >{rendered}</div>)
-          }
+          <div 
+            className="gs-cell-rendered"
+            ref={renderedRef}
+          >{rendered}</div>
         </div>
         {((!editing && pointed && selectingArea.bottom === -1) ||
           (selectingArea.bottom === y && selectingArea.right === x)) && (

@@ -1,4 +1,5 @@
-import { FC, KeyboardEvent, useContext, useEffect, useState } from 'react';
+import type { FC, KeyboardEvent } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { x2c, y2r } from '../lib/converters';
 import { clip } from '../lib/clipboard';
 import {
@@ -18,12 +19,13 @@ import {
   setEntering,
   setLastEdited,
   setInputting,
+  updateTable,
 } from '../store/actions';
 
 import { Context } from '../store';
 import { areaToZone, zoneToArea } from '../lib/structs';
-import * as prevention from '../lib/prevention';
-import { expandInput, insertTextAtCursor } from '../lib/input';
+import * as prevention from '../lib/operation';
+import { expandInput, insertTextAtCursor, isRefInsertable } from '../lib/input';
 import { Lexer } from '../formula/evaluator';
 import { REF_PALETTE } from '../lib/palette';
 import { CursorStateType, EditorEvent, EditorEventWithNativeEvent, ModeType } from '../types';
@@ -36,6 +38,7 @@ type Props = {
 
 export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
   const { store, dispatch } = useContext(Context);
+  const [selected, setSelected] = useState(0);
   const {
     showAddress,
     editorRect,
@@ -52,6 +55,13 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
     table,
     sheetId,
   } = store;
+
+  const policy = table.getPolicyByPoint(choosing);
+  const optionsAll = policy.getOptions();
+  const filteredOptions = optionsAll.filter((option) => {
+    const keyword = (option.keyword ?? String(option.value)).toLowerCase();
+    return keyword.includes(inputting.toLocaleLowerCase());
+  });
 
   //const [, sheetContext] = useSheetContext();
   useEffect(() => {
@@ -88,8 +98,23 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
 
   const cell = table.getByPoint({ y, x });
   const value: any = cell?.value;
-  const valueString = table.stringify({ y, x }, value);
+  const valueString = table.stringify({point: choosing, cell: { value }, evaluates: false});
   const [before, setBefore] = useState<string>(valueString);
+  
+  const selectValue = (selected: number) => {
+    const option = filteredOptions[selected];
+    if (option) {
+      const t = table.update({
+        diff: {[address]: {value: option.value}},
+        partial: true,
+      });
+      dispatch(updateTable(t.clone()));
+      dispatch(setEditingAddress(''));
+      dispatch(setInputting(''));
+      setSelected(0);
+    }
+  }
+  
   useEffect(() => {
     setBefore(valueString);
   }, [choosing]);
@@ -124,9 +149,13 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
       case 'Tab': // TAB
         e.preventDefault();
         if (editing) {
-          writeCell(input.value);
-          dispatch(setEditingAddress(''));
-          dispatch(setInputting(''));
+          if (filteredOptions.length) {
+            selectValue(selected);
+          } else {
+            writeCell(input.value);
+            dispatch(setEditingAddress(''));
+            dispatch(setInputting(''));
+          }
         }
         dispatch(
           walk({
@@ -151,8 +180,12 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
             if (e.nativeEvent.isComposing) {
               return false;
             }
-            writeCell(input.value);
-            dispatch(setEditingAddress(''));
+            if (filteredOptions.length) {
+              selectValue(selected);
+            } else {
+              writeCell(input.value);
+              dispatch(setEditingAddress(''));
+            }
           }
           resetSize(e.currentTarget);
         } else if (editingOnEnter && selectingZone.endY === -1) {
@@ -176,6 +209,7 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
       case 'Backspace': // BACKSPACE
         if (!editing) {
           dispatch(clear(null));
+          dispatch(setInputting(''));
           return false;
         }
         break;
@@ -227,6 +261,14 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
           );
           return false;
         }
+        if (filteredOptions.length > 1) {
+          if (selected <= 0) {
+            setSelected(filteredOptions.length - 1);
+          } else {
+            setSelected(selected - 1);
+          }
+          return true;
+        }
         break;
       case 'ArrowRight': // RIGHT
         if (!editing) {
@@ -254,6 +296,14 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
             }),
           );
           return false;
+        }
+        if (filteredOptions.length > 1) {
+          if (selected >= filteredOptions.length - 1) {
+            setSelected(0);
+          } else {
+            setSelected(selected + 1);
+          }
+          return true;
         }
         break;
       case 'a': // A
@@ -376,7 +426,7 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
     if (e.ctrlKey || e.metaKey) {
       return false;
     }
-    if (prevention.isPrevented(cell?.prevention, prevention.Write)) {
+    if (prevention.hasOperation(cell?.prevention, prevention.Write)) {
       console.warn('This cell is protected from writing.');
       return false;
     }
@@ -384,6 +434,7 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
     if (!editing) {
       dispatch(setInputting(''));
     }
+    setSelected(0);
     return false;
   };
 
@@ -422,7 +473,7 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
           }}
           style={{ minWidth: width, minHeight: height }}
           onDoubleClick={(e) => {
-            if (prevention.isPrevented(cell?.prevention, prevention.Write)) {
+            if (prevention.hasOperation(cell?.prevention, prevention.Write)) {
               console.warn('This cell is protected from writing.');
               return;
             }
@@ -441,7 +492,7 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
           }}
           onBlur={(e) => {
             dispatch(setLastEdited(before));
-            if (e.currentTarget.value.startsWith('=')) {
+            if (isRefInsertable(e.currentTarget)) {
               return true;
             } else {
               if (editing) {
@@ -449,12 +500,14 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
               }
             }
             resetSize(e.currentTarget);
+            dispatch(setEditingAddress(''));
           }}
           value={inputting}
           onChange={(e) => {
             const input = e.currentTarget;
             expandInput(input);
             dispatch(setInputting(e.currentTarget.value));
+            setSelected(0);
           }}
           onKeyDown={handleKeyDown}
           onKeyUp={(e) => {
@@ -468,6 +521,25 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
           }}
         />
       </div>
+      <ul
+        className="gs-editor-options"
+        style={{ marginTop: editorRef.current?.scrollHeight }}
+        onClick={() => {console.log("click ul")}}
+      >
+        {
+          filteredOptions.map((option, i) => (
+            <li 
+              key={i} 
+              className={`gs-editor-option ${selected === i ? ' gs-editor-option-selected' : ''}`}
+              onMouseDown={(e) => {
+                selectValue(i);
+              }}
+            >
+              {option.label ?? option.value}
+            </li>
+          ))
+        }
+      </ul>
     </Fixed>
   );
 };

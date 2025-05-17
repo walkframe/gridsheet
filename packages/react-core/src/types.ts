@@ -6,6 +6,7 @@ import { FunctionMapping } from './formula/functions/__base';
 import { JSX, RefObject } from 'react';
 import { SheetConnector } from './lib/connector';
 import { CSSProperties, KeyboardEvent } from 'react';
+import { PolicyType } from './policy/core';
 
 export type Y = number;
 export type X = number;
@@ -24,6 +25,7 @@ export type Labeler = (n: number) => string;
 export type Renderers = { [s: string]: RendererType };
 export type Parsers = { [s: string]: ParserType };
 export type Labelers = { [s: string]: Labeler };
+export type Policies = { [s: string]: PolicyType };
 
 export type TableRef = {
   table: UserTable;
@@ -41,8 +43,8 @@ export type FeedbackType = (table: UserTable, points?: CursorStateType) => void;
 export type ModeType = 'light' | 'dark';
 export type HeadersType = 'both' | 'vertical' | 'horizontal' | 'none';
 
-export type CellType<Custom = any> = {
-  value?: any;
+export type CellType<T = any, Custom = any> = {
+  value?: T;
   style?: CSSProperties;
   justifyContent?: CSSProperties['justifyContent'];
   alignItems?: CSSProperties['alignItems'];
@@ -51,10 +53,15 @@ export type CellType<Custom = any> = {
   height?: Height;
   renderer?: string;
   parser?: string;
+  policy?: string;
   custom?: Custom;
   disableFormula?: boolean;
-  prevention?: Prevention;
-  changedAt?: Date;
+  prevention?: OperationType;
+  system?: {
+    id: string;
+    changedAt: Date;
+    dependents: Set<string>;
+  };
 };
 
 export type CellFilter = (cell: CellType) => boolean;
@@ -80,12 +87,13 @@ export type OptionsType = {
   renderers?: Renderers;
   parsers?: Parsers;
   labelers?: Labelers;
+  policies?: Policies;
   onSave?: FeedbackType;
   onChange?: FeedbackType;
   onSelect?: FeedbackType;
   onKeyUp?: (e: EditorEvent, points: CursorStateType) => void;
   onInit?: (table: UserTable) => void;
-  externalRender?: boolean;
+  additionalFunctions?: FunctionMapping;
 };
 
 export type RangeType = { start: number; end: number }; // [start, end]
@@ -137,7 +145,6 @@ export type StoreType = {
   resizingPositionY: [Y, Y, Y]; // indexY, startY, endY
   resizingPositionX: [X, X, X]; // indexX, startX, endX
   onSave?: FeedbackType;
-  externalRender: boolean;
 };
 
 export type Props = {
@@ -148,7 +155,6 @@ export type Props = {
   options?: OptionsType;
   className?: string;
   style?: CSSProperties;
-  additionalFunctions?: FunctionMapping;
 };
 
 export type Id = string;
@@ -241,7 +247,7 @@ export type Virtualization = {
 };
 export type OperatorType = 'USER' | 'SYSTEM';
 
-export type Prevention = number;
+export type OperationType = number;
 
 export type TablesBySheetId = { [sheetId: string]: Table }; // id: table
 export type SheetIdsByName = { [sheetName: string]: number }; // name: id

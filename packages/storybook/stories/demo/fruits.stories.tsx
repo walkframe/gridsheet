@@ -40,8 +40,10 @@ export function FirstDemo() {
               },
             },
           })}
-          additionalFunctions={{
-            hope: HopeFunction,
+          options={{
+            additionalFunctions:{
+              hope: HopeFunction,
+            },
           }}
         />
         <br />
@@ -85,10 +87,10 @@ export function FirstDemo() {
               },
             },
           })}
-          additionalFunctions={{
-            hope: HopeFunction,
-          }}
           options={{
+            additionalFunctions:{
+              hope: HopeFunction,
+            },
             sheetResize: 'both',
           }}
         />
@@ -115,10 +117,10 @@ export function FirstDemo() {
               default: { width: 200 },
             },
           })}
-          additionalFunctions={{
-            hope: HopeFunction,
-          }}
           options={{
+            additionalFunctions:{
+              hope: HopeFunction,
+            },
             sheetResize: 'both',
           }}
         />

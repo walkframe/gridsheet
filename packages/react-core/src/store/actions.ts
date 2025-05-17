@@ -18,7 +18,7 @@ import { tsv2matrix, p2a, a2p } from '../lib/converters';
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '../constants';
 import { initSearchStatement, restrictPoints } from './helpers';
 import { smartScroll } from '../lib/virtualization';
-import * as prevention from '../lib/prevention';
+import * as prevention from '../lib/operation';
 
 const actions: { [s: string]: CoreAction<any> } = {};
 
@@ -210,7 +210,6 @@ class UpdateTableAction<T extends Table> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     //const conn = payload.conn;
     //conn.update({...conn, renderedCaches: {}});
-    console.log('update table', payload.conn.renderedCaches);
     return {
       ...store,
       table: payload,
@@ -519,7 +518,7 @@ class ClearAction<T extends null> extends CoreAction<T> {
       for (let x = left; x <= right; x++) {
         const cell = table.getByPoint({ y, x });
         const address = p2a({ y, x });
-        if (prevention.isPrevented(cell?.prevention, prevention.Write)) {
+        if (prevention.hasOperation(cell?.prevention, prevention.Write)) {
           continue;
         }
         if (cell?.value != null) {

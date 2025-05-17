@@ -183,6 +183,9 @@ export class IdEntity extends Entity<string> {
   public ref(table: Table, slideY = 0, slideX = 0) {
     const parsed = this.parse(table);
     const address = parsed.table.getAddressById(parsed.id, slideY, slideX);
+    if (!address) {
+      return '#REF!';
+    }
     if (parsed.table.sheetId === table.sheetId) {
       return address;
     }
@@ -223,7 +226,7 @@ export class IdRangeEntity extends Entity<string> {
     const parsed = this.parse(table);
     const range = parsed.ids
       .map((id) => getId(id, false))
-      .map((id) => parsed.table.getAddressById(id, slideY, slideX))
+      .map((id) => parsed.table.getAddressById(id, slideY, slideX) || '#REF!')
       .join(':');
     if (parsed.table.sheetId === table.sheetId) {
       return range;
@@ -440,7 +443,8 @@ export class Lexer {
     return this.tokens[this.tokens.length + base];
   }
 
-  public getTokenIndexByCharPosition(pos: number) {
+  public getTokenIndexByCharPosition(pos: number): [number, boolean] {
+    // return [index, edge]
     let start = 0,
       end = 0;
 
@@ -448,11 +452,11 @@ export class Lexer {
       const token = this.tokens[i];
       end = start + token.length();
       if (start <= pos && pos <= end) {
-        return i;
+        return [i, pos === start || pos === end];
       }
       start = end;
     }
-    return -1;
+    return [-1, false];
   }
 
   public getTokenPositionRange(index: number, slide = 1): [number, number] {

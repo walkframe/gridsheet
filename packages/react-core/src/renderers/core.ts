@@ -12,7 +12,7 @@ type Condition = (value: any) => boolean;
 
 type Stringify = (value: any) => string;
 
-type Props = {
+export type Props = {
   condition?: Condition;
   complement?: Stringify;
   mixins?: RendererMixinType[];
@@ -30,7 +30,7 @@ export type RendererCallProps = {
 }
 
 export type RenderProps<T extends any=any> = {
-  value: T;
+  cell: CellType<T>;
   table: Table;
   point: PointType;
   writer?: WriterType;
@@ -42,6 +42,7 @@ export interface RendererMixinType {
   dateFormat?: string;
   timeDeltaFormat?: string;
 
+  decorate?(rendered: any, props: RenderProps): any;
   render?(props: RenderProps): any;
   stringify?(cell: CellType, renderProps: RenderProps): string;
   string?(props: RenderProps<string>): any;
@@ -83,16 +84,19 @@ export class Renderer implements RendererMixinType {
     }
   }
 
-  public call({point, table, writer, renderedRef}: RendererCallProps): any {
+  public call(props: RendererCallProps): any {
+    const {point, table, writer, renderedRef} = props
     const address = p2a(point);
     const key = table.getFullRef(address);
     const alreadyRendered = table.conn.renderedCaches[key];
+    const cell = table.getByPoint(point)!;
     if (alreadyRendered !== undefined) {
+      return this.decorate(alreadyRendered, {...props, cell});
       return alreadyRendered;
     }
     const cache = table.getSolvedCache(address);
 
-    const cell = table.getByPoint(point);
+
     let value = cache ?? cell?.value;
     if (typeof value === 'string' && !cell?.disableFormula) {
       if (value[0] === "'") {
@@ -101,14 +105,18 @@ export class Renderer implements RendererMixinType {
         value = solveFormula({ value, table, raise: true, origin: point });
       }
     }
-    const rendered = this.render({value, table, writer, point, renderedRef});
+    const rendered = this.render({cell: {...cell, value}, table, writer, point, renderedRef});
     table.conn.renderedCaches[key] = rendered;
-    return rendered;
+    return this.decorate(rendered, {...props, cell});
+  }
 
+  public decorate(rendered: any, props: RenderProps): any {
+    return rendered;
   }
 
   public render(props: RenderProps): any {
-    const { value, table, writer, point } = props;
+    const { cell, table, point } = props;
+    const value = cell.value;
     if (this.condition && !this.condition(value)) {
       return this.complement ? this.complement(value) : this.stringify({ value }, props);
     }
@@ -123,12 +131,12 @@ export class Renderer implements RendererMixinType {
           return this.date(props);
         }
         if (TimeDelta.is(value)) {
-          return this.timedelta({...props, value: TimeDelta.ensure(value)});
+          return this.timedelta({cell: {...cell, value: TimeDelta.ensure(value)}, table, point});
         }
         if (value instanceof Table) {
           // MAY: { y: value.top, x: value.left } ?
-          const cell = table.getByPoint(point);
-          return this.render({...props, value: cell?.value});
+          const cell = table.getByPoint(point)!;
+          return this.render({...props, cell});
         }
         if (Array.isArray(value)) {
           return this.array(props);
@@ -149,14 +157,14 @@ export class Renderer implements RendererMixinType {
     return '';
   }
 
-  stringify(cell: CellType, renderProps: RenderProps): string {
-    const { value } = cell;
+  stringify(cell: CellType<any>, renderProps: RenderProps): string {
+    const value = cell.value!;
     const { table, point } = renderProps;
     if (value instanceof Date) {
-      return this.date({value, table, point});
+      return this.date({cell, table, point});
     }
     if (TimeDelta.is(value)) {
-      return this.timedelta({value: TimeDelta.ensure(value), table, point});
+      return this.timedelta({cell: {...cell, value: TimeDelta.ensure(value)}, table, point});
     }
     if (value == null) {
       return '';
@@ -165,39 +173,42 @@ export class Renderer implements RendererMixinType {
   }
 
 
-  string({ value }: RenderProps<string>): any {
-    return value;
+  string({ cell }: RenderProps<string>): any {
+    return cell.value!;
   }
 
-  bool({value}: RenderProps<boolean>): any {
-    return value ? 'TRUE' : 'FALSE';
+  bool({cell}: RenderProps<boolean>): any {
+    return cell.value ? 'TRUE' : 'FALSE';
   }
 
-  number({value}: RenderProps<number>): any {
-    if (isNaN(value)) {
+  number({cell}: RenderProps<number>): any {
+    const { value } = cell!;
+    if (isNaN(value!)) {
       return 'NaN';
     }
     return value;
   }
 
-  date({value}: RenderProps<Date>): any {
+  date({cell}: RenderProps<Date>): any {
+    const value = cell!.value!;
     if (value.getHours() + value.getMinutes() + value.getSeconds() === 0) {
       return dayjs(value).format(this.dateFormat);
     }
     return dayjs(value).format(this.datetimeFormat);
   }
 
-  timedelta({value}: RenderProps<TimeDelta>) {
+  timedelta({cell}: RenderProps<TimeDelta>) {
+    const value = cell.value!;
     return value.stringify(this.timeDeltaFormat);
   }
 
   array(props: RenderProps<any[]>): any {
-    const { value } = props;
-    return value.map((v) => this.stringify({ value: v }, props)).join(',');
+    const { cell } = props;
+    return cell.value!.map((v) => this.stringify({ value: v }, props)).join(',');
   }
 
-  object({value}: RenderProps<any>): any {
-    return JSON.stringify(value);
+  object({cell}: RenderProps<any>): any {
+    return JSON.stringify(cell.value);
   }
 
   null({}: RenderProps<null | undefined>): any {

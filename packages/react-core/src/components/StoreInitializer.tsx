@@ -1,5 +1,5 @@
-import { createContext, FC, ReactNode, RefObject } from 'react';
-import { useContext, useEffect, useState, useRef, useReducer } from 'react';
+import type { FC } from 'react';
+import { useContext, useEffect } from 'react';
 
 import { Props } from '../types';
 

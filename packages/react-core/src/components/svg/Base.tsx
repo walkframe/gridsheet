@@ -1,5 +1,4 @@
-import { ReactNode } from "react";
-import { CSSProperties } from "react";
+import type { ReactNode, CSSProperties } from "react";
 
 export interface IconProps {
   style?: CSSProperties;

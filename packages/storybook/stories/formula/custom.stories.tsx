@@ -33,9 +33,11 @@ export const CustomFunction = () => {
             numCols: 10,
           },
         })}
-        additionalFunctions={{
-          hope: HopeFunction,
-          test: TestFunction,
+        options={{
+          additionalFunctions: {
+            hope: HopeFunction,
+            test: TestFunction,
+          },
         }}
       />
     </>

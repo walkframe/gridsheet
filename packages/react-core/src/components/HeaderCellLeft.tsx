@@ -1,4 +1,5 @@
-import { FC, useContext } from 'react';
+import type { FC } from 'react';
+import { useContext } from 'react';
 import { y2r } from '../lib/converters';
 import { between, zoneToArea } from '../lib/structs';
 import { Context } from '../store';
@@ -12,7 +13,7 @@ import {
   setResizingPositionY,
 } from '../store/actions';
 import { DUMMY_IMG, DEFAULT_HEIGHT } from '../constants';
-import * as prevention from '../lib/prevention';
+import * as prevention from '../lib/operation';
 import { insertRef, isRefInsertable } from '../lib/input';
 import { isDifferentSheetFocused } from '../store/helpers';
 
@@ -60,7 +61,7 @@ export const HeaderCellLeft: FC<Props> = ({ y }) => {
           startY = choosing.y;
         }
         const fullColId = `${table.sheetPrefix(!differentSheetFocused)}${rowId}:${rowId}`;
-        const inserted = insertRef(lastFocused, fullColId);
+        const inserted = insertRef({input: lastFocused, ref: fullColId});
         if (inserted) {
           return false;
         }
@@ -111,7 +112,7 @@ export const HeaderCellLeft: FC<Props> = ({ y }) => {
           const newArea = zoneToArea({ ...selectingZone, endY: y, endX: 1 });
           const [top, bottom] = [y2r(newArea.top), y2r(newArea.bottom)];
           const fullRange = `${table.sheetPrefix(!differentSheetFocused)}${top}:${bottom}`;
-          insertRef(lastFocused, fullRange);
+          insertRef({input: lastFocused, ref: fullRange, edgeInsertable: true});
 
           if (resizingRect.y === -1 && autofillDraggingTo == null) {
             const { startX } = selectingZone;
@@ -131,7 +132,7 @@ export const HeaderCellLeft: FC<Props> = ({ y }) => {
         <div className="gs-th-inner" style={{ width: headerWidth, position: 'relative' }}>
           {row?.labeler ? table.getLabel(row.labeler, y) : rowId}
           <div
-            className={`gs-resizer ${prevention.isPrevented(row?.prevention, prevention.Resize) ? 'gs-protected' : ''}`}
+            className={`gs-resizer ${prevention.hasOperation(row?.prevention, prevention.Resize) ? 'gs-protected' : ''}`}
             style={{ width: headerWidth }}
             onMouseDown={(e) => {
               dispatch(setResizingPositionY([y, e.clientY, e.clientY]));

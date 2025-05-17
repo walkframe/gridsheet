@@ -10,14 +10,21 @@ export const insertTextAtCursor = (input: HTMLTextAreaElement, text: string) => 
   return;
 };
 
-export const insertRef = (input: HTMLTextAreaElement | null, ref: string, dryRun = false): boolean => {
+type InsertRefProps = {
+  input: HTMLTextAreaElement | null;
+  ref: string;
+  dryRun?: boolean;
+  edgeInsertable?: boolean;
+}
+
+export const insertRef = ({ input, ref, dryRun=false, edgeInsertable=false }: InsertRefProps): boolean => {
   // dryRun is used to check if the ref can be inserted without actually inserting it
   if (!input?.value?.startsWith('=') || input.selectionStart === 0) {
     return false;
   }
   const lexer = new Lexer(input.value.substring(1));
   lexer.tokenize();
-  const tokenIndex = lexer.getTokenIndexByCharPosition(input.selectionStart - 1);
+  const [tokenIndex, edge] = lexer.getTokenIndexByCharPosition(input.selectionStart - 1);
   let token = lexer.tokens[tokenIndex];
   if (token?.type === 'SPACE') {
     token = lexer.tokens[tokenIndex - 1];
@@ -33,6 +40,9 @@ export const insertRef = (input: HTMLTextAreaElement | null, ref: string, dryRun
       insertTextAtCursor(input, ref);
     }
   } else if (token.type === 'REF' || token.type === 'RANGE') {
+    if (edge && !edgeInsertable) {
+      return false;
+    }
     if (!dryRun) {
       const [start, end] = lexer.getTokenPositionRange(tokenIndex + 1, 1);
       input.setSelectionRange(start, end);
@@ -45,7 +55,7 @@ export const insertRef = (input: HTMLTextAreaElement | null, ref: string, dryRun
 };
 
 export const isRefInsertable = (input: HTMLTextAreaElement | null): boolean => {
-  return insertRef(input, '', true);
+  return insertRef({input, ref: '', dryRun: true });
 };
 
 export const expandInput = (input: HTMLTextAreaElement) => {

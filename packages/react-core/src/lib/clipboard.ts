@@ -1,8 +1,7 @@
-import type { StoreType, AreaType } from '../types';
+import type { StoreType, AreaType, PointType } from '../types';
 
 import { zoneToArea } from './structs';
-import { solveTable } from '../formula/solver';
-import { Table } from './table';
+import type { Table } from './table';
 
 export const clip = (store: StoreType): AreaType => {
   const { selectingZone, choosing, editorRef, table } = store;
@@ -40,33 +39,31 @@ export const clip = (store: StoreType): AreaType => {
 
 const table2tsv = (table: Table): string => {
   const lines: string[] = [];
-  const matrix = solveTable({ table, raise: false });
-  matrix.forEach((row, i) => {
-    const y = table.top + i;
+  for (let y = table.top; y <= table.bottom; y++) {
     const cols: string[] = [];
-    row.forEach((col, j) => {
-      const x = table.left + j;
-      const value = table.stringify({ y, x }, col);
+    for (let x = table.left; x <= table.right; x++) {
+      const point: PointType = { y, x };
+      const policy = table.getPolicyByPoint(point);
+      const value = policy.onClip({ point, table });
       if (value.indexOf('\n') !== -1) {
         cols.push(`"${value.replace(/"/g, '""')}"`);
       } else {
         cols.push(value);
       }
-    });
+    }
     lines.push(cols.join('\t'));
-  });
+  }
   return lines.join('\n');
 };
 
 const table2html = (table: Table): string => {
   const lines: string[] = [];
-  const matrix = solveTable({ table, raise: false });
-  matrix.forEach((row, i) => {
-    const y = table.top + i;
+  for (let y = table.top; y <= table.bottom; y++) {
     const cols: string[] = [];
-    row.forEach((col, j) => {
-      const x = table.left + j;
-      const value = table.stringify({ y, x }, col);
+    for (let x = table.left; x <= table.right; x++) {
+      const point: PointType = { y, x };
+      const policy = table.getPolicyByPoint(point);
+      const value = policy.onClip({ point, table });
       const valueEscaped = value
         .replace(/&/g, '&amp;')
         .replace(/"/g, '&quot;')
@@ -74,8 +71,7 @@ const table2html = (table: Table): string => {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
       cols.push(`<td>${valueEscaped}</td>`);
-    });
-    lines.push(`<tr>${cols.join('')}</tr>`);
-  });
+    }
+  }
   return `<table>${lines.join('')}</table>`;
 };

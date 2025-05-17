@@ -1,13 +1,13 @@
-import { WriterType } from '../types';
+import { RenderProps } from './core';
 
 export const CheckboxRendererMixin = {
-  bool(value: boolean, writer?: WriterType): any {
+  bool({cell, writer}: RenderProps<boolean>): any {
     return (
       <input
         type="checkbox"
-        checked={value}
+        checked={cell.value}
         onChange={(e) => {
-          writer && writer(e.currentTarget.checked.toString());
+          writer?.(e.currentTarget.checked.toString());
           e.currentTarget.blur();
         }}
       />

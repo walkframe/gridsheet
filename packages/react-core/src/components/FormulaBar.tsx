@@ -1,8 +1,9 @@
-import { useContext, useEffect, useState, useRef, KeyboardEvent } from 'react';
+import type { KeyboardEvent } from 'react';
+import { useContext, useEffect, useState, useRef } from 'react';
 import { Context } from '../store';
 import { p2a } from '../lib/converters';
 import { setEditingAddress, setInputting, setLastEdited, walk, write } from '../store/actions';
-import * as prevention from '../lib/prevention';
+import * as prevention from '../lib/operation';
 import { insertTextAtCursor } from '../lib/input';
 import { editorStyle } from './Editor';
 
@@ -17,7 +18,7 @@ export const FormulaBar = () => {
   useEffect(() => {
     let value = table.getByPoint(choosing)?.value ?? '';
     // debug to remove this line
-    value = table.stringify(choosing, value);
+    value = table.stringify({ point: choosing, cell: { value }, evaluates: false });
     largeEditorRef.current!.value = value;
     setBefore(value as string);
   }, [address, table]);
@@ -56,7 +57,6 @@ export const FormulaBar = () => {
     hlRef.current.scrollLeft = largeEditorRef.current.scrollLeft;
     hlRef.current.scrollTop = largeEditorRef.current.scrollTop;
   };
-
   return (
     <label className="gs-formula-bar">
       <div className="gs-selecting-address">{address}</div>
@@ -131,7 +131,7 @@ export const FormulaBar = () => {
             }
 
             const cell = table.getByPoint(choosing);
-            if (prevention.isPrevented(cell?.prevention, prevention.Write)) {
+            if (prevention.hasOperation(cell?.prevention, prevention.Write)) {
               console.warn('This cell is protected from writing.');
               e.preventDefault();
             }

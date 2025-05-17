@@ -1,9 +1,6 @@
-
-import { createContext, ReactNode } from 'react';
-import { useContext, useEffect, useState, useRef, useReducer } from 'react';
+import { useContext, useEffect } from 'react';
 
 import { a2p } from '../lib/converters';
-
 
 import { Context } from '../store';
 import { setSearchQuery, search, setSearchCaseSensitive } from '../store/actions';
