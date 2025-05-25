@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { createContext, useContext, useState } from 'react';
 
-import { StoreType } from '../types';
-import { Dispatcher } from '../store';
+import type { StoreType } from '../types';
+import type { Dispatcher } from '../store';
 
 export type PluginContextType = {
   provided: boolean;

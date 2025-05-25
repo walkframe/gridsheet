@@ -1,6 +1,6 @@
 import { useContext, useRef, useCallback, useEffect } from 'react';
 import { x2c, y2r } from '../lib/converters';
-import { zoneToArea, among, zoneShape, areaToZone, areaToRange } from '../lib/structs';
+import { zoneToArea, among, areaToRange } from '../lib/structs';
 import {
   choose,
   select,
@@ -12,17 +12,16 @@ import {
   updateTable,
   setEditingAddress,
   setInputting,
+  setDragging,
+  submitAutofill,
 } from '../store/actions';
-
-import { DUMMY_IMG } from '../constants';
 
 import { Context } from '../store';
 import { FormulaError } from '../formula/evaluator';
-import { Autofill } from '../lib/autofill';
 import { insertRef, isRefInsertable } from '../lib/input';
 import { isDifferentSheetFocused } from '../store/helpers';
-import type { CleanupRef } from '../renderers/core';
 import type { CSSProperties, FC } from 'react';
+import { isTouching } from '../lib/events';
 
 type Props = {
   y: number;
@@ -40,7 +39,6 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
   //const [sheetProvided, sheetContext] = useSheetContext();
 
   const cellRef = useRef<HTMLTableCellElement>(null);
-  const renderedRef = useRef<CleanupRef>(null);
   const {
     table,
     editingAddress,
@@ -80,20 +78,17 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
     if (pointed && !isFirstPointed.current) {
       _setEditorRect();
       if (!editing) {
-        const valueString = table.stringify({point: { y, x }, evaluates: false});
-        dispatch(setInputting(valueString));
+        //const valueString = table.stringify({point: { y, x }, evaluates: false});
+        //dispatch(setInputting(valueString));
       }
       return;
     }
     isFirstPointed.current = false;
   }, [pointed, editing]);
-  useEffect(() => {
-    return () => renderedRef.current?.cleanup?.();
-  }, []);
   const cell = table.getByPoint({ y, x });
   const writeCell = (value: string) => {
     if (lastEdited !== value) {
-      dispatch(write(value));
+      dispatch(write({value}));
       return;
     }
   };
@@ -101,7 +96,7 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
   let errorMessage = '';
   let rendered: any;
   try {
-    rendered = table.render({ table, point: { y, x }, writer: writeCell, renderedRef });
+    rendered = table.render({ table, point: { y, x }, writer: writeCell });
   } catch (e: any) {
     if (e instanceof FormulaError) {
       errorMessage = e.message;
@@ -119,6 +114,89 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
   }
 
   const editingAnywhere = !!(table.conn.editingAddress || editingAddress);
+
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (e.shiftKey) {
+      dispatch(drag({ y, x }));
+    } else {
+      dispatch(select({ startY: y, startX: x, endY: -1, endX: -1 }));
+    }
+    
+    const fullAddress = `${table.sheetPrefix(!differentSheetFocused)}${address}`;
+    if (editingAnywhere) {
+      const inserted = insertRef({input: lastFocused, ref: fullAddress});
+      if (inserted) {
+        return false;
+      }
+    }
+
+    table.conn.lastFocused = input;
+    input.focus();
+    dispatch(setEditingAddress(''));
+    dispatch(setDragging(true));
+    
+    if (autofillDraggingTo) {
+      return false;
+    }
+
+    if (editingAnywhere) {
+      writeCell(input.value);
+    }
+    if (!e.shiftKey) {
+      dispatch(choose({ y, x }));
+    }
+    return true;
+  }
+  const handleDragEnd = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dispatch(setDragging(false));
+    if (autofillDraggingTo) {
+      dispatch(submitAutofill(autofillDraggingTo));
+      input.focus();
+      return false;
+    }
+  };
+
+  const handleDragging = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isTouching(e)) {
+      return false;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (autofillDraggingTo) {
+      dispatch(setAutofillDraggingTo({ x, y }));
+      return false;
+    }
+    if (leftHeaderSelecting) {
+      dispatch(drag({y, x: table.getNumCols()}));
+      return false;
+    }
+    if (topHeaderSelecting) {
+      dispatch(drag({y: table.getNumRows(), x}));
+      return false;
+    }
+    if (editingAnywhere && !isRefInsertable(lastFocused)) {
+      return false;
+    }
+    dispatch(drag({ y, x }));
+
+    if (editingAnywhere) {
+      const newArea = zoneToArea({ ...selectingZone, endY: y, endX: x });
+      const fullRange = `${table.sheetPrefix(!differentSheetFocused)}${areaToRange(newArea)}`;
+      const inserted = insertRef({input: lastFocused, ref: fullRange});
+      // When the area is inserted into the formula, the selected area needs to be reset.
+      if (inserted) {
+        dispatch(drag({ y: -1, x: -1 }));
+      }
+    }
+    table.conn.reflect({...table.conn}); // // Force drawing because the formula is not reflected in largeInput
+    return true;
+  };
 
   return (
     <td
@@ -139,31 +217,6 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
         dispatch(setContextMenuPosition({ y: e.clientY, x: e.clientX }));
         return false;
       }}
-      onClick={(e) => {
-        if (autofillDraggingTo) {
-          return false;
-        }
-        const fullAddress = `${table.sheetPrefix(!differentSheetFocused)}${address}`;
-        if (editingAnywhere) {
-          const inserted = insertRef({input: lastFocused, ref: fullAddress});
-          if (inserted) {
-            return false;
-          }
-        }
-        dispatch(setEditingAddress(''));
-        dispatch(setContextMenuPosition({ y: -1, x: -1 }));
-        input.focus();
-        if (e.shiftKey) {
-          dispatch(drag({ y, x }));
-          return;
-        } else {
-          dispatch(choose({ y, x }));
-          dispatch(select({ startY: y, startX: x, endY: -1, endX: -1 }));
-          _setEditorRect();
-        }
-        const valueString = table.stringify({point: { y, x }, evaluates: false});
-        dispatch(setInputting(valueString));
-      }}
       onDoubleClick={(e) => {
         e!.preventDefault();
         setEditingAddress(address);
@@ -172,74 +225,16 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
         input.dispatchEvent(dblclick);
         return false;
       }}
-      draggable
-      onDragStart={(e) => {
-        if (autofillDraggingTo) {
-          return false;
-        }
-        e!.dataTransfer!.setDragImage(DUMMY_IMG, 0, 0);
-        dispatch(select({ startY: y, startX: x, endY: y, endX: x }));
-        const insertable = isRefInsertable(lastFocused);
-        
-        if (insertable) {
-          return editingAnywhere;
-        } else if (insertable != null) {
-          writeCell(input.value);
-        }
-        dispatch(choose({ y, x }));
-        input.focus();
-        dispatch(setInputting(''));
-      }}
-      onDragEnd={() => {
-        if (autofillDraggingTo) {
-          if (autofillDraggingTo.x !== x || autofillDraggingTo.y !== y) {
-            const autofill = new Autofill(store, autofillDraggingTo);
-            dispatch(updateTable(autofill.applied));
-            dispatch(select(areaToZone(autofill.wholeArea)));
-            input.focus();
-          }
-          dispatch(setAutofillDraggingTo(null));
-          return false;
-        }
-        const { height: h, width: w } = zoneShape(selectingZone);
-        if (h + w === 0) {
-          dispatch(select({ startY: -1, startX: -1, endY: -1, endX: -1 }));
-        }
-        if (isRefInsertable(lastFocused) && editingAnywhere) {
-          dispatch(select({ startY: -1, startX: -1, endY: -1, endX: -1 }));
-        }
-        lastFocused?.focus();
-      }}
-      onDragEnter={() => {
-        if (autofillDraggingTo) {
-          if (!among(selectingArea, { x, y })) {
-            dispatch(setAutofillDraggingTo({ x, y }));
-          }
-          return false;
-        }
-        if (leftHeaderSelecting) {
-          dispatch(drag({ y: table.getNumRows(), x }));
-          return false;
-        }
-        if (topHeaderSelecting) {
-          dispatch(drag({ y, x: table.getNumCols() }));
-          return false;
-        }
-        dispatch(drag({ y, x }));
-
-        if (editingAnywhere) {
-          const newArea = zoneToArea({ ...selectingZone, endY: y, endX: x });
-          const fullRange = `${table.sheetPrefix(!differentSheetFocused)}${areaToRange(newArea)}`;
-          insertRef({input: lastFocused, ref: fullRange, edgeInsertable: true});
-          return true;
-        }
-        return false;
-
-        //sheetContext?.forceRender?.(); // Force drawing because the formula is not reflected in largeInput
-        return true;
-      }}
     >
-      <div className={`gs-cell-inner-wrap`}>
+      <div
+        className={`gs-cell-inner-wrap`}
+        onMouseDown={handleDragStart}
+        onTouchStart={handleDragStart}
+        onMouseMove={handleDragging}
+        onTouchMove={handleDragging}
+        onMouseUp={handleDragEnd}
+        onTouchEnd={handleDragEnd}
+      >
         <div
           className={'gs-cell-inner'}
           style={{
@@ -250,19 +245,15 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
         >
           {errorMessage && <div className="gs-formula-error-triangle" title={errorMessage} />}
           {showAddress && <div className="gs-cell-label">{address}</div>}
-          <div 
-            className="gs-cell-rendered"
-            ref={renderedRef}
-          >{rendered}</div>
+          <div className="gs-cell-rendered">{rendered}</div>
         </div>
         {((!editing && pointed && selectingArea.bottom === -1) ||
           (selectingArea.bottom === y && selectingArea.right === x)) && (
           <div
             className="gs-autofill-drag"
-            draggable
-            onDragStart={(e) => {
-              e!.dataTransfer!.setDragImage(DUMMY_IMG, 0, 0);
+            onMouseDown={(e) => {
               dispatch(setAutofillDraggingTo({ x, y }));
+              dispatch(setDragging(true));
               e.stopPropagation();
             }}
           ></div>

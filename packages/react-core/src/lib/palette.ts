@@ -1,4 +1,4 @@
-export const REF_PALETTE = [
+export const COLOR_PALETTE = [
   // orange
   '#FF6600',
   // purple

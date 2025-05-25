@@ -18,15 +18,10 @@ export type Props = {
   mixins?: RendererMixinType[];
 };
 
-export interface CleanupRef extends HTMLDivElement {
-  cleanup?: () => void;
-}
-
 export type RendererCallProps = {
   table: Table;
   point: PointType;
   writer?: WriterType;
-  renderedRef?: RefObject<CleanupRef>;
 }
 
 export type RenderProps<T extends any=any> = {
@@ -34,7 +29,6 @@ export type RenderProps<T extends any=any> = {
   table: Table;
   point: PointType;
   writer?: WriterType;
-  renderedRef?: RefObject<CleanupRef>;
 }
 
 export interface RendererMixinType {
@@ -85,18 +79,15 @@ export class Renderer implements RendererMixinType {
   }
 
   public call(props: RendererCallProps): any {
-    const {point, table, writer, renderedRef} = props
+    const {point, table, writer} = props
     const address = p2a(point);
     const key = table.getFullRef(address);
     const alreadyRendered = table.conn.renderedCaches[key];
     const cell = table.getByPoint(point)!;
     if (alreadyRendered !== undefined) {
       return this.decorate(alreadyRendered, {...props, cell});
-      return alreadyRendered;
     }
     const cache = table.getSolvedCache(address);
-
-
     let value = cache ?? cell?.value;
     if (typeof value === 'string' && !cell?.disableFormula) {
       if (value[0] === "'") {
@@ -105,7 +96,7 @@ export class Renderer implements RendererMixinType {
         value = solveFormula({ value, table, raise: true, origin: point });
       }
     }
-    const rendered = this.render({cell: {...cell, value}, table, writer, point, renderedRef});
+    const rendered = this.render({cell: {...cell, value}, table, writer, point});
     table.conn.renderedCaches[key] = rendered;
     return this.decorate(rendered, {...props, cell});
   }

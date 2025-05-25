@@ -1,9 +1,9 @@
 import type { FC } from 'react';
 import { useContext, useEffect } from 'react';
 
-import { Props } from '../types';
-
+import type { Props } from '../types';
 import { Context } from '../store';
+
 import {
   setSheetHeight,
   setSheetWidth,

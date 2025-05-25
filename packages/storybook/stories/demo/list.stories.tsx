@@ -16,7 +16,8 @@ export default {
 };
 
 const ListRendererMixin: RendererMixinType = {
-  array(value: any[]) {
+  array({ cell}) {
+    const value = cell.value ?? [];
     return (
       <ul>
         {value.map((v, i) => (
@@ -29,7 +30,7 @@ const ListRendererMixin: RendererMixinType = {
     if (Array.isArray(value)) {
       return value.join('\n');
     }
-    return String(value) || '';
+    return String(value ?? '');
   },
 };
 

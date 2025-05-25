@@ -8,32 +8,40 @@ import {
   drag,
   select,
   selectCols,
+  setAutofillDraggingTo,
   setContextMenuPosition,
+  setDragging,
   setEditingAddress,
   setResizingPositionX,
+  submitAutofill,
+  write,
 } from '../store/actions';
-import { DUMMY_IMG, DEFAULT_WIDTH } from '../constants';
+import { DEFAULT_WIDTH } from '../constants';
 import * as prevention from '../lib/operation';
-import { insertRef, isRefInsertable } from '../lib/input';
+import { insertRef } from '../lib/input';
 import { isDifferentSheetFocused } from '../store/helpers';
+import { ScrollHandle } from './ScrollHandle';
+import { isTouching } from '../lib/events';
 
 type Props = {
   x: number;
 };
 
 export const HeaderCellTop: FC<Props> = ({ x }) => {
-  const { store, dispatch } = useContext(Context);
   const colId = x2c(x);
+  const { store, dispatch } = useContext(Context);
 
   const {
     table,
+    editingAddress,
     choosing,
     selectingZone,
-    resizingRect,
     topHeaderSelecting,
     headerHeight,
     editorRef,
     autofillDraggingTo,
+    lastEdited,
+    dragging,
   } = store;
 
   const col = table.getByPoint({ y: 0, x });
@@ -41,6 +49,96 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
 
   const differentSheetFocused = isDifferentSheetFocused(store);
   const lastFocused = table.conn.lastFocused;
+
+  const editingAnywhere = !!(table.conn.editingAddress || editingAddress);
+
+  const writeCell = (value: string) => {
+    if (lastEdited !== value) {
+      dispatch(write({value, point: choosing}));
+      return;
+    }
+  };
+
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (dragging) {
+      return false;
+    }
+
+    dispatch(select({startY: 1, startX: x, endY: -1, endX: x}));
+    const fullAddress = `${table.sheetPrefix(!differentSheetFocused)}${colId}:${colId}`;
+    if (editingAnywhere) {
+      const inserted = insertRef({input: lastFocused, ref: fullAddress});
+      if (inserted) {
+        dispatch(select({ startY: table.getNumRows(), startX: x, endY: 0, endX: x }));
+        return false;
+      }
+    }
+
+    let startX = e.shiftKey ? selectingZone.startX : x;
+    if (startX === -1) {
+      startX = choosing.x;
+    }
+
+    dispatch(
+      selectCols({
+        range: { start: startX, end: x },
+        numRows: table.getNumRows(),
+      }),
+    );
+
+    if (editingAnywhere) {
+      writeCell(lastFocused?.value ?? '');
+    }
+    dispatch(choose({ y: 1, x: startX }));
+    dispatch(setEditingAddress(''));
+    dispatch(setDragging(true));
+
+    if (autofillDraggingTo) {
+      return false;
+    }
+    return true;
+  }
+
+  const handleDragEnd = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dispatch(setDragging(false));
+    if (autofillDraggingTo) {
+      dispatch(submitAutofill(autofillDraggingTo));
+      editorRef.current!.focus();
+      return false;
+    }
+  }
+  
+  const handleDragging = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isTouching(e)) {
+      return false;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (autofillDraggingTo) {
+      dispatch(setAutofillDraggingTo({ y: 1, x }));
+      return false;
+    }
+
+    const newArea = zoneToArea({ ...selectingZone, endY: 1, endX: x });
+    const [left, right] = [x2c(newArea.left), x2c(newArea.right)];
+    const fullRange = `${table.sheetPrefix(!differentSheetFocused)}${left}:${right}`;
+    insertRef({input: lastFocused, ref: fullRange});
+
+    if (autofillDraggingTo == null) {
+      const { startY } = selectingZone;
+      if (startY === 1) {
+        dispatch(drag({ y: table.getNumRows(), x }));
+      } else {
+        dispatch(drag({ y: 1, x }));
+      }
+    }
+    return false;
+  }
 
   return (
     <th
@@ -53,29 +151,6 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
           : ''
       }`}
       style={{ width, minWidth: width, maxWidth: width }}
-      onClick={(e) => {
-        let startX = e.shiftKey ? selectingZone.startX : x;
-        if (startX === -1) {
-          startX = choosing.x;
-        }
-        const fullColId = `${table.sheetPrefix(!differentSheetFocused)}${colId}:${colId}`;
-        const inserted = insertRef({input: lastFocused, ref: fullColId});
-        if (inserted) {
-          return false;
-        }
-
-        dispatch(
-          selectCols({
-            range: { start: startX, end: x },
-            numRows: table.getNumRows(),
-          }),
-        );
-        dispatch(setContextMenuPosition({ y: -1, x: -1 }));
-        dispatch(choose({ y: 1, x: startX }));
-        dispatch(setEditingAddress(''));
-        editorRef.current!.focus();
-        return false;
-      }}
       onContextMenu={(e) => {
         e.preventDefault();
         dispatch(setContextMenuPosition({ y: e.clientY, x: e.clientX }));
@@ -84,50 +159,18 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
     >
       <div
         className="gs-th-inner-wrap"
-        draggable
-        onDragStart={(e) => {
-          e!.dataTransfer!.setDragImage(DUMMY_IMG, 0, 0);
-          const insertable = isRefInsertable(lastFocused);
-          if (insertable) {
-            dispatch(select({ startY: table.getNumRows(), startX: x, endY: 0, endX: x }));
-            return false;
-          }
-          dispatch(
-            selectCols({
-              range: { start: x, end: x },
-              numRows: table.getNumRows(),
-            }),
-          );
-          dispatch(choose({ y: 1, x }));
-          return false;
-        }}
-        onDragEnd={() => {
-          if (isRefInsertable(lastFocused)) {
-            dispatch(select({ startY: -1, startX: -1, endY: -1, endX: -1 }));
-          }
-        }}
-        onDragEnter={() => {
-          const newArea = zoneToArea({ ...selectingZone, endY: 1, endX: x });
-          const [left, right] = [x2c(newArea.left), x2c(newArea.right)];
-          const fullRange = `${table.sheetPrefix(!differentSheetFocused)}${left}:${right}`;
-          insertRef({input: lastFocused, ref: fullRange, edgeInsertable: true});
-
-          if (resizingRect.x === -1 && autofillDraggingTo == null) {
-            const { startY } = selectingZone;
-            if (startY === 1) {
-              dispatch(drag({ y: table.getNumRows(), x }));
-            } else {
-              dispatch(drag({ y: 1, x }));
-            }
-          }
-          return false;
-        }}
-        onDragOver={(e) => {
-          e!.dataTransfer!.dropEffect = 'move';
-          e.preventDefault();
-        }}
+        onMouseDown={handleDragStart}
+        onTouchStart={handleDragStart}
+        onMouseMove={handleDragging}
+        onTouchMove={handleDragging}
+        onMouseUp={handleDragEnd}
+        onTouchEnd={handleDragEnd}
       >
         <div className="gs-th-inner" style={{ height: headerHeight, position: 'relative' }}>
+          { 
+            !topHeaderSelecting ? 
+            <ScrollHandle style={{ position: 'absolute' }} vertical={-1} /> : null 
+          }
           {col?.labeler ? table.getLabel(col.labeler, x) : colId}
           <div
             className={`gs-resizer ${prevention.hasOperation(col?.prevention, prevention.Resize) ? 'gs-protected' : ''}`}

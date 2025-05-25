@@ -1,5 +1,6 @@
 import React from 'react';
 import { 
+  CellType,
   constructInitialCells, 
   GridSheet, 
   Parser, 
@@ -21,7 +22,8 @@ class ListRenderer extends Renderer {
       </ul>
     );
   }
-  stringify({ value }: { value: any[] }): string {
+  stringify(cell: CellType): string {
+    const value = cell.value;
     if (Array.isArray(value)) {
       return value.join('\n');
     }

@@ -4,8 +4,9 @@ import { Context } from '../store';
 import { p2a } from '../lib/converters';
 import { setEditingAddress, setInputting, setLastEdited, walk, write } from '../store/actions';
 import * as prevention from '../lib/operation';
-import { insertTextAtCursor } from '../lib/input';
+import { expandInput, insertTextAtCursor } from '../lib/input';
 import { editorStyle } from './Editor';
+import { ScrollHandle } from './ScrollHandle';
 
 export const FormulaBar = () => {
   const { store, dispatch } = useContext(Context);
@@ -18,14 +19,14 @@ export const FormulaBar = () => {
   useEffect(() => {
     let value = table.getByPoint(choosing)?.value ?? '';
     // debug to remove this line
-    value = table.stringify({ point: choosing, cell: { value }, evaluates: false });
+    value = table.stringify({ point: choosing, cell: { ...cell, value }, evaluates: false });
     largeEditorRef.current!.value = value;
     setBefore(value as string);
   }, [address, table]);
 
   const writeCell = (value: string) => {
     if (before !== value) {
-      dispatch(write(value));
+      dispatch(write({value}));
     }
     dispatch(setEditingAddress(''));
     editorRef.current!.focus();
@@ -59,6 +60,7 @@ export const FormulaBar = () => {
   };
   return (
     <label className="gs-formula-bar">
+      <ScrollHandle style={{ position: 'absolute', zIndex: 2 }} vertical={-1} />
       <div className="gs-selecting-address">{address}</div>
       <div className="gs-fx">Fx</div>
       <div className="gs-formula-bar-editor-inner">

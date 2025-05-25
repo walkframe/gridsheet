@@ -1,11 +1,12 @@
-import { useContext, MouseEvent } from 'react';
+import { useContext } from 'react';
+import type { MouseEvent } from 'react';
 
 import { Context } from '../store';
 import { setResizingPositionY, setResizingPositionX, updateTable } from '../store/actions';
 
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH, MIN_WIDTH, MIN_HEIGHT } from '../constants';
 import { zoneToArea, makeSequence, between } from '../lib/structs';
-import { CellsByAddressType } from '../types';
+import type { CellsByAddressType } from '../types';
 import { p2a } from '../lib/converters';
 
 export const Resizer = () => {

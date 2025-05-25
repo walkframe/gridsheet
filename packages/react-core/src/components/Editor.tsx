@@ -27,9 +27,10 @@ import { areaToZone, zoneToArea } from '../lib/structs';
 import * as prevention from '../lib/operation';
 import { expandInput, insertTextAtCursor, isRefInsertable } from '../lib/input';
 import { Lexer } from '../formula/evaluator';
-import { REF_PALETTE } from '../lib/palette';
+import { COLOR_PALETTE } from '../lib/palette';
 import { CursorStateType, EditorEvent, EditorEventWithNativeEvent, ModeType } from '../types';
 import { Fixed } from './Fixed';
+import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from 'constants';
 
 type Props = {
   mode: ModeType;
@@ -88,6 +89,7 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
 
   useEffect(() => {
     table.conn.reflect({...table.conn});
+    expandInput(editorRef.current);
   }, [inputting, editingCell]);
 
   const { y, x } = choosing;
@@ -97,8 +99,7 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
   const editing = editingCell === address;
 
   const cell = table.getByPoint({ y, x });
-  const value: any = cell?.value;
-  const valueString = table.stringify({point: choosing, cell: { value }, evaluates: false});
+  const valueString = table.stringify({point: choosing, cell, evaluates: false});
   const [before, setBefore] = useState<string>(valueString);
   
   const selectValue = (selected: number) => {
@@ -117,13 +118,23 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
   
   useEffect(() => {
     setBefore(valueString);
+    dispatch(setInputting(valueString));
+
+    const editorStyle = editorRef.current?.style;
+    if (!editorStyle) {
+      return;
+    }
+    const width = table.getByPoint({ x, y: 0})?.width ?? DEFAULT_WIDTH;
+    const height = table.getByPoint({ y, x: 0 })?.height ?? DEFAULT_HEIGHT;
+    editorStyle.width = `${width}px`;
+    editorStyle.height = `${height}px`;
   }, [choosing]);
 
   const { y: top, x: left, height, width } = editorRect;
 
   const writeCell = (value: string) => {
     if (before !== value) {
-      dispatch(write(value));
+      dispatch(write({value}));
     }
     setBefore(value);
   };
@@ -185,6 +196,7 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
             } else {
               writeCell(input.value);
               dispatch(setEditingAddress(''));
+              dispatch(setInputting(''));
             }
           }
           resetSize(e.currentTarget);
@@ -504,8 +516,6 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
           }}
           value={inputting}
           onChange={(e) => {
-            const input = e.currentTarget;
-            expandInput(input);
             dispatch(setInputting(e.currentTarget.value));
             setSelected(0);
           }}
@@ -524,11 +534,10 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
       <ul
         className="gs-editor-options"
         style={{ marginTop: editorRef.current?.scrollHeight }}
-        onClick={() => {console.log("click ul")}}
       >
         {
           filteredOptions.map((option, i) => (
-            <li 
+            <li
               key={i} 
               className={`gs-editor-option ${selected === i ? ' gs-editor-option-selected' : ''}`}
               onMouseDown={(e) => {
@@ -561,12 +570,12 @@ export const editorStyle = (text: string) => {
           const existsIndex = exists[normalizedToken];
           if (existsIndex !== undefined) {
             return (
-              <span key={i} style={{ color: REF_PALETTE[existsIndex % REF_PALETTE.length] }}>
+              <span key={i} style={{ color: COLOR_PALETTE[existsIndex % COLOR_PALETTE.length] }}>
                 {token.stringify()}
               </span>
             );
           }
-          const color = REF_PALETTE[palletIndex % REF_PALETTE.length];
+          const color = COLOR_PALETTE[palletIndex % COLOR_PALETTE.length];
           exists[normalizedToken] = palletIndex++;
           return (
             <span key={i} style={{ color }} className={`gs-token-type-${token.type}`}>

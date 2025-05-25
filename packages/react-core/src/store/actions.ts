@@ -19,6 +19,7 @@ import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '../constants';
 import { initSearchStatement, restrictPoints } from './helpers';
 import { smartScroll } from '../lib/virtualization';
 import * as prevention from '../lib/operation';
+import { Autofill } from '../lib/autofill';
 
 const actions: { [s: string]: CoreAction<any> } = {};
 
@@ -105,6 +106,26 @@ class SetAutofillDraggingToAction<T extends PointType | null> extends CoreAction
   }
 }
 export const setAutofillDraggingTo = new SetAutofillDraggingToAction().bind();
+
+class SubmitAutofillAction<T extends PointType> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreType {
+    const autofill = new Autofill(store, payload);
+    const table = autofill.applied;
+    const selectingZone = areaToZone(autofill.wholeArea);
+
+    return {
+      ...store,
+      table,
+      ...initSearchStatement(table, store),
+      ...restrictPoints(store, table),
+      selectingZone,
+      leftHeaderSelecting: false,
+      topHeaderSelecting: false,
+      autofillDraggingTo: null,
+    }
+  }
+}
+export const submitAutofill = new SubmitAutofillAction().bind();
 
 class SetShowAddressAction<T extends boolean> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
@@ -230,15 +251,16 @@ class SetEditorRectAction<T extends RectType> extends CoreAction<T> {
 }
 export const setEditorRect = new SetEditorRectAction().bind();
 
-class SetResizingRectAction<T extends RectType> extends CoreAction<T> {
+class SetDragging<T extends boolean> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     return {
       ...store,
-      resizingRect: payload,
+      dragging: payload,
     };
   }
 }
-export const setResizingRect = new SetResizingRectAction().bind();
+export const setDragging = new SetDragging().bind();
+
 
 class BlurAction<T extends null> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
@@ -455,6 +477,10 @@ class DragAction<T extends PointType> extends CoreAction<T> {
       endY: payload.y,
       endX: payload.x,
     };
+    if (startY === payload.y && startX === payload.x) {
+      selectingZone.endY = -1;
+      selectingZone.endX = -1;
+    }
     return { ...store, selectingZone };
   }
 }
@@ -480,16 +506,20 @@ class SearchAction<T extends number> extends CoreAction<T> {
 }
 export const search = new SearchAction().bind();
 
-class WriteAction<T extends string> extends CoreAction<T> {
+class WriteAction<T extends {value: string; point?: PointType}> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
+    let { value, point } = payload;
     const { choosing, selectingZone, table } = store;
+    if (point == null) {
+      point = choosing;
+    }
     const newTable = table.write({
-      point: choosing,
-      value: payload,
+      point: point,
+      value,
       operator: 'USER',
       reflection: {
         selectingZone,
-        choosing,
+        choosing: point,
       },
     });
     return {

@@ -1,22 +1,22 @@
 
-import { useEffect } from 'react';
+import { useEffect, useContext, useRef, useState } from 'react';
 
 import { Cell } from './Cell';
 import { HeaderCellTop } from './HeaderCellTop';
 import { HeaderCellLeft } from './HeaderCellLeft';
 
 import { Context } from '../store';
-import { choose, select, setEntering, updateTable, setInputting } from '../store/actions';
+import { choose, select, updateTable } from '../store/actions';
 
 import { Table } from '../lib/table';
-import { RefPaletteType, PointType, StoreType, TableRef, Virtualization } from '../types';
+import type { RefPaletteType, PointType, StoreType, TableRef, Virtualization } from '../types';
 import { virtualize } from '../lib/virtualization';
 import { a2p, p2a, stripAddressAbsolute } from '../lib/converters';
 import { zoneToArea } from '../lib/structs';
 import { Lexer, stripSheetName } from '../formula/evaluator';
-import { REF_PALETTE } from '../lib/palette';
+import { COLOR_PALETTE } from '../lib/palette';
 import { Autofill } from '../lib/autofill';
-import { useContext, useRef, useState } from 'react';
+import { ScrollHandle } from './ScrollHandle';
 
 type Props = {
   tableRef: React.MutableRefObject<TableRef | null> | undefined;
@@ -37,6 +37,8 @@ export const Tabular = ({ tableRef }: Props) => {
     editingAddress,
     inputting,
     choosing,
+    leftHeaderSelecting,
+    topHeaderSelecting
   } = store;
 
   useEffect(() => {
@@ -90,10 +92,6 @@ export const Tabular = ({ tableRef }: Props) => {
     }
   }, [table]);
   useEffect(() => {
-    const v = table.stringify({point: choosing, evaluates: false});
-    dispatch(setInputting(v || ''));
-  }, [table, choosing]);
-  useEffect(() => {
     table.conn.choosingAddress = p2a(choosing);
   }, [choosing]);
   const [virtualized, setVirtualized] = useState<Virtualization | null>(null);
@@ -115,11 +113,9 @@ export const Tabular = ({ tableRef }: Props) => {
           height: sheetHeight,
         }}
         ref={tabularRef}
-        onMouseEnter={() => {
-          dispatch(setEntering(true));
-        }}
-        onMouseLeave={() => {
-          dispatch(setEntering(false));
+        onMouseMove={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
         }}
         onScroll={(e) => {
           setVirtualized(virtualize(table, e.currentTarget));
@@ -158,11 +154,17 @@ export const Tabular = ({ tableRef }: Props) => {
                     }, 100);
                   }}
                 >
-                  <div className="gs-th-inner"></div>
+                  <div className="gs-th-inner">
+                    <ScrollHandle
+                      style={{ position: 'absolute' }} 
+                      horizontal={leftHeaderSelecting ? 0 : -1}
+                      vertical={topHeaderSelecting ? 0 : -1}
+                    />
+                  </div>
                 </th>
                 <th
                   className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-left"
-                  style={{ width: virtualized?.adjuster?.left || 1 }}
+                  style={{ width: virtualized?.adjuster?.left ?? 1 }}
                 ></th>
                 {virtualized?.xs?.map?.((x) => <HeaderCellTop x={x} key={x} />)}
                 <th
@@ -176,7 +178,7 @@ export const Tabular = ({ tableRef }: Props) => {
               <tr className="gs-row">
                 <th
                   className={`gs-adjuster gs-adjuster-horizontal gs-adjuster-vertical`}
-                  style={{ height: virtualized?.adjuster?.top || 1 }}
+                  style={{ height: virtualized?.adjuster?.top ?? 1 }}
                 ></th>
                 <td className="gs-adjuster gs-adjuster-vertical"></td>
                 {virtualized?.xs?.map((x) => <td className="gs-adjuster gs-adjuster-vertical" key={x}></td>)}
@@ -290,7 +292,7 @@ const useOperationStyles = (store: StoreType, refs: RefPaletteType) => {
   }
 
   Object.entries(refs).forEach(([ref, i]) => {
-    const palette = REF_PALETTE[i % REF_PALETTE.length];
+    const palette = COLOR_PALETTE[i % COLOR_PALETTE.length];
     const borderStyle = `dashed 2px ${palette}`;
     const { top, left, bottom, right } = table.rangeToArea(ref);
     for (let y = top; y <= bottom; y++) {

@@ -8,6 +8,9 @@
   letter-spacing: 1px;
   line-height: 24px;
   cursor: cell;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
   
   .gs-cell-inner-wrap {
     &.gs-selecting {
@@ -88,7 +91,7 @@
   .gs-cell-rendered {
     overflow: hidden;
     white-space: pre-wrap;
-    cursor: auto;
+    cursor: cell;
     word-wrap: break-word;
     word-break: break-all;
     padding: 0 2px;

@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { useContext, useEffect } from 'react';
 import { Context } from '../store';
-import { FeedbackType } from '../types';
+import type { FeedbackType } from '../types';
 
 type Props = {
   onChange?: FeedbackType;

@@ -1436,10 +1436,10 @@ export class Table implements UserTable {
   }
 
   public render(props: RendererCallProps) {
-    const { point, writer, renderedRef } = props;
+    const { point, writer } = props;
     const cell = this.getByPoint(point) ?? {};
     const renderer = this.renderers[cell.renderer ?? ''] ?? defaultRenderer;
-    return renderer.call({ table: this, point, writer, renderedRef });
+    return renderer.call({ table: this, point, writer });
   }
 
   public stringify({

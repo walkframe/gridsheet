@@ -125,7 +125,7 @@ export type StoreType = {
   topHeaderSelecting: boolean;
   editingAddress: string;
   editorRect: RectType;
-  resizingRect: RectType;
+  dragging: boolean;
   sheetHeight: number;
   sheetWidth: number;
   headerHeight: number;

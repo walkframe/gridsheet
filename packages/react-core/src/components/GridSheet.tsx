@@ -12,7 +12,7 @@ import {
 } from '../constants';
 import { functions } from '../formula/mapping';
 import { Context } from '../store';
-import { reducer as defaultReducer, updateTable } from '../store/actions';
+import { reducer as defaultReducer } from '../store/actions';
 import { Editor } from './Editor';
 import { StoreInitializer } from './StoreInitializer';
 import { Resizer } from './Resizer';
@@ -25,7 +25,9 @@ import { x2c, y2r } from '../lib/converters';
 import { embedStyle } from '../styles/embedder';
 import { FormulaBar } from './FormulaBar';
 import { SearchBar } from './SearchBar';
-import { createConnector, SheetConnector, useConnector } from '../lib/connector';
+import { createConnector } from '../lib/connector';
+import type { SheetConnector } from '../lib/connector';
+import { ScrollHandle } from './ScrollHandle';
 
 export function GridSheet({
   initialCells,
@@ -119,7 +121,7 @@ export function GridSheet({
       topHeaderSelecting: false,
       editingAddress: '',
       editorRect: { y: 0, x: 0, height: 0, width: 0 },
-      resizingRect: { y: -1, x: -1, height: -1, width: -1 },
+      dragging: false,
       sheetHeight: 0,
       sheetWidth: 0,
       headerHeight: 0,
@@ -198,6 +200,7 @@ export function GridSheet({
         data-mode={mode}
         style={{ maxWidth: `min(100%, ${store.table.totalWidth + 2}px)` }}
       >
+        <ScrollHandle style={{ position: 'fixed' }} />
         {typeof store.searchQuery === 'undefined' ? showFormulaBar && <FormulaBar /> : <SearchBar />}
         <div
           className={`gs-main ${className || ''}`}

@@ -1,9 +1,9 @@
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH, OVERSCAN_X, OVERSCAN_Y } from '../constants';
 import { range } from './structs';
 import { Table } from './table';
-import type { PointType, Virtualization } from '../types';
+import type { AreaType, PointType, Virtualization } from '../types';
 
-export const getCellRectPositions = (table: Table, e: HTMLDivElement, { y, x }: PointType) => {
+export const getCellRectPositions = (table: Table, { y, x }: PointType) => {
   let { width, height } = table.getRectSize({
     top: 1,
     left: 1,
@@ -104,7 +104,7 @@ export const smartScroll = (
     return;
   }
   const screen = getScreenRect(e);
-  const target = getCellRectPositions(table, e, targetPoint);
+  const target = getCellRectPositions(table, targetPoint);
 
   // when header is sticky
   const up = target.top - table.headerHeight;
@@ -150,4 +150,39 @@ export const smartScroll = (
       // go nowhere
     }
   }
+};
+
+export const getAreaInTabular = (tabularElement: HTMLDivElement): AreaType => {
+  const rect = tabularElement.getBoundingClientRect();
+  const top = rect.top,
+    left = rect.left,
+    bottom = rect.bottom,
+    right = rect.right;
+
+  const rows = tabularElement.querySelectorAll('.gs-th-left');
+  const cols = tabularElement.querySelectorAll('.gs-th-top');
+  let firstRow = -1, lastRow = -1, firstCol = -1, lastCol = -1;
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i] as HTMLTableHeaderCellElement;
+    const rect = row.getBoundingClientRect();
+    if (firstRow === -1 && rect.top > top) {
+      firstRow = parseInt(row.dataset.y || '0');
+    }
+    if (lastRow === -1 && rect.bottom >= bottom) {
+      lastRow = parseInt(row.dataset.y || '0');
+      break;
+    }
+  }
+  for (let i = 0; i < cols.length; i++) {
+    const col = cols[i] as HTMLTableHeaderCellElement;
+    const rect = col.getBoundingClientRect();
+    if (firstCol === -1 && rect.left > left) {
+      firstCol = parseInt(col.dataset.x || '0');
+    }
+    if (lastCol === - 1 && rect.right >= right) {
+      lastCol = parseInt(col.dataset.x || '0');
+      break;
+    }
+  }
+  return { top: firstRow, left: firstCol, bottom: lastRow, right: lastCol };
 };

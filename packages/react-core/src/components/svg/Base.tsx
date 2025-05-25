@@ -21,9 +21,9 @@ export const Base = ({ style, size = 24, children }: BaseProps) => {
       viewBox={`0 0 24 24`}
       fill="none"
       stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
       style={style}
       className="icon-tabler"
     >
