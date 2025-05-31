@@ -1,4 +1,8 @@
+import type { PointType } from '../types';
+import type { Table } from './table';
 import { Lexer } from '../formula/evaluator';
+import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '../constants';
+
 
 export const insertTextAtCursor = (input: HTMLTextAreaElement, text: string) => {
   input.focus();
@@ -60,4 +64,15 @@ export const expandInput = (input: HTMLTextAreaElement | null) => {
   }
   input.style.width = `${input.scrollWidth}px`;
   input.style.height = `${input.scrollHeight}px`;
+};
+
+export const resetInput = (input: HTMLTextAreaElement | null, table: Table, point: PointType) => {
+  const style = input?.style;
+  if (style == null) {
+    return;
+  }
+  const width = table.getByPoint({ x: point.x, y: 0})?.width ?? DEFAULT_WIDTH;
+  const height = table.getByPoint(point)?.height ?? DEFAULT_HEIGHT;
+  style.width = `${width}px`;
+  style.height = `${height}px`;
 };

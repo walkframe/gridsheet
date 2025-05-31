@@ -350,3 +350,12 @@ export const expandRange = (range: string): Address[] => {
   }
   return result;
 };
+
+// restrictZone resets a zone if the zone consists of a single cell.
+export const restrictZone = (zone: ZoneType): ZoneType => {
+  const s = zoneShape(zone);
+  if (s.height + s.width === 0) {
+    return { startY: -1, startX: -1, endY: -1, endX: -1 };
+  }
+  return {...zone};
+}

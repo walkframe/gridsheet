@@ -17,7 +17,6 @@ import {
   paste,
   setSearchQuery,
   setEntering,
-  setLastEdited,
   setInputting,
   updateTable,
 } from '../store/actions';
@@ -25,12 +24,12 @@ import {
 import { Context } from '../store';
 import { areaToZone, zoneToArea } from '../lib/structs';
 import * as prevention from '../lib/operation';
-import { expandInput, insertTextAtCursor, isRefInsertable } from '../lib/input';
+import { expandInput, insertTextAtCursor, isRefInsertable, resetInput } from '../lib/input';
 import { Lexer } from '../formula/evaluator';
 import { COLOR_PALETTE } from '../lib/palette';
-import { CursorStateType, EditorEvent, EditorEventWithNativeEvent, ModeType } from '../types';
+import { CursorStateType, EditorEventWithNativeEvent, ModeType } from '../types';
 import { Fixed } from './Fixed';
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from 'constants';
+import { parseHTML, parseText } from '../lib/paste';
 
 type Props = {
   mode: ModeType;
@@ -40,10 +39,11 @@ type Props = {
 export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
   const { store, dispatch } = useContext(Context);
   const [selected, setSelected] = useState(0);
+  const [shiftKey, setShiftKey] = useState(false);
   const {
     showAddress,
     editorRect,
-    editingAddress: editingCell,
+    editingAddress,
     choosing,
     inputting,
     selectingZone,
@@ -84,19 +84,19 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
   }, [table.conn.lastFocused]);
   useEffect(() => {
     table.conn.editingSheetId = sheetId;
-    table.conn.editingAddress = editingCell;
-  }, [editingCell]);
+    table.conn.editingAddress = editingAddress;
+  }, [editingAddress]);
 
   useEffect(() => {
     table.conn.reflect({...table.conn});
     expandInput(editorRef.current);
-  }, [inputting, editingCell]);
+  }, [inputting, editingAddress]);
 
   const { y, x } = choosing;
   const rowId = `${y2r(y)}`;
   const colId = x2c(x);
   const address = `${colId}${rowId}`;
-  const editing = editingCell === address;
+  const editing = editingAddress === address;
 
   const cell = table.getByPoint({ y, x });
   const valueString = table.stringify({point: choosing, cell, evaluates: false});
@@ -119,15 +119,7 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
   useEffect(() => {
     setBefore(valueString);
     dispatch(setInputting(valueString));
-
-    const editorStyle = editorRef.current?.style;
-    if (!editorStyle) {
-      return;
-    }
-    const width = table.getByPoint({ x, y: 0})?.width ?? DEFAULT_WIDTH;
-    const height = table.getByPoint({ y, x: 0 })?.height ?? DEFAULT_HEIGHT;
-    editorStyle.width = `${width}px`;
-    editorStyle.height = `${height}px`;
+    resetInput(editorRef.current, table, choosing);
   }, [choosing]);
 
   const { y: top, x: left, height, width } = editorRect;
@@ -177,7 +169,6 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
           }),
         );
         dispatch(setEditingAddress(''));
-        resetSize(e.currentTarget);
         return false;
 
       case 'Enter': // ENTER
@@ -199,7 +190,6 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
               dispatch(setInputting(''));
             }
           }
-          resetSize(e.currentTarget);
         } else if (editingOnEnter && selectingZone.endY === -1) {
           const dblclick = document.createEvent('MouseEvents');
           dblclick.initEvent('dblclick', true, true);
@@ -226,6 +216,7 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
         }
         break;
       case 'Shift': // SHIFT
+        setShiftKey(true);
         return false;
 
       case 'Control': // CTRL
@@ -243,6 +234,7 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
       case 'Escape': // ESCAPE
         dispatch(escape(null));
         dispatch(setSearchQuery(undefined));
+        dispatch(setInputting(before));
         // input.blur();
         return false;
 
@@ -390,13 +382,8 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
         break;
       case 'v': // V
         if (e.ctrlKey || e.metaKey) {
-          if (!editing) {
-            window.setTimeout(() => {
-              dispatch(paste({ text: input.value }));
-              dispatch(setInputting(''));
-            }, 50);
-            return false;
-          }
+          // moved to onPaste
+          return false;
         }
         break;
       case 'x': // X
@@ -490,7 +477,6 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
               return;
             }
             const input = e.currentTarget;
-            resetSize(input);
             if (!editing) {
               dispatch(setInputting(valueString));
               dispatch(setEditingAddress(address));
@@ -503,7 +489,6 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
             }
           }}
           onBlur={(e) => {
-            dispatch(setLastEdited(before));
             if (isRefInsertable(e.currentTarget)) {
               return true;
             } else {
@@ -511,7 +496,6 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
                 writeCell(e.currentTarget.value);
               }
             }
-            resetSize(e.currentTarget);
             dispatch(setEditingAddress(''));
           }}
           value={inputting}
@@ -519,9 +503,26 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
             dispatch(setInputting(e.currentTarget.value));
             setSelected(0);
           }}
+          onPaste={(e) => {
+            const withoutStyle = shiftKey;
+            const html = e.clipboardData?.getData?.('text/html');
+            if (html) {
+              dispatch(paste({matrix: parseHTML(html), onlyValue: withoutStyle}));
+            } else {
+              const text = e.clipboardData?.getData?.('text/plain');
+              if (text) {
+                dispatch(paste({matrix: parseText(text), onlyValue: withoutStyle}));
+              } else {
+                console.warn('No clipboard data found.');
+              }
+            }
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          }}
           onKeyDown={handleKeyDown}
           onKeyUp={(e) => {
-            const input = e.currentTarget;
+            setShiftKey(false);
             const selectingArea = zoneToArea(store.selectingZone);
             handleKeyUp?.(e, {
               pointing: choosing,
@@ -594,7 +595,4 @@ export const editorStyle = (text: string) => {
   );
 };
 
-const resetSize = (input: HTMLTextAreaElement) => {
-  input.style.width = '0px';
-  input.style.height = '0px';
-};
+

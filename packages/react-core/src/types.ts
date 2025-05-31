@@ -1,12 +1,13 @@
 
-import { RendererType } from './renderers/core';
-import { ParserType } from './parsers/core';
-import { UserTable, Table } from './lib/table';
-import { FunctionMapping } from './formula/functions/__base';
-import { JSX, RefObject } from 'react';
-import { SheetConnector } from './lib/connector';
-import { CSSProperties, KeyboardEvent } from 'react';
-import { PolicyType } from './policy/core';
+import type { RendererType } from './renderers/core';
+import type { ParserType } from './parsers/core';
+import type { UserTable, Table } from './lib/table';
+import type { FunctionMapping } from './formula/functions/__base';
+import type { FC, RefObject } from 'react';
+import type { SheetConnector } from './lib/connector';
+import type { CSSProperties, KeyboardEvent } from 'react';
+import type { PolicyType } from './policy/core';
+import type { Dispatcher } from './store';
 
 export type Y = number;
 export type X = number;
@@ -64,6 +65,13 @@ export type CellType<T = any, Custom = any> = {
   };
 };
 
+export type RawCellType = {
+  value?: string;
+  style?: CSSProperties;
+  skip?: boolean;
+}
+
+export type CellPatchType = CellType;
 export type CellFilter = (cell: CellType) => boolean;
 
 export type CellsByAddressType = { [address: string]: CellType };
@@ -94,6 +102,7 @@ export type OptionsType = {
   onKeyUp?: (e: EditorEvent, points: CursorStateType) => void;
   onInit?: (table: UserTable) => void;
   additionalFunctions?: FunctionMapping;
+  contextMenuItems?: FC<ContextMenuProps>[];
 };
 
 export type RangeType = { start: number; end: number }; // [start, end]
@@ -113,7 +122,6 @@ export type StoreType = {
   largeEditorRef: RefObject<HTMLTextAreaElement>;
   tabularRef: RefObject<HTMLDivElement>;
   searchInputRef: RefObject<HTMLTextAreaElement>;
-  lastEdited: string;
   entering: boolean;
   choosing: PointType;
   cutting: boolean;
@@ -142,6 +150,7 @@ export type StoreType = {
   editingOnEnter: boolean;
   showAddress: boolean;
   contextMenuPosition: PositionType;
+  contextMenuItems: FC<ContextMenuProps>[];
   resizingPositionY: [Y, Y, Y]; // indexY, startY, endY
   resizingPositionX: [X, X, X]; // indexX, startX, endX
   onSave?: FeedbackType;
@@ -259,3 +268,8 @@ export type EditorEvent = KeyboardEvent<HTMLTextAreaElement>;
 export type EditorEventWithNativeEvent = EditorEvent & {
   nativeEvent: KeyboardEvent & { isComposing: boolean }
 };
+
+export type ContextMenuProps = {
+  store: StoreType;
+  dispatch: Dispatcher;
+}

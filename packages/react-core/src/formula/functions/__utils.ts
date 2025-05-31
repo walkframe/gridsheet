@@ -57,6 +57,14 @@ export const ensureNumber = (value: any, alternative?: number): number => {
   if (value instanceof Date) {
     return value.getTime();
   }
+
+  if (typeof value === 'string' && value.endsWith('%')) {
+    const num = parseFloat(value.slice(0, -1));
+    if (!isNaN(num)) {
+      return num / 100;
+    }
+  }
+
   const num = parseFloat(value as string);
   if (isNaN(num)) {
     throw new FormulaError('#VALUE!', `${value} cannot be converted to a number`);

@@ -17,7 +17,7 @@ import { Editor } from './Editor';
 import { StoreInitializer } from './StoreInitializer';
 import { Resizer } from './Resizer';
 import { Emitter } from './Emitter';
-import { ContextMenu } from './ContextMenu';
+import { ContextMenu, defaultContextMenuItems } from './ContextMenu';
 import { Table } from '../lib/table';
 import { Tabular } from './Tabular';
 import { getMaxSizesFromCells } from '../lib/structs';
@@ -81,6 +81,7 @@ export function GridSheet({
       maxNumRows,
       minNumCols,
       maxNumCols,
+      contextMenuItems,
     } = options;
     const table = new Table({
       historyLimit,
@@ -114,7 +115,7 @@ export function GridSheet({
       choosing: { y: 1, x: 1 },
       cutting: false,
       inputting: '',
-      selectingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
+      selectingZone: { startY: 1, startX: 1, endY: -1, endX: -1 },
       copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
       autofillDraggingTo: null,
       leftHeaderSelecting: false,
@@ -133,6 +134,7 @@ export function GridSheet({
       editingOnEnter: true,
       showAddress: true,
       contextMenuPosition: { y: -1, x: -1 },
+      contextMenuItems: contextMenuItems ?? defaultContextMenuItems,
       resizingPositionY: [-1, -1, -1],
       resizingPositionX: [-1, -1, -1],
       minNumRows: 1,
@@ -140,7 +142,6 @@ export function GridSheet({
       minNumCols: 1,
       maxNumCols: -1,
       mode: 'light',
-      lastEdited: '',
     };
   });
 

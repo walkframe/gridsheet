@@ -8,7 +8,6 @@ import {
   CellsByIdType,
   CellsByAddressType,
   PointType,
-  WriterType,
   Address,
   CellFilter,
   Labelers,
@@ -20,10 +19,9 @@ import {
   StoreReflectionType,
   ShapeType,
   OperatorType,
-  TablesBySheetId,
-  SheetIdsByName,
   OperationType,
   Policies,
+  RawCellType,
 } from '../types';
 import { areaShape, createMatrix, expandRange, getMaxSizesFromCells, matrixShape, putMatrix } from './structs';
 import { a2p, x2c, p2a, y2r, grantAddressAbsolute } from './converters';
@@ -122,7 +120,7 @@ export interface UserTable {
   getCols(args?: GetProps): CellsByAddressType[];
   getTableBySheetName(sheetName: string): UserTable;
   move(args: MoveProps): UserTable;
-  copy(args: MoveProps): UserTable;
+  copy(args: MoveProps & { withoutStyle?: boolean}): UserTable;
   update(args: {
     diff: CellsByAddressType;
     partial?: boolean;
@@ -924,11 +922,8 @@ export class Table implements UserTable {
     return this.clone({ keepAddressCache: false });
   }
 
-  public copy({ src, dst, operator = 'SYSTEM', reflection = {} }: MoveProps) {
-    const { height: maxHeight, width: maxWidth } = areaShape({
-      ...src,
-      base: 1,
-    });
+  public copy({ src, dst, onlyValue = false, operator = 'SYSTEM', reflection = {} }: MoveProps & { onlyValue?: boolean}) {
+    const { height: maxHeight, width: maxWidth } = areaShape({...src, base: 1 });
     const { top: topFrom, left: leftFrom } = src;
     const { top: topTo, left: leftTo, bottom: bottomTo, right: rightTo } = dst;
     const diff: CellsByAddressType = {};
@@ -962,11 +957,15 @@ export class Table implements UserTable {
           slideX,
         });
         this.setChangedAt(cell, changedAt);
-        diff[p2a({ y: toY, x: toX })] = {
-          ...cell,
-          style: { ...cell?.style },
-          value,
-        };
+        const dstPoint = { y: toY, x: toX };
+        const address = p2a(dstPoint);
+        if (onlyValue) {
+          const dstCell = this.getByPoint(dstPoint);
+          cell.style = dstCell?.style;
+          cell.justifyContent = dstCell?.justifyContent;
+          cell.alignItems = dstCell?.alignItems;
+        }
+        diff[address] = { ...cell, value };
       }
     }
     return this.update({
@@ -1108,35 +1107,50 @@ export class Table implements UserTable {
     return this.clone({ keepAddressCache: true });
   }
 
-  public writeMatrix({
+  public writeRawCellMatrix({
     point,
     matrix,
     updateChangedAt = true,
     historicize = true,
+    withoutStyle = false,
     operator = 'SYSTEM',
     reflection = {},
   }: {
     point: PointType;
-    matrix: MatrixType<string>;
+    matrix: MatrixType<RawCellType>;
     updateChangedAt?: boolean;
     historicize?: boolean;
+    withoutStyle?: boolean;
     operator?: OperatorType;
     reflection?: StoreReflectionType;
   }) {
     const { y: baseY, x: baseX } = point;
     const diff: CellsByAddressType = {};
-    matrix.forEach((cols, i) => {
+    matrix.forEach((cells, i) => {
       const y = baseY + i;
       if (y > this.bottom) {
         return;
       }
-      cols.forEach((value, j) => {
+      cells.forEach((cell, j) => {
         const x = baseX + j;
         if (x > this.right) {
           return;
         }
-        const cell = this.parse({ y, x }, value);
-        diff[p2a({ y, x })] = cell;
+
+        const dstPoint = { y, x };
+        const parsed = this.parse(dstPoint, cell.value ?? '');
+        if (withoutStyle) {
+          const dstCell = this.getByPoint(dstPoint);
+          parsed.style = dstCell?.style;
+          parsed.justifyContent = dstCell?.justifyContent;
+          parsed.alignItems = dstCell?.alignItems;
+        }
+
+        parsed.style = {
+          ...cell.style,
+          ...parsed.style, // overwrite with parsed style
+        }; 
+        diff[p2a({ y, x })] = parsed;
       });
     });
     return this.update({
@@ -1150,14 +1164,20 @@ export class Table implements UserTable {
     });
   }
 
-  public write({
-    point,
-    value,
-    updateChangedAt = true,
-    historicize = true,
-    operator = 'SYSTEM',
-    reflection = {},
-  }: {
+  public writeMatrix(props: {
+    point: PointType;
+    matrix: MatrixType<string>;
+    updateChangedAt?: boolean;
+    historicize?: boolean;
+    operator?: OperatorType;
+    reflection?: StoreReflectionType;
+  }) {
+    const matrixWithStyle: MatrixType<RawCellType> = props.matrix.map((row) =>
+      row.map((value) => ({ value })));
+    return this.writeRawCellMatrix({...props, matrix: matrixWithStyle});
+  }
+
+  public write(props: {
     point: PointType;
     value: string;
     updateChangedAt?: boolean;
@@ -1165,13 +1185,19 @@ export class Table implements UserTable {
     operator?: OperatorType;
     reflection?: StoreReflectionType;
   }) {
-    return this.writeMatrix({
-      point,
-      matrix: [[value]],
-      updateChangedAt,
-      historicize,
-      operator,
-      reflection,
+    const { point, value } = props;
+    const parsed = this.parse(point, value ?? '');
+    const current = this.getByPoint(point);
+    if (current?.value === parsed.value) {
+      // no change
+      return this;
+    }
+    const diff = {[p2a(point)]: parsed};
+    return this.update({
+      ...props,
+      diff,
+      partial: true,
+      operation: operation.Write,
     });
   }
 

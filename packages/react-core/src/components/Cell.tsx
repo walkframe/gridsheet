@@ -49,7 +49,7 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
     editorRef,
     showAddress,
     autofillDraggingTo,
-    lastEdited,
+    contextMenuItems,
   } = store;
 
   // Whether the focus is on another sheet
@@ -87,10 +87,7 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
   }, [pointed, editing]);
   const cell = table.getByPoint({ y, x });
   const writeCell = (value: string) => {
-    if (lastEdited !== value) {
-      dispatch(write({value}));
-      return;
-    }
+    dispatch(write({value}));
   };
 
   let errorMessage = '';
@@ -118,6 +115,9 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!isTouching(e)) {
+      return false;
+    }
 
     if (e.shiftKey) {
       dispatch(drag({ y, x }));
@@ -213,9 +213,13 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
         ...operationStyle,
       }}
       onContextMenu={(e) => {
-        e.preventDefault();
-        dispatch(setContextMenuPosition({ y: e.clientY, x: e.clientX }));
-        return false;
+        if (contextMenuItems.length > 0) {
+          e.preventDefault();
+          e.stopPropagation();
+          dispatch(setContextMenuPosition({ y: e.clientY, x: e.clientX }));
+          return false
+        }
+        return true;
       }}
       onDoubleClick={(e) => {
         e!.preventDefault();

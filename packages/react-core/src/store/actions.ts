@@ -9,12 +9,12 @@ import {
   AreaType,
   PositionType,
   ModeType,
-  Renderers,
+  RawCellType,
 } from '../types';
-import { zoneToArea, superposeArea, matrixShape, areaShape, areaToZone } from '../lib/structs';
+import { zoneToArea, superposeArea, matrixShape, areaShape, areaToZone, zoneShape, restrictZone } from '../lib/structs';
 import { Table } from '../lib/table';
 
-import { tsv2matrix, p2a, a2p } from '../lib/converters';
+import { p2a, a2p } from '../lib/converters';
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '../constants';
 import { initSearchStatement, restrictPoints } from './helpers';
 import { smartScroll } from '../lib/virtualization';
@@ -294,12 +294,13 @@ class CutAction<T extends ZoneType> extends CoreAction<T> {
 }
 export const cut = new CutAction().bind();
 
-class PasteAction<T extends { text: string }> extends CoreAction<T> {
+class PasteAction<T extends {matrix: RawCellType[][], onlyValue: boolean}> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     const { choosing, copyingZone, selectingZone, cutting, table } = store;
 
     let selectingArea = zoneToArea(selectingZone);
     const copyingArea = zoneToArea(copyingZone);
+    const {matrix, onlyValue} = payload;
 
     if (cutting) {
       const src = copyingArea;
@@ -318,12 +319,14 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
               bottom: choosing.y + h,
               right: choosing.x + w,
             };
+
+      const nextSelectingZone = restrictZone(areaToZone(dst));
       const newTable = table.move({
         src,
         dst,
         operator: 'USER',
         reflection: {
-          selectingZone: areaToZone(dst),
+          selectingZone: nextSelectingZone,
           copyingZone,
           cutting,
         },
@@ -333,28 +336,29 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
         ...initSearchStatement(newTable, store),
         cutting: false,
         table: newTable,
-        selectingZone: areaToZone(dst),
+        selectingZone: nextSelectingZone,
         copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
+        inputting: newTable.stringify({ point: choosing, evaluates: false }),
       };
     }
 
     let newTable: Table;
     let { y, x } = choosing;
-    const { text } = payload;
+
     if (copyingArea.top === -1) {
-      const matrixFrom = tsv2matrix(text);
-      const { height, width } = matrixShape({ matrix: matrixFrom, base: -1 });
+      const { height, width } = matrixShape({ matrix, base: -1 });
       selectingArea = {
         top: y,
         left: x,
         bottom: y + height,
         right: x + width,
       };
-      newTable = table.writeMatrix({
+      const nextSelectingZone = restrictZone(areaToZone(selectingArea));
+      newTable = table.writeRawCellMatrix({
         point: { y, x },
-        matrix: matrixFrom,
+        matrix,
         reflection: {
-          selectingZone: areaToZone(selectingArea),
+          selectingZone: nextSelectingZone,
         },
       });
     } else {
@@ -370,6 +374,7 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
       newTable = table.copy({
         src: copyingArea,
         dst: selectingArea,
+        onlyValue: onlyValue,
         operator: 'USER',
         reflection: {
           copyingZone,
@@ -377,11 +382,14 @@ class PasteAction<T extends { text: string }> extends CoreAction<T> {
         },
       });
     }
+
+    const nextSelectingZone = restrictZone(areaToZone(selectingArea));
     return {
       ...store,
       table: newTable,
-      selectingZone: areaToZone(selectingArea),
+      selectingZone: nextSelectingZone,
       copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
+      inputting: newTable.stringify({ point: choosing, evaluates: false }),
       ...initSearchStatement(newTable, store),
     };
   }
@@ -782,16 +790,6 @@ class WalkAction<
   }
 }
 export const walk = new WalkAction().bind();
-
-class SetLastEditedAction<T extends string> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
-    return {
-      ...store,
-      lastEdited: payload,
-    };
-  }
-}
-export const setLastEdited = new SetLastEditedAction().bind();
 
 class SetInputtingAction<T extends string> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {

@@ -85,44 +85,6 @@ export const p2a = ({ y, x }: PointType) => {
   return `${x2c(x)}${y2r(y)}`;
 };
 
-const restoreDoubleQuote = (text: string) => text.replace(/\x00/g, '"');
-
-export const tsv2matrix = (tsv: string): string[][] => {
-  tsv = tsv.replace(/""/g, '\x00');
-  const rows: string[][] = [[]];
-  let row = rows[0];
-  let entering = false;
-  let word = '';
-  for (let i = 0; i < tsv.length; i++) {
-    const s = tsv[i];
-    if (s === '\n' && !entering) {
-      row.push(restoreDoubleQuote(word));
-      word = '';
-      row = [];
-      rows.push(row);
-      continue;
-    }
-    if (s === '\t') {
-      row.push(restoreDoubleQuote(word));
-      word = '';
-      continue;
-    }
-    if (s === '"' && !entering && word === '') {
-      entering = true;
-      continue;
-    }
-    if (s === '"' && entering) {
-      entering = false;
-      continue;
-    }
-    word += s;
-  }
-  if (word) {
-    row.push(restoreDoubleQuote(word));
-  }
-  return rows;
-};
-
 export const a2p = (address: Address): PointType => {
   const m = address.match(/(\$)?([A-Z]*)(\$)?([0-9]*)/);
   if (m == null) {

@@ -85,7 +85,7 @@ export function SecondDemo() {
               console.log('data onchange:', matrix && aa2oa(matrix, ['name', 'occupation', 'memo']));
             }
             const diff = table.getObjectFlatten({
-              filter: (cell) => !!cell?.changedAt && cell.changedAt > table.lastChangedAt!,
+              filter: (cell) => !!cell?.system?.changedAt && cell?.system.changedAt > table.lastChangedAt!,
             });
             console.log('onchange diff:', diff);
           },

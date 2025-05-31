@@ -2,9 +2,9 @@ import type { KeyboardEvent } from 'react';
 import { useContext, useEffect, useState, useRef } from 'react';
 import { Context } from '../store';
 import { p2a } from '../lib/converters';
-import { setEditingAddress, setInputting, setLastEdited, walk, write } from '../store/actions';
+import { setEditingAddress, setInputting, walk, write } from '../store/actions';
 import * as prevention from '../lib/operation';
-import { expandInput, insertTextAtCursor } from '../lib/input';
+import { insertTextAtCursor } from '../lib/input';
 import { editorStyle } from './Editor';
 import { ScrollHandle } from './ScrollHandle';
 
@@ -91,7 +91,6 @@ export const FormulaBar = () => {
             table.conn.lastFocused = e.currentTarget;
           }}
           onBlur={(e) => {
-            dispatch(setLastEdited(before));
             if (e.currentTarget.value!.startsWith('=')) {
               return true;
             } else {
@@ -124,6 +123,7 @@ export const FormulaBar = () => {
               }
               case 'Escape': {
                 input.value = before;
+                dispatch(setInputting(before));
                 dispatch(setEditingAddress(''));
                 e.preventDefault();
                 editorRef.current!.focus();

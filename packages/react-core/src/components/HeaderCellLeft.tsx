@@ -40,8 +40,8 @@ export const HeaderCellLeft: FC<Props> = ({ y }) => {
     editorRef,
     table,
     autofillDraggingTo,
-    lastEdited,
     dragging,
+    contextMenuItems,
   } = store;
 
   const row = table.getByPoint({ y, x: 0 });
@@ -53,15 +53,15 @@ export const HeaderCellLeft: FC<Props> = ({ y }) => {
   const editingAnywhere = !!(table.conn.editingAddress || editingAddress);
 
   const writeCell = (value: string) => {
-    if (lastEdited !== value) {
-      dispatch(write({value, point: choosing}));
-      return;
-    }
+    dispatch(write({value, point: choosing}));
   };
 
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      if (!isTouching(e)) {
+        return false;
+      }
       if (dragging) {
         return false;
       }
@@ -152,9 +152,13 @@ export const HeaderCellLeft: FC<Props> = ({ y }) => {
       }`}
       style={{ height }}
       onContextMenu={(e) => {
-        e.preventDefault();
-        dispatch(setContextMenuPosition({ y: e.clientY, x: e.clientX }));
-        return false;
+        if (contextMenuItems.length > 0) {
+          e.preventDefault();
+          e.stopPropagation();
+          dispatch(setContextMenuPosition({ y: e.clientY, x: e.clientX }));
+          return false
+        }
+        return true;
       }}
     >
       <div
@@ -172,15 +176,17 @@ export const HeaderCellLeft: FC<Props> = ({ y }) => {
             <ScrollHandle style={{ position: 'absolute' }} horizontal={-1} /> : null 
           }
           {row?.labeler ? table.getLabel(row.labeler, y) : rowId}
-          <div
-            className={`gs-resizer ${prevention.hasOperation(row?.prevention, prevention.Resize) ? 'gs-protected' : ''}`}
-            style={{ width: headerWidth }}
-            onMouseDown={(e) => {
-              dispatch(setResizingPositionY([y, e.clientY, e.clientY]));
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-          ></div>
+          { !dragging &&
+            <div
+              className={`gs-resizer ${prevention.hasOperation(row?.prevention, prevention.Resize) ? 'gs-protected' : ''}`}
+              style={{ width: headerWidth }}
+              onMouseDown={(e) => {
+                dispatch(setResizingPositionY([y, e.clientY, e.clientY]));
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            ></div>
+          }
         </div>
       </div>
     </th>

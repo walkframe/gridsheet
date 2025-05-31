@@ -72,6 +72,7 @@ const table2html = (table: Table): string => {
         .replace(/>/g, '&gt;');
       cols.push(`<td>${valueEscaped}</td>`);
     }
+    lines.push(`<tr>${cols.join('')}</tr>`);
   }
   return `<table>${lines.join('')}</table>`;
 };
