@@ -104,7 +104,7 @@ function parseStyleString(element: Element | null): React.CSSProperties | undefi
       return;
     }
     const key = rawKey.trim().replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
-    if (key === 'float' || key === 'display') {
+    if (key === 'float' || key === 'display' || key.startsWith('padding')) {
       return;
     }
     if (key === 'border') {
