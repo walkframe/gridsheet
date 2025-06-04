@@ -34,6 +34,7 @@ export type {
   AreaType,
   ZoneType,
   Props,
+  TableRef,
 } from './types';
 
 export type { SheetConnector } from './lib/connector';

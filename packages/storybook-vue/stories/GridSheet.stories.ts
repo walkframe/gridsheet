@@ -19,7 +19,7 @@ export const Basic: Story = {
     data: () => {
       const initialCells: CellsByAddressType = {
         A1: { value: 'Hello' },
-        B1: { value: 'World', style: { backgroundColor: '#448888'} },
+        B1: { value: 'Vue', style: { backgroundColor: '#448888'} },
         A2: { value: 123 },
         B2: { value: 456 },
         C10: { value: '=SUM(A2:B2)' },

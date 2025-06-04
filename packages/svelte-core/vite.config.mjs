@@ -1,17 +1,17 @@
 import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import dts from 'vite-plugin-dts';
 import path from 'path';
-
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import preprocess from 'svelte-preprocess';
 
 export default defineConfig({
   plugins: [
-    vue(),
+    svelte({
+      preprocess: preprocess(),
+      compilerOptions: {
+        customElement: false
+      }
+    }),
     dts({
       tsconfigPath: path.resolve(__dirname, 'tsconfig.json'),
       include: ['index.ts', 'src'],
@@ -23,14 +23,20 @@ export default defineConfig({
   build: {
     lib: {
       entry: path.resolve(__dirname, './src/index.ts'),
-      name: 'GridSheetVueCore',
+      name: 'GridSheetSvelteCore',
       formats: ['es'],
       fileName: () => 'index.js'
     },
     outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
-      external: ['vue', '@gridsheet/preact-core'],
+      external: ['svelte', '@gridsheet/preact-core', 'svelte/internal'],
+      output: {
+        globals: {
+          svelte: 'Svelte',
+          '@gridsheet/preact-core': 'GridSheetPreactCore'
+        }
+      }
     }
   },
   resolve: {
@@ -38,4 +44,4 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src')
     }
   }
-});
+}); 
