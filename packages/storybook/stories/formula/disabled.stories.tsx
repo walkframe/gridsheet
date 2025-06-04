@@ -27,7 +27,7 @@ export const Disabled = () => {
         })}
         options={{
           labelers: {
-            disabled: (value: string) => {
+            disabled: (n) => {
               return 'disabled formula';
             }
           }

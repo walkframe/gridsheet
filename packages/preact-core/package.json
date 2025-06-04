@@ -6,8 +6,8 @@
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "copy-types": "cp -R ../react-core/dist/types/* ./dist/",
-    "append-preact": "echo '\nexport { h, render } from \"preact\";' >> dist/index.d.ts",
+    "copy-types": "rsync -avm --include='*/' --include='*.d.ts' --exclude='*' ../react-core/dist/ ./dist/",
+    "append-preact": "echo '\nexport { h, render } from \"preact\";' >> dist/index.d.ts && cat exports.ts >> dist/index.d.ts",
     "build": "rm -rf ./dist || true && vite build && pnpm copy-types && pnpm append-preact"
   },
   "peerDependencies": {

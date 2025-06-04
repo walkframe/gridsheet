@@ -1,4 +1,3 @@
-// packages/vue-core/src/GridSheet.vue
 <script lang="ts">
 import { defineComponent, onMounted, onBeforeUnmount, ref, h as vueH } from 'vue';
 import {
