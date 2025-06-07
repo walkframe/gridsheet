@@ -385,3 +385,12 @@ export const binarySearch = (
   }
   return lessThan ? low : high;
 };
+
+export const moveKey = (obj: any, keyFrom: string, keyTo: string): void => {
+  const v = obj[keyFrom];
+  if (v == null) {
+    return;
+  }
+  delete obj[keyFrom];
+  obj[keyTo] = v;
+};

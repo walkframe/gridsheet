@@ -3,10 +3,10 @@ import { Table } from '../lib/table';
 import { Address, PointType, StoreType } from '../types';
 
 export const restrictPoints = (store: StoreType, table: Table) => {
-  const { choosing, selectingZone, copyingZone } = store;
+  const { choosing, selectingZone } = store;
   let { y, x } = choosing;
   let { startY: y1, startX: x1, endY: y2, endX: x2 } = selectingZone;
-  let { startY: y3, startX: x3, endY: y4, endX: x4 } = copyingZone;
+  let { startY: y3, startX: x3, endY: y4, endX: x4 } = table.hub.copyingZone;
   const [numRows, numCols] = [table.getNumRows(), table.getNumCols()];
   if (y > numRows) {
     y = numRows;
@@ -86,10 +86,10 @@ export const initSearchStatement = (table: Table, store: StoreType) => {
   return { matchingCells, searchQuery, matchingCellIndex, choosing };
 };
 
-export const isDifferentSheetFocused = (store: StoreType) => {
+export const isXSheetFocused = (store: StoreType) => {
   const { sheetId, table } = store;
-  if (sheetId === table.conn.editingSheetId) {
+  if (sheetId === table.hub.editingSheetId) {
     return false;
   }
-  return !!table.conn.editingAddress;
+  return !!table.hub.editingAddress;
 };

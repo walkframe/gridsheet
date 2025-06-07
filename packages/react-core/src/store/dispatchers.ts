@@ -24,14 +24,14 @@ export const paster = async ({ store, dispatch }: ContextMenuProps, onlyValue = 
   let cells: RawCellType[][] = [];
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
-    if (item.types.includes('text/html')) {
+    if (item.types.indexOf('text/html') !== -1) {
       const blob = await item.getType('text/html');
       const html = await blob.text();
       if (html) {
         cells = parseHTML(html, onlyValue);
         break;
       }
-    } else if (item.types.includes('text/plain')) {
+    } else if (item.types.indexOf('text/plain') !== -1) {
       const blob = await item.getType('text/plain');
       const text = await blob.text();
       if (text) {
@@ -65,7 +65,13 @@ export const rowsInserterAbove = async ({ store, dispatch }: ContextMenuProps) =
     y: top,
     numRows,
     baseY: top,
-    reflection: {
+    undoReflection: {
+      sheetId: table.sheetId,
+      selectingZone,
+      choosing,
+    },
+    redoReflection: {
+      sheetId: table.sheetId,
       selectingZone,
       choosing,
     },
@@ -85,7 +91,13 @@ export const rowsInserterBelow = async ({ store, dispatch }: ContextMenuProps) =
     y: bottom + 1,
     numRows,
     baseY: bottom,
-    reflection: {
+    undoReflection: {
+      sheetId: table.sheetId,
+      selectingZone,
+      choosing,
+    },
+    redoReflection: {
+      sheetId: table.sheetId,
       selectingZone,
       choosing,
     },
@@ -103,7 +115,13 @@ export const colsInserterLeft = async ({ store, dispatch }: ContextMenuProps) =>
     x: left,
     numCols,
     baseX: left,
-    reflection: {
+    undoReflection: {
+      sheetId: table.sheetId,
+      selectingZone,
+      choosing,
+    },
+    redoReflection: {
+      sheetId: table.sheetId,
       selectingZone,
       choosing,
     },
@@ -123,12 +141,18 @@ export const colsInserterRight = async ({ store, dispatch }: ContextMenuProps) =
     x: right + 1,
     numCols,
     baseX: right,
-    reflection: {
+    undoReflection: {
+      sheetId: table.sheetId,
+      selectingZone,
+      choosing,
+    },
+    redoReflection: {
+      sheetId: table.sheetId,
       selectingZone,
       choosing,
     },
   });
-  dispatch(updateTable(newTable));
+  dispatch(updateTable(newTable.clone()));
   editorRef.current?.focus();
 };
 
@@ -141,7 +165,13 @@ export const rowsRemover = async ({ store, dispatch }: ContextMenuProps) => {
     y: top,
     numRows,
     operator: 'USER',
-    reflection: {
+    undoReflection: {
+      sheetId: table.sheetId,
+      selectingZone,
+      choosing,
+    },
+    redoReflection: {
+      sheetId: table.sheetId,
       selectingZone,
       choosing,
     },
@@ -159,7 +189,13 @@ export const colsRemover = async ({ store, dispatch }: ContextMenuProps) => {
     x: left,
     numCols,
     operator: 'USER',
-    reflection: {
+    undoReflection: {
+      sheetId: table.sheetId,
+      selectingZone,
+      choosing,
+    },
+    redoReflection: {
+      sheetId: table.sheetId,
       selectingZone,
       choosing,
     },

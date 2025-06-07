@@ -3,7 +3,7 @@ import type { AreaType, CellsByAddressType, CellType, PointType, StoreType } fro
 import { Table } from './table';
 import { areaShape, areaToZone, complementSelectingArea, concatAreas, zoneToArea } from './structs';
 import { p2a } from './converters';
-import { absolutizeFormula } from '../formula/evaluator';
+import { identifyFormula } from '../formula/evaluator';
 import { TimeDelta } from './time';
 import { CSSProperties } from 'react';
 
@@ -42,7 +42,8 @@ export class Autofill {
     const diff: CellsByAddressType = {};
     if (orientation === 'horizontal') {
       for (let i = 0; i < dstShape.height; i++) {
-        const patterns = this.getChangePatterns(matrix[i]);
+        // TODO: pass the originPath
+        const patterns = this.getChangePatterns(matrix[i], '');
         for (let j = 0; j < dstShape.width; j++) {
           const baseCell = matrix[i % srcShape.height]?.[j % srcShape.width];
           const x = sign > 0 ? this.dst.left + j : this.dst.right - j;
@@ -55,7 +56,8 @@ export class Autofill {
       }
     } else {
       for (let i = 0; i < dstShape.width; i++) {
-        const patterns = this.getChangePatterns(matrix.map((row) => row[i]));
+        // TODO: pass the originPath
+        const patterns = this.getChangePatterns(matrix.map((row) => row[i]), '');
         for (let j = 0; j < dstShape.height; j++) {
           const baseCell = matrix[j % srcShape.height]?.[i % srcShape.width];
           const y = sign > 0 ? this.dst.top + j : this.dst.bottom - j;
@@ -68,8 +70,13 @@ export class Autofill {
     const table = this.table.update({
       diff,
       operator: 'USER',
-      reflection: {
+      undoReflection: {
+        sheetId: this.table.sheetId,
         selectingZone: areaToZone(this.src),
+      },
+      redoReflection: {
+        sheetId: this.table.sheetId,
+        selectingZone: areaToZone(this.dst),
       },
     });
     return table;
@@ -192,7 +199,7 @@ export class Autofill {
     return 'down';
   }
 
-  private getChangePatterns(cells: (CellType | null)[]): Generator[] {
+  private getChangePatterns(cells: (CellType | null)[], originPath: string): Generator[] {
     const result: Generator[] = [];
     const groups = groupByType(cells);
     const [orientation, sign] = DirectionMapping[this.direction];
@@ -212,9 +219,10 @@ export class Autofill {
             const skip = cells.length * sign;
             while (true) {
               slide += skip;
-              yield absolutizeFormula({
+              yield identifyFormula({
                 value,
                 table,
+                originPath,
                 slideY: orientation === 'vertical' ? slide : 0,
                 slideX: orientation === 'horizontal' ? slide : 0,
               });

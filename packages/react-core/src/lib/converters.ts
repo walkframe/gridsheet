@@ -1,4 +1,4 @@
-import type { Address, PointType } from '../types';
+import type { Address, PointType, ExtraPointType } from '../types';
 import { DEFAULT_ALPHABET_CACHE_SIZE } from '../constants';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -81,18 +81,19 @@ export const r2y = (row: number | string, absolute = false) => {
   return absolute ? -row : row;
 };
 
-export const p2a = ({ y, x }: PointType) => {
-  return `${x2c(x)}${y2r(y)}`;
+export const p2a = ({ y, x, absX, absY }: ExtraPointType) => {
+  return `${absX ? '$' : ''}${x2c(x)}${absY ? '$' : ''}${y2r(y)}`;
 };
 
-export const a2p = (address: Address): PointType => {
+export const a2p = (address: Address): ExtraPointType => {
   const m = address.match(/(\$)?([A-Z]*)(\$)?([0-9]*)/);
   if (m == null) {
     console.error('invalid address', address);
     return { y: 1, x: 1 };
   }
-  const [, absoluteCol, col, absoluteRow, row] = m.slice();
-  return { y: r2y(row, !!absoluteRow) || 0, x: c2x(col, !!absoluteCol) || 0 };
+  const [, _absX, col, _absY, row] = m.slice();
+  const [absX, absY] = [_absX != null, _absY != null];
+  return { y: r2y(row) || 0, x: c2x(col) || 0, absX, absY };
 };
 
 export const grantAddressAbsolute = (address: Address, absCol: boolean, absRow: boolean) => {

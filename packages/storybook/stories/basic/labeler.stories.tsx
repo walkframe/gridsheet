@@ -29,9 +29,14 @@ export const Labeler = () => {
             3: { labeler: 'katakana' },
             4: { labeler: 'katakana' },
             5: { labeler: 'katakana' },
-            A1: { value: '=SUM($B$1:B2)' },
+            A1: { value: '=SUM($B1:C$1)' },
+            B1: { value: 1 },
+            C1: { value: 100 },
+            D1: { value: 200 },
+            A2: { value: '=$B2'},
+            B2: { value: 2 },
           },
-          ensured: { numRows: 100, numCols: 100 },
+          ensured: { numRows: 10, numCols: 10 },
         })}
         options={{
           labelers: {

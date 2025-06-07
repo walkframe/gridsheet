@@ -1,14 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
 
-type Props = {
-  showAddress: boolean;
-};
 
-const Sheet = ({ showAddress }: Props) => {
+
+const Sheet = () => {
+  const [showAddress, setShowAddress] = useState(false);
   return (
     <>
+      <label>
+        <input
+          type="checkbox"
+          checked={showAddress}
+          onChange={(e) => setShowAddress(e.target.checked)}
+        />
+        Show Address
+      </label>
       <GridSheet
         initialCells={buildInitialCells({
           ensured: { numRows: 100, numCols: 100 },
@@ -19,9 +26,7 @@ const Sheet = ({ showAddress }: Props) => {
   );
 };
 
-export const ShowAddress: StoryObj<typeof Sheet> = {
-  args: { showAddress: true },
-};
+export const ShowAddress: StoryObj<typeof Sheet> = {};
 
 export default {
   title: 'Basic',

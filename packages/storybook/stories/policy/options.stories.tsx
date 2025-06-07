@@ -3,10 +3,7 @@ import {
   GridSheet,
   Policy,
   PolicyOption,
-  PolicyMixinType,
-  CellsByAddressType,
   buildInitialCells,
-  TimeDelta,
 } from '@gridsheet/react-core';
 
 export const Options = () => {

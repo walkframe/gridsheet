@@ -54,7 +54,10 @@ export const DividerItem = (props: ContextMenuProps) => {
 
 export const CutItem = (props: ContextMenuProps) => {
   return (
-    <li className="gs-enabled" onClick={async () => await cutter(props)}>
+    <li 
+      className="gs-enabled" 
+      data-testid="cut-item"
+      onClick={async () => await cutter(props)}>
       <div className="gs-menu-name">Cut</div>
       <div className="gs-menu-shortcut">
         <span className="gs-menu-underline">X</span>
@@ -65,7 +68,10 @@ export const CutItem = (props: ContextMenuProps) => {
 
 export const CopyItem = (props: ContextMenuProps) => {
   return (
-    <li className="gs-enabled" onClick={async () => await copier(props)}>
+    <li 
+      className="gs-enabled"
+      data-testid="copy-item"
+      onClick={async () => await copier(props)}>
       <div className="gs-menu-name">Copy</div>
       <div className="gs-menu-shortcut">
         <span className="gs-menu-underline">C</span>
@@ -76,7 +82,10 @@ export const CopyItem = (props: ContextMenuProps) => {
 
 export const PasteItem = (props: ContextMenuProps) => {
   return (
-    <li className="gs-enabled" onClick={async () => await paster(props, false)}>
+    <li 
+      className="gs-enabled"
+      data-testid="paste-item"
+      onClick={async () => await paster(props, false)}>
       <div className="gs-menu-name">Paste</div>
       <div className="gs-menu-shortcut">
         <span className="gs-menu-underline">V</span>
@@ -87,7 +96,10 @@ export const PasteItem = (props: ContextMenuProps) => {
 
 export const PasteOnlyValueItem = (props: ContextMenuProps) => {
   return (
-    <li className="gs-enabled" onClick={async () => await paster(props, true)}>
+    <li 
+      className="gs-enabled" 
+      data-testid="paste-only-value-item"
+      onClick={async () => await paster(props, true)}>
       <div className="gs-menu-name">Paste only value</div>
       <div className="gs-menu-shortcut">
         Shift + <span className="gs-menu-underline">V</span>
@@ -118,6 +130,7 @@ export const InsertRowsAboveItem = (props: ContextMenuProps) => {
   return (
     <li
       className={disabled ? 'gs-disabled' : 'gs-enabled'}
+      data-testid="insert-rows-above-item"
       onClick={async (e) => {
         if (!disabled) {
           await rowsInserterAbove(props);
@@ -145,6 +158,7 @@ export const InsertRowsBelowItem = (props: ContextMenuProps) => {
   return (
     <li
       className={disabled ? 'gs-disabled' : 'gs-enabled'}
+      data-testid="insert-rows-below-item"
       onClick={async (e) => {
         if (!disabled) {
           await rowsInserterBelow(props);
@@ -172,6 +186,7 @@ export const InsertColsLeftItem = (props: ContextMenuProps) => {
   return (
     <li
       className={disabled ? 'gs-disabled' : 'gs-enabled'}
+      data-testid="insert-cols-left-item"
       onClick={async (e) => {
         if (!disabled) {
           await colsInserterLeft(props);
@@ -198,6 +213,7 @@ export const InsertColsRightItem = (props: ContextMenuProps) => {
   return (
     <li
       className={disabled ? 'gs-disabled' : 'gs-enabled'}
+      data-testid="insert-cols-right-item"
       onClick={async (e) => {
         if (!disabled) {
           await colsInserterRight(props);
@@ -224,6 +240,7 @@ export const DeleteRowsItem = (props: ContextMenuProps) => {
   return (
     <li
       className={disabled ? 'gs-disabled' : 'gs-enabled'}
+      data-testid="delete-rows-item"
       onClick={async (e) => {
         if (!disabled) {
           await rowsRemover(props);
@@ -250,6 +267,7 @@ export const DeleteColsItem = (props: ContextMenuProps) => {
   return (
     <li
       className={disabled ? 'gs-disabled' : 'gs-enabled'}
+      data-testid="delete-cols-item"
       onClick={async (e) => {
         if (!disabled) {
           await colsRemover(props);
@@ -279,7 +297,11 @@ export const UndoItem = (props: ContextMenuProps) => {
     return null;
   }
   return (
-    <li className="gs-enabled" onClick={async () => undoer(props)}>
+    <li 
+      className="gs-enabled" 
+      data-testid="undo-item"
+      onClick={async () => undoer(props)}  
+    >
       <div className="gs-menu-name">Undo</div>
       <div className="gs-menu-shortcut">
         <span className="gs-menu-underline">Z</span>
@@ -294,7 +316,10 @@ export const RedoItem = (props: ContextMenuProps) => {
     return null;
   }
   return (
-    <li className="gs-enabled" onClick={async () => redoer(props)}>
+    <li 
+      className="gs-enabled" 
+      data-testid="redo-item"
+      onClick={async () => redoer(props)}>
       <div className="gs-menu-name">Redo</div>
       <div className="gs-menu-shortcut">
         <span className="gs-menu-underline">R</span>

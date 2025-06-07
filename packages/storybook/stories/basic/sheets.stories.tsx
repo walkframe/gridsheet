@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, useConnector } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, useHubReactive } from '@gridsheet/react-core';
 
 type Props = {
   numRows: number;
@@ -13,14 +13,14 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
   const [sheet2, setSheet2] = React.useState('Sheet2');
   const [sheet3, setSheet3] = React.useState('Sheet 3');
   const [sheet4, setSheet4] = React.useState('Sheet4');
-  const connector = useConnector();
+  const hubReactive = useHubReactive();
   return (
     <div>
       <table style={{ borderCollapse: 'collapse' }}>
         <tr>
           <td style={{ border: '3px solid #aaa', padding: '5px' }}>
             <GridSheet
-              connector={connector}
+              hubReactive={hubReactive}
               sheetName={sheet1}
               initialCells={buildInitialCells({
                 cells: {
@@ -34,6 +34,9 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
                   A3: {
                     value: "='Sheet 3'!A1 + 1000",
                   },
+                  A5: {
+                    value: '=C5+100'
+                  },
                   B1: {
                     value: "=SUM('Invalid Sheet'!B2:B3)",
                   },
@@ -41,10 +44,16 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
                     value: 333,
                   },
                   C2: {
-                    value: '=C1+100',
+                    value: '=$C$1+100',
                   },
                   C3: {
                     value: '=C2+200',
+                  },
+                  B5: {
+                    value: '=A5+300',
+                  },
+                  C5: {
+                    value: 500,
                   },
                 },
                 ensured: { numRows, numCols },
@@ -55,7 +64,7 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
           </td>
           <td style={{ border: '3px solid #aaa', padding: '5px' }}>
             <GridSheet
-              connector={connector}
+              hubReactive={hubReactive}
               sheetName={sheet2}
               initialCells={buildInitialCells({
                 cells: {
@@ -78,11 +87,13 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
         <tr>
           <td style={{ border: '3px solid #aaa', padding: '5px' }}>
             <GridSheet
-              connector={connector}
+              hubReactive={hubReactive}
               sheetName={sheet3}
               initialCells={buildInitialCells({
                 cells: {
-                  A1: { value: `=${sheet1}!C3` },
+                  A1: { value: `='${sheet1}'!C3` },
+                  A2: { value: `=SUM('${sheet1}'!C2:C3) + 10` },
+                  A3: { value: `=SUM('${sheet1}'!B3:C3) + 20` },
                 },
                 ensured: { numRows, numCols },
               })}

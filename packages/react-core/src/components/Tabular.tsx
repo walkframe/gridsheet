@@ -22,7 +22,6 @@ type Props = {
 };
 
 export const createTableRef = () => useRef<TableRef | null>(null);
-
 export const Tabular = ({ tableRef }: Props) => {
   const [palette, setPalette] = useState<RefPaletteType>({});
   const { store, dispatch } = useContext(Context);
@@ -44,7 +43,7 @@ export const Tabular = ({ tableRef }: Props) => {
     const formulaEditing = editingAddress && inputting.startsWith('=');
     if (!formulaEditing) {
       setPalette({});
-      table.conn.paletteBySheetName = {};
+      table.hub.paletteBySheetName = {};
       return;
     }
     const palette: RefPaletteType = {};
@@ -77,7 +76,7 @@ export const Tabular = ({ tableRef }: Props) => {
       }
     }
     setPalette(palette);
-    table.conn.paletteBySheetName = paletteBySheetName;
+    table.hub.paletteBySheetName = paletteBySheetName;
   }, [store.inputting, store.editingAddress]);
 
   useEffect(() => {
@@ -91,7 +90,7 @@ export const Tabular = ({ tableRef }: Props) => {
     }
   }, [table]);
   useEffect(() => {
-    table.conn.choosingAddress = p2a(choosing);
+    table.hub.choosingAddress = p2a(choosing);
   }, [choosing]);
   const [virtualized, setVirtualized] = useState<Virtualization | null>(null);
   useEffect(() => {
@@ -100,8 +99,12 @@ export const Tabular = ({ tableRef }: Props) => {
 
   const operationStyles = useOperationStyles(store, {
     ...palette,
-    ...table.conn.paletteBySheetName[table.sheetName],
+    ...table.hub.paletteBySheetName[table.sheetName],
   });
+
+  if (!table.hub.ready) {
+    return null;
+  }
 
   return (
     <>
@@ -224,16 +227,16 @@ const useOperationStyles = (store: StoreType, refs: RefPaletteType) => {
   const {
     choosing,
     selectingZone,
-    copyingZone,
-    cutting,
     matchingCells,
     matchingCellIndex,
     table,
     autofillDraggingTo,
     editingAddress,
   } = store;
+  const { hub } = table;
+  const { copyingSheetId, copyingZone, cutting } = hub;
 
-  const editingAnywhere = !!(table.conn.editingAddress || editingAddress);
+  const editingAnywhere = !!(table.hub.editingAddress || editingAddress);
 
   {
     // selecting
@@ -286,7 +289,7 @@ const useOperationStyles = (store: StoreType, refs: RefPaletteType) => {
     updateStyle({ y: y - 1, x }, { borderBottom: BORDER_POINTED });
     updateStyle({ y: y + 1, x }, { borderTop: BORDER_POINTED });
   }
-  {
+  if (table.sheetId === copyingSheetId) {
     // copying
     const borderStyle = cutting ? BORDER_CUTTING : BORDER_COPYING;
     const { top, left, bottom, right } = zoneToArea(copyingZone);

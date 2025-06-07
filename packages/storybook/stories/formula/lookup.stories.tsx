@@ -1,11 +1,12 @@
 import React from 'react';
-import { buildInitialCells, GridSheet, prevention } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, operations, useHubReactive } from '@gridsheet/react-core';
 
 export default {
   title: 'Formula',
 };
 
 export const LookUp = () => {
+  const hubReactive = useHubReactive(10);
   return (
     <>
       <h1>HLOOKUP</h1>
@@ -16,7 +17,7 @@ export const LookUp = () => {
             '2:3': { style: {} },
             'A:E': { width: 50 },
             'A4:C4': {
-              prevention: prevention.Write,
+              prevention: operations.Write,
               style: {
                 backgroundColor: '#ddd',
                 borderTop: 'solid 1px black',
@@ -53,39 +54,62 @@ export const LookUp = () => {
         options={{}}
       />
       <h1>VLOOKUP</h1>
-      <GridSheet
-        initialCells={buildInitialCells({
-          cells: {
-            A: { width: 30 },
-            C: { width: 40 },
-            D: { width: 50, style: { textAlign: 'right' } },
-            E: { width: 130 },
-          },
-          matrices: {
-            A1: [
-              [0, '子🐭'],
-              [1, '丑🐮'],
-              [2, '寅🐯'],
-              [3, '卯🐰'],
-              [4, '辰🐲'],
-              [5, '巳🐍'],
-              [6, '午🐴'],
-              [7, '未🐑'],
-              [8, '申🐵'],
-              [9, '酉🐔'],
-              [10, '戌🐶'],
-              [11, '亥🐗'],
-            ],
-            D1: [
-              [2022, '年(西暦)の干支:', `=VLOOKUP(MOD(D1 - 4, 12), $A$1:$B$12, 2, false)`],
-              [2021, '年(西暦)の干支:', `=VLOOKUP(MOD(D2 - 4, 12), $A$1:$B$12, 2, false)`],
-              [2020, '年(西暦)の干支:', `=VLOOKUP(MOD(D3 - 4, 12), $A$1:$B$12, 2, false)`],
-              [2019, '年(西暦)の干支:', `=VLOOKUP(MOD(D4 - 4, 12), $A$1:$B$12, 2, false)`],
-              [2018, '年(西暦)の干支:', `=VLOOKUP(MOD(D5 - 4, 12), $A$1:$B$12, 2, false)`],
-            ],
-          },
-        })}
-      />
+      <div style={{ display: 'flex', flexDirection: 'row', gap: 10, width: '100%' }}>
+        <div style={{ width: 160 }}>
+          <GridSheet
+            hubReactive={hubReactive}
+            sheetName="eto"
+            initialCells={buildInitialCells({
+              cells: {
+                A: { width: 50 },
+                B: { width: 50 },
+              },
+              matrices: {
+                A1: [
+                  [0, '子🐭'],
+                  [1, '丑🐮'],
+                  [2, '寅🐯'],
+                  [3, '卯🐰'],
+                  [4, '辰🐲'],
+                  [5, '巳🐍'],
+                  [6, '午🐴'],
+                  [7, '未🐑'],
+                  [8, '申🐵'],
+                  [9, '酉🐔'],
+                  [10, '戌🐶'],
+                  [11, '亥🐗'],
+                ],
+              },
+            })}
+          />
+        </div>
+        <div style={{ flex: 1 }} >
+          <GridSheet
+            hubReactive={hubReactive}
+            sheetName="year"
+            initialCells={buildInitialCells({
+              cells: {
+                A: { width: 50 },
+                B: { width: 120 },
+              },
+              matrices: {
+                A1: [
+                  [2018, `=VLOOKUP(MOD(A1 - 4, 12), 'eto'!$A$1:$B$12, 2, false)`],
+                  [2019, `=VLOOKUP(MOD(A2 - 4, 12), 'eto'!$A$1:$B$12, 2, false)`],
+                  [2020, `=VLOOKUP(MOD(A3 - 4, 12), 'eto'!$A$1:$B$12, 2, false)`],
+                  [2021, `=VLOOKUP(MOD(A4 - 4, 12), 'eto'!$A$1:$B$12, 2, false)`],
+                  [2022, `=VLOOKUP(MOD(A5 - 4, 12), 'eto'!$A$1:$B$12, 2, false)`],
+                  [2023],
+                  [2024],
+                  [2025],
+                  [2026],
+                ],
+              },
+              ensured: { numRows: 12, numCols: 5 },
+            })}
+          />
+        </div>
+      </div>
     </>
   );
 };

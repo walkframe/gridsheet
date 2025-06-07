@@ -10,6 +10,7 @@ import {
   PositionType,
   ModeType,
   RawCellType,
+  HubPatchType,
 } from '../types';
 import { zoneToArea, superposeArea, matrixShape, areaShape, areaToZone, zoneShape, restrictZone } from '../lib/structs';
 import { Table } from '../lib/table';
@@ -21,21 +22,31 @@ import { smartScroll } from '../lib/virtualization';
 import * as prevention from '../lib/operation';
 import { Autofill } from '../lib/autofill';
 
+const resetZone: ZoneType = { startY: -1, startX: -1, endY: -1, endX: -1 };
+
 const actions: { [s: string]: CoreAction<any> } = {};
 
+type StoreWithCallback = StoreType & {
+  callback?: (store: StoreType) => void;
+}
+
 export const reducer = <T>(store: StoreType, action: { type: number; value: T }): StoreType => {
+
   const act: CoreAction<T> | undefined = actions[action.type];
   if (act == null) {
     return store;
   }
-  return { ...store, ...act.reduce(store, action.value) };
+
+  const { callback, ...newStore } = act.reduce(store, action.value)
+  callback?.(newStore);
+  return { ...store, ...newStore };
 };
 
 export class CoreAction<T> {
   static head = 1;
   private actionId: number = 1;
 
-  public reduce(store: StoreType, payload: T): StoreType {
+  public reduce(store: StoreType, payload: T): StoreWithCallback {
     return store;
   }
   public call(payload: T): { type: number; value: T } {
@@ -52,7 +63,7 @@ export class CoreAction<T> {
 }
 
 class SetSearchQueryAction<T extends string | undefined> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     const searchQuery = payload;
     const { table } = store;
     return {
@@ -65,7 +76,7 @@ class SetSearchQueryAction<T extends string | undefined> extends CoreAction<T> {
 export const setSearchQuery = new SetSearchQueryAction().bind();
 
 class SetSearchCaseSensitiveAction<T extends boolean> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     const searchCaseSensitive = payload;
     const { table } = store;
     return {
@@ -78,7 +89,7 @@ class SetSearchCaseSensitiveAction<T extends boolean> extends CoreAction<T> {
 export const setSearchCaseSensitive = new SetSearchCaseSensitiveAction().bind();
 
 class SetEditingAddressAction<T extends string> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     return {
       ...store,
       editingAddress: payload,
@@ -87,18 +98,8 @@ class SetEditingAddressAction<T extends string> extends CoreAction<T> {
 }
 export const setEditingAddress = new SetEditingAddressAction().bind();
 
-class SetEditingOnEnterAction<T extends boolean> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
-    return {
-      ...store,
-      editingOnEnter: payload,
-    };
-  }
-}
-export const setEditingOnEnter = new SetEditingOnEnterAction().bind();
-
 class SetAutofillDraggingToAction<T extends PointType | null> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     return {
       ...store,
       autofillDraggingTo: payload,
@@ -108,7 +109,7 @@ class SetAutofillDraggingToAction<T extends PointType | null> extends CoreAction
 export const setAutofillDraggingTo = new SetAutofillDraggingToAction().bind();
 
 class SubmitAutofillAction<T extends PointType> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     const autofill = new Autofill(store, payload);
     const table = autofill.applied;
     const selectingZone = areaToZone(autofill.wholeArea);
@@ -127,18 +128,8 @@ class SubmitAutofillAction<T extends PointType> extends CoreAction<T> {
 }
 export const submitAutofill = new SubmitAutofillAction().bind();
 
-class SetShowAddressAction<T extends boolean> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
-    return {
-      ...store,
-      showAddress: payload,
-    };
-  }
-}
-export const setShowAddress = new SetShowAddressAction().bind();
-
 class SetContextMenuPositionAction<T extends PositionType> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     return {
       ...store,
       contextMenuPosition: payload,
@@ -148,7 +139,7 @@ class SetContextMenuPositionAction<T extends PositionType> extends CoreAction<T>
 export const setContextMenuPosition = new SetContextMenuPositionAction().bind();
 
 class SetResizingPositionYAction<T extends [number, number, number]> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     return {
       ...store,
       resizingPositionY: payload,
@@ -158,7 +149,7 @@ class SetResizingPositionYAction<T extends [number, number, number]> extends Cor
 export const setResizingPositionY = new SetResizingPositionYAction().bind();
 
 class SetResizingPositionXAction<T extends [number, number, number]> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     return {
       ...store,
       resizingPositionX: payload,
@@ -167,18 +158,8 @@ class SetResizingPositionXAction<T extends [number, number, number]> extends Cor
 }
 export const setResizingPositionX = new SetResizingPositionXAction().bind();
 
-class SetOnSaveAction<T extends FeedbackType> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
-    return {
-      ...store,
-      onSave: payload,
-    };
-  }
-}
-export const setOnSave = new SetOnSaveAction().bind();
-
 class SetEnteringAction<T extends boolean> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     return {
       ...store,
       entering: payload,
@@ -187,50 +168,8 @@ class SetEnteringAction<T extends boolean> extends CoreAction<T> {
 }
 export const setEntering = new SetEnteringAction().bind();
 
-class SetHeaderHeightAction<T extends number> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
-    return {
-      ...store,
-      headerHeight: payload,
-    };
-  }
-}
-export const setHeaderHeight = new SetHeaderHeightAction().bind();
-
-class SetHeaderWidthAction<T extends number> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
-    return {
-      ...store,
-      headerWidth: payload,
-    };
-  }
-}
-export const setHeaderWidth = new SetHeaderWidthAction().bind();
-
-class SetSheetHeightAction<T extends number> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
-    return {
-      ...store,
-      sheetHeight: payload,
-    };
-  }
-}
-export const setSheetHeight = new SetSheetHeightAction().bind();
-
-class SetSheetWidthAction<T extends number> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
-    return {
-      ...store,
-      sheetWidth: payload,
-    };
-  }
-}
-export const setSheetWidth = new SetSheetWidthAction().bind();
-
 class UpdateTableAction<T extends Table> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
-    //const conn = payload.conn;
-    //conn.update({...conn, renderedCaches: {}});
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     return {
       ...store,
       table: payload,
@@ -242,7 +181,7 @@ class UpdateTableAction<T extends Table> extends CoreAction<T> {
 export const updateTable = new UpdateTableAction().bind();
 
 class SetEditorRectAction<T extends RectType> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     return {
       ...store,
       editorRect: payload,
@@ -252,7 +191,7 @@ class SetEditorRectAction<T extends RectType> extends CoreAction<T> {
 export const setEditorRect = new SetEditorRectAction().bind();
 
 class SetDragging<T extends boolean> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     return {
       ...store,
       dragging: payload,
@@ -262,7 +201,7 @@ class SetDragging<T extends boolean> extends CoreAction<T> {
 export const setDragging = new SetDragging().bind();
 
 class BlurAction<T extends null> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     return {
       ...store,
       editingAddress: '',
@@ -272,30 +211,46 @@ class BlurAction<T extends null> extends CoreAction<T> {
 export const blur = new BlurAction().bind();
 
 class CopyAction<T extends ZoneType> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
+    const { table } = store;
     return {
       ...store,
-      copyingZone: payload,
-      cutting: false,
+      callback: ({table}) => {
+        table.hub.reflect({
+          copyingSheetId: table.sheetId,
+          copyingZone: payload,
+          cutting: false,
+        });
+      },
     };
   }
 }
 export const copy = new CopyAction().bind();
 
 class CutAction<T extends ZoneType> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
+    const { table } = store;
     return {
       ...store,
-      copyingZone: payload,
-      cutting: true,
+      callback: ({table}) => {
+        table.hub.reflect({
+          copyingSheetId: table.sheetId,
+          copyingZone: payload,
+          cutting: true,
+        });
+      },
     };
   }
 }
 export const cut = new CutAction().bind();
 
 class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
-    const { choosing, copyingZone, selectingZone, cutting, table } = store;
+  reduce(store: StoreType, payload: T): StoreWithCallback {
+    
+    const { choosing, selectingZone, table: dstTable } = store;
+    const { hub } = dstTable;
+    const { copyingSheetId, copyingZone, cutting } = hub;
+    const srcTable = dstTable.getTableBySheetId(copyingSheetId);
 
     let selectingArea = zoneToArea(selectingZone);
     const copyingArea = zoneToArea(copyingZone);
@@ -320,24 +275,37 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
             };
 
       const nextSelectingZone = restrictZone(areaToZone(dst));
-      const newTable = table.move({
+      const newTable = dstTable.move({
+        srcTable,
         src,
         dst,
         operator: 'USER',
-        reflection: {
+        undoReflection: {
+          sheetId: srcTable.sheetId,
           selectingZone: nextSelectingZone,
-          copyingZone,
-          cutting,
+          choosing,
+          hub: {copyingSheetId: srcTable.sheetId, copyingZone, cutting: true},
+        },
+        redoReflection: {
+          sheetId: srcTable.sheetId,
+          //selectingZone: copyingZone,
+          choosing,
+          hub: {copyingSheetId: srcTable.sheetId, copyingZone: resetZone},
         },
       });
+
       return {
         ...store,
         ...initSearchStatement(newTable, store),
-        cutting: false,
         table: newTable,
         selectingZone: nextSelectingZone,
-        copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
         inputting: newTable.stringify({ point: choosing, evaluates: false }),
+        callback: ({table}) => {
+          table.hub.reflect({
+            cutting: false,
+            copyingZone: resetZone,
+          });
+        }
       };
     }
 
@@ -353,12 +321,19 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
         right: x + width,
       };
       const nextSelectingZone = restrictZone(areaToZone(selectingArea));
-      newTable = table.writeRawCellMatrix({
+      newTable = dstTable.writeRawCellMatrix({
         point: { y, x },
         matrix,
         onlyValue,
-        reflection: {
+        undoReflection: {
+          sheetId: dstTable.sheetId,
           selectingZone: nextSelectingZone,
+          choosing,
+        },
+        redoReflection: {
+          sheetId: dstTable.sheetId,
+          selectingZone: nextSelectingZone,
+          choosing,
         },
       });
     } else {
@@ -371,15 +346,24 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
         width = superposed.width;
       }
       selectingArea = { top: y, left: x, bottom: y + height, right: x + width };
-      newTable = table.copy({
+      newTable = dstTable.copy({
+        srcTable,
         src: copyingArea,
         dst: selectingArea,
         onlyValue,
         operator: 'USER',
-        reflection: {
-          copyingZone,
+        undoReflection: {
+          sheetId: srcTable.sheetId,
+          hub: {copyingZone},
+          choosing,
           selectingZone,
         },
+        redoReflection: {
+          sheetId: srcTable.sheetId,
+          hub: {copyingSheetId: srcTable.sheetId, copyingZone: resetZone},
+          choosing,
+          selectingZone: areaToZone(selectingArea),
+        }
       });
     }
 
@@ -388,30 +372,39 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
       ...store,
       table: newTable,
       selectingZone: nextSelectingZone,
-      copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
       inputting: newTable.stringify({ point: choosing, evaluates: false }),
       ...initSearchStatement(newTable, store),
+      callback: ({table}) => {
+        table.hub.reflect({
+          copyingZone: resetZone,
+        });
+      }
     };
   }
 }
 export const paste = new PasteAction().bind();
 
 class EscapeAction<T extends null> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
+    const { table } = store;
     return {
       ...store,
-      copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
-      cutting: false,
       editingAddress: '',
       leftHeaderSelecting: false,
       topHeaderSelecting: false,
+      callback: ({table}) => {
+        table.hub.reflect({
+          copyingZone: resetZone,
+          cutting: false,
+        });
+      }
     };
   }
 }
 export const escape = new EscapeAction().bind();
 
 class ChooseAction<T extends PointType> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     return {
       ...store,
       choosing: payload,
@@ -422,7 +415,7 @@ class ChooseAction<T extends PointType> extends CoreAction<T> {
 export const choose = new ChooseAction().bind();
 
 class SelectAction<T extends ZoneType> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     return {
       ...store,
       selectingZone: payload,
@@ -434,7 +427,7 @@ class SelectAction<T extends ZoneType> extends CoreAction<T> {
 export const select = new SelectAction().bind();
 
 class SelectRowsAction<T extends { range: RangeType; numCols: number }> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     const { range, numCols } = payload;
     const { start, end } = range;
     const selectingZone = {
@@ -455,7 +448,7 @@ class SelectRowsAction<T extends { range: RangeType; numCols: number }> extends 
 export const selectRows = new SelectRowsAction().bind();
 
 class SelectColsAction<T extends { range: RangeType; numRows: number }> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     const { range, numRows } = payload;
     const { start, end } = range;
     const selectingZone = {
@@ -477,7 +470,7 @@ class SelectColsAction<T extends { range: RangeType; numRows: number }> extends 
 export const selectCols = new SelectColsAction().bind();
 
 class DragAction<T extends PointType> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     const { startY, startX } = store.selectingZone;
     const selectingZone = {
       startY,
@@ -495,7 +488,7 @@ class DragAction<T extends PointType> extends CoreAction<T> {
 export const drag = new DragAction().bind();
 
 class SearchAction<T extends number> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     const { matchingCells } = store;
     let { matchingCellIndex, choosing } = store;
     matchingCellIndex += payload;
@@ -515,7 +508,7 @@ class SearchAction<T extends number> extends CoreAction<T> {
 export const search = new SearchAction().bind();
 
 class WriteAction<T extends { value: string; point?: PointType }> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     let { value, point } = payload;
     const { choosing, selectingZone, table } = store;
     if (point == null) {
@@ -525,7 +518,13 @@ class WriteAction<T extends { value: string; point?: PointType }> extends CoreAc
       point: point,
       value,
       operator: 'USER',
-      reflection: {
+      undoReflection: {
+        sheetId: table.sheetId,
+        selectingZone,
+        choosing: point,
+      },
+      redoReflection: {
+        sheetId: table.sheetId,
         selectingZone,
         choosing: point,
       },
@@ -534,14 +533,18 @@ class WriteAction<T extends { value: string; point?: PointType }> extends CoreAc
       ...store,
       ...initSearchStatement(newTable, store),
       table: newTable,
-      copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
+      callback: ({table}) => {
+        table.hub.reflect({
+          copyingZone: resetZone,
+        });
+      },
     };
   }
 }
 export const write = new WriteAction().bind();
 
 class ClearAction<T extends null> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     const { choosing, selectingZone, table } = store;
 
     let selectingArea = zoneToArea(selectingZone);
@@ -572,7 +575,13 @@ class ClearAction<T extends null> extends CoreAction<T> {
       diff,
       partial: true,
       operator: 'USER',
-      reflection: {
+      undoReflection: {
+        sheetId: table.sheetId,
+        selectingZone,
+        choosing,
+      },
+      redoReflection: {
+        sheetId: table.sheetId,
         selectingZone,
         choosing,
       },
@@ -587,39 +596,48 @@ class ClearAction<T extends null> extends CoreAction<T> {
 export const clear = new ClearAction().bind();
 
 class UndoAction<T extends null> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     const { table } = store;
-    const { history, newTable } = table.undo();
+    const { history, newTable, callback } = table.undo();
     if (history == null) {
       return store;
     }
-    const { reflection } = history;
+    if (history.dstSheetId !== table.sheetId) {
+      const { dispatch, store: dstStore } = table.hub.contextsBySheetId[history.dstSheetId];
+      dispatch(setStore({ ...dstStore, ...history.undoReflection}));
+      return store;
+    }
     return {
       ...store,
       ...restrictPoints(store, table),
-      ...reflection,
+      ...history.undoReflection,
       ...initSearchStatement(newTable, store),
       table: newTable,
+      callback,
     };
   }
 }
 export const undo = new UndoAction().bind();
 
 class RedoAction<T extends null> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     const { table } = store;
-    const { history, newTable } = table.redo();
+    const { history, newTable, callback } = table.redo();
     if (history == null) {
       return store;
     }
-    const { reflection } = history;
+    if (history.dstSheetId !== table.sheetId) {
+      const { dispatch, store: dstStore } = table.hub.contextsBySheetId[history.dstSheetId];
+      dispatch(setStore({ ...dstStore, ...history.redoReflection}));
+      return store;
+    }
     return {
       ...store,
-      ...reflection,
       ...restrictPoints(store, table),
+      ...history.redoReflection,
       ...initSearchStatement(newTable, store),
-      copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
       table: newTable,
+      callback,
     };
   }
 }
@@ -634,7 +652,7 @@ class ArrowAction<
     numCols: number;
   },
 > extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     const { shiftKey, deltaY, deltaX, numRows, numCols } = payload;
     const { choosing, table, tabularRef } = store;
     let { selectingZone } = store;
@@ -704,7 +722,7 @@ class WalkAction<
     numCols: number;
   },
 > extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     const { numRows, numCols } = payload;
     let { deltaY, deltaX } = payload;
     const { choosing, selectingZone, table, tabularRef: gridOuterRef } = store;
@@ -793,7 +811,7 @@ class WalkAction<
 export const walk = new WalkAction().bind();
 
 class SetInputtingAction<T extends string> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     return {
       ...store,
       inputting: payload,
@@ -803,12 +821,12 @@ class SetInputtingAction<T extends string> extends CoreAction<T> {
 
 export const setInputting = new SetInputtingAction().bind();
 
-class SetModeAction<T extends ModeType> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreType {
+class setStoreAction<T extends Partial<StoreType>> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
     return {
       ...store,
-      mode: payload,
+      ...payload,
     };
   }
 }
-export const setMode = new SetModeAction().bind();
+export const setStore = new setStoreAction().bind();

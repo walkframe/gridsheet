@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef, useReducer, useMemo } from 'react';
-
 import type { CellsByAddressType, OptionsType, Props, StoreType } from '../types';
 import {
   DEFAULT_HEIGHT,
@@ -12,9 +11,9 @@ import {
 } from '../constants';
 import { functions } from '../formula/mapping';
 import { Context } from '../store';
-import { reducer as defaultReducer } from '../store/actions';
+import { reducer as defaultReducer, updateTable } from '../store/actions';
 import { Editor } from './Editor';
-import { StoreInitializer } from './StoreInitializer';
+import { StoreObserver } from './StoreObserver';
 import { Resizer } from './Resizer';
 import { Emitter } from './Emitter';
 import { ContextMenu, defaultContextMenuItems } from './ContextMenu';
@@ -25,8 +24,7 @@ import { x2c, y2r } from '../lib/converters';
 import { embedStyle } from '../styles/embedder';
 import { FormulaBar } from './FormulaBar';
 import { SearchBar } from './SearchBar';
-import { createConnector } from '../lib/connector';
-import type { SheetConnector } from '../lib/connector';
+import { useHubReactive } from '../lib/hub';
 import { ScrollHandle } from './ScrollHandle';
 
 export function GridSheet({
@@ -36,10 +34,9 @@ export function GridSheet({
   options = {},
   className,
   style,
-  connector: initialConnector,
+  hubReactive: initialHubReactive,
 }: Props) {
   const { sheetResize, showFormulaBar = true, onInit, mode = 'light', additionalFunctions = {} } = options;
-  const [prevSheetName, setPrevSheetName] = useState(sheetName);
   const rootRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLTextAreaElement>(null);
@@ -47,22 +44,16 @@ export function GridSheet({
   const largeEditorRef = useRef<HTMLTextAreaElement>(null);
   const tabularRef = useRef<HTMLDivElement>(null);
 
-  const connector = useMemo<SheetConnector>(() => {
-    return initialConnector ?? createConnector();
-  }, [initialConnector]);
+  const internalHubReactive = useHubReactive(options.historyLimit);
+  const hubReactive = initialHubReactive ?? internalHubReactive;
+  const { hub } = hubReactive;
 
-  /*
-  const [connector, setConnector] = useConnector();
   useEffect(() => {
-    if (initialConnector) {
-      setConnector(initialConnector);
-      return;
-    }
-    if (!sheetName) {
+    if (initialHubReactive && !sheetName) {
       console.warn('If a unique sheet name is not specified, cross-sheet formula interpretation will not work.');
     }
   }, [])
-  */
+
   const [initialState] = useState<StoreType>(() => {
     const {
       headerHeight = HEADER_HEIGHT,
@@ -91,15 +82,15 @@ export function GridSheet({
       headerHeight,
       headerWidth,
       sheetName,
-      connector,
+      hub,
       functions: { ...functions, ...additionalFunctions },
     });
-    const sheetId = (table.sheetId = ++connector.head);
-    connector.sheetIdsByName[sheetName] = sheetId;
-    connector.tablesBySheetId[sheetId] = table;
+    const sheetId = (table.sheetId = ++hub.sheetHead);
+    hub.sheetIdsByName[sheetName] = sheetId;
+    
     table.initialize(initialCells);
     onInit?.(table);
-    return {
+    const store: StoreType = {
       sheetId,
       table, // temporary (see StoreInitializer for detail)
       rootRef,
@@ -109,10 +100,8 @@ export function GridSheet({
       largeEditorRef,
       tabularRef,
       choosing: { y: 1, x: 1 },
-      cutting: false,
       inputting: '',
       selectingZone: { startY: 1, startX: 1, endY: -1, endX: -1 },
-      copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
       autofillDraggingTo: null,
       leftHeaderSelecting: false,
       topHeaderSelecting: false,
@@ -139,6 +128,7 @@ export function GridSheet({
       maxNumCols: -1,
       mode: 'light',
     };
+    return store;
   });
 
   type ReducerWithoutAction<S> = (prevState: S) => S;
@@ -148,16 +138,6 @@ export function GridSheet({
     initialState,
     () => initialState,
   );
-  const { table } = store;
-
-  useEffect(() => {
-    store.table.sheetName = sheetName;
-    //table.conn.solvedCaches.value = {};
-    const sheetId = table.conn.sheetIdsByName[prevSheetName];
-    delete table.conn.sheetIdsByName[prevSheetName];
-    table.conn.sheetIdsByName[sheetName] = sheetId;
-    setPrevSheetName(sheetName);
-  }, [sheetName]);
 
   useEffect(() => {
     embedStyle();
@@ -211,7 +191,7 @@ export function GridSheet({
         >
           <Editor mode={mode} handleKeyUp={onKeyUp} />
           <Tabular tableRef={tableRef} />
-          <StoreInitializer initialCells={initialCells} options={{ ...options, sheetHeight, sheetWidth }} />
+          <StoreObserver {...{ ...options, sheetHeight, sheetWidth, sheetName, hub }} />
           <ContextMenu />
           <Resizer />
           <Emitter onChange={onChange} onSelect={onSelect} />

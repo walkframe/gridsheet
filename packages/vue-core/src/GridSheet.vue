@@ -1,13 +1,18 @@
 <script lang="ts">
-import { defineComponent, onMounted, onBeforeUnmount, ref, h as vueH } from 'vue';
+import { defineComponent, onMounted, onBeforeUnmount, ref, h as vueH, isRef, watch } from 'vue';
 import {
   GridSheet as PreactGridSheet,
   h as preactH,
   render as preactRender,
+  HubReactiveType,
 } from '@gridsheet/preact-core';
+import type { Ref } from 'vue';
 
-import type { CellsByAddressType, Props as GridSheetProps, OptionsType, SheetConnector } from '@gridsheet/preact-core';
-import { TableRef } from '@gridsheet/preact-core/dist/types';
+import type { 
+  CellsByAddressType, 
+  OptionsType, 
+  TableRef,
+} from '@gridsheet/preact-core';
 
 interface RefObject<T> {
   readonly current: T | null;
@@ -24,8 +29,8 @@ export default defineComponent({
       type: String,
       default: '',
     },
-    connector: {
-      type: Object as () => SheetConnector,
+    hubReactive: {
+      type: Object as () => HubReactiveType | Ref<HubReactiveType>,
       default: null,
     },
     tableRef: {
@@ -49,12 +54,36 @@ export default defineComponent({
     const container = ref<HTMLElement | null>(null);
     let root: HTMLElement | null = null;
 
-    onMounted(() => {
+    function getPreactProps() {
+      return {
+        ...props,
+        hubReactive: isRef(props.hubReactive) ? (props.hubReactive.value as HubReactiveType | undefined) : (props.hubReactive as HubReactiveType | undefined),
+      };
+    }
+
+    function renderPreact() {
       if (container.value) {
         root = container.value;
         preactRender(
-          preactH(PreactGridSheet, props),
+          preactH(PreactGridSheet, getPreactProps()),
           root
+        );
+      }
+    }
+
+    onMounted(() => {
+      renderPreact();
+      if (isRef(props.hubReactive)) {
+        watch(
+          () => (props.hubReactive as Ref<HubReactiveType>).value,
+          renderPreact,
+          { deep: false }
+        );
+      } else {
+        watch(
+          () => props.hubReactive,
+          renderPreact,
+          { deep: false }
         );
       }
     });
@@ -70,6 +99,8 @@ export default defineComponent({
     };
   },
 });
+
+
 </script>
 
 <template>

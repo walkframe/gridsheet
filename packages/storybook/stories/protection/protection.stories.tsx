@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, prevention } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, operations } from '@gridsheet/react-core';
 
 type Props = {
   numRows: number;
@@ -20,18 +20,18 @@ const Sheet = ({ numRows, numCols, defaultWidth }: Props) => {
           cells: {
             default: { width: defaultWidth },
             4: {
-              prevention: prevention.DeleteRow,
+              prevention: operations.DeleteRow,
             },
             1: {
-              prevention: prevention.Resize,
+              prevention: operations.Resize,
               style: { backgroundColor: '#eeeeee' },
             },
             'A:B': {
-              prevention: prevention.AddCol | prevention.DeleteCol,
+              prevention: operations.AddCol | operations.DeleteCol,
               style: { backgroundColor: '#dddddd' },
             },
             A: {
-              prevention: prevention.Resize,
+              prevention: operations.Resize,
               style: { backgroundColor: '#eeeeee' },
             },
             C: {
@@ -39,7 +39,7 @@ const Sheet = ({ numRows, numCols, defaultWidth }: Props) => {
             },
             B2: {
               value: 'READONLY',
-              prevention: prevention.ReadOnly,
+              prevention: operations.ReadOnly,
               style: { backgroundColor: '#aaaaaa' },
             },
           },

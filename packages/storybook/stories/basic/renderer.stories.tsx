@@ -6,7 +6,6 @@ import {
   RendererMixinType,
   CheckboxRendererMixin,
   RenderProps,
-  PointType,
   p2a,
 } from '@gridsheet/react-core';
 

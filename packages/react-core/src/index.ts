@@ -35,15 +35,17 @@ export type {
   ZoneType,
   Props,
   TableRef,
+  HubPatchType,
 } from './types';
 
-export type { SheetConnector } from './lib/connector';
-export { useConnector } from './lib/connector';
+export type { HubReactiveType } from './lib/hub';
+export { Hub, useHubReactive, createHubReactive } from './lib/hub';
 export type { Dispatcher } from './store';
 export { ThousandSeparatorRendererMixin } from './renderers/thousand_separator';
 export { CheckboxRendererMixin } from './renderers/checkbox';
 export { BaseFunction } from './formula/functions/__base';
 export { Table } from './lib/table';
-export * as prevention from './lib/operation';
 export { Policy } from './policy/core';
 export type { PolicyType, PolicyOption, PolicyMixinType } from './policy/core';
+
+export * as operations from './lib/operation';

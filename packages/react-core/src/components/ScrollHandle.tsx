@@ -5,7 +5,7 @@ import { drag, setAutofillDraggingTo, setDragging, submitAutofill } from '../sto
 import { getAreaInTabular } from '../lib/virtualization';
 import { insertRef, isFocus } from '../lib/input';
 import { areaToRange, zoneToArea } from '../lib/structs';
-import { isDifferentSheetFocused } from '../store/helpers';
+import { isXSheetFocused } from '../store/helpers';
 
 type Props = {
   style: CSSProperties;
@@ -26,8 +26,8 @@ export function ScrollHandle({ style, horizontal, vertical }: Props) {
     store;
 
   let isScrolling = false;
-  const differentSheetFocused = isDifferentSheetFocused(store);
-  const editingAnywhere = !!(table.conn.editingAddress || editingAddress);
+  const xSheetFocused = isXSheetFocused(store);
+  const editingAnywhere = !!(table.hub.editingAddress || editingAddress);
 
   const getDestEdge = (e: React.MouseEvent) => {
     if (horizontal == null || vertical == null) {
@@ -72,7 +72,7 @@ export function ScrollHandle({ style, horizontal, vertical }: Props) {
     } else {
       if (editingAnywhere) {
         const newArea = zoneToArea({ ...selectingZone, endY: y, endX: x });
-        const sheetPrefix = table.sheetPrefix(!differentSheetFocused);
+        const sheetPrefix = table.sheetPrefix(!xSheetFocused);
         const sheetRange = areaToRange(newArea);
         const fullRange = `${sheetPrefix}${sheetRange}`;
         insertRef({ input: editorRef.current, ref: fullRange });

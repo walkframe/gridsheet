@@ -1,7 +1,9 @@
 import type { PointType } from '../types';
 import type { Table } from './table';
-import { Lexer } from '../formula/evaluator';
+import { Lexer, splitRef } from '../formula/evaluator';
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '../constants';
+import { a2p, grantAddressAbsolute } from './converters';
+import { getSheetPrefix } from './sheet';
 
 export const insertTextAtCursor = (input: HTMLTextAreaElement, text: string) => {
   input.focus();
@@ -43,6 +45,18 @@ export const insertRef = ({ input, ref, dryRun = false }: InsertRefProps): boole
     }
   } else if (token.type === 'REF' || token.type === 'RANGE') {
     if (!dryRun) {
+      // keep the absolute/relative state of the token
+      const { sheetName: refSheetName, addresses: refAddresses } = splitRef(ref)
+      const { addresses: tokenAddresses } = splitRef(token.entity as string);
+
+      const tokenAbsolutes = tokenAddresses.map((a) => a2p(a));
+      if (tokenAddresses.length === 2 && refAddresses.length === 1) {
+        refAddresses.push(refAddresses[0]);
+      }
+      ref = getSheetPrefix(refSheetName) + refAddresses.map((r, i) => {
+        return grantAddressAbsolute(r, !!tokenAbsolutes[i]?.absX, !!tokenAbsolutes[i]?.absY);
+      }).join(':')
+
       const [start, end] = lexer.getTokenPositionRange(tokenIndex + 1, 1);
       input.setSelectionRange(start, end);
       insertTextAtCursor(input, ref);

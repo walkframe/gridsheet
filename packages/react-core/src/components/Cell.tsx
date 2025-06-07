@@ -9,9 +9,7 @@ import {
   setEditorRect,
   setContextMenuPosition,
   setAutofillDraggingTo,
-  updateTable,
   setEditingAddress,
-  setInputting,
   setDragging,
   submitAutofill,
 } from '../store/actions';
@@ -19,7 +17,7 @@ import {
 import { Context } from '../store';
 import { FormulaError } from '../formula/evaluator';
 import { insertRef, isRefInsertable } from '../lib/input';
-import { isDifferentSheetFocused } from '../store/helpers';
+import { isXSheetFocused } from '../store/helpers';
 import type { CSSProperties, FC } from 'react';
 import { isTouching } from '../lib/events';
 
@@ -53,9 +51,9 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
   } = store;
 
   // Whether the focus is on another sheet
-  const differentSheetFocused = isDifferentSheetFocused(store);
+  const xSheetFocused = isXSheetFocused(store);
 
-  const lastFocused = table.conn.lastFocused;
+  const lastFocused = table.hub.lastFocused;
 
   const selectingArea = zoneToArea(selectingZone); // (top, left) -> (bottom, right)
 
@@ -110,7 +108,7 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
     return null;
   }
 
-  const editingAnywhere = !!(table.conn.editingAddress || editingAddress);
+  const editingAnywhere = !!(table.hub.editingAddress || editingAddress);
 
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
@@ -126,7 +124,7 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
     }
 
     dispatch(setDragging(true));
-    const fullAddress = `${table.sheetPrefix(!differentSheetFocused)}${address}`;
+    const fullAddress = `${table.sheetPrefix(!xSheetFocused)}${address}`;
     if (editingAnywhere) {
       const inserted = insertRef({ input: lastFocused, ref: fullAddress });
       if (inserted) {
@@ -134,7 +132,7 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
       }
     }
 
-    table.conn.lastFocused = input;
+    table.hub.lastFocused = input;
     input.focus();
     dispatch(setEditingAddress(''));
 
@@ -190,10 +188,10 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
 
     if (editingAnywhere) {
       const newArea = zoneToArea({ ...selectingZone, endY: y, endX: x });
-      const fullRange = `${table.sheetPrefix(!differentSheetFocused)}${areaToRange(newArea)}`;
+      const fullRange = `${table.sheetPrefix(!xSheetFocused)}${areaToRange(newArea)}`;
       insertRef({ input: lastFocused, ref: fullRange });
     }
-    table.conn.reflect({ ...table.conn }); // // Force drawing because the formula is not reflected in largeInput
+    table.hub.reflect(); // Force drawing because the formula is not reflected in largeInput
     return true;
   };
 
@@ -233,7 +231,7 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
         className={`gs-cell-inner-wrap`}
         onMouseDown={handleDragStart}
         onTouchStart={handleDragStart}
-        onMouseMove={handleDragging}
+        onMouseEnter={handleDragging}
         onTouchMove={handleDragging}
         onMouseUp={handleDragEnd}
         onTouchEnd={handleDragEnd}

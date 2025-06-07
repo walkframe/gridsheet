@@ -19,7 +19,7 @@ import {
 import { DEFAULT_WIDTH } from '../constants';
 import * as prevention from '../lib/operation';
 import { insertRef } from '../lib/input';
-import { isDifferentSheetFocused } from '../store/helpers';
+import { isXSheetFocused } from '../store/helpers';
 import { ScrollHandle } from './ScrollHandle';
 import { isTouching } from '../lib/events';
 
@@ -47,10 +47,10 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
   const col = table.getByPoint({ y: 0, x });
   const width = col?.width || DEFAULT_WIDTH;
 
-  const differentSheetFocused = isDifferentSheetFocused(store);
-  const lastFocused = table.conn.lastFocused;
+  const xSheetFocused = isXSheetFocused(store);
+  const lastFocused = table.hub.lastFocused;
 
-  const editingAnywhere = !!(table.conn.editingAddress || editingAddress);
+  const editingAnywhere = !!(table.hub.editingAddress || editingAddress);
 
   const writeCell = (value: string) => {
     dispatch(write({ value, point: choosing }));
@@ -68,7 +68,7 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
     }
 
     dispatch(select({ startY: 1, startX: x, endY: -1, endX: x }));
-    const fullAddress = `${table.sheetPrefix(!differentSheetFocused)}${colId}:${colId}`;
+    const fullAddress = `${table.sheetPrefix(!xSheetFocused)}${colId}:${colId}`;
     if (editingAnywhere) {
       const inserted = insertRef({ input: lastFocused, ref: fullAddress });
       if (inserted) {
@@ -127,7 +127,7 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
 
     const newArea = zoneToArea({ ...selectingZone, endY: 1, endX: x });
     const [left, right] = [x2c(newArea.left), x2c(newArea.right)];
-    const fullRange = `${table.sheetPrefix(!differentSheetFocused)}${left}:${right}`;
+    const fullRange = `${table.sheetPrefix(!xSheetFocused)}${left}:${right}`;
     insertRef({ input: lastFocused, ref: fullRange });
 
     if (autofillDraggingTo == null) {

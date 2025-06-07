@@ -1,38 +1,38 @@
-import { OperationType } from '../types';
+import { OperationType as operations } from '../types';
 
-export const DeleteRow: OperationType = 0b00000000000000000000000000000000000000000000000000001, // 1
-  DeleteCol: OperationType = 0b00000000000000000000000000000000000000000000000000010, // 2
-  AddRowAbove: OperationType = 0b00000000000000000000000000000000000000000000000000100, // 4
-  AddRowBelow: OperationType = 0b00000000000000000000000000000000000000000000000001000, // 8
-  AddColLeft: OperationType = 0b00000000000000000000000000000000000000000000000010000, // 16
-  AddColRight: OperationType = 0b00000000000000000000000000000000000000000000000100000, // 32
-  MoveFrom: OperationType = 0b00000000000000000000000000000000000000000000001000000, // 64
-  MoveTo: OperationType = 0b00000000000000000000000000000000000000000000010000000, // 128
-  Write: OperationType = 0b00000000000000000000000000000000000000000000100000000, // 256
-  Style: OperationType = 0b00000000000000000000000000000000000000000001000000000, // 512
-  Copy: OperationType = 0b00000000000000000000000000000000000000010000000000000, // 8192
-  Resize: OperationType = 0b00000000000000000000000000000000000000000010000000000, // 1024
-  SetRenderer: OperationType = 0b00000000000000000000000000000000000000000100000000000, // 2048
-  SetParser: OperationType = 0b00000000000000000000000000000000000000001000000000000, // 4096
-  SetPolicy: OperationType = 0b00000000000000000000000000000000000000100000000000000; // 16384
+export const DeleteRow: operations = 0b00000000000000000000000000000000000000000000000000001, // 1
+  DeleteCol: operations = 0b00000000000000000000000000000000000000000000000000010, // 2
+  AddRowAbove: operations = 0b00000000000000000000000000000000000000000000000000100, // 4
+  AddRowBelow: operations = 0b00000000000000000000000000000000000000000000000001000, // 8
+  AddColLeft: operations = 0b00000000000000000000000000000000000000000000000010000, // 16
+  AddColRight: operations = 0b00000000000000000000000000000000000000000000000100000, // 32
+  MoveFrom: operations = 0b00000000000000000000000000000000000000000000001000000, // 64
+  MoveTo: operations = 0b00000000000000000000000000000000000000000000010000000, // 128
+  Write: operations = 0b00000000000000000000000000000000000000000000100000000, // 256
+  Style: operations = 0b00000000000000000000000000000000000000000001000000000, // 512
+  Copy: operations = 0b00000000000000000000000000000000000000010000000000000, // 8192
+  Resize: operations = 0b00000000000000000000000000000000000000000010000000000, // 1024
+  SetRenderer: operations = 0b00000000000000000000000000000000000000000100000000000, // 2048
+  SetParser: operations = 0b00000000000000000000000000000000000000001000000000000, // 4096
+  SetPolicy: operations = 0b00000000000000000000000000000000000000100000000000000; // 16384
 
-export const NoOperation: OperationType = 0;
+export const NoOperation: operations = 0;
 
-export const Move: OperationType = MoveFrom | MoveTo; // 192
+export const Move: operations = MoveFrom | MoveTo; // 192
 
-export const Update: OperationType = Write | Style | Copy | Resize | SetRenderer | SetParser | SetPolicy; // 7936
+export const Update: operations = Write | Style | Copy | Resize | SetRenderer | SetParser | SetPolicy; // 7936
 
-export const AddRow: OperationType = AddRowAbove | AddRowBelow; // 12
+export const AddRow: operations = AddRowAbove | AddRowBelow; // 12
 
-export const AddCol: OperationType = AddColLeft | AddColRight; // 48
+export const AddCol: operations = AddColLeft | AddColRight; // 48
 
-export const Add: OperationType = AddRow | AddCol; // 60
+export const Add: operations = AddRow | AddCol; // 60
 
-export const Delete: OperationType = DeleteRow | DeleteCol; // 3
+export const Delete: operations = DeleteRow | DeleteCol; // 3
 
-export const ReadOnly: OperationType = Update | Delete | Add | Move; //
+export const ReadOnly: operations = Update | Delete | Add | Move; //
 
-export const hasOperation = (operation: OperationType | undefined, flag: OperationType) => {
+export const hasOperation = (operation: operations | undefined, flag: operations) => {
   if (operation === undefined) {
     return false;
   }
@@ -40,7 +40,7 @@ export const hasOperation = (operation: OperationType | undefined, flag: Operati
 };
 
 // Don't use this function in production
-export const debugOperations = (prevention: OperationType | undefined) => {
+export const debugOperations = (prevention: operations | undefined) => {
   const operations: string[] = [];
   if (hasOperation(prevention, DeleteRow)) {
     operations.push('DeleteRow');

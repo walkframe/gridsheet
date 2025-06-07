@@ -88,7 +88,7 @@ export const FormulaBar = () => {
               return;
             }
             dispatch(setEditingAddress(address));
-            table.conn.lastFocused = e.currentTarget;
+            table.hub.lastFocused = e.currentTarget;
           }}
           onBlur={(e) => {
             if (e.currentTarget.value!.startsWith('=')) {

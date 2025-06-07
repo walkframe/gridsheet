@@ -1,3 +1,5 @@
+import type { ZoneType } from "./types";
+
 export const HISTORY_LIMIT = 10;
 
 export const DEFAULT_HEIGHT = 24;
@@ -26,3 +28,10 @@ export class Special {
 
 export const SECONDS_IN_DAY = 86400;
 export const FULLDATE_FORMAT_UTC = 'YYYY-MM-DDTHH:mm:ss.SSSZ';
+
+export const RESET_ZONE: ZoneType = {
+  startY: -1,
+  startX: -1,
+  endY: -1,
+  endX: -1
+};

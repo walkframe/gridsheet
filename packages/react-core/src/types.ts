@@ -3,7 +3,7 @@ import type { ParserType } from './parsers/core';
 import type { UserTable, Table } from './lib/table';
 import type { FunctionMapping } from './formula/functions/__base';
 import type { FC, RefObject } from 'react';
-import type { SheetConnector } from './lib/connector';
+import type { Hub, HubReactiveType } from './lib/hub';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import type { PolicyType } from './policy/core';
 import type { Dispatcher } from './store';
@@ -59,6 +59,7 @@ export type CellType<T = any, Custom = any> = {
   prevention?: OperationType;
   system?: {
     id: string;
+    sheetId: number;
     changedAt: Date;
     dependents: Set<string>;
   };
@@ -106,6 +107,7 @@ export type OptionsType = {
 
 export type RangeType = { start: number; end: number }; // [start, end]
 export type PointType = { y: Y; x: X }; // {y, x}
+export type ExtraPointType = { y: Y; x: X; absY?: boolean, absX?: boolean, table?: Table };
 export type PositionType = { y: Y; x: X }; // {y, x}
 export type ZoneType = { startY: Y; startX: X; endY: Y; endX: X };
 export type AreaType = { top: Y; left: X; bottom: Y; right: X };
@@ -123,9 +125,7 @@ export type StoreType = {
   searchInputRef: RefObject<HTMLTextAreaElement>;
   entering: boolean;
   choosing: PointType;
-  cutting: boolean;
   inputting: string;
-  copyingZone: ZoneType;
   selectingZone: ZoneType;
   autofillDraggingTo: PointType | null;
   leftHeaderSelecting: boolean;
@@ -158,7 +158,7 @@ export type StoreType = {
 export type Props = {
   initialCells: CellsByAddressType;
   sheetName?: string;
-  connector?: SheetConnector;
+  hubReactive?: HubReactiveType;
   tableRef?: RefObject<TableRef | null>;
   options?: OptionsType;
   className?: string;
@@ -172,17 +172,26 @@ export type Address = string;
 
 export type MatricesByAddress<T> = { [origin: Address]: MatrixType<T> };
 
-export type StoreReflectionType = {
-  choosing?: PointType;
-  cutting?: boolean;
+export type HubPatchType = {
+  copyingSheetId?: number;
   copyingZone?: ZoneType;
+  cutting?: boolean;
+}
+
+export type StorePatchType = {
+  sheetId: number;
+  choosing?: PointType;
   selectingZone?: ZoneType | undefined;
+  hub?: HubPatchType;
 };
 
 export type HistoryUpdateType = {
   operation: 'UPDATE';
+  srcSheetId: number;
+  dstSheetId: number;
   applyed: boolean;
-  reflection?: StoreReflectionType;
+  undoReflection?: StorePatchType;
+  redoReflection?: StorePatchType;
   diffBefore: CellsByIdType;
   diffAfter: CellsByIdType;
   partial: boolean;
@@ -190,8 +199,11 @@ export type HistoryUpdateType = {
 
 export type HistoryMoveType = {
   operation: 'MOVE';
+  srcSheetId: number;
+  dstSheetId: number;
   applyed: boolean;
-  reflection?: StoreReflectionType;
+  undoReflection?: StorePatchType;
+  redoReflection?: StorePatchType;
   diffBefore: CellsByIdType;
   src: AreaType;
   dst: AreaType;
@@ -203,8 +215,11 @@ export type HistoryMoveType = {
 
 export type HistoryAddRowsType = {
   operation: 'ADD_ROWS';
+  srcSheetId: number;
+  dstSheetId: number;
   applyed: boolean;
-  reflection?: StoreReflectionType;
+  undoReflection?: StorePatchType;
+  redoReflection?: StorePatchType;
   y: number;
   numRows: number;
   idMatrix: IdMatrix;
@@ -215,16 +230,22 @@ export type HistoryAddRowsType = {
 
 export type HistoryDeleteRowsType = {
   operation: 'DELETE_ROWS';
+  srcSheetId: number;
+  dstSheetId: number;
   applyed: boolean;
-  reflection?: StoreReflectionType;
+  undoReflection?: StorePatchType;
+  redoReflection?: StorePatchType;
   ys: number[];
   deleted: IdMatrix;
 };
 
 export type HistoryAddColsType = {
   operation: 'ADD_COLS';
+  srcSheetId: number;
+  dstSheetId: number;
   applyed: boolean;
-  reflection?: StoreReflectionType;
+  undoReflection?: StorePatchType;
+  redoReflection?: StorePatchType;
   x: number;
   numCols: number;
   idMatrix: IdMatrix;
@@ -235,8 +256,11 @@ export type HistoryAddColsType = {
 
 export type HistoryDeleteColsType = {
   operation: 'DELETE_COLS';
+  srcSheetId: number;
+  dstSheetId: number;
   applyed: boolean;
-  reflection?: StoreReflectionType;
+  undoReflection?: StorePatchType;
+  redoReflection?: StorePatchType;
   xs: number[];
   deleted: IdMatrix;
 };
@@ -258,7 +282,11 @@ export type OperatorType = 'USER' | 'SYSTEM';
 
 export type OperationType = number;
 
-export type TablesBySheetId = { [sheetId: string]: Table }; // id: table
+export type StoreDispatchType = {
+  store: StoreType;
+  dispatch: Dispatcher;
+}
+export type ContextsBySheetId = { [sheetId: string]: StoreDispatchType }; // id: { store, dispatch }
 export type SheetIdsByName = { [sheetName: string]: number }; // name: id
 
 export type RefPaletteType = { [address: string]: number };
@@ -272,3 +300,4 @@ export type ContextMenuProps = {
   store: StoreType;
   dispatch: Dispatcher;
 };
+

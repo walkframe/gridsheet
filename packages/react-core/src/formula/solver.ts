@@ -46,12 +46,12 @@ export const solveFormula = ({ value, table, raise = true, evaluates = true, ori
 
 export const solveTable = ({ table, raise = true }: { table: Table; raise?: boolean }): MatrixType => {
   const area = table.getArea();
-  return table.getFieldMatrix({ area, evaluates: null }).map((row, i) => {
+  return table.getFieldMatrix({ area, evaluates: null, key: 'value' }).map((row, i) => {
     const y = area.top + i;
     return row.map((value, j) => {
       const x = area.left + j;
-      const address = p2a({ y, x });
-      const cache = table.getSolvedCache(address);
+      const point = { y, x };
+      const cache = table.getSolvedCache(point);
 
       try {
         if (cache === SOLVING) {
@@ -61,12 +61,12 @@ export const solveTable = ({ table, raise = true }: { table: Table; raise?: bool
         } else if (cache != null) {
           return cache;
         }
-        table.setSolvedCache(address, SOLVING);
-        const solved = solveFormula({ value, table, raise, origin: { y, x } });
-        table.setSolvedCache(address, solved);
+        table.setSolvedCache(point, SOLVING);
+        const solved = solveFormula({ value, table, raise, origin: point });
+        table.setSolvedCache(point, solved);
         return solved;
       } catch (e) {
-        table.setSolvedCache(address, e);
+        table.setSolvedCache(point, e);
         if (raise) {
           throw e;
         }

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { GridSheet, buildInitialCells, BaseFunction, prevention, useConnector } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells, BaseFunction, operations, useHubReactive } from '@gridsheet/react-core';
 
 export default {
   title: 'Demo',
@@ -13,7 +13,7 @@ class HopeFunction extends BaseFunction {
 }
 
 export function FirstDemo() {
-  const connector = useConnector();
+  const hubReactive = useHubReactive();
   const [sheetName1, setSheetName1] = React.useState('criteria');
   const [sheetName2, setSheetName2] = React.useState('grades');
   const [sheetName3, setSheetName3] = React.useState('other');
@@ -21,7 +21,7 @@ export function FirstDemo() {
   return (
     <div className="App">
       <GridSheet
-        connector={connector}
+        hubReactive={hubReactive}
         sheetName={sheetName1}
         initialCells={buildInitialCells({
           matrices: {
@@ -36,7 +36,7 @@ export function FirstDemo() {
             },
             '1': {
               style: { backgroundColor: '#ddd' },
-              prevention: prevention.ReadOnly,
+              prevention: operations.ReadOnly,
             },
           },
         })}
@@ -52,7 +52,7 @@ export function FirstDemo() {
       reference points are readonly.
       <hr />
       <GridSheet
-        connector={connector}
+        hubReactive={hubReactive}
         sheetName={sheetName2}
         initialCells={buildInitialCells({
           matrices: {
@@ -67,7 +67,7 @@ export function FirstDemo() {
           },
           cells: {
             'A1:D1': {
-              prevention: prevention.Write,
+              prevention: operations.Write,
               style: {
                 borderTop: 'solid 1px black',
                 borderLeft: 'solid 1px black',
@@ -100,7 +100,7 @@ export function FirstDemo() {
       Ranks are derived using the HLOOKUP function with a {sheetName1} sheet.
       <hr />
       <GridSheet
-        connector={connector}
+        hubReactive={hubReactive}
         sheetName={sheetName3}
         initialCells={buildInitialCells({
           matrices: {

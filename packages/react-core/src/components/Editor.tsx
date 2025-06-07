@@ -61,7 +61,7 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
   const optionsAll = policy.getOptions();
   const filteredOptions = optionsAll.filter((option) => {
     const keyword = (option.keyword ?? String(option.value)).toLowerCase();
-    return keyword.includes(inputting.toLocaleLowerCase());
+    return keyword.indexOf(inputting.toLocaleLowerCase()) !== -1;
   });
 
   //const [, sheetContext] = useSheetContext();
@@ -70,25 +70,25 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
   }, [editorRef]);
 
   useEffect(() => {
-    if (table.conn.lastFocused == null) {
+    if (table.hub.lastFocused == null) {
       return;
     }
-    if (table.conn.lastFocused !== editorRef.current) {
+    if (table.hub.lastFocused !== editorRef.current) {
       return;
     }
-    if (table.conn.lastFocused !== largeEditorRef.current) {
+    if (table.hub.lastFocused !== largeEditorRef.current) {
       return;
     }
 
     dispatch(setEditingAddress(''));
-  }, [table.conn.lastFocused]);
+  }, [table.hub.lastFocused]);
   useEffect(() => {
-    table.conn.editingSheetId = sheetId;
-    table.conn.editingAddress = editingAddress;
+    table.hub.editingSheetId = sheetId;
+    table.hub.editingAddress = editingAddress;
   }, [editingAddress]);
 
   useEffect(() => {
-    table.conn.reflect({ ...table.conn });
+    //table.hub.reflect();
     expandInput(editorRef.current);
   }, [inputting, editingAddress]);
 
@@ -469,7 +469,7 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
           ref={editorRef}
           rows={numLines}
           onFocus={(e) => {
-            table.conn.lastFocused = e.currentTarget;
+            table.hub.lastFocused = e.currentTarget;
           }}
           style={{ minWidth: width, minHeight: height }}
           onDoubleClick={(e) => {
@@ -501,6 +501,9 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
           }}
           value={inputting}
           onChange={(e) => {
+            if (prevention.hasOperation(cell?.prevention, prevention.Write)) {
+              return;
+            }
             dispatch(setInputting(e.currentTarget.value));
             setSelected(0);
           }}

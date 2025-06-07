@@ -1,12 +1,10 @@
 import dayjs from 'dayjs';
 
 import { CellType, PointType, WriterType } from '../types';
-import { Table, UserTable } from '../lib/table';
+import { Table } from '../lib/table';
 import { solveFormula } from '../formula/solver';
 import { FormulaError } from '../formula/evaluator';
-import { p2a } from '../lib/converters';
 import { TimeDelta } from '../lib/time';
-import type { RefObject } from 'react';
 
 type Condition = (value: any) => boolean;
 
@@ -79,26 +77,24 @@ export class Renderer implements RendererMixinType {
   }
 
   public call(props: RendererCallProps): any {
-    const { point, table, writer } = props;
-    const address = p2a(point);
-    const key = table.getFullRef(address);
-    const alreadyRendered = table.conn.renderedCaches[key];
-    const cell = table.getByPoint(point)!;
-    if (alreadyRendered !== undefined) {
-      return this.decorate(alreadyRendered, { ...props, cell });
-    }
-    const cache = table.getSolvedCache(address);
-    let value = cache ?? cell?.value;
-    if (typeof value === 'string' && !cell?.disableFormula) {
-      if (value[0] === "'") {
-        value = value.substring(1);
-      } else if (value[0] === '=') {
-        value = solveFormula({ value, table, raise: true, origin: point });
+    const { point: origin, table, writer } = props;
+    const key = table.getId(origin);
+    const cell = table.getById(key);
+    const cache = table.getSolvedCache(origin);
+    let value = cache;
+    if (cache === undefined) {
+      if (typeof cell?.value === 'string' && !cell?.disableFormula) {
+        if (cell.value[0] === "'") {
+          value = cell.value.substring(1);
+        } else {
+          value = solveFormula({ value: cell.value, table, raise: true, origin });
+        }
+      } else {
+        value = cell?.value;
       }
     }
-    const rendered = this.render({ cell: { ...cell, value }, table, writer, point });
-    table.conn.renderedCaches[key] = rendered;
-    return this.decorate(rendered, { ...props, cell });
+    const rendered = this.render({ cell: { ...cell, value }, table, writer, point: origin });
+    return this.decorate(rendered, { ...props, cell: cell ?? {} });
   }
 
   public decorate(rendered: any, props: RenderProps): any {

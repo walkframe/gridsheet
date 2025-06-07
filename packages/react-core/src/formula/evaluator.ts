@@ -1,6 +1,6 @@
-import { a2p } from '../lib/converters';
+import { a2p, p2a } from '../lib/converters';
 import { Table } from '../lib/table';
-import { PointType } from '../types';
+import { Id, PointType } from '../types';
 
 type EvaluateProps = {
   table: Table;
@@ -8,14 +8,14 @@ type EvaluateProps = {
 
 // strip sharp and dollars
 const getId = (idString: string, stripAbsolute = true) => {
-  let id = idString.slice(1);
+  let id = idString;
   if (stripAbsolute && id.startsWith('$')) {
     id = id.slice(1);
   }
   if (stripAbsolute && id.endsWith('$')) {
     id = id.slice(0, -1);
   }
-  return id;
+  return id.replace('#', '');
 };
 
 export class FormulaError {
@@ -62,110 +62,89 @@ export class RefEntity extends Entity<string> {
     return this.value.toUpperCase();
   }
 
-  private parse(table: Table): {
-    table: Table;
-    ref: string;
-    sheetName: string;
-  } {
-    if (this.value.indexOf('!') !== -1) {
-      const [rawSheetName, ref] = this.value.split('!');
-      const sheetName = stripSheetName(rawSheetName);
-      return {
-        table: table.getTableBySheetName(sheetName),
-        ref: ref.toUpperCase(),
-        sheetName,
-      };
-    }
-    return {
-      table,
-      ref: this.value.toUpperCase(),
-      sheetName: stripSheetName(table.sheetName),
-    };
-  }
-
   public evaluate({ table }: EvaluateProps): Table {
-    const parsed = this.parse(table);
-    if (parsed.table == null) {
+    const parsed = parseRef(table, this.value);
+    if (parsed.invalidRef) {
       throw new FormulaError('#REF!', `Unknown sheet: ${parsed.sheetName}`);
     }
-    const { y, x } = a2p(parsed.ref);
+    if (parsed.addresses.length === 0) {
+      throw new FormulaError('#REF!', `Invalid address: ${this.value}`);
+    }
+    const { y, x } = a2p(parsed.addresses[0]);
     return parsed.table.trim({ top: y, left: x, bottom: y, right: x });
   }
-  public id(table: Table) {
-    const parsed = this.parse(table);
+
+  public id(table: Table, paths: string[], slideY = 0, slideX = 0) {
+    const parsed = parseRef(table, this.value);
     if (parsed.table == null) {
       return this.value;
     }
-    const id = parsed.table.getIdByAddress(parsed.ref);
-    if (id) {
-      if (parsed.table === table) {
-        return id;
-      }
-      return `#${parsed.table.sheetId}!${id}`;
+    const address = parsed.addresses[0];
+    const { y, x, absX, absY } = a2p(address);
+    const newPoint = {
+      y: y + slideY,
+      x: x + slideX,
+      absX,
+      absY,
+    };
+    const { id, formula } = parsed.table.getIdFormula(newPoint); 
+    if (id == null) {
+      return this.value;
     }
-
-    return this.value;
+    return `#${parsed.table.sheetId}!${formula}`;
   }
 }
 
 export class RangeEntity extends Entity<string> {
-  private parse(table: Table): {
-    table: Table;
-    refs: string[];
-    sheetName: string;
-  } {
-    const rawRefs = this.value.split(':');
-    const refs: string[] = [];
-    let sheetName = '';
-    for (let i = 0; i < rawRefs.length; i++) {
-      const ref = rawRefs[i];
-      if (ref.indexOf('!') !== -1) {
-        const [rawSheetName, rawRef] = ref.split('!');
-        refs.push(rawRef.toUpperCase());
-        if (i === 0) {
-          sheetName = stripSheetName(rawSheetName);
-          table = table.getTableBySheetName(sheetName);
-        }
-        if (table == null) {
-          return { table, refs, sheetName };
-        }
-      } else {
-        refs.push(ref);
-      }
-    }
-    return { table, refs, sheetName: sheetName || table.sheetName };
-  }
   public stringify() {
     return this.value.toUpperCase();
   }
 
   public evaluate({ table }: EvaluateProps): Table {
-    const parsed = this.parse(table);
+    const parsed = parseRef(table, this.value);
     if (parsed.table == null) {
       throw new FormulaError('#REF!', `Unknown sheet: ${parsed.sheetName}`);
     }
-    const area = parsed.table.rangeToArea(parsed.refs.join(':'));
+    if (parsed.addresses.length === 0) {
+      throw new FormulaError('#REF!', `Invalid address: ${this.value}`);
+    }
+    if (parsed.invalidRef) {
+      throw new FormulaError('#REF!', `Invalid ref: ${this.value}`);
+    }
+    const area = parsed.table.rangeToArea(parsed.addresses.join(':'));
     return parsed.table.trim(area);
   }
-  public idRange(table: Table) {
-    const parsed = this.parse(table);
+  public idRange(table: Table, paths: string[], slideY = 0, slideX = 0) {
+    const parsed = parseRef(table, this.value);
     if (parsed.table == null) {
       return this.value;
     }
-    const range = parsed.refs.map((ref) => parsed.table.getIdByAddress(ref)).join(':');
-
-    if (parsed.table === table) {
-      return range;
+    const formulas: string[] = [];
+    for (let i = 0; i < parsed.addresses.length; i++) {
+      const address = parsed.addresses[i];
+      const { y, x, absX, absY } = a2p(address);
+      const newPoint = {
+        y: y + slideY,
+        x: x + slideX,
+        absX,
+        absY
+      };
+      const {id, formula} = parsed.table.getIdFormula(newPoint);
+      if (id == null) {
+        return this.value;
+      }
+      formulas.push(formula!);
     }
-    return `#${parsed.table.sheetId}!${range}`;
+    return `#${parsed.table.sheetId}!${formulas.join(':')}`;
   }
 }
 
 export class IdEntity extends Entity<string> {
   private parse(table: Table): { table: Table; id: string } {
     if (this.value.indexOf('!') !== -1) {
-      const [tableId, id] = this.value.split('!');
-      return { table: table.conn.tablesBySheetId[tableId.slice(1)], id: getId(id, false) };
+      const [tableId, id] = this.value.split('!'); // #id
+      const sheetId = Number(tableId.slice(1));
+      return { table: table.getTableBySheetId(sheetId), id: getId(id, false) };
     }
     return { table, id: getId(this.value, false) };
   }
@@ -196,7 +175,8 @@ export class IdEntity extends Entity<string> {
     if (address == null || address.length < 2) {
       return '#REF!';
     }
-    return table.getIdByAddress(address);
+    const formula = parseRef(table, address)?.formula;
+    return formula || '#REF!';
   }
 }
 
@@ -204,16 +184,26 @@ export class IdRangeEntity extends Entity<string> {
   private parse(table: Table): { table: Table; ids: string[] } {
     const range = this.value;
     if (range.indexOf('!') !== -1) {
-      const [sheetId, idRange] = range.split('!');
-      table = table.conn.tablesBySheetId[sheetId.slice(1)];
-      return { table, ids: idRange.split(':') };
+      const [tableId, idRange] = range.split('!'); // #id
+      const sheetId = Number(tableId.slice(1));
+      return { table: table.getTableBySheetId(sheetId), ids: idRange.split(':') };
     }
     return { table, ids: range.split(':') };
   }
 
   public evaluate({ table }: EvaluateProps): Table {
     const parsed = this.parse(table);
-    const [p1, p2] = parsed.ids.map((id) => getId(id)).map((id) => parsed.table.getPointById(id));
+    const ids = parsed.ids.map((id) => getId(id));
+    const ps: PointType[] = [];
+    for (let i = 0; i < ids.length; i++) {
+      const id = ids[i];
+      if (id === '0') {
+        throw new FormulaError('#REF!', `Reference does not exist`);
+      }
+      const p = parsed.table.getPointById(id);
+      ps.push(p);
+    }
+    const [p1, p2] = ps;
     const [top, left, bottom, right] = [
       p1.y,
       p1.x,
@@ -236,7 +226,8 @@ export class IdRangeEntity extends Entity<string> {
 
   public slide(table: Table, slideY = 0, slideX = 0) {
     const range = this.range(table, slideY, slideX);
-    return new RangeEntity(range).idRange(table);
+    const formula = parseRef(table, range)?.formula;
+    return formula;
   }
 }
 
@@ -473,8 +464,9 @@ export class Lexer {
     return this.tokens.map((t) => t.stringify()).join('');
   }
 
-  public stringifyToId(table: Table, slideY = 0, slideX = 0) {
-    return this.tokens
+  public stringifyToId(table: Table, slideY = 0, slideX = 0): [string, string[]] {
+    const paths: string[] = [];
+    const converted =  this.tokens
       .map((t) => {
         switch (t.type) {
           case 'VALUE':
@@ -490,14 +482,14 @@ export class Lexer {
             return new IdRangeEntity(t.entity as string).slide(table, slideY, slideX);
 
           case 'REF':
-            return new RefEntity(t.entity as string).id(table);
+            return new RefEntity(t.entity as string).id(table, paths, slideY, slideX);
 
           case 'RANGE':
-            return new RangeEntity(t.entity as string).idRange(table);
+            return new RangeEntity(t.entity as string).idRange(table, paths, slideY, slideX);
         }
         return t.entity;
-      })
-      .join('');
+      });
+    return [converted.join(''), paths];
   }
 
   public stringifyToRef(table: Table) {
@@ -625,7 +617,7 @@ export class Lexer {
             if (bool != null) {
               this.tokens.push(new Token('VALUE', bool));
             } else if (buf.startsWith('#')) {
-              if (buf === '#REF!') {
+              if (buf.indexOf('#REF!') !== -1) {
                 this.tokens.push(new Token('UNREFERENCED', buf));
               } else if (buf.indexOf(':') !== -1) {
                 this.tokens.push(new Token('ID_RANGE', buf));
@@ -669,10 +661,14 @@ export class Lexer {
         break;
       }
       if (c === quote) {
-        if (this.get() === quote) {
-          // escape
+        if (quote === '"' && this.get() === quote) {
+          // escape for double quotes
           buf += quote;
           this.next();
+          continue;
+        } else if (quote === "'" && this.get() === quote) {
+          // keep consecutive single quotes as is
+          buf += c;
           continue;
         } else {
           break;
@@ -800,14 +796,16 @@ export class Parser {
   }
 }
 
-export const absolutizeFormula = ({
+export const identifyFormula = ({
   value,
   table,
+  originPath,
   slideY = 0,
   slideX = 0,
 }: {
   value: any;
   table: Table;
+  originPath: string;
   slideY?: number;
   slideX?: number;
 }) => {
@@ -815,7 +813,8 @@ export const absolutizeFormula = ({
     if (value.charAt(0) === '=') {
       const lexer = new Lexer(value.substring(1));
       lexer.tokenize();
-      return '=' + lexer.stringifyToId(table, slideY, slideX);
+      const [slideValue] = lexer.stringifyToId(table, slideY, slideX);
+      return '=' + slideValue;
     }
   }
   return value;
@@ -830,3 +829,92 @@ export const stripSheetName = (sheetName: string) => {
   }
   return sheetName;
 };
+
+export function splitRef(ref: string): { sheetName: string | undefined; addresses: string[] } {
+  let sheetName: string | undefined = undefined;
+  let addresses: string[] = [];
+
+  if (ref.startsWith("'")) {
+    let i = 1;
+    let name = '';
+
+    while (i < ref.length) {
+      const char = ref[i];
+      const nextChar = ref[i + 1];
+
+      if (char === "'") {
+        if (nextChar === "'") {
+          name += "'";
+          i += 2;
+        } else if (nextChar === '!') {
+          i += 2;
+          break;
+        } else {
+          return { sheetName: undefined, addresses: [] };
+        }
+      } else {
+        name += char;
+        i++;
+      }
+    }
+
+    sheetName = name;
+    const addressPart = ref.slice(i).trim();
+    addresses = addressPart.split(':');
+  } else {
+    const excl = ref.indexOf('!');
+    if (excl !== -1) {
+      sheetName = ref.slice(0, excl);
+      const addressPart = ref.slice(excl + 1).trim();
+      addresses = addressPart.split(':');
+    } else {
+      addresses = ref.trim().split(':');
+    }
+  }
+  return { sheetName, addresses };
+}
+
+export const parseRef = (table: Table, ref: string): {
+  table: Table;
+  sheetId?: number;
+  formula?: string;
+  sheetName?: string;
+  invalidRef: boolean;
+  addresses: string[];
+  ids: string[];
+} => {
+  const { sheetName, addresses } = splitRef(ref);
+  let invalidRef = false;
+  const ids: string[] = [];
+  if (sheetName) {
+    table = table.getTableBySheetName(sheetName);
+    if (table == null) {
+      return { table, sheetName, addresses, ids, invalidRef: true };
+    }
+  }
+  if (addresses.length === 0) {
+    return { table, sheetName, addresses, ids, invalidRef: true };
+  }
+  const refs: string[] = [];
+  for (let i = 0; i < addresses.length; i++) {
+    const address = addresses[i];
+    const { y, x, absX, absY } = a2p(address);
+    const id = table.getId({ y, x });
+    if (id == null) {
+      invalidRef = true;
+      refs.push(`${absX ? '$' : ''}#${address}${absY ? '$' : ''}`);
+      continue;
+    }
+    ids.push(id);
+    refs.push(`${absX ? '$' : ''}#${id}${absY ? '$' : ''}`);
+  }
+  let formula = `#${table.sheetId}!${refs.join(':')}`;
+  return { 
+    table,
+    sheetName,
+    addresses,
+    ids,
+    formula,
+    invalidRef,
+  };
+}

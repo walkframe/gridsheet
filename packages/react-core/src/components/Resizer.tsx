@@ -65,7 +65,7 @@ export const Resizer = () => {
       diff,
       partial: true,
       operator: 'USER',
-      reflection: { selectingZone },
+      undoReflection: { selectingZone, sheetId: table.sheetId },
     });
     dispatch(updateTable(newTable));
     dispatch(setResizingPositionY([-1, -1, -1]));
