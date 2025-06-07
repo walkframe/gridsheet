@@ -1,24 +1,24 @@
-import type { ContextMenuProps, RawCellType } from "../types";
-import { parseHTML, parseText } from "../lib/paste";
-import { copy, cut, paste, redo, undo, updateTable } from "./actions";
-import { clip } from "../lib/clipboard";
-import { areaToZone, zoneShape, zoneToArea } from "../lib/structs";
+import type { ContextMenuProps, RawCellType } from '../types';
+import { parseHTML, parseText } from '../lib/paste';
+import { copy, cut, paste, redo, undo, updateTable } from './actions';
+import { clip } from '../lib/clipboard';
+import { areaToZone, zoneShape, zoneToArea } from '../lib/structs';
 
-export const copier = async ({store, dispatch}: ContextMenuProps) => {
+export const copier = async ({ store, dispatch }: ContextMenuProps) => {
   const { editorRef } = store;
   const area = clip(store);
   dispatch(copy(areaToZone(area)));
   editorRef.current?.focus();
-}
+};
 
-export const cutter = async ({store, dispatch}: ContextMenuProps) => {
+export const cutter = async ({ store, dispatch }: ContextMenuProps) => {
   const { editorRef } = store;
   const area = clip(store);
   dispatch(cut(areaToZone(area)));
   editorRef.current?.focus();
-}
+};
 
-export const paster = async ({store, dispatch}: ContextMenuProps, onlyValue=false) => {
+export const paster = async ({ store, dispatch }: ContextMenuProps, onlyValue = false) => {
   const { editorRef } = store;
   const items = await navigator.clipboard.read();
   let cells: RawCellType[][] = [];
@@ -28,7 +28,7 @@ export const paster = async ({store, dispatch}: ContextMenuProps, onlyValue=fals
       const blob = await item.getType('text/html');
       const html = await blob.text();
       if (html) {
-        cells = parseHTML(html);
+        cells = parseHTML(html, onlyValue);
         break;
       }
     } else if (item.types.includes('text/plain')) {
@@ -40,23 +40,23 @@ export const paster = async ({store, dispatch}: ContextMenuProps, onlyValue=fals
       }
     }
   }
-  dispatch(paste({matrix: cells, onlyValue: onlyValue}));
+  dispatch(paste({ matrix: cells, onlyValue }));
   editorRef.current?.focus();
-}
+};
 
-export const undoer = async ({store, dispatch}: ContextMenuProps) => {
+export const undoer = async ({ store, dispatch }: ContextMenuProps) => {
   const { editorRef } = store;
   dispatch(undo(null));
   editorRef.current?.focus();
 };
 
-export const redoer = async ({store, dispatch}: ContextMenuProps) => {
+export const redoer = async ({ store, dispatch }: ContextMenuProps) => {
   const { editorRef } = store;
   dispatch(redo(null));
   editorRef.current?.focus();
 };
 
-export const rowsInserterAbove = async ({store, dispatch}: ContextMenuProps) => {
+export const rowsInserterAbove = async ({ store, dispatch }: ContextMenuProps) => {
   const { table, selectingZone, choosing, editorRef } = store;
   const { top } = zoneToArea(selectingZone);
   const numRows = zoneShape({ ...selectingZone, base: 1 }).height;
@@ -74,7 +74,7 @@ export const rowsInserterAbove = async ({store, dispatch}: ContextMenuProps) => 
   editorRef.current?.focus();
 };
 
-export const rowsInserterBelow = async ({store, dispatch}: ContextMenuProps) => {
+export const rowsInserterBelow = async ({ store, dispatch }: ContextMenuProps) => {
   const { table, selectingZone, choosing, editorRef } = store;
   const { bottom } = zoneToArea(selectingZone);
   const numRows = zoneShape({ ...selectingZone, base: 1 }).height;
@@ -94,7 +94,7 @@ export const rowsInserterBelow = async ({store, dispatch}: ContextMenuProps) => 
   editorRef.current?.focus();
 };
 
-export const colsInserterLeft = async ({store, dispatch}: ContextMenuProps) => {
+export const colsInserterLeft = async ({ store, dispatch }: ContextMenuProps) => {
   const { table, selectingZone, choosing, editorRef } = store;
   const { left } = zoneToArea(selectingZone);
   const numCols = zoneShape({ ...selectingZone, base: 1 }).width;
@@ -110,9 +110,9 @@ export const colsInserterLeft = async ({store, dispatch}: ContextMenuProps) => {
   });
   dispatch(updateTable(newTable));
   editorRef.current?.focus();
-}
+};
 
-export const colsInserterRight = async ({store, dispatch}: ContextMenuProps) => {
+export const colsInserterRight = async ({ store, dispatch }: ContextMenuProps) => {
   const { table, selectingZone, choosing, editorRef } = store;
   const { right } = zoneToArea(selectingZone);
   const numCols = zoneShape({ ...selectingZone, base: 1 }).width;
@@ -132,7 +132,7 @@ export const colsInserterRight = async ({store, dispatch}: ContextMenuProps) => 
   editorRef.current?.focus();
 };
 
-export const rowsRemover = async ({store, dispatch}: ContextMenuProps) => {
+export const rowsRemover = async ({ store, dispatch }: ContextMenuProps) => {
   const { table, selectingZone, choosing, editorRef } = store;
   const { top } = zoneToArea(selectingZone);
   const numRows = zoneShape({ ...selectingZone, base: 1 }).height;
@@ -148,9 +148,9 @@ export const rowsRemover = async ({store, dispatch}: ContextMenuProps) => {
   });
   dispatch(updateTable(newTable));
   editorRef.current?.focus();
-}
+};
 
-export const colsRemover = async ({store, dispatch}: ContextMenuProps) => {
+export const colsRemover = async ({ store, dispatch }: ContextMenuProps) => {
   const { table, selectingZone, choosing, editorRef } = store;
   const { left } = zoneToArea(selectingZone);
   const numCols = zoneShape({ ...selectingZone, base: 1 }).width;
@@ -166,4 +166,4 @@ export const colsRemover = async ({store, dispatch}: ContextMenuProps) => {
   });
   dispatch(updateTable(newTable));
   editorRef.current?.focus();
-}
+};

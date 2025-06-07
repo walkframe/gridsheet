@@ -1,7 +1,7 @@
 import { RenderProps } from './core';
 
 export const CheckboxRendererMixin = {
-  bool({cell, writer}: RenderProps<boolean>): any {
+  bool({ cell, writer }: RenderProps<boolean>): any {
     return (
       <input
         type="checkbox"

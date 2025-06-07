@@ -1,4 +1,3 @@
-
 import type { RendererType } from './renderers/core';
 import type { ParserType } from './parsers/core';
 import type { UserTable, Table } from './lib/table';
@@ -69,7 +68,7 @@ export type RawCellType = {
   value?: string;
   style?: CSSProperties;
   skip?: boolean;
-}
+};
 
 export type CellPatchType = CellType;
 export type CellFilter = (cell: CellType) => boolean;
@@ -193,6 +192,7 @@ export type HistoryMoveType = {
   operation: 'MOVE';
   applyed: boolean;
   reflection?: StoreReflectionType;
+  diffBefore: CellsByIdType;
   src: AreaType;
   dst: AreaType;
   matrixFrom: IdMatrix;
@@ -264,12 +264,11 @@ export type SheetIdsByName = { [sheetName: string]: number }; // name: id
 export type RefPaletteType = { [address: string]: number };
 
 export type EditorEvent = KeyboardEvent<HTMLTextAreaElement>;
-;
 export type EditorEventWithNativeEvent = EditorEvent & {
-  nativeEvent: KeyboardEvent & { isComposing: boolean }
+  nativeEvent: KeyboardEvent & { isComposing: boolean };
 };
 
 export type ContextMenuProps = {
   store: StoreType;
   dispatch: Dispatcher;
-}
+};

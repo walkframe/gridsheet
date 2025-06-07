@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "types": ["vite/client", "react"],
+    "types": ["vite/client", "react", "jest"],
     "target": "ES2015",
     "module": "ES2015",
     "moduleResolution": "node",
@@ -20,6 +20,6 @@
     "baseUrl": "./src/",
     "forceConsistentCasingInFileNames": true
   },
-  "exclude": ["node_modules", "storybook", "dist", "e2e", "plugins", "**/*.spec.ts"],
-  "include": ["**/*.ts", "**/*.tsx"]
+  "exclude": ["node_modules", "storybook", "dist", "e2e", "plugins"],
+  "include": ["**/*.ts", "**/*.tsx", "**/*.spec.ts"]
 }

@@ -53,7 +53,7 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
   const editingAnywhere = !!(table.conn.editingAddress || editingAddress);
 
   const writeCell = (value: string) => {
-    dispatch(write({value, point: choosing}));
+    dispatch(write({ value, point: choosing }));
   };
 
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
@@ -67,10 +67,10 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
       return false;
     }
 
-    dispatch(select({startY: 1, startX: x, endY: -1, endX: x}));
+    dispatch(select({ startY: 1, startX: x, endY: -1, endX: x }));
     const fullAddress = `${table.sheetPrefix(!differentSheetFocused)}${colId}:${colId}`;
     if (editingAnywhere) {
-      const inserted = insertRef({input: lastFocused, ref: fullAddress});
+      const inserted = insertRef({ input: lastFocused, ref: fullAddress });
       if (inserted) {
         dispatch(select({ startY: table.getNumRows(), startX: x, endY: 0, endX: x }));
         return false;
@@ -100,7 +100,7 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
       return false;
     }
     return true;
-  }
+  };
 
   const handleDragEnd = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
@@ -111,8 +111,8 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
       editorRef.current!.focus();
       return false;
     }
-  }
-  
+  };
+
   const handleDragging = (e: React.MouseEvent | React.TouchEvent) => {
     if (!isTouching(e)) {
       return false;
@@ -128,7 +128,7 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
     const newArea = zoneToArea({ ...selectingZone, endY: 1, endX: x });
     const [left, right] = [x2c(newArea.left), x2c(newArea.right)];
     const fullRange = `${table.sheetPrefix(!differentSheetFocused)}${left}:${right}`;
-    insertRef({input: lastFocused, ref: fullRange});
+    insertRef({ input: lastFocused, ref: fullRange });
 
     if (autofillDraggingTo == null) {
       const { startY } = selectingZone;
@@ -139,7 +139,7 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
       }
     }
     return false;
-  }
+  };
 
   return (
     <th
@@ -157,11 +157,10 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
           e.preventDefault();
           e.stopPropagation();
           dispatch(setContextMenuPosition({ y: e.clientY, x: e.clientX }));
-          return false
+          return false;
         }
         return true;
       }}
-
     >
       <div
         className="gs-th-inner-wrap"
@@ -173,12 +172,9 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
         onTouchEnd={handleDragEnd}
       >
         <div className="gs-th-inner" style={{ height: headerHeight, position: 'relative' }}>
-          { 
-            !topHeaderSelecting ? 
-            <ScrollHandle style={{ position: 'absolute' }} vertical={-1} /> : null 
-          }
+          {!topHeaderSelecting ? <ScrollHandle style={{ position: 'absolute' }} vertical={-1} /> : null}
           {col?.labeler ? table.getLabel(col.labeler, x) : colId}
-          { !dragging &&
+          {!dragging && (
             <div
               className={`gs-resizer ${prevention.hasOperation(col?.prevention, prevention.Resize) ? 'gs-protected' : ''}`}
               style={{ height: headerHeight }}
@@ -190,7 +186,7 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
             >
               <i />
             </div>
-          }
+          )}
         </div>
       </div>
     </th>

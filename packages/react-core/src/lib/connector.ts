@@ -1,6 +1,5 @@
-
 import { Address, RefPaletteType, SheetIdsByName, TablesBySheetId } from '../types';
-import { useMemo, useState } from "react";
+import { useMemo, useState } from 'react';
 
 export type SheetConnector = {
   head: number;
@@ -15,7 +14,7 @@ export type SheetConnector = {
   solvedCaches: { [address: Address]: any };
   renderedCaches: { [address: Address]: any };
   reflect: (v: SheetConnector) => void;
-}
+};
 
 export const createConnector = () => {
   return {
@@ -32,11 +31,10 @@ export const createConnector = () => {
     renderedCaches: {},
     reflect: (v: SheetConnector) => {},
   };
-}
-
+};
 
 export const useConnector = () => {
   const [connector, setConnector] = useState<SheetConnector>(() => createConnector());
   connector.reflect = setConnector;
   return connector;
-}
+};

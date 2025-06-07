@@ -1,5 +1,5 @@
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH, OVERSCAN_X, OVERSCAN_Y } from '../constants';
-import { range } from './structs';
+import { range, binarySearch, type BinarySearchPredicate } from './structs';
 import { Table } from './table';
 import type { AreaType, PointType, Virtualization } from '../types';
 
@@ -152,37 +152,38 @@ export const smartScroll = (
   }
 };
 
-export const getAreaInTabular = (tabularElement: HTMLDivElement): AreaType => {
-  const rect = tabularElement.getBoundingClientRect();
-  const top = rect.top,
-    left = rect.left,
-    bottom = rect.bottom,
-    right = rect.right;
+type PositionGetter = (rect: DOMRect) => number;
 
-  const rows = tabularElement.querySelectorAll('.gs-th-left');
-  const cols = tabularElement.querySelectorAll('.gs-th-top');
-  let firstRow = -1, lastRow = -1, firstCol = -1, lastCol = -1;
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i] as HTMLTableHeaderCellElement;
-    const rect = row.getBoundingClientRect();
-    if (firstRow === -1 && rect.top > top) {
-      firstRow = parseInt(row.dataset.y || '0');
-    }
-    if (lastRow === -1 && rect.bottom >= bottom) {
-      lastRow = parseInt(row.dataset.y || '0');
-      break;
-    }
-  }
-  for (let i = 0; i < cols.length; i++) {
-    const col = cols[i] as HTMLTableHeaderCellElement;
-    const rect = col.getBoundingClientRect();
-    if (firstCol === -1 && rect.left > left) {
-      firstCol = parseInt(col.dataset.x || '0');
-    }
-    if (lastCol === - 1 && rect.right >= right) {
-      lastCol = parseInt(col.dataset.x || '0');
-      break;
-    }
-  }
-  return { top: firstRow, left: firstCol, bottom: lastRow, right: lastCol };
+const findVisibleElement = (
+  elements: HTMLTableHeaderCellElement[],
+  getPosition: PositionGetter,
+  boundary: number,
+  dataKey: string,
+): number => {
+  const index = binarySearch(
+    0,
+    elements.length - 1,
+    (mid) => getPosition(elements[mid].getBoundingClientRect()) < boundary,
+    false,
+  );
+  return parseInt(elements[index]?.dataset[dataKey] ?? '1');
+};
+
+export const getAreaInTabular = (tabularElement: HTMLDivElement): AreaType => {
+  const {
+    top: topPosition,
+    left: leftPosition,
+    bottom: bottomPosition,
+    right: rightPosition,
+  } = tabularElement.getBoundingClientRect();
+
+  const rows = Array.from(tabularElement.querySelectorAll('.gs-th-left')) as HTMLTableHeaderCellElement[];
+  const cols = Array.from(tabularElement.querySelectorAll('.gs-th-top')) as HTMLTableHeaderCellElement[];
+
+  const top = findVisibleElement(rows, (rect) => rect.top, topPosition, 'y');
+  const bottom = findVisibleElement(rows, (rect) => rect.bottom, bottomPosition, 'y');
+  const left = findVisibleElement(cols, (rect) => rect.left, leftPosition, 'x');
+  const right = findVisibleElement(cols, (rect) => rect.right, rightPosition, 'x');
+
+  return { top, left, bottom, right };
 };

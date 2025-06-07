@@ -1,4 +1,3 @@
-
 import { useEffect, useContext, useRef, useState } from 'react';
 
 import { Cell } from './Cell';
@@ -38,7 +37,7 @@ export const Tabular = ({ tableRef }: Props) => {
     inputting,
     choosing,
     leftHeaderSelecting,
-    topHeaderSelecting
+    topHeaderSelecting,
   } = store;
 
   useEffect(() => {
@@ -100,8 +99,8 @@ export const Tabular = ({ tableRef }: Props) => {
   }, [tabularRef.current, table, mainRef.current?.clientHeight, mainRef.current?.clientWidth]);
 
   const operationStyles = useOperationStyles(store, {
-    ...palette, 
-    ...table.conn.paletteBySheetName[table.sheetName]
+    ...palette,
+    ...table.conn.paletteBySheetName[table.sheetName],
   });
 
   return (
@@ -156,7 +155,7 @@ export const Tabular = ({ tableRef }: Props) => {
                 >
                   <div className="gs-th-inner">
                     <ScrollHandle
-                      style={{ position: 'absolute' }} 
+                      style={{ position: 'absolute' }}
                       horizontal={leftHeaderSelecting ? 0 : -1}
                       vertical={topHeaderSelecting ? 0 : -1}
                     />
@@ -222,22 +221,36 @@ const useOperationStyles = (store: StoreType, refs: RefPaletteType) => {
     cellStyles[address] = cellStyles[address] || {};
     Object.assign(cellStyles[address], style);
   };
-  const { choosing, selectingZone, copyingZone, cutting, matchingCells, matchingCellIndex, table, autofillDraggingTo } =
-    store;
+  const {
+    choosing,
+    selectingZone,
+    copyingZone,
+    cutting,
+    matchingCells,
+    matchingCellIndex,
+    table,
+    autofillDraggingTo,
+    editingAddress,
+  } = store;
+
+  const editingAnywhere = !!(table.conn.editingAddress || editingAddress);
+
   {
     // selecting
     const { top, left, bottom, right } = zoneToArea(selectingZone);
-    for (let y = top; y <= bottom; y++) {
-      updateStyle({ y, x: left - 1 }, { borderRight: BORDER_SELECTED });
-      updateStyle({ y, x: left }, { borderLeft: BORDER_SELECTED });
-      updateStyle({ y, x: right }, { borderRight: BORDER_SELECTED });
-      updateStyle({ y, x: right + 1 }, { borderLeft: BORDER_SELECTED });
-    }
-    for (let x = left; x <= right; x++) {
-      updateStyle({ y: top - 1, x }, { borderBottom: BORDER_SELECTED });
-      updateStyle({ y: top, x }, { borderTop: BORDER_SELECTED });
-      updateStyle({ y: bottom, x }, { borderBottom: BORDER_SELECTED });
-      updateStyle({ y: bottom + 1, x }, { borderTop: BORDER_SELECTED });
+    if (!editingAnywhere) {
+      for (let y = top; y <= bottom; y++) {
+        updateStyle({ y, x: left - 1 }, { borderRight: BORDER_SELECTED });
+        updateStyle({ y, x: left }, { borderLeft: BORDER_SELECTED });
+        updateStyle({ y, x: right }, { borderRight: BORDER_SELECTED });
+        updateStyle({ y, x: right + 1 }, { borderLeft: BORDER_SELECTED });
+      }
+      for (let x = left; x <= right; x++) {
+        updateStyle({ y: top - 1, x }, { borderBottom: BORDER_SELECTED });
+        updateStyle({ y: top, x }, { borderTop: BORDER_SELECTED });
+        updateStyle({ y: bottom, x }, { borderBottom: BORDER_SELECTED });
+        updateStyle({ y: bottom + 1, x }, { borderTop: BORDER_SELECTED });
+      }
     }
   }
   if (autofillDraggingTo) {

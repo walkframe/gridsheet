@@ -11,10 +11,10 @@ export const Disabled = () => {
       <GridSheet
         initialCells={constructInitialCells({
           cells: {
-            A: { labeler: 'disabled', width: 150},
+            A: { labeler: 'disabled', width: 150 },
             A1: { value: '=1+1', disableFormula: true },
             B1: { value: '=1+1' },
-            A2: { value: "'quote", disableFormula: true  },
+            A2: { value: "'quote", disableFormula: true },
             B2: { value: "'quote" },
             A3: { value: "'0123", disableFormula: true },
             B3: { value: "'0123" },
@@ -29,8 +29,8 @@ export const Disabled = () => {
           labelers: {
             disabled: (n) => {
               return 'disabled formula';
-            }
-          }
+            },
+          },
         }}
       />
     </>

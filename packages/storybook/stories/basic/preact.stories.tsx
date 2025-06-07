@@ -1,9 +1,5 @@
 import React from 'react';
-import { 
-  constructInitialCells,
-  GridSheet as PreactGridSheet,
-  h, render as preactRender,
-} from '@gridsheet/preact-core';
+import { constructInitialCells, GridSheet as PreactGridSheet, h, render as preactRender } from '@gridsheet/preact-core';
 
 export default {
   title: 'Basic',
@@ -18,7 +14,7 @@ const GridSheet = (props: any) => {
   }, [props]);
 
   return <div ref={ref} />;
-}
+};
 
 export const Preact = () => {
   const [width, setWidth] = React.useState(500);

@@ -38,13 +38,7 @@ export function GridSheet({
   style,
   connector: initialConnector,
 }: Props) {
-  const { 
-    sheetResize, 
-    showFormulaBar = true, 
-    onInit, 
-    mode = 'light',
-    additionalFunctions = {},
-  } = options;
+  const { sheetResize, showFormulaBar = true, onInit, mode = 'light', additionalFunctions = {} } = options;
   const [prevSheetName, setPrevSheetName] = useState(sheetName);
   const rootRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
@@ -77,6 +71,7 @@ export function GridSheet({
       renderers,
       parsers,
       labelers,
+      policies,
       minNumRows,
       maxNumRows,
       minNumCols,
@@ -88,6 +83,7 @@ export function GridSheet({
       parsers,
       renderers,
       labelers,
+      policies,
       minNumRows,
       maxNumRows,
       minNumCols,
@@ -98,7 +94,7 @@ export function GridSheet({
       connector,
       functions: { ...functions, ...additionalFunctions },
     });
-    const sheetId = table.sheetId = ++connector.head;
+    const sheetId = (table.sheetId = ++connector.head);
     connector.sheetIdsByName[sheetName] = sheetId;
     connector.tablesBySheetId[sheetId] = table;
     table.initialize(initialCells);
@@ -215,10 +211,7 @@ export function GridSheet({
         >
           <Editor mode={mode} handleKeyUp={onKeyUp} />
           <Tabular tableRef={tableRef} />
-          <StoreInitializer
-            initialCells={initialCells}
-            options={{ ...options, sheetHeight, sheetWidth }}
-          />
+          <StoreInitializer initialCells={initialCells} options={{ ...options, sheetHeight, sheetWidth }} />
           <ContextMenu />
           <Resizer />
           <Emitter onChange={onChange} onSelect={onSelect} />

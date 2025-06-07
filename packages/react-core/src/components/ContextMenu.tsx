@@ -1,13 +1,24 @@
 import { type FC, useContext } from 'react';
 
-
 import { setContextMenuPosition } from '../store/actions';
 import { zoneShape } from '../lib/structs';
 
 import { Context } from '../store';
 import * as prevention from '../lib/operation';
 import { Fixed } from './Fixed';
-import { colsInserterLeft, colsInserterRight, colsRemover, copier, cutter, paster, redoer, rowsInserterAbove, rowsInserterBelow, rowsRemover, undoer } from '../store/dispatchers';
+import {
+  colsInserterLeft,
+  colsInserterRight,
+  colsRemover,
+  copier,
+  cutter,
+  paster,
+  redoer,
+  rowsInserterAbove,
+  rowsInserterBelow,
+  rowsRemover,
+  undoer,
+} from '../store/dispatchers';
 import type { ContextMenuProps } from '../types';
 
 export const ContextMenu = () => {
@@ -26,16 +37,11 @@ export const ContextMenu = () => {
         return false;
       }}
     >
-      <div
-        className={'gs-contextmenu'}
-        style={{ top: top, left: left }}
-      >
+      <div className={'gs-contextmenu'} style={{ top: top, left: left }}>
         <ul>
-          {
-            contextMenuItems.map((Item, index) => {
-              return <Item key={index} store={store} dispatch={dispatch} />;
-            })
-          }
+          {contextMenuItems.map((Item, index) => {
+            return <Item key={index} store={store} dispatch={dispatch} />;
+          })}
         </ul>
       </div>
     </Fixed>
@@ -43,29 +49,23 @@ export const ContextMenu = () => {
 };
 
 export const DividerItem = (props: ContextMenuProps) => {
-  return <li className="gs-menu-divider" />
-}
+  return <li className="gs-menu-divider" />;
+};
 
 export const CutItem = (props: ContextMenuProps) => {
   return (
-    <li
-            className="gs-enabled"
-            onClick={async () => await cutter(props)}
-          >
-            <div className="gs-menu-name">Cut</div>
-            <div className="gs-menu-shortcut">
-              <span className="gs-menu-underline">X</span>
-            </div>
+    <li className="gs-enabled" onClick={async () => await cutter(props)}>
+      <div className="gs-menu-name">Cut</div>
+      <div className="gs-menu-shortcut">
+        <span className="gs-menu-underline">X</span>
+      </div>
     </li>
-  )
-}
+  );
+};
 
 export const CopyItem = (props: ContextMenuProps) => {
   return (
-    <li
-      className="gs-enabled"
-      onClick={async () => await copier(props)}
-    >
+    <li className="gs-enabled" onClick={async () => await copier(props)}>
       <div className="gs-menu-name">Copy</div>
       <div className="gs-menu-shortcut">
         <span className="gs-menu-underline">C</span>
@@ -76,10 +76,7 @@ export const CopyItem = (props: ContextMenuProps) => {
 
 export const PasteItem = (props: ContextMenuProps) => {
   return (
-    <li
-      className="gs-enabled"
-      onClick={async () => await paster(props, false)}
-    >
+    <li className="gs-enabled" onClick={async () => await paster(props, false)}>
       <div className="gs-menu-name">Paste</div>
       <div className="gs-menu-shortcut">
         <span className="gs-menu-underline">V</span>
@@ -90,26 +87,22 @@ export const PasteItem = (props: ContextMenuProps) => {
 
 export const PasteOnlyValueItem = (props: ContextMenuProps) => {
   return (
-    <li
-      className="gs-enabled"
-      onClick={async () => await paster(props, true)}
-    >
+    <li className="gs-enabled" onClick={async () => await paster(props, true)}>
       <div className="gs-menu-name">Paste only value</div>
       <div className="gs-menu-shortcut">
         Shift + <span className="gs-menu-underline">V</span>
       </div>
     </li>
   );
-}
-
+};
 
 export const RowsColsOperationDividerItem = (props: ContextMenuProps) => {
   const { leftHeaderSelecting, topHeaderSelecting } = props.store;
   if (leftHeaderSelecting || topHeaderSelecting) {
     return <li className="gs-menu-divider" />;
   }
-  return null
-}
+  return null;
+};
 
 export const InsertRowsAboveItem = (props: ContextMenuProps) => {
   const { table, choosing, selectingZone, leftHeaderSelecting } = props.store;
@@ -119,8 +112,8 @@ export const InsertRowsAboveItem = (props: ContextMenuProps) => {
   const { y } = choosing;
   const { height } = zoneShape({ ...selectingZone, base: 1 });
   const selectingTopCell = table.getByPoint({ y, x: 0 });
-  const disabled = (
-    table.maxNumRows !== -1 && table.getNumRows() + height > table.maxNumRows) ||
+  const disabled =
+    (table.maxNumRows !== -1 && table.getNumRows() + height > table.maxNumRows) ||
     prevention.hasOperation(selectingTopCell?.prevention, prevention.AddRowAbove);
   return (
     <li
@@ -136,7 +129,7 @@ export const InsertRowsAboveItem = (props: ContextMenuProps) => {
       </div>
     </li>
   );
-}
+};
 
 export const InsertRowsBelowItem = (props: ContextMenuProps) => {
   const { table, choosing, selectingZone, leftHeaderSelecting } = props.store;
@@ -146,8 +139,8 @@ export const InsertRowsBelowItem = (props: ContextMenuProps) => {
   const { y } = choosing;
   const { height } = zoneShape({ ...selectingZone, base: 1 });
   const selectingBottomCell = table.getByPoint({ y, x: 0 });
-  const disabled = (
-    table.maxNumRows !== -1 && table.getNumRows() + height > table.maxNumRows) ||
+  const disabled =
+    (table.maxNumRows !== -1 && table.getNumRows() + height > table.maxNumRows) ||
     prevention.hasOperation(selectingBottomCell?.prevention, prevention.AddRowBelow);
   return (
     <li
@@ -163,7 +156,7 @@ export const InsertRowsBelowItem = (props: ContextMenuProps) => {
       </div>
     </li>
   );
-}
+};
 
 export const InsertColsLeftItem = (props: ContextMenuProps) => {
   const { table, choosing, selectingZone, topHeaderSelecting } = props.store;
@@ -173,8 +166,8 @@ export const InsertColsLeftItem = (props: ContextMenuProps) => {
   const { x } = choosing;
   const { width } = zoneShape({ ...selectingZone, base: 1 });
   const selectingLeftCell = table.getByPoint({ y: 0, x });
-  const disabled = (
-    table.maxNumCols !== -1 && table.getNumCols() + width > table.maxNumCols) ||
+  const disabled =
+    (table.maxNumCols !== -1 && table.getNumCols() + width > table.maxNumCols) ||
     prevention.hasOperation(selectingLeftCell?.prevention, prevention.AddColLeft);
   return (
     <li
@@ -190,7 +183,7 @@ export const InsertColsLeftItem = (props: ContextMenuProps) => {
       </div>
     </li>
   );
-}
+};
 export const InsertColsRightItem = (props: ContextMenuProps) => {
   const { table, choosing, selectingZone, topHeaderSelecting } = props.store;
   if (!topHeaderSelecting) {
@@ -199,8 +192,8 @@ export const InsertColsRightItem = (props: ContextMenuProps) => {
   const { x } = choosing;
   const { width } = zoneShape({ ...selectingZone, base: 1 });
   const selectingRightCell = table.getByPoint({ y: 0, x });
-  const disabled = (
-    table.maxNumCols !== -1 && table.getNumCols() + width > table.maxNumCols) ||
+  const disabled =
+    (table.maxNumCols !== -1 && table.getNumCols() + width > table.maxNumCols) ||
     prevention.hasOperation(selectingRightCell?.prevention, prevention.AddColRight);
   return (
     <li
@@ -216,7 +209,7 @@ export const InsertColsRightItem = (props: ContextMenuProps) => {
       </div>
     </li>
   );
-}
+};
 export const DeleteRowsItem = (props: ContextMenuProps) => {
   const { table, choosing, selectingZone, leftHeaderSelecting } = props.store;
   if (!leftHeaderSelecting) {
@@ -225,8 +218,8 @@ export const DeleteRowsItem = (props: ContextMenuProps) => {
   const { y } = choosing;
   const { height } = zoneShape({ ...selectingZone, base: 1 });
   const selectingTopCell = table.getByPoint({ y, x: 0 });
-  const disabled = (
-    table.minNumRows !== -1 && table.getNumRows() - height < table.minNumRows) ||
+  const disabled =
+    (table.minNumRows !== -1 && table.getNumRows() - height < table.minNumRows) ||
     prevention.hasOperation(selectingTopCell?.prevention, prevention.DeleteRow);
   return (
     <li
@@ -242,7 +235,7 @@ export const DeleteRowsItem = (props: ContextMenuProps) => {
       </div>
     </li>
   );
-}
+};
 export const DeleteColsItem = (props: ContextMenuProps) => {
   const { table, choosing, selectingZone, topHeaderSelecting } = props.store;
   if (!topHeaderSelecting) {
@@ -251,8 +244,8 @@ export const DeleteColsItem = (props: ContextMenuProps) => {
   const { x } = choosing;
   const { width } = zoneShape({ ...selectingZone, base: 1 });
   const selectingRightCell = table.getByPoint({ y: 0, x });
-  const disabled = (
-    table.minNumCols !== -1 && table.getNumCols() - width < table.minNumCols) ||
+  const disabled =
+    (table.minNumCols !== -1 && table.getNumCols() - width < table.minNumCols) ||
     prevention.hasOperation(selectingRightCell?.prevention, prevention.DeleteCol);
   return (
     <li
@@ -268,7 +261,7 @@ export const DeleteColsItem = (props: ContextMenuProps) => {
       </div>
     </li>
   );
-}
+};
 
 export const HistoryDeviderItem = (props: ContextMenuProps) => {
   const { table } = props.store;
@@ -277,7 +270,7 @@ export const HistoryDeviderItem = (props: ContextMenuProps) => {
     return <li className="gs-menu-divider" />;
   }
   return null;
-}
+};
 
 export const UndoItem = (props: ContextMenuProps) => {
   const { table } = props.store;
@@ -286,17 +279,14 @@ export const UndoItem = (props: ContextMenuProps) => {
     return null;
   }
   return (
-    <li
-      className="gs-enabled"
-      onClick={async () => undoer(props)}
-    >
+    <li className="gs-enabled" onClick={async () => undoer(props)}>
       <div className="gs-menu-name">Undo</div>
       <div className="gs-menu-shortcut">
         <span className="gs-menu-underline">Z</span>
       </div>
     </li>
   );
-}
+};
 export const RedoItem = (props: ContextMenuProps) => {
   const { table } = props.store;
   const historyIndex = table.getHistoryIndex();
@@ -304,26 +294,23 @@ export const RedoItem = (props: ContextMenuProps) => {
     return null;
   }
   return (
-    <li
-      className="gs-enabled"
-      onClick={async () => redoer(props)}
-    >
+    <li className="gs-enabled" onClick={async () => redoer(props)}>
       <div className="gs-menu-name">Redo</div>
       <div className="gs-menu-shortcut">
         <span className="gs-menu-underline">R</span>
       </div>
     </li>
   );
-}
+};
 
 export const defaultContextMenuItems: FC<ContextMenuProps>[] = [
   CutItem,
   CopyItem,
   PasteItem,
   PasteOnlyValueItem,
-  
+
   RowsColsOperationDividerItem,
-  
+
   InsertRowsAboveItem,
   InsertRowsBelowItem,
   InsertColsLeftItem,

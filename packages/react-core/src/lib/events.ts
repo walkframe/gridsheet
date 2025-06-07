@@ -1,4 +1,3 @@
-
 export const isTouching = (e: React.TouchEvent | React.MouseEvent): boolean => {
   if (e.type.startsWith('touch')) {
     return (e as React.TouchEvent).touches.length > 0;

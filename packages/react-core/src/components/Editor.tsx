@@ -88,7 +88,7 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
   }, [editingAddress]);
 
   useEffect(() => {
-    table.conn.reflect({...table.conn});
+    table.conn.reflect({ ...table.conn });
     expandInput(editorRef.current);
   }, [inputting, editingAddress]);
 
@@ -99,14 +99,14 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
   const editing = editingAddress === address;
 
   const cell = table.getByPoint({ y, x });
-  const valueString = table.stringify({point: choosing, cell, evaluates: false});
+  const valueString = table.stringify({ point: choosing, cell, evaluates: false });
   const [before, setBefore] = useState<string>(valueString);
-  
+
   const selectValue = (selected: number) => {
     const option = filteredOptions[selected];
     if (option) {
       const t = table.update({
-        diff: {[address]: {value: option.value}},
+        diff: { [address]: { value: option.value } },
         partial: true,
       });
       dispatch(updateTable(t.clone()));
@@ -114,8 +114,8 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
       dispatch(setInputting(''));
       setSelected(0);
     }
-  }
-  
+  };
+
   useEffect(() => {
     setBefore(valueString);
     dispatch(setInputting(valueString));
@@ -126,7 +126,7 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
 
   const writeCell = (value: string) => {
     if (before !== value) {
-      dispatch(write({value}));
+      dispatch(write({ value }));
     }
     setBefore(value);
   };
@@ -383,6 +383,7 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
       case 'v': // V
         if (e.ctrlKey || e.metaKey) {
           // moved to onPaste
+          e.stopPropagation();
           return false;
         }
         break;
@@ -504,14 +505,14 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
             setSelected(0);
           }}
           onPaste={(e) => {
-            const withoutStyle = shiftKey;
+            const onlyValue = shiftKey;
             const html = e.clipboardData?.getData?.('text/html');
             if (html) {
-              dispatch(paste({matrix: parseHTML(html), onlyValue: withoutStyle}));
+              dispatch(paste({ matrix: parseHTML(html), onlyValue }));
             } else {
               const text = e.clipboardData?.getData?.('text/plain');
               if (text) {
-                dispatch(paste({matrix: parseText(text), onlyValue: withoutStyle}));
+                dispatch(paste({ matrix: parseText(text), onlyValue }));
               } else {
                 console.warn('No clipboard data found.');
               }
@@ -532,23 +533,21 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
           }}
         />
       </div>
-      <ul
-        className="gs-editor-options"
-        style={{ marginTop: editorRef.current?.scrollHeight }}
-      >
-        {
-          filteredOptions.map((option, i) => (
-            <li
-              key={i} 
-              className={`gs-editor-option ${selected === i ? ' gs-editor-option-selected' : ''}`}
-              onMouseDown={(e) => {
-                selectValue(i);
-              }}
-            >
-              {option.label ?? option.value}
-            </li>
-          ))
-        }
+      <ul className="gs-editor-options" style={{ marginTop: editorRef.current?.scrollHeight }}>
+        {filteredOptions.map((option, i) => (
+          <li
+            key={i}
+            className={`gs-editor-option ${selected === i ? ' gs-editor-option-selected' : ''}`}
+            onMouseDown={(e) => {
+              selectValue(i);
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }}
+          >
+            {option.label ?? option.value}
+          </li>
+        ))}
       </ul>
     </Fixed>
   );
@@ -594,5 +593,3 @@ export const editorStyle = (text: string) => {
     </>
   );
 };
-
-

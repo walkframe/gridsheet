@@ -1,19 +1,12 @@
 import React from 'react';
-import { 
-  CellType,
-  constructInitialCells, 
-  GridSheet, 
-  Parser, 
-  Renderer, 
-  RenderProps,
-} from '@gridsheet/react-core';
+import { CellType, constructInitialCells, GridSheet, Parser, Renderer, RenderProps } from '@gridsheet/react-core';
 
 export default {
   title: 'Basic',
 };
 
 class ListRenderer extends Renderer {
-  array({cell}: RenderProps<any[]>) {
+  array({ cell }: RenderProps<any[]>) {
     return (
       <ul>
         {cell.value!.map((v, i) => (

@@ -1,4 +1,3 @@
-
 import type { CSSProperties, FC, ReactNode } from 'react';
 import { useBrowser } from './hooks';
 import { createPortal } from 'react-dom';
@@ -18,6 +17,7 @@ export const Fixed: FC<Props> = ({ children, style, className = '', ...attrs }) 
   return createPortal(
     <div {...attrs} className={`gs-fixed ${className}`} style={style}>
       {children}
-    </div>, document.body,
+    </div>,
+    document.body,
   );
 };

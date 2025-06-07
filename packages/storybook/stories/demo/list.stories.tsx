@@ -16,7 +16,7 @@ export default {
 };
 
 const ListRendererMixin: RendererMixinType = {
-  array({ cell}) {
+  array({ cell }) {
     const value = cell.value ?? [];
     return (
       <ul>

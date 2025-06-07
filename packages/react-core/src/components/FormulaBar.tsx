@@ -26,7 +26,7 @@ export const FormulaBar = () => {
 
   const writeCell = (value: string) => {
     if (before !== value) {
-      dispatch(write({value}));
+      dispatch(write({ value }));
     }
     dispatch(setEditingAddress(''));
     editorRef.current!.focus();

@@ -45,3 +45,5 @@ export { CheckboxRendererMixin } from './renderers/checkbox';
 export { BaseFunction } from './formula/functions/__base';
 export { Table } from './lib/table';
 export * as prevention from './lib/operation';
+export { Policy } from './policy/core';
+export type { PolicyType, PolicyOption, PolicyMixinType } from './policy/core';

@@ -1,20 +1,19 @@
-import type { UserTable } from "../lib/table";
-import type { CellType, OperationType, PointType } from "../types";
-
+import type { UserTable } from '../lib/table';
+import type { CellPatchType, CellType, OperationType, PointType } from '../types';
 
 export type PolicyOption = {
   value: any;
   label?: any;
   keyword?: string;
-}
+};
 
-export type OnChangeProps = {
+export type RestrictProps = {
   table: UserTable;
   point: PointType;
   original?: CellType;
   patch?: CellType;
   operation: OperationType;
-}
+};
 
 export type OnClipProps = {
   table: UserTable;
@@ -27,15 +26,17 @@ export type GetDefaultProps = {
   value: any;
 };
 
-type PolicyMixinType = {
-  onChange?: (props: OnChangeProps) => CellType | undefined;
+export type PolicyMixinType = {
+  getDefault?: (props: GetDefaultProps) => CellType | undefined;
+  select?: (props: RestrictProps) => CellType | undefined;
+  callback?: (props: RestrictProps) => CellType | undefined;
   onClip?: (props: OnClipProps) => string;
   getOptions?: () => PolicyOption[];
-}
+};
 
 type PolicyProps = {
   mixins?: PolicyMixinType[];
-}
+};
 
 export class Policy implements PolicyMixinType {
   constructor(props?: PolicyProps) {
@@ -55,17 +56,27 @@ export class Policy implements PolicyMixinType {
   }
 
   public getDefault(props: GetDefaultProps): any {
-    return null;
+    return { value: null };
   }
 
-  public onChange(props: OnChangeProps) {
-    const { table, point, patch } = props;
+  public select(props: RestrictProps) {
+    const { patch, table, point } = props;
     const options = this.getOptions();
-    const index = options.findIndex(option => option.value === patch?.value);
+    const index = options.findIndex((option) => option.value === patch?.value);
     if (options.length > 0 && index === -1) {
-      return { ...patch, value: this.getDefault({ table, point, value: patch?.value })};
+      return { ...patch, ...this.getDefault({ table, point, value: patch?.value }) };
     }
     return patch;
+  }
+
+  public callback(props: RestrictProps): CellPatchType | undefined {
+    const { patch } = props;
+    return patch;
+  }
+
+  public restrict(props: RestrictProps): CellPatchType | undefined {
+    const patch = this.select(props);
+    return this.callback({ ...props, patch });
   }
 
   public onClip(props: OnClipProps): string {
@@ -74,8 +85,7 @@ export class Policy implements PolicyMixinType {
   }
 
   public getOptions(): PolicyOption[] {
-    return [
-    ];
+    return [];
   }
 }
 

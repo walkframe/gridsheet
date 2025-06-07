@@ -12,7 +12,6 @@ export const useBrowser = () => {
   return { window: null, document: null };
 };
 
-
 export const useDebounce = <T>(value: T, delay = 100) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
   const timerRef = useRef<number>();

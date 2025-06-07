@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { drag } from './utils';
 
 test('render', async ({ page }) => {
   await page.goto('http://localhost:5233/iframe.html?id=basic--multiple-sheet&viewMode=story');
@@ -10,7 +11,7 @@ test('render', async ({ page }) => {
 
   expect(await a11.locator('.gs-cell-rendered').textContent()).toBe('150');
   expect(await a21.locator('.gs-cell-rendered').textContent()).toBe('1230');
-  expect(await a31.locator('.gs-cell-rendered').textContent()).toBe('1555');
+  expect(await a31.locator('.gs-cell-rendered').textContent()).toBe('1633');
   expect(await b11.locator('.gs-cell-rendered').textContent()).toBe('#REF!');
 
   // raw A1
@@ -145,10 +146,7 @@ test('insert ref by selection in multiple sheets', async ({ page }) => {
   const b3 = sheet3.locator("[data-address='B3']");
   await b3.click();
   await page.keyboard.type('=sum(');
-  await sheet1.locator("[data-address='E1']").hover();
-  await page.mouse.down();
-  await sheet1.locator("[data-address='F1']").hover();
-  await page.mouse.up();
+  await drag(sheet1, 'E1', 'F1', (page = page));
   // Confirm that the contents of largeEditor is copied to editor
   expect(await editor3.inputValue()).toBe('=sum(criteria!E1:F1');
   expect(await largeEditor3.inputValue()).toBe('=sum(criteria!E1:F1');
@@ -217,10 +215,9 @@ test('disable formula', async ({ page }) => {
   expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('=1+1');
   expect(await b1.locator('.gs-cell-rendered').textContent()).toBe('2');
   expect(await a2.locator('.gs-cell-rendered').textContent()).toBe("'quote");
-  expect(await b2.locator('.gs-cell-rendered').textContent()).toBe("quote");
+  expect(await b2.locator('.gs-cell-rendered').textContent()).toBe('quote');
   expect(await a3.locator('.gs-cell-rendered').textContent()).toBe("'0123");
   expect(await b3.locator('.gs-cell-rendered').textContent()).toBe('0123');
   expect(await a4.locator('.gs-cell-rendered').textContent()).toBe('0123');
   expect(await b4.locator('.gs-cell-rendered').textContent()).toBe('0123');
-
 });

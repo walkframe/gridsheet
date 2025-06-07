@@ -87,7 +87,7 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
   }, [pointed, editing]);
   const cell = table.getByPoint({ y, x });
   const writeCell = (value: string) => {
-    dispatch(write({value}));
+    dispatch(write({ value }));
   };
 
   let errorMessage = '';
@@ -124,10 +124,11 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
     } else {
       dispatch(select({ startY: y, startX: x, endY: -1, endX: -1 }));
     }
-    
+
+    dispatch(setDragging(true));
     const fullAddress = `${table.sheetPrefix(!differentSheetFocused)}${address}`;
     if (editingAnywhere) {
-      const inserted = insertRef({input: lastFocused, ref: fullAddress});
+      const inserted = insertRef({ input: lastFocused, ref: fullAddress });
       if (inserted) {
         return false;
       }
@@ -136,8 +137,7 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
     table.conn.lastFocused = input;
     input.focus();
     dispatch(setEditingAddress(''));
-    dispatch(setDragging(true));
-    
+
     if (autofillDraggingTo) {
       return false;
     }
@@ -149,7 +149,7 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
       dispatch(choose({ y, x }));
     }
     return true;
-  }
+  };
   const handleDragEnd = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -158,6 +158,9 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
       dispatch(submitAutofill(autofillDraggingTo));
       input.focus();
       return false;
+    }
+    if (editingAnywhere) {
+      dispatch(drag({ y: -1, x: -1 }));
     }
   };
 
@@ -173,11 +176,11 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
       return false;
     }
     if (leftHeaderSelecting) {
-      dispatch(drag({y, x: table.getNumCols()}));
+      dispatch(drag({ y, x: table.getNumCols() }));
       return false;
     }
     if (topHeaderSelecting) {
-      dispatch(drag({y: table.getNumRows(), x}));
+      dispatch(drag({ y: table.getNumRows(), x }));
       return false;
     }
     if (editingAnywhere && !isRefInsertable(lastFocused)) {
@@ -188,13 +191,9 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
     if (editingAnywhere) {
       const newArea = zoneToArea({ ...selectingZone, endY: y, endX: x });
       const fullRange = `${table.sheetPrefix(!differentSheetFocused)}${areaToRange(newArea)}`;
-      const inserted = insertRef({input: lastFocused, ref: fullRange});
-      // When the area is inserted into the formula, the selected area needs to be reset.
-      if (inserted) {
-        dispatch(drag({ y: -1, x: -1 }));
-      }
+      insertRef({ input: lastFocused, ref: fullRange });
     }
-    table.conn.reflect({...table.conn}); // // Force drawing because the formula is not reflected in largeInput
+    table.conn.reflect({ ...table.conn }); // // Force drawing because the formula is not reflected in largeInput
     return true;
   };
 
@@ -217,7 +216,7 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
           e.preventDefault();
           e.stopPropagation();
           dispatch(setContextMenuPosition({ y: e.clientY, x: e.clientX }));
-          return false
+          return false;
         }
         return true;
       }}

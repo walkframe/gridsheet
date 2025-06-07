@@ -22,14 +22,14 @@ export type RendererCallProps = {
   table: Table;
   point: PointType;
   writer?: WriterType;
-}
+};
 
-export type RenderProps<T extends any=any> = {
+export type RenderProps<T extends any = any> = {
   cell: CellType<T>;
   table: Table;
   point: PointType;
   writer?: WriterType;
-}
+};
 
 export interface RendererMixinType {
   datetimeFormat?: string;
@@ -79,13 +79,13 @@ export class Renderer implements RendererMixinType {
   }
 
   public call(props: RendererCallProps): any {
-    const {point, table, writer} = props
+    const { point, table, writer } = props;
     const address = p2a(point);
     const key = table.getFullRef(address);
     const alreadyRendered = table.conn.renderedCaches[key];
     const cell = table.getByPoint(point)!;
     if (alreadyRendered !== undefined) {
-      return this.decorate(alreadyRendered, {...props, cell});
+      return this.decorate(alreadyRendered, { ...props, cell });
     }
     const cache = table.getSolvedCache(address);
     let value = cache ?? cell?.value;
@@ -96,9 +96,9 @@ export class Renderer implements RendererMixinType {
         value = solveFormula({ value, table, raise: true, origin: point });
       }
     }
-    const rendered = this.render({cell: {...cell, value}, table, writer, point});
+    const rendered = this.render({ cell: { ...cell, value }, table, writer, point });
     table.conn.renderedCaches[key] = rendered;
-    return this.decorate(rendered, {...props, cell});
+    return this.decorate(rendered, { ...props, cell });
   }
 
   public decorate(rendered: any, props: RenderProps): any {
@@ -122,12 +122,12 @@ export class Renderer implements RendererMixinType {
           return this.date(props);
         }
         if (TimeDelta.is(value)) {
-          return this.timedelta({cell: {...cell, value: TimeDelta.ensure(value)}, table, point});
+          return this.timedelta({ cell: { ...cell, value: TimeDelta.ensure(value) }, table, point });
         }
         if (value instanceof Table) {
           // MAY: { y: value.top, x: value.left } ?
           const cell = table.getByPoint(point)!;
-          return this.render({...props, cell});
+          return this.render({ ...props, cell });
         }
         if (Array.isArray(value)) {
           return this.array(props);
@@ -152,10 +152,10 @@ export class Renderer implements RendererMixinType {
     const value = cell.value!;
     const { table, point } = renderProps;
     if (value instanceof Date) {
-      return this.date({cell, table, point});
+      return this.date({ cell, table, point });
     }
     if (TimeDelta.is(value)) {
-      return this.timedelta({cell: {...cell, value: TimeDelta.ensure(value)}, table, point});
+      return this.timedelta({ cell: { ...cell, value: TimeDelta.ensure(value) }, table, point });
     }
     if (value == null) {
       return '';
@@ -163,16 +163,15 @@ export class Renderer implements RendererMixinType {
     return value.toString();
   }
 
-
   string({ cell }: RenderProps<string>): any {
     return cell.value!;
   }
 
-  bool({cell}: RenderProps<boolean>): any {
+  bool({ cell }: RenderProps<boolean>): any {
     return cell.value ? 'TRUE' : 'FALSE';
   }
 
-  number({cell}: RenderProps<number>): any {
+  number({ cell }: RenderProps<number>): any {
     const { value } = cell!;
     if (isNaN(value!)) {
       return 'NaN';
@@ -180,7 +179,7 @@ export class Renderer implements RendererMixinType {
     return value;
   }
 
-  date({cell}: RenderProps<Date>): any {
+  date({ cell }: RenderProps<Date>): any {
     const value = cell!.value!;
     if (value.getHours() + value.getMinutes() + value.getSeconds() === 0) {
       return dayjs(value).format(this.dateFormat);
@@ -188,7 +187,7 @@ export class Renderer implements RendererMixinType {
     return dayjs(value).format(this.datetimeFormat);
   }
 
-  timedelta({cell}: RenderProps<TimeDelta>) {
+  timedelta({ cell }: RenderProps<TimeDelta>) {
     const value = cell.value!;
     return value.stringify(this.timeDeltaFormat);
   }
@@ -198,7 +197,7 @@ export class Renderer implements RendererMixinType {
     return cell.value!.map((v) => this.stringify({ value: v }, props)).join(',');
   }
 
-  object({cell}: RenderProps<any>): any {
+  object({ cell }: RenderProps<any>): any {
     return JSON.stringify(cell.value);
   }
 

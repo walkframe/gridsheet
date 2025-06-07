@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { ctrl, drag, paste } from './utils';
 
 test('cell value', async ({ page }) => {
   await page.goto('http://localhost:5233/iframe.html?id=basic--small&viewMode=story');
@@ -43,11 +44,8 @@ test('select', async ({ page }) => {
   const a1 = page.locator("[data-address='A1']");
   const b2 = page.locator("[data-address='B2']");
   const b3 = page.locator("[data-address='B3']");
-  await a1.click();
-  await page.locator("[data-address='A1']").hover();
-  await page.mouse.down();
-  await page.locator("[data-address='B3']").hover();
-  await page.mouse.up();
+
+  await drag(page, 'A1', 'B3');
   expect(await a1.getAttribute('class')).toContain('gs-selecting');
   expect(await b2.getAttribute('class')).toContain('gs-selecting');
   expect(await b3.getAttribute('class')).toContain('gs-selecting');
@@ -69,16 +67,13 @@ test('select by shift, copy and paste', async ({ page }) => {
   expect(await b3.getAttribute('class')).toContain('gs-selecting');
 
   // Copy A1:B3
-  await page.keyboard.down('Control');
-  await page.keyboard.press('c');
-  await page.keyboard.up('Control');
+  await ctrl(page, 'c');
 
   // Paste to B5
   await b5.click();
-  await page.keyboard.down('Control');
-  await page.keyboard.press('v');
-  await page.keyboard.up('Control');
+  await paste(page);
 
+  // Verify the paste operation
   expect(await b5.locator('.gs-cell-rendered').textContent()).toBe('A1');
   expect(await c5.locator('.gs-cell-rendered').textContent()).toBe('B1');
 });

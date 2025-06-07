@@ -14,11 +14,11 @@ export const Emitter: FC<Props> = ({ onChange, onSelect }) => {
 
   useEffect(() => {
     table?.isInitialized &&
-    onChange?.(table, {
-      pointing,
-      selectingFrom: { y: zone.startY, x: zone.startX },
-      selectingTo: { y: zone.endY, x: zone.endX },
-    });
+      onChange?.(table, {
+        pointing,
+        selectingFrom: { y: zone.startY, x: zone.startX },
+        selectingTo: { y: zone.endY, x: zone.endX },
+      });
   }, [table]);
 
   useEffect(() => {

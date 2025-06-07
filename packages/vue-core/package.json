@@ -6,7 +6,9 @@
   "types": "dist/index.d.ts",
   "files": ["dist"],
   "scripts": {
-    "build": "vite build"
+    "dev": "vite example",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "peerDependencies": {
     "vue": "^3.3.0"
@@ -16,6 +18,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.4",
+    "vue": "^3.4.21",
     "vite": "^6.3.5",
     "vite-plugin-dts": "^3.9.0"
   }

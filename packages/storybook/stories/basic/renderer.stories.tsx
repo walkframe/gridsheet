@@ -29,16 +29,16 @@ const kanjiMap: { [s: string]: string } = {
 };
 
 const NullMixin: RendererMixinType = {
-  null({cell, point}: RenderProps<null>) {
+  null({ cell, point }: RenderProps<null>) {
     return <span style={{ opacity: 0.3 }}>{p2a(point!)}</span>;
   },
 };
 
 const KanjiRendererMixin: RendererMixinType = {
-  string({cell}: RenderProps<string>): string {
+  string({ cell }: RenderProps<string>): string {
     return cell.value!;
   },
-  number({cell}: RenderProps<number>) {
+  number({ cell }: RenderProps<number>) {
     const minus = cell.value! < 0;
 
     let kanji = '';
@@ -67,7 +67,7 @@ export const RenderToKanji = () => {
       <GridSheet
         initialCells={constructInitialCells({
           matrices: {
-            A1: [[true, false]],
+            A1: [[true, false, 64]],
             B3: [[100], [200, 300], [400, 500, 600], [800, 900, 1000, 1100]],
           },
           cells: {
@@ -76,7 +76,7 @@ export const RenderToKanji = () => {
             },
             B10: {
               value: '=B6+10000',
-            }
+            },
           },
           ensured: { numRows: 30, numCols: 20 },
         })}

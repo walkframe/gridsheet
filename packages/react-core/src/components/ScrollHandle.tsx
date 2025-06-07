@@ -3,6 +3,9 @@ import { useEffect, useRef, useContext } from 'react';
 import { Context } from '../store';
 import { drag, setAutofillDraggingTo, setDragging, submitAutofill } from '../store/actions';
 import { getAreaInTabular } from '../lib/virtualization';
+import { insertRef, isFocus } from '../lib/input';
+import { areaToRange, zoneToArea } from '../lib/structs';
+import { isDifferentSheetFocused } from '../store/helpers';
 
 type Props = {
   style: CSSProperties;
@@ -19,11 +22,35 @@ let currentSpeed = 0;
 export function ScrollHandle({ style, horizontal, vertical }: Props) {
   const scrollRef = useRef<number | null>(null);
   const { store, dispatch } = useContext(Context);
-  const { tabularRef, autofillDraggingTo, dragging, selectingZone, editorRef, table } = store;
+  const { tabularRef, autofillDraggingTo, dragging, selectingZone, editorRef, table, searchInputRef, editingAddress } =
+    store;
 
   let isScrolling = false;
+  const differentSheetFocused = isDifferentSheetFocused(store);
+  const editingAnywhere = !!(table.conn.editingAddress || editingAddress);
 
-  const scrollStep = () => {
+  const getDestEdge = (e: React.MouseEvent) => {
+    if (horizontal == null || vertical == null) {
+      const tabularRect = tabularRef.current!.getBoundingClientRect();
+      const { left, top, right, bottom } = tabularRect;
+      horizontal = horizontal ?? (e.pageX > right ? 1 : e.pageX < left ? -1 : 0);
+      vertical = vertical ?? (e.pageY > bottom ? 1 : e.pageY < top ? -1 : 0);
+    }
+
+    const area = getAreaInTabular(tabularRef.current!);
+    let x = 0,
+      y = 0;
+    if (horizontal) {
+      y = selectingZone.endY;
+      x = horizontal > 0 ? area.right : area.left;
+    } else {
+      x = selectingZone.endX;
+      y = vertical > 0 ? area.bottom : area.top;
+    }
+    return { x, y };
+  };
+
+  const scrollStep = (e: React.MouseEvent) => {
     if (!isScrolling || tabularRef.current === null) {
       return;
     }
@@ -39,21 +66,21 @@ export function ScrollHandle({ style, horizontal, vertical }: Props) {
     });
     editorRef.current!.focus();
 
-    let [y, x] = [0, 0];
-    if (horizontal !== 0) {
-      y = selectingZone.endY;
-      x = horizontal! > 0 ? table.getNumCols() : 0;
-    } else {
-      x = selectingZone.endX;
-      y = vertical! > 0 ? table.getNumRows() : 0;
-    }
+    const { x, y } = getDestEdge(e);
     if (autofillDraggingTo) {
       dispatch(setAutofillDraggingTo({ y, x }));
     } else {
+      if (editingAnywhere) {
+        const newArea = zoneToArea({ ...selectingZone, endY: y, endX: x });
+        const sheetPrefix = table.sheetPrefix(!differentSheetFocused);
+        const sheetRange = areaToRange(newArea);
+        const fullRange = `${sheetPrefix}${sheetRange}`;
+        insertRef({ input: editorRef.current, ref: fullRange });
+      }
       dispatch(drag({ y, x }));
     }
     currentSpeed = Math.min(currentSpeed + acceleration, maxSpeed);
-    scrollRef.current = requestAnimationFrame(scrollStep);
+    scrollRef.current = requestAnimationFrame(() => scrollStep(e));
   };
 
   const handleMouseEnter = (e: React.MouseEvent) => {
@@ -71,18 +98,20 @@ export function ScrollHandle({ style, horizontal, vertical }: Props) {
       horizontal = horizontal ?? (e.pageX > right ? 1 : e.pageX < left ? -1 : 0);
       vertical = vertical ?? (e.pageY > bottom ? 1 : e.pageY < top ? -1 : 0);
     }
-
-    scrollRef.current = requestAnimationFrame(scrollStep);
+    scrollRef.current = requestAnimationFrame(() => scrollStep(e));
   };
 
-  const stopScroll = () => {
+  function stopScroll() {
     if (scrollRef.current !== null) {
       cancelAnimationFrame(scrollRef.current);
       scrollRef.current = null;
     }
     isScrolling = false;
-    editorRef.current?.focus?.();
-  };
+    if (!isFocus(searchInputRef.current)) {
+      // Pressing Enter on a search result will not focus the editor.
+      editorRef.current?.focus?.();
+    }
+  }
 
   const handleMouseUp = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -92,24 +121,17 @@ export function ScrollHandle({ style, horizontal, vertical }: Props) {
       return;
     }
 
-    const tabularRect = tabularRef.current!.getBoundingClientRect();
-    const { left, top, right, bottom } = tabularRect;
-    horizontal = horizontal ?? (e.pageX > right ? 1 : e.pageX < left ? -1 : 0);
-    vertical = vertical ?? (e.pageY > bottom ? 1 : e.pageY < top ? -1 : 0);
-
-    let x = 0, y = 0;
-    if (horizontal) {
-      y = selectingZone.endY;
-      x = horizontal > 0 ? area.right : area.left;
-    } else {
-      x = selectingZone.endX;
-      y = vertical > 0 ? area.bottom : area.top;
-    }
+    const { x, y } = getDestEdge(e);
     if (autofillDraggingTo) {
       dispatch(submitAutofill({ y, x }));
       editorRef.current!.focus();
     } else {
-      dispatch(drag({ y, x }));
+      if (editingAnywhere) {
+        // inserting a range
+        dispatch(drag({ y: -1, x: -1 })); // Reset dragging
+      } else {
+        dispatch(drag({ y, x }));
+      }
     }
   };
 
@@ -132,7 +154,7 @@ export function ScrollHandle({ style, horizontal, vertical }: Props) {
       onMouseUp={(e) => {
         stopScroll();
         dispatch(setDragging(false));
-        requestAnimationFrame(() => handleMouseUp(e))
+        requestAnimationFrame(() => handleMouseUp(e));
       }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={() => {

@@ -3,7 +3,6 @@ import type { Table } from './table';
 import { Lexer } from '../formula/evaluator';
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '../constants';
 
-
 export const insertTextAtCursor = (input: HTMLTextAreaElement, text: string) => {
   input.focus();
   const deprecated = !document.execCommand?.('insertText', false, text);
@@ -18,9 +17,9 @@ type InsertRefProps = {
   input: HTMLTextAreaElement | null;
   ref: string;
   dryRun?: boolean;
-}
+};
 
-export const insertRef = ({ input, ref, dryRun=false }: InsertRefProps): boolean => {
+export const insertRef = ({ input, ref, dryRun = false }: InsertRefProps): boolean => {
   // dryRun is used to check if the ref can be inserted without actually inserting it
   if (!input?.value?.startsWith('=') || input.selectionStart === 0) {
     return false;
@@ -55,7 +54,7 @@ export const insertRef = ({ input, ref, dryRun=false }: InsertRefProps): boolean
 };
 
 export const isRefInsertable = (input: HTMLTextAreaElement | null): boolean => {
-  return insertRef({input, ref: '', dryRun: true });
+  return insertRef({ input, ref: '', dryRun: true });
 };
 
 export const expandInput = (input: HTMLTextAreaElement | null) => {
@@ -71,8 +70,15 @@ export const resetInput = (input: HTMLTextAreaElement | null, table: Table, poin
   if (style == null) {
     return;
   }
-  const width = table.getByPoint({ x: point.x, y: 0})?.width ?? DEFAULT_WIDTH;
+  const width = table.getByPoint({ x: point.x, y: 0 })?.width ?? DEFAULT_WIDTH;
   const height = table.getByPoint(point)?.height ?? DEFAULT_HEIGHT;
   style.width = `${width}px`;
   style.height = `${height}px`;
+};
+
+export const isFocus = (input: HTMLTextAreaElement | null): boolean => {
+  if (typeof window === 'undefined' || input == null) {
+    return false;
+  }
+  return document.activeElement === input;
 };

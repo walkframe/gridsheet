@@ -70,10 +70,9 @@ export const areaToRange = (area: AreaType): string => {
   if (top === bottom && left === right) {
     return p2a({ y: top, x: left });
   }
-  return `${p2a({ y: top, x: left })}:${p2a({
-    y: bottom,
-    x: right,
-  })}`;
+  const leftTop = p2a({ y: top, x: left });
+  const rightBottom = p2a({ y: bottom, x: right });
+  return `${leftTop}:${rightBottom}`;
 };
 
 export const between = (range: RangeType, index: number) => {
@@ -357,5 +356,32 @@ export const restrictZone = (zone: ZoneType): ZoneType => {
   if (s.height + s.width === 0) {
     return { startY: -1, startX: -1, endY: -1, endX: -1 };
   }
-  return {...zone};
-}
+  return { ...zone };
+};
+
+export type BinarySearchPredicate = (mid: number) => boolean;
+
+export const binarySearch = (
+  low: number,
+  high: number,
+  predicate: BinarySearchPredicate,
+  lessThan: boolean,
+): number => {
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    if (predicate(mid)) {
+      if (lessThan) {
+        high = mid - 1;
+      } else {
+        low = mid + 1;
+      }
+    } else {
+      if (lessThan) {
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+  }
+  return lessThan ? low : high;
+};

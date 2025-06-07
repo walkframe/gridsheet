@@ -122,7 +122,7 @@ class SubmitAutofillAction<T extends PointType> extends CoreAction<T> {
       leftHeaderSelecting: false,
       topHeaderSelecting: false,
       autofillDraggingTo: null,
-    }
+    };
   }
 }
 export const submitAutofill = new SubmitAutofillAction().bind();
@@ -261,7 +261,6 @@ class SetDragging<T extends boolean> extends CoreAction<T> {
 }
 export const setDragging = new SetDragging().bind();
 
-
 class BlurAction<T extends null> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     return {
@@ -294,13 +293,13 @@ class CutAction<T extends ZoneType> extends CoreAction<T> {
 }
 export const cut = new CutAction().bind();
 
-class PasteAction<T extends {matrix: RawCellType[][], onlyValue: boolean}> extends CoreAction<T> {
+class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     const { choosing, copyingZone, selectingZone, cutting, table } = store;
 
     let selectingArea = zoneToArea(selectingZone);
     const copyingArea = zoneToArea(copyingZone);
-    const {matrix, onlyValue} = payload;
+    const { matrix, onlyValue } = payload;
 
     if (cutting) {
       const src = copyingArea;
@@ -357,6 +356,7 @@ class PasteAction<T extends {matrix: RawCellType[][], onlyValue: boolean}> exten
       newTable = table.writeRawCellMatrix({
         point: { y, x },
         matrix,
+        onlyValue,
         reflection: {
           selectingZone: nextSelectingZone,
         },
@@ -374,7 +374,7 @@ class PasteAction<T extends {matrix: RawCellType[][], onlyValue: boolean}> exten
       newTable = table.copy({
         src: copyingArea,
         dst: selectingArea,
-        onlyValue: onlyValue,
+        onlyValue,
         operator: 'USER',
         reflection: {
           copyingZone,
@@ -514,7 +514,7 @@ class SearchAction<T extends number> extends CoreAction<T> {
 }
 export const search = new SearchAction().bind();
 
-class WriteAction<T extends {value: string; point?: PointType}> extends CoreAction<T> {
+class WriteAction<T extends { value: string; point?: PointType }> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreType {
     let { value, point } = payload;
     const { choosing, selectingZone, table } = store;
@@ -618,6 +618,7 @@ class RedoAction<T extends null> extends CoreAction<T> {
       ...reflection,
       ...restrictPoints(store, table),
       ...initSearchStatement(newTable, store),
+      copyingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
       table: newTable,
     };
   }

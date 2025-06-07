@@ -1,5 +1,5 @@
 <script>
-  import { GridSheet } from '..';
+  import { GridSheet } from '@gridsheet/svelte-core';
 </script>
 
 <main>
@@ -8,10 +8,13 @@
     <GridSheet
       initialCells={{
         A1: { value: 'Hello' },
-        B1: { value: 'Svelte', style: { backgroundColor: '#448888'} },
+        B1: { value: 'Svelte', style: { backgroundColor: '#FF8800'} },
         A2: { value: 123 },
         B2: { value: 456 },
         C10: { value: '=SUM(A2:B2)' },
+      }}
+      options={{
+        mode: 'dark',
       }}
       sheetName="Example"
     />

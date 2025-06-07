@@ -18,7 +18,7 @@ export const SheetOnChange = () => {
     setDiff(
       table.getObjectFlatten({
         evaluates,
-        filter: (cell) => !!cell?.changedAt && cell.changedAt > table.lastChangedAt!,
+        filter: (cell) => !!cell?.system?.changedAt && cell.system.changedAt > table.lastChangedAt!,
       }),
     );
   }, [table, evaluates]);

@@ -183,5 +183,5 @@ function dayjsFormatToNamedRegex(format: string): RegExp {
   return new RegExp(`^${regexSource}$`);
 }
 
-export const safeQueueMicrotask = typeof queueMicrotask === 'function'
-  ? queueMicrotask : (cb: () => void) => Promise.resolve().then(cb);
+export const safeQueueMicrotask =
+  typeof queueMicrotask === 'function' ? queueMicrotask : (cb: () => void) => Promise.resolve().then(cb);

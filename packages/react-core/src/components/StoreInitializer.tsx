@@ -87,7 +87,6 @@ export const StoreInitializer: FC<Props> = ({ options = {} }) => {
     table.absolutizeFormula();
   }, [table.conn.head]);
 
-
   const [pluginProvided, pluginContext] = usePluginContext();
   useEffect(() => {
     if (!pluginProvided) {

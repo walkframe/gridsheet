@@ -55,6 +55,6 @@ export const Prevention: StoryObj<typeof Sheet> = {
 };
 
 export default {
-  title: 'Basic',
+  title: 'Protection',
   component: Sheet,
 };
