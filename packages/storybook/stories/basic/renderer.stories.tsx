@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  constructInitialCells,
+  buildInitialCells,
   GridSheet,
   Renderer,
   RendererMixinType,
@@ -65,7 +65,7 @@ export const RenderToKanji = () => {
   return (
     <>
       <GridSheet
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           matrices: {
             A1: [[true, false, 64]],
             B3: [[100], [200, 300], [400, 500, 600], [800, 900, 1000, 1100]],

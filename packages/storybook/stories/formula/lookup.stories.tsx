@@ -1,5 +1,5 @@
 import React from 'react';
-import { constructInitialCells, GridSheet, prevention } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, prevention } from '@gridsheet/react-core';
 
 export default {
   title: 'Formula',
@@ -10,7 +10,7 @@ export const LookUp = () => {
     <>
       <h1>HLOOKUP</h1>
       <GridSheet
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           cells: {
             1: { style: { backgroundColor: '#ddd' } },
             '2:3': { style: {} },
@@ -54,7 +54,7 @@ export const LookUp = () => {
       />
       <h1>VLOOKUP</h1>
       <GridSheet
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           cells: {
             A: { width: 30 },
             C: { width: 40 },

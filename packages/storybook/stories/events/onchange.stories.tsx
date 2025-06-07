@@ -1,5 +1,5 @@
 import React from 'react';
-import { GridSheet, constructInitialCells, createTableRef, HistoryType } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells, createTableRef, HistoryType } from '@gridsheet/react-core';
 
 export default {
   title: 'Table operations',
@@ -16,7 +16,7 @@ export const SheetOnChange = () => {
       return;
     }
     setDiff(
-      table.getObjectFlatten({
+      table.getFieldObject({
         evaluates,
         filter: (cell) => !!cell?.system?.changedAt && cell.system.changedAt > table.lastChangedAt!,
       }),
@@ -29,7 +29,7 @@ export const SheetOnChange = () => {
         <div style={{ flex: 1 }}>
           <GridSheet
             tableRef={tableRef}
-            initialCells={constructInitialCells({
+            initialCells={buildInitialCells({
               matrices: {
                 A1: [
                   [1, 2, 3, 4, 5],
@@ -59,7 +59,7 @@ export const SheetOnChange = () => {
                 if (h?.operation === 'UPDATE') {
                   console.log('histories', table.getAddressesByIds(h.diffAfter));
                 }
-                console.log('matrix', table.getMatrixFlatten({ evaluates }));
+                console.log('matrix', table.getFieldMatrix({ evaluates }));
               },
             }}
           />

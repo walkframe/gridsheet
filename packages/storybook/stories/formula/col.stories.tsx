@@ -1,5 +1,5 @@
 import React from 'react';
-import { constructInitialCells, GridSheet } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
 
 export default {
   title: 'Formula',
@@ -9,7 +9,7 @@ export const Col = () => {
   return (
     <>
       <GridSheet
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           cells: {
             A1: { value: '=COL()' },
             A2: { value: '=COL()' },

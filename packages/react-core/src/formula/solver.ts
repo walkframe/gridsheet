@@ -46,7 +46,7 @@ export const solveFormula = ({ value, table, raise = true, evaluates = true, ori
 
 export const solveTable = ({ table, raise = true }: { table: Table; raise?: boolean }): MatrixType => {
   const area = table.getArea();
-  return table.getMatrixFlatten({ area, evaluates: null }).map((row, i) => {
+  return table.getFieldMatrix({ area, evaluates: null }).map((row, i) => {
     const y = area.top + i;
     return row.map((value, j) => {
       const x = area.left + j;

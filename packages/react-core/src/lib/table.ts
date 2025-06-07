@@ -72,7 +72,7 @@ type MoveProps = {
   historicize?: boolean;
 };
 
-type GetFlattenProps = GetProps & {
+type GetFieldProps = GetProps & {
   key?: keyof CellType;
 };
 
@@ -80,7 +80,7 @@ type GetPropsWithArea = GetProps & {
   area?: AreaType;
 };
 
-type GetFlattenPropsWithArea = GetFlattenProps & {
+type GetFieldPropsWithArea = GetFieldProps & {
   area?: AreaType;
 };
 
@@ -110,10 +110,10 @@ export interface UserTable {
   getById(id: Id): CellType | undefined;
   getNumRows(base?: number): number;
   getNumCols(base?: number): number;
-  getMatrixFlatten(args?: GetFlattenPropsWithArea): any[][];
-  getObjectFlatten(args?: GetFlattenProps): CellsByAddressType;
-  getRowsFlatten(args?: GetFlattenProps): CellsByAddressType[];
-  getColsFlatten(args?: GetFlattenProps): CellsByAddressType[];
+  getFieldMatrix(args?: GetFieldPropsWithArea): any[][];
+  getFieldObject(args?: GetFieldProps): CellsByAddressType;
+  getFieldRows(args?: GetFieldProps): CellsByAddressType[];
+  getFieldCols(args?: GetFieldProps): CellsByAddressType[];
   getMatrix(args?: GetPropsWithArea): (CellType | null)[][];
   getObject(args?: GetProps): CellsByAddressType;
   getRows(args?: GetProps): CellsByAddressType[];
@@ -530,13 +530,13 @@ export class Table implements UserTable {
     return ref;
   }
 
-  public getMatrixFlatten({
+  public getFieldMatrix({
     area,
     key = 'value',
     evaluates = true,
     raise = false,
     filter = noFilter,
-  }: GetFlattenPropsWithArea = {}) {
+  }: GetFieldPropsWithArea = {}) {
     const { top, left, bottom, right } = area || {
       top: 1,
       left: 1,
@@ -561,7 +561,8 @@ export class Table implements UserTable {
     }
     return matrix;
   }
-  public getObjectFlatten({ key = 'value', evaluates = true, raise = false, filter = noFilter }: GetFlattenProps = {}) {
+
+  public getFieldObject({ key = 'value', evaluates = true, raise = false, filter = noFilter }: GetFieldProps = {}) {
     const result: CellsByAddressType = {};
     const { top, left, bottom, right } = this.area;
     for (let y = top; y <= bottom; y++) {
@@ -580,7 +581,8 @@ export class Table implements UserTable {
     }
     return result;
   }
-  public getRowsFlatten({ key = 'value', evaluates = true, raise = false, filter = noFilter }: GetFlattenProps = {}) {
+
+  public getFieldRows({ key = 'value', evaluates = true, raise = false, filter = noFilter }: GetFieldProps = {}) {
     const result: CellsByAddressType[] = [];
     const { top, left, bottom, right } = this.area;
     for (let y = top; y <= bottom; y++) {
@@ -601,7 +603,8 @@ export class Table implements UserTable {
     }
     return result;
   }
-  public getColsFlatten({ key = 'value', evaluates = true, raise = false, filter = noFilter }: GetFlattenProps = {}) {
+
+  public getFieldCols({ key = 'value', evaluates = true, raise = false, filter = noFilter }: GetFieldProps = {}) {
     const result: CellsByAddressType[] = [];
     const { top, left, bottom, right } = this.area;
     for (let x = left; x <= right; x++) {
@@ -622,6 +625,7 @@ export class Table implements UserTable {
     }
     return result;
   }
+
   public getMatrix({
     area,
     evaluates = true,

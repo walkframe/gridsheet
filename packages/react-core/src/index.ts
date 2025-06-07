@@ -7,8 +7,8 @@ export type { ParserMixinType } from './parsers/core';
 export {
   oa2aa,
   aa2oa,
-  constructInitialCells,
-  constructInitialCellsOrigin,
+  buildInitialCells,
+  buildInitialCellsOrigin,
   zoneToArea,
   areaToZone,
   areaToRange,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { constructInitialCells, GridSheet as PreactGridSheet, h, render as preactRender } from '@gridsheet/preact-core';
+import { buildInitialCells, GridSheet as PreactGridSheet, h, render as preactRender } from '@gridsheet/preact-core';
 
 export default {
   title: 'Basic',
@@ -28,7 +28,7 @@ export const Preact = () => {
   return (
     <>
       <GridSheet
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           cells: {
             A1: { value: '=SUM($B$1:B2)' },
             B1: { value: 1 },

@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { constructInitialCells, GridSheet, useConnector } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, useConnector } from '@gridsheet/react-core';
 
 type Props = {
   numRows: number;
@@ -22,7 +22,7 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
             <GridSheet
               connector={connector}
               sheetName={sheet1}
-              initialCells={constructInitialCells({
+              initialCells={buildInitialCells({
                 cells: {
                   default: { width: defaultWidth },
                   A1: {
@@ -57,7 +57,7 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
             <GridSheet
               connector={connector}
               sheetName={sheet2}
-              initialCells={constructInitialCells({
+              initialCells={buildInitialCells({
                 cells: {
                   A1: { value: 50 },
                   A2: { value: `=${sheet1}!C3` },
@@ -80,7 +80,7 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
             <GridSheet
               connector={connector}
               sheetName={sheet3}
-              initialCells={constructInitialCells({
+              initialCells={buildInitialCells({
                 cells: {
                   A1: { value: `=${sheet1}!C3` },
                 },
@@ -93,7 +93,7 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
           <td style={{ border: '3px solid #aaa', padding: '5px' }}>
             <GridSheet
               sheetName={sheet4}
-              initialCells={constructInitialCells({
+              initialCells={buildInitialCells({
                 cells: {
                   A1: { value: `=${sheet1}!C3` },
                 },

@@ -1,5 +1,5 @@
 import React from 'react';
-import { CellType, constructInitialCells, GridSheet, Parser, Renderer, RenderProps } from '@gridsheet/react-core';
+import { CellType, buildInitialCells, GridSheet, Parser, Renderer, RenderProps } from '@gridsheet/react-core';
 
 export default {
   title: 'Basic',
@@ -32,7 +32,7 @@ export const ParseAsList = () => {
   return (
     <>
       <GridSheet
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           matrices: {
             A1: [
               [

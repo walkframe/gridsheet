@@ -5,7 +5,7 @@ import {
   PolicyOption,
   PolicyMixinType,
   CellsByAddressType,
-  constructInitialCells,
+  buildInitialCells,
   TimeDelta,
 } from '@gridsheet/react-core';
 
@@ -64,7 +64,7 @@ export const Options = () => {
           animal: animalPolicy,
         },
       }}
-      initialCells={constructInitialCells({
+      initialCells={buildInitialCells({
         cells: {
           A: {
             labeler: 'color',

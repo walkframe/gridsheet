@@ -5,7 +5,7 @@ import {
   PolicyOption,
   PolicyMixinType,
   CellsByAddressType,
-  constructInitialCells,
+  buildInitialCells,
   TimeDelta,
   Renderer,
 } from '@gridsheet/react-core';
@@ -46,7 +46,7 @@ export const OnClip = () => {
           mask: maskRenderer,
         },
       }}
-      initialCells={constructInitialCells({
+      initialCells={buildInitialCells({
         cells: {
           default: {
             policy: 'mask',

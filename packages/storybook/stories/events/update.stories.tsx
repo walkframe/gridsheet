@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { GridSheet, constructInitialCells, createTableRef, HistoryType } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells, createTableRef, HistoryType } from '@gridsheet/react-core';
 
 export default {
   title: 'Table operations',
@@ -36,7 +36,7 @@ export const Update = () => {
       <button onClick={update}>Update!</button>
       <GridSheet
         tableRef={tableRef}
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           cells: {},
           ensured: {
             numRows: 10,
@@ -73,7 +73,7 @@ export const AddRowsAndUpdate = () => {
       <button onClick={add}>Add!</button>
       <GridSheet
         tableRef={tableRef}
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           cells: {
             B: { style: { color: '#F00' } },
             B7: { value: 'test1' },
@@ -115,7 +115,7 @@ export const AddColsAndUpdate = () => {
       <button onClick={add}>Add!</button>
       <GridSheet
         tableRef={tableRef}
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           cells: {
             B: { style: { color: '#F00' } },
             B7: { value: 'test1' },

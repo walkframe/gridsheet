@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { constructInitialCells, GridSheet, prevention } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, prevention } from '@gridsheet/react-core';
 
 type Props = {
   numRows: number;
@@ -16,7 +16,7 @@ const Sheet = ({ numRows, numCols, defaultWidth }: Props) => {
           headerHeight: 50,
           headerWidth: 150,
         }}
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           cells: {
             default: { width: defaultWidth },
             4: {

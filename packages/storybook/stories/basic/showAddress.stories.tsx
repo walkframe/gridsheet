@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { constructInitialCells, GridSheet } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
 
 type Props = {
   showAddress: boolean;
@@ -10,7 +10,7 @@ const Sheet = ({ showAddress }: Props) => {
   return (
     <>
       <GridSheet
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           ensured: { numRows: 100, numCols: 100 },
         })}
         options={{ showAddress }}

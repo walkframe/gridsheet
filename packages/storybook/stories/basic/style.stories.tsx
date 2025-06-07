@@ -1,5 +1,5 @@
 import React from 'react';
-import { constructInitialCells, GridSheet } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
 
 export default {
   title: 'Basic',
@@ -9,7 +9,7 @@ export const Style = () => {
   return (
     <div style={{ transform: 'translate(50px, 50px)' }}>
       <GridSheet
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           matrices: {
             A1: [
               ['a', 'b', 'c', 'd', 'e'],

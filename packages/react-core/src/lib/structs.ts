@@ -188,7 +188,7 @@ export const cropMatrix = <T = any>(matrix: T[][], area: AreaType): T[][] => {
   return matrix.slice(top, bottom + 1).map((cols) => cols.slice(left, right + 1));
 };
 
-export const constructInitialCellsOrigin = ({
+export const buildInitialCellsOrigin = ({
   cells = {},
   ensured = {},
   matrix = [],
@@ -202,7 +202,7 @@ export const constructInitialCellsOrigin = ({
   flattenAs?: keyof CellType;
   matrix?: MatrixType;
 }) => {
-  return constructInitialCells({
+  return buildInitialCells({
     cells,
     ensured,
     matrices: { A1: matrix },
@@ -210,7 +210,7 @@ export const constructInitialCellsOrigin = ({
   });
 };
 
-export const constructInitialCells = ({
+export const buildInitialCells = ({
   cells = {},
   ensured = {},
   matrices = {},

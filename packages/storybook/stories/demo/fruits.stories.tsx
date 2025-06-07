@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { GridSheet, constructInitialCells, BaseFunction, prevention, useConnector } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells, BaseFunction, prevention, useConnector } from '@gridsheet/react-core';
 
 export default {
   title: 'Demo',
@@ -23,7 +23,7 @@ export function FirstDemo() {
       <GridSheet
         connector={connector}
         sheetName={sheetName1}
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           matrices: {
             A1: [
               [0, '=A1+60', '=B1+10', '=C1+10', '=D1+10', '=E1+5'],
@@ -54,7 +54,7 @@ export function FirstDemo() {
       <GridSheet
         connector={connector}
         sheetName={sheetName2}
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           matrices: {
             A1: [
               ['Name', 'Point', 'Rank', 'Comment'],
@@ -102,7 +102,7 @@ export function FirstDemo() {
       <GridSheet
         connector={connector}
         sheetName={sheetName3}
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           matrices: {
             A1: [
               ['NOW:', '=NOW()'],
