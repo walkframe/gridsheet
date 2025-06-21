@@ -65,7 +65,7 @@ export const DynamicOptions = () => {
               labeler: 'label',
             },
             default: {
-              prevention: operations.AddCol,
+              prevention: operations.InsertCols,
             },
           },
         })}

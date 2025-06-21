@@ -36,7 +36,7 @@ export function FirstDemo() {
             },
             '1': {
               style: { backgroundColor: '#ddd' },
-              prevention: operations.ReadOnly,
+              prevention: operations.InsertCols,
             },
           },
         })}

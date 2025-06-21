@@ -114,7 +114,7 @@ export const InsertRowsAboveItem = (props: ContextMenuProps) => {
   const selectingTopCell = table.getByPoint({ y, x: 0 });
   const disabled =
     (table.maxNumRows !== -1 && table.getNumRows() + height > table.maxNumRows) ||
-    prevention.hasOperation(selectingTopCell?.prevention, prevention.AddRowAbove);
+    prevention.hasOperation(selectingTopCell?.prevention, prevention.InsertRowsAbove);
   return (
     <li
       className={disabled ? 'gs-disabled' : 'gs-enabled'}
@@ -142,7 +142,7 @@ export const InsertRowsBelowItem = (props: ContextMenuProps) => {
   const selectingBottomCell = table.getByPoint({ y, x: 0 });
   const disabled =
     (table.maxNumRows !== -1 && table.getNumRows() + height > table.maxNumRows) ||
-    prevention.hasOperation(selectingBottomCell?.prevention, prevention.AddRowBelow);
+    prevention.hasOperation(selectingBottomCell?.prevention, prevention.InsertRowsBelow);
   return (
     <li
       className={disabled ? 'gs-disabled' : 'gs-enabled'}
@@ -170,7 +170,7 @@ export const InsertColsLeftItem = (props: ContextMenuProps) => {
   const selectingLeftCell = table.getByPoint({ y: 0, x });
   const disabled =
     (table.maxNumCols !== -1 && table.getNumCols() + width > table.maxNumCols) ||
-    prevention.hasOperation(selectingLeftCell?.prevention, prevention.AddColLeft);
+    prevention.hasOperation(selectingLeftCell?.prevention, prevention.InsertColsLeft);
   return (
     <li
       className={disabled ? 'gs-disabled' : 'gs-enabled'}
@@ -187,6 +187,7 @@ export const InsertColsLeftItem = (props: ContextMenuProps) => {
     </li>
   );
 };
+
 export const InsertColsRightItem = (props: ContextMenuProps) => {
   const { table, choosing, selectingZone, topHeaderSelecting } = props.store;
   if (!topHeaderSelecting) {
@@ -197,7 +198,7 @@ export const InsertColsRightItem = (props: ContextMenuProps) => {
   const selectingRightCell = table.getByPoint({ y: 0, x });
   const disabled =
     (table.maxNumCols !== -1 && table.getNumCols() + width > table.maxNumCols) ||
-    prevention.hasOperation(selectingRightCell?.prevention, prevention.AddColRight);
+    prevention.hasOperation(selectingRightCell?.prevention, prevention.InsertColsRight);
   return (
     <li
       className={disabled ? 'gs-disabled' : 'gs-enabled'}
@@ -214,7 +215,8 @@ export const InsertColsRightItem = (props: ContextMenuProps) => {
     </li>
   );
 };
-export const DeleteRowsItem = (props: ContextMenuProps) => {
+
+export const RemoveRowsItem = (props: ContextMenuProps) => {
   const { table, choosing, selectingZone, leftHeaderSelecting } = props.store;
   if (!leftHeaderSelecting) {
     return null;
@@ -224,11 +226,11 @@ export const DeleteRowsItem = (props: ContextMenuProps) => {
   const selectingTopCell = table.getByPoint({ y, x: 0 });
   const disabled =
     (table.minNumRows !== -1 && table.getNumRows() - height < table.minNumRows) ||
-    prevention.hasOperation(selectingTopCell?.prevention, prevention.DeleteRow);
+    prevention.hasOperation(selectingTopCell?.prevention, prevention.RemoveRows);
   return (
     <li
       className={disabled ? 'gs-disabled' : 'gs-enabled'}
-      data-testid="delete-rows-item"
+      data-testid="remove-rows-item"
       onClick={async (e) => {
         if (!disabled) {
           await rowsRemover(props);
@@ -236,12 +238,13 @@ export const DeleteRowsItem = (props: ContextMenuProps) => {
       }}
     >
       <div className="gs-menu-name">
-        Delete {height} row{height > 1 && 's'}
+        Remove {height} row{height > 1 && 's'}
       </div>
     </li>
   );
 };
-export const DeleteColsItem = (props: ContextMenuProps) => {
+
+export const RemoveColsItem = (props: ContextMenuProps) => {
   const { table, choosing, selectingZone, topHeaderSelecting } = props.store;
   if (!topHeaderSelecting) {
     return null;
@@ -251,11 +254,11 @@ export const DeleteColsItem = (props: ContextMenuProps) => {
   const selectingRightCell = table.getByPoint({ y: 0, x });
   const disabled =
     (table.minNumCols !== -1 && table.getNumCols() - width < table.minNumCols) ||
-    prevention.hasOperation(selectingRightCell?.prevention, prevention.DeleteCol);
+    prevention.hasOperation(selectingRightCell?.prevention, prevention.RemoveCols);
   return (
     <li
       className={disabled ? 'gs-disabled' : 'gs-enabled'}
-      data-testid="delete-cols-item"
+      data-testid="remove-cols-item"
       onClick={async (e) => {
         if (!disabled) {
           await colsRemover(props);
@@ -263,7 +266,7 @@ export const DeleteColsItem = (props: ContextMenuProps) => {
       }}
     >
       <div className="gs-menu-name">
-        Delete {width} column{width > 1 && 's'}
+        Remove {width} column{width > 1 && 's'}
       </div>
     </li>
   );
@@ -293,6 +296,7 @@ export const UndoItem = (props: ContextMenuProps) => {
     </li>
   );
 };
+
 export const RedoItem = (props: ContextMenuProps) => {
   const { table } = props.store;
   const historyIndex = table.getHistoryIndex();
@@ -321,8 +325,8 @@ export const defaultContextMenuItems: FC<ContextMenuProps>[] = [
   InsertRowsBelowItem,
   InsertColsLeftItem,
   InsertColsRightItem,
-  DeleteRowsItem,
-  DeleteColsItem,
+  RemoveRowsItem,
+  RemoveColsItem,
 
   HistoryDeviderItem,
 

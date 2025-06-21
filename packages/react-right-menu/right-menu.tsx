@@ -46,10 +46,16 @@ export const SideMenuItems = () => {
     >
       <div className="gs-rightmenu-items">
         <div className="gs-rightmenu-item">
-          <AddRows store={store} dispatch={dispatch} />
+          <InsertRows store={store} dispatch={dispatch} />
         </div>
         <div className="gs-rightmenu-item">
-          <AddCols store={store} dispatch={dispatch} />
+          <InsertCols store={store} dispatch={dispatch} />
+        </div>
+        <div className="gs-rightmenu-item">
+          <RemoveRows store={store} dispatch={dispatch} />
+        </div>
+        <div className="gs-rightmenu-item">
+          <RemoveCols store={store} dispatch={dispatch} />
         </div>
       </div>
     </div>
@@ -61,7 +67,7 @@ type ItemProps = {
   dispatch: Dispatcher;
 };
 
-export const AddRows = ({ store, dispatch }: ItemProps) => {
+export const InsertRows = ({ store, dispatch }: ItemProps) => {
   const [numRows, setNumRows] = React.useState(1000);
   const [at, setAt] = React.useState<string>('below');
   const [above, setAbove] = React.useState(1);
@@ -178,7 +184,7 @@ export const AddRows = ({ store, dispatch }: ItemProps) => {
   );
 };
 
-export const AddCols = ({ store, dispatch }: ItemProps) => {
+export const InsertCols = ({ store, dispatch }: ItemProps) => {
   const [numCols, setNumCols] = React.useState(store.table.getNumCols());
   const [at, setAt] = React.useState<string>('right');
   const [left, setLeft] = React.useState(1);
@@ -291,5 +297,77 @@ export const AddCols = ({ store, dispatch }: ItemProps) => {
         </label>
       </div>
     </form>
+  );
+};
+
+export const RemoveRows = ({ store, dispatch }: ItemProps) => {
+  const [numRows, setNumRows] = React.useState(1);
+  const [at, setAt] = React.useState<string>('current');
+
+  const removeRows = () => {
+    const { table, choosing } = store;
+    const args = {
+      y: at === 'current' ? choosing.y : 1,
+      numRows,
+      operator: 'USER' as const,
+      reflection: { sheetId: table.getSheetId() },
+    };
+    const newTable = table.removeRows(args);
+    dispatch(updateTable(newTable));
+  };
+
+  return (
+    <div>
+      <div>Remove Rows</div>
+      <input
+        type="number"
+        value={numRows}
+        onChange={(e) => setNumRows(Number(e.target.value))}
+        style={{ width: 50, padding: '0 5px' }}
+      />
+      <select value={at} onChange={(e) => setAt(e.target.value)} style={{ width: 80, padding: '0 5px' }}>
+        <option value="current">Current</option>
+        <option value="top">Top</option>
+      </select>
+      <button style={{ width: 50, padding: '0 5px' }} type="button" className="gs-right-menu-btn" onClick={removeRows}>
+        Remove
+      </button>
+    </div>
+  );
+};
+
+export const RemoveCols = ({ store, dispatch }: ItemProps) => {
+  const [numCols, setNumCols] = React.useState(1);
+  const [at, setAt] = React.useState<string>('current');
+
+  const removeCols = () => {
+    const { table, choosing } = store;
+    const args = {
+      x: at === 'current' ? choosing.x : 1,
+      numCols,
+      operator: 'USER' as const,
+      reflection: { sheetId: table.getSheetId() },
+    };
+    const newTable = table.removeCols(args);
+    dispatch(updateTable(newTable));
+  };
+
+  return (
+    <div>
+      <div>Remove Columns</div>
+      <input
+        type="number"
+        value={numCols}
+        onChange={(e) => setNumCols(Number(e.target.value))}
+        style={{ width: 50, padding: '0 5px' }}
+      />
+      <select value={at} onChange={(e) => setAt(e.target.value)} style={{ width: 80, padding: '0 5px' }}>
+        <option value="current">Current</option>
+        <option value="left">Left</option>
+      </select>
+      <button style={{ width: 50, padding: '0 5px' }} type="button" className="gs-right-menu-btn" onClick={removeCols}>
+        Remove
+      </button>
+    </div>
   );
 };

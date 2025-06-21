@@ -209,8 +209,8 @@ export type HistoryMoveType = {
   lostRows: MatricesByAddress<Id>;
 };
 
-export type HistoryAddRowsType = {
-  operation: 'ADD_ROWS';
+export type HistoryInsertRowsType = {
+  operation: 'INSERT_ROWS';
   srcSheetId: number;
   dstSheetId: number;
   applyed: boolean;
@@ -224,8 +224,8 @@ export type HistoryAddRowsType = {
   partial?: true;
 };
 
-export type HistoryDeleteRowsType = {
-  operation: 'DELETE_ROWS';
+export type HistoryRemoveRowsType = {
+  operation: 'REMOVE_ROWS';
   srcSheetId: number;
   dstSheetId: number;
   applyed: boolean;
@@ -235,8 +235,8 @@ export type HistoryDeleteRowsType = {
   deleted: IdMatrix;
 };
 
-export type HistoryAddColsType = {
-  operation: 'ADD_COLS';
+export type HistoryInsertColsType = {
+  operation: 'INSERT_COLS';
   srcSheetId: number;
   dstSheetId: number;
   applyed: boolean;
@@ -250,8 +250,8 @@ export type HistoryAddColsType = {
   partial?: true;
 };
 
-export type HistoryDeleteColsType = {
-  operation: 'DELETE_COLS';
+export type HistoryRemoveColsType = {
+  operation: 'REMOVE_COLS';
   srcSheetId: number;
   dstSheetId: number;
   applyed: boolean;
@@ -264,10 +264,10 @@ export type HistoryDeleteColsType = {
 export type HistoryType =
   | HistoryUpdateType
   | HistoryMoveType
-  | HistoryAddRowsType
-  | HistoryDeleteRowsType
-  | HistoryAddColsType
-  | HistoryDeleteColsType;
+  | HistoryInsertRowsType
+  | HistoryRemoveRowsType
+  | HistoryInsertColsType
+  | HistoryRemoveColsType;
 
 export type Virtualization = {
   xs: number[];

@@ -61,7 +61,7 @@ export const rowsInserterAbove = async ({ store, dispatch }: ContextMenuProps) =
   const { top } = zoneToArea(selectingZone);
   const numRows = zoneShape({ ...selectingZone, base: 1 }).height;
 
-  const newTable = table.addRows({
+  const newTable = table.insertRows({
     y: top,
     numRows,
     baseY: top,
@@ -87,7 +87,7 @@ export const rowsInserterBelow = async ({ store, dispatch }: ContextMenuProps) =
   selectingZone.startY += numRows;
   selectingZone.endY += numRows;
 
-  const newTable = table.addRows({
+  const newTable = table.insertRows({
     y: bottom + 1,
     numRows,
     baseY: bottom,
@@ -111,7 +111,7 @@ export const colsInserterLeft = async ({ store, dispatch }: ContextMenuProps) =>
   const { left } = zoneToArea(selectingZone);
   const numCols = zoneShape({ ...selectingZone, base: 1 }).width;
 
-  const newTable = table.addCols({
+  const newTable = table.insertCols({
     x: left,
     numCols,
     baseX: left,
@@ -137,7 +137,7 @@ export const colsInserterRight = async ({ store, dispatch }: ContextMenuProps) =
   selectingZone.startX += numCols;
   selectingZone.endX += numCols;
 
-  const newTable = table.addCols({
+  const newTable = table.insertCols({
     x: right + 1,
     numCols,
     baseX: right,
@@ -161,7 +161,7 @@ export const rowsRemover = async ({ store, dispatch }: ContextMenuProps) => {
   const { top } = zoneToArea(selectingZone);
   const numRows = zoneShape({ ...selectingZone, base: 1 }).height;
 
-  const newTable = table.deleteRows({
+  const newTable = table.removeRows({
     y: top,
     numRows,
     operator: 'USER',
@@ -185,7 +185,7 @@ export const colsRemover = async ({ store, dispatch }: ContextMenuProps) => {
   const { left } = zoneToArea(selectingZone);
   const numCols = zoneShape({ ...selectingZone, base: 1 }).width;
 
-  const newTable = table.deleteCols({
+  const newTable = table.removeCols({
     x: left,
     numCols,
     operator: 'USER',

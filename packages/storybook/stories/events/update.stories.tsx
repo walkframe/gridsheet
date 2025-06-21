@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-import { GridSheet, buildInitialCells, createTableRef, HistoryType } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells, createTableRef, HistoryType, Table } from '@gridsheet/react-core';
 
 export default {
-  title: 'Table operations',
+  title: 'Events/Update',
+  component: GridSheet,
 };
 
 export const Update = () => {
@@ -48,14 +49,14 @@ export const Update = () => {
   );
 };
 
-export const AddRowsAndUpdate = () => {
+export const InsertRowsAndUpdate = () => {
   const tableRef = createTableRef();
 
   const add = () => {
     if (tableRef.current) {
       const { table, dispatch } = tableRef.current;
       dispatch(
-        table.addRowsAndUpdate({
+        table.insertRowsAndUpdate({
           y: 5,
           numRows: 1,
           baseY: 5,
@@ -70,7 +71,7 @@ export const AddRowsAndUpdate = () => {
   return (
     <>
       <br />
-      <button onClick={add}>Add!</button>
+      <button onClick={add}>Insert Rows and Update!</button>
       <GridSheet
         tableRef={tableRef}
         initialCells={buildInitialCells({
@@ -90,14 +91,14 @@ export const AddRowsAndUpdate = () => {
   );
 };
 
-export const AddColsAndUpdate = () => {
+export const InsertColsAndUpdate = () => {
   const tableRef = createTableRef();
 
   const add = () => {
     if (tableRef.current) {
       const { table, dispatch } = tableRef.current;
       dispatch(
-        table.addColsAndUpdate({
+        table.insertColsAndUpdate({
           x: 4,
           numCols: 1,
           baseX: 4,
@@ -112,7 +113,7 @@ export const AddColsAndUpdate = () => {
   return (
     <>
       <br />
-      <button onClick={add}>Add!</button>
+      <button onClick={add}>Insert Columns and Update!</button>
       <GridSheet
         tableRef={tableRef}
         initialCells={buildInitialCells({

@@ -106,6 +106,10 @@ export interface UserTable {
   headerHeight: number;
   currentHistory?: HistoryType;
 
+  /**
+   * Returns the raw table object, which is used for internal operations.
+   * This is not intended for public use and may change in future versions.
+   */
   __raw__: Table;
 
   getRectSize(area: AreaType): ShapeType;
@@ -143,7 +147,7 @@ export interface UserTable {
     reflection?: StorePatchType;
   }): UserTable;
   write(args: { point: PointType; value: string; updateChangedAt?: boolean; reflection?: StorePatchType }): UserTable;
-  addRowsAndUpdate(args: {
+  insertRowsAndUpdate(args: {
     y: number;
     numRows: number;
     baseY: number;
@@ -152,9 +156,9 @@ export interface UserTable {
     updateChangedAt?: boolean;
     reflection?: StorePatchType;
   }): UserTable;
-  addRows(args: { y: number; numRows: number; baseY: number; reflection?: StorePatchType }): UserTable;
-  deleteRows(args: { y: number; numRows: number; reflection?: StorePatchType }): UserTable;
-  addColsAndUpdate(args: {
+  insertRows(args: { y: number; numRows: number; baseY: number; reflection?: StorePatchType }): UserTable;
+  removeRows(args: { y: number; numRows: number; reflection?: StorePatchType }): UserTable;
+  insertColsAndUpdate(args: {
     x: number;
     numCols: number;
     baseX: number;
@@ -163,8 +167,8 @@ export interface UserTable {
     updateChangedAt?: boolean;
     reflection?: StorePatchType;
   }): UserTable;
-  addCols(args: { x: number; numCols: number; baseX: number; reflection?: StorePatchType }): UserTable;
-  deleteCols(args: { x: number; numCols: number; reflection?: StorePatchType }): UserTable;
+  insertCols(args: { x: number; numCols: number; baseX: number; reflection?: StorePatchType }): UserTable;
+  removeCols(args: { x: number; numCols: number; reflection?: StorePatchType }): UserTable;
   undo(): {
     history: HistoryType | null;
     newTable: UserTable;
@@ -770,7 +774,7 @@ export class Table implements UserTable {
   }
 
   private cleanObsolete(history: HistoryType) {
-    if (history.operation === 'DELETE_ROWS' || history.operation === 'DELETE_COLS') {
+    if (history.operation === 'REMOVE_ROWS' || history.operation === 'REMOVE_COLS') {
       history.deleted.forEach((ids) => {
         ids.forEach((id) => {
           delete this.hub.data[id];
@@ -792,7 +796,7 @@ export class Table implements UserTable {
   }
 
   private cleanStrayed(history: HistoryType) {
-    if (history.operation === 'ADD_ROWS' || history.operation === 'ADD_COLS') {
+    if (history.operation === 'INSERT_ROWS' || history.operation === 'INSERT_COLS') {
       history.idMatrix.forEach((ids) => {
         ids.forEach((id) => {
           delete this.hub.data[id];
@@ -924,7 +928,7 @@ export class Table implements UserTable {
       return true;
     });
 
-    const srcTableRaw = srcTable as Table;
+    const srcTableRaw = srcTable.__raw__;
     const srcContext = this.hub.contextsBySheetId[srcTable.getSheetId()];
     // to src(from)
     putMatrix(srcTableRaw.idMatrix, matrixNew, src, (newId, currentId) => {
@@ -1273,7 +1277,7 @@ export class Table implements UserTable {
     });
   }
 
-  public addRowsAndUpdate({
+  public insertRowsAndUpdate({
     y,
     numRows,
     baseY,
@@ -1294,7 +1298,7 @@ export class Table implements UserTable {
     undoReflection?: StorePatchType;
     redoReflection?: StorePatchType;
   }) {
-    const returned = this.addRows({
+    const returned = this.insertRows({
       y,
       numRows,
       baseY,
@@ -1307,7 +1311,7 @@ export class Table implements UserTable {
     return returned;
   }
 
-  public addRows({
+  public insertRows({
     y,
     numRows,
     baseY,
@@ -1353,7 +1357,7 @@ export class Table implements UserTable {
 
     this.pushHistory({
       applyed: true,
-      operation: 'ADD_ROWS',
+      operation: 'INSERT_ROWS',
       srcSheetId: this.sheetId,
       dstSheetId: this.sheetId,
       undoReflection,
@@ -1364,7 +1368,7 @@ export class Table implements UserTable {
     });
     return this.clone(false);
   }
-  public deleteRows({
+  public removeRows({
     y,
     numRows,
     operator = 'SYSTEM',
@@ -1385,7 +1389,7 @@ export class Table implements UserTable {
     const ys: number[] = [];
     for (let i = y; i < y + numRows; i++) {
       const cell = this.getByPoint({ y: i, x: 0 });
-      if (operator === 'USER' && operation.hasOperation(cell?.prevention, operation.DeleteRow)) {
+      if (operator === 'USER' && operation.hasOperation(cell?.prevention, operation.RemoveRows)) {
         console.warn(`Cannot delete row ${i}.`);
         return this;
       }
@@ -1399,7 +1403,7 @@ export class Table implements UserTable {
     this.area.bottom -= ys.length;
     this.pushHistory({
       applyed: true,
-      operation: 'DELETE_ROWS',
+      operation: 'REMOVE_ROWS',
       srcSheetId: this.sheetId,
       dstSheetId: this.sheetId,
       undoReflection,
@@ -1410,7 +1414,7 @@ export class Table implements UserTable {
     return this.clone(false);
   }
 
-  public addColsAndUpdate({
+  public insertColsAndUpdate({
     x,
     numCols,
     baseX,
@@ -1429,7 +1433,7 @@ export class Table implements UserTable {
     undoReflection?: StorePatchType;
     redoReflection?: StorePatchType;
   }) {
-    const returned = this.addCols({
+    const returned = this.insertCols({
       x,
       numCols,
       baseX,
@@ -1441,7 +1445,7 @@ export class Table implements UserTable {
     return returned;
   }
 
-  public addCols({
+  public insertCols({
     x,
     numCols,
     baseX,
@@ -1485,7 +1489,7 @@ export class Table implements UserTable {
 
     this.pushHistory({
       applyed: true,
-      operation: 'ADD_COLS',
+      operation: 'INSERT_COLS',
       srcSheetId: this.sheetId,
       dstSheetId: this.sheetId,
       undoReflection: undoReflection,
@@ -1496,7 +1500,7 @@ export class Table implements UserTable {
     });
     return this.clone(false);
   }
-  public deleteCols({
+  public removeCols({
     x,
     numCols,
     operator = 'SYSTEM',
@@ -1517,7 +1521,7 @@ export class Table implements UserTable {
     const xs: number[] = [];
     for (let i = x; i < x + numCols; i++) {
       const cell = this.getByPoint({ y: 0, x: i });
-      if (operator === 'USER' && operation.hasOperation(cell?.prevention, operation.DeleteCol)) {
+      if (operator === 'USER' && operation.hasOperation(cell?.prevention, operation.RemoveCols)) {
         console.warn(`Cannot delete col ${i}.`);
         continue;
       }
@@ -1537,7 +1541,7 @@ export class Table implements UserTable {
 
     this.pushHistory({
       applyed: true,
-      operation: 'DELETE_COLS',
+      operation: 'REMOVE_COLS',
       srcSheetId: this.sheetId,
       dstSheetId: this.sheetId,
       undoReflection: undoReflection,
@@ -1623,7 +1627,7 @@ export class Table implements UserTable {
 
   public undo() {
     if (this.hub.historyIndex < 0) {
-      return { history: null, newTable: this as Table };
+      return { history: null, newTable: this.__raw__ };
     }
     const history = this.hub.histories[this.hub.historyIndex--];
     history.applyed = false;
@@ -1635,7 +1639,7 @@ export class Table implements UserTable {
         // diffBefore is guaranteed as total of cell (not partial)
         dstTable.applyDiff(history.diffBefore, false);
         break;
-      case 'ADD_ROWS': {
+      case 'INSERT_ROWS': {
         if (history.diffBefore) {
           dstTable.applyDiff(history.diffBefore, false);
         }
@@ -1644,7 +1648,7 @@ export class Table implements UserTable {
         dstTable.area.bottom -= height;
         break;
       }
-      case 'ADD_COLS': {
+      case 'INSERT_COLS': {
         if (history.diffBefore) {
           this.applyDiff(history.diffBefore, false);
         }
@@ -1655,7 +1659,7 @@ export class Table implements UserTable {
         dstTable.area.right -= width;
         break;
       }
-      case 'DELETE_ROWS': {
+      case 'REMOVE_ROWS': {
         const { ys, deleted } = history;
         ys.forEach((y, i) => {
           dstTable.idMatrix.splice(y, 0, deleted[i]);
@@ -1663,7 +1667,7 @@ export class Table implements UserTable {
         dstTable.area.bottom += ys.length;
         break;
       }
-      case 'DELETE_COLS': {
+      case 'REMOVE_COLS': {
         const { xs, deleted } = history;
         dstTable.idMatrix.forEach((row, i) => {
           for (let j = 0; j < xs.length; j++) {
@@ -1709,7 +1713,7 @@ export class Table implements UserTable {
 
   public redo() {
     if (this.hub.historyIndex + 1 >= this.hub.histories.length) {
-      return { history: null, newTable: this as Table };
+      return { history: null, newTable: this.__raw__ };
     }
     const history = this.hub.histories[++this.hub.historyIndex];
     history.applyed = true;
@@ -1722,7 +1726,7 @@ export class Table implements UserTable {
       case 'UPDATE':
         dstTable.applyDiff(history.diffAfter, history.partial);
         break;
-      case 'ADD_ROWS': {
+      case 'INSERT_ROWS': {
         if (history.diffAfter) {
           dstTable.applyDiff(history.diffAfter, history.partial);
         }
@@ -1731,7 +1735,7 @@ export class Table implements UserTable {
         dstTable.area.bottom += height;
         break;
       }
-      case 'ADD_COLS': {
+      case 'INSERT_COLS': {
         if (history.diffAfter) {
           dstTable.applyDiff(history.diffAfter, history.partial);
         }
@@ -1742,7 +1746,7 @@ export class Table implements UserTable {
         dstTable.area.right += width;
         break;
       }
-      case 'DELETE_ROWS': {
+      case 'REMOVE_ROWS': {
         const { ys } = history;
         [...ys].reverse().forEach((y) => {
           dstTable.idMatrix.splice(y, 1);
@@ -1750,7 +1754,7 @@ export class Table implements UserTable {
         dstTable.area.bottom -= ys.length;
         break;
       }
-      case 'DELETE_COLS': {
+      case 'REMOVE_COLS': {
         const { xs } = history;
         [...xs].reverse().forEach((x) => {
           dstTable.idMatrix.forEach((row) => {

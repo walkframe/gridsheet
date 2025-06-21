@@ -20,14 +20,14 @@ const Sheet = ({ numRows, numCols, defaultWidth }: Props) => {
           cells: {
             default: { width: defaultWidth },
             4: {
-              prevention: operations.DeleteRow,
+              prevention: operations.RemoveRows,
             },
             1: {
               prevention: operations.Resize,
               style: { backgroundColor: '#eeeeee' },
             },
             'A:B': {
-              prevention: operations.AddCol | operations.DeleteCol,
+              prevention: operations.InsertCols | operations.RemoveCols,
               style: { backgroundColor: '#dddddd' },
             },
             A: {
@@ -39,8 +39,12 @@ const Sheet = ({ numRows, numCols, defaultWidth }: Props) => {
             },
             B2: {
               value: 'READONLY',
-              prevention: operations.ReadOnly,
+              prevention: operations.InsertCols,
               style: { backgroundColor: '#aaaaaa' },
+            },
+            B1: {
+              value: 'Protected from row deletion',
+              prevention: operations.InsertCols | operations.RemoveCols,
             },
           },
           ensured: { numRows, numCols },
