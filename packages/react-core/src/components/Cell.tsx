@@ -19,7 +19,7 @@ import { FormulaError } from '../formula/evaluator';
 import { insertRef, isRefInsertable } from '../lib/input';
 import { isXSheetFocused } from '../store/helpers';
 import type { CSSProperties, FC } from 'react';
-import { isTouching } from '../lib/events';
+import { isTouching, safePreventDefault } from '../lib/events';
 
 type Props = {
   y: number;
@@ -111,12 +111,25 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
   const editingAnywhere = !!(table.hub.editingAddress || editingAddress);
 
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
     e.stopPropagation();
+    safePreventDefault(e);
+    
     if (!isTouching(e)) {
       return false;
     }
 
+    // Single cell selection only for touch events
+    if (e.type.startsWith('touch')) {
+      // Blur the input field to commit current value when selecting via touch
+      if (editingAnywhere && input) {
+        input.blur();
+      }
+      dispatch(choose({ y, x }));
+      dispatch(select({ startY: y, startX: x, endY: y, endX: x }));
+      return true;
+    }
+
+    // Normal drag operation for mouse events
     if (e.shiftKey) {
       dispatch(drag({ y, x }));
     } else {
@@ -149,8 +162,12 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
     return true;
   };
   const handleDragEnd = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
     e.stopPropagation();
+    if (e.type.startsWith('touch')) {
+      return;
+    }
+    
+    safePreventDefault(e);
     dispatch(setDragging(false));
     if (autofillDraggingTo) {
       dispatch(submitAutofill(autofillDraggingTo));
@@ -166,7 +183,13 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
     if (!isTouching(e)) {
       return false;
     }
-    e.preventDefault();
+    
+    // Do nothing for touch events
+    if (e.type.startsWith('touch')) {
+      return false;
+    }
+    
+    safePreventDefault(e);
     e.stopPropagation();
 
     if (autofillDraggingTo) {
@@ -211,15 +234,16 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
       }}
       onContextMenu={(e) => {
         if (contextMenuItems.length > 0) {
-          e.preventDefault();
           e.stopPropagation();
+          safePreventDefault(e);
           dispatch(setContextMenuPosition({ y: e.clientY, x: e.clientX }));
           return false;
         }
         return true;
       }}
       onDoubleClick={(e) => {
-        e!.preventDefault();
+        e.stopPropagation();
+        safePreventDefault(e);
         setEditingAddress(address);
         const dblclick = document.createEvent('MouseEvents');
         dblclick.initEvent('dblclick', true, true);
@@ -232,9 +256,7 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
         onMouseDown={handleDragStart}
         onTouchStart={handleDragStart}
         onMouseEnter={handleDragging}
-        onTouchMove={handleDragging}
         onMouseUp={handleDragEnd}
-        onTouchEnd={handleDragEnd}
       >
         <div
           className={'gs-cell-inner'}

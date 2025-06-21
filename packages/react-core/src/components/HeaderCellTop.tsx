@@ -21,7 +21,7 @@ import * as prevention from '../lib/operation';
 import { insertRef } from '../lib/input';
 import { isXSheetFocused } from '../store/helpers';
 import { ScrollHandle } from './ScrollHandle';
-import { isTouching } from '../lib/events';
+import { isTouching, safePreventDefault } from '../lib/events';
 
 type Props = {
   x: number;
@@ -57,14 +57,26 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
   };
 
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
     e.stopPropagation();
+    safePreventDefault(e);
+    
     if (!isTouching(e)) {
       return false;
     }
 
     if (dragging) {
       return false;
+    }
+
+    // Single column selection only for touch events
+    if (e.type.startsWith('touch')) {
+      // Blur the input field to commit current value when selecting via touch
+      if (editingAnywhere && editorRef.current) {
+        editorRef.current.blur();
+      }
+      dispatch(choose({ y: 1, x }));
+      dispatch(select({ startY: 1, startX: x, endY: table.getNumRows(), endX: x }));
+      return true;
     }
 
     dispatch(select({ startY: 1, startX: x, endY: -1, endX: x }));
@@ -103,8 +115,12 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
   };
 
   const handleDragEnd = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
     e.stopPropagation();
+    if (e.type.startsWith('touch')) {
+      return;
+    }
+    
+    safePreventDefault(e);
     dispatch(setDragging(false));
     if (autofillDraggingTo) {
       dispatch(submitAutofill(autofillDraggingTo));
@@ -117,7 +133,12 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
     if (!isTouching(e)) {
       return false;
     }
-    e.preventDefault();
+    
+    if (e.type.startsWith('touch')) {
+      return false;
+    }
+    
+    safePreventDefault(e);
     e.stopPropagation();
 
     if (autofillDraggingTo) {
@@ -154,8 +175,8 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
       style={{ width, minWidth: width, maxWidth: width }}
       onContextMenu={(e) => {
         if (contextMenuItems.length > 0) {
-          e.preventDefault();
           e.stopPropagation();
+          safePreventDefault(e);
           dispatch(setContextMenuPosition({ y: e.clientY, x: e.clientX }));
           return false;
         }
@@ -167,9 +188,7 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
         onMouseDown={handleDragStart}
         onTouchStart={handleDragStart}
         onMouseMove={handleDragging}
-        onTouchMove={handleDragging}
         onMouseUp={handleDragEnd}
-        onTouchEnd={handleDragEnd}
       >
         <div className="gs-th-inner" style={{ height: headerHeight, position: 'relative' }}>
           {!topHeaderSelecting ? <ScrollHandle style={{ position: 'absolute' }} vertical={-1} /> : null}
@@ -180,8 +199,8 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
               style={{ height: headerHeight }}
               onMouseDown={(e) => {
                 dispatch(setResizingPositionX([x, e.clientX, e.clientX]));
-                e.preventDefault();
                 e.stopPropagation();
+                safePreventDefault(e);
               }}
             >
               <i />

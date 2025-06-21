@@ -21,7 +21,7 @@ import * as prevention from '../lib/operation';
 import { insertRef } from '../lib/input';
 import { isXSheetFocused } from '../store/helpers';
 import { ScrollHandle } from './ScrollHandle';
-import { isTouching } from '../lib/events';
+import { isTouching, safePreventDefault } from '../lib/events';
 
 type Props = {
   y: number;
@@ -57,8 +57,9 @@ export const HeaderCellLeft: FC<Props> = ({ y }) => {
   };
 
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
     e.stopPropagation();
+    safePreventDefault(e);
+    
     if (!isTouching(e)) {
       return false;
     }
@@ -66,6 +67,18 @@ export const HeaderCellLeft: FC<Props> = ({ y }) => {
       return false;
     }
 
+    // Single row selection only for touch events
+    if (e.type.startsWith('touch')) {
+      // Blur the input field to commit current value when selecting via touch
+      if (editingAnywhere && editorRef.current) {
+        editorRef.current.blur();
+      }
+      dispatch(choose({ y, x: 1 }));
+      dispatch(select({ startY: y, startX: 1, endY: y, endX: table.getNumCols() }));
+      return true;
+    }
+
+    // Normal drag operation for mouse events
     dispatch(select({ startY: y, startX: 1, endY: y, endX: -1 }));
     const fullAddress = `${table.sheetPrefix(!xSheetFocused)}${rowId}:${rowId}`;
     if (editingAnywhere) {
@@ -102,8 +115,12 @@ export const HeaderCellLeft: FC<Props> = ({ y }) => {
   };
 
   const handleDragEnd = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
     e.stopPropagation();
+    if (e.type.startsWith('touch')) {
+      return;
+    }
+    
+    safePreventDefault(e);
     dispatch(setDragging(false));
     if (autofillDraggingTo) {
       dispatch(submitAutofill(autofillDraggingTo));
@@ -116,7 +133,13 @@ export const HeaderCellLeft: FC<Props> = ({ y }) => {
     if (!isTouching(e)) {
       return false;
     }
-    e.preventDefault();
+    
+    // Do nothing for touch events
+    if (e.type.startsWith('touch')) {
+      return false;
+    }
+    
+    safePreventDefault(e);
     e.stopPropagation();
 
     if (autofillDraggingTo) {
@@ -153,8 +176,8 @@ export const HeaderCellLeft: FC<Props> = ({ y }) => {
       style={{ height }}
       onContextMenu={(e) => {
         if (contextMenuItems.length > 0) {
-          e.preventDefault();
           e.stopPropagation();
+          safePreventDefault(e);
           dispatch(setContextMenuPosition({ y: e.clientY, x: e.clientX }));
           return false;
         }
@@ -166,9 +189,7 @@ export const HeaderCellLeft: FC<Props> = ({ y }) => {
         onMouseDown={handleDragStart}
         onTouchStart={handleDragStart}
         onMouseMove={handleDragging}
-        onTouchMove={handleDragging}
         onMouseUp={handleDragEnd}
-        onTouchEnd={handleDragEnd}
       >
         <div className="gs-th-inner" style={{ width: headerWidth, position: 'relative' }}>
           {!leftHeaderSelecting ? <ScrollHandle style={{ position: 'absolute' }} horizontal={-1} /> : null}
@@ -179,8 +200,8 @@ export const HeaderCellLeft: FC<Props> = ({ y }) => {
               style={{ width: headerWidth }}
               onMouseDown={(e) => {
                 dispatch(setResizingPositionY([y, e.clientY, e.clientY]));
-                e.preventDefault();
                 e.stopPropagation();
+                safePreventDefault(e);
               }}
             ></div>
           )}

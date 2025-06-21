@@ -9,3 +9,12 @@ export const isTouching = (e: React.TouchEvent | React.MouseEvent): boolean => {
   }
   return false;
 };
+
+/**
+ * Safely call preventDefault to avoid errors on touch events
+ */
+export const safePreventDefault = (e: React.MouseEvent | React.TouchEvent): void => {
+  if (!e.type.startsWith('touch')) {
+    e.preventDefault();
+  }
+};
