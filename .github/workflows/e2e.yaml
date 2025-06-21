@@ -31,19 +31,22 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            storybook/node_modules
-          key: ${{ runner.os }}-${{ hashFiles('./storybook/pnpm-lock.yaml') }}
+            packages/storybook/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('./packages/storybook/pnpm-lock.yaml') }}
 
       - name: install
         run: |
           pnpm install
           npx playwright install --with-deps
 
-      - name: server
+      - name: build storybook
         run: |
           cd packages/storybook
           pnpm build
-          python -m http.server 5233 --directory "${{ github.workspace }}/storybook-static" &
+
+      - name: server
+        run: |
+          python -m http.server 5233 --directory "${{ github.workspace }}/packages/storybook/storybook-static" &
 
       - name: e2e test
         run: pnpm e2e

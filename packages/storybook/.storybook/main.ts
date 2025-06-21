@@ -34,7 +34,7 @@ const config: StorybookConfig = {
       },
       optimizeDeps: {
         include: ['react', 'react-dom'],
-        exclude: ['@gridsheet/react-core'],
+        exclude: ['@gridsheet/react-core', '@gridsheet/preact-core', '@gridsheet/react-right-menu'],
       },
     });
     config.resolve = config.resolve || {};
