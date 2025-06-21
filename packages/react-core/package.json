@@ -7,7 +7,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "rm -rf ./dist || true && vite build",
-    "typecheck": "pnpm tsc --noEmit",
+    "typecheck": "pnpm tsc --noEmit --types jest",
     "less": "lessc --clean-css ./src/styles/root.less ./src/styles/root.min.css",
     "generate-style": "node ./src/generate-style.js",
     "jest": "jest"

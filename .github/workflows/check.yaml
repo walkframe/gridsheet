@@ -17,11 +17,13 @@ jobs:
         with:
           path: |
             node_modules
+            packages/*/node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: install
         run: |
           pnpm install
+
       - name: check
         run: |
-          pnpm typecheck:all
+          pnpm typecheck:all --build
