@@ -1,6 +1,6 @@
-import type { ZoneType } from "./types";
+import type { ZoneType } from './types';
 
-export const HISTORY_LIMIT = 10;
+export const DEFAULT_HISTORY_LIMIT = 20;
 
 export const DEFAULT_HEIGHT = 24;
 export const DEFAULT_WIDTH = 90;
@@ -33,5 +33,5 @@ export const RESET_ZONE: ZoneType = {
   startY: -1,
   startX: -1,
   endY: -1,
-  endX: -1
+  endX: -1,
 };

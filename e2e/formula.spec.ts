@@ -320,9 +320,9 @@ test('add col and slide ref', async ({ page }) => {
   expect(await a22.locator('.gs-cell-rendered').textContent()).toBe('633');
 
   await a51.click();
-  expect(await largeEditor1.inputValue()).toBe("=D5+100"); // C5 -> D5
+  expect(await largeEditor1.inputValue()).toBe('=D5+100'); // C5 -> D5
   await b51.click();
-  expect(await largeEditor1.inputValue()).toBe("=A5+300"); // A5 -> A5
+  expect(await largeEditor1.inputValue()).toBe('=A5+300'); // A5 -> A5
   await a22.click();
   expect(await largeEditor2.inputValue()).toBe("='Sheet1'!D3"); // C3 -> D3
 });

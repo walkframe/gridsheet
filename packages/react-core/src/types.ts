@@ -107,7 +107,7 @@ export type OptionsType = {
 
 export type RangeType = { start: number; end: number }; // [start, end]
 export type PointType = { y: Y; x: X }; // {y, x}
-export type ExtraPointType = { y: Y; x: X; absY?: boolean, absX?: boolean, table?: Table };
+export type ExtraPointType = { y: Y; x: X; absY?: boolean; absX?: boolean; table?: Table };
 export type PositionType = { y: Y; x: X }; // {y, x}
 export type ZoneType = { startY: Y; startX: X; endY: Y; endX: X };
 export type AreaType = { top: Y; left: X; bottom: Y; right: X };
@@ -172,11 +172,7 @@ export type Address = string;
 
 export type MatricesByAddress<T> = { [origin: Address]: MatrixType<T> };
 
-export type HubPatchType = {
-  copyingSheetId?: number;
-  copyingZone?: ZoneType;
-  cutting?: boolean;
-}
+export type HubPatchType = Partial<Hub>;
 
 export type StorePatchType = {
   sheetId: number;
@@ -285,7 +281,7 @@ export type OperationType = number;
 export type StoreDispatchType = {
   store: StoreType;
   dispatch: Dispatcher;
-}
+};
 export type ContextsBySheetId = { [sheetId: string]: StoreDispatchType }; // id: { store, dispatch }
 export type SheetIdsByName = { [sheetName: string]: number }; // name: id
 
@@ -300,4 +296,3 @@ export type ContextMenuProps = {
   store: StoreType;
   dispatch: Dispatcher;
 };
-

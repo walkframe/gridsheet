@@ -83,7 +83,7 @@ export const LookUp = () => {
             })}
           />
         </div>
-        <div style={{ flex: 1 }} >
+        <div style={{ flex: 1 }}>
           <GridSheet
             hubReactive={hubReactive}
             sheetName="year"

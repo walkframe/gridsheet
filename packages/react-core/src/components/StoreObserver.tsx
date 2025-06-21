@@ -4,15 +4,12 @@ import { useContext, useEffect, useState } from 'react';
 import type { OptionsType, Props } from '../types';
 import { Context } from '../store';
 
-import {
-  setStore,
-  updateTable,
-} from '../store/actions';
+import { setStore, updateTable } from '../store/actions';
 
 import { HEADER_HEIGHT, HEADER_WIDTH } from '../constants';
 import { usePluginContext } from './PluginBase';
 
-type StoreInitializerProps = OptionsType & { 
+type StoreInitializerProps = OptionsType & {
   sheetName?: string;
 };
 
@@ -88,8 +85,8 @@ export const StoreObserver: FC<StoreInitializerProps> = ({
 
   useEffect(() => {
     table.updatePolicies(policies);
-    dispatch(updateTable(table.clone()))
-  }, [policies])
+    dispatch(updateTable(table.clone()));
+  }, [policies]);
 
   useEffect(() => {
     if (typeof onSave !== 'undefined') {

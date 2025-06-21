@@ -1,10 +1,5 @@
 import React, { type CSSProperties } from 'react';
-import {
-  GridSheet,
-  Policy,
-  PolicyOption,
-  buildInitialCells,
-} from '@gridsheet/react-core';
+import { GridSheet, Policy, PolicyOption, buildInitialCells } from '@gridsheet/react-core';
 
 export const Options = () => {
   const colorPolicy = new Policy({

@@ -224,15 +224,8 @@ const useOperationStyles = (store: StoreType, refs: RefPaletteType) => {
     cellStyles[address] = cellStyles[address] || {};
     Object.assign(cellStyles[address], style);
   };
-  const {
-    choosing,
-    selectingZone,
-    matchingCells,
-    matchingCellIndex,
-    table,
-    autofillDraggingTo,
-    editingAddress,
-  } = store;
+  const { choosing, selectingZone, matchingCells, matchingCellIndex, table, autofillDraggingTo, editingAddress } =
+    store;
   const { hub } = table;
   const { copyingSheetId, copyingZone, cutting } = hub;
 

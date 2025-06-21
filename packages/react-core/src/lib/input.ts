@@ -46,16 +46,20 @@ export const insertRef = ({ input, ref, dryRun = false }: InsertRefProps): boole
   } else if (token.type === 'REF' || token.type === 'RANGE') {
     if (!dryRun) {
       // keep the absolute/relative state of the token
-      const { sheetName: refSheetName, addresses: refAddresses } = splitRef(ref)
+      const { sheetName: refSheetName, addresses: refAddresses } = splitRef(ref);
       const { addresses: tokenAddresses } = splitRef(token.entity as string);
 
       const tokenAbsolutes = tokenAddresses.map((a) => a2p(a));
       if (tokenAddresses.length === 2 && refAddresses.length === 1) {
         refAddresses.push(refAddresses[0]);
       }
-      ref = getSheetPrefix(refSheetName) + refAddresses.map((r, i) => {
-        return grantAddressAbsolute(r, !!tokenAbsolutes[i]?.absX, !!tokenAbsolutes[i]?.absY);
-      }).join(':')
+      ref =
+        getSheetPrefix(refSheetName) +
+        refAddresses
+          .map((r, i) => {
+            return grantAddressAbsolute(r, !!tokenAbsolutes[i]?.absX, !!tokenAbsolutes[i]?.absY);
+          })
+          .join(':');
 
       const [start, end] = lexer.getTokenPositionRange(tokenIndex + 1, 1);
       input.setSelectionRange(start, end);

@@ -17,6 +17,7 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
   return (
     <div>
       <table style={{ borderCollapse: 'collapse' }}>
+        <tbody>
         <tr>
           <td style={{ border: '3px solid #aaa', padding: '5px' }}>
             <GridSheet
@@ -35,7 +36,7 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
                     value: "='Sheet 3'!A1 + 1000",
                   },
                   A5: {
-                    value: '=C5+100'
+                    value: '=C5+100',
                   },
                   B1: {
                     value: "=SUM('Invalid Sheet'!B2:B3)",
@@ -118,6 +119,7 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
             Independent <input id="input4" value={sheet4} onChange={(e) => setSheet4(e.target.value)} />
           </td>
         </tr>
+        </tbody>
       </table>
     </div>
   );

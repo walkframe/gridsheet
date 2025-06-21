@@ -49,3 +49,4 @@ export { Policy } from './policy/core';
 export type { PolicyType, PolicyOption, PolicyMixinType } from './policy/core';
 
 export * as operations from './lib/operation';
+export { DEFAULT_HISTORY_LIMIT } from './constants';

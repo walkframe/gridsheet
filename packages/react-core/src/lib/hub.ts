@@ -1,17 +1,26 @@
 import { identifyFormula } from '../formula/evaluator';
-import { HISTORY_LIMIT, RESET_ZONE } from '../constants';
-import type { Address, HistoryType, RefPaletteType, SheetIdsByName, ContextsBySheetId, ZoneType, HubPatchType, CellsByIdType, Id, StoreDispatchType } from '../types';
+import { DEFAULT_HISTORY_LIMIT, RESET_ZONE } from '../constants';
+import type {
+  HistoryType,
+  RefPaletteType,
+  SheetIdsByName,
+  ContextsBySheetId,
+  ZoneType,
+  HubPatchType,
+  CellsByIdType,
+  Id,
+  StoreDispatchType,
+} from '../types';
 import { useState } from 'react';
-import { Table } from './table';
-import { setStore, updateTable } from '../store/actions';
+import { updateTable } from '../store/actions';
 
 export type HubProps = {
-  historyLimit?: number
-}
+  historyLimit?: number;
+};
 
 export class Hub {
   sheetHead: number = 0;
-  cellHead: bigint | number = 0;
+  cellHead: number = 0;
   data: CellsByIdType = {};
   sheetIdsByName: SheetIdsByName = {};
   contextsBySheetId: ContextsBySheetId = {};
@@ -27,7 +36,7 @@ export class Hub {
   cutting: boolean = false;
   histories: HistoryType[] = [];
   historyIndex: number = -1;
-  historyLimit: number = HISTORY_LIMIT;
+  historyLimit: number = DEFAULT_HISTORY_LIMIT;
   lastHistory?: HistoryType;
   currentHistory?: HistoryType;
   ready = false;
@@ -45,7 +54,7 @@ export class Hub {
     for (let i = 0; i < keys.length; i++) {
       const sheetId = keys[i];
       const storeDispatch = this.contextsBySheetId[sheetId];
-      const {table} = storeDispatch.store;
+      const { table } = storeDispatch.store;
       if (table.status === 0) {
         return;
       }
@@ -68,19 +77,19 @@ export class Hub {
   }
 }
 
-export const createHub = (historyLimit=HISTORY_LIMIT) => {
-  return new Hub({historyLimit});
+export const createHub = (historyLimit = DEFAULT_HISTORY_LIMIT) => {
+  return new Hub({ historyLimit });
 };
 
 export type HubReactiveType = {
   hub: Hub;
-}
+};
 
-export const createHubReactive = (historyLimit=HISTORY_LIMIT): HubReactiveType => {
+export const createHubReactive = (historyLimit = DEFAULT_HISTORY_LIMIT): HubReactiveType => {
   return { hub: createHub(historyLimit) };
-}
+};
 
-export const useHubReactive = (historyLimit=HISTORY_LIMIT) => {
+export const useHubReactive = (historyLimit = DEFAULT_HISTORY_LIMIT) => {
   const [hubReactive, setHubReactive] = useState<HubReactiveType>(() => createHubReactive(historyLimit));
   const { hub } = hubReactive;
   hub.reflect = (newHub?: HubPatchType) => {

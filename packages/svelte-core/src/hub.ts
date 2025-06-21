@@ -1,8 +1,7 @@
 import { writable } from 'svelte/store';
-import { createHubReactive, HubPatchType } from '@gridsheet/preact-core';
+import { createHubReactive, DEFAULT_HISTORY_LIMIT, type HubPatchType } from '@gridsheet/preact-core';
 
-
-export function useHubReactive(historyLimit = 100) {
+export function useHubReactive(historyLimit = DEFAULT_HISTORY_LIMIT) {
   const hubReactive = createHubReactive(historyLimit);
   const store = writable(hubReactive);
   const { hub } = hubReactive;

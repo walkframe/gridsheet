@@ -33,7 +33,7 @@ export const Labeler = () => {
             B1: { value: 1 },
             C1: { value: 100 },
             D1: { value: 200 },
-            A2: { value: '=$B2'},
+            A2: { value: '=$B2' },
             B2: { value: 2 },
           },
           ensured: { numRows: 10, numCols: 10 },

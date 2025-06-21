@@ -32,7 +32,7 @@ import { functions as functionsDefault } from '../formula/mapping';
 import { identifyFormula, Lexer, splitRef, stripSheetName } from '../formula/evaluator';
 import { solveFormula } from '../formula/solver';
 
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH, HEADER_HEIGHT, HEADER_WIDTH, HISTORY_LIMIT } from '../constants';
+import { DEFAULT_HEIGHT, DEFAULT_WIDTH, HEADER_HEIGHT, HEADER_WIDTH, DEFAULT_HISTORY_LIMIT } from '../constants';
 import { shouldTracking } from '../store/helpers';
 import { updateTable } from '../store/actions';
 import * as operation from './operation';
@@ -41,13 +41,11 @@ import { safeQueueMicrotask } from './time';
 import { defaultPolicy, PolicyType } from '../policy/core';
 import { escapeSheetName, getSheetPrefix } from './sheet';
 
-
 type Props = {
   parsers?: Parsers;
   renderers?: Renderers;
   labelers?: Labelers;
   policies?: Policies;
-  useBigInt?: boolean;
   historyLimit?: number;
   minNumRows?: number;
   maxNumRows?: number;
@@ -144,12 +142,7 @@ export interface UserTable {
     updateChangedAt?: boolean;
     reflection?: StorePatchType;
   }): UserTable;
-  write(args: {
-    point: PointType;
-    value: string;
-    updateChangedAt?: boolean;
-    reflection?: StorePatchType;
-  }): UserTable;
+  write(args: { point: PointType; value: string; updateChangedAt?: boolean; reflection?: StorePatchType }): UserTable;
   addRowsAndUpdate(args: {
     y: number;
     numRows: number;
@@ -219,8 +212,6 @@ export class Table implements UserTable {
     renderers = {},
     labelers = {},
     policies = {},
-    useBigInt = false,
-    historyLimit: historyLimit,
     minNumRows = 1,
     maxNumRows = -1,
     minNumCols = 1,
@@ -492,7 +483,7 @@ export class Table implements UserTable {
     return this.idMatrix[y]?.[x];
   }
 
-  public getIdFormula(point: ExtraPointType): {id: Id | null, formula: string | null} {
+  public getIdFormula(point: ExtraPointType): { id: Id | null; formula: string | null } {
     const { y, x, absX = false, absY = false } = point;
     const id = this.getId({ y, x });
     if (id == null) {
@@ -880,12 +871,12 @@ export class Table implements UserTable {
     return newCell;
   }
 
-  public move({ 
-    srcTable = this, 
-    src, 
-    dst, 
-    historicize = true, 
-    operator = 'SYSTEM', 
+  public move({
+    srcTable = this,
+    src,
+    dst,
+    historicize = true,
+    operator = 'SYSTEM',
     undoReflection,
     redoReflection,
   }: MoveProps) {
@@ -952,10 +943,10 @@ export class Table implements UserTable {
       if (patch) {
         srcTableRaw.hub.data[newId] = {
           ...patch,
-          system: { 
+          system: {
             id: newId,
             sheetId: srcTableRaw.sheetId,
-            changedAt: new Date(), 
+            changedAt: new Date(),
             dependents: new Set(),
           },
         };
@@ -1172,7 +1163,6 @@ export class Table implements UserTable {
       updateChangedAt,
     });
 
-
     if (historicize) {
       this.pushHistory({
         applyed: true,
@@ -1346,12 +1336,12 @@ export class Table implements UserTable {
         row.push(id);
         const cell = this.getByPoint({ y: baseY, x: j });
         const copied = this.copyCellLayout(cell);
-        this.hub.data[id] = { 
-          ...copied, 
-          system: { 
+        this.hub.data[id] = {
+          ...copied,
+          system: {
             id,
             sheetId: this.sheetId,
-            changedAt, 
+            changedAt,
             dependents: new Set(),
           },
         };
@@ -1479,13 +1469,14 @@ export class Table implements UserTable {
         const cell = this.getByPoint({ y: i, x: baseX });
         const copied = this.copyCellLayout(cell);
         this.idMatrix[i].splice(x, 0, id);
-        this.hub.data[id] = { 
-          ...copied, system: {
+        this.hub.data[id] = {
+          ...copied,
+          system: {
             id,
             sheetId: this.sheetId,
-            changedAt, 
+            changedAt,
             dependents: new Set(),
-          } 
+          },
         };
       }
       rows.push(row);
@@ -1709,7 +1700,7 @@ export class Table implements UserTable {
     return {
       history,
       newTable: this.clone(!shouldTracking(history.operation)),
-      callback: ({table: {hub}}: StoreType) => {
+      callback: ({ table: { hub } }: StoreType) => {
         Object.assign(hub, history.undoReflection?.hub);
         hub.reflect();
       },
@@ -1777,10 +1768,10 @@ export class Table implements UserTable {
     return {
       history,
       newTable: this.clone(!shouldTracking(history.operation)),
-      callback: ({table: {hub}}: StoreType) => {
+      callback: ({ table: { hub } }: StoreType) => {
         Object.assign(hub, history.redoReflection?.hub);
         hub.reflect();
-      }
+      },
     };
   }
   public getFunction(name: string) {
@@ -1796,11 +1787,11 @@ export class Table implements UserTable {
   }
 
   public getSolvedCache(point: PointType) {
-    const id = this.getId(point)
+    const id = this.getId(point);
     return this.hub.solvedCaches.get(id);
   }
   public setSolvedCache(point: PointType, value: any) {
-    const id = this.getId(point)
+    const id = this.getId(point);
     this.hub.solvedCaches.set(id, value);
   }
   public clearSolvedCaches() {

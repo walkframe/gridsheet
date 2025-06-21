@@ -28,16 +28,15 @@ const actions: { [s: string]: CoreAction<any> } = {};
 
 type StoreWithCallback = StoreType & {
   callback?: (store: StoreType) => void;
-}
+};
 
 export const reducer = <T>(store: StoreType, action: { type: number; value: T }): StoreType => {
-
   const act: CoreAction<T> | undefined = actions[action.type];
   if (act == null) {
     return store;
   }
 
-  const { callback, ...newStore } = act.reduce(store, action.value)
+  const { callback, ...newStore } = act.reduce(store, action.value);
   callback?.(newStore);
   return { ...store, ...newStore };
 };
@@ -215,7 +214,7 @@ class CopyAction<T extends ZoneType> extends CoreAction<T> {
     const { table } = store;
     return {
       ...store,
-      callback: ({table}) => {
+      callback: ({ table }) => {
         table.hub.reflect({
           copyingSheetId: table.sheetId,
           copyingZone: payload,
@@ -232,7 +231,7 @@ class CutAction<T extends ZoneType> extends CoreAction<T> {
     const { table } = store;
     return {
       ...store,
-      callback: ({table}) => {
+      callback: ({ table }) => {
         table.hub.reflect({
           copyingSheetId: table.sheetId,
           copyingZone: payload,
@@ -246,7 +245,6 @@ export const cut = new CutAction().bind();
 
 class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
-    
     const { choosing, selectingZone, table: dstTable } = store;
     const { hub } = dstTable;
     const { copyingSheetId, copyingZone, cutting } = hub;
@@ -284,13 +282,13 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
           sheetId: srcTable.sheetId,
           selectingZone: nextSelectingZone,
           choosing,
-          hub: {copyingSheetId: srcTable.sheetId, copyingZone, cutting: true},
+          hub: { copyingSheetId: srcTable.sheetId, copyingZone, cutting: true },
         },
         redoReflection: {
           sheetId: srcTable.sheetId,
           //selectingZone: copyingZone,
           choosing,
-          hub: {copyingSheetId: srcTable.sheetId, copyingZone: resetZone},
+          hub: { copyingSheetId: srcTable.sheetId, copyingZone: resetZone },
         },
       });
 
@@ -300,12 +298,12 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
         table: newTable,
         selectingZone: nextSelectingZone,
         inputting: newTable.stringify({ point: choosing, evaluates: false }),
-        callback: ({table}) => {
+        callback: ({ table }) => {
           table.hub.reflect({
             cutting: false,
             copyingZone: resetZone,
           });
-        }
+        },
       };
     }
 
@@ -354,16 +352,16 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
         operator: 'USER',
         undoReflection: {
           sheetId: srcTable.sheetId,
-          hub: {copyingZone},
+          hub: { copyingZone },
           choosing,
           selectingZone,
         },
         redoReflection: {
           sheetId: srcTable.sheetId,
-          hub: {copyingSheetId: srcTable.sheetId, copyingZone: resetZone},
+          hub: { copyingSheetId: srcTable.sheetId, copyingZone: resetZone },
           choosing,
           selectingZone: areaToZone(selectingArea),
-        }
+        },
       });
     }
 
@@ -374,11 +372,11 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
       selectingZone: nextSelectingZone,
       inputting: newTable.stringify({ point: choosing, evaluates: false }),
       ...initSearchStatement(newTable, store),
-      callback: ({table}) => {
+      callback: ({ table }) => {
         table.hub.reflect({
           copyingZone: resetZone,
         });
-      }
+      },
     };
   }
 }
@@ -392,12 +390,12 @@ class EscapeAction<T extends null> extends CoreAction<T> {
       editingAddress: '',
       leftHeaderSelecting: false,
       topHeaderSelecting: false,
-      callback: ({table}) => {
+      callback: ({ table }) => {
         table.hub.reflect({
           copyingZone: resetZone,
           cutting: false,
         });
-      }
+      },
     };
   }
 }
@@ -533,7 +531,7 @@ class WriteAction<T extends { value: string; point?: PointType }> extends CoreAc
       ...store,
       ...initSearchStatement(newTable, store),
       table: newTable,
-      callback: ({table}) => {
+      callback: ({ table }) => {
         table.hub.reflect({
           copyingZone: resetZone,
         });
@@ -604,7 +602,7 @@ class UndoAction<T extends null> extends CoreAction<T> {
     }
     if (history.dstSheetId !== table.sheetId) {
       const { dispatch, store: dstStore } = table.hub.contextsBySheetId[history.dstSheetId];
-      dispatch(setStore({ ...dstStore, ...history.undoReflection}));
+      dispatch(setStore({ ...dstStore, ...history.undoReflection }));
       return store;
     }
     return {
@@ -628,7 +626,7 @@ class RedoAction<T extends null> extends CoreAction<T> {
     }
     if (history.dstSheetId !== table.sheetId) {
       const { dispatch, store: dstStore } = table.hub.contextsBySheetId[history.dstSheetId];
-      dispatch(setStore({ ...dstStore, ...history.redoReflection}));
+      dispatch(setStore({ ...dstStore, ...history.redoReflection }));
       return store;
     }
     return {

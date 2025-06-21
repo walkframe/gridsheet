@@ -7,7 +7,7 @@ import {
   HEADER_WIDTH,
   SHEET_HEIGHT,
   SHEET_WIDTH,
-  HISTORY_LIMIT,
+  DEFAULT_HISTORY_LIMIT,
 } from '../constants';
 import { functions } from '../formula/mapping';
 import { Context } from '../store';
@@ -52,13 +52,13 @@ export function GridSheet({
     if (initialHubReactive && !sheetName) {
       console.warn('If a unique sheet name is not specified, cross-sheet formula interpretation will not work.');
     }
-  }, [])
+  }, []);
 
   const [initialState] = useState<StoreType>(() => {
     const {
       headerHeight = HEADER_HEIGHT,
       headerWidth = HEADER_WIDTH,
-      historyLimit = HISTORY_LIMIT,
+      historyLimit = DEFAULT_HISTORY_LIMIT,
       renderers,
       parsers,
       labelers,
@@ -87,7 +87,7 @@ export function GridSheet({
     });
     const sheetId = (table.sheetId = ++hub.sheetHead);
     hub.sheetIdsByName[sheetName] = sheetId;
-    
+
     table.initialize(initialCells);
     onInit?.(table);
     const store: StoreType = {

@@ -57,7 +57,10 @@ export class Autofill {
     } else {
       for (let i = 0; i < dstShape.width; i++) {
         // TODO: pass the originPath
-        const patterns = this.getChangePatterns(matrix.map((row) => row[i]), '');
+        const patterns = this.getChangePatterns(
+          matrix.map((row) => row[i]),
+          '',
+        );
         for (let j = 0; j < dstShape.height; j++) {
           const baseCell = matrix[j % srcShape.height]?.[i % srcShape.width];
           const y = sign > 0 ? this.dst.top + j : this.dst.bottom - j;
