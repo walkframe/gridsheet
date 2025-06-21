@@ -18,107 +18,107 @@ const Sheets = ({ numRows, numCols, defaultWidth }: Props) => {
     <div>
       <table style={{ borderCollapse: 'collapse' }}>
         <tbody>
-        <tr>
-          <td style={{ border: '3px solid #aaa', padding: '5px' }}>
-            <GridSheet
-              hubReactive={hubReactive}
-              sheetName={sheet1}
-              initialCells={buildInitialCells({
-                cells: {
-                  default: { width: defaultWidth },
-                  A1: {
-                    value: '=Sheet2!A1+100',
+          <tr>
+            <td style={{ border: '3px solid #aaa', padding: '5px' }}>
+              <GridSheet
+                hubReactive={hubReactive}
+                sheetName={sheet1}
+                initialCells={buildInitialCells({
+                  cells: {
+                    default: { width: defaultWidth },
+                    A1: {
+                      value: '=Sheet2!A1+100',
+                    },
+                    A2: {
+                      value: '=SUM(Sheet2!B2:B4)',
+                    },
+                    A3: {
+                      value: "='Sheet 3'!A1 + 1000",
+                    },
+                    A5: {
+                      value: '=C5+100',
+                    },
+                    B1: {
+                      value: "=SUM('Invalid Sheet'!B2:B3)",
+                    },
+                    C1: {
+                      value: 333,
+                    },
+                    C2: {
+                      value: '=$C$1+100',
+                    },
+                    C3: {
+                      value: '=C2+200',
+                    },
+                    B5: {
+                      value: '=A5+300',
+                    },
+                    C5: {
+                      value: 500,
+                    },
                   },
-                  A2: {
-                    value: '=SUM(Sheet2!B2:B4)',
+                  ensured: { numRows, numCols },
+                })}
+              />
+              <br />
+              <input id="input1" value={sheet1} onChange={(e) => setSheet1(e.target.value)} />
+            </td>
+            <td style={{ border: '3px solid #aaa', padding: '5px' }}>
+              <GridSheet
+                hubReactive={hubReactive}
+                sheetName={sheet2}
+                initialCells={buildInitialCells({
+                  cells: {
+                    A1: { value: 50 },
+                    A2: { value: `=${sheet1}!C3` },
+                    B1: { value: 999 },
+                    B2: { value: 1200 },
+                    B3: { value: 30 },
                   },
-                  A3: {
-                    value: "='Sheet 3'!A1 + 1000",
+                  ensured: { numRows, numCols },
+                })}
+                options={{
+                  sheetResize: 'both',
+                }}
+              />
+              <br />
+              <input id="input2" value={sheet2} onChange={(e) => setSheet2(e.target.value)} />
+            </td>
+          </tr>
+          <tr>
+            <td style={{ border: '3px solid #aaa', padding: '5px' }}>
+              <GridSheet
+                hubReactive={hubReactive}
+                sheetName={sheet3}
+                initialCells={buildInitialCells({
+                  cells: {
+                    A1: { value: `='${sheet1}'!C3` },
+                    A2: { value: `=SUM('${sheet1}'!C2:C3) + 10` },
+                    A3: { value: `=SUM('${sheet1}'!B3:C3) + 20` },
                   },
-                  A5: {
-                    value: '=C5+100',
+                  ensured: { numRows, numCols },
+                })}
+              />
+              <br />
+              <input id="input3" value={sheet3} onChange={(e) => setSheet3(e.target.value)} />
+            </td>
+            <td style={{ border: '3px solid #aaa', padding: '5px' }}>
+              <GridSheet
+                sheetName={sheet4}
+                initialCells={buildInitialCells({
+                  cells: {
+                    A1: { value: `=${sheet1}!C3` },
                   },
-                  B1: {
-                    value: "=SUM('Invalid Sheet'!B2:B3)",
-                  },
-                  C1: {
-                    value: 333,
-                  },
-                  C2: {
-                    value: '=$C$1+100',
-                  },
-                  C3: {
-                    value: '=C2+200',
-                  },
-                  B5: {
-                    value: '=A5+300',
-                  },
-                  C5: {
-                    value: 500,
-                  },
-                },
-                ensured: { numRows, numCols },
-              })}
-            />
-            <br />
-            <input id="input1" value={sheet1} onChange={(e) => setSheet1(e.target.value)} />
-          </td>
-          <td style={{ border: '3px solid #aaa', padding: '5px' }}>
-            <GridSheet
-              hubReactive={hubReactive}
-              sheetName={sheet2}
-              initialCells={buildInitialCells({
-                cells: {
-                  A1: { value: 50 },
-                  A2: { value: `=${sheet1}!C3` },
-                  B1: { value: 999 },
-                  B2: { value: 1200 },
-                  B3: { value: 30 },
-                },
-                ensured: { numRows, numCols },
-              })}
-              options={{
-                sheetResize: 'both',
-              }}
-            />
-            <br />
-            <input id="input2" value={sheet2} onChange={(e) => setSheet2(e.target.value)} />
-          </td>
-        </tr>
-        <tr>
-          <td style={{ border: '3px solid #aaa', padding: '5px' }}>
-            <GridSheet
-              hubReactive={hubReactive}
-              sheetName={sheet3}
-              initialCells={buildInitialCells({
-                cells: {
-                  A1: { value: `='${sheet1}'!C3` },
-                  A2: { value: `=SUM('${sheet1}'!C2:C3) + 10` },
-                  A3: { value: `=SUM('${sheet1}'!B3:C3) + 20` },
-                },
-                ensured: { numRows, numCols },
-              })}
-            />
-            <br />
-            <input id="input3" value={sheet3} onChange={(e) => setSheet3(e.target.value)} />
-          </td>
-          <td style={{ border: '3px solid #aaa', padding: '5px' }}>
-            <GridSheet
-              sheetName={sheet4}
-              initialCells={buildInitialCells({
-                cells: {
-                  A1: { value: `=${sheet1}!C3` },
-                },
-                ensured: { numRows, numCols },
-              })}
-              options={{
-                mode: 'dark',
-              }}
-            />
-            <br />
-            Independent <input id="input4" value={sheet4} onChange={(e) => setSheet4(e.target.value)} />
-          </td>
-        </tr>
+                  ensured: { numRows, numCols },
+                })}
+                options={{
+                  mode: 'dark',
+                }}
+              />
+              <br />
+              Independent <input id="input4" value={sheet4} onChange={(e) => setSheet4(e.target.value)} />
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>

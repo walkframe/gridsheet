@@ -59,7 +59,7 @@ export const HeaderCellLeft: FC<Props> = ({ y }) => {
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
     safePreventDefault(e);
-    
+
     if (!isTouching(e)) {
       return false;
     }
@@ -119,7 +119,7 @@ export const HeaderCellLeft: FC<Props> = ({ y }) => {
     if (e.type.startsWith('touch')) {
       return;
     }
-    
+
     safePreventDefault(e);
     dispatch(setDragging(false));
     if (autofillDraggingTo) {
@@ -133,12 +133,12 @@ export const HeaderCellLeft: FC<Props> = ({ y }) => {
     if (!isTouching(e)) {
       return false;
     }
-    
+
     // Do nothing for touch events
     if (e.type.startsWith('touch')) {
       return false;
     }
-    
+
     safePreventDefault(e);
     e.stopPropagation();
 

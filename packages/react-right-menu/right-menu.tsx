@@ -11,7 +11,7 @@ interface Props {
   children: ReactNode;
 }
 
-export const RightMenu = ({ children }: Props): JSX.Element => {
+export const RightMenu = ({ children }: Props) => {
   const context = useInitialPluginContext();
   return (
     <div className={`gs-rightmenu-wrapper`}>
@@ -99,7 +99,7 @@ export const InsertRows = ({ store, dispatch }: ItemProps) => {
       case 'below':
         args = { y: below + 1, baseY: below };
     }
-    const newTable = table.addRows({ ...args, numRows });
+    const newTable = table.removeRows({ ...args, numRows });
     dispatch(updateTable(newTable));
   };
 
@@ -216,7 +216,7 @@ export const InsertCols = ({ store, dispatch }: ItemProps) => {
       case 'right':
         args = { x: right + 1, baseX: right };
     }
-    const newTable = table.addCols({ ...args, numCols });
+    const newTable = table.removeCols({ ...args, numCols });
     dispatch(updateTable(newTable));
   };
 

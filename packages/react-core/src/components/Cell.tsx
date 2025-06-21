@@ -113,7 +113,7 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
     safePreventDefault(e);
-    
+
     if (!isTouching(e)) {
       return false;
     }
@@ -166,7 +166,7 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
     if (e.type.startsWith('touch')) {
       return;
     }
-    
+
     safePreventDefault(e);
     dispatch(setDragging(false));
     if (autofillDraggingTo) {
@@ -183,12 +183,12 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
     if (!isTouching(e)) {
       return false;
     }
-    
+
     // Do nothing for touch events
     if (e.type.startsWith('touch')) {
       return false;
     }
-    
+
     safePreventDefault(e);
     e.stopPropagation();
 

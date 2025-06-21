@@ -42,8 +42,8 @@ jobs:
       - name: server
         run: |
           cd packages/storybook
-          pnpm install
-          pnpm dev &
+          pnpm build
+          python -m http.server 5233 --directory "${{ github.workspace }}/storybook-static" &
 
       - name: e2e test
         run: pnpm e2e
