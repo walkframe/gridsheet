@@ -1,21 +1,22 @@
 import React from 'react';
-import { constructInitialCells, GridSheet, Parser, Renderer } from '@gridsheet/react-core';
+import { CellType, buildInitialCells, GridSheet, Parser, Renderer, RenderProps } from '@gridsheet/react-core';
 
 export default {
   title: 'Basic',
 };
 
 class ListRenderer extends Renderer {
-  array(value: any[]) {
+  array({ cell }: RenderProps<any[]>) {
     return (
       <ul>
-        {value.map((v, i) => (
+        {cell.value!.map((v, i) => (
           <li key={i}>{v}</li>
         ))}
       </ul>
     );
   }
-  stringify({ value }: { value: any[] }): string {
+  stringify(cell: CellType): string {
+    const value = cell.value;
     if (Array.isArray(value)) {
       return value.join('\n');
     }
@@ -31,7 +32,7 @@ export const ParseAsList = () => {
   return (
     <>
       <GridSheet
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           matrices: {
             A1: [
               [

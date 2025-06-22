@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "types": ["vite/client", "react", "jest"],
     "target": "ES2015",
     "module": "ES2015",
     "moduleResolution": "node",
@@ -7,7 +8,8 @@
     "declaration": true,
     "declarationMap": true,
     "allowJs": true,
-    "jsx": "react",
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
     "sourceMap": true,
     "outDir": "./dist/",
     "strict": true,
@@ -19,5 +21,5 @@
     "forceConsistentCasingInFileNames": true
   },
   "exclude": ["node_modules", "storybook", "dist", "e2e", "plugins"],
-  "include": ["**/*.ts", "**/*.tsx"]
+  "include": ["**/*.ts", "**/*.tsx", "**/*.spec.ts"]
 }

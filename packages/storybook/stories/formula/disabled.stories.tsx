@@ -1,5 +1,5 @@
 import React from 'react';
-import { constructInitialCells, GridSheet } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
 
 export default {
   title: 'Formula',
@@ -9,12 +9,12 @@ export const Disabled = () => {
   return (
     <>
       <GridSheet
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           cells: {
-            A: { labeler: 'disabled', width: 150},
+            A: { labeler: 'disabled', width: 150 },
             A1: { value: '=1+1', disableFormula: true },
             B1: { value: '=1+1' },
-            A2: { value: "'quote", disableFormula: true  },
+            A2: { value: "'quote", disableFormula: true },
             B2: { value: "'quote" },
             A3: { value: "'0123", disableFormula: true },
             B3: { value: "'0123" },
@@ -27,10 +27,10 @@ export const Disabled = () => {
         })}
         options={{
           labelers: {
-            disabled: (value: string) => {
+            disabled: (n) => {
               return 'disabled formula';
-            }
-          }
+            },
+          },
         }}
       />
     </>

@@ -7,21 +7,28 @@
     "declaration": true,
     "declarationMap": true,
     "allowJs": true,
-    "jsx": "react",
+    "jsx": "react-jsx",
     "sourceMap": true,
     "outDir": "./dist/",
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
-    "baseUrl": "./src/",
-    "forceConsistentCasingInFileNames": true
+    "baseUrl": ".",
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true
   },
-  "exclude": ["node_modules", "storybook", "dist", "e2e"],
-  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "storybook-static", "dist", "e2e"],
+  "include": ["**/*.ts", "**/*.tsx", ".storybook/**/*"],
+  "ts-node": {
+    "esm": true
+  },
   "paths": {
-    "@gridsheet/react-core": ["../react-core"],
-    "@gridsheet/react-right-menu": ["../react-right-menu"]
+    "@gridsheet/react-core": ["../react-core/src"],
+    "@gridsheet/react-right-menu": ["../react-right-menu"],
+    "@gridsheet/preact-core": ["../preact-core"],
   }
 }

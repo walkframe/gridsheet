@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { constructInitialCells, GridSheet, prevention } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, operations } from '@gridsheet/react-core';
 
 type Props = {
   numRows: number;
@@ -16,22 +16,22 @@ const Sheet = ({ numRows, numCols, defaultWidth }: Props) => {
           headerHeight: 50,
           headerWidth: 150,
         }}
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           cells: {
             default: { width: defaultWidth },
             4: {
-              prevention: prevention.DeleteRow,
+              prevention: operations.RemoveRows,
             },
             1: {
-              prevention: prevention.Resize,
+              prevention: operations.Resize,
               style: { backgroundColor: '#eeeeee' },
             },
             'A:B': {
-              prevention: prevention.AddCol | prevention.DeleteCol,
+              prevention: operations.InsertCols | operations.RemoveCols,
               style: { backgroundColor: '#dddddd' },
             },
             A: {
-              prevention: prevention.Resize,
+              prevention: operations.Resize,
               style: { backgroundColor: '#eeeeee' },
             },
             C: {
@@ -39,8 +39,12 @@ const Sheet = ({ numRows, numCols, defaultWidth }: Props) => {
             },
             B2: {
               value: 'READONLY',
-              prevention: prevention.ReadOnly,
+              prevention: operations.InsertCols,
               style: { backgroundColor: '#aaaaaa' },
+            },
+            B1: {
+              value: 'Protected from row deletion',
+              prevention: operations.InsertCols | operations.RemoveCols,
             },
           },
           ensured: { numRows, numCols },
@@ -55,6 +59,6 @@ export const Prevention: StoryObj<typeof Sheet> = {
 };
 
 export default {
-  title: 'Basic',
+  title: 'Protection',
   component: Sheet,
 };

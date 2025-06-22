@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { ctrl, drag, paste } from './utils';
 
 test('render', async ({ page }) => {
   await page.goto('http://localhost:5233/iframe.html?id=basic--multiple-sheet&viewMode=story');
@@ -10,12 +11,12 @@ test('render', async ({ page }) => {
 
   expect(await a11.locator('.gs-cell-rendered').textContent()).toBe('150');
   expect(await a21.locator('.gs-cell-rendered').textContent()).toBe('1230');
-  expect(await a31.locator('.gs-cell-rendered').textContent()).toBe('1555');
+  expect(await a31.locator('.gs-cell-rendered').textContent()).toBe('1633');
   expect(await b11.locator('.gs-cell-rendered').textContent()).toBe('#REF!');
 
   // raw A1
   const largeEditor1 = sheet1.locator('.gs-formula-bar textarea');
-  expect(await largeEditor1.inputValue()).toBe('=Sheet2!A1+100');
+  expect(await largeEditor1.inputValue()).toBe("='Sheet2'!A1+100");
 
   // update sheet2
   const sheet2 = page.locator('[data-sheet-name="Sheet2"]');
@@ -40,6 +41,43 @@ test('render', async ({ page }) => {
 
   await a31.click();
   expect(await largeEditor1.inputValue()).toBe("='Sheet 3a'!A1 + 1000");
+});
+
+test('absolute ref should not be changed', async ({ page }) => {
+  await page.goto('http://localhost:5233/iframe.html?id=formula--look-up&viewMode=story');
+  const sheet2 = page.locator('[data-sheet-name="year"]');
+
+  const b3 = sheet2.locator("[data-address='B3']");
+  await b3.click();
+  await ctrl(page, 'c');
+
+  const b7 = sheet2.locator("[data-address='B7']");
+  await b7.click();
+  await paste(page);
+  expect(await b7.locator('.gs-cell-rendered').textContent()).toBe('辰🐲');
+  const largeEditor2 = sheet2.locator('.gs-formula-bar textarea');
+  expect(await largeEditor2.inputValue()).toBe("=VLOOKUP(MOD(A7 - 4, 12), 'eto'!$A$1:$B$12, 2, false)");
+});
+
+test('inserting absolute ref', async ({ page }) => {
+  await page.goto('http://localhost:5233/iframe.html?id=basic--labeler&viewMode=story');
+  const largeEditor = page.locator('.gs-formula-bar textarea');
+  // single ref
+  const a2 = page.locator("[data-address='A2']");
+  await a2.dblclick(); // =$B2
+  const a3 = page.locator("[data-address='A3']");
+  await a3.click();
+  expect(await largeEditor.inputValue()).toBe('=$A3');
+  await page.keyboard.press('Enter');
+
+  // range ref
+  const a1 = page.locator("[data-address='A1']");
+  await a1.dblclick(); // =SUM($B1:C$1)
+  await page.keyboard.press('ArrowLeft');
+  await drag(page, 'C1', 'D1');
+  expect(await largeEditor.inputValue()).toBe('=SUM($C1:D$1)');
+  await page.keyboard.press('Enter');
+  expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('300'); // 100 + 200
 });
 
 test('circular referencing error', async ({ page }) => {
@@ -145,13 +183,10 @@ test('insert ref by selection in multiple sheets', async ({ page }) => {
   const b3 = sheet3.locator("[data-address='B3']");
   await b3.click();
   await page.keyboard.type('=sum(');
-  await sheet1.locator("[data-address='E1']").hover();
-  await page.mouse.down();
-  await sheet1.locator("[data-address='F1']").hover();
-  await page.mouse.up();
+  await drag(sheet1, 'E1', 'F1', (page = page));
   // Confirm that the contents of largeEditor is copied to editor
-  expect(await editor3.inputValue()).toBe('=sum(criteria!E1:F1');
-  expect(await largeEditor3.inputValue()).toBe('=sum(criteria!E1:F1');
+  expect(await editor3.inputValue()).toBe("=sum('criteria'!E1:F1");
+  expect(await largeEditor3.inputValue()).toBe("=sum('criteria'!E1:F1");
   await page.keyboard.type(')');
   await page.keyboard.press('Enter');
   expect(await b3.locator('.gs-cell-rendered').textContent()).toBe('185');
@@ -217,10 +252,77 @@ test('disable formula', async ({ page }) => {
   expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('=1+1');
   expect(await b1.locator('.gs-cell-rendered').textContent()).toBe('2');
   expect(await a2.locator('.gs-cell-rendered').textContent()).toBe("'quote");
-  expect(await b2.locator('.gs-cell-rendered').textContent()).toBe("quote");
+  expect(await b2.locator('.gs-cell-rendered').textContent()).toBe('quote');
   expect(await a3.locator('.gs-cell-rendered').textContent()).toBe("'0123");
   expect(await b3.locator('.gs-cell-rendered').textContent()).toBe('0123');
   expect(await a4.locator('.gs-cell-rendered').textContent()).toBe('0123');
   expect(await b4.locator('.gs-cell-rendered').textContent()).toBe('0123');
+});
 
+test('copy and slide ref', async ({ page }) => {
+  await page.goto('http://localhost:5233/iframe.html?id=basic--multiple-sheet&viewMode=story');
+  const sheet1 = page.locator('[data-sheet-name="Sheet1"]');
+  const sheet2 = page.locator('[data-sheet-name="Sheet2"]');
+  const sheet3 = page.locator('[data-sheet-name="Sheet 3"]');
+  const largeEditor3 = sheet3.locator('.gs-formula-bar textarea');
+
+  const a13 = sheet3.locator("[data-address='A1']");
+  const b13 = sheet3.locator("[data-address='B1']");
+  await a13.click();
+  await ctrl(page, 'c');
+  await b13.click();
+  await paste(page);
+  expect(await b13.locator('.gs-cell-rendered').textContent()).toBe('#REF!');
+  expect(await largeEditor3.inputValue()).toBe('=#REF!');
+
+  const a23 = sheet3.locator("[data-address='A2']");
+  const b23 = sheet3.locator("[data-address='B2']");
+  await a23.click();
+  await ctrl(page, 'c');
+  await b23.click();
+  await paste(page);
+  expect(await b23.locator('.gs-cell-rendered').textContent()).toBe('#REF!');
+  expect(await largeEditor3.inputValue()).toBe("=SUM('Sheet1'!#REF!:#REF!) + 10");
+
+  const a33 = sheet3.locator("[data-address='A3']");
+  const b33 = sheet3.locator("[data-address='B3']");
+  await a33.click();
+  await ctrl(page, 'c');
+  await b33.click();
+  await paste(page);
+  expect(await b33.locator('.gs-cell-rendered').textContent()).toBe('#REF!');
+  expect(await largeEditor3.inputValue()).toBe("=SUM('Sheet1'!C3:#REF!) + 20");
+});
+
+test('add col and slide ref', async ({ page }) => {
+  await page.goto('http://localhost:5233/iframe.html?id=basic--multiple-sheet&viewMode=story');
+  const sheet1 = page.locator('[data-sheet-name="Sheet1"]');
+  const sheet2 = page.locator('[data-sheet-name="Sheet2"]');
+  const sheet3 = page.locator('[data-sheet-name="Sheet 3"]');
+  const largeEditor1 = sheet1.locator('.gs-formula-bar textarea');
+  const largeEditor2 = sheet2.locator('.gs-formula-bar textarea');
+
+  const a51 = sheet1.locator("[data-address='A5']");
+  expect(await a51.locator('.gs-cell-rendered').textContent()).toBe('600');
+  const b51 = sheet1.locator("[data-address='B5']");
+  expect(await b51.locator('.gs-cell-rendered').textContent()).toBe('900');
+  const a22 = sheet2.locator("[data-address='A2']");
+  expect(await a22.locator('.gs-cell-rendered').textContent()).toBe('633');
+
+  // insert a column to the left of Sheet1!C
+  const th31 = sheet1.locator("th[data-x='3']");
+  await th31.click();
+  await page.click("th[data-x='3']", { button: 'right' });
+  await page.click("[data-testid='insert-cols-left-item']");
+
+  expect(await a51.locator('.gs-cell-rendered').textContent()).toBe('600');
+  expect(await b51.locator('.gs-cell-rendered').textContent()).toBe('900');
+  expect(await a22.locator('.gs-cell-rendered').textContent()).toBe('633');
+
+  await a51.click();
+  expect(await largeEditor1.inputValue()).toBe('=D5+100'); // C5 -> D5
+  await b51.click();
+  expect(await largeEditor1.inputValue()).toBe('=A5+300'); // A5 -> A5
+  await a22.click();
+  expect(await largeEditor2.inputValue()).toBe("='Sheet1'!D3"); // C3 -> D3
 });

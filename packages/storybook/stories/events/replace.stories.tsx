@@ -1,5 +1,5 @@
 import React from 'react';
-import { GridSheet, constructInitialCells, createTableRef, Table } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells, createTableRef, Table } from '@gridsheet/react-core';
 
 export default {
   title: 'Table operations',
@@ -12,7 +12,7 @@ export const Replace = () => {
     <>
       <GridSheet
         tableRef={tableRef}
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           cells: {},
           ensured: {
             numRows: 50,
@@ -30,7 +30,7 @@ export const Replace = () => {
 
           const table = new Table({});
           table.initialize(
-            constructInitialCells({
+            buildInitialCells({
               cells: {},
               matrices: {
                 A1: [

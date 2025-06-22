@@ -5,7 +5,7 @@
 
 ## Introduction
 
-@gridsheet/react-core is a simple yet highly functional spreadsheet component for ReactJS.
+@gridsheet/react-core is a lightweight and extensible spreadsheet component for React with formula support, custom rendering, and real-time updates.
 
 ![gridsheet](https://github.com/walkframe/gridsheet/raw/master/gridsheet.png)
 

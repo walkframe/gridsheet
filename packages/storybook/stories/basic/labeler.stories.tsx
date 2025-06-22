@@ -1,5 +1,5 @@
 import React from 'react';
-import { constructInitialCells, GridSheet } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
 
 export default {
   title: 'Basic',
@@ -8,15 +8,16 @@ export default {
 export const Labeler = () => {
   const [width, setWidth] = React.useState(500);
   React.useEffect(() => {
-    setInterval(() => {
+    const id = window.setInterval(() => {
       setWidth(width - 50);
-    }, 10000);
-  });
+    }, 500);
+    return () => window.clearInterval(id);
+  }, []);
 
   return (
     <>
       <GridSheet
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           cells: {
             A: { labeler: 'hiragana' },
             B: { labeler: 'hiragana' },
@@ -28,9 +29,14 @@ export const Labeler = () => {
             3: { labeler: 'katakana' },
             4: { labeler: 'katakana' },
             5: { labeler: 'katakana' },
-            A1: { value: '=SUM($B$1:B2)' },
+            A1: { value: '=SUM($B1:C$1)' },
+            B1: { value: 1 },
+            C1: { value: 100 },
+            D1: { value: 200 },
+            A2: { value: '=$B2' },
+            B2: { value: 2 },
           },
-          ensured: { numRows: 100, numCols: 100 },
+          ensured: { numRows: 10, numCols: 10 },
         })}
         options={{
           labelers: {

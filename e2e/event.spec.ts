@@ -9,10 +9,10 @@ test('show the diff', async ({ page }) => {
   await page.keyboard.press('Enter');
 
   const diff = page.locator('#changes');
-  expect(jsonMinify(await diff.inputValue())).toContain('{"B2":22}');
+  expect(jsonMinify(await diff.inputValue())).toContain('"B2":22');
   const evaluates = page.locator('#evaluates');
   await evaluates.uncheck();
-  expect(jsonMinify(await diff.inputValue())).toContain('{"B2":"=sum(C1:E1)+10"}');
+  expect(jsonMinify(await diff.inputValue())).toContain('"B2":"=sum(C1:E1)+10"');
 });
 
 test('1 operation makes 1 diff history', async ({ page }) => {

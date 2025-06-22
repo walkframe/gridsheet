@@ -1,5 +1,5 @@
 import React from 'react';
-import { constructInitialCells, GridSheet } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
 
 export default {
   title: 'Basic',
@@ -15,7 +15,7 @@ export const ResizeSheets = () => {
               {' '}
               <GridSheet
                 style={{ maxWidth: '100%', maxHeight: '150px' }}
-                initialCells={constructInitialCells({
+                initialCells={buildInitialCells({
                   matrices: {
                     A1: [
                       ['resizable', 'both', '!'],
@@ -37,7 +37,7 @@ export const ResizeSheets = () => {
               {' '}
               <GridSheet
                 style={{ maxWidth: '100%', maxHeight: '150px' }}
-                initialCells={constructInitialCells({
+                initialCells={buildInitialCells({
                   matrices: {
                     A1: [
                       ['resizable', 'vertically', '!'],
@@ -60,7 +60,7 @@ export const ResizeSheets = () => {
               {' '}
               <GridSheet
                 style={{ maxWidth: '100%', maxHeight: '150px' }}
-                initialCells={constructInitialCells({
+                initialCells={buildInitialCells({
                   matrices: {
                     A1: [
                       ['resizable', 'horizontally', '!'],
@@ -82,7 +82,7 @@ export const ResizeSheets = () => {
               {' '}
               <GridSheet
                 style={{ maxWidth: '100%', maxHeight: '150px' }}
-                initialCells={constructInitialCells({
+                initialCells={buildInitialCells({
                   matrices: {
                     A1: [
                       ['not', 'resizable', '!!!'],

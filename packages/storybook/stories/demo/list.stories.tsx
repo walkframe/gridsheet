@@ -4,7 +4,7 @@ import {
   Renderer,
   Parser,
   MatrixType,
-  constructInitialCells,
+  buildInitialCells,
   aa2oa,
   RendererMixinType,
   ParserMixinType,
@@ -16,7 +16,8 @@ export default {
 };
 
 const ListRendererMixin: RendererMixinType = {
-  array(value: any[]) {
+  array({ cell }) {
+    const value = cell.value ?? [];
     return (
       <ul>
         {value.map((v, i) => (
@@ -29,7 +30,7 @@ const ListRendererMixin: RendererMixinType = {
     if (Array.isArray(value)) {
       return value.join('\n');
     }
-    return String(value) || '';
+    return String(value ?? '');
   },
 };
 
@@ -52,7 +53,7 @@ export function SecondDemo() {
     <div className="example-app">
       <h1>Sloppy data</h1>
       <GridSheet
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           matrices: { A1: initialData },
           cells: {
             default: { height: 100 },
@@ -74,17 +75,17 @@ export function SecondDemo() {
             list: new Parser({ mixins: [ListParserMixin] }),
           },
           onSave: (table) => {
-            const matrix = table.getMatrixFlatten({});
+            const matrix = table.getFieldMatrix({});
             const filtered = matrix.filter((row) => row[0]).map((row) => row.slice(1));
             setTsv(filtered.map((cols) => cols.join('\t')).join('\n'));
           },
           onChange: (table) => {
-            const matrix = table.getMatrixFlatten({});
+            const matrix = table.getFieldMatrix({});
             if (matrix != null) {
               console.log('data onchange:', matrix && aa2oa(matrix, ['name', 'occupation', 'memo']));
             }
-            const diff = table.getObjectFlatten({
-              filter: (cell) => !!cell?.changedAt && cell.changedAt > table.lastChangedAt!,
+            const diff = table.getFieldObject({
+              filter: (cell) => !!cell?.system?.changedAt && cell?.system.changedAt > table.lastChangedAt!,
             });
             console.log('onchange diff:', diff);
           },

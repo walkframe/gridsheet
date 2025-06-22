@@ -1,11 +1,11 @@
 import React from 'react';
 import {
-  constructInitialCells,
+  buildInitialCells,
   GridSheet,
   Renderer,
   RendererMixinType,
   CheckboxRendererMixin,
-  PointType,
+  RenderProps,
   p2a,
 } from '@gridsheet/react-core';
 
@@ -28,23 +28,20 @@ const kanjiMap: { [s: string]: string } = {
 };
 
 const NullMixin: RendererMixinType = {
-  null(value: null, writer?: any, position?: PointType) {
-    return <span style={{ opacity: 0.3 }}>{p2a(position!)}</span>;
-  },
-  undefined(value: undefined, writer?: any, position?: PointType) {
-    return <span style={{ opacity: 0.3 }}>{p2a(position!)}</span>;
+  null({ cell, point }: RenderProps<null>) {
+    return <span style={{ opacity: 0.3 }}>{p2a(point!)}</span>;
   },
 };
 
 const KanjiRendererMixin: RendererMixinType = {
-  string(value: string): string {
-    return value;
+  string({ cell }: RenderProps<string>): string {
+    return cell.value!;
   },
-  number(value: number): string {
-    const minus = value < 0;
+  number({ cell }: RenderProps<number>) {
+    const minus = cell.value! < 0;
 
     let kanji = '';
-    let [int, fraction] = String(Math.abs(value)).split('.');
+    let [int, fraction] = String(Math.abs(cell.value!)).split('.');
     for (let i = 0; i < int.length; i++) {
       const j = int.length - i;
       if (j % 3 === 0 && i !== 0) {
@@ -53,13 +50,13 @@ const KanjiRendererMixin: RendererMixinType = {
       kanji += kanjiMap[int[i]];
     }
     if (fraction == null) {
-      return minus ? `-${kanji}` : kanji;
+      return minus ? <span>{kanji}</span> : <span>{kanji}</span>;
     }
     kanji += '.';
     for (let i = 0; i < fraction.length; i++) {
       kanji += kanjiMap[fraction[i]];
     }
-    return minus ? `-${kanji}` : kanji;
+    return minus ? <span>{kanji}</span> : <span>{kanji}</span>;
   },
 };
 
@@ -67,9 +64,9 @@ export const RenderToKanji = () => {
   return (
     <>
       <GridSheet
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           matrices: {
-            A1: [[true, false]],
+            A1: [[true, false, 64]],
             B3: [[100], [200, 300], [400, 500, 600], [800, 900, 1000, 1100]],
           },
           cells: {
@@ -78,14 +75,14 @@ export const RenderToKanji = () => {
             },
             B10: {
               value: '=B6+10000',
-            }
+            },
           },
           ensured: { numRows: 30, numCols: 20 },
         })}
         options={{
           renderers: {
             kanji: new Renderer({
-              mixins: [KanjiRendererMixin, CheckboxRendererMixin, NullMixin],
+              mixins: [KanjiRendererMixin, NullMixin],
             }),
           },
         }}

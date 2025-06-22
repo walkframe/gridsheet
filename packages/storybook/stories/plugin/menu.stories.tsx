@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { CellsByAddressType, constructInitialCells, GridSheet } from '@gridsheet/react-core';
+import { CellsByAddressType, buildInitialCells, GridSheet } from '@gridsheet/react-core';
 
 import { RightMenu as RightMenuComponent } from '@gridsheet/react-right-menu';
 
@@ -26,7 +26,7 @@ const Sheet = ({ numRows, numCols, defaultWidth, initialCells }: Props) => {
             sheetResize: 'both',
             editingOnEnter: true,
           }}
-          initialCells={constructInitialCells({
+          initialCells={buildInitialCells({
             ensured: { numRows: 5, numCols: 5 },
           })}
         />
@@ -44,7 +44,7 @@ const Sheet = ({ numRows, numCols, defaultWidth, initialCells }: Props) => {
             sheetResize: 'both',
             editingOnEnter: true,
           }}
-          initialCells={constructInitialCells({
+          initialCells={buildInitialCells({
             cells: {
               default: { width: defaultWidth, labeler: 'raw' },
               A1: {

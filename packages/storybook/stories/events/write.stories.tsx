@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, constructInitialCells, createTableRef, HistoryType } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells, createTableRef, HistoryType } from '@gridsheet/react-core';
 
 type Props = {
   x: number;
@@ -22,7 +22,7 @@ const Sheet = ({ x, y, value }: Props) => {
     <>
       <GridSheet
         tableRef={tableRef}
-        initialCells={constructInitialCells({
+        initialCells={buildInitialCells({
           cells: {},
           ensured: {
             numRows: 50,

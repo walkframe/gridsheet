@@ -11,7 +11,8 @@ export default [
       '**/storybook/**/*',
       'e2e/**/*',
       '**/*.config.ts',
-      '**/*.spec.ts'
+      '**/*.spec.ts',
+      '**/*.mjs',
     ],
   },
   {

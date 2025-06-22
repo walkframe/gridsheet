@@ -1,0 +1,25 @@
+{
+  "name": "@gridsheet/vue-core",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "dev": "vite example",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "peerDependencies": {
+    "vue": "^3.3.0"
+  },
+  "dependencies": {
+    "@gridsheet/preact-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.4",
+    "vue": "^3.4.21",
+    "vite": "^6.3.5",
+    "vite-plugin-dts": "^3.9.0"
+  }
+}

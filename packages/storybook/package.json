@@ -15,6 +15,7 @@
   "devDependencies": {
     "@chromatic-com/storybook": "^3",
     "@gridsheet/react-core": "workspace:^",
+    "@gridsheet/preact-core": "workspace:^",
     "@gridsheet/react-right-menu": "workspace:^",
     "@storybook/addon-essentials": "^8.6.7",
     "@storybook/addon-interactions": "^8.6.7",
