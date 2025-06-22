@@ -10,6 +10,10 @@
     "append-preact": "echo '\nexport { h, render } from \"preact\";' >> dist/index.d.ts && cat exports.ts >> dist/index.d.ts",
     "build": "rm -rf ./dist || true && vite build && pnpm copy-types && pnpm append-preact"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/walkframe/gridsheet.git"
+  },
   "peerDependencies": {
     "dayjs": "^1.11.13",
     "preact": "^10.26.6"

@@ -20,15 +20,12 @@ This package requires the following peer dependencies:
 ### Basic Preact Component
 
 ```tsx
-import { h, render } from '@gridsheet/preact-core';
 import { GridSheet } from '@gridsheet/preact-core';
 
 // Your Preact component
 function App() {
   return (
-    <div>
-      <GridSheet />
-    </div>
+    <GridSheet />
   );
 }
 
