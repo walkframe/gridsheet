@@ -37,7 +37,7 @@ jobs:
           pnpm install
           pnpm build
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
-          npm publish || true
+          npm publish --access public || true
 
       - name: upload react-right-menu
         run: |
@@ -45,4 +45,4 @@ jobs:
           pnpm install
           pnpm build --mode development
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
-          npm publish || true
+          npm publish --access public || true
