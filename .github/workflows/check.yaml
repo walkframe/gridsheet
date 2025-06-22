@@ -26,4 +26,4 @@ jobs:
 
       - name: check
         run: |
-          pnpm typecheck:all --build
+          pnpm typecheck:all
