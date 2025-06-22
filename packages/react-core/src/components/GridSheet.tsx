@@ -48,13 +48,12 @@ export function GridSheet({
   const hubReactive = initialHubReactive ?? internalHubReactive;
   const { hub } = hubReactive;
 
-  useEffect(() => {
-    if (initialHubReactive && !sheetName) {
-      console.warn('If a unique sheet name is not specified, cross-sheet formula interpretation will not work.');
-    }
-  }, []);
-
   const [initialState] = useState<StoreType>(() => {
+    const sheetId = ++hub.sheetHead;
+    if (!sheetName) {
+      sheetName = `Sheet${sheetId}`;
+      console.debug('GridSheet: sheetName is not provided, using default name:', sheetName);
+    }
     const {
       headerHeight = HEADER_HEIGHT,
       headerWidth = HEADER_WIDTH,
@@ -85,7 +84,7 @@ export function GridSheet({
       hub,
       functions: { ...functions, ...additionalFunctions },
     });
-    const sheetId = (table.sheetId = ++hub.sheetHead);
+    table.sheetId = sheetId;
     hub.sheetIdsByName[sheetName] = sheetId;
 
     table.initialize(initialCells);
