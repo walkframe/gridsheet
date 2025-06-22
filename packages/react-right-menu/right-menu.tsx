@@ -84,7 +84,7 @@ export const InsertRows = ({ store, dispatch }: ItemProps) => {
     setBelow(area.bottom);
   }, [store.leftHeaderSelecting, store.selectingZone]);
 
-  const addRows = () => {
+  const insertRows = () => {
     let args = { y: store.table.getNumRows() + 1, baseY: store.table.getNumRows() };
     switch (at) {
       case 'above':
@@ -93,7 +93,7 @@ export const InsertRows = ({ store, dispatch }: ItemProps) => {
       case 'below':
         args = { y: below + 1, baseY: below };
     }
-    const newTable = table.removeRows({ ...args, numRows });
+    const newTable = table.insertRows({ ...args, numRows });
     dispatch(updateTable(newTable));
   };
 
@@ -115,7 +115,7 @@ export const InsertRows = ({ store, dispatch }: ItemProps) => {
               setNumRows(num);
             }}
           />
-          <button style={{ width: 50, padding: '0 5px' }} type="button" className="gs-right-menu-btn" onClick={addRows}>
+          <button style={{ width: 50, padding: '0 5px' }} type="button" className="gs-right-menu-btn" onClick={insertRows}>
             <span>Insert</span>
           </button>
         </div>
@@ -201,7 +201,7 @@ export const InsertCols = ({ store, dispatch }: ItemProps) => {
     setRight(area.right);
   }, [store.topHeaderSelecting, store.selectingZone]);
 
-  const addCols = () => {
+  const insertCols = () => {
     let args = { x: store.table.getNumCols() + 1, baseX: store.table.getNumCols() };
     switch (at) {
       case 'left':
@@ -210,7 +210,7 @@ export const InsertCols = ({ store, dispatch }: ItemProps) => {
       case 'right':
         args = { x: right + 1, baseX: right };
     }
-    const newTable = table.removeCols({ ...args, numCols });
+    const newTable = table.insertCols({ ...args, numCols });
     dispatch(updateTable(newTable));
   };
 
@@ -232,7 +232,7 @@ export const InsertCols = ({ store, dispatch }: ItemProps) => {
               setNumCols(num);
             }}
           />
-          <button style={{ width: 50, padding: '0 5px' }} type="button" className="gs-right-menu-btn" onClick={addCols}>
+          <button style={{ width: 50, padding: '0 5px' }} type="button" className="gs-right-menu-btn" onClick={insertCols}>
             <span>Insert</span>
           </button>
         </div>

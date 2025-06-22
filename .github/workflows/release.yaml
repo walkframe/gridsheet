@@ -31,18 +31,18 @@ jobs:
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
           npm publish --access public || true
 
-      - name: upload react-right-menu
-        run: |
-          cd packages/react-right-menu
-          pnpm install
-          pnpm build --mode development
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
-          npm publish || true
-
       - name: upload preact-core
         run: |
           cd packages/preact-core
           pnpm install
           pnpm build
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+          npm publish || true
+
+      - name: upload react-right-menu
+        run: |
+          cd packages/react-right-menu
+          pnpm install
+          pnpm build --mode development
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
           npm publish || true
