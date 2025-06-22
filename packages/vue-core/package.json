@@ -14,7 +14,7 @@
     "vue": "^3.3.0"
   },
   "dependencies": {
-    "@gridsheet/preact-core": "workspace:*"
+    "@gridsheet/preact-core": "^2.0.0-rc.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.4",

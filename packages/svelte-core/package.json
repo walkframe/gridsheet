@@ -15,7 +15,7 @@
     "svelte": "^4.0.0"
   },
   "dependencies": {
-    "@gridsheet/preact-core": "workspace:*"
+    "@gridsheet/preact-core": "^2.0.0-rc.0"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^3.1.2",
