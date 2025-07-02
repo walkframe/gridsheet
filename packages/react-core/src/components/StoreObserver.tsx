@@ -1,7 +1,7 @@
-import type { FC } from 'react';
-import { useContext, useEffect, useState } from 'react';
+import type { FC, MutableRefObject } from 'react';
+import { createRef, useContext, useEffect, useRef, useState } from 'react';
 
-import type { OptionsType, Props } from '../types';
+import type { OptionsType, Props, StoreRef } from '../types';
 import { Context } from '../store';
 
 import { setStore, updateTable } from '../store/actions';
@@ -11,39 +11,46 @@ import { usePluginContext } from './PluginBase';
 
 type StoreInitializerProps = OptionsType & {
   sheetName?: string;
+  storeRef?: MutableRefObject<StoreRef | null>;
 };
 
+export const createStoreRef = () => createRef<StoreRef | null>();
+export const useStoreRef = () => useRef<StoreRef | null>(null);
 export const StoreObserver: FC<StoreInitializerProps> = ({
   headerHeight = HEADER_HEIGHT,
   headerWidth = HEADER_WIDTH,
   sheetName,
   sheetHeight,
   sheetWidth,
+  storeRef,
   editingOnEnter,
   showAddress,
   mode,
-  policies,
   onSave,
 }) => {
   const { store, dispatch } = useContext(Context);
   const { table } = store;
-  const { hub } = table;
+  const { wire } = table;
 
   useEffect(() => {
     if (sheetName && sheetName !== table.sheetName) {
       table.sheetName = sheetName;
-      hub.sheetIdsByName[sheetName] = table.sheetId;
-      delete hub.sheetIdsByName[table.prevSheetName];
+      wire.sheetIdsByName[sheetName] = table.sheetId;
+      delete wire.sheetIdsByName[table.prevSheetName];
       table.prevSheetName = sheetName;
-      hub.reflect();
+      //hub.transmit();
     }
   }, [sheetName]);
 
   useEffect(() => {
-    const { hub } = table;
+    const { wire: hub } = table;
     requestAnimationFrame(() => hub.identifyFormula());
     hub.contextsBySheetId[table.sheetId] = { store, dispatch };
-    hub.reflect();
+    hub.transmit();
+
+    if (storeRef) {
+      storeRef.current = { store, dispatch };
+    }
   }, [store]);
 
   useEffect(() => {
@@ -82,11 +89,6 @@ export const StoreObserver: FC<StoreInitializerProps> = ({
       dispatch(setStore({ mode }));
     }
   }, [mode]);
-
-  useEffect(() => {
-    table.updatePolicies(policies);
-    dispatch(updateTable(table.clone()));
-  }, [policies]);
 
   useEffect(() => {
     if (typeof onSave !== 'undefined') {

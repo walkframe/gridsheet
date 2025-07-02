@@ -27,11 +27,11 @@ export class SumFunction extends BaseFunction {
         spreaded.push(
           ...solveTable({ table: arg })
             .reduce((a, b) => a.concat(b))
-            .filter((v: any) => typeof v === 'number'),
+            .map((v) => ensureNumber(v, { ignore: true }))
         );
         return;
       }
-      spreaded.push(ensureNumber(arg));
+      spreaded.push(ensureNumber(arg, { ignore: true }));
     });
     this.bareArgs = spreaded;
   }

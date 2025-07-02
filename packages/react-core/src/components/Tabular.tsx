@@ -1,4 +1,4 @@
-import { useEffect, useContext, useRef, useState } from 'react';
+import { useEffect, useContext, useRef, useState, createRef } from 'react';
 
 import { Cell } from './Cell';
 import { HeaderCellTop } from './HeaderCellTop';
@@ -21,11 +21,13 @@ type Props = {
   tableRef: React.MutableRefObject<TableRef | null> | undefined;
 };
 
-export const createTableRef = () => useRef<TableRef | null>(null);
+export const createTableRef = () => createRef<TableRef | null>();
+export const useTableRef = () => useRef<TableRef | null>(null);
 export const Tabular = ({ tableRef }: Props) => {
   const [palette, setPalette] = useState<RefPaletteType>({});
   const { store, dispatch } = useContext(Context);
   const {
+    sheetWidth,
     sheetHeight,
     table,
     tabularRef,
@@ -43,7 +45,7 @@ export const Tabular = ({ tableRef }: Props) => {
     const formulaEditing = editingAddress && inputting.startsWith('=');
     if (!formulaEditing) {
       setPalette({});
-      table.hub.paletteBySheetName = {};
+      table.wire.paletteBySheetName = {};
       return;
     }
     const palette: RefPaletteType = {};
@@ -76,7 +78,7 @@ export const Tabular = ({ tableRef }: Props) => {
       }
     }
     setPalette(palette);
-    table.hub.paletteBySheetName = paletteBySheetName;
+    table.wire.paletteBySheetName = paletteBySheetName;
   }, [store.inputting, store.editingAddress]);
 
   useEffect(() => {
@@ -90,7 +92,7 @@ export const Tabular = ({ tableRef }: Props) => {
     }
   }, [table]);
   useEffect(() => {
-    table.hub.choosingAddress = p2a(choosing);
+    table.wire.choosingAddress = p2a(choosing);
   }, [choosing]);
   const [virtualized, setVirtualized] = useState<Virtualization | null>(null);
   useEffect(() => {
@@ -99,10 +101,10 @@ export const Tabular = ({ tableRef }: Props) => {
 
   const operationStyles = useOperationStyles(store, {
     ...palette,
-    ...table.hub.paletteBySheetName[table.sheetName],
+    ...table.wire.paletteBySheetName[table.sheetName],
   });
 
-  if (!table.hub.ready) {
+  if (!table.wire.ready) {
     return null;
   }
 
@@ -111,8 +113,8 @@ export const Tabular = ({ tableRef }: Props) => {
       <div
         className="gs-tabular"
         style={{
-          //width: sheetWidth,
-          height: sheetHeight,
+          //width: sheetWidth === -1 ? undefined : sheetWidth,
+          height: sheetHeight === -1 ? undefined : sheetHeight,
         }}
         ref={tabularRef}
         onMouseMove={(e) => {
@@ -226,10 +228,10 @@ const useOperationStyles = (store: StoreType, refs: RefPaletteType) => {
   };
   const { choosing, selectingZone, matchingCells, matchingCellIndex, table, autofillDraggingTo, editingAddress } =
     store;
-  const { hub } = table;
+  const { wire: hub } = table;
   const { copyingSheetId, copyingZone, cutting } = hub;
 
-  const editingAnywhere = !!(table.hub.editingAddress || editingAddress);
+  const editingAnywhere = !!(table.wire.editingAddress || editingAddress);
 
   {
     // selecting

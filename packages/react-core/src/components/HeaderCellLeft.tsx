@@ -48,9 +48,9 @@ export const HeaderCellLeft: FC<Props> = ({ y }) => {
   const height = row?.height || DEFAULT_HEIGHT;
 
   const xSheetFocused = isXSheetFocused(store);
-  const lastFocused = table.hub.lastFocused;
+  const lastFocused = table.wire.lastFocused;
 
-  const editingAnywhere = !!(table.hub.editingAddress || editingAddress);
+  const editingAnywhere = !!(table.wire.editingAddress || editingAddress);
 
   const writeCell = (value: string) => {
     dispatch(write({ value, point: choosing }));
@@ -147,10 +147,12 @@ export const HeaderCellLeft: FC<Props> = ({ y }) => {
       return false;
     }
 
-    const newArea = zoneToArea({ ...selectingZone, endY: y, endX: 1 });
-    const [top, bottom] = [y2r(newArea.top), y2r(newArea.bottom)];
-    const fullRange = `${table.sheetPrefix(!xSheetFocused)}${top}:${bottom}`;
-    insertRef({ input: lastFocused, ref: fullRange });
+    if (editingAnywhere) {
+      const newArea = zoneToArea({ ...selectingZone, endY: y, endX: 1 });
+      const [top, bottom] = [y2r(newArea.top), y2r(newArea.bottom)];
+      const fullRange = `${table.sheetPrefix(!xSheetFocused)}${top}:${bottom}`;
+      insertRef({ input: lastFocused, ref: fullRange });
+    }
 
     if (autofillDraggingTo == null) {
       const { startX } = selectingZone;
@@ -193,7 +195,7 @@ export const HeaderCellLeft: FC<Props> = ({ y }) => {
       >
         <div className="gs-th-inner" style={{ width: headerWidth, position: 'relative' }}>
           {!leftHeaderSelecting ? <ScrollHandle style={{ position: 'absolute' }} horizontal={-1} /> : null}
-          {row?.labeler ? table.getLabel(row.labeler, y) : rowId}
+          {table.getLabel(row?.labeler, y) ?? rowId}
           {!dragging && (
             <div
               className={`gs-resizer ${prevention.hasOperation(row?.prevention, prevention.Resize) ? 'gs-protected' : ''}`}

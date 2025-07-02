@@ -19,7 +19,7 @@ export const FormulaBar = () => {
   useEffect(() => {
     let value = table.getByPoint(choosing)?.value ?? '';
     // debug to remove this line
-    value = table.stringify({ point: choosing, cell: { ...cell, value }, evaluates: false });
+    value = table.stringify({ point: choosing, cell: { ...cell, value }, refEvaluation: 'raw' });
     largeEditorRef.current!.value = value;
     setBefore(value as string);
   }, [address, table]);
@@ -60,7 +60,7 @@ export const FormulaBar = () => {
   };
   return (
     <label className="gs-formula-bar">
-      <ScrollHandle style={{ position: 'absolute', zIndex: 2 }} vertical={-1} />
+      <ScrollHandle style={{ position: 'absolute', left: 0, top: 0, zIndex: 2 }} vertical={-1} />
       <div className="gs-selecting-address">{address}</div>
       <div className="gs-fx">Fx</div>
       <div className="gs-formula-bar-editor-inner">
@@ -88,7 +88,7 @@ export const FormulaBar = () => {
               return;
             }
             dispatch(setEditingAddress(address));
-            table.hub.lastFocused = e.currentTarget;
+            table.wire.lastFocused = e.currentTarget;
           }}
           onBlur={(e) => {
             if (e.currentTarget.value!.startsWith('=')) {
@@ -100,7 +100,11 @@ export const FormulaBar = () => {
             }
           }}
           onKeyDown={(e) => {
+            if (e.ctrlKey) {
+              return true;
+            }
             const input = e.currentTarget;
+
             switch (e.key) {
               case 'Enter': {
                 if (e.altKey) {
@@ -130,6 +134,20 @@ export const FormulaBar = () => {
 
                 break;
               }
+              case 'a': // A
+                if (e.ctrlKey || e.metaKey) {
+                  return true;
+                }
+              case 'c': // C
+                if (e.ctrlKey || e.metaKey) {
+                  return true;
+                }
+                break;
+              case 'v': // V
+                if (e.ctrlKey || e.metaKey) {
+                  return true;
+                }
+                break;
             }
 
             const cell = table.getByPoint(choosing);

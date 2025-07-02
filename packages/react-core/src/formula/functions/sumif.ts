@@ -3,6 +3,7 @@ import { solveTable } from '../solver';
 import { Table } from '../../lib/table';
 import { BaseFunction } from './__base';
 import { check, ensureString } from './__utils';
+import { stripTable } from '../../formula/solver';
 import { AreaType } from '../../types';
 
 export class SumifFunction extends BaseFunction {
@@ -50,7 +51,7 @@ export class SumifFunction extends BaseFunction {
     let total = 0;
     conditionMatrix.forEach((row, y) =>
       row.forEach((c, x) => {
-        const s = sumMatrix[y]?.[x] || 0;
+        const s = stripTable(sumMatrix[y]?.[x] ?? 0);
         if (typeof s === 'number' && check(c, condition)) {
           total += s;
         }

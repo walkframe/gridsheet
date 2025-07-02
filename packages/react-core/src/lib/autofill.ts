@@ -35,7 +35,7 @@ export class Autofill {
 
   public get applied(): Table {
     const [orientation, sign] = DirectionMapping[this.direction];
-    const matrix = this.table.getMatrix({ area: this.src, evaluates: null });
+    const matrix = this.table.getMatrix({ area: this.src, refEvaluation: 'system' });
     const srcShape = areaShape({ ...this.src, base: 1 });
     const dstShape = areaShape({ ...this.dst, base: 1 });
 
@@ -202,7 +202,7 @@ export class Autofill {
     return 'down';
   }
 
-  private getChangePatterns(cells: (CellType | null)[], originPath: string): Generator[] {
+  private getChangePatterns(cells: (CellType | null)[], id: string): Generator[] {
     const result: Generator[] = [];
     const groups = groupByType(cells);
     const [orientation, sign] = DirectionMapping[this.direction];
@@ -225,7 +225,7 @@ export class Autofill {
               yield identifyFormula({
                 value,
                 table,
-                originPath,
+                id,
                 slideY: orientation === 'vertical' ? slide : 0,
                 slideX: orientation === 'horizontal' ? slide : 0,
               });

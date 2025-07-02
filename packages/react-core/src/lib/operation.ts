@@ -36,7 +36,7 @@ export const hasOperation = (operation: operations | undefined, flag: operations
   if (operation === undefined) {
     return false;
   }
-  return (operation & flag) > NoOperation;
+  return (operation & flag) === flag;
 };
 
 // Don't use this function in production

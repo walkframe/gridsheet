@@ -7,6 +7,12 @@ const preview = {
        date: /Date$/i,
       },
     },
+    docs: {
+      source: {
+        type: 'dynamic',
+        excludeDecorators: true,
+      },
+    },
   },
 };
 

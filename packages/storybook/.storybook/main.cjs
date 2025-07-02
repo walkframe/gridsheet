@@ -2,8 +2,9 @@ const path = require('path');
 
 /** @type {import('@storybook/react-vite').StorybookConfig} */
 module.exports = {
-  stories: ['../stories/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
+  stories: ['../stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)'],
   addons: [
+    '@storybook/addon-docs',
     '@storybook/addon-essentials',
     '@storybook/addon-onboarding',
     '@storybook/addon-interactions',

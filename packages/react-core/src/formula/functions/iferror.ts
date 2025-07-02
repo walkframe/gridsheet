@@ -3,7 +3,7 @@
 import { Table } from '../../lib/table';
 import { Expression, FormulaError } from '../evaluator';
 import { FunctionProps } from './__base';
-import { stripTable } from './__utils';
+import { stripTable } from '../../formula/solver';
 
 export class IfErrorFunction {
   example = 'IFERROR(A1, "Error in cell A1")';

@@ -4,7 +4,7 @@ import {
   GridSheet as PreactGridSheet,
   h as preactH,
   render as preactRender,
-  HubReactiveType,
+  type HubType,
 } from '@gridsheet/preact-core';
 import type { Ref } from 'vue';
 
@@ -29,8 +29,8 @@ export default defineComponent({
       type: String,
       default: '',
     },
-    hubReactive: {
-      type: Object as () => HubReactiveType | Ref<HubReactiveType>,
+    hub: {
+      type: Object as () => HubType | Ref<HubType>,
       default: null,
     },
     tableRef: {
@@ -57,7 +57,7 @@ export default defineComponent({
     function getPreactProps() {
       return {
         ...props,
-        hubReactive: isRef(props.hubReactive) ? (props.hubReactive.value as HubReactiveType | undefined) : (props.hubReactive as HubReactiveType | undefined),
+        hub: isRef(props.hub) ? (props.hub.value as HubType | undefined) : (props.hub as HubType | undefined),
       };
     }
 
@@ -73,15 +73,15 @@ export default defineComponent({
 
     onMounted(() => {
       renderPreact();
-      if (isRef(props.hubReactive)) {
+      if (isRef(props.hub)) {
         watch(
-          () => (props.hubReactive as Ref<HubReactiveType>).value,
+          () => (props.hub as Ref<HubType>).value,
           renderPreact,
           { deep: false }
         );
       } else {
         watch(
-          () => props.hubReactive,
+          () => props.hub,
           renderPreact,
           { deep: false }
         );

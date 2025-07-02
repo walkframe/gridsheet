@@ -1,4 +1,4 @@
-import { solveTable } from '../solver';
+import { stripTable } from '../solver';
 import { Table } from '../../lib/table';
 import { FormulaError } from '../evaluator';
 import dayjs from 'dayjs';
@@ -42,7 +42,13 @@ export const ne = (left: any, right: any): boolean => {
   return !eq(left, right);
 };
 
-export const ensureNumber = (value: any, alternative?: number): number => {
+export type EnsureNumberOptions = {
+  alternative?: number;
+  ignore?: boolean;
+}
+
+export const ensureNumber = (value: any, options?: EnsureNumberOptions): number => {
+  const { alternative, ignore } = options || {};
   if (typeof value === 'undefined' && typeof alternative !== 'undefined') {
     return alternative;
   }
@@ -52,7 +58,7 @@ export const ensureNumber = (value: any, alternative?: number): number => {
   }
   if (value instanceof Table) {
     const v = stripTable(value, 0, 0);
-    return ensureNumber(v, alternative);
+    return ensureNumber(v, {alternative});
   }
   if (value instanceof Date) {
     return value.getTime();
@@ -67,6 +73,9 @@ export const ensureNumber = (value: any, alternative?: number): number => {
 
   const num = parseFloat(value as string);
   if (isNaN(num)) {
+    if (ignore) {
+      return 0;
+    }
     throw new FormulaError('#VALUE!', `${value} cannot be converted to a number`);
   }
   return num;
@@ -116,13 +125,6 @@ export const ensureBoolean = (
     return bool;
   }
   return Boolean(value);
-};
-
-export const stripTable = (value: any, y = 0, x = 0) => {
-  if (value instanceof Table) {
-    return solveTable({ table: value })[y][x];
-  }
-  return value;
 };
 
 const CONDITION_REGEX = /^(<=|>=|<>|>|<|=)?(.*)$/;

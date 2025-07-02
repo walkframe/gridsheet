@@ -1,6 +1,8 @@
-export const ThousandSeparatorRendererMixin = {
-  number(value: number): any {
-    if (isNaN(value)) {
+import { RendererMixinType } from "./core";
+
+export const ThousandSeparatorRendererMixin: RendererMixinType = {
+  number({ value, cell }): any {
+    if (value == null || isNaN(value)) {
       return 'NaN';
     }
     const [int, fraction] = String(value).split('.');

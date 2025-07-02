@@ -94,6 +94,9 @@ export const among = (area: AreaType, point: PointType) => {
 type ShapeExtension = { base?: number };
 
 export const zoneShape = ({ base = 0, ...zone }: ZoneType & ShapeExtension): ShapeType => {
+  if (zone.endY === -1 || zone.endX === -1) {
+    return { height: 1, width: 1 };
+  }
   return {
     height: base + Math.abs(zone.startY - zone.endY),
     width: base + Math.abs(zone.startX - zone.endX),
@@ -151,7 +154,7 @@ export const putMatrix = <T = any>(
   dst: T[][],
   src: T[][],
   dstArea: AreaType,
-  filter: (srcValue: T, dstValue: T) => boolean = () => true,
+  filter: (srcValue: T, dstValue: T, point: PointType) => boolean = () => true,
 ) => {
   const lostRows: MatricesByAddress<T> = {};
   const { top, left, bottom, right } = dstArea;
@@ -165,7 +168,7 @@ export const putMatrix = <T = any>(
       const value = src[y - top][x - left];
       // -1 means excluding headers
       if (y < dstNumRows - 1 && x < dstNumCols - 1) {
-        if (filter(value, dst[y][x])) {
+        if (filter(value, dst[y][x], { y, x })) {
           dst[y][x] = value;
         }
         continue;
@@ -394,3 +397,13 @@ export const moveKey = (obj: any, keyFrom: string, keyTo: string): void => {
   delete obj[keyFrom];
   obj[keyTo] = v;
 };
+
+export const invertObject = (obj: { [key: string]: string }): { [value: string]: string } => {
+  const inverted: { [value: string]: string } = {};
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      inverted[obj[key]] = key;
+    }
+  }
+  return inverted;
+}

@@ -23,6 +23,8 @@ import { CountifFunction } from './functions/countif';
 import { SumifFunction } from './functions/sumif';
 import { VlookupFunction } from './functions/vlookup';
 import { HlookupFunction } from './functions/hlookup';
+import { IndexFunction } from './functions/index';
+import { MatchFunction } from './functions/match';
 import { LogFunction } from './functions/log';
 import { Log10Function } from './functions/log10';
 import { LnFunction } from './functions/ln';
@@ -94,6 +96,8 @@ export const functions: FunctionMapping = {
   not: NotFunction,
   vlookup: VlookupFunction,
   hlookup: HlookupFunction,
+  index: IndexFunction,
+  match: MatchFunction,
   row: RowFunction,
   col: ColFunction,
   column: ColFunction,

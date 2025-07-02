@@ -3,7 +3,8 @@ import dayjs from 'dayjs';
 import { FormulaError } from '../evaluator';
 import { TimeDelta } from '../../lib/time';
 import { BaseFunction } from './__base';
-import { ensureNumber, stripTable } from './__utils';
+import { ensureNumber } from './__utils';
+import { stripTable } from '../../formula/solver';
 import { Table } from '../../lib/table';
 import { SECONDS_IN_DAY } from '../../constants';
 
@@ -45,12 +46,10 @@ export class MinusFunction extends BaseFunction {
         .subtract(v2 * SECONDS_IN_DAY, 'second')
         .toDate();
     }
-    if (!v1) {
-      return -v2;
-    }
-    if (!v2) {
-      return v1;
-    }
-    throw new FormulaError('#VALUE!', 'Mismatched types for minuend and subtrahend.');
+    try {
+      return ensureNumber(v1, { alternative: 0 }) - ensureNumber(v2, { alternative: 0 });
+    } catch (e) {
+      throw new FormulaError('#VALUE!', 'Mismatched types for minuend or subtrahend.');
+    }    
   }
 }

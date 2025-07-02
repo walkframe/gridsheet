@@ -1,3 +1,4 @@
+
 import { a2p, grantAddressAbsolute, p2a } from '../lib/converters';
 import { Table } from '../lib/table';
 import { Id, PointType } from '../types';
@@ -74,7 +75,7 @@ export class RefEntity extends Entity<string> {
     return parsed.table.trim({ top: y, left: x, bottom: y, right: x });
   }
 
-  public id(table: Table, paths: string[], slideY = 0, slideX = 0) {
+  public id(table: Table, currentId: string, slideY = 0, slideX = 0) {
     const parsed = parseRef(table, this.value);
     if (parsed.table == null) {
       return this.value;
@@ -91,6 +92,9 @@ export class RefEntity extends Entity<string> {
     if (id == null) {
       return this.value;
     }
+    const system = table.wire.getSystem(id, table);
+    table.wire.data[id]!.system = system;
+    system.dependents.add(currentId);
     return `#${parsed.table.sheetId}!${formula}`;
   }
 }
@@ -111,7 +115,7 @@ export class RangeEntity extends Entity<string> {
     const area = parsed.table.rangeToArea(parsed.addresses.join(':'));
     return parsed.table.trim(area);
   }
-  public idRange(table: Table, paths: string[], slideY = 0, slideX = 0) {
+  public idRange(table: Table, currentId: string, slideY = 0, slideX = 0) {
     const parsed = parseRef(table, this.value);
     if (parsed.table == null) {
       return this.value;
@@ -130,6 +134,9 @@ export class RangeEntity extends Entity<string> {
       if (id == null) {
         return this.value;
       }
+      const system = table.wire.getSystem(id, table);
+      table.wire.data[id]!.system = system;
+      system.dependents.add(currentId);
       formulas.push(formula!);
     }
     return `#${parsed.table.sheetId}!${formulas.join(':')}`;
@@ -396,6 +403,7 @@ const BOOLS: { [s: string]: boolean } = { ['true']: true, ['false']: false };
 
 type LexerOption = {
   origin?: PointType;
+  idMap?: {  [id: Id]: Id;};
 };
 
 export class Lexer {
@@ -404,6 +412,7 @@ export class Lexer {
   public tokens: Token[] = [];
   public foreign: boolean = false;
   private origin?: PointType;
+  private idMap: {  [id: Id]: Id;};
 
   constructor(formula: string, options?: LexerOption) {
     this.formula = formula;
@@ -412,6 +421,8 @@ export class Lexer {
     if (options?.origin) {
       this.origin = options.origin;
     }
+
+    this.idMap = options?.idMap ?? {};
   }
 
   private isWhiteSpace() {
@@ -461,8 +472,7 @@ export class Lexer {
     return this.tokens.map((t) => t.stringify()).join('');
   }
 
-  public stringifyToId(table: Table, slideY = 0, slideX = 0): [string, string[]] {
-    const paths: string[] = [];
+  public stringifyToId(table: Table, slideY = 0, slideX = 0, currentId: string): string {
     const converted = this.tokens.map((t) => {
       switch (t.type) {
         case 'VALUE':
@@ -478,14 +488,14 @@ export class Lexer {
           return new IdRangeEntity(t.entity as string).slide(table, slideY, slideX);
 
         case 'REF':
-          return new RefEntity(t.entity as string).id(table, paths, slideY, slideX);
+          return new RefEntity(t.entity as string).id(table, currentId, slideY, slideX);
 
         case 'RANGE':
-          return new RangeEntity(t.entity as string).idRange(table, paths, slideY, slideX);
+          return new RangeEntity(t.entity as string).idRange(table, currentId, slideY, slideX);
       }
       return t.entity;
     });
-    return [converted.join(''), paths];
+    return converted.join('');
   }
 
   public stringifyToRef(table: Table) {
@@ -616,7 +626,7 @@ export class Lexer {
               if (buf.indexOf('#REF!') !== -1) {
                 this.tokens.push(new Token('UNREFERENCED', buf));
               } else if (buf.indexOf(':') !== -1) {
-                this.tokens.push(new Token('ID_RANGE', buf));
+                this.tokens.push(new Token('ID_RANGE', this.resolveIdRange(buf)));
               } else {
                 this.tokens.push(new Token('ID', buf));
               }
@@ -674,6 +684,37 @@ export class Lexer {
       }
     }
     return buf;
+  }
+
+  private resolveIdRange(range: string) {
+    const [sheetId, refString] = range.split('!');
+    const refs = refString.split(':');
+    const done = new Set<number>();
+  
+    Object.keys(this.idMap).forEach((before) => {
+      const after = this.idMap[before];
+  
+      // #x -> #y, #$x -> #$y, #x$ -> #y$, #$x$ -> #$y$
+      const regex = new RegExp(`(\\$)?#${before}(\\$)?`);
+  
+      for (let i = 0; i < refs.length; i++) {
+        if (done.has(i)) {
+          continue;
+        }
+  
+        const ref = refs[i];
+        const replaced = ref.replace(regex, (_, prefix, suffix) => {
+          return `${prefix || ''}#${after}${suffix || ''}`;
+        });
+        if (replaced === ref) {
+          continue;
+        }
+  
+        refs[i] = replaced;
+        done.add(i);
+      }
+    });
+    return `${sheetId}!${refs.join(':')}`;
   }
 }
 
@@ -795,22 +836,24 @@ export class Parser {
 export const identifyFormula = ({
   value,
   table,
-  originPath,
+  id: currentId,
   slideY = 0,
   slideX = 0,
+  idMap,
 }: {
   value: any;
   table: Table;
-  originPath: string;
+  id: string;
   slideY?: number;
   slideX?: number;
+  idMap?: {[id: string]: string};
 }) => {
   if (typeof value === 'string' || value instanceof String) {
     if (value.charAt(0) === '=') {
-      const lexer = new Lexer(value.substring(1));
+      const lexer = new Lexer(value.substring(1), {idMap});
       lexer.tokenize();
-      const [slideValue] = lexer.stringifyToId(table, slideY, slideX);
-      return '=' + slideValue;
+      const identified = lexer.stringifyToId(table, slideY, slideX, currentId);
+      return '=' + identified;
     }
   }
   return value;

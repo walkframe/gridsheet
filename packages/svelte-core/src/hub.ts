@@ -1,18 +1,18 @@
 import { writable } from 'svelte/store';
-import { createHubReactive, DEFAULT_HISTORY_LIMIT, type HubPatchType } from '@gridsheet/preact-core';
+import { createHub, WireProps, type TransmitProps } from '@gridsheet/preact-core';
 
-export function useHubReactive(historyLimit = DEFAULT_HISTORY_LIMIT) {
-  const hubReactive = createHubReactive(historyLimit);
-  const store = writable(hubReactive);
-  const { hub } = hubReactive;
+export function useHub(wireProps: WireProps = {}) {
+  const hub = createHub(wireProps);
+  const store = writable(hub);
+  const { wire } = hub;
 
-  function applyPatch(patch?: HubPatchType) {
-    Object.assign(hub, patch);
-    if (!hub.ready) {
+  function transmit(patch?: TransmitProps) {
+    Object.assign(wire, patch);
+    if (!wire.ready) {
       return;
     }
-    store.set({ ...hubReactive });
+    store.set({ ...hub });
   }
-  hub.reflect = applyPatch;
+  wire.transmit = transmit;
   return store;
 }

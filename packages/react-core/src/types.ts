@@ -1,12 +1,13 @@
 import type { RendererType } from './renderers/core';
 import type { ParserType } from './parsers/core';
 import type { UserTable, Table } from './lib/table';
-import type { FunctionMapping } from './formula/functions/__base';
 import type { FC, RefObject } from 'react';
-import type { Hub, HubReactiveType } from './lib/hub';
+import type { HubType, TransmitProps } from './lib/hub';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import type { PolicyType } from './policy/core';
 import type { Dispatcher } from './store';
+
+export type RefEvaluation = 'complete' | 'table' | 'raw' | 'system';
 
 export type Y = number;
 export type X = number;
@@ -43,6 +44,13 @@ export type FeedbackType = (table: UserTable, points?: CursorStateType) => void;
 export type ModeType = 'light' | 'dark';
 export type HeadersType = 'both' | 'vertical' | 'horizontal' | 'none';
 
+export type System = {
+  id: string;
+  sheetId: number;
+  changedAt: Date;
+  dependents: Set<string>;
+}
+
 export type CellType<T = any, Custom = any> = {
   value?: T;
   style?: CSSProperties;
@@ -57,12 +65,7 @@ export type CellType<T = any, Custom = any> = {
   custom?: Custom;
   disableFormula?: boolean;
   prevention?: OperationType;
-  system?: {
-    id: string;
-    sheetId: number;
-    changedAt: Date;
-    dependents: Set<string>;
-  };
+  system?: System;
 };
 
 export type RawCellType = {
@@ -81,7 +84,6 @@ export type OptionsType = {
   sheetHeight?: number;
   sheetWidth?: number;
   sheetResize?: CSSProperties['resize'];
-  historyLimit?: number;
   headerHeight?: number;
   headerWidth?: number;
   editingOnEnter?: boolean;
@@ -92,16 +94,11 @@ export type OptionsType = {
   minNumCols?: number;
   maxNumCols?: number;
   mode?: ModeType;
-  renderers?: Renderers;
-  parsers?: Parsers;
-  labelers?: Labelers;
-  policies?: Policies;
   onSave?: FeedbackType;
   onChange?: FeedbackType;
   onSelect?: FeedbackType;
   onKeyUp?: (e: EditorEvent, points: CursorStateType) => void;
   onInit?: (table: UserTable) => void;
-  additionalFunctions?: FunctionMapping;
   contextMenuItems?: FC<ContextMenuProps>[];
 };
 
@@ -155,11 +152,17 @@ export type StoreType = {
   onSave?: FeedbackType;
 };
 
+export type StoreRef = {
+  store: StoreType;
+  dispatch: Dispatcher;
+}
+
 export type Props = {
   initialCells: CellsByAddressType;
   sheetName?: string;
-  hubReactive?: HubReactiveType;
+  hub?: HubType;
   tableRef?: RefObject<TableRef | null>;
+  storeRef?: RefObject<StoreRef | null>;
   options?: OptionsType;
   className?: string;
   style?: CSSProperties;
@@ -172,13 +175,11 @@ export type Address = string;
 
 export type MatricesByAddress<T> = { [origin: Address]: MatrixType<T> };
 
-export type HubPatchType = Partial<Hub>;
-
 export type StorePatchType = {
   sheetId: number;
   choosing?: PointType;
   selectingZone?: ZoneType | undefined;
-  hub?: HubPatchType;
+  transmit?: TransmitProps;
 };
 
 export type HistoryUpdateType = {
@@ -201,6 +202,7 @@ export type HistoryMoveType = {
   undoReflection?: StorePatchType;
   redoReflection?: StorePatchType;
   diffBefore: CellsByIdType;
+  diffAfter: CellsByIdType;
   src: AreaType;
   dst: AreaType;
   matrixFrom: IdMatrix;
@@ -232,6 +234,7 @@ export type HistoryRemoveRowsType = {
   undoReflection?: StorePatchType;
   redoReflection?: StorePatchType;
   ys: number[];
+  diffBefore?: CellsByIdType;
   deleted: IdMatrix;
 };
 
@@ -258,6 +261,7 @@ export type HistoryRemoveColsType = {
   undoReflection?: StorePatchType;
   redoReflection?: StorePatchType;
   xs: number[];
+  diffBefore?: CellsByIdType;
   deleted: IdMatrix;
 };
 
@@ -292,7 +296,4 @@ export type EditorEventWithNativeEvent = EditorEvent & {
   nativeEvent: KeyboardEvent & { isComposing: boolean };
 };
 
-export type ContextMenuProps = {
-  store: StoreType;
-  dispatch: Dispatcher;
-};
+export type ContextMenuProps = StoreDispatchType;
