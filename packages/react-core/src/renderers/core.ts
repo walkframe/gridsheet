@@ -107,7 +107,7 @@ export class Renderer implements RendererMixinType {
   public render(props: RenderProps): any {
     const { cell, table, point } = props;
     const value = props.value;
-    
+
     if (this.condition && !this.condition(value)) {
       return this.complement ? this.complement(value) : this.stringify(props);
     }

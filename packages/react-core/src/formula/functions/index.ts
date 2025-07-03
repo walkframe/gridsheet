@@ -19,18 +19,18 @@ export class IndexFunction extends BaseFunction {
     if (this.bareArgs.length < 1 || this.bareArgs.length > 3) {
       throw new FormulaError('#N/A', 'Number of arguments for INDEX is incorrect.');
     }
-    
+
     if (!(this.bareArgs[0] instanceof Table)) {
       throw new FormulaError('#VALUE!', 'First argument must be a range.');
     }
-    
+
     if (this.bareArgs.length >= 2) {
       this.bareArgs[1] = ensureNumber(this.bareArgs[1]);
       if (this.bareArgs[1] < 0) {
         throw new FormulaError('#VALUE!', 'Row number must be greater than or equal to 0.');
       }
     }
-    
+
     if (this.bareArgs.length === 3) {
       this.bareArgs[2] = ensureNumber(this.bareArgs[2]);
       if (this.bareArgs[2] < 0) {
@@ -55,4 +55,4 @@ export class IndexFunction extends BaseFunction {
     }
     return table.trim(area);
   }
-} 
+}

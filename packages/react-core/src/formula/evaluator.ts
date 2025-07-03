@@ -1,4 +1,3 @@
-
 import { a2p, grantAddressAbsolute, p2a } from '../lib/converters';
 import { Table } from '../lib/table';
 import { Id, PointType } from '../types';
@@ -12,15 +11,14 @@ export type IdentifyProps = {
   slideY?: number;
   slideX?: number;
   dependency: string;
-  idMap?: {[id: string]: string};
-}
+  idMap?: { [id: string]: string };
+};
 
 export type DisplayProps = {
   table: Table;
   slideY?: number;
   slideX?: number;
-}
-
+};
 
 // strip sharp and dollars
 const getId = (idString: string, stripAbsolute = true) => {
@@ -90,7 +88,7 @@ export class RefEntity extends Entity<string> {
     return parsed.table.trim({ top: y, left: x, bottom: y, right: x });
   }
 
-  public identify({ table, dependency, slideY = 0, slideX = 0}: IdentifyProps) {
+  public identify({ table, dependency, slideY = 0, slideX = 0 }: IdentifyProps) {
     const parsed = parseRef(table, this.value);
     if (parsed.table == null) {
       return this.value;
@@ -130,7 +128,7 @@ export class RangeEntity extends Entity<string> {
     const area = parsed.table.rangeToArea(parsed.addresses.join(':'));
     return parsed.table.trim(area);
   }
-  public identify({ table, dependency, slideY = 0, slideX = 0}: IdentifyProps) {
+  public identify({ table, dependency, slideY = 0, slideX = 0 }: IdentifyProps) {
     const parsed = parseRef(table, this.value);
     if (parsed.table == null) {
       return this.value;
@@ -189,7 +187,7 @@ export class IdEntity extends Entity<string> {
     }
     return `${parsed.table.sheetPrefix()}${address}`;
   }
-  public identify({ table, dependency, slideX = 0, slideY = 0}: IdentifyProps) {
+  public identify({ table, dependency, slideX = 0, slideY = 0 }: IdentifyProps) {
     const address = this.display({ table, slideY, slideX });
     if (address == null || address.length < 2) {
       return '#REF!';
@@ -249,7 +247,7 @@ export class IdRangeEntity extends Entity<string> {
     }
     return `${parsed.table.sheetPrefix()}${range}`;
   }
-  public identify({ table, dependency, slideY = 0, slideX = 0}: IdentifyProps) {
+  public identify({ table, dependency, slideY = 0, slideX = 0 }: IdentifyProps) {
     const range = this.display({ table, slideY, slideX });
     const { formula, ids } = parseRef(table, range);
     if (dependency) {
@@ -431,7 +429,7 @@ const BOOLS: { [s: string]: boolean } = { ['true']: true, ['false']: false };
 
 type LexerOption = {
   origin?: PointType;
-  idMap?: {  [id: Id]: Id;};
+  idMap?: { [id: Id]: Id };
 };
 
 export class Lexer {
@@ -440,7 +438,7 @@ export class Lexer {
   public tokens: Token[] = [];
   public foreign: boolean = false;
   private origin?: PointType;
-  private idMap: {  [id: Id]: Id;};
+  private idMap: { [id: Id]: Id };
 
   constructor(formula: string, options?: LexerOption) {
     this.formula = formula;
@@ -718,18 +716,18 @@ export class Lexer {
     const [sheetId, refString] = range.split('!');
     const refs = refString.split(':');
     const done = new Set<number>();
-  
+
     Object.keys(this.idMap).forEach((before) => {
       const after = this.idMap[before];
-  
+
       // #x -> #y, #$x -> #$y, #x$ -> #y$, #$x$ -> #$y$
       const regex = new RegExp(`(\\$)?#${before}(\\$)?`);
-  
+
       for (let i = 0; i < refs.length; i++) {
         if (done.has(i)) {
           continue;
         }
-  
+
         const ref = refs[i];
         const replaced = ref.replace(regex, (_, prefix, suffix) => {
           return `${prefix || ''}#${after}${suffix || ''}`;
@@ -737,7 +735,7 @@ export class Lexer {
         if (replaced === ref) {
           continue;
         }
-  
+
         refs[i] = replaced;
         done.add(i);
       }
@@ -861,9 +859,7 @@ export class Parser {
   }
 }
 
-
-
-export const identifyFormula = (value: any, {idMap, ...props}: IdentifyProps) => {
+export const identifyFormula = (value: any, { idMap, ...props }: IdentifyProps) => {
   if (typeof value === 'string' || value instanceof String) {
     if (value.charAt(0) === '=') {
       const lexer = new Lexer(value.substring(1), { idMap });

@@ -13,14 +13,13 @@ const DESCRIPTION = [
   'This demo showcases the RightMenu plugin for GridSheet.',
   'The plugin adds a context menu that appears when right-clicking on the grid.',
   'It demonstrates how plugins can extend GridSheet functionality with custom UI components.',
-  
+
   '## How it works',
   'The demo shows both light and dark theme versions of the menu plugin.',
   '1. Plugins allow you to extend the core functionality with custom components.',
   '2. The RightMenu plugin provides context-sensitive menu options.',
   '3. Plugins can be wrapped around GridSheet components.',
   '4. This enhances the user experience with additional interactive features.',
-
 ].join('\n\n');
 
 export const RightMenu: StoryObj = {
@@ -28,7 +27,7 @@ export const RightMenu: StoryObj = {
     const hub = useHub({
       labelers: {
         raw: (n) => String(n),
-      }
+      },
     });
 
     return (
@@ -50,7 +49,7 @@ export const RightMenu: StoryObj = {
           />
         </RightMenuComponent>
         <br />
-          
+
         <RightMenuComponent>
           <GridSheet
             hub={hub}

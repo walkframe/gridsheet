@@ -102,7 +102,7 @@ const PriorityPolicy: PolicyMixinType = {
         style: {
           ...patch.style,
           fontWeight: 'bold',
-        }
+        },
       };
     }
     return patch;
@@ -121,12 +121,14 @@ export const Case7: StoryObj = {
   render: () => {
     const tableRef = useTableRef();
     const storeRef = useStoreRef();
-    const [activityLog, setActivityLog] = React.useState<Array<{
-      user: string;
-      action: string;
-      timestamp: string;
-      cell?: string;
-    }>>([]);
+    const [activityLog, setActivityLog] = React.useState<
+      Array<{
+        user: string;
+        action: string;
+        timestamp: string;
+        cell?: string;
+      }>
+    >([]);
     const [userCursors, setUserCursors] = React.useState<Record<string, { row: number; col: number }>>({
       alice: { row: 1, col: 1 },
       bob: { row: 2, col: 3 },
@@ -146,12 +148,15 @@ export const Case7: StoryObj = {
 
     // Add to activity log
     const addActivity = React.useCallback((user: string, action: string, cell?: string) => {
-      setActivityLog(prev => [{
-        user,
-        action,
-        timestamp: new Date().toLocaleTimeString(),
-        cell,
-      }, ...prev.slice(0, 9)]); // Keep latest 10 items
+      setActivityLog((prev) => [
+        {
+          user,
+          action,
+          timestamp: new Date().toLocaleTimeString(),
+          cell,
+        },
+        ...prev.slice(0, 9),
+      ]); // Keep latest 10 items
     }, []);
 
     // Simulate virtual user actions
@@ -164,25 +169,45 @@ export const Case7: StoryObj = {
       ];
 
       const sampleData = [
-        'Updated!', 'In Review', 'Almost Done', 'On Track', 'Delayed',
-        '90%', '85%', '95%', '70%', '60%',
-        'High Priority', 'Medium', 'Low', 'Critical', 'Normal',
-        'Alice', 'Bob', 'Charlie', 'Diana', 'Team',
-        '2024-02-20', '2024-02-25', '2024-03-01', '2024-03-05', '2024-03-10',
+        'Updated!',
+        'In Review',
+        'Almost Done',
+        'On Track',
+        'Delayed',
+        '90%',
+        '85%',
+        '95%',
+        '70%',
+        '60%',
+        'High Priority',
+        'Medium',
+        'Low',
+        'Critical',
+        'Normal',
+        'Alice',
+        'Bob',
+        'Charlie',
+        'Diana',
+        'Team',
+        '2024-02-20',
+        '2024-02-25',
+        '2024-03-01',
+        '2024-03-05',
+        '2024-03-10',
       ];
 
       const simulateUserAction = () => {
         // Add possibility of multiple users acting simultaneously
         const numUsersToAct = Math.random() < 0.15 ? 2 : 1; // 15% chance of 2 users simultaneously (adjusted probability)
-        
+
         for (let i = 0; i < numUsersToAct; i++) {
           const randomUser = virtualUsers[Math.floor(Math.random() * virtualUsers.length)];
-          
+
           // Determine action using weighted random selection
           const totalWeight = actions.reduce((sum, action) => sum + action.weight, 0);
           let random = Math.random() * totalWeight;
           let selectedAction = actions[0];
-          
+
           for (const action of actions) {
             random -= action.weight;
             if (random <= 0) {
@@ -190,14 +215,14 @@ export const Case7: StoryObj = {
               break;
             }
           }
-          
+
           // Update cursor position randomly
           const newRow = Math.floor(Math.random() * 5) + 2; // Rows 2-6 (excluding header)
           const newCol = Math.floor(Math.random() * 6) + 1; // Columns 1-6
-          
-          setUserCursors(prev => ({
+
+          setUserCursors((prev) => ({
             ...prev,
-            [randomUser.id]: { row: newRow, col: newCol }
+            [randomUser.id]: { row: newRow, col: newCol },
           }));
 
           // If edit action, actually edit the cell after 1 second
@@ -206,21 +231,56 @@ export const Case7: StoryObj = {
               if (tableRef.current) {
                 const { table, dispatch } = tableRef.current;
                 const cellAddress = `${String.fromCharCode(64 + newCol)}${newRow}`;
-                
+
                 // Select appropriate data based on column
                 let newValue: string;
                 switch (newCol) {
                   case 1: // Project column
-                    newValue = ['Website Redesign', 'Mobile App', 'Database Migration', 'API Integration', 'UI/UX Design', 'Frontend Refactor', 'Backend API', 'DevOps Setup', 'Testing Suite', 'Documentation'][Math.floor(Math.random() * 10)];
+                    newValue = [
+                      'Website Redesign',
+                      'Mobile App',
+                      'Database Migration',
+                      'API Integration',
+                      'UI/UX Design',
+                      'Frontend Refactor',
+                      'Backend API',
+                      'DevOps Setup',
+                      'Testing Suite',
+                      'Documentation',
+                    ][Math.floor(Math.random() * 10)];
                     break;
                   case 2: // Status column
-                    newValue = ['In Progress', 'Planning', 'Completed', 'Testing', 'Review', 'On Hold', 'Blocked', 'Ready for QA', 'Deployed', 'Archived'][Math.floor(Math.random() * 10)];
+                    newValue = [
+                      'In Progress',
+                      'Planning',
+                      'Completed',
+                      'Testing',
+                      'Review',
+                      'On Hold',
+                      'Blocked',
+                      'Ready for QA',
+                      'Deployed',
+                      'Archived',
+                    ][Math.floor(Math.random() * 10)];
                     break;
                   case 3: // Assignee column
-                    newValue = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry'][Math.floor(Math.random() * 8)];
+                    newValue = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry'][
+                      Math.floor(Math.random() * 8)
+                    ];
                     break;
                   case 4: // Due Date column
-                    const dates = ['2024-02-15', '2024-02-20', '2024-02-25', '2024-03-01', '2024-03-05', '2024-03-10', '2024-03-15', '2024-03-20', '2024-03-25', '2024-04-01'];
+                    const dates = [
+                      '2024-02-15',
+                      '2024-02-20',
+                      '2024-02-25',
+                      '2024-03-01',
+                      '2024-03-05',
+                      '2024-03-10',
+                      '2024-03-15',
+                      '2024-03-20',
+                      '2024-03-25',
+                      '2024-04-01',
+                    ];
                     newValue = dates[Math.floor(Math.random() * dates.length)];
                     break;
                   case 5: // Progress column
@@ -233,25 +293,25 @@ export const Case7: StoryObj = {
                   default:
                     newValue = 'Updated';
                 }
-                
+
                 // Highlight the edited cell
                 const updatedTable = table.update({
                   diff: {
-                    [cellAddress]: { 
+                    [cellAddress]: {
                       value: newValue,
-                      style: { 
+                      style: {
                         backgroundColor: randomUser.color + '30',
                         fontWeight: 'bold',
                         border: `2px solid ${randomUser.color}`,
-                        transition: 'all 0.3s ease'
-                      }
-                    }
-                  }
+                        transition: 'all 0.3s ease',
+                      },
+                    },
+                  },
                 });
                 dispatch(updatedTable);
-                
+
                 addActivity(randomUser.name, `edited ${cellAddress} to "${newValue}"`, cellAddress);
-                
+
                 // Remove highlight after 2 seconds (shorter)
                 setTimeout(() => {
                   if (tableRef.current) {
@@ -260,16 +320,16 @@ export const Case7: StoryObj = {
                     if (currentCell) {
                       const resetTable = table.update({
                         diff: {
-                          [cellAddress]: { 
+                          [cellAddress]: {
                             ...currentCell,
-                            style: { 
+                            style: {
                               ...currentCell.style,
                               backgroundColor: undefined,
                               border: undefined,
                               fontWeight: undefined,
-                            }
-                          }
-                        }
+                            },
+                          },
+                        },
                       });
                       dispatch(resetTable);
                     }
@@ -289,16 +349,16 @@ export const Case7: StoryObj = {
 
     return (
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
-        <div style={{
-          textAlign: 'center',
-          marginBottom: '20px',
-          padding: '20px',
-          backgroundColor: '#f8f9fa',
-          borderRadius: '8px',
-        }}>
-          <h2 style={{ color: '#2c3e50', margin: '0 0 10px 0' }}>
-            👥 Real-time Collaboration Demo
-          </h2>
+        <div
+          style={{
+            textAlign: 'center',
+            marginBottom: '20px',
+            padding: '20px',
+            backgroundColor: '#f8f9fa',
+            borderRadius: '8px',
+          }}
+        >
+          <h2 style={{ color: '#2c3e50', margin: '0 0 10px 0' }}>👥 Real-time Collaboration Demo</h2>
           <p style={{ color: '#7f8c8d', margin: '0 0 15px 0' }}>
             Simulating multiple users working on the same spreadsheet
           </p>
@@ -307,28 +367,32 @@ export const Case7: StoryObj = {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '20px' }}>
           {/* Main grid */}
           <div>
-            <div style={{
-              position: 'relative',
-              border: '2px solid #e9ecef',
-              borderRadius: '8px',
-              overflow: 'hidden',
-            }}>
+            <div
+              style={{
+                position: 'relative',
+                border: '2px solid #e9ecef',
+                borderRadius: '8px',
+                overflow: 'hidden',
+              }}
+            >
               {/* User cursor overlay */}
-              <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                pointerEvents: 'none',
-                zIndex: 10,
-              }}>
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  pointerEvents: 'none',
+                  zIndex: 10,
+                }}
+              >
                 {Object.entries(userCursors).map(([userId, pos]) => {
-                  const user = virtualUsers.find(u => u.id === userId);
+                  const user = virtualUsers.find((u) => u.id === userId);
                   if (!user || !tableRef.current) return null;
-                  
+
                   const { table } = tableRef.current;
-                  
+
                   // Get actual column width and row height
                   const columnWidths = table.getRectSize({
                     top: 1,
@@ -336,26 +400,26 @@ export const Case7: StoryObj = {
                     bottom: 1,
                     right: pos.col,
                   });
-                  
+
                   const rowHeights = table.getRectSize({
                     top: 1,
                     left: 1,
                     bottom: pos.row,
                     right: 1,
                   });
-                  
+
                   // Get current cell width and height
                   const currentColWidth = table.getByPoint({ y: 0, x: pos.col })?.width || 120;
                   const currentRowHeight = table.getByPoint({ y: pos.row, x: 0 })?.height || 40;
-                  
+
                   // Get header width and height
                   const headerWidth = table.headerWidth;
                   const headerHeight = table.headerHeight;
-                  
+
                   // Calculate position to center the cell
                   const x = columnWidths.width + headerWidth + currentColWidth / 2 - 10;
                   const y = rowHeights.height + headerHeight + currentRowHeight / 2 - 10;
-                  
+
                   return (
                     <div
                       key={userId}
@@ -405,12 +469,12 @@ export const Case7: StoryObj = {
                       width: 120,
                       height: 40,
                     },
-                    'A': { width: 150 }, // Project column wider
-                    'B': { width: 100 }, // Status column narrower
-                    'C': { width: 80 },  // Assignee column narrower
-                    'D': { width: 120 }, // Due Date column
-                    'E': { width: 80 },  // Progress column narrower
-                    'F': { width: 100 }, // Priority column
+                    A: { width: 150 }, // Project column wider
+                    B: { width: 100 }, // Status column narrower
+                    C: { width: 80 }, // Assignee column narrower
+                    D: { width: 120 }, // Due Date column
+                    E: { width: 80 }, // Progress column narrower
+                    F: { width: 100 }, // Priority column
                     'A1:F1': {
                       style: {
                         backgroundColor: '#34495e',
@@ -440,19 +504,21 @@ export const Case7: StoryObj = {
           {/* Sidebar */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Activity feed */}
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              padding: '16px',
-              border: '1px solid #e9ecef',
-              flex: 1,
-            }}>
-              <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#2c3e50' }}>
-                📝 Activity Feed
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '400px', overflowY: 'auto' }}>
+            <div
+              style={{
+                backgroundColor: 'white',
+                borderRadius: '8px',
+                padding: '16px',
+                border: '1px solid #e9ecef',
+                flex: 1,
+              }}
+            >
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#2c3e50' }}>📝 Activity Feed</h3>
+              <div
+                style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '400px', overflowY: 'auto' }}
+              >
                 {activityLog.map((activity, index) => {
-                  const user = virtualUsers.find(u => u.name === activity.user);
+                  const user = virtualUsers.find((u) => u.name === activity.user);
                   return (
                     <div
                       key={index}
@@ -471,9 +537,7 @@ export const Case7: StoryObj = {
                         {activity.action}
                         {activity.cell && ` ${activity.cell}`}
                       </div>
-                      <div style={{ fontSize: '10px', color: '#999', marginTop: '2px' }}>
-                        {activity.timestamp}
-                      </div>
+                      <div style={{ fontSize: '10px', color: '#999', marginTop: '2px' }}>{activity.timestamp}</div>
                     </div>
                   );
                 })}
@@ -483,28 +547,34 @@ export const Case7: StoryObj = {
         </div>
 
         {/* How it works - Markdown */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '20px',
-          marginTop: '20px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-        }}>
-          <h3 style={{ 
-            color: '#2c3e50', 
-            margin: '0 0 15px 0',
-            fontSize: '18px',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
+        <div
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '20px',
+            marginTop: '20px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          }}
+        >
+          <h3
+            style={{
+              color: '#2c3e50',
+              margin: '0 0 15px 0',
+              fontSize: '18px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
             📖 How it works
           </h3>
-          <div style={{
-            lineHeight: '1.6',
-            color: '#374151'
-          }}>
+          <div
+            style={{
+              lineHeight: '1.6',
+              color: '#374151',
+            }}
+          >
             <ReactMarkdown>{HOW_IT_WORKS}</ReactMarkdown>
           </div>
         </div>
@@ -526,4 +596,4 @@ export const Case7: StoryObj = {
       },
     },
   },
-}; 
+};

@@ -27,7 +27,7 @@ export class SumFunction extends BaseFunction {
         spreaded.push(
           ...solveTable({ table: arg })
             .reduce((a, b) => a.concat(b))
-            .map((v) => ensureNumber(v, { ignore: true }))
+            .map((v) => ensureNumber(v, { ignore: true })),
         );
         return;
       }

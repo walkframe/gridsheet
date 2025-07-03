@@ -8,11 +8,7 @@ const meta: Meta = {
 };
 export default meta;
 
-const DESCRIPTION = [
-  '## Example',
-
-
-].join('\n\n');
+const DESCRIPTION = ['## Example'].join('\n\n');
 
 export const Refs: StoryObj = {
   render: () => {
@@ -21,7 +17,7 @@ export const Refs: StoryObj = {
         <GridSheet
           initialCells={buildInitialCells({
             cells: {
-              A: { width: 150},
+              A: { width: 150 },
               A1: { value: '#REF!(circulating)' },
               B1: { value: '=C1' },
               C1: { value: '=D1' },
@@ -44,7 +40,7 @@ export const Refs: StoryObj = {
 
               A6: { value: 'SUM(A2:D2)' },
               B6: { value: 10 },
-              C6: { value: '=B6' }, // 
+              C6: { value: '=B6' }, //
               D6: { value: '=B6 + 1' },
               E6: { value: '=SUM(B6:D6)' },
 
@@ -76,7 +72,7 @@ export const Refs: StoryObj = {
               C11: { value: 10 },
               B12: { value: 11 },
               C12: { value: 12 },
-              
+
               B13: { value: '=SUM(B9:B12)' },
               C13: { value: '=SUM(C9:C12)' },
             },

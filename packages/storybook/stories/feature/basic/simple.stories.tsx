@@ -1,4 +1,3 @@
-
 import type { Meta, StoryObj } from '@storybook/react';
 import { buildInitialCells, GridSheet, TimeDelta, useHub } from '@gridsheet/react-core';
 
@@ -67,4 +66,4 @@ export const Sheet: StoryObj = {
       },
     },
   },
-}
+};

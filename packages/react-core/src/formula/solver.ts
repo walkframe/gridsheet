@@ -18,7 +18,7 @@ export const solveFormula = ({ value, table, raise = true, refEvaluation = 'tabl
     return value;
   }
   let solved = value;
-  
+
   if (typeof value === 'string') {
     if (value.charAt(0) === '=') {
       try {
@@ -46,11 +46,11 @@ export const solveFormula = ({ value, table, raise = true, refEvaluation = 'tabl
   return solved;
 };
 
-type SolveTableProps = { 
+type SolveTableProps = {
   table: Table;
   raise?: boolean;
   refEvaluation?: RefEvaluation;
-}
+};
 
 export const solveTable = ({ table, raise = true }: SolveTableProps): MatrixType => {
   const area = table.getArea();

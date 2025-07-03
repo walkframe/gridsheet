@@ -34,8 +34,6 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
   const { store, dispatch } = useContext(Context);
   const isFirstPointed = useRef(true);
 
-  //const [sheetProvided, sheetContext] = useSheetContext();
-
   const cellRef = useRef<HTMLTableCellElement>(null);
   const {
     table,

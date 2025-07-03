@@ -49,7 +49,7 @@ export type System = {
   sheetId: number;
   changedAt: Date;
   dependents: Set<string>;
-}
+};
 
 export type CellType<T = any, Custom = any> = {
   value?: T;
@@ -155,7 +155,7 @@ export type StoreType = {
 export type StoreRef = {
   store: StoreType;
   dispatch: Dispatcher;
-}
+};
 
 export type Props = {
   initialCells: CellsByAddressType;

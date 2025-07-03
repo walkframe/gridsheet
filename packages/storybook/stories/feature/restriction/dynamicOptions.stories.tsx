@@ -21,7 +21,7 @@ const DESCRIPTION = [
   'This demo showcases dynamic policy options that can be updated in real-time.',
   'The top grid displays cells with a framework policy that shows dropdown options.',
   'The bottom grid allows you to edit the available options, and changes are immediately reflected in the top grid.',
-  
+
   '## How it works',
   'This demonstrates how policies can be dynamically configured for interactive data validation and user experience enhancement.',
   '1. The framework policy provides dropdown options for framework selection.',
@@ -71,7 +71,7 @@ export const DynamicOptions: StoryObj = {
           return 'Label';
         },
       },
-    })
+    });
 
     return (
       <>
@@ -83,9 +83,7 @@ export const DynamicOptions: StoryObj = {
             },
             ensured: { numRows: 4, numCols: 3 },
           })}
-          options={{
-            
-          }}
+          options={{}}
         />
         <hr />
 
@@ -110,7 +108,6 @@ export const DynamicOptions: StoryObj = {
               const matrix = table.getFieldMatrix() as [string, string][];
               setOptionMatrix(matrix);
             },
-            
           }}
         />
       </>

@@ -90,10 +90,26 @@ const HOW_IT_WORKS = [
 
 // Color palette
 const COLORS = [
-  '#FF0000', '#FF4500', '#FFA500', '#FFFF00', '#32CD32',
-  '#00FF00', '#00FFFF', '#0000FF', '#8A2BE2', '#FF00FF',
-  '#FF69B4', '#FFC0CB', '#FFFFFF', '#C0C0C0', '#808080',
-  '#000000', '#8B4513', '#A0522D', '#CD853F', '#F4A460',
+  '#FF0000',
+  '#FF4500',
+  '#FFA500',
+  '#FFFF00',
+  '#32CD32',
+  '#00FF00',
+  '#00FFFF',
+  '#0000FF',
+  '#8A2BE2',
+  '#FF00FF',
+  '#FF69B4',
+  '#FFC0CB',
+  '#FFFFFF',
+  '#C0C0C0',
+  '#808080',
+  '#000000',
+  '#8B4513',
+  '#A0522D',
+  '#CD853F',
+  '#F4A460',
 ];
 
 export const Case3: StoryObj = {
@@ -101,7 +117,7 @@ export const Case3: StoryObj = {
     const tableRef = useTableRef();
     const storeRef = useStoreRef();
     const [selectedColor, setSelectedColor] = React.useState('#FF0000');
-  
+
     // Load data from localStorage
     const loadSavedData = React.useCallback(() => {
       try {
@@ -124,19 +140,19 @@ export const Case3: StoryObj = {
         if (tableRef.current) {
           const { table } = tableRef.current;
           const cells = table.getObject();
-          
+
           // Extract only cells with colors
           const coloredCells: { [key: string]: string } = {};
-          Object.keys(cells).forEach(address => {
+          Object.keys(cells).forEach((address) => {
             const cell = cells[address];
             if (cell?.style?.backgroundColor) {
               coloredCells[address] = cell.style.backgroundColor;
             }
           });
-          
+
           const dataToSave = {
             cells: coloredCells,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           };
           localStorage.setItem('demo3', JSON.stringify(dataToSave));
         }
@@ -160,15 +176,15 @@ export const Case3: StoryObj = {
         if (savedData) {
           const parsedData = JSON.parse(savedData);
           const savedCells = parsedData.cells || {};
-          
+
           // Convert saved color data to cell format
           const cellData: { [key: string]: any } = {};
-          Object.keys(savedCells).forEach(address => {
+          Object.keys(savedCells).forEach((address) => {
             cellData[address] = {
-              style: { backgroundColor: savedCells[address] }
+              style: { backgroundColor: savedCells[address] },
             };
           });
-          
+
           console.log('Loaded saved data:', savedCells);
           return cellData;
         }
@@ -185,7 +201,7 @@ export const Case3: StoryObj = {
 
     const initialCells = buildInitialCells({
       cells: {
-        default: { width: 20, height: 20},
+        default: { width: 20, height: 20 },
         ...getSavedData(),
       },
       ensured: {
@@ -197,26 +213,26 @@ export const Case3: StoryObj = {
     // Function to fill selected cells
     const fillSelectedCells = () => {
       if (!tableRef.current || !storeRef.current) return;
-      
+
       const { table, dispatch } = tableRef.current;
       const { store } = storeRef.current;
-      
+
       // Get current selection area
       const area = clip(store);
       if (!area) return;
-      
+
       const diff: any = {};
-      
+
       // Fill all cells in the selection area
       for (let row = area.top; row <= area.bottom; row++) {
         for (let col = area.left; col <= area.right; col++) {
           const cellAddress = p2a({ y: row, x: col });
           diff[cellAddress] = {
-            style: { backgroundColor: selectedColor }
+            style: { backgroundColor: selectedColor },
           };
         }
       }
-      
+
       const updatedTable = table.update({ diff });
       dispatch(updatedTable);
     };
@@ -225,13 +241,15 @@ export const Case3: StoryObj = {
       <div style={{ padding: '10px' }}>
         {/* Color palette */}
         <div style={{ marginBottom: '20px' }}>
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(10, 1fr)', 
-            gap: '8px',
-            maxWidth: '400px',
-            marginBottom: '10px'
-          }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(10, 1fr)',
+              gap: '8px',
+              maxWidth: '400px',
+              marginBottom: '10px',
+            }}
+          >
             {COLORS.map((color, index) => (
               <button
                 key={index}
@@ -250,15 +268,17 @@ export const Case3: StoryObj = {
           </div>
           <div style={{ marginBottom: '10px' }}>
             <span>Selected Color: </span>
-            <span style={{ 
-              display: 'inline-block',
-              width: '20px',
-              height: '20px',
-              backgroundColor: selectedColor,
-              border: '1px solid #ccc',
-              verticalAlign: 'middle',
-              marginLeft: '5px'
-            }}></span>
+            <span
+              style={{
+                display: 'inline-block',
+                width: '20px',
+                height: '20px',
+                backgroundColor: selectedColor,
+                border: '1px solid #ccc',
+                verticalAlign: 'middle',
+                marginLeft: '5px',
+              }}
+            ></span>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button
@@ -270,7 +290,7 @@ export const Case3: StoryObj = {
                 border: 'none',
                 borderRadius: '4px',
                 cursor: 'pointer',
-                fontSize: '14px'
+                fontSize: '14px',
               }}
             >
               Fill Selected Cells
@@ -284,14 +304,14 @@ export const Case3: StoryObj = {
                 border: 'none',
                 borderRadius: '4px',
                 cursor: 'pointer',
-                fontSize: '14px'
+                fontSize: '14px',
               }}
             >
               🔄 Reset
             </button>
           </div>
         </div>
-        
+
         <GridSheet
           tableRef={tableRef}
           storeRef={storeRef}
@@ -304,30 +324,36 @@ export const Case3: StoryObj = {
           }}
           style={{ width: '400px', height: '400px' }}
         />
-        
+
         {/* How it works - Markdown */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '20px',
-          marginTop: '20px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-        }}>
-          <h3 style={{ 
-            color: '#2c3e50', 
-            margin: '0 0 15px 0',
-            fontSize: '18px',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
+        <div
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '20px',
+            marginTop: '20px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          }}
+        >
+          <h3
+            style={{
+              color: '#2c3e50',
+              margin: '0 0 15px 0',
+              fontSize: '18px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
             📖 How it works
           </h3>
-          <div style={{
-            lineHeight: '1.6',
-            color: '#374151'
-          }}>
+          <div
+            style={{
+              lineHeight: '1.6',
+              color: '#374151',
+            }}
+          >
             <ReactMarkdown>{HOW_IT_WORKS}</ReactMarkdown>
           </div>
         </div>
@@ -344,7 +370,7 @@ export const Case3: StoryObj = {
 };
 
 const myHeart: CellsByAddressType = {
-    C3: { style: { backgroundColor: 'red' } },
+  C3: { style: { backgroundColor: 'red' } },
   D3: { style: { backgroundColor: 'red' } },
   O3: { style: { backgroundColor: 'red' } },
   N3: { style: { backgroundColor: 'red' } },
@@ -396,7 +422,7 @@ const myHeart: CellsByAddressType = {
 
   I16: { style: { backgroundColor: 'red' } },
 
-// B5 - B8
+  // B5 - B8
   B5: { style: { backgroundColor: 'pink' } },
   B6: { style: { backgroundColor: 'pink' } },
   B7: { style: { backgroundColor: 'pink' } },
@@ -522,4 +548,4 @@ const myHeart: CellsByAddressType = {
   P6: { style: { backgroundColor: 'pink' } },
   P7: { style: { backgroundColor: 'pink' } },
   P8: { style: { backgroundColor: 'pink' } },
-}; 
+};

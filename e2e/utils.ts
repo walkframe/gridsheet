@@ -44,30 +44,35 @@ export const paste = async (page: any) => {
 export const dragAutofill = async (page: any, startAddress: string, endAddress: string) => {
   const start = page.locator(`[data-address='${startAddress}']`);
   const end = page.locator(`[data-address='${endAddress}']`);
-  
+
   const autofillHandle = start.locator('.gs-autofill-drag');
   await autofillHandle.click();
-  
+
   await autofillHandle.hover();
   await page.mouse.down();
   await end.hover();
   await page.mouse.up();
 };
 
-export const dragAutofillRange = async (page: any, rangeStartAddress: string, rangeEndAddress: string, targetAddress: string) => {
+export const dragAutofillRange = async (
+  page: any,
+  rangeStartAddress: string,
+  rangeEndAddress: string,
+  targetAddress: string,
+) => {
   const rangeStart = page.locator(`[data-address='${rangeStartAddress}']`);
   const rangeEnd = page.locator(`[data-address='${rangeEndAddress}']`);
   const target = page.locator(`[data-address='${targetAddress}']`);
-  
+
   await rangeStart.click();
   await rangeStart.hover();
   await page.mouse.down();
   await rangeEnd.hover();
   await page.mouse.up();
-  
+
   const autofillHandle = rangeEnd.locator('.gs-autofill-drag');
   await autofillHandle.click();
-  
+
   await autofillHandle.hover();
   await page.mouse.down();
   await target.hover();

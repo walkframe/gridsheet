@@ -61,26 +61,29 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
   const optionsAll = policy.getOptions();
   const inputLower = inputting.toLocaleLowerCase();
   const filteredOptions = optionsAll
-    .map(option => {
+    .map((option) => {
       const keywords = option.keywords ?? [String(option.value)];
       let bestMatch = { index: -1, startsWith: false, keyword: '' };
-      
+
       for (const keyword of keywords) {
         const keywordLower = keyword.toLowerCase();
         const index = keywordLower.indexOf(inputLower);
         if (index !== -1) {
           const startsWith = keywordLower.startsWith(inputLower);
-          if (bestMatch.index === -1 || index < bestMatch.index || 
-              (index === bestMatch.index && startsWith && !bestMatch.startsWith)) {
+          if (
+            bestMatch.index === -1 ||
+            index < bestMatch.index ||
+            (index === bestMatch.index && startsWith && !bestMatch.startsWith)
+          ) {
             bestMatch = { index, startsWith, keyword };
           }
         }
       }
-      
-      return { 
-        option, 
+
+      return {
+        option,
         ...bestMatch,
-        keywordCount: keywords.length // Add hierarchy (number of keywords)
+        keywordCount: keywords.length, // Add hierarchy (number of keywords)
       };
     })
     .filter(({ index }) => index !== -1)
@@ -102,7 +105,6 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
     })
     .map(({ option }) => option);
 
-  //const [, sheetContext] = useSheetContext();
   useEffect(() => {
     editorRef?.current?.focus?.({ preventScroll: true });
   }, [editorRef]);
@@ -500,7 +502,6 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
         </pre>
         <textarea
           data-sheet-id={sheetId}
-          //data-address={address}
           data-size="small"
           autoFocus={true}
           spellCheck={false}
@@ -547,9 +548,9 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
             setSelected(0);
           }}
           onPaste={(e) => {
-          if (editing) {
-            return true;
-          }
+            if (editing) {
+              return true;
+            }
 
             const onlyValue = shiftKey;
             const html = e.clipboardData?.getData?.('text/html');

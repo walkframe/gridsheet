@@ -1,13 +1,6 @@
 import { useEffect, useState, useRef, useReducer } from 'react';
 import type { CellsByAddressType, OptionsType, Props, StoreType } from '../types';
-import {
-  DEFAULT_HEIGHT,
-  DEFAULT_WIDTH,
-  HEADER_HEIGHT,
-  HEADER_WIDTH,
-  SHEET_HEIGHT,
-  SHEET_WIDTH,
-} from '../constants';
+import { DEFAULT_HEIGHT, DEFAULT_WIDTH, HEADER_HEIGHT, HEADER_WIDTH, SHEET_HEIGHT, SHEET_WIDTH } from '../constants';
 import { Context } from '../store';
 import { reducer as defaultReducer } from '../store/actions';
 import { Editor } from './Editor';
@@ -165,15 +158,9 @@ export function GridSheet({
         style={{ maxWidth: `min(100%, ${store.table.totalWidth + 2}px)` }}
       >
         <ScrollHandle style={{ position: 'fixed', top: 0, left: 0 }} />
-        <ScrollHandle
-          style={{ position: 'absolute', zIndex: 4, right: 0, top: 0, width: 5 }}
-          horizontal={1}
-        />
-        <ScrollHandle
-          style={{ position: 'absolute', zIndex: 4, left: 0, bottom: 0, height: 5 }}
-          vertical={1}
-        />
-        
+        <ScrollHandle style={{ position: 'absolute', zIndex: 4, right: 0, top: 0, width: 5 }} horizontal={1} />
+        <ScrollHandle style={{ position: 'absolute', zIndex: 4, left: 0, bottom: 0, height: 5 }} vertical={1} />
+
         {typeof store.searchQuery === 'undefined' ? showFormulaBar && <FormulaBar /> : <SearchBar />}
         <div
           className={`gs-main ${className || ''}`}

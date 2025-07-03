@@ -145,9 +145,9 @@ const DepartmentPolicy: PolicyMixinType = {
   validate: (props: any) => {
     const { patch } = props;
     if (patch?.value == null) return patch;
-    
+
     const options = DepartmentPolicy.getOptions!();
-    const validOption = options.find(option => option.value === patch?.value);
+    const validOption = options.find((option) => option.value === patch?.value);
     if (!validOption) {
       return { ...patch, value: 'Engineering' };
     }
@@ -160,7 +160,7 @@ const BudgetPolicy: PolicyMixinType = {
   validate: (props: any) => {
     const { patch } = props;
     if (patch?.value == null) return patch;
-    
+
     const value = Number(patch.value);
     if (isNaN(value) || value < 0) {
       return { ...patch, value: 0 };
@@ -189,10 +189,10 @@ export const Case4: StoryObj = {
       const checkScreenWidth = () => {
         setIsMobile(window.innerWidth <= 900);
       };
-      
+
       checkScreenWidth();
       window.addEventListener('resize', checkScreenWidth);
-      
+
       return () => window.removeEventListener('resize', checkScreenWidth);
     }, []);
 
@@ -208,7 +208,7 @@ export const Case4: StoryObj = {
         validate: (props: any) => {
           const { patch } = props;
           if (patch?.value == null) return patch;
-          
+
           const options = statusOptions.map(([value]) => value);
           const validOption = options.includes(patch?.value);
           if (!validOption) {
@@ -242,65 +242,79 @@ export const Case4: StoryObj = {
     }, [statusOptions]);
 
     return (
-      <div style={{
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        maxWidth: '1400px',
-        margin: '0 auto',
-        padding: '20px',
-        backgroundColor: '#f8f9fa'
-      }}>
-        <div style={{
-          textAlign: 'center',
-          marginBottom: '30px',
+      <div
+        style={{
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          maxWidth: '1400px',
+          margin: '0 auto',
           padding: '20px',
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-        }}>
-          <h1 style={{ 
-            color: '#2c3e50', 
-            margin: '0 0 10px 0',
-            fontSize: '28px',
-            fontWeight: '600'
-          }}>
+          backgroundColor: '#f8f9fa',
+        }}
+      >
+        <div
+          style={{
+            textAlign: 'center',
+            marginBottom: '30px',
+            padding: '20px',
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          }}
+        >
+          <h1
+            style={{
+              color: '#2c3e50',
+              margin: '0 0 10px 0',
+              fontSize: '28px',
+              fontWeight: '600',
+            }}
+          >
             💰 Budget Management System
           </h1>
-          <p style={{ 
-            color: '#7f8c8d', 
-            margin: '0',
-            fontSize: '16px'
-          }}>
+          <p
+            style={{
+              color: '#7f8c8d',
+              margin: '0',
+              fontSize: '16px',
+            }}
+          >
             Advanced policy-based data validation with dynamic status options
           </p>
         </div>
 
         {/* Main Budget Grid and Status Options - Side by Side */}
-        <div style={{ 
-          display: 'flex', 
-          gap: '20px', 
-          alignItems: 'flex-start',
-          marginBottom: '20px',
-          flexDirection: isMobile ? 'column' : 'row'
-        }}>
+        <div
+          style={{
+            display: 'flex',
+            gap: '20px',
+            alignItems: 'flex-start',
+            marginBottom: '20px',
+            flexDirection: isMobile ? 'column' : 'row',
+          }}
+        >
           {/* Main Budget Grid */}
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            padding: '20px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            flex: isMobile ? 'none' : 1,
-            flexShrink: 0,
-            width: isMobile ? '100%' : 'auto'
-          }}>
-            <h3 style={{ 
-              color: '#2c3e50', 
-              margin: '0 0 15px 0',
-              fontSize: '18px',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
+          <div
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '20px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              flex: isMobile ? 'none' : 1,
+              flexShrink: 0,
+              width: isMobile ? '100%' : 'auto',
+            }}
+          >
+            <h3
+              style={{
+                color: '#2c3e50',
+                margin: '0 0 15px 0',
+                fontSize: '18px',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
               📊 Budget Overview
             </h3>
             <GridSheet
@@ -323,8 +337,8 @@ export const Case4: StoryObj = {
                   ],
                 },
                 cells: {
-                  default: { 
-                    width: 100, 
+                  default: {
+                    width: 100,
                     height: 40,
                     style: {
                       ...makeBorder({ all: '1px solid #000000' }),
@@ -340,43 +354,43 @@ export const Case4: StoryObj = {
                     },
                     prevention: operations.Write,
                   },
-                  'A': { 
+                  A: {
                     width: 100,
                     style: {
                       borderRight: 'double 3px #000000',
                     },
                     policy: 'department',
                   },
-                  'B': { 
+                  B: {
                     width: 80,
-                    style: { 
+                    style: {
                       backgroundColor: '#e8f5e8',
                     },
                     policy: 'budget',
                     renderer: 'thousand_separator',
                   },
-                  'C': { 
+                  C: {
                     width: 80,
-                    style: { 
+                    style: {
                       backgroundColor: '#fff3cd',
                     },
                     policy: 'budget',
                     renderer: 'thousand_separator',
                   },
-                  'D': { 
+                  D: {
                     width: 80,
-                    style: { 
+                    style: {
                       backgroundColor: '#d1ecf1',
                       fontWeight: 'bold',
                     },
                     prevention: operations.Write,
                     renderer: 'thousand_separator',
                   },
-                  'E': { 
+                  E: {
                     width: 90,
                     policy: 'status',
                   },
-                  'F': { 
+                  F: {
                     width: 50,
                     renderer: 'checkbox',
                     style: {
@@ -388,7 +402,7 @@ export const Case4: StoryObj = {
                   // Double border above Total row
                   'A10:F10': {
                     style: {
-                      ...makeBorder({ 
+                      ...makeBorder({
                         bottom: '4px double #000000',
                       }),
                     },
@@ -402,28 +416,28 @@ export const Case4: StoryObj = {
                     },
                     prevention: operations.Write,
                   },
-                  'B11': {
+                  B11: {
                     style: {
                       backgroundColor: '#27ae60',
                       color: 'white',
                       fontWeight: 'bold',
                     },
                   },
-                  'C11': {
+                  C11: {
                     style: {
                       backgroundColor: '#e67e22',
                       color: 'white',
                       fontWeight: 'bold',
                     },
                   },
-                  'D11': {
+                  D11: {
                     style: {
                       backgroundColor: '#3498db',
                       color: 'white',
                       fontWeight: 'bold',
                     },
                   },
-                  'F11': {
+                  F11: {
                     style: {
                       backgroundColor: '#9b59b6',
                       color: 'white',
@@ -432,53 +446,53 @@ export const Case4: StoryObj = {
                     prevention: operations.Write,
                   },
                   // Conditional styling for status
-                  'E2': { 
-                    style: { 
-                      backgroundColor: '#d4edda', 
+                  E2: {
+                    style: {
+                      backgroundColor: '#d4edda',
                       color: '#155724',
-                    } 
+                    },
                   },
-                  'E3': { 
-                    style: { 
-                      backgroundColor: '#d4edda', 
+                  E3: {
+                    style: {
+                      backgroundColor: '#d4edda',
                       color: '#155724',
-                    } 
+                    },
                   },
-                  'E4': { 
-                    style: { 
-                      backgroundColor: '#fff3cd', 
+                  E4: {
+                    style: {
+                      backgroundColor: '#fff3cd',
                       color: '#856404',
-                    } 
+                    },
                   },
-                  'E5': { 
-                    style: { 
-                      backgroundColor: '#f8d7da', 
+                  E5: {
+                    style: {
+                      backgroundColor: '#f8d7da',
                       color: '#721c24',
-                    } 
+                    },
                   },
-                  'E6': { 
-                    style: { 
-                      backgroundColor: '#f8d7da', 
+                  E6: {
+                    style: {
+                      backgroundColor: '#f8d7da',
                       color: '#721c24',
-                    } 
+                    },
                   },
-                  'E7': { 
-                    style: { 
-                      backgroundColor: '#d4edda', 
+                  E7: {
+                    style: {
+                      backgroundColor: '#d4edda',
                       color: '#155724',
-                    } 
+                    },
                   },
-                  'E8': { 
-                    style: { 
-                      backgroundColor: '#e2e3e5', 
+                  E8: {
+                    style: {
+                      backgroundColor: '#e2e3e5',
                       color: '#383d41',
-                    } 
+                    },
                   },
-                  'E9': { 
-                    style: { 
-                      backgroundColor: '#d4edda', 
+                  E9: {
+                    style: {
+                      backgroundColor: '#d4edda',
                       color: '#155724',
-                    } 
+                    },
                   },
                 },
               })}
@@ -490,23 +504,27 @@ export const Case4: StoryObj = {
           </div>
 
           {/* Status Options Management */}
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            padding: '20px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            width: isMobile ? '100%' : '300px',
-            minWidth: 0
-          }}>
-            <h3 style={{ 
-              color: '#2c3e50', 
-              margin: '0 0 15px 0',
-              fontSize: '18px',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
+          <div
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '20px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              width: isMobile ? '100%' : '300px',
+              minWidth: 0,
+            }}
+          >
+            <h3
+              style={{
+                color: '#2c3e50',
+                margin: '0 0 15px 0',
+                fontSize: '18px',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
               ⚙️ Status Options
             </h3>
             <GridSheet
@@ -537,7 +555,7 @@ export const Case4: StoryObj = {
                     const matrix = table.getFieldMatrix() as [string, string][];
                     if (matrix && matrix.length > 0) {
                       // Filter out empty rows
-                      const validMatrix = matrix.filter(row => row[0] && row[1]);
+                      const validMatrix = matrix.filter((row) => row[0] && row[1]);
                       setStatusOptions(validMatrix);
                     }
                   } catch (error) {
@@ -546,40 +564,48 @@ export const Case4: StoryObj = {
                 },
               }}
             />
-            <p style={{ 
-              color: '#7f8c8d', 
-              margin: '0 0 15px 0',
-              fontSize: '14px'
-            }}>
+            <p
+              style={{
+                color: '#7f8c8d',
+                margin: '0 0 15px 0',
+                fontSize: '14px',
+              }}
+            >
               Edit status options. Changes reflect immediately.
             </p>
           </div>
         </div>
 
         {/* Policy Information */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '20px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          marginBottom: '20px'
-        }}>
-          <h3 style={{ 
-            color: '#2c3e50', 
-            margin: '0 0 15px 0',
-            fontSize: '18px',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
+        <div
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '20px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            marginBottom: '20px',
+          }}
+        >
+          <h3
+            style={{
+              color: '#2c3e50',
+              margin: '0 0 15px 0',
+              fontSize: '18px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
             🔧 Policy Features
           </h3>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '20px'
-          }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: '20px',
+            }}
+          >
             <div style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
               <h4 style={{ margin: '0 0 10px 0', color: '#2c3e50' }}>📋 Department Policy</h4>
               <p style={{ margin: '0', fontSize: '14px', color: '#666' }}>
@@ -589,7 +615,8 @@ export const Case4: StoryObj = {
             <div style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
               <h4 style={{ margin: '0 0 10px 0', color: '#2c3e50' }}>📊 Dynamic Status Policy</h4>
               <p style={{ margin: '0', fontSize: '14px', color: '#666' }}>
-                Status options can be dynamically updated in real-time. Changes in the status options sheet immediately reflect in the budget grid.
+                Status options can be dynamically updated in real-time. Changes in the status options sheet immediately
+                reflect in the budget grid.
               </p>
             </div>
             <div style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
@@ -602,27 +629,33 @@ export const Case4: StoryObj = {
         </div>
 
         {/* How it works - Markdown */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '20px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-        }}>
-          <h3 style={{ 
-            color: '#2c3e50', 
-            margin: '0 0 15px 0',
-            fontSize: '18px',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
+        <div
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '20px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          }}
+        >
+          <h3
+            style={{
+              color: '#2c3e50',
+              margin: '0 0 15px 0',
+              fontSize: '18px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
             📖 How it works
           </h3>
-          <div style={{
-            lineHeight: '1.6',
-            color: '#374151'
-          }}>
+          <div
+            style={{
+              lineHeight: '1.6',
+              color: '#374151',
+            }}
+          >
             <ReactMarkdown>{HOW_IT_WORKS}</ReactMarkdown>
           </div>
         </div>
@@ -636,4 +669,4 @@ export const Case4: StoryObj = {
       },
     },
   },
-}; 
+};

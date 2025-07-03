@@ -1,4 +1,4 @@
-import { RendererMixinType } from "./core";
+import { RendererMixinType } from './core';
 
 export const ThousandSeparatorRendererMixin: RendererMixinType = {
   number({ value, cell }): any {

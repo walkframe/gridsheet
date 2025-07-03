@@ -406,4 +406,4 @@ export const invertObject = (obj: { [key: string]: string }): { [value: string]:
     }
   }
   return inverted;
-}
+};

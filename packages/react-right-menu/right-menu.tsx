@@ -115,7 +115,12 @@ export const InsertRows = ({ store, dispatch }: ItemProps) => {
               setNumRows(num);
             }}
           />
-          <button style={{ width: 50, padding: '0 5px' }} type="button" className="gs-right-menu-btn" onClick={insertRows}>
+          <button
+            style={{ width: 50, padding: '0 5px' }}
+            type="button"
+            className="gs-right-menu-btn"
+            onClick={insertRows}
+          >
             <span>Insert</span>
           </button>
         </div>
@@ -232,7 +237,12 @@ export const InsertCols = ({ store, dispatch }: ItemProps) => {
               setNumCols(num);
             }}
           />
-          <button style={{ width: 50, padding: '0 5px' }} type="button" className="gs-right-menu-btn" onClick={insertCols}>
+          <button
+            style={{ width: 50, padding: '0 5px' }}
+            type="button"
+            className="gs-right-menu-btn"
+            onClick={insertCols}
+          >
             <span>Insert</span>
           </button>
         </div>

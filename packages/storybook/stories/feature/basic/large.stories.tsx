@@ -37,7 +37,7 @@ const HOW_IT_WORKS = [
   '',
   '### Performance Best Practices',
   '1. **Virtual Scrolling**: Enabled by default for large datasets',
-  '2. **Efficient Labelers**: Use simple labelers like \'raw\' for better performance',
+  "2. **Efficient Labelers**: Use simple labelers like 'raw' for better performance",
   '3. **Column Widths**: Set appropriate widths to avoid layout calculations',
   '4. **Memory Management**: Limit visible area with sheetHeight/sheetWidth',
   '5. **Data Types**: Use appropriate data types (numbers vs strings)',
@@ -50,11 +50,11 @@ const HOW_IT_WORKS = [
 // Generate large dataset
 const generateLargeData = () => {
   const data: any[][] = [];
-  
+
   // Header row
   const headers = ['ID', 'Name', 'Date', 'Status', 'Category', 'Score', 'Notes'];
   data.push(headers);
-  
+
   // Generate 2000 rows of data
   for (let i = 1; i <= 2000; i++) {
     const row = [
@@ -68,7 +68,7 @@ const generateLargeData = () => {
     ];
     data.push(row);
   }
-  
+
   return data;
 };
 
@@ -89,7 +89,7 @@ export const Sheet: StoryObj = {
           <p>Grid size: 2000 rows × 100 columns (200,000 cells)</p>
           <p>This demonstrates GridSheet's ability to handle large datasets efficiently.</p>
         </div>
-        
+
         <GridSheet
           hub={hub}
           initialCells={buildInitialCells({
@@ -111,25 +111,25 @@ export const Sheet: StoryObj = {
                 },
                 height: 40,
               },
-              'A': { width: 60 }, // ID column
-              'B': { width: 150 }, // Name column
-              'C': { 
+              A: { width: 60 }, // ID column
+              B: { width: 150 }, // Name column
+              C: {
                 width: 100,
                 style: { backgroundColor: '#f8f9fa' },
               }, // Date column
-              'D': { 
+              D: {
                 width: 80,
                 style: { backgroundColor: '#e8f5e8' },
               }, // Status column
-              'E': { 
+              E: {
                 width: 60,
                 style: { backgroundColor: '#fff3cd' },
               }, // Category column
-              'F': { 
+              F: {
                 width: 60,
                 style: { backgroundColor: '#f8d7da' },
               }, // Score column
-              'G': { 
+              G: {
                 width: 200,
                 style: { backgroundColor: '#f8f9fa' },
               }, // Notes column
@@ -144,30 +144,36 @@ export const Sheet: StoryObj = {
             sheetResize: 'both',
           }}
         />
-        
+
         {/* How it works - Markdown */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '20px',
-          marginTop: '20px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-        }}>
-          <h3 style={{ 
-            color: '#2c3e50', 
-            margin: '0 0 15px 0',
-            fontSize: '18px',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
+        <div
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '20px',
+            marginTop: '20px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          }}
+        >
+          <h3
+            style={{
+              color: '#2c3e50',
+              margin: '0 0 15px 0',
+              fontSize: '18px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
             📖 How it works
           </h3>
-          <div style={{
-            lineHeight: '1.6',
-            color: '#374151'
-          }}>
+          <div
+            style={{
+              lineHeight: '1.6',
+              color: '#374151',
+            }}
+          >
             <ReactMarkdown>{HOW_IT_WORKS}</ReactMarkdown>
           </div>
         </div>
@@ -181,4 +187,4 @@ export const Sheet: StoryObj = {
       },
     },
   },
-}; 
+};

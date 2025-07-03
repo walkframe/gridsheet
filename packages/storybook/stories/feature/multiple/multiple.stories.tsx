@@ -13,14 +13,13 @@ const DESCRIPTION = [
   'This demo showcases multi-sheet functionality in GridSheet.',
   'It demonstrates how multiple sheets can work together with cross-sheet references and shared data.',
   'The demo shows four different sheets with various interconnections and formula references.',
-  
+
   '## How it works',
   'Multiple sheets can reference each other using sheet names in formulas.',
   '1. Sheets can reference other sheets using the sheetName!cellAddress syntax.',
   '2. The hub option enables real-time updates between connected sheets.',
   '3. Sheet names can be changed dynamically, updating all references.',
   '4. Independent sheets can exist without hub for isolated functionality.',
-
 ].join('\n\n');
 
 export const Sheets: StoryObj = {

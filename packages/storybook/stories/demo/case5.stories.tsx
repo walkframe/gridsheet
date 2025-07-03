@@ -61,7 +61,7 @@ const HOW_IT_WORKS = [
   'Create a comprehensive color formatting system with background and text color options. Implement color picker dialogs, color preview, and undo/redo functionality for formatting changes. Include accessibility considerations for color-blind users.',
   '',
   '### 🎯 Professional UI Design',
-  'Design a professional interface that mimics Excel\'s familiar layout and styling. Include proper spacing, typography, and visual hierarchy. Implement responsive design that works across different screen sizes and devices.',
+  "Design a professional interface that mimics Excel's familiar layout and styling. Include proper spacing, typography, and visual hierarchy. Implement responsive design that works across different screen sizes and devices.",
   '',
   '### 📋 Clipboard Operations',
   'Implement full clipboard functionality including cut, copy, and paste operations. Handle cell ranges, multiple data types, and cross-sheet operations. Include proper error handling and user feedback for clipboard operations.',
@@ -109,13 +109,15 @@ const HOW_IT_WORKS = [
 ].join('\n\n');
 
 // Menu item types
-type MenuItem = {
-  label: string;
-  icon: string;
-  action: string;
-} | {
-  separator: true;
-};
+type MenuItem =
+  | {
+      label: string;
+      icon: string;
+      action: string;
+    }
+  | {
+      separator: true;
+    };
 
 // Menu items configuration
 const MENU_ITEMS = [
@@ -124,14 +126,14 @@ const MENU_ITEMS = [
     items: [
       { label: 'Save (<u>S</u>)', icon: '💾', action: 'save' },
       { label: 'Reset', icon: '🔄', action: 'reset' },
-    ] as MenuItem[]
+    ] as MenuItem[],
   },
   {
     name: 'History',
     items: [
       { label: 'Undo (<u>Z</u>)', icon: '↶', action: 'undo' },
       { label: 'Redo (Shift+<u>Z</u>)', icon: '↷', action: 'redo' },
-    ] as MenuItem[]
+    ] as MenuItem[],
   },
   {
     name: 'Edit',
@@ -141,13 +143,13 @@ const MENU_ITEMS = [
       { separator: true },
       { label: 'Paste (<u>V</u>)', icon: '📋', action: 'paste' },
       { label: 'Paste Values Only (Shift+<u>V</u>)', icon: '📋', action: 'pasteValues' },
-    ] as MenuItem[]
+    ] as MenuItem[],
   },
 ];
 
 // Sample data for different sheets
 const SHEET_DATA = {
-  'Sales': [
+  Sales: [
     ['Product', 'Q1', 'Q2', 'Q3', 'Q4', 'Total'],
     ['Laptops', 1200, 1350, 1100, 1400, '=SUM(B2:E2)'],
     ['Monitors', 800, 950, 850, 1000, '=SUM(B3:E3)'],
@@ -156,7 +158,7 @@ const SHEET_DATA = {
     ['', '', '', '', '', ''],
     ['Total', '=SUM(B2:B5)', '=SUM(C2:C5)', '=SUM(D2:D5)', '=SUM(E2:E5)', '=SUM(F2:F5)'],
   ],
-  'Budget': [
+  Budget: [
     ['Department', 'Budget', 'Spent', 'Remaining', 'Status'],
     ['Engineering', 50000, 42000, '=B2-C2', 'Under Budget'],
     ['Marketing', 75000, 68000, '=B3-C3', 'Under Budget'],
@@ -165,7 +167,7 @@ const SHEET_DATA = {
     ['Finance', 45000, 52000, '=B6-C6', 'Over Budget'],
     ['Operations', 60000, 58000, '=B7-C7', 'Under Budget'],
   ],
-  'Inventory': [
+  Inventory: [
     ['Item', 'SKU', 'Quantity', 'Price', 'Value', 'Status'],
     ['Laptop Dell XPS', 'DLX001', 45, 1299, '=C2*D2', 'In Stock'],
     ['Monitor LG 27"', 'LGM001', 32, 299, '=C3*D3', 'In Stock'],
@@ -183,12 +185,12 @@ export const Case5: StoryObj = {
     const loadedSheetsRef = React.useRef<Set<string>>(new Set());
 
     // Create refs for each sheet
-    const tableRefs = React.useRef<{[s: string]: React.RefObject<TableRef | null>}>({});
-    const storeRefs = React.useRef<{[s: string]: React.RefObject<StoreRef | null>}>({});
+    const tableRefs = React.useRef<{ [s: string]: React.RefObject<TableRef | null> }>({});
+    const storeRefs = React.useRef<{ [s: string]: React.RefObject<StoreRef | null> }>({});
 
     React.useEffect(() => {
       // Initialize refs for each sheet
-      sheets.forEach(sheet => {
+      sheets.forEach((sheet) => {
         if (!tableRefs.current[sheet]) {
           tableRefs.current[sheet] = createTableRef();
         }
@@ -196,7 +198,7 @@ export const Case5: StoryObj = {
           storeRefs.current[sheet] = createStoreRef();
         }
       });
-    }, [sheets])
+    }, [sheets]);
 
     const hub = useHub({
       renderers: {
@@ -212,7 +214,7 @@ export const Case5: StoryObj = {
     const getActiveRefs = () => {
       return {
         tableRef: tableRefs.current[activeSheet]?.current,
-        storeRef: storeRefs.current[activeSheet]?.current
+        storeRef: storeRefs.current[activeSheet]?.current,
       };
     };
 
@@ -220,13 +222,13 @@ export const Case5: StoryObj = {
     React.useEffect(() => {
       try {
         // Try to load the most recent saved data to get sheets list
-        const allKeys = Object.keys(localStorage).filter(key => key.startsWith('gridsheet_demo5.'));
+        const allKeys = Object.keys(localStorage).filter((key) => key.startsWith('gridsheet_demo5.'));
         if (allKeys.length > 0) {
           // Get the most recent saved data
           let mostRecentData: any = null;
           let mostRecentTime = 0;
-          
-          allKeys.forEach(key => {
+
+          allKeys.forEach((key) => {
             try {
               const data = JSON.parse(localStorage.getItem(key) || '{}');
               if (data.timestamp) {
@@ -240,7 +242,7 @@ export const Case5: StoryObj = {
               console.error('Error parsing saved data:', error);
             }
           });
-          
+
           if (mostRecentData) {
             if (mostRecentData.sheets) {
               setSheets(mostRecentData.sheets);
@@ -274,7 +276,7 @@ export const Case5: StoryObj = {
       `;
       notification.textContent = message;
       document.body.appendChild(notification);
-      
+
       setTimeout(() => {
         notification.style.opacity = '0';
         notification.style.transform = 'translateX(100%)';
@@ -286,18 +288,18 @@ export const Case5: StoryObj = {
     // Handle menu actions
     const handleMenuAction = (action: string) => {
       console.log('Menu action:', action);
-      
+
       switch (action) {
         case 'insertSheet':
           const newSheetName = `Sheet${sheets.length + 1}`;
           const updatedSheets = [...sheets, newSheetName];
           setSheets(updatedSheets);
           setActiveSheet(newSheetName);
-          
+
           // Create refs for the new sheet
           tableRefs.current[newSheetName] = createTableRef();
           storeRefs.current[newSheetName] = createStoreRef();
-          
+
           // Save initial data for the new sheet
           const newSheetData = {
             matrixData: [
@@ -309,16 +311,16 @@ export const Case5: StoryObj = {
             ],
             activeSheet: newSheetName,
             sheets: updatedSheets,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           };
-          
+
           try {
             localStorage.setItem(`gridsheet_demo5.${newSheetName}`, JSON.stringify(newSheetData));
             console.log('Initial data saved for new sheet:', newSheetName);
           } catch (error) {
             console.error('Failed to save initial data for new sheet:', error);
           }
-          
+
           showNotification(`New sheet "${newSheetName}" created`);
           break;
         case 'save':
@@ -327,7 +329,7 @@ export const Case5: StoryObj = {
         case 'reset':
           try {
             // Remove all saved data for all sheets
-            sheets.forEach(sheetName => {
+            sheets.forEach((sheetName) => {
               localStorage.removeItem(`gridsheet_demo5.${sheetName}`);
             });
             showNotification('Data reset successfully. Reloading...');
@@ -404,27 +406,27 @@ export const Case5: StoryObj = {
       if (tableRef && storeRef) {
         const { table } = tableRef;
         const { store } = storeRef;
-        
+
         // Get cell matrix data and remove system properties
         const matrixData = table.getMatrix({ refEvaluation: 'raw' });
-        const cleanMatrixData = matrixData.map((row: any[]) => 
+        const cleanMatrixData = matrixData.map((row: any[]) =>
           row.map((cell: any) => {
             if (cell && typeof cell === 'object') {
               const { system, ...cleanCell } = cell;
               return cleanCell;
             }
             return cell;
-          })
+          }),
         );
-        
+
         const saveData = {
           matrixData: cleanMatrixData,
           activeSheet,
           sheets,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
         console.log('Saving data:', saveData);
-        
+
         try {
           localStorage.setItem(`gridsheet_demo5.${activeSheet}`, JSON.stringify(saveData));
           showNotification('Data saved to localStorage successfully');
@@ -440,12 +442,12 @@ export const Case5: StoryObj = {
     // Function to build initial cells for a specific sheet
     const buildInitialCellsForSheet = (sheetName: string) => {
       const currentSheet = sheetName;
-      
+
       // Try to load saved data from localStorage
       let data: any[][] = [];
       let savedCells: any = {};
       let loadedFromStorage = false;
-      
+
       try {
         const savedData = localStorage.getItem(`gridsheet_demo5.${currentSheet}`);
         if (savedData) {
@@ -457,16 +459,16 @@ export const Case5: StoryObj = {
                 if (cell && typeof cell === 'object') {
                   const { value, style, ...otherProps } = cell;
                   const address = `${String.fromCharCode(65 + colIndex)}${rowIndex + 1}`;
-                  
+
                   // Store non-value properties in cells object
                   if (style || Object.keys(otherProps).length > 0) {
                     savedCells[address] = { style, ...otherProps };
                   }
-                  
+
                   return value || '';
                 }
                 return cell || '';
-              })
+              }),
             );
             loadedFromStorage = true;
           } else {
@@ -482,13 +484,13 @@ export const Case5: StoryObj = {
         // Fallback to default data
         data = SHEET_DATA[currentSheet as keyof typeof SHEET_DATA] || SHEET_DATA['Sales'];
       }
-      
+
       // Only log once per sheet when data is actually loaded from localStorage
       if (loadedFromStorage && !loadedSheetsRef.current.has(currentSheet)) {
         console.log('Loaded saved data from localStorage for sheet:', currentSheet);
         loadedSheetsRef.current.add(currentSheet);
       }
-      
+
       return buildInitialCells({
         matrices: {
           A1: data,
@@ -499,7 +501,7 @@ export const Case5: StoryObj = {
             style: {
               borderBottom: '1px solid #e0e0e0',
               borderRight: '1px solid #e0e0e0',
-            }
+            },
           },
           '1': {
             style: {
@@ -508,32 +510,32 @@ export const Case5: StoryObj = {
               fontWeight: 'bold',
               textAlign: 'center',
               borderBottom: '2px solid #dee2e6',
-            }
+            },
           },
-          'A': { width: 150 },
-          'B': { 
+          A: { width: 150 },
+          B: {
             width: 100,
             renderer: 'thousand_separator',
           },
-          'C': { 
+          C: {
             width: 100,
             renderer: 'thousand_separator',
           },
-          'D': { 
+          D: {
             width: 100,
             renderer: 'thousand_separator',
           },
-          'E': { 
+          E: {
             width: 100,
             renderer: 'thousand_separator',
           },
-          'F': { 
+          F: {
             width: 100,
             renderer: 'thousand_separator',
             ...(currentSheet === 'Sales' && {
               style: {
                 borderLeft: '3px double #000',
-              }
+              },
             }),
           },
           // Total row styling (for Sales sheet - row 7)
@@ -544,7 +546,7 @@ export const Case5: StoryObj = {
                 color: '#495057',
                 fontWeight: 'bold',
                 borderTop: '3px double #000',
-              }
+              },
             },
           }),
           // Add saved cell properties
@@ -554,61 +556,73 @@ export const Case5: StoryObj = {
     };
 
     return (
-      <div style={{
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        maxWidth: '1400px',
-        margin: '0 auto',
-        backgroundColor: '#f8f9fa',
-        minHeight: '100vh'
-      }}>
+      <div
+        style={{
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          maxWidth: '1400px',
+          margin: '0 auto',
+          backgroundColor: '#f8f9fa',
+          minHeight: '100vh',
+        }}
+      >
         {/* Header */}
-        <div style={{
-          textAlign: 'center',
-          padding: '20px',
-          backgroundColor: 'white',
-          borderBottom: '1px solid #e0e0e0'
-        }}>
-          <p style={{ 
-            color: '#7f8c8d', 
-            margin: '0',
-            fontSize: '16px'
-          }}>
+        <div
+          style={{
+            textAlign: 'center',
+            padding: '20px',
+            backgroundColor: 'white',
+            borderBottom: '1px solid #e0e0e0',
+          }}
+        >
+          <p
+            style={{
+              color: '#7f8c8d',
+              margin: '0',
+              fontSize: '16px',
+            }}
+          >
             Spreadsheet interface with menu bar and sheet tabs
           </p>
         </div>
 
         {/* Menu Bar */}
-        <div style={{
-          backgroundColor: '#f8f9fa',
-          borderBottom: 'none',
-          padding: '10px 20px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '20px',
-          flexWrap: 'wrap'
-        }}>
-          {/* File Group */}
-          <div style={{
+        <div
+          style={{
+            backgroundColor: '#f8f9fa',
+            borderBottom: 'none',
+            padding: '10px 20px',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            padding: '4px 12px',
-            backgroundColor: 'white',
-            borderRadius: '6px',
-            border: '1px solid #e0e0e0'
-          }}>
-            <span style={{
-              fontSize: '12px',
-              fontWeight: '600',
-              color: '#6c757d',
-              marginRight: '4px'
-            }}>
+            gap: '20px',
+            flexWrap: 'wrap',
+          }}
+        >
+          {/* File Group */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '4px 12px',
+              backgroundColor: 'white',
+              borderRadius: '6px',
+              border: '1px solid #e0e0e0',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '12px',
+                fontWeight: '600',
+                color: '#6c757d',
+                marginRight: '4px',
+              }}
+            >
               File:
             </span>
             {MENU_ITEMS[0].items.map((item, index) => (
               <button
                 key={index}
-                onClick={() => 'action' in item ? handleMenuAction(item.action) : undefined}
+                onClick={() => ('action' in item ? handleMenuAction(item.action) : undefined)}
                 style={{
                   padding: '6px 12px',
                   height: '28px',
@@ -621,7 +635,7 @@ export const Case5: StoryObj = {
                   alignItems: 'center',
                   gap: '6px',
                   color: '#2c3e50',
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = '#e3f2fd';
@@ -633,35 +647,37 @@ export const Case5: StoryObj = {
                 }}
               >
                 <span style={{ fontSize: '14px' }}>{'icon' in item ? item.icon : ''}</span>
-                <span 
-                  dangerouslySetInnerHTML={{ __html: 'label' in item ? item.label : '' }}
-                />
+                <span dangerouslySetInnerHTML={{ __html: 'label' in item ? item.label : '' }} />
               </button>
             ))}
           </div>
 
           {/* History Group */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '4px 12px',
-            backgroundColor: 'white',
-            borderRadius: '6px',
-            border: '1px solid #e0e0e0'
-          }}>
-            <span style={{
-              fontSize: '12px',
-              fontWeight: '600',
-              color: '#6c757d',
-              marginRight: '4px'
-            }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '4px 12px',
+              backgroundColor: 'white',
+              borderRadius: '6px',
+              border: '1px solid #e0e0e0',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '12px',
+                fontWeight: '600',
+                color: '#6c757d',
+                marginRight: '4px',
+              }}
+            >
               History:
             </span>
             {MENU_ITEMS[1].items.map((item, index) => (
               <button
                 key={index}
-                onClick={() => 'action' in item ? handleMenuAction(item.action) : undefined}
+                onClick={() => ('action' in item ? handleMenuAction(item.action) : undefined)}
                 style={{
                   padding: '6px 12px',
                   height: '28px',
@@ -674,7 +690,7 @@ export const Case5: StoryObj = {
                   alignItems: 'center',
                   gap: '6px',
                   color: '#2c3e50',
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = '#e3f2fd';
@@ -686,43 +702,47 @@ export const Case5: StoryObj = {
                 }}
               >
                 <span style={{ fontSize: '14px' }}>{'icon' in item ? item.icon : ''}</span>
-                <span 
-                  dangerouslySetInnerHTML={{ __html: 'label' in item ? item.label : '' }}
-                />
+                <span dangerouslySetInnerHTML={{ __html: 'label' in item ? item.label : '' }} />
               </button>
             ))}
           </div>
 
           {/* Edit Group */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '4px 12px',
-            backgroundColor: 'white',
-            borderRadius: '6px',
-            border: '1px solid #e0e0e0'
-          }}>
-            <span style={{
-              fontSize: '12px',
-              fontWeight: '600',
-              color: '#6c757d',
-              marginRight: '4px'
-            }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '4px 12px',
+              backgroundColor: 'white',
+              borderRadius: '6px',
+              border: '1px solid #e0e0e0',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '12px',
+                fontWeight: '600',
+                color: '#6c757d',
+                marginRight: '4px',
+              }}
+            >
               Edit:
             </span>
             {MENU_ITEMS[2].items.map((item, index) => (
               <div key={index}>
                 {'separator' in item ? (
-                  <div style={{ 
-                    width: '1px',
-                    height: '20px',
-                    backgroundColor: '#e0e0e0',
-                    margin: '0 4px'
-                  }} />
+                  <div
+                    style={{
+                      width: '1px',
+                      height: '20px',
+                      backgroundColor: '#e0e0e0',
+                      margin: '0 4px',
+                    }}
+                  />
                 ) : (
                   <button
-                    onClick={() => 'action' in item ? handleMenuAction(item.action) : undefined}
+                    onClick={() => ('action' in item ? handleMenuAction(item.action) : undefined)}
                     style={{
                       padding: '6px 12px',
                       height: '28px',
@@ -735,7 +755,7 @@ export const Case5: StoryObj = {
                       alignItems: 'center',
                       gap: '6px',
                       color: '#2c3e50',
-                      transition: 'all 0.2s ease'
+                      transition: 'all 0.2s ease',
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.backgroundColor = '#e3f2fd';
@@ -747,9 +767,7 @@ export const Case5: StoryObj = {
                     }}
                   >
                     <span style={{ fontSize: '14px' }}>{'icon' in item ? item.icon : ''}</span>
-                    <span 
-                      dangerouslySetInnerHTML={{ __html: 'label' in item ? item.label : '' }}
-                    />
+                    <span dangerouslySetInnerHTML={{ __html: 'label' in item ? item.label : '' }} />
                   </button>
                 )}
               </div>
@@ -758,58 +776,66 @@ export const Case5: StoryObj = {
         </div>
 
         {/* Main Content */}
-        <div style={{
-          padding: '0 20px 20px 20px',
-          //minHeight: 'calc(100vh - 200px)'
-        }}>
+        <div
+          style={{
+            padding: '0 20px 20px 20px',
+            //minHeight: 'calc(100vh - 200px)'
+          }}
+        >
           {/* Sheet Container */}
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '0',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            overflow: 'hidden'
-          }}>
+          <div
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '0',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              overflow: 'hidden',
+            }}
+          >
             {/* GridSheet */}
-            <div style={{
-              borderBottom: '1px solid #e0e0e0'
-            }}>
-            {sheets.map((sheet) => (
-              <div
-                key={sheet}
-                style={{
-                  display: activeSheet === sheet ? 'block' : 'none'
-                }}
-              >
-                <GridSheet
+            <div
+              style={{
+                borderBottom: '1px solid #e0e0e0',
+              }}
+            >
+              {sheets.map((sheet) => (
+                <div
                   key={sheet}
-                  tableRef={tableRefs.current[sheet]}
-                  storeRef={storeRefs.current[sheet]}
-                  hub={hub}
-                  sheetName={sheet}
-                  initialCells={buildInitialCellsForSheet(sheet)}
                   style={{
-                    width: '100%',
-                    //height: '100%',
-                    fontSize: '14px'
-                }}
-                  options={{
-                    onSave: handleSave
+                    display: activeSheet === sheet ? 'block' : 'none',
                   }}
-                />
-              </div>
-            ))}
-          </div>
+                >
+                  <GridSheet
+                    key={sheet}
+                    tableRef={tableRefs.current[sheet]}
+                    storeRef={storeRefs.current[sheet]}
+                    hub={hub}
+                    sheetName={sheet}
+                    initialCells={buildInitialCellsForSheet(sheet)}
+                    style={{
+                      width: '100%',
+                      //height: '100%',
+                      fontSize: '14px',
+                    }}
+                    options={{
+                      onSave: handleSave,
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
 
             {/* Sheet Tabs */}
-          <div style={{
-              backgroundColor: '#f8f9fa',
-              borderTop: '1px solid #e0e0e0',
-              padding: '0 20px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '2px',
-              minHeight: '40px'
-            }}>
+            <div
+              style={{
+                backgroundColor: '#f8f9fa',
+                borderTop: '1px solid #e0e0e0',
+                padding: '0 20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '2px',
+                minHeight: '40px',
+              }}
+            >
               {sheets.map((sheet) => (
                 <button
                   key={sheet}
@@ -832,7 +858,7 @@ export const Case5: StoryObj = {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    marginTop: '8px'
+                    marginTop: '8px',
                   }}
                   onMouseEnter={(e) => {
                     if (activeSheet !== sheet) {
@@ -848,7 +874,7 @@ export const Case5: StoryObj = {
                   {sheet}
                 </button>
               ))}
-              
+
               {/* Add Sheet Button */}
               <button
                 onClick={() => handleMenuAction('insertSheet')}
@@ -866,7 +892,7 @@ export const Case5: StoryObj = {
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginTop: '8px',
-                  marginLeft: '8px'
+                  marginLeft: '8px',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = '#e9ecef';
@@ -887,28 +913,34 @@ export const Case5: StoryObj = {
         </div>
 
         {/* How it works - Markdown */}
-        <div style={{
-          padding: '20px',
-          backgroundColor: 'white',
-          margin: '20px',
-          borderRadius: '8px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-        }}>
-          <h3 style={{ 
-            color: '#2c3e50', 
-            margin: '0 0 15px 0',
-            fontSize: '18px',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
+        <div
+          style={{
+            padding: '20px',
+            backgroundColor: 'white',
+            margin: '20px',
+            borderRadius: '8px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          }}
+        >
+          <h3
+            style={{
+              color: '#2c3e50',
+              margin: '0 0 15px 0',
+              fontSize: '18px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
             📖 How it works
           </h3>
-          <div style={{
-            lineHeight: '1.6',
-            color: '#374151'
-          }}>
+          <div
+            style={{
+              lineHeight: '1.6',
+              color: '#374151',
+            }}
+          >
             <ReactMarkdown>{HOW_IT_WORKS}</ReactMarkdown>
           </div>
         </div>
@@ -922,4 +954,4 @@ export const Case5: StoryObj = {
       },
     },
   },
-}; 
+};

@@ -7,7 +7,7 @@ test('reference resolution after move operation', async ({ page }) => {
   // Check initial state
   const f9 = page.locator("[data-address='F9']");
   const f10 = page.locator("[data-address='F10']");
-  
+
   // Check initial values: F9 = SUM(B9:E9) = 1+2+5+6 = 14, F10 = SUM(B10:E10) = 3+4+7+8 = 22
   expect(await f9.locator('.gs-cell-rendered').textContent()).toBe('14');
   expect(await f10.locator('.gs-cell-rendered').textContent()).toBe('22');
@@ -27,7 +27,7 @@ test('reference resolution after move operation', async ({ page }) => {
   const b10 = page.locator("[data-address='B10']");
   const c9 = page.locator("[data-address='C9']");
   const c10 = page.locator("[data-address='C10']");
-  
+
   expect(await b9.locator('.gs-cell-rendered').textContent()).toBe('');
   expect(await b10.locator('.gs-cell-rendered').textContent()).toBe('');
   expect(await c9.locator('.gs-cell-rendered').textContent()).toBe('');
@@ -37,7 +37,7 @@ test('reference resolution after move operation', async ({ page }) => {
   const e9 = page.locator("[data-address='E9']");
   const e10 = page.locator("[data-address='E10']");
   const d10 = page.locator("[data-address='D10']");
-  
+
   expect(await d9.locator('.gs-cell-rendered').textContent()).toBe('1');
   expect(await e9.locator('.gs-cell-rendered').textContent()).toBe('2');
   expect(await d10.locator('.gs-cell-rendered').textContent()).toBe('3');
@@ -47,7 +47,7 @@ test('reference resolution after move operation', async ({ page }) => {
   await f9.click();
   const largeEditor = page.locator('.gs-formula-bar textarea');
   expect(await largeEditor.inputValue()).toBe('=SUM(B9:E9)');
-  
+
   await f10.click();
   expect(await largeEditor.inputValue()).toBe('=SUM(B10:E10)');
 
@@ -98,7 +98,7 @@ test('reference resolution after move B11:C12 to B9:C10', async ({ page }) => {
   // Check initial state
   const b13 = page.locator("[data-address='B13']");
   const c13 = page.locator("[data-address='C13']");
-  
+
   // Check initial values: B13 = SUM(B9:B12) = 1+3+9+11 = 24, C13 = SUM(C9:C12) = 2+4+10+12 = 28
   expect(await b13.locator('.gs-cell-rendered').textContent()).toBe('24');
   expect(await c13.locator('.gs-cell-rendered').textContent()).toBe('28');
@@ -118,7 +118,7 @@ test('reference resolution after move B11:C12 to B9:C10', async ({ page }) => {
   const b12 = page.locator("[data-address='B12']");
   const c11 = page.locator("[data-address='C11']");
   const c12 = page.locator("[data-address='C12']");
-  
+
   expect(await b11.locator('.gs-cell-rendered').textContent()).toBe('');
   expect(await b12.locator('.gs-cell-rendered').textContent()).toBe('');
   expect(await c11.locator('.gs-cell-rendered').textContent()).toBe('');
@@ -128,7 +128,7 @@ test('reference resolution after move B11:C12 to B9:C10', async ({ page }) => {
   const b10 = page.locator("[data-address='B10']");
   const c9 = page.locator("[data-address='C9']");
   const c10 = page.locator("[data-address='C10']");
-  
+
   expect(await b9.locator('.gs-cell-rendered').textContent()).toBe('9');
   expect(await c9.locator('.gs-cell-rendered').textContent()).toBe('10');
   expect(await b10.locator('.gs-cell-rendered').textContent()).toBe('11');
@@ -138,7 +138,7 @@ test('reference resolution after move B11:C12 to B9:C10', async ({ page }) => {
   await b13.click();
   const largeEditor = page.locator('.gs-formula-bar textarea');
   expect(await largeEditor.inputValue()).toBe('=SUM(B9:B12)');
-  
+
   await c13.click();
   expect(await largeEditor.inputValue()).toBe('=SUM(C9:C12)');
 
@@ -181,4 +181,4 @@ test('reference resolution after move B11:C12 to B9:C10', async ({ page }) => {
   expect(await b12.locator('.gs-cell-rendered').textContent()).toBe('');
   expect(await c11.locator('.gs-cell-rendered').textContent()).toBe('');
   expect(await c12.locator('.gs-cell-rendered').textContent()).toBe('');
-}); 
+});

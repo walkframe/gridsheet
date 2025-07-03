@@ -65,43 +65,43 @@ const HOW_IT_WORKS = [
   '- **Localization**: Number formats, date formats, currency formats',
 ].join('\n\n');
 
-class ListRenderer extends Renderer {
-
-}
-
+class ListRenderer extends Renderer {}
 
 export const ParseAsList: StoryObj = {
   render: () => {
     const hub = useHub({
       renderers: {
-        list: new Renderer({ mixins: [
-          {
-            array({ value }: RenderProps<any[]>) {
-              return (
-                <ul>
-                  {value!.map((v, i) => (
-                    <li key={i}>{v}</li>
-                  ))}
-                </ul>
-              );
+        list: new Renderer({
+          mixins: [
+            {
+              array({ value }: RenderProps<any[]>) {
+                return (
+                  <ul>
+                    {value!.map((v, i) => (
+                      <li key={i}>{v}</li>
+                    ))}
+                  </ul>
+                );
+              },
+              stringify(cell: CellType): string {
+                const value = cell.value;
+                if (Array.isArray(value)) {
+                  return value.join('\n');
+                }
+                return value == null ? '' : String(value);
+              },
             },
-            stringify(cell: CellType): string {
-              const value = cell.value;
-              if (Array.isArray(value)) {
-                return value.join('\n');
-              }
-              return value == null ? '' : String(value);
-            }
-          },
-        ]}),
+          ],
+        }),
       },
       parsers: {
-        list: new Parser({ mixins: [
-          {
-            functions: [(value: string) => value.split(/\n/g)],
-          },
-          
-        ] }),
+        list: new Parser({
+          mixins: [
+            {
+              functions: [(value: string) => value.split(/\n/g)],
+            },
+          ],
+        }),
       },
     });
 
@@ -139,30 +139,36 @@ export const ParseAsList: StoryObj = {
             ensured: { numRows: 30, numCols: 20 },
           })}
         />
-        
+
         {/* How it works - Markdown */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '20px',
-          marginTop: '20px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-        }}>
-          <h3 style={{ 
-            color: '#2c3e50', 
-            margin: '0 0 15px 0',
-            fontSize: '18px',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
+        <div
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '20px',
+            marginTop: '20px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          }}
+        >
+          <h3
+            style={{
+              color: '#2c3e50',
+              margin: '0 0 15px 0',
+              fontSize: '18px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
             📖 How it works
           </h3>
-          <div style={{
-            lineHeight: '1.6',
-            color: '#374151'
-          }}>
+          <div
+            style={{
+              lineHeight: '1.6',
+              color: '#374151',
+            }}
+          >
             <ReactMarkdown>{HOW_IT_WORKS}</ReactMarkdown>
           </div>
         </div>

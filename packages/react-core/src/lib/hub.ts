@@ -90,14 +90,14 @@ export class Wire {
   public getSystem(id: Id, table: Table): System {
     const cell = this.data[id];
     if (cell?.system) {
-      return cell.system
+      return cell.system;
     }
     return {
       id,
       sheetId: table.sheetId,
       changedAt: new Date(),
       dependents: new Set(),
-    }
+    };
   }
 
   constructor({
@@ -114,7 +114,7 @@ export class Wire {
     this.functions = {
       ...functionsDefault,
       ...additionalFunctions,
-    }
+    };
     this.renderers = renderers;
     this.parsers = parsers;
     this.labelers = labelers;

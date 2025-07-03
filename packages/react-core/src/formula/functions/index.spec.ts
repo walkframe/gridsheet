@@ -5,9 +5,9 @@ import type { AreaType } from '../../types';
 
 describe('IndexFunction', () => {
   const indexFunction = (args: any[]) => {
-    return new IndexFunction({ 
-      args: args.map(arg => ({ evaluate: () => arg } as any)), 
-      table: {} as any 
+    return new IndexFunction({
+      args: args.map((arg) => ({ evaluate: () => arg }) as any),
+      table: {} as any,
     });
   };
 
@@ -142,4 +142,4 @@ describe('IndexFunction', () => {
       expect(() => indexFunction([table, 1, 4]).call()).toThrow('Column number 4 is out of range.');
     });
   });
-}); 
+});

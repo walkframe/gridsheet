@@ -13,7 +13,7 @@ const DESCRIPTION = [
   'This demo shows how to create custom dropdown options with policies.',
   'The first column uses a color policy that provides color options with visual labels and automatically applies the selected color as the cell background.',
   'The second column uses an animal policy with simple text options.',
-  
+
   '## How it works',
   'This demonstrates how policies can be used to create controlled input fields with predefined options, improving data consistency and user experience.',
   '1. The color policy provides visual color options and applies the selected color as background.',
@@ -74,7 +74,7 @@ export const Options: StoryObj = {
         color: colorPolicy,
         animal: animalPolicy,
       },
-    })
+    });
 
     return (
       <GridSheet

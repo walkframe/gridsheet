@@ -45,7 +45,7 @@ export const ne = (left: any, right: any): boolean => {
 export type EnsureNumberOptions = {
   alternative?: number;
   ignore?: boolean;
-}
+};
 
 export const ensureNumber = (value: any, options?: EnsureNumberOptions): number => {
   const { alternative, ignore } = options || {};
@@ -58,7 +58,7 @@ export const ensureNumber = (value: any, options?: EnsureNumberOptions): number 
   }
   if (value instanceof Table) {
     const v = stripTable(value, 0, 0);
-    return ensureNumber(v, {alternative});
+    return ensureNumber(v, { alternative });
   }
   if (value instanceof Date) {
     return value.getTime();

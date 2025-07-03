@@ -24,20 +24,19 @@ const DESCRIPTION = [
   'This demo showcases programmatic writing to specific cells in GridSheet.',
   'It demonstrates how to write values to cells using coordinates and the table API.',
   'The demo shows how to programmatically set cell values after the grid is initialized.',
-  
+
   '## How it works',
   'Programmatic writing allows you to set cell values from external sources or user interactions.',
   '1. Use tableRef to access the table instance and dispatch function.',
   '2. The write operation sets a value at a specific point (x, y coordinates).',
   '3. Writing can be triggered by props changes or user interactions.',
   '4. The operation is applied through the dispatch function to maintain consistency.',
-
 ].join('\n\n');
 
 export const Write: StoryObj<Props> = {
   render: ({ x, y, value }) => {
     const tableRef = useTableRef();
-    
+
     React.useEffect(() => {
       if (tableRef?.current == null) {
         return;

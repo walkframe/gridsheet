@@ -50,6 +50,6 @@ export class MinusFunction extends BaseFunction {
       return ensureNumber(v1, { alternative: 0 }) - ensureNumber(v2, { alternative: 0 });
     } catch (e) {
       throw new FormulaError('#VALUE!', 'Mismatched types for minuend or subtrahend.');
-    }    
+    }
   }
 }

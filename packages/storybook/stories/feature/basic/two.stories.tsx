@@ -1,4 +1,3 @@
-
 import type { Meta, StoryObj } from '@storybook/react';
 import { buildInitialCells, GridSheet, TimeDelta, useHub } from '@gridsheet/react-core';
 
@@ -8,10 +7,7 @@ const meta: Meta = {
 };
 export default meta;
 
-const DESCRIPTION = [
-  '## Example',
-  'This demo is smallest simple grid sheet with a few cells for debug.',
-].join('\n\n');
+const DESCRIPTION = ['## Example', 'This demo is smallest simple grid sheet with a few cells for debug.'].join('\n\n');
 
 export const Sheet: StoryObj = {
   render: () => {
@@ -46,4 +42,4 @@ export const Sheet: StoryObj = {
       },
     },
   },
-}
+};

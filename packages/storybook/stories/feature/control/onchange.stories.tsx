@@ -12,14 +12,13 @@ const DESCRIPTION = [
   '## Example',
   'This demo demonstrates the onChange event handling and history tracking in GridSheet.',
   'It shows how to monitor changes in real-time, track operation history, and display diffs between states.',
-  
+
   '## How it works',
   'The interface includes a live diff viewer and operation history that updates as you interact with the grid.',
   '1. The onChange callback is triggered whenever the grid data changes.',
   '2. Operation history is tracked and displayed in real-time.',
   '3. Diffs show exactly what changed between operations.',
   '4. The evaluates checkbox controls whether to show calculated or raw values in diffs.',
-
 ].join('\n\n');
 
 export const SheetOnChange: StoryObj = {
@@ -77,7 +76,7 @@ export const SheetOnChange: StoryObj = {
                   if (h?.operation === 'UPDATE') {
                     console.log('histories', table.getAddressesByIds(h.diffAfter));
                   }
-                  console.log('matrix', table.getFieldMatrix({  }));
+                  console.log('matrix', table.getFieldMatrix({}));
                 },
               }}
             />

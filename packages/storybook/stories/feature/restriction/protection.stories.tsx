@@ -18,7 +18,7 @@ const DESCRIPTION = [
   'This demo demonstrates cell and range protection features in GridSheet.',
   'Different areas of the grid are protected from various operations: row deletion, column insertion/removal, and resizing.',
   'Protected areas are visually indicated with different background colors.',
-  
+
   '## How it works',
   'This is useful for creating templates or preventing accidental modifications to critical data.',
   '1. Row protection prevents deletion of specific rows.',
@@ -31,44 +31,44 @@ export const Prevention: StoryObj = {
   args: { numRows: 50, numCols: 20, defaultWidth: 50 },
   render: () => {
     return (
-        <GridSheet
-          options={{
-            headerHeight: 50,
-            headerWidth: 150,
-          }}
-          initialCells={buildInitialCells({
-            cells: {
-              4: {
-                prevention: operations.RemoveRows,
-              },
-              1: {
-                prevention: operations.Resize,
-                style: { backgroundColor: '#eeeeee' },
-              },
-              'A:B': {
-                prevention: operations.InsertCols | operations.RemoveCols,
-                style: { backgroundColor: '#dddddd' },
-              },
-              A: {
-                prevention: operations.Resize,
-                style: { backgroundColor: '#eeeeee' },
-              },
-              C: {
-                style: { backgroundColor: '#ffffff' },
-              },
-              B2: {
-                value: 'READONLY',
-                prevention: operations.ReadOnly,
-                style: { backgroundColor: '#aaaaaa' },
-              },
-              B1: {
-                value: 'Protected from row deletion',
-                prevention: operations.RemoveRows | operations.RemoveCols,
-              },
+      <GridSheet
+        options={{
+          headerHeight: 50,
+          headerWidth: 150,
+        }}
+        initialCells={buildInitialCells({
+          cells: {
+            4: {
+              prevention: operations.RemoveRows,
             },
-            ensured: { numRows: 50, numCols: 20 },
-          })}
-        />
+            1: {
+              prevention: operations.Resize,
+              style: { backgroundColor: '#eeeeee' },
+            },
+            'A:B': {
+              prevention: operations.InsertCols | operations.RemoveCols,
+              style: { backgroundColor: '#dddddd' },
+            },
+            A: {
+              prevention: operations.Resize,
+              style: { backgroundColor: '#eeeeee' },
+            },
+            C: {
+              style: { backgroundColor: '#ffffff' },
+            },
+            B2: {
+              value: 'READONLY',
+              prevention: operations.ReadOnly,
+              style: { backgroundColor: '#aaaaaa' },
+            },
+            B1: {
+              value: 'Protected from row deletion',
+              prevention: operations.RemoveRows | operations.RemoveCols,
+            },
+          },
+          ensured: { numRows: 50, numCols: 20 },
+        })}
+      />
     );
   },
   parameters: {

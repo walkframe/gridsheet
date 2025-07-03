@@ -83,7 +83,7 @@ test('inserting absolute ref', async ({ page }) => {
 test('referencing error', async ({ page }) => {
   await page.goto('http://localhost:5233/iframe.html?id=feature-formula-ref--refs&viewMode=story');
   const editor = page.locator('.gs-editor textarea');
-  
+
   // B
   expect(await page.locator('[data-address="B1"] .gs-cell-rendered').textContent()).toBe('#REF!');
   expect(await page.locator('[data-address="B2"] .gs-cell-rendered').textContent()).toBe('1');

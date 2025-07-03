@@ -33,9 +33,9 @@ export function ScrollHandle({ style, horizontal = 0, vertical = 0 }: Props) {
     if (horizontal == 0 && vertical == 0) {
       const tabularRect = tabularRef.current!.getBoundingClientRect();
       const { left, top, right, bottom } = tabularRect;
-      horizontal = (e.pageX > right ? 1 : e.pageX < left ? -1 : 0);
+      horizontal = e.pageX > right ? 1 : e.pageX < left ? -1 : 0;
       if (horizontal === 0) {
-        vertical = (e.pageY > bottom ? 1 : e.pageY < top ? -1 : 0);
+        vertical = e.pageY > bottom ? 1 : e.pageY < top ? -1 : 0;
       }
     }
     const area = getAreaInTabular(tabularRef.current!);
@@ -94,11 +94,10 @@ export function ScrollHandle({ style, horizontal = 0, vertical = 0 }: Props) {
       const tabularRect = tabularRef.current!.getBoundingClientRect();
       const { left, top, right, bottom } = tabularRect;
 
-      horizontal ||= (e.pageX > right ? 1 : e.pageX < left ? -1 : 0);
+      horizontal ||= e.pageX > right ? 1 : e.pageX < left ? -1 : 0;
       if (horizontal === 0) {
-        vertical ||= (e.pageY > bottom ? 1 : e.pageY < top ? -1 : 0);
+        vertical ||= e.pageY > bottom ? 1 : e.pageY < top ? -1 : 0;
       }
-      
     }
     scrollRef.current = requestAnimationFrame(() => scrollStep(e));
   };
@@ -150,7 +149,7 @@ export function ScrollHandle({ style, horizontal = 0, vertical = 0 }: Props) {
 
   return (
     <div
-      style={{...style, backgroundColor: 'rgba(0, 0, 0, 0)'}}
+      style={{ ...style, backgroundColor: 'rgba(0, 0, 0, 0)' }}
       className="gs-scroll-handle"
       onMouseUp={(e) => {
         stopScroll();

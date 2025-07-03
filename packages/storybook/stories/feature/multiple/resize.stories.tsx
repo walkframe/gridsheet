@@ -12,27 +12,26 @@ const DESCRIPTION = [
   '## Example',
   'This demo showcases different resize options for GridSheet components.',
   'It demonstrates how to control whether users can resize the grid horizontally, vertically, both directions, or not at all.',
-  
+
   '## How it works',
   'The sheetResize option controls the resize behavior of the grid.',
   '1. "none" disables all resizing functionality.',
   '2. "horizontal" allows only horizontal resizing.',
   '3. "vertical" allows only vertical resizing.',
   '4. "both" allows resizing in both horizontal and vertical directions.',
-
 ].join('\n\n');
 
 const tdStyle: React.CSSProperties = {
   width: '200px',
   height: '200px',
   verticalAlign: 'top',
-}
+};
 
 export const CompareResizers: StoryObj = {
   render: () => {
     return (
       <>
-        <table style={{  tableLayout: 'fixed' }}>
+        <table style={{ tableLayout: 'fixed' }}>
           <tbody>
             <tr>
               <td style={tdStyle}>
@@ -47,7 +46,7 @@ export const CompareResizers: StoryObj = {
                       ],
                     },
                     cells: { A3: { value: 'four' } },
-                    ensured: {numRows: 10, numCols: 10},
+                    ensured: { numRows: 10, numCols: 10 },
                   })}
                   options={{
                     mode: 'dark',
@@ -69,7 +68,7 @@ export const CompareResizers: StoryObj = {
                       ],
                     },
                     cells: { B3: { value: 'five' } },
-                    ensured: {numRows: 10, numCols: 10},
+                    ensured: { numRows: 10, numCols: 10 },
                   })}
                   options={{
                     sheetResize: 'horizontal',
@@ -92,7 +91,7 @@ export const CompareResizers: StoryObj = {
                       ],
                     },
                     cells: { C3: { value: 'six' } },
-                    ensured: {numRows: 10, numCols: 10},
+                    ensured: { numRows: 10, numCols: 10 },
                   })}
                   options={{
                     sheetResize: 'vertical',
@@ -114,7 +113,7 @@ export const CompareResizers: StoryObj = {
                       ],
                     },
                     cells: { A3: { value: 'four' } },
-                    ensured: {numRows: 10, numCols: 10},
+                    ensured: { numRows: 10, numCols: 10 },
                   })}
                   options={{
                     sheetResize: 'both',

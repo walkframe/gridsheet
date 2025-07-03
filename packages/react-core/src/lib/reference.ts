@@ -1,13 +1,12 @@
-import { identifyFormula } from "../formula/evaluator";
-import { CellsByIdType, Id } from "../types";
-import { Table } from "./table";
-
+import { identifyFormula } from '../formula/evaluator';
+import { CellsByIdType, Id } from '../types';
+import { Table } from './table';
 
 export class ReferencePreserver {
   public map: { [id: Id]: Id } = {};
   private table: Table;
   private dependentIds: Set<Id> = new Set<Id>();
-  
+
   constructor(table: Table) {
     this.table = table;
   }
@@ -28,7 +27,7 @@ export class ReferencePreserver {
       if (dep == null) {
         return;
       }
-      diffBefore[id] = {...dep};
+      diffBefore[id] = { ...dep };
       dep.value = identifyFormula(dep.value, {
         dependency: id,
         table: this.table,

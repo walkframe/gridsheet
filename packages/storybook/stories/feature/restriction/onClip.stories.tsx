@@ -1,12 +1,6 @@
 import React, { type CSSProperties } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import {
-  GridSheet,
-  Policy,
-  buildInitialCells,
-  Renderer,
-  useHub,
-} from '@gridsheet/react-core';
+import { GridSheet, Policy, buildInitialCells, Renderer, useHub } from '@gridsheet/react-core';
 
 const meta: Meta = {
   title: 'Feature/Restriction/OnClip',
@@ -19,7 +13,7 @@ const DESCRIPTION = [
   'This demo demonstrates how to implement data masking and privacy protection using policies.',
   'When users copy data from the grid, sensitive information is automatically masked with asterisks (*).',
   'The renderer also displays partially masked values in the grid itself, showing only the first character followed by asterisks.',
-  
+
   '## How it works',
   'This is useful for applications that need to protect sensitive data while still allowing users to work with the information.',
   '1. The mask policy intercepts clipboard operations and replaces data with asterisks.',

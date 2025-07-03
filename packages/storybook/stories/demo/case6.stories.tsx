@@ -103,14 +103,14 @@ const HOW_IT_WORKS = [
 // Event parsing function
 const parseEvents = (input: string): EventType[] => {
   if (!input || typeof input !== 'string') return [];
-  
-  const lines = input.split('\n').filter(line => line.trim());
+
+  const lines = input.split('\n').filter((line) => line.trim());
   const events: EventType[] = [];
-  
+
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed) continue;
-    
+
     // Parse HH:MM Task format
     const match = trimmed.match(/^(\d{1,2}):(\d{2})\s+(.+)$/);
     if (match) {
@@ -122,19 +122,21 @@ const parseEvents = (input: string): EventType[] => {
       events.push({ time: '', task: trimmed });
     }
   }
-  
+
   return events;
 };
 
 // Calendar parser
 const CalendarParser = new Parser({
-  mixins: [{
-    any(value: string, cell?: any): any {
-      const events = parseEvents(value);
-      console.log('Parsed events:', events);
-      return events;
+  mixins: [
+    {
+      any(value: string, cell?: any): any {
+        const events = parseEvents(value);
+        console.log('Parsed events:', events);
+        return events;
+      },
     },
-  }],
+  ],
 });
 
 // Date calculation function
@@ -144,7 +146,7 @@ const getDateFromPosition = (row: number, col: number): { date: string; weekday:
   date.setDate(startDate.getDate() + (row - 1) * 7 + (col - 1));
   const weekday = date.getDay();
   const isWeekend = weekday === 0 || weekday === 6;
-  
+
   return {
     date: date.toISOString().slice(0, 10),
     weekday,
@@ -156,79 +158,94 @@ const getDateFromPosition = (row: number, col: number): { date: string; weekday:
 const CalendarCellRenderer: RendererMixinType = {
   array({ value, point }: RenderProps<ValueType>) {
     if (!value) return null;
-    
+
     const { date, isWeekend } = getDateFromPosition(point.y, point.x);
     const events = value || [];
-    
+
     return (
-      <div style={{
-        width: '100%',
-        height: '100%',
-        padding: 8,
-        background: isWeekend ? '#f8d7da' : '#fff',
-        borderRadius: 6,
-        border: isWeekend ? '1px solid #e74c3c' : '1px solid #eee',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        boxSizing: 'border-box',
-      }}>
-        <div style={{ 
-          fontWeight: 700, 
-          color: isWeekend ? '#e74c3c' : '#2c3e50', 
-          fontSize: 14,
-          marginBottom: 4,
-        }}>
-          {date}
-        </div>
-        <div style={{ 
-          flex: 1,
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          padding: 8,
+          background: isWeekend ? '#f8d7da' : '#fff',
+          borderRadius: 6,
+          border: isWeekend ? '1px solid #e74c3c' : '1px solid #eee',
+          position: 'relative',
           display: 'flex',
           flexDirection: 'column',
-          gap: 2,
-          overflow: 'hidden',
-        }}>
+          boxSizing: 'border-box',
+        }}
+      >
+        <div
+          style={{
+            fontWeight: 700,
+            color: isWeekend ? '#e74c3c' : '#2c3e50',
+            fontSize: 14,
+            marginBottom: 4,
+          }}
+        >
+          {date}
+        </div>
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+            overflow: 'hidden',
+          }}
+        >
           {events.length > 0 ? (
             events.map((event: EventType, i: number) => (
-              <div key={i} style={{
-                background: '#3498db',
-                color: '#fff',
-                borderRadius: 3,
-                padding: '2px 4px',
-                fontSize: 11,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-                minHeight: 16,
-              }}>
+              <div
+                key={i}
+                style={{
+                  background: '#3498db',
+                  color: '#fff',
+                  borderRadius: 3,
+                  padding: '2px 4px',
+                  fontSize: 11,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  minHeight: 16,
+                }}
+              >
                 {event.time && (
-                  <span style={{ 
-                    fontWeight: 'bold', 
-                    fontSize: 10,
-                    minWidth: 28,
-                  }}>
+                  <span
+                    style={{
+                      fontWeight: 'bold',
+                      fontSize: 10,
+                      minWidth: 28,
+                    }}
+                  >
                     {event.time}
                   </span>
                 )}
-                <span style={{ 
-                  flex: 1,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}>
+                <span
+                  style={{
+                    flex: 1,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
                   {event.task}
                 </span>
               </div>
             ))
           ) : (
-            <span style={{ 
-              color: '#aaa', 
-              fontSize: 11,
-              fontStyle: 'italic',
-              textAlign: 'center',
-              marginTop: 'auto',
-              marginBottom: 'auto',
-            }}>
+            <span
+              style={{
+                color: '#aaa',
+                fontSize: 11,
+                fontStyle: 'italic',
+                textAlign: 'center',
+                marginTop: 'auto',
+                marginBottom: 'auto',
+              }}
+            >
               No events
             </span>
           )}
@@ -250,7 +267,7 @@ for (let w = 0; w < 4; w++) {
     // Sample events (only for some days)
     let events: EventType[] = [];
     const weekday = (d + 1) % 7; // Start from Monday
-    
+
     if (weekday === 1 && w === 0) {
       events = parseEvents('10:00 Team Meeting\n14:00 Client Call');
     } else if (weekday === 3 && w === 0) {
@@ -264,7 +281,7 @@ for (let w = 0; w < 4; w++) {
     } else if (weekday === 1 && w === 3) {
       events = parseEvents('10:00 All Hands Meeting');
     }
-    
+
     week.push(events);
   }
   weeks.push(week);
@@ -281,7 +298,7 @@ export const Case6: StoryObj = {
       },
       labelers: {
         sun: () => 'Sun',
-        mon: () => 'Mon', 
+        mon: () => 'Mon',
         tue: () => 'Tue',
         wed: () => 'Wed',
         thu: () => 'Thu',
@@ -324,30 +341,36 @@ export const Case6: StoryObj = {
             showAddress: false,
           }}
         />
-        
+
         {/* How it works - Markdown */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '20px',
-          marginTop: '20px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-        }}>
-          <h3 style={{ 
-            color: '#2c3e50', 
-            margin: '0 0 15px 0',
-            fontSize: '18px',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
+        <div
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '20px',
+            marginTop: '20px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          }}
+        >
+          <h3
+            style={{
+              color: '#2c3e50',
+              margin: '0 0 15px 0',
+              fontSize: '18px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
             📖 How it works
           </h3>
-          <div style={{
-            lineHeight: '1.6',
-            color: '#374151'
-          }}>
+          <div
+            style={{
+              lineHeight: '1.6',
+              color: '#374151',
+            }}
+          >
             <ReactMarkdown>{HOW_IT_WORKS}</ReactMarkdown>
           </div>
         </div>
@@ -361,4 +384,4 @@ export const Case6: StoryObj = {
       },
     },
   },
-}; 
+};

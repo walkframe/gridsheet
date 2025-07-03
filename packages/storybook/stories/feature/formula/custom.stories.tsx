@@ -26,7 +26,7 @@ const HOW_IT_WORKS = [
   '## Implementation Guide',
   '',
   '### Custom Function Overview',
-  'Custom functions extend GridSheet\'s formula capabilities by allowing you to create your own functions that can be used in formulas. These functions can perform complex calculations, data processing, or integrate with external services.',
+  "Custom functions extend GridSheet's formula capabilities by allowing you to create your own functions that can be used in formulas. These functions can perform complex calculations, data processing, or integrate with external services.",
   '',
   '### Function Structure',
   'Custom functions are created by extending the BaseFunction class and implementing the main() method. The main() method receives the function arguments and should return the calculated result.',
@@ -79,7 +79,7 @@ const HOW_IT_WORKS = [
   '3. **Testing**: Thoroughly test functions with various input types and edge cases',
   '4. **Error handling**: Provide clear error messages for invalid inputs',
   '5. **Performance**: Optimize functions for speed and efficiency',
-  '6. **Maintainability**: Write clean, readable code that\'s easy to maintain',
+  "6. **Maintainability**: Write clean, readable code that's easy to maintain",
   '',
   '### Function Examples by Category',
   'Custom functions can serve various purposes:',
@@ -135,7 +135,7 @@ export const CustomFunction: StoryObj = {
           }
         },
       },
-    })
+    });
     return (
       <>
         <GridSheet
@@ -152,30 +152,36 @@ export const CustomFunction: StoryObj = {
             },
           })}
         />
-        
+
         {/* How it works - Markdown */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '20px',
-          marginTop: '20px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-        }}>
-          <h3 style={{ 
-            color: '#2c3e50', 
-            margin: '0 0 15px 0',
-            fontSize: '18px',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
+        <div
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '20px',
+            marginTop: '20px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          }}
+        >
+          <h3
+            style={{
+              color: '#2c3e50',
+              margin: '0 0 15px 0',
+              fontSize: '18px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
             📖 How it works
           </h3>
-          <div style={{
-            lineHeight: '1.6',
-            color: '#374151'
-          }}>
+          <div
+            style={{
+              lineHeight: '1.6',
+              color: '#374151',
+            }}
+          >
             <ReactMarkdown>{HOW_IT_WORKS}</ReactMarkdown>
           </div>
         </div>

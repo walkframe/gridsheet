@@ -59,13 +59,13 @@ const HOW_IT_WORKS = [
 
 type Props = {
   initialShowAddress: boolean;
-}
+};
 
 export const ShowAddress: StoryObj<Props> = {
   args: {
     initialShowAddress: false,
   },
-  render: ({initialShowAddress}) => {
+  render: ({ initialShowAddress }) => {
     const [showAddress, setShowAddress] = useState(initialShowAddress);
     useEffect(() => {
       setShowAddress(initialShowAddress);
@@ -82,30 +82,36 @@ export const ShowAddress: StoryObj<Props> = {
           })}
           options={{ showAddress }}
         />
-        
+
         {/* How it works - Markdown */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '20px',
-          marginTop: '20px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-        }}>
-          <h3 style={{ 
-            color: '#2c3e50', 
-            margin: '0 0 15px 0',
-            fontSize: '18px',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
+        <div
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '20px',
+            marginTop: '20px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          }}
+        >
+          <h3
+            style={{
+              color: '#2c3e50',
+              margin: '0 0 15px 0',
+              fontSize: '18px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
             📖 How it works
           </h3>
-          <div style={{
-            lineHeight: '1.6',
-            color: '#374151'
-          }}>
+          <div
+            style={{
+              lineHeight: '1.6',
+              color: '#374151',
+            }}
+          >
             <ReactMarkdown>{HOW_IT_WORKS}</ReactMarkdown>
           </div>
         </div>

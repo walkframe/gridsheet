@@ -47,7 +47,6 @@ export const FormulaBar = () => {
 
   const handleInput = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     dispatch(setInputting(e.currentTarget.value));
-    //sheetContext?.forceRender?.();
   };
 
   const updateScroll = () => {
@@ -76,7 +75,6 @@ export const FormulaBar = () => {
         </div>
         <textarea
           data-sheet-id={store.sheetId}
-          //data-address={address}
           data-size="large"
           rows={1}
           spellCheck={false}

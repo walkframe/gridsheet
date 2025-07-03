@@ -285,7 +285,6 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
         },
         redoReflection: {
           sheetId: srcTable.sheetId,
-          //selectingZone: copyingZone,
           choosing,
           transmit: { copyingSheetId: srcTable.sheetId, copyingZone: resetZone },
         },
@@ -846,5 +845,4 @@ export const userActions = {
   redo,
   arrow,
   walk,
-  
-}
+};

@@ -26,7 +26,15 @@ import {
   StoreType,
   RefEvaluation,
 } from '../types';
-import { areaShape, createMatrix, expandRange, getMaxSizesFromCells, invertObject, matrixShape, putMatrix } from './structs';
+import {
+  areaShape,
+  createMatrix,
+  expandRange,
+  getMaxSizesFromCells,
+  invertObject,
+  matrixShape,
+  putMatrix,
+} from './structs';
 import { a2p, x2c, p2a, y2r, grantAddressAbsolute } from './converters';
 import { FunctionMapping } from '../formula/functions/__base';
 import { identifyFormula, Lexer, splitRef, stripSheetName } from '../formula/evaluator';
@@ -58,7 +66,7 @@ const noFilter: CellFilter = () => true;
 
 type GetProps = {
   // do not use 'system', it is reserved for internal use.
-  refEvaluation?: RefEvaluation; 
+  refEvaluation?: RefEvaluation;
   raise?: boolean;
   filter?: CellFilter;
 };
@@ -574,7 +582,13 @@ export class Table implements UserTable {
     return matrix;
   }
 
-  public getFieldObject({ area, key = 'value', refEvaluation = 'complete', raise = false, filter = noFilter }: GetFieldPropsWithArea = {}) {
+  public getFieldObject({
+    area,
+    key = 'value',
+    refEvaluation = 'complete',
+    raise = false,
+    filter = noFilter,
+  }: GetFieldPropsWithArea = {}) {
     const result: CellsByAddressType = {};
     const { top, left, bottom, right } = area ?? this.area;
     for (let y = top; y <= bottom; y++) {
@@ -595,9 +609,9 @@ export class Table implements UserTable {
   }
 
   public getFieldRows({
-    key = 'value', 
-    refEvaluation = 'complete', 
-    raise = false, 
+    key = 'value',
+    refEvaluation = 'complete',
+    raise = false,
     filter = noFilter,
   }: GetFieldProps = {}) {
     const result: CellsByAddressType[] = [];
@@ -621,7 +635,12 @@ export class Table implements UserTable {
     return result;
   }
 
-  public getFieldCols({ key = 'value', refEvaluation = 'complete', raise = false, filter = noFilter }: GetFieldProps = {}) {
+  public getFieldCols({
+    key = 'value',
+    refEvaluation = 'complete',
+    raise = false,
+    filter = noFilter,
+  }: GetFieldProps = {}) {
     const result: CellsByAddressType[] = [];
     const { top, left, bottom, right } = this.area;
     for (let x = left; x <= right; x++) {
@@ -1606,9 +1625,13 @@ export class Table implements UserTable {
     return renderer.call({ table: this, point, writer });
   }
 
-  public stringify({ point, cell, refEvaluation = 'complete' }: { 
-    point: PointType; 
-    cell?: CellType; 
+  public stringify({
+    point,
+    cell,
+    refEvaluation = 'complete',
+  }: {
+    point: PointType;
+    cell?: CellType;
     refEvaluation?: RefEvaluation;
   }) {
     if (cell == null) {
@@ -1650,7 +1673,7 @@ export class Table implements UserTable {
       Object.keys(diff).forEach((id) => {
         const newCell = diff[id];
         this.wire.data[id] = { ...newCell };
-      })
+      });
       return;
     }
     Object.keys(diff).map((id) => {
@@ -1808,7 +1831,6 @@ export class Table implements UserTable {
       case 'MOVE': {
         const { src, dst } = history;
         dstTable.move({ srcTable, src, dst, operator: 'USER', historicize: false });
-
       }
     }
     return {

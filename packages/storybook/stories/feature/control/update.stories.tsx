@@ -13,14 +13,13 @@ const DESCRIPTION = [
   'This demo showcases programmatic updates to GridSheet data.',
   'It demonstrates how to update cell values and styles through the table API.',
   'The demo includes various update operations like direct updates, row insertion with updates, and column insertion with updates.',
-  
+
   '## How it works',
   'Programmatic updates allow you to modify grid data from external sources or user interactions.',
   '1. Use tableRef to access the table instance and dispatch function.',
   '2. Direct updates modify existing cells with new values and styles.',
   '3. Insert operations can be combined with updates to add new data.',
   '4. Updates are applied through the dispatch function to maintain consistency.',
-
 ].join('\n\n');
 
 export const Update: StoryObj = {
