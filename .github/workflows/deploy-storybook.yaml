@@ -53,7 +53,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           # Project name in Cloudflare Pages (not the domain)
-          projectName: gridsheet-storybook
+          projectName: gridsheet-demo
           directory: packages/storybook/storybook-static
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           environmentName: production
