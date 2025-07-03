@@ -1,6 +1,5 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,7 +30,9 @@ export default {
   ],
   viteFinal: async (config) => {
     config.plugins = config.plugins || [];
-    config.plugins.push(tsconfigPaths());
+    // Use dynamic import for vite-tsconfig-paths
+    const tsconfigPathsPlugin = (await import('vite-tsconfig-paths')).default;
+    config.plugins.push(tsconfigPathsPlugin());
     config.resolve = config.resolve || {};
     config.resolve.conditions = ['development', 'import', 'require'];
     config.optimizeDeps = config.optimizeDeps || {};
