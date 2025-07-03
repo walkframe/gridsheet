@@ -29,9 +29,8 @@ export class ReferencePreserver {
         return;
       }
       diffBefore[id] = {...dep};
-      dep.value = identifyFormula({
-        value: dep.value,
-        id,
+      dep.value = identifyFormula(dep.value, {
+        dependency: id,
         table: this.table,
         idMap: this.map,
       });

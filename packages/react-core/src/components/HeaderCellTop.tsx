@@ -123,7 +123,6 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
     safePreventDefault(e);
     dispatch(setDragging(false));
     if (autofillDraggingTo) {
-      dispatch(submitAutofill(autofillDraggingTo));
       editorRef.current!.focus();
       return false;
     }

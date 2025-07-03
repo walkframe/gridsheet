@@ -17,7 +17,6 @@ const meta: Meta = {
 };
 export default meta;
 
-// 型定義
 type EventType = {
   time: string;
   task: string;

@@ -26,7 +26,7 @@ export const solveFormula = ({ value, table, raise = true, refEvaluation = 'tabl
         lexer.tokenize();
         const parser = new Parser(lexer.tokens);
         if (refEvaluation === 'raw') {
-          return '=' + lexer.stringifyToRef(table);
+          return '=' + lexer.display({ table });
         }
         const expr = parser.build();
         solved = expr?.evaluate?.({ table });

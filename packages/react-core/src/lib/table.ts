@@ -255,10 +255,9 @@ export class Table implements UserTable {
       if (cell?.system?.sheetId == null) {
         return;
       }
-      cell.value = identifyFormula({
-        value: cell?.value,
+      cell.value = identifyFormula(cell?.value, {
         table: this,
-        id,
+        dependency: id,
       });
     });
     this.idsToBeAbsoluted = [];
@@ -1024,10 +1023,9 @@ export class Table implements UserTable {
           }),
         };
         const dstPoint = { y: toY, x: toX };
-        const value = identifyFormula({
-          value: cell?.value,
+        const value = identifyFormula(cell?.value, {
           table: this,
-          id: this.getId(dstPoint),
+          dependency: this.getId(dstPoint),
           slideY,
           slideX,
         });
@@ -1091,10 +1089,9 @@ export class Table implements UserTable {
       }
 
       if (formulaIdentify) {
-        patch.value = identifyFormula({
-          value: patch.value,
+        patch.value = identifyFormula(patch.value, {
           table: this,
-          id,
+          dependency: id,
         });
       }
       ignoreFields.forEach((key) => {
@@ -1630,7 +1627,7 @@ export class Table implements UserTable {
       if (refEvaluation === 'raw') {
         const lexer = new Lexer(s.substring(1));
         lexer.tokenize();
-        return '=' + lexer.stringifyToRef(this);
+        return '=' + lexer.display({ table: this });
       }
       const solved = solveFormula({ value: s, table: this, raise: false, refEvaluation, origin: point });
       const value = stripTable(solved, 0, 0, false);
