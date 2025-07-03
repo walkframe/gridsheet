@@ -1,7 +1,12 @@
-const path = require('path');
+import path from 'path';
+import { fileURLToPath } from 'url';
+import tsconfigPaths from 'vite-tsconfig-paths';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /** @type {import('@storybook/react-vite').StorybookConfig} */
-module.exports = {
+export default {
   stories: ['../stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)'],
   addons: [
     '@storybook/addon-docs',
@@ -17,9 +22,15 @@ module.exports = {
   docs: {
     autodocs: 'tag',
   },
+  managerHead: (entry) => [
+    ...entry,
+    `<link rel="icon" type="image/x-icon" href="https://github.com/favicon.ico">`,
+  ],
+  managerEntries: [
+    path.resolve(__dirname, './manager.js'),
+  ],
   viteFinal: async (config) => {
     config.plugins = config.plugins || [];
-    const tsconfigPaths = require('vite-tsconfig-paths').default;
     config.plugins.push(tsconfigPaths());
     config.resolve = config.resolve || {};
     config.resolve.conditions = ['development', 'import', 'require'];
