@@ -1,11 +1,7 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const path = require('path');
 
 /** @type {import('@storybook/react-vite').StorybookConfig} */
-export default {
+module.exports = {
   stories: ['../stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)'],
   addons: [
     '@storybook/addon-docs',
@@ -30,9 +26,8 @@ export default {
   ],
   viteFinal: async (config) => {
     config.plugins = config.plugins || [];
-    // Use dynamic import for vite-tsconfig-paths
-    const tsconfigPathsPlugin = (await import('vite-tsconfig-paths')).default;
-    config.plugins.push(tsconfigPathsPlugin());
+    const tsconfigPaths = require('vite-tsconfig-paths').default;
+    config.plugins.push(tsconfigPaths());
     config.resolve = config.resolve || {};
     config.resolve.conditions = ['development', 'import', 'require'];
     config.optimizeDeps = config.optimizeDeps || {};
