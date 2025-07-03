@@ -19,6 +19,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'pnpm'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -52,3 +53,4 @@ jobs:
           command: pages deploy packages/storybook/storybook-static --project-name=gridsheet-demo
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           environment: production
+          packageManager: pnpm
