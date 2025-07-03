@@ -6,7 +6,7 @@ export const restrictPoints = (store: StoreType, table: Table) => {
   const { choosing, selectingZone } = store;
   let { y, x } = choosing;
   let { startY: y1, startX: x1, endY: y2, endX: x2 } = selectingZone;
-  let { startY: y3, startX: x3, endY: y4, endX: x4 } = table.hub.copyingZone;
+  let { startY: y3, startX: x3, endY: y4, endX: x4 } = table.wire.copyingZone;
   const [numRows, numCols] = [table.getNumRows(), table.getNumCols()];
   if (y > numRows) {
     y = numRows;
@@ -47,13 +47,13 @@ export const restrictPoints = (store: StoreType, table: Table) => {
 
 export const shouldTracking = (operation: string) => {
   switch (operation) {
-    case 'ADD_ROWS':
+    case 'INSERT_ROWS':
       return true;
-    case 'ADD_COLS':
+    case 'INSERT_COLS':
       return true;
-    case 'DELETE_ROWS':
+    case 'REMOVE_ROWS':
       return true;
-    case 'DELETE_COLS':
+    case 'REMOVE_COLS':
       return true;
     case 'MOVE':
       return true;
@@ -88,8 +88,8 @@ export const initSearchStatement = (table: Table, store: StoreType) => {
 
 export const isXSheetFocused = (store: StoreType) => {
   const { sheetId, table } = store;
-  if (sheetId === table.hub.editingSheetId) {
+  if (sheetId === table.wire.editingSheetId) {
     return false;
   }
-  return !!table.hub.editingAddress;
+  return !!table.wire.editingAddress;
 };

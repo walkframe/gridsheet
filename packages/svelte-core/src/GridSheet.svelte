@@ -3,13 +3,12 @@
   import {
     GridSheet as PreactGridSheet,
     h as preactH,
-    render,
+    render as preactRender,
+    type HubType,
   } from '@gridsheet/preact-core';
-
-  import type {
-    CellsByAddressType,
-    OptionsType,
-    HubReactiveType,
+  import type { 
+    CellsByAddressType, 
+    OptionsType, 
     TableRef,
   } from '@gridsheet/preact-core';
 
@@ -17,44 +16,63 @@
     readonly current: T | null;
   }
 
-  export let initialCells: CellsByAddressType;
-  export let sheetName: string = '';
-  export let hubReactive: HubReactiveType | undefined = undefined;
-  export let tableRef: RefObject<TableRef | null> | undefined = undefined;
-  export let options: OptionsType = {};
-  export let className: string = '';
+  interface Props {
+    initialCells: CellsByAddressType;
+    sheetName?: string;
+    hub?: HubType;
+    tableRef?: RefObject<TableRef | null>;
+    options?: OptionsType;
+    className?: string;
+    style?: Record<string, any>;
+  }
 
-  let container: HTMLElement | null = null;
+  let { 
+    initialCells,
+    sheetName = '',
+    hub,
+    tableRef,
+    options = {},
+    className = '',
+    style = {}
+  }: Props = $props();
+  
   let root: HTMLElement | null = null;
+  let container: HTMLElement;
+
+  function getPreactProps() {
+    return {
+      initialCells,
+      sheetName,
+      hub,
+      tableRef,
+      options,
+      className,
+      style
+    };
+  }
 
   function renderPreact() {
     if (container) {
-      render(
-        preactH(PreactGridSheet, {
-          initialCells,
-          sheetName,
-          hubReactive,
-          tableRef,
-          options,
-          className,
-        }),
-        container,
+      root = container;
+      preactRender(
+        preactH(PreactGridSheet, getPreactProps()),
+        root
       );
+      
     }
   }
-
-  onMount(() => {
-    root = container;
-    renderPreact();
-  });
-
-  $: hubReactive, renderPreact();
 
   onDestroy(() => {
     if (root) {
       root.innerHTML = '';
     }
   });
+
+  $effect(() => {
+    if (container) {
+      renderPreact();
+    }
+  });
 </script>
 
-<div bind:this={container} class={className}></div>
+<div bind:this={container} class={className} style={style}></div>

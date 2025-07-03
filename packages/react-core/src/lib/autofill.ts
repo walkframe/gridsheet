@@ -9,8 +9,8 @@ import { CSSProperties } from 'react';
 
 const BORDER_AUTOFILL_DRAGGING = 'dashed 1px #888888';
 
-type Direction = 'left' | 'right' | 'up' | 'down';
-type Orientation = 'horizontal' | 'vertical';
+type Direction = 'left' | 'right' | 'up' | 'down' | 'none';
+type Orientation = 'horizontal' | 'vertical' | 'none';
 const DirectionMapping: {
   [key: string]: [Orientation, number];
 } = {
@@ -18,6 +18,7 @@ const DirectionMapping: {
   right: ['horizontal', 1],
   up: ['vertical', -1],
   down: ['vertical', 1],
+  none: ['none', 0],
 };
 
 export class Autofill {
@@ -35,7 +36,7 @@ export class Autofill {
 
   public get applied(): Table {
     const [orientation, sign] = DirectionMapping[this.direction];
-    const matrix = this.table.getMatrix({ area: this.src, evaluates: null });
+    const matrix = this.table.getMatrix({ area: this.src, refEvaluation: 'system' });
     const srcShape = areaShape({ ...this.src, base: 1 });
     const dstShape = areaShape({ ...this.dst, base: 1 });
 
@@ -48,13 +49,20 @@ export class Autofill {
           const baseCell = matrix[i % srcShape.height]?.[j % srcShape.width];
           const x = sign > 0 ? this.dst.left + j : this.dst.right - j;
           const px = sign > 0 ? j % srcShape.width : (srcShape.width - 1 - (j % srcShape.width)) % srcShape.width;
-          diff[p2a({ y: this.dst.top + i, x })] = {
+          const point = { y: this.dst.top + i, x };
+          const id = this.table.getId(point);
+          const value = patterns[px].next().value;
+          const nextValue = identifyFormula(value, {
+            dependency: id,
+            table: this.table,
+          });
+          diff[p2a(point)] = {
             ...baseCell,
-            value: patterns[px].next().value,
+            value: nextValue,
           };
         }
       }
-    } else {
+    } else if (orientation === 'vertical') {
       for (let i = 0; i < dstShape.width; i++) {
         // TODO: pass the originPath
         const patterns = this.getChangePatterns(
@@ -199,10 +207,10 @@ export class Autofill {
     if (vertical !== 0) {
       return vertical < 0 ? 'up' : 'down';
     }
-    return 'down';
+    return 'none';
   }
 
-  private getChangePatterns(cells: (CellType | null)[], originPath: string): Generator[] {
+  private getChangePatterns(cells: (CellType | null)[], id: string): Generator[] {
     const result: Generator[] = [];
     const groups = groupByType(cells);
     const [orientation, sign] = DirectionMapping[this.direction];
@@ -222,10 +230,9 @@ export class Autofill {
             const skip = cells.length * sign;
             while (true) {
               slide += skip;
-              yield identifyFormula({
-                value,
+              yield identifyFormula(value, {
                 table,
-                originPath,
+                dependency: id,
                 slideY: orientation === 'vertical' ? slide : 0,
                 slideX: orientation === 'horizontal' ? slide : 0,
               });

@@ -1,93 +1,62 @@
 # @gridsheet/svelte-core
 
-Spreadsheet component for Svelte
+GridSheet component for Svelte 5.
 
 ## Installation
 
 ```bash
-npm install @gridsheet/svelte-core
+pnpm add @gridsheet/svelte-core
 ```
-
-## Peer Dependencies
-
-This package requires the following peer dependency:
-
-- `svelte` ^4.0.0
 
 ## Usage
 
 ```svelte
 <script>
-import { GridSheet, useHubReactive } from '@gridsheet/svelte-core';
-const hubReactiveStore = useHubReactive();
+  import { GridSheet } from '@gridsheet/svelte-core';
+
+  const initialCells = {
+    A1: { value: 'Hello' },
+    B1: { value: 'Svelte' },
+    A2: { value: 123 },
+    B2: { value: 456 },
+    C10: { value: '=SUM(A2:B2)' },
+  };
 </script>
 
-<main>
-  <h1>GridSheet Svelte Example</h1>
-  <div class="grid-container">
-    <GridSheet
-      hubReactive={$hubReactiveStore}
-      initialCells={{
-        A1: { value: 'Hello' },
-        B1: { value: 'Svelte', style: { backgroundColor: '#FF8800'} },
-        A2: { value: 123 },
-        B2: { value: 456 },
-        A3: { value: 789},
-        C10: { value: '=SUM(A2:B2)' },
-      }}
-      sheetName="Sheet1"
-    />
-    <GridSheet
-      hubReactive={$hubReactiveStore}
-      initialCells={{
-        C3: { value: '=SUM(Sheet1!A2:B3)' },
-      }}
-      options={{
-        mode: 'dark',
-      }}
-      sheetName="Sheet2"
-    />
-  </div>
-</main>
+<GridSheet
+  {initialCells}
+  sheetName="Sheet1"
+  options={{
+    mode: 'dark',
+  }}
+/>
 ```
 
-## Components
+## Props
 
-### GridSheet
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `initialCells` | `CellsByAddressType` | Yes | - | Initial cell data |
+| `sheetName` | `string` | No | `''` | Name of the sheet |
+| `hub` | `HubType` | No | `null` | Hub instance for cross-sheet communication |
+| `tableRef` | `RefObject<TableRef \| null>` | No | `null` | Reference to the table instance |
+| `options` | `OptionsType` | No | `{}` | GridSheet options |
+| `className` | `string` | No | `''` | CSS class name |
+| `style` | `Record<string, any>` | No | `{}` | Inline styles |
 
-The main spreadsheet component for Svelte applications.
+## Example
 
-**Props:**
-- `hubReactive` - Reactive hub store for data binding and state management
-- `initialCells` - Initial cell data with values, styles, and formulas
-- `options` - GridSheet options (e.g., mode: 'dark')
-- `sheetName` - Name of the sheet
-
-### useHubReactive
-
-A Svelte-specific hook for creating reactive hubs that can be used for data binding and state management. Returns a Svelte store.
-
-## Exports
-
-This package exports:
-
-- All core GridSheet functionality from `@gridsheet/preact-core`
-- `GridSheet` - Svelte component
-- `useHubReactive` - Svelte-specific reactive hub hook
+See the `example/` directory for a complete working example.
 
 ## Development
 
 ```bash
+# Install dependencies
+pnpm install
+
 # Start development server
 pnpm dev
 
 # Build the package
 pnpm build
-
-# Preview the build
-pnpm preview
-```
-
-## License
-
-Apache-2.0 
+``` 

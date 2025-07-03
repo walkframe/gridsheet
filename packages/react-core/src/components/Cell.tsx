@@ -34,8 +34,6 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
   const { store, dispatch } = useContext(Context);
   const isFirstPointed = useRef(true);
 
-  //const [sheetProvided, sheetContext] = useSheetContext();
-
   const cellRef = useRef<HTMLTableCellElement>(null);
   const {
     table,
@@ -53,7 +51,7 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
   // Whether the focus is on another sheet
   const xSheetFocused = isXSheetFocused(store);
 
-  const lastFocused = table.hub.lastFocused;
+  const lastFocused = table.wire.lastFocused;
 
   const selectingArea = zoneToArea(selectingZone); // (top, left) -> (bottom, right)
 
@@ -75,10 +73,6 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
     // Avoid setting coordinates on the initial render to account for shifts caused by redrawing due to virtualization.
     if (pointed && !isFirstPointed.current) {
       _setEditorRect();
-      if (!editing) {
-        //const valueString = table.stringify({point: { y, x }, evaluates: false});
-        //dispatch(setInputting(valueString));
-      }
       return;
     }
     isFirstPointed.current = false;
@@ -108,7 +102,7 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
     return null;
   }
 
-  const editingAnywhere = !!(table.hub.editingAddress || editingAddress);
+  const editingAnywhere = !!(table.wire.editingAddress || editingAddress);
 
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
@@ -145,7 +139,7 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
       }
     }
 
-    table.hub.lastFocused = input;
+    table.wire.lastFocused = input;
     input.focus();
     dispatch(setEditingAddress(''));
 
@@ -214,7 +208,7 @@ export const Cell: FC<Props> = ({ y, x, operationStyle }) => {
       const fullRange = `${table.sheetPrefix(!xSheetFocused)}${areaToRange(newArea)}`;
       insertRef({ input: lastFocused, ref: fullRange });
     }
-    table.hub.reflect(); // Force drawing because the formula is not reflected in largeInput
+    //table.wire.transmit(); // Force drawing because the formula is not reflected in largeInput
     return true;
   };
 

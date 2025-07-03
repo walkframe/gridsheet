@@ -2,7 +2,8 @@ import { FormulaError } from '../evaluator';
 import { solveTable } from '../solver';
 import { Table } from '../../lib/table';
 import { BaseFunction } from './__base';
-import { ensureBoolean, ensureNumber, stripTable } from './__utils';
+import { ensureBoolean, ensureNumber } from './__utils';
+import { stripTable } from '../../formula/solver';
 
 export class VlookupFunction extends BaseFunction {
   example = 'VLOOKUP(10003, A2:B26, 2, FALSE)';

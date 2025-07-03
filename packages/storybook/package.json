@@ -15,9 +15,10 @@
   "packageManager": "pnpm@10.6.5",
   "devDependencies": {
     "@chromatic-com/storybook": "^3",
-    "@gridsheet/react-core": "workspace:^",
     "@gridsheet/preact-core": "workspace:^",
+    "@gridsheet/react-core": "workspace:^",
     "@gridsheet/react-right-menu": "workspace:^",
+    "@storybook/addon-docs": "^8.6.7",
     "@storybook/addon-essentials": "^8.6.7",
     "@storybook/addon-interactions": "^8.6.7",
     "@storybook/addon-onboarding": "^8.6.7",
@@ -36,5 +37,11 @@
     "vite": "^6.2.2",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.0.9"
+  },
+  "dependencies": {
+    "@octokit/request": "^10.0.3",
+    "chart.js": "^4.5.0",
+    "react-chartjs-2": "^5.3.0",
+    "react-markdown": "^10.1.0"
   }
 }

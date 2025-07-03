@@ -25,6 +25,7 @@ export interface ParserMixinType {
   functions?: ((value: string, cell?: CellType) => any)[];
   callback?(parsed: any, cell?: CellType): CellType;
   parse?(value: string, cell: CellType): any;
+  any?(value: string, cell?: CellType): string | undefined;
   bool?(value: string, cell?: CellType): boolean | undefined;
   number?(value: string, cell?: CellType): number | undefined;
   timedelta?(value: string, cell?: CellType): TimeDelta | undefined;
@@ -32,48 +33,59 @@ export interface ParserMixinType {
 }
 
 export class Parser implements ParserMixinType {
-  functions: ((value: string, cell?: CellType) => any)[] = [
-    this.number.bind(this),
-    this.timedelta.bind(this),
-    this.date.bind(this),
-    this.bool.bind(this),
-  ];
-
+  functions!: ((value: string, cell?: CellType) => any)[];
   private condition?: Condition;
   private complement?: Stringify;
 
   constructor(props?: Props) {
     this.applyMixins(props?.mixins);
-    if (props == null) {
-      return;
+
+    if (!this.functions) {
+      this.functions = [
+        this.number.bind(this),
+        this.timedelta.bind(this),
+        this.date.bind(this),
+        this.bool.bind(this),
+        this.any.bind(this),
+      ];
     }
-    const { condition, complement } = props;
-    this.condition = condition;
-    this.complement = complement;
+
+    if (props != null) {
+      const { condition, complement } = props;
+      this.condition = condition;
+      this.complement = complement;
+    }
   }
 
   private applyMixins(mixins?: ParserMixinType[]) {
-    if (mixins == null) {
-      return;
-    }
+    if (!mixins) return;
+
     for (const mixin of mixins) {
       for (const key in mixin) {
-        // @ts-expect-error mixin has the same fields as this
-        this[key] = mixin[key];
+        if (key === 'functions' && Array.isArray(mixin.functions)) {
+          if (!this.functions) this.functions = [];
+          this.functions.push(...mixin.functions);
+        } else {
+          // @ts-expect-error
+          this[key] = mixin[key];
+        }
       }
     }
   }
+
   public call(value: string, cell: CellType): CellType {
     try {
       const parsed = this.parse(value, cell);
       return this.callback(parsed, cell);
     } catch (e) {
-      return this.callback(e, cell);
+      return this.callback(String(e), cell);
     }
   }
+
   public callback(parsed: any, cell?: CellType): CellType {
     return { ...cell, value: parsed };
   }
+
   public parse(value: string, cell?: CellType): any {
     if (this.condition && !this.condition(value)) {
       const result = this.complement ? this.complement(value) : value;
@@ -90,6 +102,13 @@ export class Parser implements ParserMixinType {
     }
     if (value === '') {
       return null;
+    }
+    return value;
+  }
+
+  any(value: string, cell?: CellType): string | undefined {
+    if (value == null || value === '') {
+      return undefined;
     }
     return value;
   }

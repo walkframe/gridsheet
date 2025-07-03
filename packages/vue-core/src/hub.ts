@@ -1,18 +1,25 @@
-import { shallowRef } from 'vue';
-import { createHubReactive, DEFAULT_HISTORY_LIMIT, type HubPatchType } from '@gridsheet/preact-core';
+import { shallowRef, watch } from 'vue';
+import { createHub, WireProps, type TransmitProps } from '@gridsheet/preact-core';
 
-export function useHubReactive(historyLimit = DEFAULT_HISTORY_LIMIT) {
-  const hubReactive = createHubReactive(historyLimit);
-  const ref = shallowRef(hubReactive);
-  const { hub } = ref.value;
+export function useHub(wireProps: WireProps = {}) {
+  const hub = createHub(wireProps);
+  const ref = shallowRef(hub);
+  const { wire } = ref.value;
 
-  function applyPatch(patch?: HubPatchType) {
-    Object.assign(hub, { ...patch });
-    if (!hub.ready) {
+  function transmit(patch?: TransmitProps) {
+    Object.assign(wire, patch);
+    if (!wire.ready) {
       return;
     }
     requestAnimationFrame(() => (ref.value = { ...ref.value }));
   }
-  hub.reflect = applyPatch;
+  wire.transmit = transmit;
+
+  // Watch for hubProps changes and apply them to hub
+  watch(
+    () => wireProps,
+    (newProps) => transmit(newProps),
+    { deep: true },
+  );
   return ref;
 }

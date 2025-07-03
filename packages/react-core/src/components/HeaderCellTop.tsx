@@ -48,9 +48,9 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
   const width = col?.width || DEFAULT_WIDTH;
 
   const xSheetFocused = isXSheetFocused(store);
-  const lastFocused = table.hub.lastFocused;
+  const lastFocused = table.wire.lastFocused;
 
-  const editingAnywhere = !!(table.hub.editingAddress || editingAddress);
+  const editingAnywhere = !!(table.wire.editingAddress || editingAddress);
 
   const writeCell = (value: string) => {
     dispatch(write({ value, point: choosing }));
@@ -123,7 +123,6 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
     safePreventDefault(e);
     dispatch(setDragging(false));
     if (autofillDraggingTo) {
-      dispatch(submitAutofill(autofillDraggingTo));
       editorRef.current!.focus();
       return false;
     }
@@ -146,10 +145,12 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
       return false;
     }
 
-    const newArea = zoneToArea({ ...selectingZone, endY: 1, endX: x });
-    const [left, right] = [x2c(newArea.left), x2c(newArea.right)];
-    const fullRange = `${table.sheetPrefix(!xSheetFocused)}${left}:${right}`;
-    insertRef({ input: lastFocused, ref: fullRange });
+    if (editingAnywhere) {
+      const newArea = zoneToArea({ ...selectingZone, endY: 1, endX: x });
+      const [left, right] = [x2c(newArea.left), x2c(newArea.right)];
+      const fullRange = `${table.sheetPrefix(!xSheetFocused)}${left}:${right}`;
+      insertRef({ input: lastFocused, ref: fullRange });
+    }
 
     if (autofillDraggingTo == null) {
       const { startY } = selectingZone;
@@ -192,7 +193,7 @@ export const HeaderCellTop: FC<Props> = ({ x }) => {
       >
         <div className="gs-th-inner" style={{ height: headerHeight, position: 'relative' }}>
           {!topHeaderSelecting ? <ScrollHandle style={{ position: 'absolute' }} vertical={-1} /> : null}
-          {col?.labeler ? table.getLabel(col.labeler, x) : colId}
+          {table.getLabel(col?.labeler, x) ?? colId}
           {!dragging && (
             <div
               className={`gs-resizer ${prevention.hasOperation(col?.prevention, prevention.Resize) ? 'gs-protected' : ''}`}

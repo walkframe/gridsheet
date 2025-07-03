@@ -1,36 +1,37 @@
 import { Special } from '../constants';
 import { Table } from '../lib/table';
-import { MatrixType, PointType } from '../types';
+import { MatrixType, PointType, RefEvaluation } from '../types';
 import { FormulaError, Lexer, Parser } from './evaluator';
-import { p2a } from '../lib/converters';
 
 const SOLVING = new Special('solving');
 
-type SolveFormulaType = {
+type SolveFormulaProps = {
   value: any;
   table: Table;
   raise?: boolean;
-  evaluates?: boolean | null;
-  origin?: PointType;
+  refEvaluation?: RefEvaluation;
+  origin: PointType;
 };
 
-export const solveFormula = ({ value, table, raise = true, evaluates = true, origin }: SolveFormulaType) => {
-  if (evaluates === null) {
+export const solveFormula = ({ value, table, raise = true, refEvaluation = 'table', origin }: SolveFormulaProps) => {
+  if (refEvaluation === 'system') {
     return value;
   }
   let solved = value;
+
   if (typeof value === 'string') {
     if (value.charAt(0) === '=') {
       try {
         const lexer = new Lexer(value.substring(1), { origin });
         lexer.tokenize();
         const parser = new Parser(lexer.tokens);
-        if (evaluates === false) {
-          return '=' + lexer.stringifyToRef(table);
+        if (refEvaluation === 'raw') {
+          return '=' + lexer.display({ table });
         }
         const expr = parser.build();
         solved = expr?.evaluate?.({ table });
       } catch (e) {
+        table.setSolvedCache(origin, e);
         if (raise) {
           throw e;
         }
@@ -38,15 +39,22 @@ export const solveFormula = ({ value, table, raise = true, evaluates = true, ori
       }
     }
   }
-  if (solved instanceof Table) {
+  if (refEvaluation === 'complete' && solved instanceof Table) {
     solved = solveTable({ table: solved, raise })[0][0];
   }
+  table.setSolvedCache(origin, solved);
   return solved;
 };
 
-export const solveTable = ({ table, raise = true }: { table: Table; raise?: boolean }): MatrixType => {
+type SolveTableProps = {
+  table: Table;
+  raise?: boolean;
+  refEvaluation?: RefEvaluation;
+};
+
+export const solveTable = ({ table, raise = true }: SolveTableProps): MatrixType => {
   const area = table.getArea();
-  return table.getFieldMatrix({ area, evaluates: null, key: 'value' }).map((row, i) => {
+  return table.getFieldMatrix({ area, refEvaluation: 'system', key: 'value' }).map((row, i) => {
     const y = area.top + i;
     return row.map((value, j) => {
       const x = area.left + j;
@@ -62,7 +70,7 @@ export const solveTable = ({ table, raise = true }: { table: Table; raise?: bool
           return cache;
         }
         table.setSolvedCache(point, SOLVING);
-        const solved = solveFormula({ value, table, raise, origin: point });
+        const solved = solveFormula({ value, table, raise, origin: point, refEvaluation: 'complete' });
         table.setSolvedCache(point, solved);
         return solved;
       } catch (e) {
@@ -70,8 +78,22 @@ export const solveTable = ({ table, raise = true }: { table: Table; raise?: bool
         if (raise) {
           throw e;
         }
-        return null;
+        return e;
       }
     });
   });
+};
+
+export const stripTable = (value: any, y = 0, x = 0, raise = true) => {
+  if (value instanceof Table) {
+    value = solveTable({ table: value, raise })[y][x];
+  }
+  if (value instanceof Table) {
+    const e = new FormulaError('#REF!', 'References are circulating.');
+    if (raise) {
+      throw e;
+    }
+    return e;
+  }
+  return value;
 };

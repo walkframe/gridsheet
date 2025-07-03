@@ -22,7 +22,7 @@ This package requires the following peer dependency:
     <h1>GridSheet Vue Example</h1>
     <div class="grid-container">
       <GridSheet
-        :hubReactive="hubReactive"
+        :hub="hub"
         :initialCells="{
           A1: { value: 'Hello' },
           B1: { value: 'Vue', style: { backgroundColor: '#448888'} },
@@ -38,7 +38,7 @@ This package requires the following peer dependency:
       />
 
       <GridSheet
-        :hubReactive="hubReactive"
+        :hub="hub"
         :initialCells="{
           C3: { value: '=SUM(Sheet1!A2:B3)' },
         }"
@@ -50,8 +50,8 @@ This package requires the following peer dependency:
 </template>
 
 <script setup>
-import { GridSheet, useHubReactive } from '@gridsheet/vue-core';
-const hubReactive = useHubReactive();
+import { GridSheet, useHub } from '@gridsheet/vue-core';
+const hub = useHub();
 </script>
 ```
 
@@ -62,12 +62,12 @@ const hubReactive = useHubReactive();
 The main spreadsheet component for Vue 3 applications.
 
 **Props:**
-- `hubReactive` - Reactive hub for data binding and state management
+- `hub` - Reactive hub for data binding and state management
 - `initialCells` - Initial cell data with values, styles, and formulas
 - `options` - GridSheet options (e.g., mode: 'dark')
 - `sheetName` - Name of the sheet
 
-### useHubReactive
+### useHub
 
 A Vue 3-specific composable for creating reactive hubs that can be used for data binding and state management.
 
@@ -77,7 +77,7 @@ This package exports:
 
 - All core GridSheet functionality from `@gridsheet/preact-core`
 - `GridSheet` - Vue 3 component
-- `useHubReactive` - Vue 3-specific reactive hub composable
+- `useHub` - Vue 3-specific reactive hub composable
 
 ## Development
 

@@ -4,7 +4,7 @@ import type { CellPatchType, CellType, OperationType, PointType } from '../types
 export type PolicyOption = {
   value: any;
   label?: any;
-  keyword?: string;
+  keywords?: string[];
 };
 
 export type RestrictProps = {
@@ -29,7 +29,7 @@ export type GetDefaultProps = {
 export type PolicyMixinType = {
   getDefault?: (props: GetDefaultProps) => CellType | undefined;
   select?: (props: RestrictProps) => CellType | undefined;
-  callback?: (props: RestrictProps) => CellType | undefined;
+  validate?: (props: RestrictProps) => CellType | undefined;
   onClip?: (props: OnClipProps) => string;
   getOptions?: () => PolicyOption[];
 };
@@ -69,14 +69,14 @@ export class Policy implements PolicyMixinType {
     return patch;
   }
 
-  public callback(props: RestrictProps): CellPatchType | undefined {
+  public validate(props: RestrictProps): CellPatchType | undefined {
     const { patch } = props;
     return patch;
   }
 
   public restrict(props: RestrictProps): CellPatchType | undefined {
     const patch = this.select(props);
-    return this.callback({ ...props, patch });
+    return this.validate({ ...props, patch });
   }
 
   public onClip(props: OnClipProps): string {

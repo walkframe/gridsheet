@@ -10,7 +10,6 @@ import {
   PositionType,
   ModeType,
   RawCellType,
-  HubPatchType,
 } from '../types';
 import { zoneToArea, superposeArea, matrixShape, areaShape, areaToZone, zoneShape, restrictZone } from '../lib/structs';
 import { Table } from '../lib/table';
@@ -215,7 +214,7 @@ class CopyAction<T extends ZoneType> extends CoreAction<T> {
     return {
       ...store,
       callback: ({ table }) => {
-        table.hub.reflect({
+        table.wire.transmit({
           copyingSheetId: table.sheetId,
           copyingZone: payload,
           cutting: false,
@@ -232,7 +231,7 @@ class CutAction<T extends ZoneType> extends CoreAction<T> {
     return {
       ...store,
       callback: ({ table }) => {
-        table.hub.reflect({
+        table.wire.transmit({
           copyingSheetId: table.sheetId,
           copyingZone: payload,
           cutting: true,
@@ -246,7 +245,7 @@ export const cut = new CutAction().bind();
 class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { choosing, selectingZone, table: dstTable } = store;
-    const { hub } = dstTable;
+    const { wire: hub } = dstTable;
     const { copyingSheetId, copyingZone, cutting } = hub;
     const srcTable = dstTable.getTableBySheetId(copyingSheetId);
 
@@ -282,13 +281,12 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
           sheetId: srcTable.sheetId,
           selectingZone: nextSelectingZone,
           choosing,
-          hub: { copyingSheetId: srcTable.sheetId, copyingZone, cutting: true },
+          transmit: { copyingSheetId: srcTable.sheetId, copyingZone, cutting: true },
         },
         redoReflection: {
           sheetId: srcTable.sheetId,
-          //selectingZone: copyingZone,
           choosing,
-          hub: { copyingSheetId: srcTable.sheetId, copyingZone: resetZone },
+          transmit: { copyingSheetId: srcTable.sheetId, copyingZone: resetZone },
         },
       });
 
@@ -297,9 +295,9 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
         ...initSearchStatement(newTable, store),
         table: newTable,
         selectingZone: nextSelectingZone,
-        inputting: newTable.stringify({ point: choosing, evaluates: false }),
+        inputting: newTable.stringify({ point: choosing, refEvaluation: 'raw' }),
         callback: ({ table }) => {
-          table.hub.reflect({
+          table.wire.transmit({
             cutting: false,
             copyingZone: resetZone,
           });
@@ -352,13 +350,13 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
         operator: 'USER',
         undoReflection: {
           sheetId: srcTable.sheetId,
-          hub: { copyingZone },
+          transmit: { copyingZone },
           choosing,
           selectingZone,
         },
         redoReflection: {
           sheetId: srcTable.sheetId,
-          hub: { copyingSheetId: srcTable.sheetId, copyingZone: resetZone },
+          transmit: { copyingSheetId: srcTable.sheetId, copyingZone: resetZone },
           choosing,
           selectingZone: areaToZone(selectingArea),
         },
@@ -370,10 +368,10 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
       ...store,
       table: newTable,
       selectingZone: nextSelectingZone,
-      inputting: newTable.stringify({ point: choosing, evaluates: false }),
+      inputting: newTable.stringify({ point: choosing, refEvaluation: 'raw' }),
       ...initSearchStatement(newTable, store),
       callback: ({ table }) => {
-        table.hub.reflect({
+        table.wire.transmit({
           copyingZone: resetZone,
         });
       },
@@ -391,7 +389,7 @@ class EscapeAction<T extends null> extends CoreAction<T> {
       leftHeaderSelecting: false,
       topHeaderSelecting: false,
       callback: ({ table }) => {
-        table.hub.reflect({
+        table.wire.transmit({
           copyingZone: resetZone,
           cutting: false,
         });
@@ -532,7 +530,7 @@ class WriteAction<T extends { value: string; point?: PointType }> extends CoreAc
       ...initSearchStatement(newTable, store),
       table: newTable,
       callback: ({ table }) => {
-        table.hub.reflect({
+        table.wire.transmit({
           copyingZone: resetZone,
         });
       },
@@ -601,7 +599,7 @@ class UndoAction<T extends null> extends CoreAction<T> {
       return store;
     }
     if (history.dstSheetId !== table.sheetId) {
-      const { dispatch, store: dstStore } = table.hub.contextsBySheetId[history.dstSheetId];
+      const { dispatch, store: dstStore } = table.wire.contextsBySheetId[history.dstSheetId];
       dispatch(setStore({ ...dstStore, ...history.undoReflection }));
       return store;
     }
@@ -625,7 +623,7 @@ class RedoAction<T extends null> extends CoreAction<T> {
       return store;
     }
     if (history.dstSheetId !== table.sheetId) {
-      const { dispatch, store: dstStore } = table.hub.contextsBySheetId[history.dstSheetId];
+      const { dispatch, store: dstStore } = table.wire.contextsBySheetId[history.dstSheetId];
       dispatch(setStore({ ...dstStore, ...history.redoReflection }));
       return store;
     }
@@ -828,3 +826,23 @@ class setStoreAction<T extends Partial<StoreType>> extends CoreAction<T> {
   }
 }
 export const setStore = new setStoreAction().bind();
+
+export const userActions = {
+  blur,
+  copy,
+  cut,
+  paste,
+  escape,
+  choose,
+  select,
+  selectRows,
+  selectCols,
+  drag,
+  search,
+  write,
+  clear,
+  undo,
+  redo,
+  arrow,
+  walk,
+};

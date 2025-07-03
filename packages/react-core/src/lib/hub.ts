@@ -1,24 +1,36 @@
-import { identifyFormula } from '../formula/evaluator';
 import { DEFAULT_HISTORY_LIMIT, RESET_ZONE } from '../constants';
+
 import type {
   HistoryType,
   RefPaletteType,
   SheetIdsByName,
   ContextsBySheetId,
   ZoneType,
-  HubPatchType,
   CellsByIdType,
   Id,
   StoreDispatchType,
+  CellType,
+  System,
 } from '../types';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { updateTable } from '../store/actions';
+import type { FunctionMapping } from '../formula/functions/__base';
+import { functions as functionsDefault } from '../formula/mapping';
+import { PolicyType } from '../policy/core';
+import { RendererType } from '../renderers/core';
+import { ParserType } from '../parsers/core';
+import { Table } from './table';
 
-export type HubProps = {
+export type WireProps = {
   historyLimit?: number;
+  additionalFunctions?: FunctionMapping;
+  renderers?: { [rendererName: string]: RendererType };
+  parsers?: { [parserName: string]: ParserType };
+  labelers?: { [labelerName: string]: (n: number) => string };
+  policies?: { [policyName: string]: PolicyType };
 };
 
-export class Hub {
+export class Wire {
   sheetHead: number = 0;
   cellHead: number = 0;
   data: CellsByIdType = {};
@@ -40,8 +52,13 @@ export class Hub {
   lastHistory?: HistoryType;
   currentHistory?: HistoryType;
   ready = false;
+  functions: FunctionMapping = {};
+  renderers: { [rendererName: string]: RendererType } = {};
+  parsers: { [parserName: string]: ParserType } = {};
+  labelers: { [labelerName: string]: (n: number) => string } = {};
+  policies: { [policyName: string]: PolicyType } = {};
 
-  reflect: (newHub?: HubPatchType) => void = (newHub?: HubPatchType) => {
+  transmit: (newHub?: TransmitProps) => void = (newHub?: TransmitProps) => {
     // This method will be overridden by useHub
   };
 
@@ -70,34 +87,67 @@ export class Hub {
     this.ready = true;
   }
 
-  constructor({ historyLimit }: HubProps = {}) {
+  public getSystem(id: Id, table: Table): System {
+    const cell = this.data[id];
+    if (cell?.system) {
+      return cell.system;
+    }
+    return {
+      id,
+      sheetId: table.sheetId,
+      changedAt: new Date(),
+      dependents: new Set(),
+    };
+  }
+
+  constructor({
+    historyLimit,
+    additionalFunctions,
+    renderers = {},
+    parsers = {},
+    labelers = {},
+    policies = {},
+  }: WireProps = {}) {
     if (historyLimit != null) {
       this.historyLimit = historyLimit;
     }
+    this.functions = {
+      ...functionsDefault,
+      ...additionalFunctions,
+    };
+    this.renderers = renderers;
+    this.parsers = parsers;
+    this.labelers = labelers;
+    this.policies = policies;
   }
 }
 
-export const createHub = (historyLimit = DEFAULT_HISTORY_LIMIT) => {
-  return new Hub({ historyLimit });
+export type TransmitProps = Partial<Wire>;
+
+export const createWire = (props: WireProps = {}) => {
+  return new Wire(props);
 };
 
-export type HubReactiveType = {
-  hub: Hub;
+export type HubType = {
+  wire: Wire;
 };
 
-export const createHubReactive = (historyLimit = DEFAULT_HISTORY_LIMIT): HubReactiveType => {
-  return { hub: createHub(historyLimit) };
+export const createHub = (props: WireProps = {}): HubType => {
+  return { wire: createWire(props) };
 };
 
-export const useHubReactive = (historyLimit = DEFAULT_HISTORY_LIMIT) => {
-  const [hubReactive, setHubReactive] = useState<HubReactiveType>(() => createHubReactive(historyLimit));
-  const { hub } = hubReactive;
-  hub.reflect = (newHub?: HubPatchType) => {
-    Object.assign(hub, newHub);
-    if (!hub.ready) {
+export const useHub = (props: WireProps = {}) => {
+  const [hub, setHub] = useState<HubType>(() => createHub(props));
+  const { wire } = hub;
+  wire.transmit = (patch?: TransmitProps) => {
+    Object.assign(wire, patch);
+    if (!wire.ready) {
       return;
     }
-    requestAnimationFrame(() => setHubReactive({ hub }));
+    requestAnimationFrame(() => setHub({ wire }));
   };
-  return hubReactive;
+  useEffect(() => {
+    Object.assign(wire, props);
+  }, [props]);
+  return hub;
 };

@@ -1,5 +1,6 @@
 export { GridSheet } from './components/GridSheet';
-export { createTableRef } from './components/Tabular';
+export { useTableRef, createTableRef } from './components/Tabular';
+export { useStoreRef, createStoreRef } from './components/StoreObserver';
 export { Renderer } from './renderers/core';
 export type { RendererMixinType, RendererCallProps, RenderProps } from './renderers/core';
 export { Parser } from './parsers/core';
@@ -35,18 +36,23 @@ export type {
   ZoneType,
   Props,
   TableRef,
-  HubPatchType,
 } from './types';
 
-export type { HubReactiveType } from './lib/hub';
-export { Hub, useHubReactive, createHubReactive } from './lib/hub';
+export type { HubType, WireProps, TransmitProps } from './lib/hub';
+export { Wire, useHub, createHub } from './lib/hub';
 export type { Dispatcher } from './store';
 export { ThousandSeparatorRendererMixin } from './renderers/thousand_separator';
 export { CheckboxRendererMixin } from './renderers/checkbox';
 export { BaseFunction } from './formula/functions/__base';
+export { FormulaError } from './formula/evaluator';
 export { Table } from './lib/table';
 export { Policy } from './policy/core';
 export type { PolicyType, PolicyOption, PolicyMixinType } from './policy/core';
 
 export * as operations from './lib/operation';
 export { DEFAULT_HISTORY_LIMIT } from './constants';
+
+export { userActions } from './store/actions';
+export { clip } from './lib/clipboard';
+
+export { makeBorder } from './styles/utils';

@@ -1,17 +1,8 @@
-import { useEffect, useState, useRef, useReducer, useMemo } from 'react';
+import { useEffect, useState, useRef, useReducer } from 'react';
 import type { CellsByAddressType, OptionsType, Props, StoreType } from '../types';
-import {
-  DEFAULT_HEIGHT,
-  DEFAULT_WIDTH,
-  HEADER_HEIGHT,
-  HEADER_WIDTH,
-  SHEET_HEIGHT,
-  SHEET_WIDTH,
-  DEFAULT_HISTORY_LIMIT,
-} from '../constants';
-import { functions } from '../formula/mapping';
+import { DEFAULT_HEIGHT, DEFAULT_WIDTH, HEADER_HEIGHT, HEADER_WIDTH, SHEET_HEIGHT, SHEET_WIDTH } from '../constants';
 import { Context } from '../store';
-import { reducer as defaultReducer, updateTable } from '../store/actions';
+import { reducer as defaultReducer } from '../store/actions';
 import { Editor } from './Editor';
 import { StoreObserver } from './StoreObserver';
 import { Resizer } from './Resizer';
@@ -24,19 +15,20 @@ import { x2c, y2r } from '../lib/converters';
 import { embedStyle } from '../styles/embedder';
 import { FormulaBar } from './FormulaBar';
 import { SearchBar } from './SearchBar';
-import { useHubReactive } from '../lib/hub';
+import { useHub } from '../lib/hub';
 import { ScrollHandle } from './ScrollHandle';
 
 export function GridSheet({
   initialCells,
   sheetName = '',
   tableRef,
+  storeRef,
   options = {},
   className,
   style,
-  hubReactive: initialHubReactive,
+  hub: initialHub,
 }: Props) {
-  const { sheetResize, showFormulaBar = true, onInit, mode = 'light', additionalFunctions = {} } = options;
+  const { sheetResize, showFormulaBar = true, onInit, mode = 'light' } = options;
   const rootRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLTextAreaElement>(null);
@@ -44,12 +36,12 @@ export function GridSheet({
   const largeEditorRef = useRef<HTMLTextAreaElement>(null);
   const tabularRef = useRef<HTMLDivElement>(null);
 
-  const internalHubReactive = useHubReactive(options.historyLimit);
-  const hubReactive = initialHubReactive ?? internalHubReactive;
-  const { hub } = hubReactive;
+  const internalHub = useHub({});
+  const hub = initialHub ?? internalHub;
+  const { wire } = hub;
 
   const [initialState] = useState<StoreType>(() => {
-    const sheetId = ++hub.sheetHead;
+    const sheetId = ++wire.sheetHead;
     if (!sheetName) {
       sheetName = `Sheet${sheetId}`;
       console.debug('GridSheet: sheetName is not provided, using default name:', sheetName);
@@ -57,11 +49,6 @@ export function GridSheet({
     const {
       headerHeight = HEADER_HEIGHT,
       headerWidth = HEADER_WIDTH,
-      historyLimit = DEFAULT_HISTORY_LIMIT,
-      renderers,
-      parsers,
-      labelers,
-      policies,
       minNumRows,
       maxNumRows,
       minNumCols,
@@ -69,11 +56,6 @@ export function GridSheet({
       contextMenuItems,
     } = options;
     const table = new Table({
-      historyLimit,
-      parsers,
-      renderers,
-      labelers,
-      policies,
       minNumRows,
       maxNumRows,
       minNumCols,
@@ -81,11 +63,10 @@ export function GridSheet({
       headerHeight,
       headerWidth,
       sheetName,
-      hub,
-      functions: { ...functions, ...additionalFunctions },
+      hub: wire,
     });
     table.sheetId = sheetId;
-    hub.sheetIdsByName[sheetName] = sheetId;
+    wire.sheetIdsByName[sheetName] = sheetId;
 
     table.initialize(initialCells);
     onInit?.(table);
@@ -176,7 +157,10 @@ export function GridSheet({
         data-mode={mode}
         style={{ maxWidth: `min(100%, ${store.table.totalWidth + 2}px)` }}
       >
-        <ScrollHandle style={{ position: 'fixed' }} />
+        <ScrollHandle style={{ position: 'fixed', top: 0, left: 0 }} />
+        <ScrollHandle style={{ position: 'absolute', zIndex: 4, right: 0, top: 0, width: 5 }} horizontal={1} />
+        <ScrollHandle style={{ position: 'absolute', zIndex: 4, left: 0, bottom: 0, height: 5 }} vertical={1} />
+
         {typeof store.searchQuery === 'undefined' ? showFormulaBar && <FormulaBar /> : <SearchBar />}
         <div
           className={`gs-main ${className || ''}`}
@@ -190,7 +174,7 @@ export function GridSheet({
         >
           <Editor mode={mode} handleKeyUp={onKeyUp} />
           <Tabular tableRef={tableRef} />
-          <StoreObserver {...{ ...options, sheetHeight, sheetWidth, sheetName, hub }} />
+          <StoreObserver {...{ ...options, sheetHeight, sheetWidth, sheetName, storeRef }} />
           <ContextMenu />
           <Resizer />
           <Emitter onChange={onChange} onSelect={onSelect} />

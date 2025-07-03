@@ -2,8 +2,9 @@ const path = require('path');
 
 /** @type {import('@storybook/react-vite').StorybookConfig} */
 module.exports = {
-  stories: ['../stories/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
+  stories: ['../stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)'],
   addons: [
+    '@storybook/addon-docs',
     '@storybook/addon-essentials',
     '@storybook/addon-onboarding',
     '@storybook/addon-interactions',
@@ -16,6 +17,13 @@ module.exports = {
   docs: {
     autodocs: 'tag',
   },
+  managerHead: (entry) => [
+    ...entry,
+    `<link rel="icon" type="image/x-icon" href="https://github.com/favicon.ico">`,
+  ],
+  managerEntries: [
+    path.resolve(__dirname, './manager.js'),
+  ],
   viteFinal: async (config) => {
     config.plugins = config.plugins || [];
     const tsconfigPaths = require('vite-tsconfig-paths').default;

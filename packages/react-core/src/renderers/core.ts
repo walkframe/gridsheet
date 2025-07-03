@@ -2,9 +2,10 @@ import dayjs from 'dayjs';
 
 import { CellType, PointType, WriterType } from '../types';
 import { Table } from '../lib/table';
-import { solveFormula } from '../formula/solver';
+import { solveFormula, solveTable } from '../formula/solver';
 import { FormulaError } from '../formula/evaluator';
 import { TimeDelta } from '../lib/time';
+import { stripTable } from '../formula/solver';
 
 type Condition = (value: any) => boolean;
 
@@ -23,7 +24,8 @@ export type RendererCallProps = {
 };
 
 export type RenderProps<T extends any = any> = {
-  cell: CellType<T>;
+  value: T;
+  cell?: CellType<T>;
   table: Table;
   point: PointType;
   writer?: WriterType;
@@ -36,8 +38,9 @@ export interface RendererMixinType {
 
   decorate?(rendered: any, props: RenderProps): any;
   render?(props: RenderProps): any;
-  stringify?(cell: CellType, renderProps: RenderProps): string;
+  stringify?(props: RenderProps): string;
   string?(props: RenderProps<string>): any;
+  table?(props: RenderProps<Table>): any;
   bool?(props: RenderProps<boolean>): any;
   number?(props: RenderProps<number>): any;
   date?(props: RenderProps<Date>): any;
@@ -79,7 +82,7 @@ export class Renderer implements RendererMixinType {
   public call(props: RendererCallProps): any {
     const { point: origin, table, writer } = props;
     const key = table.getId(origin);
-    const cell = table.getById(key);
+    const cell = table.getById(key) ?? {};
     const cache = table.getSolvedCache(origin);
     let value = cache;
     if (cache === undefined) {
@@ -93,8 +96,8 @@ export class Renderer implements RendererMixinType {
         value = cell?.value;
       }
     }
-    const rendered = this.render({ cell: { ...cell, value }, table, writer, point: origin });
-    return this.decorate(rendered, { ...props, cell: cell ?? {} });
+    const rendered = this.render({ value, cell, table, writer, point: origin });
+    return this.decorate(rendered, { ...props, value, cell });
   }
 
   public decorate(rendered: any, props: RenderProps): any {
@@ -103,27 +106,25 @@ export class Renderer implements RendererMixinType {
 
   public render(props: RenderProps): any {
     const { cell, table, point } = props;
-    const value = cell.value;
-    if (this.condition && !this.condition(value)) {
-      return this.complement ? this.complement(value) : this.stringify({ value }, props);
-    }
+    const value = props.value;
 
+    if (this.condition && !this.condition(value)) {
+      return this.complement ? this.complement(value) : this.stringify(props);
+    }
     if (value == null) {
       return this.null(props);
     }
 
     switch (typeof value) {
       case 'object':
+        if (value instanceof Table) {
+          return this.table(props);
+        }
         if (value instanceof Date) {
           return this.date(props);
         }
         if (TimeDelta.is(value)) {
-          return this.timedelta({ cell: { ...cell, value: TimeDelta.ensure(value) }, table, point });
-        }
-        if (value instanceof Table) {
-          // MAY: { y: value.top, x: value.left } ?
-          const cell = table.getByPoint(point)!;
-          return this.render({ ...props, cell });
+          return this.timedelta({ value: TimeDelta.ensure(value), cell, table, point });
         }
         if (Array.isArray(value)) {
           return this.array(props);
@@ -144,57 +145,68 @@ export class Renderer implements RendererMixinType {
     return '';
   }
 
-  stringify(cell: CellType<any>, renderProps: RenderProps): string {
-    const value = cell.value!;
-    const { table, point } = renderProps;
+  stringify({ value, cell, table, point }: RenderProps): string {
+    if (value === undefined) {
+      value = cell?.value;
+    }
     if (value instanceof Date) {
-      return this.date({ cell, table, point });
+      return this.date({ value, cell, table, point });
     }
     if (TimeDelta.is(value)) {
-      return this.timedelta({ cell: { ...cell, value: TimeDelta.ensure(value) }, table, point });
+      const ensured = TimeDelta.ensure(value);
+      return this.timedelta({ value: ensured, cell: { ...cell, value: ensured }, table, point });
     }
     if (value == null) {
+      return '';
+    }
+    if (value instanceof FormulaError) {
+      return '';
+    }
+    if (value instanceof Error) {
       return '';
     }
     return value.toString();
   }
 
-  string({ cell }: RenderProps<string>): any {
-    return cell.value!;
+  string({ value }: RenderProps<string>): any {
+    return value!;
   }
 
-  bool({ cell }: RenderProps<boolean>): any {
-    return cell.value ? 'TRUE' : 'FALSE';
+  table(props: RenderProps<Table>): any {
+    let { value: table } = props;
+    const value = stripTable(table, 0, 0);
+    return this.render({ ...props, table, value });
   }
 
-  number({ cell }: RenderProps<number>): any {
-    const { value } = cell!;
+  bool({ value }: RenderProps<boolean>): any {
+    return value ? 'TRUE' : 'FALSE';
+  }
+
+  number({ value }: RenderProps<number>): any {
     if (isNaN(value!)) {
       return 'NaN';
     }
     return value;
   }
 
-  date({ cell }: RenderProps<Date>): any {
-    const value = cell!.value!;
-    if (value.getHours() + value.getMinutes() + value.getSeconds() === 0) {
+  date({ value }: RenderProps<Date>): any {
+    if (value!.getHours() + value!.getMinutes() + value!.getSeconds() === 0) {
       return dayjs(value).format(this.dateFormat);
     }
     return dayjs(value).format(this.datetimeFormat);
   }
 
-  timedelta({ cell }: RenderProps<TimeDelta>) {
-    const value = cell.value!;
-    return value.stringify(this.timeDeltaFormat);
+  timedelta({ value }: RenderProps<TimeDelta>) {
+    return value!.stringify(this.timeDeltaFormat);
   }
 
   array(props: RenderProps<any[]>): any {
-    const { cell } = props;
-    return cell.value!.map((v) => this.stringify({ value: v }, props)).join(',');
+    let { value } = props;
+    return value!.map((v) => this.stringify(props)).join(',');
   }
 
-  object({ cell }: RenderProps<any>): any {
-    return JSON.stringify(cell.value);
+  object({ value }: RenderProps<any>): any {
+    return JSON.stringify(value);
   }
 
   null({}: RenderProps<null | undefined>): any {

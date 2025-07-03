@@ -59,36 +59,76 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
 
   const policy = table.getPolicyByPoint(choosing);
   const optionsAll = policy.getOptions();
-  const filteredOptions = optionsAll.filter((option) => {
-    const keyword = (option.keyword ?? String(option.value)).toLowerCase();
-    return keyword.indexOf(inputting.toLocaleLowerCase()) !== -1;
-  });
+  const inputLower = inputting.toLocaleLowerCase();
+  const filteredOptions = optionsAll
+    .map((option) => {
+      const keywords = option.keywords ?? [String(option.value)];
+      let bestMatch = { index: -1, startsWith: false, keyword: '' };
 
-  //const [, sheetContext] = useSheetContext();
+      for (const keyword of keywords) {
+        const keywordLower = keyword.toLowerCase();
+        const index = keywordLower.indexOf(inputLower);
+        if (index !== -1) {
+          const startsWith = keywordLower.startsWith(inputLower);
+          if (
+            bestMatch.index === -1 ||
+            index < bestMatch.index ||
+            (index === bestMatch.index && startsWith && !bestMatch.startsWith)
+          ) {
+            bestMatch = { index, startsWith, keyword };
+          }
+        }
+      }
+
+      return {
+        option,
+        ...bestMatch,
+        keywordCount: keywords.length, // Add hierarchy (number of keywords)
+      };
+    })
+    .filter(({ index }) => index !== -1)
+    .sort((a, b) => {
+      // First priority: starts with input
+      if (a.startsWith !== b.startsWith) {
+        return b.startsWith ? 1 : -1;
+      }
+      // Second priority: earlier match position
+      if (a.index !== b.index) {
+        return a.index - b.index;
+      }
+      // Third priority: more keywords (higher hierarchy)
+      if (a.keywordCount !== b.keywordCount) {
+        return b.keywordCount - a.keywordCount;
+      }
+      // Fourth priority: alphabetical order
+      return a.keyword.localeCompare(b.keyword);
+    })
+    .map(({ option }) => option);
+
   useEffect(() => {
     editorRef?.current?.focus?.({ preventScroll: true });
   }, [editorRef]);
 
   useEffect(() => {
-    if (table.hub.lastFocused == null) {
+    if (table.wire.lastFocused == null) {
       return;
     }
-    if (table.hub.lastFocused !== editorRef.current) {
+    if (table.wire.lastFocused !== editorRef.current) {
       return;
     }
-    if (table.hub.lastFocused !== largeEditorRef.current) {
+    if (table.wire.lastFocused !== largeEditorRef.current) {
       return;
     }
 
     dispatch(setEditingAddress(''));
-  }, [table.hub.lastFocused]);
+  }, [table.wire.lastFocused]);
   useEffect(() => {
-    table.hub.editingSheetId = sheetId;
-    table.hub.editingAddress = editingAddress;
+    table.wire.editingSheetId = sheetId;
+    table.wire.editingAddress = editingAddress;
   }, [editingAddress]);
 
   useEffect(() => {
-    //table.hub.reflect();
+    //table.wire.transmit();
     expandInput(editorRef.current);
   }, [inputting, editingAddress]);
 
@@ -99,7 +139,7 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
   const editing = editingAddress === address;
 
   const cell = table.getByPoint({ y, x });
-  const valueString = table.stringify({ point: choosing, cell, evaluates: false });
+  const valueString = table.stringify({ point: choosing, cell, refEvaluation: 'raw' });
   const [before, setBefore] = useState<string>(valueString);
 
   const selectValue = (selected: number) => {
@@ -335,6 +375,7 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
             input.focus(); // refocus
             return false;
           }
+          return true;
         }
         break;
       case 'f': // F
@@ -461,7 +502,6 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
         </pre>
         <textarea
           data-sheet-id={sheetId}
-          //data-address={address}
           data-size="small"
           autoFocus={true}
           spellCheck={false}
@@ -469,7 +509,7 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
           ref={editorRef}
           rows={numLines}
           onFocus={(e) => {
-            table.hub.lastFocused = e.currentTarget;
+            table.wire.lastFocused = e.currentTarget;
           }}
           style={{ minWidth: width, minHeight: height }}
           onDoubleClick={(e) => {
@@ -508,6 +548,10 @@ export const Editor: FC<Props> = ({ mode, handleKeyUp }: Props) => {
             setSelected(0);
           }}
           onPaste={(e) => {
+            if (editing) {
+              return true;
+            }
+
             const onlyValue = shiftKey;
             const html = e.clipboardData?.getData?.('text/html');
             if (html) {
