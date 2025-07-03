@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - master
-  pull_request:
-    branches:
-      - master
   workflow_dispatch:
 
 jobs:
@@ -48,15 +45,10 @@ jobs:
           pnpm run build
 
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # Project name in Cloudflare Pages (not the domain)
-          projectName: gridsheet-demo
-          directory: packages/storybook/storybook-static
+          command: pages deploy packages/storybook/storybook-static --project-name=gridsheet-demo
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          environmentName: production
-          commitMessage: "Deploy Storybook to Cloudflare Pages"
-          branch: ${{ github.ref_name }}
-          failOnError: true 
+          environment: production
