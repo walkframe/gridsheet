@@ -36,6 +36,8 @@ importers:
         specifier: ^5.8.2
         version: 5.8.3
 
+  packages/docs: {}
+
   packages/preact-core:
     dependencies:
       dayjs:
@@ -234,8 +236,8 @@ importers:
   packages/svelte-core:
     dependencies:
       '@gridsheet/preact-core':
-        specifier: workspace:*
-        version: link:../preact-core
+        specifier: ^2.0.0-rc.0
+        version: 2.0.0-rc.0(dayjs@1.11.13)(preact@10.26.6)
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^5.1.0

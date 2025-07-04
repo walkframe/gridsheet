@@ -1,6 +1,6 @@
 {
   "name": "@gridsheet/svelte-core",
-  "version": "2.0.0-0.rc.2",
+  "version": "2.0.0-0.rc.0",
   "description": "Spreadsheet component for Svelte 5",
   "type": "module",
   "main": "dist/index.js",
@@ -23,7 +23,7 @@
     "svelte": "^5.10.0"
   },
   "dependencies": {
-    "@gridsheet/preact-core": "^2.0.0-rc.2"
+    "@gridsheet/preact-core": "^2.0.0-rc.0"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.1.0",
