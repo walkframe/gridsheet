@@ -3,8 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { GridSheet, Policy, buildInitialCells, Renderer, useHub } from '@gridsheet/react-core';
 
 const meta: Meta = {
-  title: 'Feature/Restriction/OnClip',
-  tags: ['autodocs'],
+  title: 'Restriction/OnClip',
 };
 export default meta;
 
@@ -22,60 +21,62 @@ const DESCRIPTION = [
   '4. The masking is applied both during display and clipboard operations.',
 ].join('\n\n');
 
-export const OnClip: StoryObj = {
-  render: () => {
-    const maskPolicy = new Policy({
-      mixins: [
-        {
-          onClip({ point, table }) {
-            const s = table.stringify({ point }) ?? '';
-            return '*'.repeat(s.length);
-          },
+const OnClipComponent: React.FC = () => {
+  const maskPolicy = new Policy({
+    mixins: [
+      {
+        onClip({ point, table }) {
+          const s = table.stringify({ point }) ?? '';
+          return '*'.repeat(s.length);
         },
-      ],
-    });
-    const maskRenderer = new Renderer({
-      mixins: [
-        {
-          string({ value }) {
-            if (value == null) {
-              return '';
-            }
-            return `${value.substring(0, 1)}${'*'.repeat(value.substring(1).length)}`;
-          },
+      },
+    ],
+  });
+  const maskRenderer = new Renderer({
+    mixins: [
+      {
+        string({ value }) {
+          if (value == null) {
+            return '';
+          }
+          return `${value.substring(0, 1)}${'*'.repeat(value.substring(1).length)}`;
         },
-      ],
-    });
-    const hub = useHub({
-      policies: {
-        mask: maskPolicy,
       },
-      renderers: {
-        mask: maskRenderer,
-      },
-    });
+    ],
+  });
+  const hub = useHub({
+    policies: {
+      mask: maskPolicy,
+    },
+    renderers: {
+      mask: maskRenderer,
+    },
+  });
 
-    return (
-      <GridSheet
-        hub={hub}
-        options={{
-          showFormulaBar: false,
-        }}
-        initialCells={buildInitialCells({
-          cells: {
-            default: {
-              policy: 'mask',
-              renderer: 'mask',
-              width: 150,
-            },
-            A1: { value: 'Hello' },
-            B2: { value: 'Spread sheet' },
+  return (
+    <GridSheet
+      hub={hub}
+      options={{
+        showFormulaBar: false,
+      }}
+      initialCells={buildInitialCells({
+        cells: {
+          default: {
+            policy: 'mask',
+            renderer: 'mask',
+            width: 150,
           },
-          ensured: { numRows: 4, numCols: 3 },
-        })}
-      />
-    );
-  },
+          A1: { value: 'Hello' },
+          B2: { value: 'Spread sheet' },
+        },
+        ensured: { numRows: 4, numCols: 3 },
+      })}
+    />
+  );
+};
+
+export const OnClip: StoryObj = {
+  render: () => <OnClipComponent />,
   parameters: {
     docs: {
       description: {

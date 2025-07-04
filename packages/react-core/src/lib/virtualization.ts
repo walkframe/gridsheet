@@ -12,8 +12,8 @@ export const getCellRectPositions = (table: Table, { y, x }: PointType) => {
   });
   width += table.headerWidth;
   height += table.headerHeight;
-  const w = table.getByPoint({ y: 0, x })?.width || DEFAULT_WIDTH;
-  const h = table.getByPoint({ y, x: 0 })?.height || DEFAULT_HEIGHT;
+  const w = table.getCellByPoint({ y: 0, x }, 'SYSTEM')?.width || DEFAULT_WIDTH;
+  const h = table.getCellByPoint({ y, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
   return {
     top: height,
     left: width,
@@ -47,7 +47,7 @@ export const virtualize = (table: Table, e: HTMLDivElement | null): Virtualizati
   let width = 0,
     height = 0;
   for (let x = 1; x <= table.getNumCols(); x++) {
-    const w = table.getByPoint({ y: 0, x })?.width || DEFAULT_WIDTH;
+    const w = table.getCellByPoint({ y: 0, x }, 'SYSTEM')?.width || DEFAULT_WIDTH;
     width += w;
     if (boundaryLeft === 0 && width > left) {
       boundaryLeft = Math.max(x - OVERSCAN_X, 1);
@@ -58,7 +58,7 @@ export const virtualize = (table: Table, e: HTMLDivElement | null): Virtualizati
     }
   }
   for (let y = 1; y <= table.getNumRows(); y++) {
-    const h = table.getByPoint({ y, x: 0 })?.height || DEFAULT_HEIGHT;
+    const h = table.getCellByPoint({ y, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
     height += h;
     if (boundaryTop === 0 && height > top) {
       boundaryTop = Math.max(y - OVERSCAN_Y, 1);

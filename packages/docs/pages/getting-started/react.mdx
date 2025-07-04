@@ -1,0 +1,40 @@
+# React
+
+GridSheet provides a comprehensive React component that brings Excel-like functionality to your React applications.
+
+## Installation
+
+```bash
+npm install @gridsheet/react-core
+# or
+yarn add @gridsheet/react-core
+# or
+pnpm add @gridsheet/react-core
+```
+
+## Basic Usage
+
+```tsx filename="App.tsx" copy
+import { GridSheet, buildInitialCellsFromOrigin } from '@gridsheet/react-core';
+
+function App() {
+  return (
+    <GridSheet
+      sheetName="MySheet"
+      initialCells={buildInitialCellsFromOrigin({
+        matrix: [
+          ['Name', 'Age', 'City'],
+          ['John', 25, 'New York'],
+          ['Jane', 30, 'Los Angeles'],
+          ['Bob', 35, 'Chicago']
+        ]
+      })}
+      options={{
+        sheetHeight: 400,
+        sheetWidth: 600,
+        sheetResize: 'both'
+      }}
+    />
+  );
+}
+``` 

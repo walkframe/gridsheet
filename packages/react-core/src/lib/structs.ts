@@ -191,11 +191,12 @@ export const cropMatrix = <T = any>(matrix: T[][], area: AreaType): T[][] => {
   return matrix.slice(top, bottom + 1).map((cols) => cols.slice(left, right + 1));
 };
 
-export const buildInitialCellsOrigin = ({
+export const buildInitialCellsFromOrigin = ({
   cells = {},
   ensured = {},
   matrix = [],
   flattenAs = 'value',
+  origin = 'A1',
 }: {
   cells?: CellsByAddressType;
   ensured?: {
@@ -204,11 +205,12 @@ export const buildInitialCellsOrigin = ({
   };
   flattenAs?: keyof CellType;
   matrix?: MatrixType;
+  origin?: Address;
 }) => {
   return buildInitialCells({
     cells,
     ensured,
-    matrices: { A1: matrix },
+    matrices: { [origin]: matrix },
     flattenAs,
   });
 };
@@ -227,7 +229,7 @@ export const buildInitialCells = ({
   flattenAs?: keyof CellType;
   matrices?: MatricesByAddress<any>;
 } = {}) => {
-  upsert({ cells, flattenAs, matrices });
+  buildCells({ cells, flattenAs, matrices });
   const { numRows, numCols } = Object.assign({ numRows: 1, numCols: 1 }, ensured);
   const rightBottom = p2a({ y: numRows, x: numCols });
   if (cells[rightBottom] == null) {
@@ -236,7 +238,7 @@ export const buildInitialCells = ({
   return cells;
 };
 
-export const upsert = <T>({
+export const buildCells = <T>({
   cells = {},
   matrices = {},
   flattenAs,

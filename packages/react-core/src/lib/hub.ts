@@ -11,7 +11,11 @@ import type {
   StoreDispatchType,
   CellType,
   System,
+  FeedbackType,
+  EditorEvent,
+  CursorStateType,
 } from '../types';
+import type { UserTable } from './table';
 import { useEffect, useState } from 'react';
 import { updateTable } from '../store/actions';
 import type { FunctionMapping } from '../formula/functions/__base';
@@ -28,6 +32,16 @@ export type WireProps = {
   parsers?: { [parserName: string]: ParserType };
   labelers?: { [labelerName: string]: (n: number) => string };
   policies?: { [policyName: string]: PolicyType };
+  onSave?: FeedbackType;
+  onChange?: FeedbackType;
+  onEdit?: (args: { table: UserTable }) => void;
+  onRemoveRows?: (args: { table: UserTable; ys: number[] }) => void;
+  onRemoveCols?: (args: { table: UserTable; xs: number[] }) => void;
+  onInsertRows?: (args: { table: UserTable; y: number; numRows: number }) => void;
+  onInsertCols?: (args: { table: UserTable; x: number; numCols: number }) => void;
+  onSelect?: FeedbackType;
+  onKeyUp?: (e: EditorEvent, points: CursorStateType) => void;
+  onInit?: (table: UserTable) => void;
 };
 
 export class Wire {
@@ -57,6 +71,16 @@ export class Wire {
   parsers: { [parserName: string]: ParserType } = {};
   labelers: { [labelerName: string]: (n: number) => string } = {};
   policies: { [policyName: string]: PolicyType } = {};
+  onSave?: FeedbackType;
+  onChange?: FeedbackType;
+  onEdit?: (args: { table: UserTable }) => void;
+  onRemoveRows?: (args: { table: UserTable; ys: number[] }) => void;
+  onRemoveCols?: (args: { table: UserTable; xs: number[] }) => void;
+  onInsertRows?: (args: { table: UserTable; y: number; numRows: number }) => void;
+  onInsertCols?: (args: { table: UserTable; x: number; numCols: number }) => void;
+  onSelect?: FeedbackType;
+  onKeyUp?: (e: EditorEvent, points: CursorStateType) => void;
+  onInit?: (table: UserTable) => void;
 
   transmit: (newHub?: TransmitProps) => void = (newHub?: TransmitProps) => {
     // This method will be overridden by useHub
@@ -71,18 +95,21 @@ export class Wire {
     for (let i = 0; i < keys.length; i++) {
       const sheetId = keys[i];
       const storeDispatch = this.contextsBySheetId[sheetId];
-      const { table } = storeDispatch.store;
-      if (table.status === 0) {
+      const table = storeDispatch.store.tableReactive.current;
+      if (!table || table.status === 0) {
         return;
       }
       tobe.push(storeDispatch);
     }
     for (let i = 0; i < tobe.length; i++) {
-      const { store, dispatch } = tobe[i];
-      let { table } = store;
+      const { store, sync } = tobe[i];
+      const table = store.tableReactive.current;
+      if (!table) {
+        continue;
+      }
       table.identifyFormula();
-      table = table.clone();
-      dispatch(updateTable(table));
+      const newTable = table.clone();
+      sync(updateTable(newTable));
     }
     this.ready = true;
   }
@@ -107,6 +134,16 @@ export class Wire {
     parsers = {},
     labelers = {},
     policies = {},
+    onSave,
+    onChange,
+    onEdit,
+    onRemoveRows,
+    onRemoveCols,
+    onInsertRows,
+    onInsertCols,
+    onSelect,
+    onKeyUp,
+    onInit,
   }: WireProps = {}) {
     if (historyLimit != null) {
       this.historyLimit = historyLimit;
@@ -119,6 +156,16 @@ export class Wire {
     this.parsers = parsers;
     this.labelers = labelers;
     this.policies = policies;
+    this.onSave = onSave;
+    this.onChange = onChange;
+    this.onEdit = onEdit;
+    this.onRemoveRows = onRemoveRows;
+    this.onRemoveCols = onRemoveCols;
+    this.onInsertRows = onInsertRows;
+    this.onInsertCols = onInsertCols;
+    this.onSelect = onSelect;
+    this.onKeyUp = onKeyUp;
+    this.onInit = onInit;
   }
 }
 

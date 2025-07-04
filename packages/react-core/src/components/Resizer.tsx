@@ -2,7 +2,7 @@ import { useContext } from 'react';
 import type { MouseEvent } from 'react';
 
 import { Context } from '../store';
-import { setResizingPositionY, setResizingPositionX, updateTable } from '../store/actions';
+import { setResizingPositionY, setResizingPositionX, updateTable, setStore } from '../store/actions';
 
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH, MIN_WIDTH, MIN_HEIGHT } from '../constants';
 import { zoneToArea, makeSequence, between } from '../lib/structs';
@@ -14,23 +14,23 @@ export const Resizer = () => {
   const {
     resizingPositionY: posY,
     resizingPositionX: posX,
-    table,
+    tableReactive: tableRef,
     leftHeaderSelecting,
     topHeaderSelecting,
     selectingZone,
     editorRef,
     mainRef,
   } = store;
+  const table = tableRef.current;
 
   const [y, startY, endY] = posY;
   const [x, startX, endX] = posX;
-  if (y === -1 && x === -1) {
-    return null;
+
+  if (mainRef.current == null || editorRef.current == null || !table) {
+    return <div className="gs-resizing gs-hidden" />;
   }
-  if (mainRef.current == null || editorRef.current == null) {
-    return null;
-  }
-  const cell = table.getByPoint({ y: y === -1 ? 0 : y, x: x === -1 ? 0 : x });
+
+  const cell = table.getCellByPoint({ y: y === -1 ? 0 : y, x: x === -1 ? 0 : x }, 'SYSTEM');
   const { y: offsetY, x: offsetX } = mainRef.current.getBoundingClientRect();
 
   const baseWidth = cell?.width || DEFAULT_WIDTH;
@@ -61,13 +61,16 @@ export const Resizer = () => {
         diff[p2a({ y, x: 0 })] = { height };
       });
     }
-    const newTable = table.update({
+     table.update({
       diff,
       partial: true,
       operator: 'USER',
       undoReflection: { selectingZone, sheetId: table.sheetId },
     });
-    dispatch(updateTable(newTable));
+    dispatch(setStore({
+      tableReactive: { current: table },
+      ...table.getTotalSize(),
+    }))
     dispatch(setResizingPositionY([-1, -1, -1]));
     dispatch(setResizingPositionX([-1, -1, -1]));
     editorRef.current!.focus();
@@ -91,17 +94,31 @@ export const Resizer = () => {
   };
 
   return (
-    <div className="gs-resizing" onMouseUp={handleResizeEnd} onMouseMove={handleResizeMove}>
-      {x !== -1 && (
-        <div className={'gs-line'} style={{ width: 1, height: '100%', left: endX - offsetX }}>
-          <span style={{ left: '-50%' }}>{width}px</span>
-        </div>
-      )}
-      {y !== -1 && (
-        <div className={'gs-line'} style={{ width: '100%', height: 1, top: endY - offsetY }}>
-          <span style={{ top: '-50%' }}>{height}px</span>
-        </div>
-      )}
+    <div
+      className={`gs-resizing ${y === -1 && x === -1 ? 'gs-hidden' : ''}`}
+      onMouseUp={handleResizeEnd}
+      onMouseMove={handleResizeMove}
+    >
+      <div
+        className={`gs-line ${x === -1 ? 'gs-hidden' : ''}`}
+        style={{
+          width: 1,
+          height: '100%',
+          left: endX - offsetX,
+        }}
+      >
+        <span style={{ left: '-50%' }}>{width}px</span>
+      </div>
+      <div
+        className={`gs-line ${y === -1 ? 'gs-hidden' : ''}`}
+        style={{
+          width: '100%',
+          height: 1,
+          top: endY - offsetY,
+        }}
+      >
+        <span style={{ top: '-50%' }}>{height}px</span>
+      </div>
     </div>
   );
 };

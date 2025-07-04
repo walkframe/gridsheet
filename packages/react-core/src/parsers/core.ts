@@ -58,16 +58,19 @@ export class Parser implements ParserMixinType {
   }
 
   private applyMixins(mixins?: ParserMixinType[]) {
-    if (!mixins) return;
+    if (!mixins) {
+      return;
+    }
 
     for (const mixin of mixins) {
       for (const key in mixin) {
         if (key === 'functions' && Array.isArray(mixin.functions)) {
-          if (!this.functions) this.functions = [];
+          if (!this.functions) {
+            this.functions = [];
+          }
           this.functions.push(...mixin.functions);
         } else {
-          // @ts-expect-error
-          this[key] = mixin[key];
+          (this as any)[key] = (mixin as any)[key];
         }
       }
     }

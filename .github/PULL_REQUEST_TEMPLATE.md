@@ -17,7 +17,7 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 
 - [ ] Visual operation check - `pnpm storybook`
 - [ ] Test - `pnpm test`
-- [ ] Lint - `pnpm eslint:fix`
+- [ ] Lint - `pnpm lint:fix`
 
 ## Additional Context
 Add any other context or screenshots about the pull request here.

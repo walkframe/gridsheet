@@ -87,7 +87,11 @@ export const initSearchStatement = (table: Table, store: StoreType) => {
 };
 
 export const isXSheetFocused = (store: StoreType) => {
-  const { sheetId, table } = store;
+  const { sheetId, tableReactive: tableRef } = store;
+  const table = tableRef.current;
+  if (!table) {
+    return false;
+  }
   if (sheetId === table.wire.editingSheetId) {
     return false;
   }

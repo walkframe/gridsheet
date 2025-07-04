@@ -7,22 +7,22 @@ import type { Dispatcher } from '../store';
 export type PluginContextType = {
   provided: boolean;
   store?: StoreType;
-  dispatch?: Dispatcher;
+  sync?: Dispatcher;
   setStore: (store: StoreType) => void;
-  setDispatch: (dispatch: Dispatcher) => void;
+  setSync: (sync: Dispatcher) => void;
 };
 
 export const PluginContext = createContext({} as PluginContextType);
 
 export function useInitialPluginContext(): PluginContextType {
   const [store, setStore] = useState<StoreType | undefined>(undefined);
-  const [dispatch, setDispatch] = useState<Dispatcher>();
+  const [sync, setSync] = useState<Dispatcher>();
   return {
     provided: true,
     store,
-    dispatch,
+    sync,
     setStore,
-    setDispatch,
+    setSync,
   };
 }
 
@@ -35,11 +35,11 @@ export function usePluginContext(): [boolean, PluginContextType] {
 }
 
 export function usePluginDispatch() {
-  const dispatch = useContext(PluginContext);
-  if (!dispatch) {
+  const sync = useContext(PluginContext);
+  if (!sync) {
     return undefined;
   }
-  return dispatch;
+  return sync;
 }
 
 type Props = {

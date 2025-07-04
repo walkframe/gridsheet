@@ -1,4 +1,4 @@
-import { type FC, useContext } from 'react';
+import { type FC, useContext, useRef } from 'react';
 
 import { setContextMenuPosition } from '../store/actions';
 import { zoneShape } from '../lib/structs';
@@ -40,7 +40,7 @@ export const ContextMenu = () => {
       <div className={'gs-contextmenu'} style={{ top: top, left: left }}>
         <ul>
           {contextMenuItems.map((Item, index) => {
-            return <Item key={index} store={store} dispatch={dispatch} />;
+            return <Item key={index} store={store} sync={dispatch} />;
           })}
         </ul>
       </div>
@@ -105,13 +105,15 @@ export const RowsColsOperationDividerItem = (props: ContextMenuProps) => {
 };
 
 export const InsertRowsAboveItem = (props: ContextMenuProps) => {
-  const { table, choosing, selectingZone, leftHeaderSelecting } = props.store;
-  if (!leftHeaderSelecting) {
+  const { tableReactive: tableRef, choosing, selectingZone, leftHeaderSelecting } = props.store;
+  const table = tableRef.current;
+
+  if (!leftHeaderSelecting || !table) {
     return null;
   }
   const { y } = choosing;
   const { height } = zoneShape({ ...selectingZone, base: 1 });
-  const selectingTopCell = table.getByPoint({ y, x: 0 });
+  const selectingTopCell = table.getCellByPoint({ y, x: 0 }, 'SYSTEM');
   const disabled =
     (table.maxNumRows !== -1 && table.getNumRows() + height > table.maxNumRows) ||
     prevention.hasOperation(selectingTopCell?.prevention, prevention.InsertRowsAbove);
@@ -133,13 +135,15 @@ export const InsertRowsAboveItem = (props: ContextMenuProps) => {
 };
 
 export const InsertRowsBelowItem = (props: ContextMenuProps) => {
-  const { table, choosing, selectingZone, leftHeaderSelecting } = props.store;
-  if (!leftHeaderSelecting) {
+  const { tableReactive: tableRef, choosing, selectingZone, leftHeaderSelecting } = props.store;
+  const table = tableRef.current;
+
+  if (!leftHeaderSelecting || !table) {
     return null;
   }
   const { y } = choosing;
   const { height } = zoneShape({ ...selectingZone, base: 1 });
-  const selectingBottomCell = table.getByPoint({ y, x: 0 });
+  const selectingBottomCell = table.getCellByPoint({ y, x: 0 }, 'SYSTEM');
   const disabled =
     (table.maxNumRows !== -1 && table.getNumRows() + height > table.maxNumRows) ||
     prevention.hasOperation(selectingBottomCell?.prevention, prevention.InsertRowsBelow);
@@ -161,13 +165,15 @@ export const InsertRowsBelowItem = (props: ContextMenuProps) => {
 };
 
 export const InsertColsLeftItem = (props: ContextMenuProps) => {
-  const { table, choosing, selectingZone, topHeaderSelecting } = props.store;
-  if (!topHeaderSelecting) {
+  const { tableReactive: tableRef, choosing, selectingZone, topHeaderSelecting } = props.store;
+  const table = tableRef.current;
+
+  if (!topHeaderSelecting || !table) {
     return null;
   }
   const { x } = choosing;
   const { width } = zoneShape({ ...selectingZone, base: 1 });
-  const selectingLeftCell = table.getByPoint({ y: 0, x });
+  const selectingLeftCell = table.getCellByPoint({ y: 0, x }, 'SYSTEM');
   const disabled =
     (table.maxNumCols !== -1 && table.getNumCols() + width > table.maxNumCols) ||
     prevention.hasOperation(selectingLeftCell?.prevention, prevention.InsertColsLeft);
@@ -189,13 +195,15 @@ export const InsertColsLeftItem = (props: ContextMenuProps) => {
 };
 
 export const InsertColsRightItem = (props: ContextMenuProps) => {
-  const { table, choosing, selectingZone, topHeaderSelecting } = props.store;
-  if (!topHeaderSelecting) {
+  const { tableReactive: tableRef, choosing, selectingZone, topHeaderSelecting } = props.store;
+  const table = tableRef.current;
+
+  if (!topHeaderSelecting || !table) {
     return null;
   }
   const { x } = choosing;
   const { width } = zoneShape({ ...selectingZone, base: 1 });
-  const selectingRightCell = table.getByPoint({ y: 0, x });
+  const selectingRightCell = table.getCellByPoint({ y: 0, x }, 'SYSTEM');
   const disabled =
     (table.maxNumCols !== -1 && table.getNumCols() + width > table.maxNumCols) ||
     prevention.hasOperation(selectingRightCell?.prevention, prevention.InsertColsRight);
@@ -217,13 +225,15 @@ export const InsertColsRightItem = (props: ContextMenuProps) => {
 };
 
 export const RemoveRowsItem = (props: ContextMenuProps) => {
-  const { table, choosing, selectingZone, leftHeaderSelecting } = props.store;
-  if (!leftHeaderSelecting) {
+  const { tableReactive: tableRef, choosing, selectingZone, leftHeaderSelecting } = props.store;
+  const table = tableRef.current;
+
+  if (!leftHeaderSelecting || !table) {
     return null;
   }
   const { y } = choosing;
   const { height } = zoneShape({ ...selectingZone, base: 1 });
-  const selectingTopCell = table.getByPoint({ y, x: 0 });
+  const selectingTopCell = table.getCellByPoint({ y, x: 0 }, 'SYSTEM');
   const disabled =
     (table.minNumRows !== -1 && table.getNumRows() - height < table.minNumRows) ||
     prevention.hasOperation(selectingTopCell?.prevention, prevention.RemoveRows);
@@ -245,13 +255,15 @@ export const RemoveRowsItem = (props: ContextMenuProps) => {
 };
 
 export const RemoveColsItem = (props: ContextMenuProps) => {
-  const { table, choosing, selectingZone, topHeaderSelecting } = props.store;
-  if (!topHeaderSelecting) {
+  const { tableReactive: tableRef, choosing, selectingZone, topHeaderSelecting } = props.store;
+  const table = tableRef.current;
+
+  if (!topHeaderSelecting || !table) {
     return null;
   }
   const { x } = choosing;
   const { width } = zoneShape({ ...selectingZone, base: 1 });
-  const selectingRightCell = table.getByPoint({ y: 0, x });
+  const selectingRightCell = table.getCellByPoint({ y: 0, x }, 'SYSTEM');
   const disabled =
     (table.minNumCols !== -1 && table.getNumCols() - width < table.minNumCols) ||
     prevention.hasOperation(selectingRightCell?.prevention, prevention.RemoveCols);
@@ -273,7 +285,13 @@ export const RemoveColsItem = (props: ContextMenuProps) => {
 };
 
 export const HistoryDeviderItem = (props: ContextMenuProps) => {
-  const { table } = props.store;
+  const { tableReactive: tableRef } = props.store;
+  const table = tableRef.current;
+
+  if (!table) {
+    return null;
+  }
+
   const historyIndex = table.getHistoryIndex();
   if (historyIndex > -1 || historyIndex < table.getHistorySize() - 1) {
     return <li className="gs-menu-divider" />;
@@ -282,7 +300,13 @@ export const HistoryDeviderItem = (props: ContextMenuProps) => {
 };
 
 export const UndoItem = (props: ContextMenuProps) => {
-  const { table } = props.store;
+  const { tableReactive: tableRef } = props.store;
+  const table = tableRef.current;
+
+  if (!table) {
+    return null;
+  }
+
   const historyIndex = table.getHistoryIndex();
   if (historyIndex <= -1) {
     return null;
@@ -298,7 +322,13 @@ export const UndoItem = (props: ContextMenuProps) => {
 };
 
 export const RedoItem = (props: ContextMenuProps) => {
-  const { table } = props.store;
+  const { tableReactive: tableRef } = props.store;
+  const table = tableRef.current;
+
+  if (!table) {
+    return null;
+  }
+
   const historyIndex = table.getHistoryIndex();
   if (historyIndex >= table.getHistorySize() - 1) {
     return null;

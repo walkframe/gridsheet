@@ -1,0 +1,42 @@
+# Vue
+
+GridSheet provides a comprehensive Vue component that brings Excel-like functionality to your Vue applications.
+
+## Installation
+
+```bash
+npm install @gridsheet/vue-core
+# or
+yarn add @gridsheet/vue-core
+# or
+pnpm add @gridsheet/vue-core
+```
+
+## Basic Usage
+
+```vue filename="App.vue" copy
+<template>
+  <GridSheet
+    :initialCells="buildInitialCellsFromOrigin({
+      matrix: [
+        ['Name', 'Age', 'City'],
+        ['John', 25, 'New York'],
+        ['Jane', 30, 'Los Angeles'],
+        ['Bob', 35, 'Chicago']
+      ]
+    })"
+    :options="{
+      sheetHeight: 400,
+      sheetWidth: 600,
+      sheetResize: 'both'
+    }"
+    sheetName="MySheet"
+  />
+</template>
+
+<script setup lang="ts">
+import { GridSheet, buildInitialCellsFromOrigin } from '@gridsheet/vue-core';
+</script>
+```
+
+**Note:** This Vue implementation is a wrapped version of the Preact core, which means some advanced features may be limited. Additionally, while GridSheet supports custom renderers for arbitrary components, Vue components cannot be passed directly to GridSheet. For custom component rendering, you need to write the code in Preact and pass it to GridSheet. 

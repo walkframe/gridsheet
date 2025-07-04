@@ -1,0 +1,32 @@
+{
+  "case1": {
+    "title": "Case 1: Sales Dashboard with Data Visualization"
+  },
+  "case2": {
+    "title": "Case 2: GitHub Contributors Dashboard"
+  },
+  "case3": {
+    "title": "Case 3: Pixel Art Drawing Interface"
+  },
+  "case4": {
+    "title": "Case 4: Budget Management System with Policies"
+  },
+  "case5": {
+    "title": "Case 5: A simplified menu with Multiple Sheets"
+  },
+  "case6": {
+    "title": "Case 6: Calendar/Scheduler Interface"
+  },
+  "case7": {
+    "title": "Case 7: Real-time Collaboration Interface"
+  },
+  "case8": {
+    "title": "Case 8: Large Dataset Performance Demo"
+  },
+  "case9": {
+    "title": "Case 9: Security & Data Protection"
+  },
+  "case10": {
+    "title": "Case 10: Project Management with Event Handlers"
+  }
+} 

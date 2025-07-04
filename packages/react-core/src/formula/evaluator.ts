@@ -10,6 +10,7 @@ export type IdentifyProps = {
   table: Table;
   slideY?: number;
   slideX?: number;
+  operation?: 'move' | 'removeRows' | 'removeCols';
   dependency: string;
   idMap?: { [id: string]: string };
 };
@@ -77,7 +78,7 @@ export class RefEntity extends Entity<string> {
   }
 
   public evaluate({ table }: EvaluateProps): Table {
-    const parsed = parseRef(table, this.value);
+    const parsed = parseRef(this.value, { table, dependency: '' });
     if (parsed.table == null) {
       throw new FormulaError('#REF!', `Unknown sheet: ${parsed.sheetName}`);
     }
@@ -88,8 +89,9 @@ export class RefEntity extends Entity<string> {
     return parsed.table.trim({ top: y, left: x, bottom: y, right: x });
   }
 
-  public identify({ table, dependency, slideY = 0, slideX = 0 }: IdentifyProps) {
-    const parsed = parseRef(table, this.value);
+  public identify(props: IdentifyProps) {
+    const { table, dependency, slideY = 0, slideX = 0 } = props;
+    const parsed = parseRef(this.value, props);
     if (parsed.table == null) {
       return this.value;
     }
@@ -118,7 +120,7 @@ export class RangeEntity extends Entity<string> {
   }
 
   public evaluate({ table }: EvaluateProps): Table {
-    const parsed = parseRef(table, this.value);
+    const parsed = parseRef(this.value, { table, dependency: '' });
     if (parsed.table == null) {
       throw new FormulaError('#REF!', `Unknown sheet: ${parsed.sheetName}`);
     }
@@ -128,8 +130,9 @@ export class RangeEntity extends Entity<string> {
     const area = parsed.table.rangeToArea(parsed.addresses.join(':'));
     return parsed.table.trim(area);
   }
-  public identify({ table, dependency, slideY = 0, slideX = 0 }: IdentifyProps) {
-    const parsed = parseRef(table, this.value);
+  public identify(props: IdentifyProps) {
+    const { table, dependency, slideY = 0, slideX = 0 } = props;
+    const parsed = parseRef(this.value, props);
     if (parsed.table == null) {
       return this.value;
     }
@@ -161,12 +164,15 @@ export class IdEntity extends Entity<string> {
     if (this.value.indexOf('!') !== -1) {
       const [tableId, id] = this.value.split('!'); // #id
       const sheetId = Number(tableId.slice(1));
-      return { table: table.getTableBySheetId(sheetId), id: getId(id, false) };
+      return { table: table.getTableBySheetId(sheetId)!, id: getId(id, false) };
     }
     return { table, id: getId(this.value, false) };
   }
   public evaluate({ table }: EvaluateProps) {
     const parsed = this.parse(table);
+    if (parsed.id === '?') {
+      throw new FormulaError('#REF!', `Reference does not exist`);
+    }
     const { y, x } = parsed.table.getPointById(parsed.id);
     const [absY, absX] = [Math.abs(y), Math.abs(x)];
     return parsed.table.trim({
@@ -187,12 +193,13 @@ export class IdEntity extends Entity<string> {
     }
     return `${parsed.table.sheetPrefix()}${address}`;
   }
-  public identify({ table, dependency, slideX = 0, slideY = 0 }: IdentifyProps) {
+  public identify(props: IdentifyProps) {
+    const { table, dependency, slideY = 0, slideX = 0 } = props;
     const address = this.display({ table, slideY, slideX });
     if (address == null || address.length < 2) {
-      return '#REF!';
+      return '#?';
     }
-    const { formula, ids } = parseRef(table, address);
+    const { formula, ids } = parseRef(address, props);
     if (dependency) {
       ids.forEach((id) => {
         const system = table.wire.getSystem(id, table);
@@ -200,7 +207,7 @@ export class IdEntity extends Entity<string> {
         system.dependents.add(dependency);
       });
     }
-    return formula || '#REF!';
+    return formula || '#?';
   }
 }
 
@@ -210,7 +217,7 @@ export class IdRangeEntity extends Entity<string> {
     if (range.indexOf('!') !== -1) {
       const [tableId, idRange] = range.split('!'); // #id
       const sheetId = Number(tableId.slice(1));
-      return { table: table.getTableBySheetId(sheetId), ids: idRange.split(':') };
+      return { table: table.getTableBySheetId(sheetId)!, ids: idRange.split(':') };
     }
     return { table, ids: range.split(':') };
   }
@@ -221,7 +228,7 @@ export class IdRangeEntity extends Entity<string> {
     const ps: PointType[] = [];
     for (let i = 0; i < ids.length; i++) {
       const id = ids[i];
-      if (id === '0') {
+      if (id === '?') {
         throw new FormulaError('#REF!', `Reference does not exist`);
       }
       const p = parsed.table.getPointById(id);
@@ -247,9 +254,10 @@ export class IdRangeEntity extends Entity<string> {
     }
     return `${parsed.table.sheetPrefix()}${range}`;
   }
-  public identify({ table, dependency, slideY = 0, slideX = 0 }: IdentifyProps) {
+  public identify(props: IdentifyProps) {
+    const { table, dependency, slideY = 0, slideX = 0 } = props;
     const range = this.display({ table, slideY, slideX });
-    const { formula, ids } = parseRef(table, range);
+    const { formula, ids } = parseRef(range, props);
     if (dependency) {
       ids.forEach((id) => {
         const system = table.wire.getSystem(id, table);
@@ -926,8 +934,8 @@ export function splitRef(ref: string): { sheetName: string | undefined; addresse
 }
 
 export const parseRef = (
-  table: Table,
   ref: string,
+  { table, operation, dependency }: IdentifyProps,
 ): {
   table: Table;
   sheetId?: number;
@@ -939,7 +947,7 @@ export const parseRef = (
   const { sheetName, addresses } = splitRef(ref);
   const ids: string[] = [];
   if (sheetName) {
-    table = table.getTableBySheetName(sheetName);
+    table = table.getTableBySheetName(sheetName)!;
     if (table == null) {
       return { table, sheetName, addresses, ids };
     }
@@ -951,9 +959,19 @@ export const parseRef = (
   for (let i = 0; i < addresses.length; i++) {
     const address = addresses[i];
     const { y, x, absX, absY } = a2p(address);
-    const id = table.getId({ y, x });
+    let id = table.getId({ y, x });
+
+    // if the id is the same as the dependency by the operation,
+    // we need to adjust the id based on the operation
+    if (id === dependency) {
+      if (operation === 'removeRows') {
+        id = table.getId({ y: y - 1, x });
+      } else if (operation === 'removeCols') {
+        id = table.getId({ y, x: x - 1 });
+      }
+    }
     if (id == null) {
-      refs.push(grantAddressAbsolute(address, !!absX, !!absY) || '#REF!');
+      refs.push(grantAddressAbsolute(address, !!absX, !!absY) || '?');
       continue;
     }
     ids.push(id);

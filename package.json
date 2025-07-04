@@ -15,11 +15,14 @@
     "typescript": "^5.8.2"
   },
   "scripts": {
-    "dev": "cd packages/storybook && pnpm dev",
+    "dev": "cd packages/docs && pnpm dev",
+    "dev:storybook": "cd packages/storybook && pnpm dev",
+    "dev:docs": "cd packages/docs && pnpm dev",
     "build:react-core": "cd packages/react-core && pnpm build --mode development",
     "build:right-menu": "cd packages/react-right-menu && pnpm build --mode development",
     "build:storybook": "cd packages/storybook && pnpm build",
-    "build:all": "pnpm build:react-core && pnpm build:right-menu && pnpm build:storybook",
+    "build:docs": "cd packages/docs && pnpm build",
+    "build:all": "pnpm build:react-core && pnpm build:right-menu && pnpm build:storybook && pnpm build:docs",
     "typecheck:react-core": "cd packages/react-core && pnpm typecheck",
     "typecheck:right-menu": "cd packages/react-right-menu && pnpm typecheck",
     "typecheck:all": "pnpm typecheck:react-core",
@@ -28,18 +31,25 @@
     "jest": "pnpm jest:react-core",
     "test": "pnpm jest && pnpm e2e",
     "prettier": "prettier --write '**/*.{ts,tsx}'",
-    "eslint": "eslint --ext .ts,.tsx .",
-    "eslint:fix": "pnpm eslint --fix && pnpm prettier",
+    "lint": "eslint --ext .ts,.tsx .",
+    "lint:fix": "pnpm eslint --fix --ext .ts,.tsx . && pnpm prettier",
     "remove:root": "rm -rf node_modules",
     "remove:react-core": "cd packages/react-core && rm -rf node_modules",
     "remove:right-menu": "cd packages/react-right-menu && rm -rf node_modules",
     "remove:storybook": "cd packages/storybook && rm -rf node_modules",
-    "remove:all": "pnpm remove:react-core && pnpm remove:right-menu && pnpm remove:storybook",
+    "remove:docs": "cd packages/docs && rm -rf node_modules",
+    "remove:all": "pnpm remove:react-core && pnpm remove:right-menu && pnpm remove:storybook && pnpm remove:docs",
     "install:root": "pnpm install",
     "install:react-core": "cd packages/react-core && pnpm install",
     "install:right-menu": "cd packages/react-right-menu && pnpm install",
     "install:storybook": "cd packages/storybook && pnpm install",
-    "install:all": "pnpm install:react-core && pnpm install:right-menu && pnpm install:storybook",
+    "install:docs": "cd packages/docs && pnpm install",
+    "install:all": "pnpm install:react-core && pnpm install:right-menu && pnpm install:storybook && pnpm install:docs",
     "reset:all": "pnpm remove:all && pnpm install:all"
+  },
+  "resolutions": {
+    "react": "18.2.0",
+    "@types/react": "18.2.0",
+    "@types/react-dom": "18.2.0"
   }
 }

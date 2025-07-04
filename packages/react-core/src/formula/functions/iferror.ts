@@ -44,9 +44,9 @@ export class IfErrorFunction {
     const [value, valueIfError] = this.args;
 
     try {
-      return stripTable(value.evaluate({ table: this.table }));
+      return stripTable({ value: value.evaluate({ table: this.table }) });
     } catch (e) {
-      return stripTable(valueIfError?.evaluate({ table: this.table }));
+      return stripTable({ value: valueIfError?.evaluate({ table: this.table }) });
     }
   }
 }

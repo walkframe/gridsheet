@@ -1,0 +1,73 @@
+import Case6 from './case6.component';
+
+# 🗓️ Calendar/Scheduler Interface
+
+This demo showcases a calendar/scheduler UI built with GridSheet.
+
+It demonstrates custom date cell rendering with event management.
+
+Users can input events in "HH:MM Task" format, separated by newlines.
+
+<Case6 />
+
+## Implementation Guide
+
+### 📅 Calendar/Scheduler Interface Overview
+This comprehensive calendar and scheduler interface demonstrates how GridSheet can be used to create sophisticated scheduling applications. The implementation includes date calculations, event parsing, visual styling, and interactive event management.
+
+### 📅 Date Calculation System
+Implement a robust date calculation system that determines dates based on grid positions. Calculate weekdays, weekends, and date ranges for proper calendar display. Handle date boundaries, leap years, and timezone considerations.
+
+### 🔧 Event Parsing and Validation
+Create custom parsers that convert user input into structured event data. Parse time formats (HH:MM), validate time ranges, and handle various input formats. Include error handling for invalid time formats and malformed input.
+
+### 🎨 Custom Calendar Renderer
+Implement custom renderers that display calendar cells with dates, events, and visual indicators. Handle weekend highlighting, event display, and empty state messaging. Create responsive layouts that work with different cell sizes.
+
+### 📝 Event Management System
+Develop a comprehensive event management system that handles multiple events per day. Support event time formatting, task descriptions, and event prioritization. Include visual indicators for different event types and durations.
+
+### 🎨 Visual Styling and Theming
+Create professional calendar styling with weekend highlighting, event colors, and visual hierarchy. Implement consistent color schemes, typography, and spacing. Include hover effects and visual feedback for user interactions.
+
+### 💾 Data Structure Management
+Handle complex data structures including event arrays, date objects, and time formats. Implement proper data validation, serialization, and deserialization. Ensure data consistency across different calendar views.
+
+### 📱 Responsive Calendar Layout
+Design responsive calendar layouts that adapt to different screen sizes and orientations. Implement flexible grid systems, adaptive cell sizing, and mobile-friendly interactions. Ensure calendar remains usable on all devices.
+
+### ✏️ Event Input and Editing
+Provide intuitive event input interfaces with format validation and real-time feedback. Support multiple input formats, keyboard shortcuts, and bulk event entry. Include undo/redo functionality for event modifications.
+
+### ⚡ Performance Optimization
+Optimize calendar rendering for large date ranges and multiple events. Implement efficient date calculations, event filtering, and visual updates. Consider virtualization for long date ranges and memory management.
+
+### ✅ Best Practices
+1. **Date Handling**: Use proper date libraries and handle timezone considerations
+2. **Event Validation**: Validate all event inputs and time formats
+3. **User Experience**: Provide clear visual feedback and intuitive interactions
+4. **Accessibility**: Ensure calendar is accessible to users with disabilities
+5. **Performance**: Optimize rendering for large datasets and frequent updates
+6. **Data Persistence**: Implement reliable event saving and recovery
+7. **Error Handling**: Provide graceful error handling for invalid inputs
+
+### 🎯 Common Use Cases
+- **Personal Scheduling**: Individual calendar and task management
+- **Team Calendars**: Shared team scheduling and meeting coordination
+- **Event Management**: Conference and event scheduling systems
+- **Resource Booking**: Room and resource reservation systems
+- **Project Planning**: Project timeline and milestone tracking
+
+### 🚀 Advanced Features
+- **Recurring Events**: Support for daily, weekly, monthly recurring events
+- **Event Categories**: Color-coded event categories and filtering
+- **Time Zone Support**: Multi-timezone calendar support
+- **Event Sharing**: Share events and calendars with other users
+- **Integration**: Connect with external calendar systems and APIs
+
+### 📅 Calendar Patterns
+- **Week View**: Traditional weekly calendar layout
+- **Month View**: Monthly calendar with event previews
+- **Agenda View**: List-based event display
+- **Timeline View**: Gantt-style timeline visualization
+- **Multi-calendar**: Support for multiple calendar sources

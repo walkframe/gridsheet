@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, buildInitialCells, useTableRef, HistoryType } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells, useConnector, HistoryType, useHub } from '@gridsheet/react-core';
 
 type Props = {
   x: number;
@@ -9,8 +9,7 @@ type Props = {
 };
 
 const meta: Meta = {
-  title: 'Feature/Control/Write',
-  tags: ['autodocs'],
+  title: 'Control/Write',
   argTypes: {
     x: { control: 'number' },
     y: { control: 'number' },
@@ -27,45 +26,51 @@ const DESCRIPTION = [
 
   '## How it works',
   'Programmatic writing allows you to set cell values from external sources or user interactions.',
-  '1. Use tableRef to access the table instance and dispatch function.',
+  '1. Use connector to access the table instance and sync function.',
   '2. The write operation sets a value at a specific point (x, y coordinates).',
   '3. Writing can be triggered by props changes or user interactions.',
-  '4. The operation is applied through the dispatch function to maintain consistency.',
+  '4. The operation is applied through the sync function to maintain consistency.',
 ].join('\n\n');
 
+const WriteComponent: React.FC<Props> = ({ x, y, value }: Props) => {
+  const connector = useConnector();
+
+  const hub = useHub({
+    onKeyUp: (e, points) => {
+      console.log('onKeyUp', e.currentTarget.value, points.pointing);
+    },
+    onInit: (table) => {
+      console.debug('onInit', table);
+    },
+  });
+
+  React.useEffect(() => {
+    if (connector?.current == null) {
+      return;
+    }
+    const { tableManager } = connector.current;
+    const { instance: table, sync } = tableManager;
+    sync(table.write({ point: { x, y }, value }));
+  }, [x, y, value, connector]);
+
+  return (
+    <GridSheet
+      connector={connector}
+      hub={hub}
+      initialCells={buildInitialCells({
+        cells: {},
+        ensured: {
+          numRows: 10,
+          numCols: 10,
+        },
+      })}
+      options={{}}
+    />
+  );
+};
+
 export const Write: StoryObj<Props> = {
-  render: ({ x, y, value }) => {
-    const tableRef = useTableRef();
-
-    React.useEffect(() => {
-      if (tableRef?.current == null) {
-        return;
-      }
-      const { table, dispatch } = tableRef.current;
-      dispatch(table.write({ point: { y, x }, value }));
-    }, [x, y, value, tableRef]);
-
-    return (
-      <GridSheet
-        tableRef={tableRef}
-        initialCells={buildInitialCells({
-          cells: {},
-          ensured: {
-            numRows: 10,
-            numCols: 10,
-          },
-        })}
-        options={{
-          onKeyUp: (e, points) => {
-            console.log('onKeyUp', e.currentTarget.value, points.pointing);
-          },
-          onInit: (table) => {
-            console.debug('onInit', table);
-          },
-        }}
-      />
-    );
-  },
+  render: ({ x, y, value }: Props) => <WriteComponent x={x} y={y} value={value} />,
   args: { x: 2, y: 2, value: 'something' },
   parameters: {
     docs: {

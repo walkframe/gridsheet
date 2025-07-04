@@ -1,0 +1,44 @@
+# Vanilla JavaScript
+
+GridSheet provides a lightweight vanilla JavaScript library that brings Excel-like functionality to your web applications without any framework dependencies.
+
+## Installation
+
+```bash
+npm install @gridsheet/preact-core
+# or
+yarn add @gridsheet/preact-core
+# or
+pnpm add @gridsheet/preact-core
+```
+
+## Basic Usage
+
+```html
+<script type="module">
+  import { GridSheet, h, render, buildInitialCellsFromOrigin } from '@gridsheet/preact-core';
+
+  const app = h(GridSheet, {
+    initialCells: buildInitialCellsFromOrigin({
+      matrix: [
+        ['Name', 'Age', 'City'],
+        ['John', 25, 'New York'],
+        ['Jane', 30, 'Los Angeles'],
+        ['Bob', 35, 'Chicago']
+      ],
+    }),
+    options: {
+      sheetHeight: 400,
+      sheetWidth: 600,
+      sheetResize: 'both'
+    },
+  });
+  render(app, document.body);
+</script>
+```
+
+## Next Steps
+
+- Explore the [Features](/features) section to learn about all available options
+- Check out [Examples](/examples) for more use cases
+- Read the [API Reference](/api) for detailed documentation 

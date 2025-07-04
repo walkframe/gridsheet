@@ -51,7 +51,7 @@ export class SumifFunction extends BaseFunction {
     let total = 0;
     conditionMatrix.forEach((row, y) =>
       row.forEach((c, x) => {
-        const s = stripTable(sumMatrix[y]?.[x] ?? 0);
+        const s = stripTable({ value: sumMatrix[y]?.[x] ?? 0 });
         if (typeof s === 'number' && check(c, condition)) {
           total += s;
         }

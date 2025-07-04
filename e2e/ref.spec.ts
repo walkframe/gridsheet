@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { ctrl, drag, paste } from './utils';
 
 test('reference resolution after move operation', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-formula-ref--refs&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=formula-ref--refs&viewMode=story');
 
   // Check initial state
   const f9 = page.locator("[data-address='F9']");
@@ -93,7 +93,7 @@ test('reference resolution after move operation', async ({ page }) => {
 });
 
 test('reference resolution after move B11:C12 to B9:C10', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-formula-ref--refs&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=formula-ref--refs&viewMode=story');
 
   // Check initial state
   const b13 = page.locator("[data-address='B13']");

@@ -1,0 +1,83 @@
+# History
+
+Track the evolution of GridSheet through its version history and migration guides.
+
+## Version History
+
+### 2.x.x
+
+The latest major version of GridSheet with enhanced features and improved performance.
+
+#### Key Changes in 2.x
+
+- Enhanced formula engine
+- Improved TypeScript support
+- Better performance optimizations
+- New policy system
+- Updated styling API
+- Unified connector system (`useConnector` replaces `useTableRef` and `useStoreRef`)
+
+### 1.x.x
+
+The initial release of GridSheet with core spreadsheet functionality.
+
+#### Features in 1.x
+
+- Basic spreadsheet interface
+- Simple formula support
+- Basic styling options
+- Cell operations
+- Hub system
+
+## Migration Guide
+
+### Migrating from 1.x to 2.x
+
+This guide helps you upgrade your GridSheet implementation from version 1.x to 2.x.
+
+#### Breaking Changes
+
+1. **API Updates**: Some prop names and structures have changed
+2. **Policy System**: New policy system replaces old validation
+3. **Styling**: Updated styling API with new utilities
+4. **Hub Configuration**: Enhanced hub system with new options
+5. **Connector System**: `useTableRef` and `useStoreRef` unified into `useConnector`
+
+#### Migration Steps
+
+1. **Update Dependencies**: Install the latest version
+2. **Review API Changes**: Check for deprecated props and methods
+3. **Update Policies**: Migrate to the new policy system
+4. **Test Functionality**: Verify all features work as expected
+
+#### Code Examples
+
+**Before (1.x):**
+```tsx
+// Old validation approach
+const validation = {
+  type: 'number',
+  min: 0,
+  max: 100
+};
+```
+
+**After (2.x):**
+```tsx
+// New policy approach
+const BudgetPolicy = {
+  validate: (props) => {
+    const { patch } = props;
+    const value = Number(patch.value);
+    if (isNaN(value) || value < 0) {
+      return { ...patch, value: 0 };
+    }
+    if (value > 100) {
+      return { ...patch, value: 100 };
+    }
+    return patch;
+  }
+};
+```
+
+For detailed migration assistance, refer to the specific version documentation. 

@@ -10,6 +10,7 @@ import {
   PositionType,
   ModeType,
   RawCellType,
+  OperatorType,
 } from '../types';
 import { zoneToArea, superposeArea, matrixShape, areaShape, areaToZone, zoneShape, restrictZone } from '../lib/structs';
 import { Table } from '../lib/table';
@@ -63,10 +64,13 @@ export class CoreAction<T> {
 class SetSearchQueryAction<T extends string | undefined> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const searchQuery = payload;
-    const { table } = store;
+    const { tableReactive: tableRef } = store;
+    if (tableRef.current == null) {
+      return store;
+    }
     return {
       ...store,
-      ...initSearchStatement(table, { ...store, searchQuery }),
+      ...initSearchStatement(tableRef.current, { ...store, searchQuery }),
       searchQuery,
     };
   }
@@ -76,10 +80,13 @@ export const setSearchQuery = new SetSearchQueryAction().bind();
 class SetSearchCaseSensitiveAction<T extends boolean> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const searchCaseSensitive = payload;
-    const { table } = store;
+    const { tableReactive: tableRef } = store;
+    if (tableRef.current == null) {
+      return store;
+    }
     return {
       ...store,
-      ...initSearchStatement(table, { ...store, searchCaseSensitive }),
+      ...initSearchStatement(tableRef.current, { ...store, searchCaseSensitive }),
       searchCaseSensitive,
     };
   }
@@ -114,7 +121,7 @@ class SubmitAutofillAction<T extends PointType> extends CoreAction<T> {
 
     return {
       ...store,
-      table,
+      tableReactive: { current: table },
       ...initSearchStatement(table, store),
       ...restrictPoints(store, table),
       selectingZone,
@@ -170,7 +177,7 @@ class UpdateTableAction<T extends Table> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     return {
       ...store,
-      table: payload,
+      tableReactive: { current: payload },
       ...initSearchStatement(payload, store),
       ...restrictPoints(store, payload),
     };
@@ -210,10 +217,14 @@ export const blur = new BlurAction().bind();
 
 class CopyAction<T extends ZoneType> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
-    const { table } = store;
+    const { tableReactive: tableRef } = store;
+    const table = tableRef.current;
+    if (!table) {
+      return store;
+    }
     return {
       ...store,
-      callback: ({ table }) => {
+      callback: ({ tableReactive: tableRef }) => {
         table.wire.transmit({
           copyingSheetId: table.sheetId,
           copyingZone: payload,
@@ -227,10 +238,14 @@ export const copy = new CopyAction().bind();
 
 class CutAction<T extends ZoneType> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
-    const { table } = store;
+    const { tableReactive: tableRef } = store;
+    const table = tableRef.current;
+    if (!table) {
+      return store;
+    }
     return {
       ...store,
-      callback: ({ table }) => {
+      callback: ({ tableReactive: tableRef }) => {
         table.wire.transmit({
           copyingSheetId: table.sheetId,
           copyingZone: payload,
@@ -244,10 +259,17 @@ export const cut = new CutAction().bind();
 
 class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
-    const { choosing, selectingZone, table: dstTable } = store;
-    const { wire: hub } = dstTable;
-    const { copyingSheetId, copyingZone, cutting } = hub;
+    const { choosing, selectingZone, tableReactive: dstTableRef } = store;
+    const dstTable = dstTableRef.current;
+    if (!dstTable) {
+      return store;
+    }
+    const { wire } = dstTable;
+    const { copyingSheetId, copyingZone, cutting } = wire;
     const srcTable = dstTable.getTableBySheetId(copyingSheetId);
+    if (!srcTable) {
+      return store;
+    }
 
     let selectingArea = zoneToArea(selectingZone);
     const copyingArea = zoneToArea(copyingZone);
@@ -293,11 +315,11 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
       return {
         ...store,
         ...initSearchStatement(newTable, store),
-        table: newTable,
+        tableReactive: { current: newTable },
         selectingZone: nextSelectingZone,
-        inputting: newTable.stringify({ point: choosing, refEvaluation: 'raw' }),
-        callback: ({ table }) => {
-          table.wire.transmit({
+        inputting: newTable.stringify({ point: choosing, refEvaluation: 'RAW' }),
+        callback: ({ tableReactive: tableRef }) => {
+          wire.transmit({
             cutting: false,
             copyingZone: resetZone,
           });
@@ -366,12 +388,12 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
     const nextSelectingZone = restrictZone(areaToZone(selectingArea));
     return {
       ...store,
-      table: newTable,
+      tableReactive: { current: newTable },
       selectingZone: nextSelectingZone,
-      inputting: newTable.stringify({ point: choosing, refEvaluation: 'raw' }),
+      inputting: newTable.stringify({ point: choosing, refEvaluation: 'RAW' }),
       ...initSearchStatement(newTable, store),
-      callback: ({ table }) => {
-        table.wire.transmit({
+      callback: ({ tableReactive: tableRef }) => {
+        wire.transmit({
           copyingZone: resetZone,
         });
       },
@@ -382,14 +404,14 @@ export const paste = new PasteAction().bind();
 
 class EscapeAction<T extends null> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
-    const { table } = store;
+    const { tableReactive: tableRef } = store;
     return {
       ...store,
       editingAddress: '',
       leftHeaderSelecting: false,
       topHeaderSelecting: false,
-      callback: ({ table }) => {
-        table.wire.transmit({
+      callback: ({ tableReactive: tableRef }) => {
+        tableRef.current!.wire.transmit({
           copyingZone: resetZone,
           cutting: false,
         });
@@ -506,9 +528,13 @@ export const search = new SearchAction().bind();
 class WriteAction<T extends { value: string; point?: PointType }> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     let { value, point } = payload;
-    const { choosing, selectingZone, table } = store;
+    const { choosing, selectingZone, tableReactive: tableRef } = store;
     if (point == null) {
       point = choosing;
+    }
+    const table = tableRef.current;
+    if (!table) {
+      return store;
     }
     const newTable = table.write({
       point: point,
@@ -528,8 +554,8 @@ class WriteAction<T extends { value: string; point?: PointType }> extends CoreAc
     return {
       ...store,
       ...initSearchStatement(newTable, store),
-      table: newTable,
-      callback: ({ table }) => {
+      tableReactive: { current: newTable },
+      callback: ({ tableReactive: tableRef }) => {
         table.wire.transmit({
           copyingZone: resetZone,
         });
@@ -541,7 +567,11 @@ export const write = new WriteAction().bind();
 
 class ClearAction<T extends null> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
-    const { choosing, selectingZone, table } = store;
+    const { choosing, selectingZone, tableReactive: tableRef } = store;
+    const table = tableRef.current;
+    if (!table) {
+      return store;
+    }
 
     let selectingArea = zoneToArea(selectingZone);
     if (selectingArea.top === -1) {
@@ -553,7 +583,7 @@ class ClearAction<T extends null> extends CoreAction<T> {
     let diffCount = 0;
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        const cell = table.getByPoint({ y, x });
+        const cell = table.getCellByPoint({ y, x }, 'SYSTEM');
         const address = p2a({ y, x });
         if (prevention.hasOperation(cell?.prevention, prevention.Write)) {
           continue;
@@ -567,7 +597,7 @@ class ClearAction<T extends null> extends CoreAction<T> {
     if (diffCount === 0) {
       return store;
     }
-    const newTable = table.update({
+    table.update({
       diff,
       partial: true,
       operator: 'USER',
@@ -584,8 +614,8 @@ class ClearAction<T extends null> extends CoreAction<T> {
     });
     return {
       ...store,
-      ...initSearchStatement(newTable, store),
-      table: newTable,
+      ...initSearchStatement(table, store),
+      tableReactive: { current: table },
     };
   }
 }
@@ -593,22 +623,26 @@ export const clear = new ClearAction().bind();
 
 class UndoAction<T extends null> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
-    const { table } = store;
-    const { history, newTable, callback } = table.undo();
+    const { tableReactive: tableRef } = store;
+    const table = tableRef.current;
+    if (!table) {
+      return store;
+    }
+    const { history, callback } = table.undo();
     if (history == null) {
       return store;
     }
     if (history.dstSheetId !== table.sheetId) {
-      const { dispatch, store: dstStore } = table.wire.contextsBySheetId[history.dstSheetId];
-      dispatch(setStore({ ...dstStore, ...history.undoReflection }));
+      const { sync, store: dstStore } = table.wire.contextsBySheetId[history.dstSheetId];
+      sync(setStore({ ...dstStore, ...history.undoReflection }));
       return store;
     }
     return {
       ...store,
       ...restrictPoints(store, table),
       ...history.undoReflection,
-      ...initSearchStatement(newTable, store),
-      table: newTable,
+      ...initSearchStatement(table, store),
+      tableReactive: { current: table },
       callback,
     };
   }
@@ -617,22 +651,26 @@ export const undo = new UndoAction().bind();
 
 class RedoAction<T extends null> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
-    const { table } = store;
+    const { tableReactive: tableRef } = store;
+    const table = tableRef.current;
+    if (table == null) {
+      return store;
+    }
     const { history, newTable, callback } = table.redo();
     if (history == null) {
       return store;
     }
     if (history.dstSheetId !== table.sheetId) {
-      const { dispatch, store: dstStore } = table.wire.contextsBySheetId[history.dstSheetId];
-      dispatch(setStore({ ...dstStore, ...history.redoReflection }));
+      const { sync, store: dstStore } = table.wire.contextsBySheetId[history.dstSheetId];
+      sync(setStore({ ...dstStore, ...history.redoReflection }));
       return store;
     }
     return {
       ...store,
       ...restrictPoints(store, table),
       ...history.redoReflection,
-      ...initSearchStatement(newTable, store),
-      table: newTable,
+      ...initSearchStatement(table, store),
+      tableReactive: { current: table },
       callback,
     };
   }
@@ -650,7 +688,11 @@ class ArrowAction<
 > extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { shiftKey, deltaY, deltaX, numRows, numCols } = payload;
-    const { choosing, table, tabularRef } = store;
+    const { choosing, tableReactive: tableRef, tabularRef } = store;
+    const table = tableRef.current;
+    if (table == null) {
+      return store;
+    }
     let { selectingZone } = store;
     const { y, x } = choosing;
     if (shiftKey) {
@@ -678,24 +720,24 @@ class ArrowAction<
     let { y: editorTop, x: editorLeft, height, width } = store.editorRect;
     if (deltaY > 0) {
       for (let i = y; i < nextY; i++) {
-        editorTop += table.getByPoint({ y: i, x: 0 })?.height || DEFAULT_HEIGHT;
+        editorTop += table.getCellByPoint({ y: i, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
       }
     } else if (deltaY < 0) {
       for (let i = y - 1; i >= nextY; i--) {
-        editorTop -= table.getByPoint({ y: i, x: 0 })?.height || DEFAULT_HEIGHT;
+        editorTop -= table.getCellByPoint({ y: i, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
       }
     }
     if (deltaX > 0) {
       for (let i = x; i < nextX; i++) {
-        editorLeft += table.getByPoint({ y: 0, x: i })?.width || DEFAULT_WIDTH;
+        editorLeft += table.getCellByPoint({ y: 0, x: i }, 'SYSTEM')?.width || DEFAULT_WIDTH;
       }
     } else if (deltaX < 0) {
       for (let i = x - 1; i >= nextX; i--) {
-        editorLeft -= table.getByPoint({ y: 0, x: i })?.width || DEFAULT_WIDTH;
+        editorLeft -= table.getCellByPoint({ y: 0, x: i }, 'SYSTEM')?.width || DEFAULT_WIDTH;
       }
     }
 
-    const cell = table.getByPoint({ y: nextY, x: nextX });
+    const cell = table.getCellByPoint({ y: nextY, x: nextX }, 'SYSTEM');
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
 
@@ -721,7 +763,12 @@ class WalkAction<
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { numRows, numCols } = payload;
     let { deltaY, deltaX } = payload;
-    const { choosing, selectingZone, table, tabularRef: gridOuterRef } = store;
+    const { choosing, selectingZone, tableReactive: tableRef, tabularRef: gridOuterRef } = store;
+    const table = tableRef.current;
+    if (table == null) {
+      return store;
+    }
+
     let { y: editorTop, x: editorLeft, height, width } = store.editorRect;
     const { y, x } = choosing;
     const selectingArea = zoneToArea(selectingZone);
@@ -777,23 +824,23 @@ class WalkAction<
     }
     if (deltaY > 0) {
       for (let i = y; i < nextY; i++) {
-        editorTop += table.getByPoint({ y: i, x: 0 })?.height || DEFAULT_HEIGHT;
+        editorTop += table.getCellByPoint({ y: i, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
       }
     } else if (deltaY < 0) {
       for (let i = y - 1; i >= nextY; i--) {
-        editorTop -= table.getByPoint({ y: i, x: 0 })?.height || DEFAULT_HEIGHT;
+        editorTop -= table.getCellByPoint({ y: i, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
       }
     }
     if (deltaX > 0) {
       for (let i = x; i < nextX; i++) {
-        editorLeft += table.getByPoint({ y: 0, x: i })?.width || DEFAULT_WIDTH;
+        editorLeft += table.getCellByPoint({ y: 0, x: i }, 'SYSTEM')?.width || DEFAULT_WIDTH;
       }
     } else if (deltaX < 0) {
       for (let i = x - 1; i >= nextX; i--) {
-        editorLeft -= table.getByPoint({ y: 0, x: i })?.width || DEFAULT_WIDTH;
+        editorLeft -= table.getCellByPoint({ y: 0, x: i }, 'SYSTEM')?.width || DEFAULT_WIDTH;
       }
     }
-    const cell = table.getByPoint({ y: nextY, x: nextX });
+    const cell = table.getCellByPoint({ y: nextY, x: nextX }, 'SYSTEM');
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
     smartScroll(table, gridOuterRef.current, { y: nextY, x: nextX });
@@ -816,6 +863,230 @@ class SetInputtingAction<T extends string> extends CoreAction<T> {
 }
 
 export const setInputting = new SetInputtingAction().bind();
+
+class InsertRowsAboveAction<T extends { numRows: number; y: number; operator?: OperatorType }> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
+    const { numRows, y, operator } = payload;
+    const { tableReactive: tableRef, selectingZone, choosing } = store;
+    const table = tableRef.current;
+    if (table == null) {
+      return store;
+    }
+    table.insertRows({
+      y,
+      numRows,
+      baseY: y,
+      operator,
+      undoReflection: {
+        sheetId: table.sheetId,
+        selectingZone,
+        choosing,
+      },
+      redoReflection: {
+        sheetId: table.sheetId,
+        selectingZone,
+        choosing,
+      },
+    });
+    return {
+      ...store,
+      ...table.getTotalSize(),
+      tableReactive: { current: table },
+    };
+  }
+}
+export const insertRowsAbove = new InsertRowsAboveAction().bind();
+
+class InsertRowsBelowAction<T extends { numRows: number; y: number; operator?: OperatorType }> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
+    const { numRows, y, operator } = payload;
+    const { tableReactive: tableRef, selectingZone, choosing, editorRef } = store;
+    const table = tableRef.current;
+    if (table == null) {
+      return store;
+    }
+    const nextSelectingZone = {
+      ...selectingZone,
+      startY: selectingZone.startY + numRows,
+      endY: selectingZone.endY + numRows,
+    };
+    const nextChoosing = { ...choosing, y: choosing.y + numRows };
+
+    table.insertRows({
+      y: y + 1,
+      numRows,
+      baseY: y,
+      operator,
+      undoReflection: {
+        sheetId: table.sheetId,
+        selectingZone,
+        choosing,
+      },
+      redoReflection: {
+        sheetId: table.sheetId,
+        selectingZone: nextSelectingZone,
+        choosing: nextChoosing,
+      },
+    });
+    return {
+      ...store,
+      ...table.getTotalSize(),
+      selectingZone: nextSelectingZone,
+      choosing: nextChoosing,
+      tableReactive: { current: table },
+    };
+  }
+}
+export const insertRowsBelow = new InsertRowsBelowAction().bind();
+
+class InsertColsLeftAction<T extends { numCols: number; x: number; operator?: OperatorType }> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
+    const { numCols, x, operator } = payload;
+    const { tableReactive: tableRef, selectingZone, choosing, editorRef } = store;
+    const table = tableRef.current;
+    if (table == null) {
+      return store;
+    }
+
+    table.insertCols({
+      x,
+      numCols,
+      baseX: x,
+      operator,
+      undoReflection: {
+        sheetId: table.sheetId,
+        selectingZone,
+        choosing,
+      },
+      redoReflection: {
+        sheetId: table.sheetId,
+        selectingZone,
+        choosing,
+      },
+    });
+    return {
+      ...store,
+      ...table.getTotalSize(),
+      tableReactive: { current: table },
+    };
+  }
+}
+export const insertColsLeft = new InsertColsLeftAction().bind();
+
+class InsertColsRightAction<T extends { numCols: number; x: number; operator?: OperatorType }> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
+    const { numCols, x, operator } = payload;
+    const { tableReactive: tableRef, selectingZone, choosing } = store;
+    const table = tableRef.current;
+    if (table == null) {
+      return store;
+    }
+    const nextSelectingZone = {
+      ...selectingZone,
+      startX: selectingZone.startX + numCols,
+      endX: selectingZone.endX + numCols,
+    };
+    const nextChoosing = { ...choosing, x: choosing.x + numCols };
+
+    selectingZone.startX += numCols;
+    selectingZone.endX += numCols;
+
+    table.insertCols({
+      x: x + 1,
+      numCols,
+      baseX: x,
+      operator,
+      undoReflection: {
+        sheetId: table.sheetId,
+        selectingZone,
+        choosing,
+      },
+      redoReflection: {
+        sheetId: table.sheetId,
+        selectingZone: nextSelectingZone,
+        choosing: nextChoosing,
+      },
+    });
+    return {
+      ...store,
+      ...table.getTotalSize(),
+      selectingZone: nextSelectingZone,
+      choosing: nextChoosing,
+      tableReactive: { current: table },
+    };
+  }
+}
+export const insertColsRight = new InsertColsRightAction().bind();
+
+class RemoveRowsAction<T extends { numRows: number; y: number; operator?: OperatorType }> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
+    const { numRows, y, operator } = payload;
+    const { tableReactive: tableRef, selectingZone, choosing, editorRef } = store;
+    const table = tableRef.current;
+    if (table == null) {
+      return store;
+    }
+
+    table.removeRows({
+      y,
+      numRows,
+      operator,
+      undoReflection: {
+        sheetId: table.sheetId,
+        selectingZone,
+        choosing,
+        sheetHeight: store.sheetHeight,
+      },
+      redoReflection: {
+        sheetId: table.sheetId,
+        selectingZone,
+        choosing,
+      },
+    });
+
+    return {
+      ...store,
+      ...table.getTotalSize(),
+      tableReactive: { current: table },
+    };
+  }
+}
+export const removeRows = new RemoveRowsAction().bind();
+
+class RemoveColsAction<T extends { numCols: number; x: number; operator?: OperatorType }> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
+    const { numCols, x, operator } = payload;
+    const { tableReactive: tableRef, selectingZone, choosing, editorRef } = store;
+    const table = tableRef.current;
+    if (table == null) {
+      return store;
+    }
+
+    table.removeCols({
+      x,
+      numCols,
+      operator,
+      undoReflection: {
+        sheetId: table.sheetId,
+        selectingZone,
+        choosing,
+        sheetWidth: store.sheetWidth,
+      },
+      redoReflection: {
+        sheetId: table.sheetId,
+        selectingZone,
+        choosing,
+      },
+    });
+
+    return {
+      ...store,
+      ...table.getTotalSize(),
+      tableReactive: { current: table },
+    };
+  }
+}
+export const removeCols = new RemoveColsAction().bind();
 
 class setStoreAction<T extends Partial<StoreType>> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
@@ -845,4 +1116,10 @@ export const userActions = {
   redo,
   arrow,
   walk,
+  insertRowsAbove,
+  insertRowsBelow,
+  insertColsLeft,
+  insertColsRight,
+  removeRows,
+  removeCols,
 };

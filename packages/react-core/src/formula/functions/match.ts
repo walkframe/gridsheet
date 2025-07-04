@@ -27,7 +27,7 @@ export class MatchFunction extends BaseFunction {
     }
 
     if (this.bareArgs[0] instanceof Table) {
-      this.bareArgs[0] = stripTable(this.bareArgs[0]);
+      this.bareArgs[0] = stripTable({ value: this.bareArgs[0] });
     }
 
     if (!(this.bareArgs[1] instanceof Table)) {

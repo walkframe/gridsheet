@@ -20,7 +20,8 @@ export class ReferencePreserver {
     });
   }
 
-  resolveDependents() {
+  resolveDependents(operation?: 'move' | 'removeRows' | 'removeCols'): CellsByIdType {
+    this.table.clearAddressCaches();
     const diffBefore: CellsByIdType = {};
     this.dependentIds.forEach((id) => {
       const dep = this.table.wire.data[id];
@@ -32,6 +33,7 @@ export class ReferencePreserver {
         dependency: id,
         table: this.table,
         idMap: this.map,
+        operation,
       });
     });
 

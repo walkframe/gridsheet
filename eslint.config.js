@@ -38,6 +38,7 @@ export default [
       "@typescript-eslint/no-unsafe-member-access": "off",
       "@typescript-eslint/no-unsafe-return": "off",
       "@typescript-eslint/no-unused-vars": "off",
+      curly: ['error', 'all'],
     },
   },
 ];

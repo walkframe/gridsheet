@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 
 import { CellType, PointType, WriterType } from '../types';
-import { Table } from '../lib/table';
+import { Table, UserTable } from '../lib/table';
 import { solveFormula, solveTable } from '../formula/solver';
 import { FormulaError } from '../formula/evaluator';
 import { TimeDelta } from '../lib/time';
@@ -20,7 +20,7 @@ export type Props = {
 export type RendererCallProps = {
   table: Table;
   point: PointType;
-  writer?: WriterType;
+  sync?: (table: UserTable) => void;
 };
 
 export type RenderProps<T extends any = any> = {
@@ -28,7 +28,7 @@ export type RenderProps<T extends any = any> = {
   cell?: CellType<T>;
   table: Table;
   point: PointType;
-  writer?: WriterType;
+  sync?: (table: UserTable) => void;
 };
 
 export interface RendererMixinType {
@@ -73,14 +73,13 @@ export class Renderer implements RendererMixinType {
     }
     for (const mixin of mixins) {
       for (const key in mixin) {
-        // @ts-expect-error mixin has the same fields as this
-        this[key] = mixin[key];
+        (this as any)[key] = (mixin as any)[key];
       }
     }
   }
 
   public call(props: RendererCallProps): any {
-    const { point: origin, table, writer } = props;
+    const { point: origin, table, sync } = props;
     const key = table.getId(origin);
     const cell = table.getById(key) ?? {};
     const cache = table.getSolvedCache(origin);
@@ -96,7 +95,7 @@ export class Renderer implements RendererMixinType {
         value = cell?.value;
       }
     }
-    const rendered = this.render({ value, cell, table, writer, point: origin });
+    const rendered = this.render({ value, cell, table, sync, point: origin });
     return this.decorate(rendered, { ...props, value, cell });
   }
 
@@ -174,7 +173,7 @@ export class Renderer implements RendererMixinType {
 
   table(props: RenderProps<Table>): any {
     let { value: table } = props;
-    const value = stripTable(table, 0, 0);
+    const value = stripTable({ value: table });
     return this.render({ ...props, table, value });
   }
 

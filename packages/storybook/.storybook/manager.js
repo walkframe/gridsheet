@@ -23,4 +23,6 @@ addons.setConfig({
     copy: { hidden: false },
     fullscreen: { hidden: false },
   },
+  panelPosition: 'bottom',
+  showPanel: false,
 }); 

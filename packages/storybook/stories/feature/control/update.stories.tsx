@@ -1,69 +1,68 @@
 import React, { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, buildInitialCells, useTableRef, HistoryType, Table } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells, useConnector, HistoryType, Table, createHub, UserTable } from '@gridsheet/react-core';
 
 const meta: Meta = {
-  title: 'Feature/Control/Update',
-  tags: ['autodocs'],
+  title: 'Control/Update',
 };
 export default meta;
 
-const DESCRIPTION = [
-  '## Example',
-  'This demo showcases programmatic updates to GridSheet data.',
-  'It demonstrates how to update cell values and styles through the table API.',
-  'The demo includes various update operations like direct updates, row insertion with updates, and column insertion with updates.',
+const hub = createHub({
+  onInsertRows: ({ table, y, numRows }) => {
+    console.log('onInsertRows called with:', { table, y, numRows });
+    console.log('Inserted data:', table.getFieldObject());
+  },
+  onInsertCols: ({ table, x, numCols }) => {
+    console.log('onInsertCols called with:', { table, x, numCols });
+    console.log('Inserted data:', table.getFieldObject());
+  },
+});
 
-  '## How it works',
-  'Programmatic updates allow you to modify grid data from external sources or user interactions.',
-  '1. Use tableRef to access the table instance and dispatch function.',
-  '2. Direct updates modify existing cells with new values and styles.',
-  '3. Insert operations can be combined with updates to add new data.',
-  '4. Updates are applied through the dispatch function to maintain consistency.',
-].join('\n\n');
-
-export const Update: StoryObj = {
-  render: () => {
-    const tableRef = useTableRef();
-    const [json, setJson] = React.useState(`
+const UpdateComponent: React.FC = () => {
+  const connector = useConnector();
+  const [json, setJson] = React.useState(`
   {
     "A5": {"value": "test"}
   }`);
 
-    const update = () => {
-      console.log('update', tableRef.current);
-      if (tableRef.current) {
-        const { table, dispatch } = tableRef.current;
-        const diff = JSON.parse(json);
-        console.log(diff);
-        dispatch(table.update({ diff }));
-      }
-    };
+  const update = () => {
+    console.log('update', connector.current);
+    if (connector.current) {
+      const { tableManager } = connector.current;
+      const { instance: table, sync } = tableManager;
+      const diff = JSON.parse(json);
+      console.log(diff);
+      sync(table.update({ diff }));
+    }
+  };
 
-    return (
-      <>
-        <textarea
-          placeholder="Input JSON"
-          rows={10}
-          cols={100}
-          value={json}
-          onChange={(e) => setJson(e.target.value)}
-        ></textarea>
-        <br />
-        <button onClick={update}>Update!</button>
-        <GridSheet
-          tableRef={tableRef}
-          initialCells={buildInitialCells({
-            cells: {},
-            ensured: {
-              numRows: 10,
-              numCols: 10,
-            },
-          })}
-        />
-      </>
-    );
-  },
+  return (
+    <>
+      <textarea
+        placeholder="Input JSON"
+        rows={10}
+        cols={100}
+        value={json}
+        onChange={(e) => setJson(e.target.value)}
+      ></textarea>
+      <br />
+      <button onClick={update}>Update!</button>
+      <GridSheet
+        connector={connector}
+        initialCells={buildInitialCells({
+          cells: {},
+          ensured: {
+            numRows: 10,
+            numCols: 10,
+          },
+        })}
+      />
+    </>
+  );
+};
+
+export const Update: StoryObj = {
+  render: () => <UpdateComponent />,
   parameters: {
     docs: {
       description: {
@@ -73,48 +72,52 @@ export const Update: StoryObj = {
   },
 };
 
+const InsertRowsAndUpdateComponent: React.FC = () => {
+  const connector = useConnector();
+
+  const add = () => {
+    if (connector.current) {
+      const { tableManager } = connector.current;
+      const { instance: table, sync } = tableManager;
+      sync(
+        table.insertRows({
+          y: 5,
+          numRows: 1,
+          baseY: 5,
+          diff: {
+            C5: { value: 'added', style: { textDecoration: 'underline' } },
+          },
+        }),
+      );
+    }
+  };
+
+  return (
+    <>
+      <br />
+      <button onClick={add}>Insert Rows and Update!</button>
+      <GridSheet
+        hub={hub}
+        connector={connector}
+        initialCells={buildInitialCells({
+          cells: {
+            B: { style: { color: '#F00' } },
+            B7: { value: 'test1' },
+            C8: { value: 'test2' },
+            5: { style: { backgroundColor: '#077', color: '#fff' } },
+          },
+          ensured: {
+            numRows: 10,
+            numCols: 10,
+          },
+        })}
+      />
+    </>
+  );
+};
+
 export const InsertRowsAndUpdate: StoryObj = {
-  render: () => {
-    const tableRef = useTableRef();
-
-    const add = () => {
-      if (tableRef.current) {
-        const { table, dispatch } = tableRef.current;
-        dispatch(
-          table.insertRowsAndUpdate({
-            y: 5,
-            numRows: 1,
-            baseY: 5,
-            diff: {
-              C5: { value: 'added', style: { textDecoration: 'underline' } },
-            },
-          }),
-        );
-      }
-    };
-
-    return (
-      <>
-        <br />
-        <button onClick={add}>Insert Rows and Update!</button>
-        <GridSheet
-          tableRef={tableRef}
-          initialCells={buildInitialCells({
-            cells: {
-              B: { style: { color: '#F00' } },
-              B7: { value: 'test1' },
-              C8: { value: 'test2' },
-              5: { style: { backgroundColor: '#077', color: '#fff' } },
-            },
-            ensured: {
-              numRows: 10,
-              numCols: 10,
-            },
-          })}
-        />
-      </>
-    );
-  },
+  render: () => <InsertRowsAndUpdateComponent />,
   parameters: {
     docs: {
       description: {
@@ -124,48 +127,52 @@ export const InsertRowsAndUpdate: StoryObj = {
   },
 };
 
+const InsertColsAndUpdateComponent: React.FC = () => {
+  const connector = useConnector();
+
+  const add = () => {
+    if (connector.current) {
+      const { tableManager } = connector.current;
+      const { instance: table, sync } = tableManager;
+      sync(
+        table.insertCols({
+          x: 4,
+          numCols: 1,
+          baseX: 4,
+          diff: {
+            D4: { value: 'added' },
+          },
+        }),
+      );
+    }
+  };
+
+  return (
+    <>
+      <br />
+      <button onClick={add}>Insert Columns and Update!</button>
+      <GridSheet
+        hub={hub}
+        connector={connector}
+        initialCells={buildInitialCells({
+          cells: {
+            B: { style: { color: '#F00' } },
+            B7: { value: 'test1' },
+            C8: { value: 'test2' },
+            D: { style: { backgroundColor: '#077', color: '#fff' } },
+          },
+          ensured: {
+            numRows: 10,
+            numCols: 10,
+          },
+        })}
+      />
+    </>
+  );
+};
+
 export const InsertColsAndUpdate: StoryObj = {
-  render: () => {
-    const tableRef = useTableRef();
-
-    const add = () => {
-      if (tableRef.current) {
-        const { table, dispatch } = tableRef.current;
-        dispatch(
-          table.insertColsAndUpdate({
-            x: 4,
-            numCols: 1,
-            baseX: 4,
-            diff: {
-              D4: { value: 'added' },
-            },
-          }),
-        );
-      }
-    };
-
-    return (
-      <>
-        <br />
-        <button onClick={add}>Insert Columns and Update!</button>
-        <GridSheet
-          tableRef={tableRef}
-          initialCells={buildInitialCells({
-            cells: {
-              B: { style: { color: '#F00' } },
-              B7: { value: 'test1' },
-              C8: { value: 'test2' },
-              D: { style: { backgroundColor: '#077', color: '#fff' } },
-            },
-            ensured: {
-              numRows: 10,
-              numCols: 10,
-            },
-          })}
-        />
-      </>
-    );
-  },
+  render: () => <InsertColsAndUpdateComponent />,
   parameters: {
     docs: {
       description: {

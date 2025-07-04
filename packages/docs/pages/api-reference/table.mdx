@@ -1,0 +1,285 @@
+# Table Class
+
+The `UserTable` interface provides the public API for manipulating spreadsheet data programmatically. It offers comprehensive methods for data access, manipulation, and history management.
+
+## Overview
+
+The `UserTable` interface provides access to:
+- Cell data retrieval and manipulation
+- Row and column operations
+- History and undo/redo functionality
+- Matrix and object data access
+- Cross-sheet communication
+
+**Important**: When using table methods that return a new `UserTable` instance (like `update`, `write`, `setHeaderHeight`, etc.), you must call `sync()` to apply the changes to the GridSheet component. The table instance alone is not sufficient to update the UI.
+
+## Core Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `changedAt` | `Date` | Timestamp of the last change |
+| `lastChangedAt` | `Date` | Timestamp of the previous change |
+| `top`, `left`, `bottom`, `right` | `number` | Current table boundaries |
+| `minNumRows`, `maxNumRows` | `number` | Row count limits |
+| `minNumCols`, `maxNumCols` | `number` | Column count limits |
+| `headerWidth`, `headerHeight` | `number` | Header dimensions |
+| `currentHistory` | `HistoryType` | Current history entry |
+
+## Data Access Methods
+
+### Cell Retrieval
+
+#### `getCellByPoint(point: PointType, refEvaluation?: RefEvaluation, raise?: boolean): CellType | undefined`
+Retrieves a cell by its coordinates.
+
+```tsx
+const cell = table.getCellByPoint({ x: 1, y: 1 });
+console.log(cell?.value, cell?.style);
+```
+
+#### `getCellByAddress(address: Address, refEvaluation?: RefEvaluation, raise?: boolean): CellType | undefined`
+Retrieves a cell by its address.
+
+```tsx
+const cell = table.getCellByAddress('A1');
+console.log(cell?.value);
+```
+
+### Matrix and Object Access
+
+#### `getMatrix(args?: GetPropsWithArea): (CellType | null)[][]`
+Retrieves cells as a 2D matrix.
+
+```tsx
+const matrix = table.getMatrix({ area: { top: 0, left: 0, bottom: 2, right: 2 } });
+console.log(matrix);
+```
+
+#### `getObject(args?: GetProps): CellsByAddressType`
+Retrieves cells as an object with addresses as keys.
+
+```tsx
+const cells = table.getObject({ refEvaluation: 'COMPLETE' });
+console.log(cells);
+```
+
+#### `getRows(args?: GetProps): CellsByAddressType[]`
+Retrieves cells organized by rows.
+
+```tsx
+const rows = table.getRows();
+console.log(rows[0]); // First row cells
+```
+
+#### `getCols(args?: GetProps): CellsByAddressType[]`
+Retrieves cells organized by columns.
+
+```tsx
+const cols = table.getCols();
+console.log(cols[0]); // First column cells
+```
+
+### Field-Specific Access
+
+#### `getFieldMatrix(args?: GetFieldPropsWithArea): any[][]`
+Retrieves a specific field (e.g., 'value', 'style') as a matrix.
+
+```tsx
+const values = table.getFieldMatrix({ field: 'value' });
+const styles = table.getFieldMatrix({ field: 'style' });
+```
+
+#### `getFieldObject(args?: GetFieldProps): { [address: Address]: any }`
+Retrieves a specific field as an object.
+
+```tsx
+const values = table.getFieldObject({ field: 'value' });
+```
+
+#### `getFieldRows(args?: GetFieldProps): { [address: Address]: any }[]`
+Retrieves a specific field organized by rows.
+
+```tsx
+const valueRows = table.getFieldRows({ field: 'value' });
+```
+
+#### `getFieldCols(args?: GetFieldProps): { [address: Address]: any }[]`
+Retrieves a specific field organized by columns.
+
+```tsx
+const valueCols = table.getFieldCols({ field: 'value' });
+```
+
+## Data Manipulation Methods
+
+**Important**: All data manipulation methods return a new `UserTable` instance. To apply changes to the GridSheet component, you must use the `sync` function from `connector`.
+
+### Using Table References
+
+To manipulate table data, you need to access the table through a table reference:
+
+#### React (useConnector)
+
+`useConnector` is a React hook and must be called within a function component:
+
+```tsx
+import { useConnector, GridSheet } from '@gridsheet/react-core';
+
+function MyComponent() {
+  const connector = useConnector(); // Must be called inside function component
+  
+  const handleUpdate = () => {
+    if (connector.current) {
+      const { tableManager } = connector.current;
+      const { instance: table, sync } = tableManager;
+      const updatedTable = table.write({ point: { x: 1, y: 1 }, value: 'New Value' });
+      sync(updatedTable);
+    }
+  };
+
+  return (
+    <GridSheet connector={connector} initialCells={initialCells} />
+  );
+}
+```
+
+#### Global Usage and Other Frameworks (createConnector)
+
+For global usage or non-React frameworks (Vue, Svelte), use `createConnector`:
+
+```tsx
+import { createConnector, GridSheet } from '@gridsheet/react-core';
+
+// Create a connector reference
+const connector = createConnector();
+
+// Use it in your component
+function MyComponent() {
+  const connector = createConnector();
+  
+  return (
+    <GridSheet connector={connector} initialCells={initialCells} />
+  );
+}
+```
+
+### Cell Updates
+
+#### `update(args: { diff: CellsByAddressType; historicize?: boolean; partial?: boolean; updateChangedAt?: boolean; reflection?: StorePatchType }): UserTable`
+Updates multiple cells at once.
+
+```tsx
+const newTable = table.update({
+  diff: {
+    'A1': { value: 'Updated Value' },
+    'B1': { style: { color: '#FF0000' } }
+  },
+  historicize: true
+});
+sync(newTable); // Required to apply changes
+```
+
+#### `write(args: { point: PointType; value: string; updateChangedAt?: boolean; reflection?: StorePatchType }): UserTable`
+Writes a value to a specific cell.
+
+```tsx
+const newTable = table.write({
+  point: { x: 1, y: 1 },
+  value: 'Hello World'
+});
+sync(newTable); // Required to apply changes
+```
+
+#### `writeMatrix(args: { point: PointType; matrix: MatrixType<string>; updateChangedAt?: boolean; reflection?: StorePatchType }): UserTable`
+Writes a matrix of values starting at a specific point.
+
+```tsx
+const newTable = table.writeMatrix({
+  point: { x: 1, y: 1 },
+  matrix: [['A1', 'B1'], ['A2', 'B2']]
+});
+sync(newTable); // Required to apply changes
+```
+
+### Row Operations
+
+#### `insertRows(args: { y: number; numRows: number; baseY: number; diff?: CellsByAddressType; partial?: boolean; updateChangedAt?: boolean; reflection?: StorePatchType }): UserTable`
+
+Inserts rows at the specified position. If `diff` is provided, it also updates the cells after insertion.
+
+```tsx
+const newTable = table.insertRows({
+  y: 5,
+  numRows: 2,
+  baseY: 5,
+  diff: {
+    A5: { value: 'New Row 1' },
+    A6: { value: 'New Row 2' },
+  },
+});
+```
+
+#### `removeRows(args: { y: number; numRows: number; reflection?: StorePatchType }): UserTable`
+Removes rows at a specific position.
+
+```tsx
+const newTable = table.removeRows({
+  y: 2,
+  numRows: 3
+});
+sync(newTable); // Required to apply changes
+```
+
+### Column Operations
+
+#### `insertCols(args: { x: number; numCols: number; baseX: number; diff?: CellsByAddressType; partial?: boolean; updateChangedAt?: boolean; reflection?: StorePatchType }): UserTable`
+
+Inserts columns at the specified position. If `diff` is provided, it also updates the cells after insertion.
+
+```tsx
+const newTable = table.insertCols({
+  x: 3,
+  numCols: 2,
+  baseX: 3,
+  diff: {
+    C1: { value: 'New Col 1' },
+    D1: { value: 'New Col 2' },
+  },
+});
+```
+
+#### `removeCols(args: { x: number; numCols: number; reflection?: StorePatchType }): UserTable`
+Removes columns at a specific position.
+
+```tsx
+const newTable = table.removeCols({
+  x: 2,
+  numCols: 3
+});
+sync(newTable); // Required to apply changes
+```
+
+### Move and Copy Operations
+
+#### `move(args: MoveProps): UserTable`
+Moves cells from one area to another.
+
+```tsx
+const newTable = table.move({
+  src: { top: 0, left: 0, bottom: 2, right: 2 },
+  dst: { top: 5, left: 5, bottom: 7, right: 7 }
+});
+sync(newTable); // Required to apply changes
+```
+
+#### `copy(args: MoveProps & { onlyValue?: boolean }): UserTable`
+Copies cells from one area to another.
+
+```tsx
+const newTable = table.copy({
+  src: { top: 0, left: 0, bottom: 2, right: 2 },
+  dst: { top: 5, left: 5, bottom: 7, right: 7 },
+  onlyValue: false
+});
+sync(newTable); // Required to apply changes
+```

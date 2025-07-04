@@ -1,78 +1,82 @@
 import type { FC, MutableRefObject } from 'react';
 import { createRef, useContext, useEffect, useRef, useState } from 'react';
 
-import type { OptionsType, Props, StoreRef } from '../types';
+import type { OptionsType, Props, Connector } from '../types';
 import { Context } from '../store';
 
 import { setStore, updateTable } from '../store/actions';
 
-import { HEADER_HEIGHT, HEADER_WIDTH } from '../constants';
 import { usePluginContext } from './PluginBase';
+import { Table } from '../lib/table';
 
-type StoreInitializerProps = OptionsType & {
+type StoreObserverProps = OptionsType & {
   sheetName?: string;
-  storeRef?: MutableRefObject<StoreRef | null>;
+  connector?: MutableRefObject<Connector | null>;
 };
 
-export const createStoreRef = () => createRef<StoreRef | null>();
-export const useStoreRef = () => useRef<StoreRef | null>(null);
-export const StoreObserver: FC<StoreInitializerProps> = ({
-  headerHeight = HEADER_HEIGHT,
-  headerWidth = HEADER_WIDTH,
+export const createConnector = () => createRef<Connector | null>();
+export const useConnector = () => useRef<Connector | null>(null);
+export const StoreObserver: FC<StoreObserverProps> = ({
   sheetName,
   sheetHeight,
   sheetWidth,
-  storeRef,
+  connector,
   editingOnEnter,
   showAddress,
   mode,
-  onSave,
 }) => {
   const { store, dispatch } = useContext(Context);
-  const { table } = store;
-  const { wire } = table;
+  const { tableReactive: tableRef } = store;
+  const table = tableRef.current;
 
   useEffect(() => {
+    if (!table) {
+      return;
+    }
     if (sheetName && sheetName !== table.sheetName) {
       table.sheetName = sheetName;
-      wire.sheetIdsByName[sheetName] = table.sheetId;
-      delete wire.sheetIdsByName[table.prevSheetName];
+      table.wire.sheetIdsByName[sheetName] = table.sheetId;
+      delete table.wire.sheetIdsByName[table.prevSheetName];
       table.prevSheetName = sheetName;
       //hub.transmit();
     }
   }, [sheetName]);
 
   useEffect(() => {
-    const { wire: hub } = table;
-    requestAnimationFrame(() => hub.identifyFormula());
-    hub.contextsBySheetId[table.sheetId] = { store, dispatch };
-    hub.transmit();
-
-    if (storeRef) {
-      storeRef.current = { store, dispatch };
+    if (!table) {
+      return;
     }
-  }, [store]);
+    const { wire } = table;
+    requestAnimationFrame(() => wire.identifyFormula());
+    wire.contextsBySheetId[table.sheetId] = { store, sync: dispatch };
+    wire.transmit();
+
+    if (connector) {
+      connector.current = {
+        tableManager: {
+          instance: table,
+          sync: (table) => {
+            dispatch(updateTable(table as Table));
+          },
+        },
+        storeManager: {
+          instance: store,
+          sync: dispatch,
+        },
+      };
+    }
+  }, [store, table, connector]);
 
   useEffect(() => {
     if (sheetHeight) {
       dispatch(setStore({ sheetHeight }));
     }
-  }, [sheetHeight]);
+  }, [sheetHeight, dispatch]);
   useEffect(() => {
     if (sheetWidth) {
       dispatch(setStore({ sheetWidth }));
     }
   }, [sheetWidth]);
-  useEffect(() => {
-    if (headerHeight) {
-      dispatch(setStore({ headerHeight }));
-    }
-  }, [headerHeight]);
-  useEffect(() => {
-    if (headerWidth) {
-      dispatch(setStore({ headerWidth }));
-    }
-  }, [headerWidth]);
   useEffect(() => {
     if (typeof editingOnEnter !== 'undefined') {
       dispatch(setStore({ editingOnEnter }));
@@ -90,20 +94,14 @@ export const StoreObserver: FC<StoreInitializerProps> = ({
     }
   }, [mode]);
 
-  useEffect(() => {
-    if (typeof onSave !== 'undefined') {
-      dispatch(setStore({ onSave }));
-    }
-  }, [onSave]);
-
   const [pluginProvided, pluginContext] = usePluginContext();
   useEffect(() => {
     if (!pluginProvided) {
       return;
     }
     pluginContext.setStore(store);
-    pluginContext.setDispatch(() => dispatch);
-  }, [store, dispatch]);
+    pluginContext.setSync(() => dispatch);
+  }, [store, pluginProvided, pluginContext]);
 
   return <></>;
 };

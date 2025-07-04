@@ -1,0 +1,153 @@
+# Architecture & Design
+
+This document provides an overview of GridSheet's architecture and design principles.
+
+## Core Architecture
+
+### Table and Hub Relationship
+
+The most important architectural relationship in GridSheet is between the **Hub** and **Table** instances. The Hub serves as a cross-cutting access point for multiple Table instances, while each Table instance corresponds one-to-one with a sheet.
+
+```mermaid
+graph LR
+    subgraph HUB ["Hub (Wire wrapper)"]
+        subgraph WI["Wire Instance"]
+            P[Policies]
+            R[Renderers]
+            PR[Parsers]
+            HIST[Histories]
+            L[Labelers]
+            CACHE[Calculation Cache]
+        end
+    end
+    
+    T1[Table 1]
+    T2[Table 2]
+    T3[Table 3]
+    
+    T1 --> WI
+    T2 --> WI
+    T3 --> WI
+    
+    style WI fill:#f3e5f5,color:#2c3e50
+    style T1 fill:#e8f5e8,color:#2c3e50
+    style T2 fill:#e8f5e8,color:#2c3e50
+    style T3 fill:#e8f5e8,color:#2c3e50
+```
+
+### Hub Architecture
+
+The **Hub** is a cross-cutting instance that provides access to multiple Table instances. It contains:
+
+- **Cross-cutting Configuration**: Policies, renderers, parsers, histories, and labelers
+- **Cell Data**: Actual cell values, formulas, and metadata
+- **Calculation Cache**: Cached formula results for performance
+
+The Hub is actually a wrapper around the **Wire** class, which is the core implementation. This design allows React/Preact to trigger sheet re-renders by changing references, while the internal Wire instance maintains the same reference throughout its lifecycle.
+
+> **Note**: Even when using only a single table, a Hub (Wire instance) is implicitly created to manage the cell data and configuration.
+
+### Table Architecture
+
+Each **Table** instance corresponds one-to-one with a sheet and contains:
+
+- **ID Matrix**: Internal data identifiers that correspond to sheet row/column positions
+- **Sheet State**: Current state of the specific sheet
+- **UI State**: Visual state and rendering information
+
+### Cell Reference System
+
+GridSheet uses an internal ID-based reference system for formulas:
+
+- **Internal References**: Formulas use IDs like `#f1`, `#f2` instead of addresses like `A1`
+- **Address Mapping**: The system converts IDs to addresses for display
+- **Stable References**: This ensures formulas don't break when rows/columns are added/removed
+
+For example:
+```tsx
+// Internal formula storage
+"=SUM(#2!#f1:#f5)"  // Uses internal IDs
+
+// Display conversion
+"=SUM('Sheet2'!A1:A5)"    // Converted to addresses for display
+```
+
+This architecture provides:
+- **Stable References**: Formulas remain intact during structural changes
+- **Performance**: ID-based lookups are faster than address parsing
+- **Flexibility**: Easy to add/remove rows/columns without breaking formulas
+
+## Data Flow
+
+GridSheet processes data through two main flows: data input and data output. Each flow uses identifiers (strings) rather than instances for parsers and renderers to enable persistence.
+
+### Data Input Flow
+
+Data input follows this sequence: User Input → Parser → Policy
+
+```mermaid
+graph LR
+    UI[User Input] --> PARSER[Parser<br/>cell.parser]
+    PARSER --> POLICY[Policy<br/>cell.policy]
+    POLICY --> CD[Cell Data]
+    
+    style UI fill:#e3f2fd,color:#1565c0
+    style PARSER fill:#fff3e0,color:#e65100
+    style POLICY fill:#f3e5f5,color:#7b1fa2
+    style CD fill:#e8f5e8,color:#2e7d32
+```
+
+- **User Input**: Raw input from keyboard, paste, or programmatic updates
+- **Parser**: Converts input to appropriate data type using `cell.parser` identifier
+- **Policy**: Validates and processes data using `cell.policy` identifier
+- **Cell Data**: Final processed data stored in the cell
+
+### Data Output Flow
+
+Data output follows this sequence: Cell Data → Formula Evaluation → Renderer → CSS Application
+
+```mermaid
+graph LR
+    CD[Cell Data] --> FE[Formula Evaluation]
+    FE --> RENDERER[Renderer<br/>cell.renderer]
+    RENDERER --> CSS[CSS Application<br/>cell.style]
+    CSS --> UI[User Interface]
+    
+    style CD fill:#e8f5e8,color:#2e7d32
+    style FE fill:#fff8e1,color:#f57f17
+    style RENDERER fill:#f1f8e9,color:#33691e
+    style CSS fill:#fce4ec,color:#c2185b
+    style UI fill:#e3f2fd,color:#1565c0
+```
+
+- **Cell Data**: Raw cell value or formula
+- **Formula Evaluation**: Calculates formula results if present
+- **Renderer**: Formats display using `cell.renderer` identifier
+- **CSS Application**: Applies styling using `cell.style` properties
+- **User Interface**: Final rendered cell in the grid
+
+## Matrix Data Evaluation
+
+GridSheet uses a matrix-based data structure where each cell is identified by its row and column coordinates. The evaluation process considers both header information and cell data:
+
+| Header Column & Header Row (0,0) | A Column Info (0,1) | B Column Info (0,2) |
+|----------------------------------|---------------------|---------------------|
+| 1st Row Info (1,0) | A1 Cell Info (1,1) | B1 Cell Info (1,2) |
+| 2nd Row Info (2,0) | A2 Cell Info (2,1) | B2 Cell Info (2,2) |
+
+
+## Component Hierarchy
+
+GridSheet is composed of several key components that work together to provide the complete spreadsheet experience:
+
+- **GridSheet**: Main container and orchestrator
+  - **FormulaBar**: Displays and edits cell formulas
+  - **SearchBar**: Provides search functionality across the grid
+  - **Editor**: Handles cell editing and input validation
+  - **Tabular**: Core grid rendering component
+    - **HeaderCellLeft...**: Left-side row headers
+    - **HeaderCellTop...**: Top-side column headers
+    - **Cell...**: Individual cell components
+  - **StoreObserver**: Monitors state changes and triggers updates
+  - **ContextMenu**: Right-click context menu functionality
+  - **Resizer**: Handles column/row resizing operations

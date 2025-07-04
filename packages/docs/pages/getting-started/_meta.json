@@ -1,0 +1,8 @@
+{
+  "index": "Overview",
+  "features": "Features",
+  "react": "React",
+  "vue": "Vue",
+  "svelte": "Svelte",
+  "vanilla": "Vanilla JavaScript"
+} 

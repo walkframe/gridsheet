@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { ctrl, drag, paste } from './utils';
 
 test('select an option in strict accordance with the options', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-restriction-options--options&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=restriction-options--options&viewMode=story');
 
   {
     const a1 = page.locator("[data-address='A1']");
@@ -34,7 +34,7 @@ test('select an option in strict accordance with the options', async ({ page }) 
 });
 
 test('select an option from the autocomplete suggestions', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-restriction-options--options&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=restriction-options--options&viewMode=story');
 
   {
     const b1 = page.locator("[data-address='B1']");
@@ -56,7 +56,7 @@ test('select an option from the autocomplete suggestions', async ({ page }) => {
 });
 
 test('move the invalid value to column A', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-restriction-options--options&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=restriction-options--options&viewMode=story');
 
   {
     const b3 = page.locator("[data-address='B3']");
@@ -84,7 +84,7 @@ test('move the invalid value to column A', async ({ page }) => {
 });
 
 test('move the valid value to column A', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-restriction-options--options&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=restriction-options--options&viewMode=story');
 
   {
     const b8 = page.locator("[data-address='B8']");
@@ -111,7 +111,7 @@ test('move the valid value to column A', async ({ page }) => {
 });
 
 test('masked words in clipboard', async ({ page, context }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-restriction-onclip--on-clip&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=restriction-onclip--on-clip&viewMode=story');
   await drag(page, 'A1', 'B2');
   // Copy A1:B2
   await ctrl(page, 'c');

@@ -33,13 +33,13 @@ export class VlookupFunction extends BaseFunction {
       throw new FormulaError('#N/A', 'Number of arguments for VLOOKUP is incorrect.');
     }
     if (this.bareArgs[0] instanceof Table) {
-      this.bareArgs[0] = stripTable(this.bareArgs[0]);
+      this.bareArgs[0] = stripTable({ value: this.bareArgs[0] });
     }
     if (!(this.bareArgs[1] instanceof Table)) {
       throw new FormulaError('#REF!', '2nd argument must be range');
     }
     this.bareArgs[2] = ensureNumber(this.bareArgs[2]);
-    this.bareArgs[3] = ensureBoolean(this.bareArgs[3], true);
+    this.bareArgs[3] = ensureBoolean(this.bareArgs[3], { alternative: true });
   }
 
   protected main(key: any, range: Table, index: number, isSorted: boolean) {
