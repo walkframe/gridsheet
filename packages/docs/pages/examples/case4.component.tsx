@@ -167,10 +167,10 @@ export default function BudgetManagement() {
     onInsertCols: ({ table, x, numCols }) => {
       addEventLog(`Inserted ${numCols} column(s) at position ${x}`);
     },
-    onKeyUp: (e, points) => {
+    onKeyUp: ({e, points}) => {
       addEventLog(`Key pressed: ${e.key}`);
     },
-    onInit: (table) => {
+    onInit: ({table}) => {
       addEventLog(`Budget table initialized: ${table.sheetName}`);
     },
   });
@@ -375,44 +375,6 @@ export default function BudgetManagement() {
             sheetWidth: 700,
           }}
         />
-
-        {/* Event Logs Display */}
-        <div style={{ marginTop: '20px' }}>
-          <h4
-            style={{
-              color: '#2c3e50',
-              margin: '0 0 10px 0',
-              fontSize: '16px',
-              fontWeight: '600',
-            }}
-          >
-            📊 Event Logs
-          </h4>
-          <div
-            style={{
-              padding: '15px',
-              backgroundColor: '#f8f9fa',
-              borderRadius: '8px',
-              border: '1px solid #e9ecef',
-              maxHeight: '200px',
-              overflowY: 'auto',
-              fontFamily: 'monospace',
-              fontSize: '12px',
-            }}
-          >
-            {eventLogs.length === 0 ? (
-              <div style={{ color: '#6c757d', fontStyle: 'italic' }}>
-                No events logged yet. Try interacting with the budget table.
-              </div>
-            ) : (
-              eventLogs.map((log, index) => (
-                <div key={index} style={{ marginBottom: '5px', wordBreak: 'break-all' }}>
-                  {log}
-                </div>
-              ))
-            )}
-          </div>
-        </div>
 
         {/* Dynamic Status Options Display */}
         <div style={{ marginTop: '20px' }}>

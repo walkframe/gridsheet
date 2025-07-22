@@ -283,10 +283,10 @@ const hub = useHub({
   onInsertCols: ({ table, x, numCols }) => {
     console.log('Columns inserted at position', x, 'count:', numCols);
   },
-  onKeyUp: (e, points) => {
+  onKeyUp: ({ e, points }) => {
     console.log('Key pressed:', e.key, 'at position:', points);
   },
-  onInit: (table) => {
+  onInit: ({ table }) => {
     console.log('Table initialized:', table.sheetName);
   },
 });
@@ -301,6 +301,37 @@ const hub = useHub({
 - `onInsertCols`: Called when columns are inserted into the spreadsheet
 - `onKeyUp`: Called when a key is pressed in the cell editor
 - `onInit`: Called when the table is initialized
+
+### Event Handler Table Identification
+
+When multiple sheets share the same hub, event handlers receive a `table` parameter that contains the `UserTable` instance. You can use `table.sheetName` to identify which sheet triggered the event:
+
+```tsx
+const hub = useHub({
+  onChange: ({ table, points }) => {
+    // Use table.sheetName to identify the source sheet
+    if (table.sheetName === 'Sales') {
+      console.log('Sales sheet data changed:', points);
+    } else if (table.sheetName === 'Inventory') {
+      console.log('Inventory sheet data changed:', points);
+    }
+  },
+  onRemoveRows: ({ table, ys }) => {
+    console.log(`Rows removed from ${table.sheetName}:`, ys);
+  },
+  onInsertCols: ({ table, x, numCols }) => {
+    console.log(`Inserted ${numCols} columns at position ${x} in ${table.sheetName}`);
+  },
+  onKeyUp: ({ e, points }) => {
+    console.log(`Key pressed: ${e.key} at position:`, points);
+  },
+  onInit: ({ table }) => {
+    console.log(`Table initialized: ${table.sheetName}`);
+  },
+});
+```
+
+**Important**: Always use `table.sheetName` for conditional logic when multiple sheets share the same hub to ensure proper event handling and data management.
 
 ### 7. Connector Function Renaming: `dispatch` → `sync`
 
@@ -611,7 +642,7 @@ const hub = useHub({
   onInsertCols: ({ table, x, numCols }) => {
     console.log('Columns inserted at position', x, 'count:', numCols);
   },
-  onKeyUp: (e, points) => {
+  onKeyUp: ({ e, points }) => {
     console.log('Key pressed:', e.key, 'at position:', points);
   },
   onInit: (table) => {
@@ -645,8 +676,8 @@ const hub = useHub({
   onRemoveCols: ({ table, xs }) => { /* ... */ },
   onInsertRows: ({ table, y, numRows }) => { /* ... */ },
   onInsertCols: ({ table, x, numCols }) => { /* ... */ },
-  onKeyUp: (e, points) => { /* ... */ },
-  onInit: (table) => { /* ... */ },
+  onKeyUp: ({ e, points }) => { /* ... */ },
+  onInit: ({ table }) => { /* ... */ },
 });
 
 <GridSheet hub={hub} initialCells={initialCells} />

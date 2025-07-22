@@ -1,6 +1,6 @@
 {
   "name": "@gridsheet/preact-core",
-  "version": "2.0.0-rc.3",
+  "version": "2.0.0-rc.4",
   "description": "Spreadsheet component for Preact",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -27,6 +27,10 @@
     "vite-plugin-dts": "^4.5.3",
     "@preact/preset-vite": "^2.10.1"
   },
+  "bugs": {
+    "url": "https://github.com/walkframe/gridsheet/issues"
+  },
+  "homepage": "https://gridsheet.walkframe.com/",
   "author": "righ",
   "license": "Apache-2.0"
 }

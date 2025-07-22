@@ -15,13 +15,11 @@
     "typescript": "^5.8.2"
   },
   "scripts": {
-    "dev": "cd packages/docs && pnpm dev",
-    "dev:storybook": "cd packages/storybook && pnpm dev",
-    "dev:docs": "cd packages/docs && pnpm dev",
+    "dev": "cd packages/storybook && pnpm dev",
+    "doc": "cd packages/docs && pnpm dev",
     "build:react-core": "cd packages/react-core && pnpm build --mode development",
+    "build:preact-core": "cd packages/preact-core && pnpm build --mode development",
     "build:right-menu": "cd packages/react-right-menu && pnpm build --mode development",
-    "build:storybook": "cd packages/storybook && pnpm build",
-    "build:docs": "cd packages/docs && pnpm build",
     "build:all": "pnpm build:react-core && pnpm build:right-menu && pnpm build:storybook && pnpm build:docs",
     "typecheck:react-core": "cd packages/react-core && pnpm typecheck",
     "typecheck:right-menu": "cd packages/react-right-menu && pnpm typecheck",

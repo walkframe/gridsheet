@@ -12,7 +12,9 @@ The status options can be dynamically managed using a modern multi-select interf
 
 ## Implementation Guide
 
-### 📊 Policy-Based Data Validation Overview
+<a href="https://github.com/walkframe/gridsheet/tree/master/packages/docs/pages/examples/case4.component.tsx" target="_blank" rel="noopener noreferrer" style={{display: 'inline-block', background: '#007bff', color: 'white', padding: '8px 16px', textDecoration: 'none', borderRadius: '4px', fontWeight: '500', margin: '10px 0'}}>📄 View Source Code</a>
+
+### 📋 Policy System Overview
 This comprehensive budget management system demonstrates how GridSheet can implement sophisticated business rules and data validation through policies. The system enforces data integrity, provides user-friendly interfaces, and maintains consistency across complex business processes.
 
 ### 🔧 Policy Features
@@ -169,7 +171,7 @@ const hub = useHub({
   onSelect: ({ table, points }) => {
     addEventLog(`Selected ${Array.isArray(points) ? points.length : 1} cell(s)`);
   },
-  onKeyUp: (e, points) => {
+  onKeyUp: ({ e, points }) => {
     addEventLog(`Key pressed: ${e.key}`);
   },
 });

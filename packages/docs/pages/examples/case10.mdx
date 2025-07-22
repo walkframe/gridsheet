@@ -12,7 +12,9 @@ The system includes custom renderers for stock levels and categories, along with
 
 ## Implementation Guide
 
-### Inventory Management Overview
+<a href="https://github.com/walkframe/gridsheet/tree/master/packages/docs/pages/examples/case10.component.tsx" target="_blank" rel="noopener noreferrer" style={{display: 'inline-block', background: '#007bff', color: 'white', padding: '8px 16px', textDecoration: 'none', borderRadius: '4px', fontWeight: '500', margin: '10px 0'}}>📄 View Source Code</a>
+
+### 📋 Event-Driven Architecture Overview
 This comprehensive inventory management system demonstrates how GridSheet can be used to build sophisticated business applications with real-time event monitoring. The system combines stock tracking, value calculations, and event-driven analytics to create a powerful inventory management tool.
 
 ### Event-Driven Architecture
@@ -226,7 +228,7 @@ onRemoveRows: ({ table, ys }) => {
 #### Keyboard Event Patterns
 ```tsx
 // Track editing activities
-onKeyUp: (e, points) => {
+onKeyUp: ({ e, points }) => {
   if (e.key === 'Delete' || e.key === 'Backspace') {
     addActivityLog(`⌨️ Editing inventory data`);
   }
@@ -275,3 +277,10 @@ onKeyUp: (e, points) => {
 - **Export Functionality**: Export inventory data for external reporting
 
 This inventory management system demonstrates how GridSheet's event handling capabilities can be used to build sophisticated, real-time business applications with comprehensive monitoring and analytics. 
+
+### 🚀 Advanced Features
+- **Event-driven Architecture**: Build reactive applications with event handling
+- **Custom Event Types**: Define and handle custom event types
+- **Event Filtering**: Filter and process specific events
+- **Event History**: Track and display event history
+- **Real-time Updates**: Live updates based on events 

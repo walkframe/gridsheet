@@ -592,11 +592,11 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       setShiftKey(false);
       const selectingArea = zoneToArea(store.selectingZone);
-      table.wire.onKeyUp?.(e, {
+      table.wire.onKeyUp?.({e, points: {
         pointing: choosing,
         selectingFrom: { y: selectingArea.top, x: selectingArea.left },
         selectingTo: { y: selectingArea.bottom, x: selectingArea.right },
-      });
+      }});
     },
     [store.selectingZone, choosing],
   );

@@ -12,18 +12,18 @@ The most important architectural relationship in GridSheet is between the **Hub*
 graph LR
     subgraph HUB ["Hub (Wire wrapper)"]
         subgraph WI["Wire Instance"]
-            P[Policies]
-            R[Renderers]
-            PR[Parsers]
-            HIST[Histories]
-            L[Labelers]
-            CACHE[Calculation Cache]
+            P["Policies"]
+            R["Renderers"]
+            PR["Parsers"]
+            HIST["Histories"]
+            L["Labelers"]
+            CACHE["Calculation Cache"]
         end
     end
     
-    T1[Table 1]
-    T2[Table 2]
-    T3[Table 3]
+    T1["Table 1"]
+    T2["Table 2"]
+    T3["Table 3"]
     
     T1 --> WI
     T2 --> WI
@@ -87,9 +87,9 @@ Data input follows this sequence: User Input → Parser → Policy
 
 ```mermaid
 graph LR
-    UI[User Input] --> PARSER[Parser<br/>cell.parser]
-    PARSER --> POLICY[Policy<br/>cell.policy]
-    POLICY --> CD[Cell Data]
+    UI["User Input"] --> PARSER["Parser<br/>cell.parser"]
+    PARSER --> POLICY["Policy<br/>cell.policy"]
+    POLICY --> CD["Cell Data"]
     
     style UI fill:#e3f2fd,color:#1565c0
     style PARSER fill:#fff3e0,color:#e65100
@@ -108,10 +108,10 @@ Data output follows this sequence: Cell Data → Formula Evaluation → Renderer
 
 ```mermaid
 graph LR
-    CD[Cell Data] --> FE[Formula Evaluation]
-    FE --> RENDERER[Renderer<br/>cell.renderer]
-    RENDERER --> CSS[CSS Application<br/>cell.style]
-    CSS --> UI[User Interface]
+    CD["Cell Data"] --> FE["Formula Evaluation"]
+    FE --> RENDERER["Renderer<br/>cell.renderer"]
+    RENDERER --> CSS["CSS Application<br/>cell.style"]
+    CSS --> UI["User Interface"]
     
     style CD fill:#e8f5e8,color:#2e7d32
     style FE fill:#fff8e1,color:#f57f17
@@ -125,6 +125,113 @@ graph LR
 - **Renderer**: Formats display using `cell.renderer` identifier
 - **CSS Application**: Applies styling using `cell.style` properties
 - **User Interface**: Final rendered cell in the grid
+
+## Cell Value Serialization
+
+GridSheet is designed with persistence in mind, ensuring that cell values are serializable and can be safely stored and restored. This design principle is crucial for maintaining data integrity across sessions and enabling features like undo/redo, data export, and state persistence.
+
+### Serialization Design
+
+Cell values are designed to be **serializable** and contain only **persistable data**. This means:
+
+- **Serializable Values**: All cell values can be converted to JSON and back without loss
+- **Persistable Data**: Values can be safely stored in databases, local storage, or transmitted over networks
+- **Non-Serializable Objects**: Event handlers, class instances, and other non-serializable objects are not stored directly in cells
+
+### Hub-Based Architecture for Non-Serializable Data
+
+To handle non-serializable objects while maintaining cell serialization, GridSheet uses a **Hub-based architecture**:
+
+```mermaid
+graph TB
+    subgraph CELL ["Cell (Serializable)"]
+        V["value: 'user123'"]
+        P["parser: 'userParser'"]
+        R["renderer: 'userRenderer'"]
+    end
+    
+    subgraph HUB ["Hub (Non-Serializable)"]
+        PARSERS["Parsers Registry"]
+        RENDERERS["Renderers Registry"]
+        HANDLERS["Event Handlers"]
+    end
+    
+    CELL -->|"parser: 'userParser'"| HUB
+    CELL -->|"renderer: 'userRenderer'"| HUB
+    
+    style CELL fill:#e8f5e8,color:#2e7d32
+    style HUB fill:#fff3e0,color:#e65100
+```
+
+### Multi-Sheet Event Handling
+
+When multiple sheets share the same hub, event handlers receive a `table` parameter that contains the `UserTable` instance. You can use `table.sheetName` to identify which sheet triggered the event:
+
+```tsx
+const hub = useHub({
+  onChange: ({ table, points }) => {
+    // Use table.sheetName to identify the source sheet
+    if (table.sheetName === 'Sales') {
+      console.log('Sales sheet data changed:', points);
+    } else if (table.sheetName === 'Inventory') {
+      console.log('Inventory sheet data changed:', points);
+    }
+  },
+  onRemoveRows: ({ table, ys }) => {
+    console.log(`Rows removed from ${table.sheetName}:`, ys);
+  },
+  onKeyUp: ({ e, points }) => {
+    console.log(`Key pressed: ${e.key} at position:`, points);
+  },
+  onInit: ({ table }) => {
+    console.log(`Table initialized: ${table.sheetName}`);
+  },
+});
+```
+
+**Important**: Always use `table.sheetName` for conditional logic when multiple sheets share the same hub to ensure proper event handling and data management.
+
+**How it works:**
+
+1. **Cell Storage**: Cells store only serializable identifiers (strings) for parsers, renderers, and other components
+2. **Hub Registry**: The Hub maintains registries of actual instances, event handlers, and class objects
+3. **Identifier Resolution**: When needed, the system resolves identifiers to actual instances from the Hub
+4. **Persistence**: Only the cell data (with identifiers) is persisted, while the Hub instances are recreated as needed
+
+### Benefits of This Design
+
+- **Data Integrity**: Cell data remains consistent and serializable
+- **Flexibility**: Non-serializable objects can still be used through the Hub system
+- **Performance**: Direct object references are maintained during runtime
+- **Persistence**: Data can be safely saved and restored without losing functionality
+- **Extensibility**: New parsers, renderers, and handlers can be added without breaking existing data
+
+### Example Implementation
+
+```tsx
+// Cell stores only serializable data
+const cell = {
+  value: "user123",
+  parser: "userParser",        // Identifier, not the actual parser instance
+  renderer: "userRenderer",    // Identifier, not the actual renderer instance
+  custom: { userId: 123 }      // Serializable custom data
+}
+
+// Hub stores the actual instances
+const hub = {
+  parsers: {
+    userParser: new UserParser(),  // Actual parser instance
+  },
+  renderers: {
+    userRenderer: new UserRenderer(),  // Actual renderer instance
+  },
+  eventHandlers: {
+    userHandler: (event) => { /* handler logic */ }  // Event handler function
+  }
+}
+```
+
+This architecture ensures that GridSheet can handle complex, non-serializable objects while maintaining the ability to persist and restore cell data reliably.
 
 ## Matrix Data Evaluation
 

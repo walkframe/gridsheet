@@ -9,8 +9,7 @@ The GridSheet component accepts the following props to configure its behavior an
 | `initialCells` | `CellsByAddressType` | Yes | Initial cell data and configuration |
 | `sheetName` | `string` | No | Unique identifier for the sheet |
 | `hub` | `HubType` | No | Shared hub for cross-sheet communication |
-| `tableRef` | `RefObject<TableRef>` | No | Reference to access table data and dispatch |
-| `storeRef` | `RefObject<StoreRef>` | No | Reference to access store state and dispatch |
+| `connector` | `Connector` | No | Reference to access table and store managers |
 | `options` | `OptionsType` | No | Configuration options for sheet behavior |
 | `className` | `string` | No | CSS class name for styling |
 | `style` | `CSSProperties` | No | Inline styles for the component |
@@ -83,7 +82,7 @@ Each cell can be configured with the following properties:
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `value` | `T` | The cell's content (text, numbers, formulas) |
+| `value` | `T` | The cell's content (text, numbers, formulas). You can parse user input and store arbitrary values, but avoid non-serializable objects like class instances. Cell values are designed to be serializable (except for system field). |
 | `style` | `CSSProperties` | CSS properties for appearance |
 | `justifyContent` | `CSSProperties['justifyContent']` | Horizontal alignment within the cell |
 | `alignItems` | `CSSProperties['alignItems']` | Vertical alignment within the cell |
@@ -93,9 +92,13 @@ Each cell can be configured with the following properties:
 | `renderer` | `string` | Key of a renderer registered in the hub |
 | `parser` | `string` | Key of a parser registered in the hub |
 | `policy` | `string` | Key of a policy registered in the hub |
-| `custom` | `Custom` | Custom data for the cell |
+| `custom` | `Custom` | Custom data for the cell. You can store any arbitrary data here for your application's needs |
 | `disableFormula` | `boolean` | Disable formula evaluation for this cell |
 | `prevention` | `OperationType` | Operation restrictions for the cell |
+
+**Important Notes:**
+- **Serialization**: Cell values (except `system` field) are designed to be serializable. Avoid storing non-serializable objects like class instances.
+- **System Field**: The `system` field contains values used by the system to display correct values. Do not modify this field manually.
 
 ### Example Usage
 
@@ -198,242 +201,40 @@ The `useHub` hook accepts configuration options that are shared across all sheet
 | `onSave` | `FeedbackType` | Callback when cell data is saved |
 | `onChange` | `FeedbackType` | Callback when cell data changes |
 | `onEdit` | `(args: { table: UserTable }) => void` | Callback when cell is being edited |
-| `onRemoveRows` | `(args: { table: UserTable; ys: number[] }) => void` | Callback when rows are removed |
-| `onRemoveCols` | `(args: { table: UserTable; xs: number[] }) => void` | Callback when columns are removed |
-| `onInsertRows` | `(args: { table: UserTable; y: number; numRows: number }) => void` | Callback when rows are inserted |
-| `onInsertCols` | `(args: { table: UserTable; x: number; numCols: number }) => void` | Callback when columns are inserted |
+| `onRemoveRows` | `(args: { table: UserTable; ys: number[] }) => void` | Callback when rows are removed from the spreadsheet |
+| `onRemoveCols` | `(args: { table: UserTable; xs: number[] }) => void` | Callback when columns are removed from the spreadsheet |
+| `onInsertRows` | `(args: { table: UserTable; y: number; numRows: number }) => void` | Callback when rows are inserted into the spreadsheet |
+| `onInsertCols` | `(args: { table: UserTable; x: number; numCols: number }) => void` | Callback when columns are inserted into the spreadsheet |
 | `onSelect` | `FeedbackType` | Callback when cell selection changes |
-| `onKeyUp` | `(e: EditorEvent, points: CursorStateType) => void` | Callback when key is pressed in editor |
-| `onInit` | `(table: UserTable) => void` | Callback when table is initialized |
+| `onKeyUp` | `(args: { e: EditorEvent, points: CursorStateType }) => void` | Callback when a key is pressed in the cell editor |
+| `onInit` | `(args: { table: UserTable }) => void` | Callback when the table is initialized |
 
-### Shared Resources
+### Event Handler Table Identification
 
-All configurations passed to `useHub` are shared across sheets that use the same hub instance. This means:
-
-- **Renderers**: Custom cell renderers are available to all sheets
-- **Policies**: Validation and behavior rules apply consistently
-- **Functions**: Custom formula functions work across all sheets
-- **Parsers**: Data parsing rules are unified
-- **Labelers**: Header labeling is consistent
-
-### Event Handlers
-
-The hub provides several event handlers that allow you to respond to various spreadsheet operations:
-
-#### `onSave` and `onChange`
-Called when cell data is saved or changed. These handlers receive the updated table and the positions of changed cells.
-
-#### `onEdit`
-Called when a cell is being edited. This handler receives the current table state during the editing process.
-
-#### `onRemoveRows` and `onRemoveCols`
-Called when rows or columns are removed from the spreadsheet. These handlers receive:
-- `table`: A cloned table containing the removed data
-- `ys`/`xs`: Array of removed row/column indices
-
-#### `onInsertRows` and `onInsertCols`
-Called when rows or columns are inserted into the spreadsheet. These handlers receive:
-- `table`: A cloned table containing the inserted data
-- `y`/`x`: The insertion position (row/column index)
-- `numRows`/`numCols`: Number of rows/columns inserted
-
-#### `onSelect`
-Called when cell selection changes. This handler receives the current selection state.
-
-#### `onKeyUp`
-Called when a key is pressed in the cell editor. This handler receives the editor event and cursor state.
-
-#### `onInit`
-Called when the table is initialized. This handler receives the initialized table instance.
-
-### Usage Example
+When multiple sheets share the same hub, event handlers receive a `table` parameter that contains the `UserTable` instance. You can use `table.sheetName` to identify which sheet triggered the event:
 
 ```tsx
 const hub = useHub({
-  renderers: {
-    currency: new Renderer({ mixins: [CurrencyRendererMixin] }),
-    percentage: new Renderer({ mixins: [PercentageRendererMixin] }),
-  },
-  policies: {
-    status: new Policy({ mixins: [StatusPolicyMixin] }),
-    budget: new Policy({ mixins: [BudgetPolicyMixin] }),
-  },
-  historyLimit: 50,
-  onSave: ({ table, points }) => {
-    console.log('Data saved:', points);
-  },
   onChange: ({ table, points }) => {
-    console.log('Data changed:', points);
-  },
-  onEdit: ({ table }) => {
-    console.log('Cell being edited:', table);
+    if (table.sheetName === 'Sales') {
+      console.log('Sales sheet data changed:', points);
+    } else if (table.sheetName === 'Inventory') {
+      console.log('Inventory sheet data changed:', points);
+    }
   },
   onRemoveRows: ({ table, ys }) => {
-    console.log('Rows removed:', ys);
-    console.log('Removed data:', table.getFieldObject());
-  },
-  onRemoveCols: ({ table, xs }) => {
-    console.log('Columns removed:', xs);
-    console.log('Removed data:', table.getFieldObject());
-  },
-  onInsertRows: ({ table, y, numRows }) => {
-    console.log('Rows inserted at position', y, 'count:', numRows);
-    console.log('Inserted data:', table.getFieldObject());
+    console.log(`Rows removed from ${table.sheetName}:`, ys);
   },
   onInsertCols: ({ table, x, numCols }) => {
-    console.log('Columns inserted at position', x, 'count:', numCols);
-    console.log('Inserted data:', table.getFieldObject());
+    console.log(`Inserted ${numCols} columns at position ${x} in ${table.sheetName}`);
   },
-  onSelect: ({ table, points }) => {
-    console.log('Selection changed:', points);
+  onKeyUp: ({ e, points }) => {
+    console.log(`Key pressed: ${e.key} at position:`, points);
   },
-  onKeyUp: (e, points) => {
-    console.log('Key pressed:', e.key, 'at position:', points);
-  },
-  onInit: (table) => {
-    console.log('Table initialized:', table.sheetName);
+  onInit: ({ table }) => {
+    console.log(`Table initialized: ${table.sheetName}`);
   },
 });
-
-// Use the same hub in multiple sheets
 ```
 
-## Connector Reference
-
-The `connector` prop provides access to both table and store managers for programmatic control.
-
-### Connector Interface
-
-```tsx
-interface Connector {
-  tableManager: {
-    instance: UserTable;
-    sync: (table: UserTable) => void;
-  };
-  storeManager: {
-    instance: StoreType;
-    sync: Dispatcher;
-  };
-}
-```
-
-### Usage Example
-
-```tsx
-const connector = useConnector();
-
-<GridSheet connector={connector} initialCells={initialCells} />
-
-// Later, access the table manager
-const { tableManager } = connector.current;
-if (tableManager) {
-  const { instance: table, sync } = tableManager;
-  
-  // Update cells
-  const newTable = table.update({
-    diff: { 'A1': { value: 'Updated' } }
-  });
-  sync(newTable);
-  
-  // Set header dimensions
-  const tableWithHeader = table.setHeaderHeight(60);
-  sync(tableWithHeader);
-}
-
-// Access the store manager
-const { storeManager } = connector.current;
-if (storeManager) {
-  const { instance: store, sync } = storeManager;
-  // Use store and sync as needed
-}
-```
-
-## Options
-
-The `options` prop provides configuration options for sheet behavior.
-
-### Options Interface
-
-```tsx
-interface OptionsType {
-  showFormulaBar?: boolean;
-  showGridLines?: boolean;
-  showRowHeaders?: boolean;
-  showColHeaders?: boolean;
-  enableEditing?: boolean;
-  enableSelection?: boolean;
-  enableKeyboardNavigation?: boolean;
-  enableContextMenu?: boolean;
-  enableDragAndDrop?: boolean;
-  enableAutoResize?: boolean;
-  enableVirtualization?: boolean;
-  theme?: 'light' | 'dark' | 'auto';
-  locale?: string;
-  timezone?: string;
-}
-```
-
-### Options Example
-
-```tsx
-const options = {
-  showFormulaBar: true,
-  showGridLines: true,
-  showRowHeaders: true,
-  showColHeaders: true,
-  enableEditing: true,
-  enableSelection: true,
-  enableKeyboardNavigation: true,
-  theme: 'light',
-  locale: 'en-US',
-};
-
-<GridSheet options={options} initialCells={initialCells} />
-```
-
-## Prevention Property
-
-The `prevention` property in cell configuration allows you to restrict specific operations on cells using bitwise operations.
-
-### Prevention Constants
-
-```tsx
-const Prevention = {
-  NONE: 0,
-  SELECT: 1,
-  EDIT: 2,
-  COPY: 4,
-  PASTE: 8,
-  DELETE: 16,
-  MOVE: 32,
-  RESIZE: 64,
-  ALL: 127,
-} as const;
-```
-
-### Usage Example
-
-```tsx
-const initialCells = {
-  'A1': { 
-    value: 'Protected Cell',
-    prevention: Prevention.EDIT | Prevention.DELETE  // Prevent editing and deletion
-  },
-  'B1': { 
-    value: 'Read Only',
-    prevention: Prevention.ALL  // Prevent all operations
-  },
-};
-```
-
-### Prevention Combinations
-
-- `Prevention.EDIT`: Cell cannot be edited
-- `Prevention.SELECT`: Cell cannot be selected
-- `Prevention.COPY`: Cell content cannot be copied
-- `Prevention.PASTE`: Content cannot be pasted into cell
-- `Prevention.DELETE`: Cell content cannot be deleted
-- `Prevention.MOVE`: Cell cannot be moved
-- `Prevention.RESIZE`: Cell cannot be resized
-
-Use bitwise OR (`|`) to combine multiple restrictions.
+**Important**: Always use `table.sheetName` for conditional logic when multiple sheets share the same hub to ensure proper event handling and data management.

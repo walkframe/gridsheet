@@ -1,6 +1,6 @@
 {
   "name": "@gridsheet/react-core",
-  "version": "2.0.0-rc.3",
+  "version": "2.0.0-rc.4",
   "description": "Spreadsheet component for React",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -32,7 +32,7 @@
   "bugs": {
     "url": "https://github.com/walkframe/gridsheet/issues"
   },
-  "homepage": "https://docs.walkframe.com/gridsheet/react",
+  "homepage": "https://gridsheet.walkframe.com/",
   "packageManager": "pnpm@10.6.5",
   "devDependencies": {
     "@types/jest": "^29.4.0",

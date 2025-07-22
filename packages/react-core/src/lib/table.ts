@@ -100,7 +100,6 @@ export interface UserTable {
   maxNumCols: number;
   headerWidth: number;
   headerHeight: number;
-  currentHistory?: HistoryType;
   sheetName: string;
 
   /**
@@ -280,7 +279,6 @@ export class Table implements UserTable {
 
   public getTableBySheetName(sheetName: string) {
     const sheetId = this.wire.sheetIdsByName[sheetName];
-    console.log('sheetId', sheetId);
     return this.getTableBySheetId(sheetId);
   }
   public getTableBySheetId(sheetId: number) {

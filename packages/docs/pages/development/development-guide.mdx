@@ -24,8 +24,11 @@ pnpm install
 ### Development Scripts
 
 ```bash
-# Start development server for testing
+# Start Storybook development server
 pnpm dev
+
+# Start documentation development server
+pnpm doc
 
 # Run unit tests
 pnpm test
@@ -52,22 +55,31 @@ GridSheet follows a specific testing strategy:
 
 ```typescript
 import { test, expect } from '@playwright/test';
+import { ctrl, drag, paste } from './utils';
 
-test('basic cell editing', async ({ page }) => {
-  await page.goto('/story/basic--default');
-  
-  // Click on cell A1
-  await page.click('[data-testid="cell-A1"]');
-  
-  // Type value
-  await page.keyboard.type('Hello World');
-  await page.keyboard.press('Enter');
-  
-  // Verify value
-  const cell = page.locator('[data-testid="cell-A1"]');
-  await expect(cell).toHaveText('Hello World');
+test('time + delta, time + number(days)', async ({ page }) => {
+  await page.goto('http://localhost:5233/iframe.html?id=basic-simple--sheet&viewMode=story');
+  const a4 = page.locator("[data-address='A4']");
+  const b4 = page.locator("[data-address='B4']");
+  const c4 = page.locator("[data-address='C4']");
+  const a5 = page.locator("[data-address='A5']");
+
+  expect(await a4.locator('.gs-cell-rendered').textContent()).toBe('2022-03-05 12:34:56');
+  expect(await b4.locator('.gs-cell-rendered').textContent()).toBe('11:11:11');
+  expect(await c4.locator('.gs-cell-rendered').textContent()).toBe('2022-03-05 23:46:07');
+  expect(await a5.locator('.gs-cell-rendered').textContent()).toBe('2022-03-04 23:34:56');
 });
 ```
+
+**Available Utilities:**
+
+The E2E test suite provides utility functions for common operations:
+
+- **`ctrl`**: Helper for Ctrl key combinations
+- **`drag`**: Helper for drag and drop operations  
+- **`paste`**: Helper for paste operations
+
+These utilities are available in `e2e/utils.ts` and can be imported to simplify test writing.
 
 ## Formula Functions
 
@@ -146,24 +158,21 @@ export const functions = {
 ### API Documentation
 
 ```bash
-# Generate API docs
-pnpm docs:api
+# Start documentation development server
+pnpm doc
 
-# Serve docs locally
-pnpm docs:dev
+# Build documentation
+pnpm build:docs
 ```
 
 ### Storybook
 
 ```bash
-# Start Storybook
-pnpm storybook
+# Start Storybook development server
+pnpm dev
 
 # Build Storybook
-pnpm storybook:build
-
-# Test Storybook
-pnpm storybook:test
+pnpm build:storybook
 ```
 
 ## Contributing

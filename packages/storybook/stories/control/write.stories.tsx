@@ -36,7 +36,7 @@ const WriteComponent: React.FC<Props> = ({ x, y, value }: Props) => {
   const connector = useConnector();
 
   const hub = useHub({
-    onKeyUp: (e, points) => {
+    onKeyUp: ({ e, points }) => {
       console.log('onKeyUp', e.currentTarget.value, points.pointing);
     },
     onInit: (table) => {
