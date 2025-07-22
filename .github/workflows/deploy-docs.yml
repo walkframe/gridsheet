@@ -3,7 +3,7 @@ name: Deploy Docs to Cloudflare Pages
 on:
   push:
     branches:
-      - main
+      - master
       - feature/docs
 
 jobs:
