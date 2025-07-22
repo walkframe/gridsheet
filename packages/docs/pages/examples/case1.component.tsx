@@ -409,7 +409,6 @@ export default function SalesDashboard() {
             })}
             options={{
               sheetHeight: 200,
-              sheetWidth: 350,
             }}
           />
           <div style={{ marginTop: '10px' }}>
@@ -517,7 +516,6 @@ export default function SalesDashboard() {
             })}
             options={{
               sheetHeight: 200,
-              sheetWidth: 350,
             }}
           />
           <div style={{ marginTop: '10px' }}>
