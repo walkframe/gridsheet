@@ -17,7 +17,7 @@ const StockRendererMixin: RendererMixinType = {
   number({ value }: RenderProps<number>) {
     const color = value <= 10 ? '#e74c3c' : value <= 50 ? '#f39c12' : '#27ae60';
     const status = value <= 10 ? 'LOW' : value <= 50 ? 'MEDIUM' : 'GOOD';
-    
+
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px' }}>
         <div
@@ -39,14 +39,14 @@ const StockRendererMixin: RendererMixinType = {
 const CategoryRendererMixin: RendererMixinType = {
   string({ value }: RenderProps<string>) {
     const colors = {
-      'Electronics': '#3498db',
-      'Clothing': '#e67e22',
-      'Books': '#9b59b6',
-      'Home': '#1abc9c',
-      'Sports': '#e74c3c',
+      Electronics: '#3498db',
+      Clothing: '#e67e22',
+      Books: '#9b59b6',
+      Home: '#1abc9c',
+      Sports: '#e74c3c',
     };
     const color = colors[value as keyof typeof colors] || '#95a5a6';
-    
+
     return (
       <span
         style={{
@@ -70,7 +70,7 @@ const DeleteButtonRendererMixin: RendererMixinType = {
   string({ value, point, sync, table }: RenderProps<string>) {
     // Only show delete button for product rows (rows 2-21)
     const shouldShowButton = point.y >= 2 && point.y <= 21;
-    
+
     // Get product name for tooltip
     let productName = 'Unknown';
     try {
@@ -90,7 +90,7 @@ const DeleteButtonRendererMixin: RendererMixinType = {
       console.error('Error getting product name:', error);
       // Fallback to unknown
     }
-    
+
     return (
       <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {shouldShowButton && (
@@ -101,7 +101,7 @@ const DeleteButtonRendererMixin: RendererMixinType = {
               if (sync) {
                 // Create a custom event to pass product name
                 const deleteEvent = new CustomEvent('productDelete', {
-                  detail: { row: point.y, productName: productName }
+                  detail: { row: point.y, productName: productName },
                 });
                 document.dispatchEvent(deleteEvent);
                 sync(table.removeRows({ y: point.y, numRows: 1 }));
@@ -134,11 +134,11 @@ const DeleteButtonRendererMixin: RendererMixinType = {
 
 export default function InventoryManagement() {
   const [activityLogs, setActivityLogs] = React.useState<string[]>([]);
-  const [pendingDeleteInfo, setPendingDeleteInfo] = React.useState<{row: number, productName: string} | null>(null);
+  const [pendingDeleteInfo, setPendingDeleteInfo] = React.useState<{ row: number; productName: string } | null>(null);
 
   const addActivityLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
-    setActivityLogs(prev => [`[${timestamp}] ${message}`, ...prev.slice(0, 19)]);
+    setActivityLogs((prev) => [`[${timestamp}] ${message}`, ...prev.slice(0, 19)]);
   };
 
   // Listen for product delete events
@@ -153,8 +153,6 @@ export default function InventoryManagement() {
     };
   }, []);
 
-
-
   const hub = useHub({
     renderers: {
       stock: new Renderer({ mixins: [StockRendererMixin] }),
@@ -162,35 +160,35 @@ export default function InventoryManagement() {
       delete: new Renderer({ mixins: [DeleteButtonRendererMixin] }),
     },
     onSave: ({ table, points }) => {
-      const posInfo = Array.isArray(points) 
-        ? points.map(p => `(${p.pointing.y},${p.pointing.x})`).join(', ')
+      const posInfo = Array.isArray(points)
+        ? points.map((p) => `(${p.pointing.y},${p.pointing.x})`).join(', ')
         : `(${points.pointing.y},${points.pointing.x})`;
       addActivityLog(`💾 Inventory data saved at ${Array.isArray(points) ? points.length : 1} position(s): ${posInfo}`);
     },
     onChange: ({ table, points }) => {
-      const posInfo = Array.isArray(points) 
-        ? points.map(p => `(${p.pointing.y},${p.pointing.x})`).join(', ')
+      const posInfo = Array.isArray(points)
+        ? points.map((p) => `(${p.pointing.y},${p.pointing.x})`).join(', ')
         : `(${points.pointing.y},${points.pointing.x})`;
       addActivityLog(`✏️ Updated at ${Array.isArray(points) ? points.length : 1} position(s): ${posInfo}`);
     },
     onRemoveRows: ({ table, ys }) => {
-      ys.forEach(y => {
+      ys.forEach((y) => {
         // Check if we have pending delete info for this row
         if (pendingDeleteInfo && pendingDeleteInfo.row === y) {
           const productName = pendingDeleteInfo.productName;
           setPendingDeleteInfo(null); // Clear the pending info
           return `row ${y} (${productName})`;
         }
-        
+
         const fieldRows = table.getFieldRows();
         fieldRows.forEach((row, index) => {
-          const productName = row?.["B"] ?? 'Unknown';
+          const productName = row?.['B'] ?? 'Unknown';
           addActivityLog(`🗑️ Removed product: row ${y} (${productName})`);
         });
       });
     },
     onRemoveCols: ({ table, xs }) => {
-      const colInfo = xs.map(x => `col ${String.fromCharCode(65 + x)}`).join(', ');
+      const colInfo = xs.map((x) => `col ${String.fromCharCode(65 + x)}`).join(', ');
       addActivityLog(`🗑️ Removed ${xs.length} column(s) from inventory: ${colInfo}`);
     },
     onInsertRows: ({ table, y, numRows }) => {
@@ -206,62 +204,62 @@ export default function InventoryManagement() {
   });
 
   const initialCells = buildInitialCells({
-          matrices: {
-        A1: [
-          ['', 'Product Name', 'Stock Level', 'Unit Price'],
-          ['', 'Laptop Pro X1', 15, 1299.99],
-          ['', 'Wireless Mouse', 45, 29.99],
-          ['', 'Cotton T-Shirt', 8, 19.99],
-          ['', 'Programming Book', 22, 49.99],
-          ['', 'Coffee Maker', 5, 89.99],
-          ['', 'Yoga Mat', 35, 39.99],
-          ['', 'Bluetooth Headphones', 12, 79.99],
-          ['', 'USB Cable', 67, 9.99],
-          ['', 'Notebook', 23, 15.99],
-          ['', 'Desk Lamp', 7, 45.99],
-          ['', 'Water Bottle', 89, 12.99],
-          ['', 'Phone Case', 34, 24.99],
-          ['', 'Power Bank', 18, 59.99],
-          ['', 'Keyboard', 9, 89.99],
-          ['', 'Mouse Pad', 56, 8.99],
-          ['', 'Monitor Stand', 3, 129.99],
-          ['', 'Cable Organizer', 41, 6.99],
-          ['', 'Desk Mat', 28, 19.99],
-          ['', 'Webcam', 14, 69.99],
-          ['', 'Microphone', 6, 149.99],
-          ['', 'Gaming Mouse', 11, 79.99],
-        ],
-      },
-          cells: {
-        default: {
-          width: 120,
-          height: 32,
-          style: {
-            ...makeBorder({ all: '1px solid #e0e0e0' }),
-            fontSize: '11px',
-          },
-        },
-        'A': { width: 40, renderer: 'delete' },
-        'B': { width: 140 },
-        'C': { width: 100, renderer: 'stock' },
-        'D': { width: 90 },
-        '1': {
-          style: {
-            backgroundColor: '#f8f9fa',
-            fontWeight: 'bold',
-            textAlign: 'center',
-          },
-          prevention: operations.Write,
-        },
-        'A1': {
-          style: {
-            backgroundColor: '#f8f9fa',
-            fontWeight: 'bold',
-            textAlign: 'center',
-          },
-          prevention: operations.Write,
+    matrices: {
+      A1: [
+        ['', 'Product Name', 'Stock Level', 'Unit Price'],
+        ['', 'Laptop Pro X1', 15, 1299.99],
+        ['', 'Wireless Mouse', 45, 29.99],
+        ['', 'Cotton T-Shirt', 8, 19.99],
+        ['', 'Programming Book', 22, 49.99],
+        ['', 'Coffee Maker', 5, 89.99],
+        ['', 'Yoga Mat', 35, 39.99],
+        ['', 'Bluetooth Headphones', 12, 79.99],
+        ['', 'USB Cable', 67, 9.99],
+        ['', 'Notebook', 23, 15.99],
+        ['', 'Desk Lamp', 7, 45.99],
+        ['', 'Water Bottle', 89, 12.99],
+        ['', 'Phone Case', 34, 24.99],
+        ['', 'Power Bank', 18, 59.99],
+        ['', 'Keyboard', 9, 89.99],
+        ['', 'Mouse Pad', 56, 8.99],
+        ['', 'Monitor Stand', 3, 129.99],
+        ['', 'Cable Organizer', 41, 6.99],
+        ['', 'Desk Mat', 28, 19.99],
+        ['', 'Webcam', 14, 69.99],
+        ['', 'Microphone', 6, 149.99],
+        ['', 'Gaming Mouse', 11, 79.99],
+      ],
+    },
+    cells: {
+      default: {
+        width: 120,
+        height: 32,
+        style: {
+          ...makeBorder({ all: '1px solid #e0e0e0' }),
+          fontSize: '11px',
         },
       },
+      A: { width: 40, renderer: 'delete' },
+      B: { width: 140 },
+      C: { width: 100, renderer: 'stock' },
+      D: { width: 90 },
+      '1': {
+        style: {
+          backgroundColor: '#f8f9fa',
+          fontWeight: 'bold',
+          textAlign: 'center',
+        },
+        prevention: operations.Write,
+      },
+      A1: {
+        style: {
+          backgroundColor: '#f8f9fa',
+          fontWeight: 'bold',
+          textAlign: 'center',
+        },
+        prevention: operations.Write,
+      },
+    },
   });
 
   const clearLogs = () => {
@@ -282,9 +280,7 @@ export default function InventoryManagement() {
         {/* Activity Logs */}
         <div style={{ flex: 1, maxWidth: '300px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <h4 style={{ color: '#2c3e50', margin: 0, fontSize: '14px', fontWeight: '600' }}>
-              Activity Logs
-            </h4>
+            <h4 style={{ color: '#2c3e50', margin: 0, fontSize: '14px', fontWeight: '600' }}>Activity Logs</h4>
             <button
               onClick={clearLogs}
               style={{
@@ -324,7 +320,10 @@ export default function InventoryManagement() {
               </div>
             ) : (
               activityLogs.map((log, index) => (
-                <div key={index} style={{ marginBottom: '3px', wordBreak: 'break-all', color: 'var(--nextra-text-color, #333)' }}>
+                <div
+                  key={index}
+                  style={{ marginBottom: '3px', wordBreak: 'break-all', color: 'var(--nextra-text-color, #333)' }}
+                >
                   {log}
                 </div>
               ))
@@ -344,8 +343,6 @@ export default function InventoryManagement() {
           >
             Inventory Management System
           </h3>
-          
-
 
           <GridSheet
             hub={hub}
@@ -357,4 +354,4 @@ export default function InventoryManagement() {
       </div>
     </div>
   );
-} 
+}

@@ -83,7 +83,7 @@ export default function BudgetManagement() {
   const [eventLogs, setEventLogs] = React.useState<string[]>([]);
 
   const addEventLog = (message: string) => {
-    setEventLogs(prev => [...prev.slice(-9), `${new Date().toLocaleTimeString()}: ${message}`]);
+    setEventLogs((prev) => [...prev.slice(-9), `${new Date().toLocaleTimeString()}: ${message}`]);
   };
 
   // Check screen width on mount and resize

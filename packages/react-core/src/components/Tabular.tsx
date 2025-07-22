@@ -30,6 +30,8 @@ export const Tabular = () => {
     inputting,
     leftHeaderSelecting,
     topHeaderSelecting,
+    totalWidth,
+    totalHeight,
   } = store;
   const table = tableReactive.current;
 
@@ -147,10 +149,12 @@ export const Tabular = () => {
       >
         <div
           className={'gs-tabular-inner'}
+          style={{
+            width: totalWidth + 1,
+            height: totalHeight + 1,
+          }}
         >
-          <table
-            className={`gs-table`}
-          >
+          <table className={`gs-table`}>
             <thead className="gs-thead" style={{ height: table.headerHeight }}>
               <tr className="gs-row">
                 <th

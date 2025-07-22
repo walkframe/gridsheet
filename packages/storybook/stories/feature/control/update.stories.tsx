@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, buildInitialCells, useConnector, HistoryType, Table, createHub, UserTable } from '@gridsheet/react-core';
+import {
+  GridSheet,
+  buildInitialCells,
+  useConnector,
+  HistoryType,
+  Table,
+  createHub,
+  UserTable,
+} from '@gridsheet/react-core';
 
 const meta: Meta = {
   title: 'Control/Update',

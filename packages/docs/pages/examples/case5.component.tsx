@@ -174,8 +174,19 @@ export default function AdvancedFeatures() {
     const cellsMap: Record<string, any> = {};
 
     // Always process all possible sheets to maintain consistent hook count
-    const allPossibleSheets = ['Sales', 'Budget', 'Inventory', 'Sheet4', 'Sheet5', 'Sheet6', 'Sheet7', 'Sheet8', 'Sheet9', 'Sheet10'];
-    
+    const allPossibleSheets = [
+      'Sales',
+      'Budget',
+      'Inventory',
+      'Sheet4',
+      'Sheet5',
+      'Sheet6',
+      'Sheet7',
+      'Sheet8',
+      'Sheet9',
+      'Sheet10',
+    ];
+
     allPossibleSheets.forEach((sheetName) => {
       const currentSheet = sheetName;
       let data: any[][] = [];

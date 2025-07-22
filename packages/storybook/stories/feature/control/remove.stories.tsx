@@ -25,11 +25,11 @@ const RemoveComponent: React.FC = () => {
   const connector = useConnector();
 
   const hub = useHub({
-    onRemoveRows: ({table, ys}) => {
+    onRemoveRows: ({ table, ys }) => {
       console.log('onRemoveRows called with:', { table, ys });
-      console.log("matrix", table.getFieldObject());
+      console.log('matrix', table.getFieldObject());
     },
-    onRemoveCols: ({table, xs}) => {
+    onRemoveCols: ({ table, xs }) => {
       console.log('onRemoveCols called with:', { table, xs });
     },
   });
@@ -130,4 +130,4 @@ export const Remove: StoryObj = {
       },
     },
   },
-}; 
+};

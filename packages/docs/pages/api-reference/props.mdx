@@ -197,6 +197,7 @@ The `useHub` hook accepts configuration options that are shared across all sheet
 | `policies` | `{ [policyName: string]: PolicyType }` | Custom cell policies |
 | `onSave` | `FeedbackType` | Callback when cell data is saved |
 | `onChange` | `FeedbackType` | Callback when cell data changes |
+| `onEdit` | `(args: { table: UserTable }) => void` | Callback when cell is being edited |
 | `onRemoveRows` | `(args: { table: UserTable; ys: number[] }) => void` | Callback when rows are removed |
 | `onRemoveCols` | `(args: { table: UserTable; xs: number[] }) => void` | Callback when columns are removed |
 | `onInsertRows` | `(args: { table: UserTable; y: number; numRows: number }) => void` | Callback when rows are inserted |
@@ -221,6 +222,9 @@ The hub provides several event handlers that allow you to respond to various spr
 
 #### `onSave` and `onChange`
 Called when cell data is saved or changed. These handlers receive the updated table and the positions of changed cells.
+
+#### `onEdit`
+Called when a cell is being edited. This handler receives the current table state during the editing process.
 
 #### `onRemoveRows` and `onRemoveCols`
 Called when rows or columns are removed from the spreadsheet. These handlers receive:
@@ -260,6 +264,9 @@ const hub = useHub({
   },
   onChange: ({ table, points }) => {
     console.log('Data changed:', points);
+  },
+  onEdit: ({ table }) => {
+    console.log('Cell being edited:', table);
   },
   onRemoveRows: ({ table, ys }) => {
     console.log('Rows removed:', ys);

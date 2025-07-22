@@ -61,16 +61,18 @@ export const Resizer = () => {
         diff[p2a({ y, x: 0 })] = { height };
       });
     }
-     table.update({
+    table.update({
       diff,
       partial: true,
       operator: 'USER',
       undoReflection: { selectingZone, sheetId: table.sheetId },
     });
-    dispatch(setStore({
-      tableReactive: { current: table },
-      ...table.getTotalSize(),
-    }))
+    dispatch(
+      setStore({
+        tableReactive: { current: table },
+        ...table.getTotalSize(),
+      }),
+    );
     dispatch(setResizingPositionY([-1, -1, -1]));
     dispatch(setResizingPositionX([-1, -1, -1]));
     editorRef.current!.focus();

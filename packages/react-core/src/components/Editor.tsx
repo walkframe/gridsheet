@@ -417,17 +417,20 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
           if (e.ctrlKey || e.metaKey) {
             if (!editing) {
               e.preventDefault();
-              table.wire.onSave?.({ table, points: {
-                pointing: choosing,
-                selectingFrom: {
-                  y: selectingZone.startY,
-                  x: selectingZone.startX,
+              table.wire.onSave?.({
+                table,
+                points: {
+                  pointing: choosing,
+                  selectingFrom: {
+                    y: selectingZone.startY,
+                    x: selectingZone.startX,
+                  },
+                  selectingTo: {
+                    y: selectingZone.endY,
+                    x: selectingZone.endX,
+                  },
                 },
-                selectingTo: {
-                  y: selectingZone.endY,
-                  x: selectingZone.endX,
-                },
-              }});
+              });
               return false;
             }
           }

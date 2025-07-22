@@ -22,14 +22,16 @@ const DESCRIPTION = [
 
 const SheetOnEditComponent: React.FC = () => {
   const [editData, setEditData] = React.useState<Record<string, any>>({});
-  const [editHistory, setEditHistory] = React.useState<Array<{
-    operation: string;
-    area: { top: number; left: number; bottom: number; right: number };
-    sheetName: string;
-    timestamp: string;
-    data: Record<string, any>;
-  }>>([]);
-  
+  const [editHistory, setEditHistory] = React.useState<
+    Array<{
+      operation: string;
+      area: { top: number; left: number; bottom: number; right: number };
+      sheetName: string;
+      timestamp: string;
+      data: Record<string, any>;
+    }>
+  >([]);
+
   const hub = useHub({
     onEdit: ({ table }) => {
       const data = table.getFieldObject();
@@ -41,7 +43,7 @@ const SheetOnEditComponent: React.FC = () => {
         data: data,
       };
       setEditData(data);
-      setEditHistory(prev => [info, ...prev.slice(0, 9)]); // Keep last 10 edits
+      setEditHistory((prev) => [info, ...prev.slice(0, 9)]); // Keep last 10 edits
     },
   });
 
@@ -82,11 +84,11 @@ const SheetOnEditComponent: React.FC = () => {
               }}
             />
           </div>
-          
+
           <div>
             <h4 style={{ textAlign: 'center', marginBottom: '10px' }}>Sheet 2</h4>
             <GridSheet
-              sheetName='Sheet2'
+              sheetName="Sheet2"
               hub={hub}
               initialCells={buildInitialCells({
                 matrices: {
@@ -117,17 +119,21 @@ const SheetOnEditComponent: React.FC = () => {
             />
           </div>
         </div>
-        
+
         <div style={{ padding: '20px', maxWidth: '1800px', margin: '0 auto' }}>
           <h3>Edit History</h3>
           <div data-testid="edit-history" style={{ maxHeight: '400px', overflowY: 'auto' }}>
             {editHistory.map((edit, index) => (
-              <div key={index} data-testid="history-item" style={{ 
-                border: '1px solid #ddd', 
-                padding: '8px', 
-                marginBottom: '8px',
-                fontSize: '12px'
-              }}>
+              <div
+                key={index}
+                data-testid="history-item"
+                style={{
+                  border: '1px solid #ddd',
+                  padding: '8px',
+                  marginBottom: '8px',
+                  fontSize: '12px',
+                }}
+              >
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <tbody>
                     <tr>
@@ -136,14 +142,22 @@ const SheetOnEditComponent: React.FC = () => {
                       <td style={{ fontWeight: 'bold', width: '80px' }}>Sheet:</td>
                       <td style={{ width: '100px' }}>{edit.sheetName}</td>
                       <td style={{ fontWeight: 'bold', width: '80px' }}>Area:</td>
-                      <td>{edit.area.top},{edit.area.left} to {edit.area.bottom},{edit.area.right}</td>
+                      <td>
+                        {edit.area.top},{edit.area.left} to {edit.area.bottom},{edit.area.right}
+                      </td>
                     </tr>
                     <tr>
                       <td style={{ fontWeight: 'bold', verticalAlign: 'top' }}>Data:</td>
                       <td colSpan={5}>
                         <textarea
                           data-testid="history-data"
-                          style={{ width: '100%', height: '20px', fontFamily: 'monospace', fontSize: '10px', resize: 'none' }}
+                          style={{
+                            width: '100%',
+                            height: '20px',
+                            fontFamily: 'monospace',
+                            fontSize: '10px',
+                            resize: 'none',
+                          }}
                           value={JSON.stringify(edit.data)}
                           readOnly
                         />
@@ -153,9 +167,7 @@ const SheetOnEditComponent: React.FC = () => {
                 </table>
               </div>
             ))}
-            {editHistory.length === 0 && (
-              <p>No edit history yet.</p>
-            )}
+            {editHistory.length === 0 && <p>No edit history yet.</p>}
           </div>
         </div>
       </div>
@@ -172,4 +184,4 @@ export const OnEdit: StoryObj = {
       },
     },
   },
-}; 
+};

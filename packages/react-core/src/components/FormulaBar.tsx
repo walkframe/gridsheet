@@ -184,7 +184,7 @@ export const FormulaBar = () => {
           ref={hlRef}
           style={{
             height: largeEditorRef.current?.clientHeight,
-            width: "100%",
+            width: '100%',
           }}
         >
           {cell?.disableFormula ? inputting : editorStyle(inputting)}

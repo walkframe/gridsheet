@@ -151,12 +151,7 @@ export function GridSheet({
 
   return (
     <Context.Provider value={{ store, dispatch: dispatch }}>
-      <div
-        className={`gs-root1`}
-        ref={rootRef}
-        data-sheet-name={sheetName}
-        data-mode={mode}
-      >
+      <div className={`gs-root1`} ref={rootRef} data-sheet-name={sheetName} data-mode={mode}>
         <ScrollHandle style={{ position: 'fixed', top: 0, left: 0 }} />
         <ScrollHandle style={{ position: 'absolute', zIndex: 4, right: 0, top: 0, width: 5 }} horizontal={1} />
         <ScrollHandle style={{ position: 'absolute', zIndex: 4, left: 0, bottom: 0, height: 5 }} vertical={1} />

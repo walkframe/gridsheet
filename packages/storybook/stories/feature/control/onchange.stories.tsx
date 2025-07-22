@@ -5,25 +5,27 @@ import { GridSheet, buildInitialCells, useConnector, HistoryType, useHub } from 
 // TSV conversion utility function
 const convertToTSV = (table: any, evaluates: boolean = true): string => {
   if (!table) return '';
-  
+
   const matrix = table.getFieldMatrix({
     refEvaluation: evaluates ? 'COMPLETE' : 'RAW',
   });
-  
+
   if (!matrix || matrix.length === 0) return '';
-  
+
   return matrix
-    .map((row: any[]) => 
-      row.map((cell: any) => {
-        if (cell === null || cell === undefined) return '';
-        // Handle tabs and newlines appropriately
-        const cellStr = String(cell);
-        if (cellStr.includes('\t') || cellStr.includes('\n')) {
-          // Replace tabs with spaces and remove newlines
-          return cellStr.replace(/\t/g, ' ').replace(/\n/g, ' ');
-        }
-        return cellStr;
-      }).join('\t')
+    .map((row: any[]) =>
+      row
+        .map((cell: any) => {
+          if (cell === null || cell === undefined) return '';
+          // Handle tabs and newlines appropriately
+          const cellStr = String(cell);
+          if (cellStr.includes('\t') || cellStr.includes('\n')) {
+            // Replace tabs with spaces and remove newlines
+            return cellStr.replace(/\t/g, ' ').replace(/\n/g, ' ');
+          }
+          return cellStr;
+        })
+        .join('\t'),
     )
     .join('\n');
 };
@@ -52,7 +54,7 @@ const SheetOnChangeComponent: React.FC = () => {
   const [histories, setHistories] = React.useState<HistoryType[]>([]);
   const connector = useConnector();
   const table = connector.current?.tableManager.instance;
-  
+
   const hub = useHub({
     onChange: ({ table, points }) => {
       const tsv = convertToTSV(table, evaluates);

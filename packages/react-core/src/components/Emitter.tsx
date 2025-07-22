@@ -9,21 +9,27 @@ export const Emitter: FC = () => {
 
   useEffect(() => {
     if (table?.isInitialized && table.wire.onChange) {
-      table.wire.onChange({ table, points: {
-        pointing,
-        selectingFrom: { y: zone.startY, x: zone.startX },
-        selectingTo: { y: zone.endY, x: zone.endX },
-      }});
+      table.wire.onChange({
+        table,
+        points: {
+          pointing,
+          selectingFrom: { y: zone.startY, x: zone.startX },
+          selectingTo: { y: zone.endY, x: zone.endX },
+        },
+      });
     }
   }, [tableReactive]);
 
   useEffect(() => {
     if (table && table.wire.onSelect) {
-      table.wire.onSelect({ table, points: {
-        pointing,
-        selectingFrom: { y: zone.startY, x: zone.startX },
-        selectingTo: { y: zone.endY, x: zone.endX },
-      }});
+      table.wire.onSelect({
+        table,
+        points: {
+          pointing,
+          selectingFrom: { y: zone.startY, x: zone.startX },
+          selectingTo: { y: zone.endY, x: zone.endX },
+        },
+      });
     }
   }, [pointing, zone]);
   return null;

@@ -94,8 +94,8 @@ export const Cell: FC<Props> = memo(({ y, x, operationStyle }) => {
   }, []);
 
   const sync = useCallback((table: UserTable) => {
-    dispatch(setStore({ tableReactive: { current: table.__raw__ } }))
-  }, [])
+    dispatch(setStore({ tableReactive: { current: table.__raw__ } }));
+  }, []);
 
   let errorMessage = '';
   let rendered: any;

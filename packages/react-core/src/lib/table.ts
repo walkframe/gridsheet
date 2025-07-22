@@ -417,7 +417,7 @@ export class Table implements UserTable {
     return {
       totalWidth: width + this.headerWidth,
       totalHeight: height + this.headerHeight,
-    }
+    };
   }
 
   public refresh(keepAddressCache = true): Table {
@@ -1153,13 +1153,13 @@ export class Table implements UserTable {
         diffAfter[id] = this.wire.data[id] = patch;
       }
     });
-    
+
     // Call onEdit with cloned table containing updated area
     if (this.wire.onEdit && Object.keys(diff).length > 0) {
       const updatedArea = this.getUpdatedArea(diff);
       this.wire.onEdit({ table: this.__raw__.trim(updatedArea) });
     }
-    
+
     //this.clearSolvedCaches();
     return {
       diffBefore,

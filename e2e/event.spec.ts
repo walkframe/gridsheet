@@ -11,7 +11,7 @@ test('show the tsv data', async ({ page }) => {
   const tsvData = page.locator('#changes');
   const tsvText = await tsvData.inputValue();
   expect(tsvText).toContain('22'); // Verify that calculation result is included
-  
+
   const evaluates = page.locator('#evaluates');
   await evaluates.uncheck();
   const tsvTextRaw = await tsvData.inputValue();
@@ -20,57 +20,55 @@ test('show the tsv data', async ({ page }) => {
 
 test('formula evaluation with evaluates flag', async ({ page }) => {
   await page.goto('http://localhost:5233/iframe.html?id=control-onchange--sheet-on-change&viewMode=story');
-  
+
   // Verify that formulas are evaluated in initial state
   const tsvData = page.locator('#changes');
   let tsvText = await tsvData.inputValue();
-  
 
-  
   // Verify that formula calculation results are included (formula results are in 3rd row)
   const lines = tsvText.split('\n');
   const thirdLine = lines[2]; // 3rd row (0-indexed so 2)
-  
+
   expect(thirdLine).toContain('7'); // A3: =A1+A2 result
   expect(thirdLine).toContain('16'); // B3: =SUM(A1:B2) result
   expect(thirdLine).toContain('4.5'); // C3: =AVERAGE(A1:C2) result
   expect(thirdLine).toContain('9'); // D3: =MAX(A1:D2) result
   expect(thirdLine).toContain('1'); // E3: =MIN(A1:E2) result
-  
+
   // Verify that formulas are not displayed
   expect(tsvText).not.toContain('=A1+A2');
   expect(tsvText).not.toContain('=SUM(A1:B2)');
-  
+
   // Turn off Evaluates flag and verify that raw formulas are displayed
   const evaluates = page.locator('#evaluates');
   await evaluates.uncheck();
-  
+
   tsvText = await tsvData.inputValue();
-  
+
   // Verify that raw formulas are included
   const lines2 = tsvText.split('\n');
   const thirdLine2 = lines2[2]; // 3rd row
-  
+
   expect(thirdLine2).toContain('=A1+A2');
   expect(thirdLine2).toContain('=SUM(A1:B2)');
   expect(thirdLine2).toContain('=AVERAGE(A1:C2)');
   expect(thirdLine2).toContain('=MAX(A1:D2)');
   expect(thirdLine2).toContain('=MIN(A1:E2)');
-  
+
   // Verify that calculation results are not displayed
   expect(thirdLine2).not.toContain('7'); // A3 calculation result
   expect(thirdLine2).not.toContain('16'); // B3 calculation result
   expect(thirdLine2).not.toContain('4.5'); // C3 calculation result
-  
+
   // Turn Evaluates flag back on and verify that calculation results are displayed again
   await evaluates.check();
-  
+
   tsvText = await tsvData.inputValue();
-  
+
   // Verify that calculation results are included again
   const lines3 = tsvText.split('\n');
   const thirdLine3 = lines3[2]; // 3rd row
-  
+
   expect(thirdLine3).toContain('7'); // A3: =A1+A2 result
   expect(thirdLine3).toContain('16'); // B3: =SUM(A1:B2) result
   expect(thirdLine3).toContain('4.5'); // C3: =AVERAGE(A1:C2) result
@@ -266,7 +264,7 @@ test('onInsertRows', async ({ page }) => {
   expect(logs.length).toBeGreaterThan(1);
   const eventLog = logs[logs.length - 2]; // First log is the event call
   expect(eventLog[0]).toBe('onInsertRows called with:');
-  
+
   const eventData = eventLog[1];
   expect(eventData).toHaveProperty('table');
   expect(eventData).toHaveProperty('y');
@@ -301,7 +299,7 @@ test('onInsertCols', async ({ page }) => {
   expect(logs.length).toBeGreaterThan(1);
   const eventLog = logs[logs.length - 2]; // First log is the event call
   expect(eventLog[0]).toBe('onInsertCols called with:');
-  
+
   const eventData = eventLog[1];
   expect(eventData).toHaveProperty('table');
   expect(eventData).toHaveProperty('x');
@@ -336,7 +334,7 @@ test('onRemoveRows', async ({ page }) => {
   expect(logs.length).toBeGreaterThan(1);
   const eventLog = logs[logs.length - 2]; // First log is the event call
   expect(eventLog[0]).toBe('onRemoveRows called with:');
-  
+
   const eventData = eventLog[1];
   expect(eventData).toHaveProperty('table');
   expect(eventData).toHaveProperty('ys');
@@ -370,7 +368,7 @@ test('onRemoveCols', async ({ page }) => {
   expect(logs.length).toBeGreaterThan(1);
   const eventLog = logs[logs.length - 2]; // First log is the event call
   expect(eventLog[0]).toBe('onRemoveCols called with:');
-  
+
   const eventData = eventLog[1];
   expect(eventData).toHaveProperty('table');
   expect(eventData).toHaveProperty('xs');
@@ -387,24 +385,24 @@ test.describe('OnEdit Event Tests', () => {
   test('should display edit data when writing to cells', async ({ page }) => {
     // Sheet1のA2セル（Apple）をクリック
     await page.click('[data-sheet-name="Sheet1"] >> text=Apple');
-    
+
     // セルを編集モードにする（ダブルクリック）
     await page.dblclick('[data-sheet-name="Sheet1"] .gs-cell >> text=Apple');
-    
+
     // 値を変更
     await page.fill('[data-sheet-name="Sheet1"] input, [data-sheet-name="Sheet1"] textarea', 'Apple Updated');
     await page.keyboard.press('Enter');
-    
+
     // Edit Historyに変更が反映されることを確認
     await page.waitForFunction(() => {
       const historyElements = document.querySelectorAll('[data-testid="history-item"]');
       return historyElements.length > 0;
     });
-    
+
     // 最新の履歴データを確認
     const latestDataText = await page.locator('[data-testid="history-data"]').first().inputValue();
     const editData = JSON.parse(latestDataText);
-    
+
     // A2セルの値が更新されていることを確認
     expect(editData).toHaveProperty('A2');
     expect(editData.A2).toBe('Apple Updated');
@@ -415,57 +413,55 @@ test.describe('OnEdit Event Tests', () => {
     await page.dblclick('[data-sheet-name="Sheet1"] .gs-cell >> text=Apple');
     await page.fill('[data-sheet-name="Sheet1"] input, [data-sheet-name="Sheet1"] textarea', 'Apple Moved');
     await page.keyboard.press('Enter');
-    
+
     // Edit Historyに編集の差分が反映されることを確認
     await page.waitForFunction(() => {
       const historyElements = document.querySelectorAll('[data-testid="history-item"]');
       return historyElements.length > 0;
     });
-    
+
     // 最新の履歴データを確認
     const latestDataText = await page.locator('[data-testid="history-data"]').first().inputValue();
     const editData = JSON.parse(latestDataText);
-    
+
     // 編集された値が存在することを確認
-    const hasEditedData = Object.keys(editData).some(key => 
-      editData[key] === 'Apple Moved'
-    );
+    const hasEditedData = Object.keys(editData).some((key) => editData[key] === 'Apple Moved');
     expect(hasEditedData).toBe(true);
   });
 
   test('should display edit history for multiple operations', async ({ page }) => {
     // 複数のシートで複数の編集操作を実行
-    
+
     // 1. Sheet1のA2セルを編集
     await page.dblclick('[data-sheet-name="Sheet1"] .gs-cell >> text=Apple');
     await page.fill('[data-sheet-name="Sheet1"] input, [data-sheet-name="Sheet1"] textarea', 'Apple 1');
     await page.keyboard.press('Enter');
-    
+
     // 2. Sheet1のB2セルを編集
     await page.dblclick('[data-sheet-name="Sheet1"] .gs-cell >> text=100');
     await page.fill('[data-sheet-name="Sheet1"] input, [data-sheet-name="Sheet1"] textarea', '150');
     await page.keyboard.press('Enter');
-    
+
     // 3. Sheet2で編集
     await page.click('[data-sheet-name="Sheet2"] .gs-cell >> text=John');
     await page.dblclick('[data-sheet-name="Sheet2"] .gs-cell >> text=John');
     await page.fill('[data-sheet-name="Sheet2"] input, [data-sheet-name="Sheet2"] textarea', 'John Updated');
     await page.keyboard.press('Enter');
-    
+
     // Edit Historyに複数のエントリが表示されることを確認
     await page.waitForFunction(() => {
       const historyElements = document.querySelectorAll('[data-testid="history-item"]');
       return historyElements.length >= 3;
     });
-    
+
     // 履歴の内容を確認
     const historyElements = await page.locator('[data-testid="history-item"]').all();
     expect(historyElements.length).toBeGreaterThanOrEqual(3);
-    
+
     // 最新の履歴エントリを確認
     const latestHistory = await historyElements[0].textContent();
     expect(latestHistory).toContain('Sheet:');
-    
+
     // 最新の履歴データを確認
     const latestDataText = await page.locator('[data-testid="history-data"]').first().inputValue();
     expect(latestDataText).toContain('John Updated');
@@ -476,15 +472,15 @@ test.describe('OnEdit Event Tests', () => {
     await page.dblclick('[data-sheet-name="Sheet1"] .gs-cell >> text=Apple');
     await page.fill('[data-sheet-name="Sheet1"] input, [data-sheet-name="Sheet1"] textarea', 'Test Value');
     await page.keyboard.press('Enter');
-    
+
     // Edit Historyのエリア情報を確認
     await page.waitForFunction(() => {
       const historyElements = document.querySelectorAll('[data-testid="history-item"]');
       return historyElements.length > 0;
     });
-    
+
     const historyText = await page.locator('[data-testid="history-item"]').first().textContent();
-    
+
     // エリア情報が正しく表示されていることを確認（A2セルなので top:2, left:1, bottom:2, right:1）
     expect(historyText).toContain('Area:2,1 to 2,1');
   });
@@ -494,22 +490,22 @@ test.describe('OnEdit Event Tests', () => {
     await page.dblclick('[data-sheet-name="Sheet1"] .gs-cell >> text=Apple');
     await page.fill('[data-sheet-name="Sheet1"] input, [data-sheet-name="Sheet1"] textarea', 'Sheet1 Edit');
     await page.keyboard.press('Enter');
-    
+
     // Sheet2で編集
     await page.click('[data-sheet-name="Sheet2"] .gs-cell >> text=John');
     await page.dblclick('[data-sheet-name="Sheet2"] .gs-cell >> text=John');
     await page.fill('[data-sheet-name="Sheet2"] input, [data-sheet-name="Sheet2"] textarea', 'Sheet2 Edit');
     await page.keyboard.press('Enter');
-    
+
     // 両方の編集が履歴に記録されることを確認
     await page.waitForFunction(() => {
       const historyElements = document.querySelectorAll('[data-testid="history-item"]');
       return historyElements.length >= 2;
     });
-    
+
     const historyElements = await page.locator('[data-testid="history-item"]').all();
     expect(historyElements.length).toBeGreaterThanOrEqual(2);
-    
+
     // 最新の編集がSheet2のものであることを確認
     const latestHistory = await historyElements[0].textContent();
     expect(latestHistory).toContain('Sheet2 Edit');

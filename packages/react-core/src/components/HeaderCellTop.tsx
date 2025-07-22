@@ -124,16 +124,7 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
       }
       return true;
     },
-    [
-      dragging,
-      editingAnywhere,
-      xSheetFocused,
-      colId,
-      lastFocused,
-      selectingZone,
-      choosing,
-      autofillDraggingTo,
-    ],
+    [dragging, editingAnywhere, xSheetFocused, colId, lastFocused, selectingZone, choosing, autofillDraggingTo],
   );
 
   const handleDragEnd = useCallback(
