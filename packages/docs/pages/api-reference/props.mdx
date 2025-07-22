@@ -348,68 +348,6 @@ if (storeManager) {
 }
 ```
 
-## Table Reference (Deprecated)
-
-**Deprecated**: Use `connector` instead. The `tableRef` prop provided access to the table instance and dispatch function.
-
-### TableRef Interface (Deprecated)
-
-```tsx
-interface TableRef {
-  current: {
-    table: UserTable;
-    dispatch: (table: UserTable) => void;
-  } | null;
-}
-```
-
-### Migration Example
-
-```tsx
-// Old way (deprecated)
-const connector = useConnector();
-<GridSheet connector={connector} initialCells={initialCells} />
-
-// New way
-const connector = useConnector();
-<GridSheet connector={connector} initialCells={initialCells} />
-
-// Access table
-const { tableManager } = connector.current;
-const { instance: table, sync } = tableManager;
-```
-
-## Store Reference (Deprecated)
-
-**Deprecated**: Use `connector` instead. The `storeRef` prop provided access to the store state and dispatch function.
-
-### StoreRef Interface (Deprecated)
-
-```tsx
-interface StoreRef {
-  current: {
-    state: StoreState;
-    dispatch: (action: StoreAction) => void;
-  } | null;
-}
-```
-
-### Migration Example
-
-```tsx
-// Old way (deprecated)
-const connector = useConnector();
-<GridSheet connector={connector} initialCells={initialCells} />
-
-// New way
-const connector = useConnector();
-<GridSheet connector={connector} initialCells={initialCells} />
-
-// Access store
-const { storeManager } = connector.current;
-const { instance: store, sync } = storeManager;
-```
-
 ## Options
 
 The `options` prop provides configuration options for sheet behavior.
@@ -498,4 +436,4 @@ const initialCells = {
 - `Prevention.MOVE`: Cell cannot be moved
 - `Prevention.RESIZE`: Cell cannot be resized
 
-Use bitwise OR (`|`) to combine multiple restrictions. 
+Use bitwise OR (`|`) to combine multiple restrictions.
