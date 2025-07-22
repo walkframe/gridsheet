@@ -133,6 +133,9 @@ export default function AdvancedFeatures() {
 
   // Load most recent saved data for sheets/activeSheet
   React.useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
     try {
       const allKeys = Object.keys(localStorage).filter((key) => key.startsWith('gridsheet_demo5.'));
       if (allKeys.length > 0) {
@@ -196,24 +199,28 @@ export default function AdvancedFeatures() {
       // Only process if the sheet is in the current sheets array
       if (sheets.includes(sheetName)) {
         try {
-          const savedData = localStorage.getItem(`gridsheet_demo5.${currentSheet}`);
-          if (savedData) {
-            const parsedData = JSON.parse(savedData);
-            if (parsedData.matrixData && parsedData.matrixData.length > 0) {
-              data = parsedData.matrixData.map((row: any[], rowIndex: number) =>
-                row.map((cell: any, colIndex: number) => {
-                  if (cell && typeof cell === 'object') {
-                    const { value, style, ...otherProps } = cell;
-                    const address = `${String.fromCharCode(65 + colIndex)}${rowIndex + 1}`;
-                    if (style || Object.keys(otherProps).length > 0) {
-                      savedCells[address] = { style, ...otherProps };
+          if (typeof window !== 'undefined') {
+            const savedData = localStorage.getItem(`gridsheet_demo5.${currentSheet}`);
+            if (savedData) {
+              const parsedData = JSON.parse(savedData);
+              if (parsedData.matrixData && parsedData.matrixData.length > 0) {
+                data = parsedData.matrixData.map((row: any[], rowIndex: number) =>
+                  row.map((cell: any, colIndex: number) => {
+                    if (cell && typeof cell === 'object') {
+                      const { value, style, ...otherProps } = cell;
+                      const address = `${String.fromCharCode(65 + colIndex)}${rowIndex + 1}`;
+                      if (style || Object.keys(otherProps).length > 0) {
+                        savedCells[address] = { style, ...otherProps };
+                      }
+                      return value || '';
                     }
-                    return value || '';
-                  }
-                  return cell || '';
-                }),
-              );
-              loadedFromStorage = true;
+                    return cell || '';
+                  }),
+                );
+                loadedFromStorage = true;
+              } else {
+                data = SHEET_DATA[currentSheet as keyof typeof SHEET_DATA] || SHEET_DATA['Sales'];
+              }
             } else {
               data = SHEET_DATA[currentSheet as keyof typeof SHEET_DATA] || SHEET_DATA['Sales'];
             }
@@ -224,7 +231,7 @@ export default function AdvancedFeatures() {
           data = SHEET_DATA[currentSheet as keyof typeof SHEET_DATA] || SHEET_DATA['Sales'];
         }
 
-        if (loadedFromStorage && !loadedSheetsRef.current.has(currentSheet)) {
+        if (loadedFromStorage && typeof window !== 'undefined' && !loadedSheetsRef.current.has(currentSheet)) {
           loadedSheetsRef.current.add(currentSheet);
         }
       } else {
@@ -342,7 +349,9 @@ export default function AdvancedFeatures() {
           timestamp: new Date().toISOString(),
         };
         try {
-          localStorage.setItem(`gridsheet_demo5.${newSheetName}`, JSON.stringify(newSheetData));
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(`gridsheet_demo5.${newSheetName}`, JSON.stringify(newSheetData));
+          }
         } catch {}
         showNotification(`New sheet "${newSheetName}" created`);
         break;
@@ -369,7 +378,9 @@ export default function AdvancedFeatures() {
             timestamp: new Date().toISOString(),
           };
           try {
-            localStorage.setItem(`gridsheet_demo5.${activeSheet}`, JSON.stringify(saveData));
+            if (typeof window !== 'undefined') {
+              localStorage.setItem(`gridsheet_demo5.${activeSheet}`, JSON.stringify(saveData));
+            }
             showNotification('Data saved to localStorage successfully');
           } catch {}
         }
@@ -377,7 +388,9 @@ export default function AdvancedFeatures() {
       }
       case 'reset': {
         sheets.forEach((sheetName) => {
-          localStorage.removeItem(`gridsheet_demo5.${sheetName}`);
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem(`gridsheet_demo5.${sheetName}`);
+          }
         });
         showNotification('Data reset successfully. Reloading...');
         setTimeout(() => window.location.reload(), 1000);

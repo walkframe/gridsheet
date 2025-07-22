@@ -224,6 +224,9 @@ export default function DataManagement() {
 
   // Load data from localStorage
   const loadSavedData = React.useCallback(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
     try {
       const savedData = localStorage.getItem('demo3');
       if (savedData) {
@@ -241,6 +244,9 @@ export default function DataManagement() {
   }, []);
 
   const saveData = React.useCallback(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
     try {
       if (connector.current) {
         const { tableManager } = connector.current;
@@ -273,6 +279,9 @@ export default function DataManagement() {
 
   // Reset data
   const resetData = () => {
+    if (typeof window === 'undefined') {
+      return;
+    }
     if (confirm('Are you sure you want to reset all data? This cannot be undone.')) {
       localStorage.removeItem('demo3');
       window.location.reload();
@@ -281,6 +290,9 @@ export default function DataManagement() {
 
   // Get saved data
   const getSavedData = () => {
+    if (typeof window === 'undefined') {
+      return myHeart;
+    }
     try {
       const savedData = localStorage.getItem('demo3');
       if (savedData) {
