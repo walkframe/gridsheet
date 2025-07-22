@@ -3,8 +3,14 @@ import type { StoreType, AreaType, PointType } from '../types';
 import { zoneToArea } from './structs';
 import type { Table } from './table';
 
-export const clip = (store: StoreType): AreaType => {
-  const { selectingZone, choosing, editorRef, table } = store;
+export const clip = (store: StoreType) => {
+  const { selectingZone, choosing, editorRef, tableReactive: tableRef } = store;
+  const table = tableRef.current;
+
+  if (!table) {
+    return { top: 0, left: 0, bottom: 0, right: 0 };
+  }
+
   const { y, x } = choosing;
   const selectingArea = zoneToArea(selectingZone);
   let area = selectingArea;

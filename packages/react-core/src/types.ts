@@ -7,7 +7,7 @@ import type { CSSProperties, KeyboardEvent } from 'react';
 import type { PolicyType } from './policy/core';
 import type { Dispatcher } from './store';
 
-export type RefEvaluation = 'complete' | 'table' | 'raw' | 'system';
+export type RefEvaluation = 'COMPLETE' | 'TABLE' | 'RAW' | 'SYSTEM';
 
 export type Y = number;
 export type X = number;
@@ -28,18 +28,13 @@ export type Parsers = { [s: string]: ParserType };
 export type Labelers = { [s: string]: Labeler };
 export type Policies = { [s: string]: PolicyType };
 
-export type TableRef = {
-  table: UserTable;
-  dispatch: (table: UserTable) => void;
-};
-
 export type CursorStateType = {
   pointing: PointType;
   selectingFrom: PointType;
   selectingTo: PointType;
 };
 
-export type FeedbackType = (table: UserTable, points?: CursorStateType) => void;
+export type FeedbackType = (args: { table: UserTable; points?: CursorStateType }) => void;
 
 export type ModeType = 'light' | 'dark';
 export type HeadersType = 'both' | 'vertical' | 'horizontal' | 'none';
@@ -84,8 +79,6 @@ export type OptionsType = {
   sheetHeight?: number;
   sheetWidth?: number;
   sheetResize?: CSSProperties['resize'];
-  headerHeight?: number;
-  headerWidth?: number;
   editingOnEnter?: boolean;
   showAddress?: boolean;
   showFormulaBar?: boolean;
@@ -94,11 +87,6 @@ export type OptionsType = {
   minNumCols?: number;
   maxNumCols?: number;
   mode?: ModeType;
-  onSave?: FeedbackType;
-  onChange?: FeedbackType;
-  onSelect?: FeedbackType;
-  onKeyUp?: (e: EditorEvent, points: CursorStateType) => void;
-  onInit?: (table: UserTable) => void;
   contextMenuItems?: FC<ContextMenuProps>[];
 };
 
@@ -113,7 +101,7 @@ export type WriterType = (value: string) => void;
 
 export type StoreType = {
   sheetId: number;
-  table: Table;
+  tableReactive: RefObject<Table>;
   rootRef: RefObject<HTMLDivElement>;
   mainRef: RefObject<HTMLDivElement>;
   editorRef: RefObject<HTMLTextAreaElement>;
@@ -132,8 +120,6 @@ export type StoreType = {
   dragging: boolean;
   sheetHeight: number;
   sheetWidth: number;
-  headerHeight: number;
-  headerWidth: number;
   minNumRows: number;
   maxNumRows: number;
   minNumCols: number;
@@ -149,20 +135,25 @@ export type StoreType = {
   contextMenuItems: FC<ContextMenuProps>[];
   resizingPositionY: [Y, Y, Y]; // indexY, startY, endY
   resizingPositionX: [X, X, X]; // indexX, startX, endX
-  onSave?: FeedbackType;
+  totalWidth: number;
+  totalHeight: number;
 };
 
-export type StoreRef = {
-  store: StoreType;
-  dispatch: Dispatcher;
+export type Manager<T> = {
+  instance: T;
+  sync: T extends StoreType ? Dispatcher : (instance: T) => void;
+};
+
+export type Connector = {
+  tableManager: Manager<UserTable>;
+  storeManager: Manager<StoreType>;
 };
 
 export type Props = {
   initialCells: CellsByAddressType;
   sheetName?: string;
   hub?: HubType;
-  tableRef?: RefObject<TableRef | null>;
-  storeRef?: RefObject<StoreRef | null>;
+  connector?: RefObject<Connector | null>;
   options?: OptionsType;
   className?: string;
   style?: CSSProperties;
@@ -179,6 +170,8 @@ export type StorePatchType = {
   sheetId: number;
   choosing?: PointType;
   selectingZone?: ZoneType | undefined;
+  sheetHeight?: number;
+  sheetWidth?: number;
   transmit?: TransmitProps;
 };
 
@@ -284,9 +277,9 @@ export type OperationType = number;
 
 export type StoreDispatchType = {
   store: StoreType;
-  dispatch: Dispatcher;
+  sync: Dispatcher;
 };
-export type ContextsBySheetId = { [sheetId: string]: StoreDispatchType }; // id: { store, dispatch }
+export type ContextsBySheetId = { [sheetId: string]: StoreDispatchType }; // id: { store, sync }
 export type SheetIdsByName = { [sheetName: string]: number }; // name: id
 
 export type RefPaletteType = { [address: string]: number };

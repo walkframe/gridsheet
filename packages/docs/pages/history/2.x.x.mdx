@@ -1,0 +1,35 @@
+# Version 2.x.x
+
+The latest major version of GridSheet with enhanced features and improved performance.
+
+
+## 2.0.0 - Major Release
+
+### 🎯 Core Architecture Improvements
+- **Complete Policy System Redesign**: Introduced a new flexible policy system with full TypeScript support, enabling custom validation rules and business logic enforcement
+- **Enhanced Renderer System**: Improved renderer method argument types for better type safety and developer experience
+- **Hub System Introduction**: Implemented a centralized hub system for managing renderers, policies, parsers, and labelers, providing better organization and reusability across multiple GridSheet instances
+- **Utility Function Renaming**: Standardized utility function names for consistency and clarity across the codebase
+
+### 🎨 UI/UX Enhancements
+- **Header Configuration Migration**: Moved `headerHeight` and `headerWidth` options from global Options to Table-specific settings for better granular control
+- **Drag Scroll Implementation**: Implemented native drag scrolling functionality, removing dependency on external drag APIs for improved performance and reliability
+
+### 🔧 Technical Improvements
+- **Enhanced TypeScript Support**: Full type safety with improved IntelliSense and compile-time error detection
+- **Performance Optimizations**: Memory leak fixes, optimized re-rendering, and improved state management
+- **New Styling Utilities**: Introduced `makeBorder` utility for cleaner border styling API
+- **Advanced Validation Capabilities**: Real-time validation with custom policy enforcement
+
+### Table API Changes
+
+- `getMatrixFlatten` → `getFieldMatrix`
+- `getObjectFlatten` → `getFieldObject`
+- `getRowsFlatten` → `getFieldRows`
+- `getColsFlatten` → `getFieldCols`
+- `addRows` → `insertRows`
+- `deleteRows` → `removeRows`
+- `addCols` → `insertCols`
+- `deleteCols` → `removeCols`
+- `addRowsAndUpdate` and `addColsAndUpdate` functionality merged into `insertRows` and `insertCols` respectively
+

@@ -1,0 +1,747 @@
+# Migration Guide: 1.x to 2.x
+
+Complete guide for upgrading your GridSheet implementation from version 1.x to 2.x.
+
+## Overview
+
+Version 2.x introduces significant improvements and breaking changes. This guide will help you migrate your existing code safely.
+
+## Breaking Changes
+
+### 1. TableRef and StoreRef Replaced with Connector
+
+**Before (v1.x):**
+```tsx
+import { useTableRef, useStoreRef } from '@gridsheet/react-core';
+
+const tableRef = useTableRef();
+const storeRef = useStoreRef();
+
+<GridSheet tableRef={tableRef} storeRef={storeRef} initialCells={initialCells} />
+
+// Access table
+const { table, sync } = tableRef.current;
+// Access store
+const { store, sync } = storeRef.current;
+```
+
+**After (v2.x):**
+```tsx
+import { useConnector } from '@gridsheet/react-core';
+
+const connector = useConnector();
+
+<GridSheet connector={connector} initialCells={initialCells} />
+
+// Access table manager
+const { tableManager } = connector.current;
+const { instance: table, sync } = tableManager;
+
+// Access store manager
+const { storeManager } = connector.current;
+const { instance: store, sync } = storeManager;
+```
+
+### 2. Hook Unification
+
+The separate `useTableRef()` and `useStoreRef()` hooks have been unified into a single `useConnector()` hook that provides access to both table and store managers.
+
+**Before (1.x):**
+```tsx
+import { useTableRef, useStoreRef } from '@gridsheet/react-core';
+
+const tableRef = useTableRef();
+const storeRef = useStoreRef();
+```
+
+**After (2.x):**
+```tsx
+import { useConnector } from '@gridsheet/react-core';
+
+const connector = useConnector();
+
+// Access table manager
+const { tableManager } = connector.current;
+const { instance: table, sync } = tableManager;
+
+// Access store manager
+const { storeManager } = connector.current;
+const { instance: store, sync } = storeManager;
+```
+
+### Hook and Function Renaming
+
+- `useTableRef()` → `useConnector()`
+- `useStoreRef()` → `useConnector()` (same hook for both)
+- `createTableRef()` → `createConnector()`
+- `createStoreRef()` → `createConnector()` (same function for both)
+
+### 1. Renderer Method Argument Types
+
+Renderer methods now use typed props objects instead of individual parameters.
+
+**Before (1.x):**
+```tsx
+const ScoreColorRendererMixin: RendererMixinType = {
+  number(value: number) {
+    if (value < 60) {
+      return { style: { backgroundColor: "#ffcccc" } };
+    } else if (value < 80) {
+      return { style: { backgroundColor: "#ffffcc" } };
+    } else {
+      return { style: { backgroundColor: "#ccffcc" } };
+    }
+  }
+}
+```
+
+**After (2.x):**
+```tsx
+const ScoreColorRendererMixin: RendererMixinType = {
+  number({ value }: RenderProps<number>) {
+    if (value < 60) {
+      return { style: { backgroundColor: "#ffcccc" } };
+    } else if (value < 80) {
+      return { style: { backgroundColor: "#ffffcc" } };
+    } else {
+      return { style: { backgroundColor: "#ccffcc" } };
+    }
+  }
+}
+```
+
+### 2. Utility Function Renaming
+
+Several utility functions have been renamed for consistency.
+
+**Before (1.x):**
+```tsx
+import { constructInitialCells, constructInitialCellsOrigin } from "@gridsheet/react-core";
+```
+
+**After (2.x):**
+```tsx
+import { buildInitialCells, buildInitialCellsFromOrigin } from "@gridsheet/react-core";
+```
+
+### 3. Header Configuration Migration
+
+`headerHeight` and `headerWidth` options have been moved from global Options to Table-specific settings.
+
+**Before (1.x):**
+```tsx
+<GridSheet
+  options={{
+    headerHeight: 100,
+    headerWidth: 100,
+  }}
+/>
+```
+
+**After (2.x):**
+```tsx
+<GridSheet
+  initialCells={buildInitialCells({
+    cells: {
+      0: {
+        width: 100, // Set header width
+        height: 100, // Set header height
+      },
+    }
+  })}
+/>
+```
+
+And if you need to set header height and width for the table, you can do it like this:
+
+```tsx
+table.setHeaderHeight(100);
+table.setHeaderWidth(100);
+```
+
+### 4. Table Method Name Changes
+
+Several table methods have been renamed for better clarity and consistency.
+
+**Before (1.x):**
+```tsx
+// Data access methods
+table.getMatrixFlatten(args?: GetFlattenPropsWithArea): any[][];
+table.getObjectFlatten(args?: GetFlattenProps): CellsByAddressType;
+table.getRowsFlatten(args?: GetFlattenProps): CellsByAddressType[];
+table.getColsFlatten(args?: GetFlattenProps): CellsByAddressType[];
+
+// Row and column operations
+table.addRowsAndUpdate(args: { y: number; numRows: number; baseY: number; diff: CellsByAddressType; partial?: boolean; updateChangedAt?: boolean; reflection?: StoreReflectionType }): UserTable;
+table.addRows(args: { y: number; numRows: number; baseY: number; reflection?: StoreReflectionType }): UserTable;
+table.deleteRows(args: { y: number; numRows: number; reflection?: StoreReflectionType }): UserTable;
+table.addColsAndUpdate(args: { x: number; numCols: number; baseX: number; diff: CellsByAddressType; partial?: boolean; updateChangedAt?: boolean; reflection?: StoreReflectionType }): UserTable;
+table.addCols(args: { x: number; numCols: number; baseX: number; reflection?: StoreReflectionType }): UserTable;
+table.deleteCols(args: { x: number; numCols: number; reflection?: StoreReflectionType }): UserTable;
+```
+
+**After (2.x):**
+```tsx
+// Data access methods
+table.getFieldMatrix(args?: GetFieldPropsWithArea): any[][];
+table.getFieldObject(args?: GetFieldProps): { [address: Address]: any };
+table.getFieldRows(args?: GetFieldProps): { [address: Address]: any }[];
+table.getFieldCols(args?: GetFieldProps): { [address: Address]: any }[];
+
+// Row and column operations (merged functionality)
+table.insertRows(args: { y: number; numRows: number; baseY: number; diff?: CellsByAddressType; partial?: boolean; updateChangedAt?: boolean; reflection?: StorePatchType }): UserTable;
+table.removeRows(args: { y: number; numRows: number; reflection?: StorePatchType }): UserTable;
+table.insertCols(args: { x: number; numCols: number; baseX: number; diff?: CellsByAddressType; partial?: boolean; updateChangedAt?: boolean; reflection?: StorePatchType }): UserTable;
+table.removeCols(args: { x: number; numCols: number; reflection?: StorePatchType }): UserTable;
+```
+
+### 5. GetProps Type Changes
+
+The `GetProps` type has been updated to use a more explicit `refEvaluation` property instead of the boolean `evaluates` property.
+
+**Before (1.x):**
+```tsx
+type GetProps = {
+  // null for the system, do not use it
+  evaluates?: boolean | null;
+  raise?: boolean;
+  filter?: CellFilter;
+};
+```
+
+**After (2.x):**
+```tsx
+type GetProps = {
+  // do not use 'SYSTEM', it is reserved for internal use.
+  refEvaluation?: RefEvaluation;
+  raise?: boolean;
+  filter?: CellFilter;
+};
+```
+
+**Usage Examples:**
+```tsx
+// Before (1.x)
+table.getCellByPoint({ y: 1, x: 1 }, { evaluates: true });
+table.getCellByPoint({ y: 1, x: 1 }, { evaluates: false });
+table.getCellByPoint({ y: 1, x: 1 }, { evaluates: null });
+
+// After (2.x)
+table.getCellByPoint({ y: 1, x: 1 }, { refEvaluation: 'COMPLETE' });
+table.getCellByPoint({ y: 1, x: 1 }, { refEvaluation: 'RAW' });
+table.getCellByPoint({ y: 1, x: 1 }, { refEvaluation: 'SYSTEM' });
+```
+
+**RefEvaluation Values:**
+- `'COMPLETE'` - Evaluates formulas and returns the final value (equivalent to `evaluates: true`)
+- `'RAW'` - Returns the raw cell value without formula evaluation (equivalent to `evaluates: false`)
+- `'SYSTEM'` - Reserved for internal use (equivalent to `evaluates: null`)
+
+### 6. Event Handlers Moved from Options to Hub
+
+Event handlers have been moved from the `options` prop to the `hub` configuration for better organization and consistency.
+
+**Before (1.x):**
+```tsx
+<GridSheet
+  options={{
+    onChange: (table, positions) => {
+      console.log('Data changed:', positions);
+    },
+    onSave: (table, positions) => {
+      console.log('Data saved:', positions);
+    },
+    onSelect: (table, positions) => {
+      console.log('Selection changed:', positions);
+    },
+  }}
+  initialCells={initialCells}
+/>
+```
+
+**After (2.x):**
+```tsx
+const hub = useHub({
+  onChange: ({ table, points }) => {
+    console.log('Data changed:', points);
+  },
+  onSave: ({ table, points }) => {
+    console.log('Data saved:', points);
+  },
+  onSelect: ({ table, points }) => {
+    console.log('Selection changed:', points);
+  },
+  onRemoveRows: ({ table, ys }) => {
+    console.log('Rows removed:', ys);
+  },
+  onRemoveCols: ({ table, xs }) => {
+    console.log('Columns removed:', xs);
+  },
+  onInsertRows: ({ table, y, numRows }) => {
+    console.log('Rows inserted at position', y, 'count:', numRows);
+  },
+  onInsertCols: ({ table, x, numCols }) => {
+    console.log('Columns inserted at position', x, 'count:', numCols);
+  },
+  onKeyUp: (e, points) => {
+    console.log('Key pressed:', e.key, 'at position:', points);
+  },
+  onInit: (table) => {
+    console.log('Table initialized:', table.sheetName);
+  },
+});
+
+<GridSheet hub={hub} initialCells={initialCells} />
+```
+
+**New Event Handlers in 2.x:**
+- `onRemoveRows`: Called when rows are removed from the spreadsheet
+- `onRemoveCols`: Called when columns are removed from the spreadsheet  
+- `onInsertRows`: Called when rows are inserted into the spreadsheet
+- `onInsertCols`: Called when columns are inserted into the spreadsheet
+- `onKeyUp`: Called when a key is pressed in the cell editor
+- `onInit`: Called when the table is initialized
+
+### 7. Connector Function Renaming: `dispatch` → `sync`
+
+The function name in the connector has been renamed from `dispatch` to `sync` to avoid confusion with Redux dispatch and better reflect its purpose.
+
+**Before (1.x):**
+```tsx
+import { useTableRef } from '@gridsheet/react-core';
+
+function MyComponent() {
+  const tableRef = useTableRef();
+
+  const handleUpdate = () => {
+    if (tableRef.current) {
+      const { table, dispatch } = tableRef.current;
+      const updatedTable = table.update({
+        diff: { 'A1': { value: 'Updated' } }
+      });
+      dispatch(updatedTable);
+    }
+  };
+}
+```
+
+**After (2.x):**
+```tsx
+import { useConnector } from '@gridsheet/react-core';
+
+function MyComponent() {
+  const connector = useConnector();
+
+  const handleUpdate = () => {
+    const { tableManager } = connector.current;
+    if (tableManager) {
+      const { instance: table, sync } = tableManager;
+      const updatedTable = table.update({
+        diff: { 'A1': { value: 'Updated' } }
+      });
+      sync(updatedTable);
+    }
+  };
+}
+```
+
+**Type Definition:**
+```tsx
+// Before (1.x)
+type TableRef = {
+  table: UserTable;
+  dispatch: (table: UserTable) => void;
+};
+
+// After (2.x)
+type Connector = {
+  tableManager: {
+    instance: UserTable;
+    sync: (table: UserTable) => void;
+  };
+  storeManager: {
+    instance: StoreType;
+    sync: Dispatcher;
+  };
+};
+```
+
+
+## Complete Migration Example
+
+### Before (1.x)
+
+```tsx
+import * as React from "react";
+import {
+  GridSheet,
+  constructInitialCells,
+  BaseFunction,
+  prevention,
+  SheetProvider,
+} from "@gridsheet/react-core";
+
+const ScoreColorRendererMixin: RendererMixinType = {
+  number(value: number) {
+    if (value < 60) {
+      return { style: { backgroundColor: "#ffcccc" } };
+    } else if (value < 80) {
+      return { style: { backgroundColor: "#ffffcc" } };
+    } else {
+      return { style: { backgroundColor: "#ccffcc" } };
+    }
+  }
+}
+
+function App() {
+  return (
+    <SheetProvider>
+      <GridSheet
+        sheetName={'criteria'}
+        initialCells={constructInitialCells({
+          matrices: {
+            A1: [
+              [0, "=A1+60", "=B1+10", "=C1+10", "=D1+10", "=E1+5"],
+              ["E🤯", "D🥺", "C😒", "B😚", "A🥰", "S😇"],
+            ],
+          },
+          cells: {
+            1: {
+              style: { backgroundColor: '#ddd' }	
+            },
+          },
+        })}
+        options={{
+          headerHeight: 100,
+          headerWidth: 100,
+        }}
+      />
+      <GridSheet
+        sheetName={'grades'}
+        initialCells={constructInitialCells({
+          matrices: {
+            A1: [
+              ["Name", "Score", "Rank", "Comment"],
+              [
+                "apple",
+                50,
+                "=HLOOKUP(B2, criteria!$A$1:$F$2, 2, true)",
+                "Pie",
+              ],
+              ["orange", 82, "=HLOOKUP(B3, criteria!$A$1:$F$2, 2, true)"],
+              ["grape", 75, "=HLOOKUP(B4, criteria!$A$1:$F$2, 2, true)"],
+              ["melon", 98, "=HLOOKUP(B5, criteria!$A$1:$F$2, 2, true)"],
+              ["banana", 65, "=HLOOKUP(B6, criteria!$A$1:$F$2, 2, true)"],
+            ],
+          },
+          cells: {
+            B: {
+              renderer: ScoreColorRendererMixin,
+            }
+          }
+        })}
+      />
+    </SheetProvider>
+  );
+}
+```
+
+### After (2.x)
+
+```tsx
+import * as React from "react";
+import {
+  GridSheet,
+  buildInitialCells,
+  useHub,
+  Renderer,
+  RendererMixinType,
+  RenderProps,
+  makeBorder,
+} from "@gridsheet/react-core";
+
+// Updated renderer with new method signature
+const ScoreColorRendererMixin: RendererMixinType = {
+  number({ value }: RenderProps<number>) {
+    if (value < 60) {
+      return { style: { backgroundColor: "#ffcccc" } };
+    } else if (value < 80) {
+      return { style: { backgroundColor: "#ffffcc" } };
+    } else {
+      return { style: { backgroundColor: "#ccffcc" } };
+    }
+  }
+}
+
+function App() {
+  const hub = useHub({
+    renderers: {
+      scoreColor: new Renderer({ mixins: [ScoreColorRendererMixin] }),
+    },
+  });
+
+  return (
+    <>
+      <GridSheet
+        hub={hub}
+        sheetName={'criteria'}
+        initialCells={buildInitialCells({
+          matrices: {
+            A1: [
+              [0, "=A1+60", "=B1+10", "=C1+10", "=D1+10", "=E1+5"],
+              ["E🤯", "D🥺", "C😒", "B😚", "A🥰", "S😇"],
+            ],
+          },
+          cells: {
+            1: {
+              style: { 
+                backgroundColor: '#ddd',
+                ...makeBorder({ all: '1px solid #ccc' })
+              }	
+            },
+          },
+        })}
+      />
+      <GridSheet
+        hub={hub}
+        sheetName={'grades'}
+        initialCells={buildInitialCells({
+          matrices: {
+            A1: [
+              ["Name", "Score", "Rank", "Comment"],
+              [
+                "apple",
+                50,
+                "=HLOOKUP(B2, criteria!$A$1:$F$2, 2, true)",
+                "Pie",
+              ],
+              ["orange", 82, "=HLOOKUP(B3, criteria!$A$1:$F$2, 2, true)"],
+              ["grape", 75, "=HLOOKUP(B4, criteria!$A$1:$F$2, 2, true)"],
+              ["melon", 98, "=HLOOKUP(B5, criteria!$A$1:$F$2, 2, true)"],
+              ["banana", 65, "=HLOOKUP(B6, criteria!$A$1:$F$2, 2, true)"],
+            ],
+          },
+          cells: {
+            B: {
+              renderer: 'scoreColor',
+            }
+          }
+        })}
+      />
+    </>
+  );
+}
+```
+
+## Migration Steps
+
+### Step 1: Update Imports
+
+```tsx
+// Old imports
+import { constructInitialCells, SheetProvider, useTableRef, useStoreRef } from '@gridsheet/react-core';
+
+// New imports
+import { buildInitialCells, useHub, Renderer, makeBorder, useConnector } from '@gridsheet/react-core';
+```
+
+### Step 2: Update Connector Usage
+
+Replace `useTableRef` and `useStoreRef` with `useConnector`:
+
+```tsx
+// Before (1.x)
+const tableRef = useTableRef();
+const storeRef = useStoreRef();
+
+// After (2.x)
+const connector = useConnector();
+
+// Access table manager
+const { tableManager } = connector.current;
+const { instance: table, sync } = tableManager;
+
+// Access store manager
+const { storeManager } = connector.current;
+const { instance: store, sync } = storeManager;
+```
+
+### Step 3: Migrate Renderers
+
+Update all renderer mixins to use the new method signature with `RenderProps`:
+
+```tsx
+// Before
+const MyRenderer = {
+  string(value: string) { /* ... */ }
+}
+
+// After
+const MyRenderer: RendererMixinType = {
+  string({ value }: RenderProps<string>) { /* ... */ }
+}
+```
+
+### Step 4: Update Hub Configuration
+
+```tsx
+const hub = useHub({
+  renderers: {
+    myRenderer: new Renderer({ mixins: [MyRenderer] }),
+  },
+  // Move event handlers from options to hub
+  onChange: ({ table, points }) => {
+    console.log('Data changed:', points);
+  },
+  onSave: ({ table, points }) => {
+    console.log('Data saved:', points);
+  },
+  onSelect: ({ table, points }) => {
+    console.log('Selection changed:', points);
+  },
+  onRemoveRows: ({ table, ys }) => {
+    console.log('Rows removed:', ys);
+  },
+  onRemoveCols: ({ table, xs }) => {
+    console.log('Columns removed:', xs);
+  },
+  onInsertRows: ({ table, y, numRows }) => {
+    console.log('Rows inserted at position', y, 'count:', numRows);
+  },
+  onInsertCols: ({ table, x, numCols }) => {
+    console.log('Columns inserted at position', x, 'count:', numCols);
+  },
+  onKeyUp: (e, points) => {
+    console.log('Key pressed:', e.key, 'at position:', points);
+  },
+  onInit: (table) => {
+    console.log('Table initialized:', table.sheetName);
+  },
+});
+```
+
+### Step 5: Move Event Handlers to Hub
+
+Move all event handlers from the `options` prop to the `hub` configuration:
+
+```tsx
+// Before (1.x)
+<GridSheet
+  options={{
+    onChange: (table, positions) => { /* ... */ },
+    onSave: (table, positions) => { /* ... */ },
+    onSelect: (table, positions) => { /* ... */ },
+  }}
+  initialCells={initialCells}
+/>
+
+// After (2.x)
+const hub = useHub({
+  onChange: ({ table, points }) => { /* ... */ },
+  onSave: ({ table, points }) => { /* ... */ },
+  onSelect: ({ table, points }) => { /* ... */ },
+  // New event handlers available in 2.x
+  onRemoveRows: ({ table, ys }) => { /* ... */ },
+  onRemoveCols: ({ table, xs }) => { /* ... */ },
+  onInsertRows: ({ table, y, numRows }) => { /* ... */ },
+  onInsertCols: ({ table, x, numCols }) => { /* ... */ },
+  onKeyUp: (e, points) => { /* ... */ },
+  onInit: (table) => { /* ... */ },
+});
+
+<GridSheet hub={hub} initialCells={initialCells} />
+```
+
+### Step 6: Remove Header Options
+
+Remove `headerHeight` and `headerWidth` from options and set them on the table if needed.
+
+### Step 6: Test Functionality
+
+- Test all features to ensure they work as expected
+- Check TypeScript errors and fix type issues
+- Verify performance improvements
+- Test edge cases and error handling
+
+### Step 7: Update Table Method Calls
+
+Update any direct table method calls to use the new method names:
+
+```tsx
+// Before (1.x)
+const matrix = table.getMatrixFlatten({ area: { top: 0, left: 0, bottom: 2, right: 2 } });
+const cells = table.getObjectFlatten({ evaluates: true });
+const rows = table.getRowsFlatten();
+const cols = table.getColsFlatten();
+
+table.addRows({ y: 2, numRows: 1, baseY: 2 });
+table.deleteRows({ y: 2, numRows: 1 });
+table.addCols({ x: 2, numCols: 1, baseX: 2 });
+table.deleteCols({ x: 2, numCols: 1 });
+
+// After (2.x)
+const matrix = table.getFieldMatrix({ area: { top: 0, left: 0, bottom: 2, right: 2 } });
+const cells = table.getFieldObject({ refEvaluation: 'COMPLETE' });
+const rows = table.getFieldRows();
+const cols = table.getFieldCols();
+
+table.insertRows({ y: 2, numRows: 1, baseY: 2 });
+table.removeRows({ y: 2, numRows: 1 });
+table.insertCols({ x: 2, numCols: 1, baseX: 2 });
+table.removeCols({ x: 2, numCols: 1 });
+```
+
+**Note**: The `addRowsAndUpdate` and `addColsAndUpdate` methods have been merged into `insertRows` and `insertCols` respectively. Use the `diff` parameter to update cells after insertion:
+
+```tsx
+// Before (1.x)
+table.addRowsAndUpdate({
+  y: 2,
+  numRows: 1,
+  baseY: 2,
+  diff: { 'A2': { value: 'New Row' } }
+});
+
+// After (2.x)
+table.insertRows({
+  y: 2,
+  numRows: 1,
+  baseY: 2,
+  diff: { 'A2': { value: 'New Row' } }
+});
+```
+
+### Step 8: Update GetProps Usage
+
+Update any usage of the `GetProps` type to use the new `refEvaluation` property:
+
+```tsx
+// Before (1.x)
+table.getCellByPoint({ y: 1, x: 1 }, { evaluates: true });
+table.getCellByPoint({ y: 1, x: 1 }, { evaluates: false });
+
+// After (2.x)
+table.getCellByPoint({ y: 1, x: 1 }, { refEvaluation: 'COMPLETE' });
+table.getCellByPoint({ y: 1, x: 1 }, { refEvaluation: 'RAW' });
+```
+
+### Step 10: Update Connector Function Calls
+
+Update connector usage to use `sync` instead of `dispatch`:
+
+```tsx
+// Before (1.x)
+if (tableRef.current) {
+  const { table, dispatch } = tableRef.current;
+  const updatedTable = table.update({ diff: { 'A1': { value: 'New' } } });
+  dispatch(updatedTable);
+}
+
+// After (2.x)
+const { tableManager } = connector.current;
+if (tableManager) {
+  const { instance: table, sync } = tableManager;
+  const updatedTable = table.update({ diff: { 'A1': { value: 'New' } } });
+  sync(updatedTable);
+}
+```

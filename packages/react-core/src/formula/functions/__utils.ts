@@ -47,6 +47,11 @@ export type EnsureNumberOptions = {
   ignore?: boolean;
 };
 
+export type EnsureBooleanOptions = {
+  alternative?: boolean;
+  ignore?: boolean;
+};
+
 export const ensureNumber = (value: any, options?: EnsureNumberOptions): number => {
   const { alternative, ignore } = options || {};
   if (typeof value === 'undefined' && typeof alternative !== 'undefined') {
@@ -57,7 +62,7 @@ export const ensureNumber = (value: any, options?: EnsureNumberOptions): number 
     return 0;
   }
   if (value instanceof Table) {
-    const v = stripTable(value, 0, 0);
+    const v = stripTable({ value });
     return ensureNumber(v, { alternative });
   }
   if (value instanceof Date) {
@@ -89,7 +94,7 @@ export const ensureString = (value: any): string => {
     return '';
   }
   if (value instanceof Table) {
-    const v = stripTable(value, 0, 0);
+    const v = stripTable({ value });
     return ensureString(v);
   }
   switch (value.constructor.name) {
@@ -102,11 +107,8 @@ export const ensureString = (value: any): string => {
   }
 };
 
-export const ensureBoolean = (
-  value: any,
-
-  alternative?: boolean,
-): boolean => {
+export const ensureBoolean = (value: any, options?: EnsureBooleanOptions): boolean => {
+  const { alternative, ignore } = options ?? {};
   if (typeof value === 'undefined' && typeof alternative !== 'undefined') {
     return alternative;
   }
@@ -114,12 +116,15 @@ export const ensureBoolean = (
     return false;
   }
   if (value instanceof Table) {
-    const v = stripTable(value, 0, 0);
-    return ensureBoolean(v, alternative);
+    const v = stripTable({ value });
+    return ensureBoolean(v, options);
   }
   if (typeof value === 'string' || value instanceof String) {
     const bool = { true: true, false: false }[value.toLowerCase()];
     if (bool == null) {
+      if (ignore) {
+        return false;
+      }
       throw new FormulaError('#VALUE!', `text '${value as string}' cannot be converted to a boolean`);
     }
     return bool;

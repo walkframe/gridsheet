@@ -49,8 +49,7 @@ export class Policy implements PolicyMixinType {
     }
     for (const mixin of mixins) {
       for (const key in mixin) {
-        // @ts-expect-error mixin has the same fields as this
-        this[key] = mixin[key];
+        (this as any)[key] = (mixin as any)[key];
       }
     }
   }

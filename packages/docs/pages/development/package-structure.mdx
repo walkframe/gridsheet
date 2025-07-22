@@ -1,0 +1,73 @@
+# Package Structure
+
+This document describes the structure and organization of GridSheet packages.
+
+## Monorepo Overview
+
+GridSheet is organized as a monorepo using pnpm workspaces:
+
+```
+gridsheet/
+├── packages/
+│   ├── react-core/          # React implementation
+│   ├── preact-core/         # Preact implementation
+│   ├── vue-core/           # Vue.js implementation
+│   ├── svelte-core/        # Svelte implementation
+│   ├── docs/              # Documentation site
+│   └── storybook/         # Component examples and testing
+├── package.json           # Root package configuration
+├── tsconfig.json         # Root TypeScript configuration
+└── README.md             # Project overview
+```
+
+## Versioning Strategy
+
+### Core Implementation
+
+GridSheet is fundamentally implemented in `react-core` and built for both React and Preact:
+
+- **@gridsheet/react-core**: React implementation
+- **@gridsheet/preact-core**: Preact implementation (same codebase, different build target)
+
+These core packages always maintain identical versions following semantic versioning: `MAJOR.MINOR.PATCH[-PRERELEASE]`
+
+### Wrapper Packages
+
+The Vue and Svelte implementations are wrappers around the preact-core:
+
+- **@gridsheet/vue-core**: Vue.js wrapper around preact-core
+- **@gridsheet/svelte-core**: Svelte wrapper around preact-core
+
+When only the wrapper layer is updated, these packages use the format: `MAJOR.MINOR.PATCH-X` where X starts from 0 and increments as integers.
+
+### Version Examples
+
+```json
+{
+  "name": "@gridsheet/react-core",
+  "version": "2.0.0-rc.2"
+}
+
+{
+  "name": "@gridsheet/preact-core", 
+  "version": "2.0.0-rc.2"
+}
+
+{
+  "name": "@gridsheet/vue-core",
+  "version": "2.0.0-rc.2-0"
+}
+
+{
+  "name": "@gridsheet/svelte-core",
+  "version": "2.0.0-rc.2-0"
+}
+```
+
+### Version Bumping Rules
+
+- **Core Updates**: Both `react-core` and `preact-core` bump together
+- **Wrapper Updates**: Only `vue-core` or `svelte-core` increment the suffix (0, 1, 2, ...)
+- **Breaking Changes**: All packages bump major version
+- **New Features**: All packages bump minor version
+- **Bug Fixes**: All packages bump patch version 

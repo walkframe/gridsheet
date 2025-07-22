@@ -22,9 +22,15 @@ export const drag = async (locator: any, startAddress: string, endAddress: strin
   await page.mouse.up();
 };
 
-export const ctrl = async (page: any, key: string) => {
+export const ctrl = async (page: any, key: string, shift = false) => {
   await page.keyboard.down('Control');
+  if (shift) {
+    await page.keyboard.down('Shift');
+  }
   await page.keyboard.press(key);
+  if (shift) {
+    await page.keyboard.up('Shift');
+  }
   await page.keyboard.up('Control');
 };
 

@@ -1,24 +1,36 @@
 import type { ContextMenuProps, RawCellType } from '../types';
-import { parseHTML, parseText } from '../lib/paste';
-import { copy, cut, paste, redo, undo, updateTable } from './actions';
-import { clip } from '../lib/clipboard';
 import { areaToZone, zoneShape, zoneToArea } from '../lib/structs';
+import {
+  copy,
+  cut,
+  paste,
+  undo,
+  redo,
+  insertRowsAbove,
+  insertRowsBelow,
+  insertColsLeft,
+  insertColsRight,
+  removeRows,
+  removeCols,
+} from './actions';
+import { clip } from '../lib/clipboard';
+import { parseHTML, parseText } from '../lib/paste';
 
-export const copier = async ({ store, dispatch }: ContextMenuProps) => {
+export const copier = async ({ store, sync }: ContextMenuProps) => {
   const { editorRef } = store;
   const area = clip(store);
-  dispatch(copy(areaToZone(area)));
+  sync(copy(areaToZone(area)));
   editorRef.current?.focus();
 };
 
-export const cutter = async ({ store, dispatch }: ContextMenuProps) => {
+export const cutter = async ({ store, sync }: ContextMenuProps) => {
   const { editorRef } = store;
   const area = clip(store);
-  dispatch(cut(areaToZone(area)));
+  sync(cut(areaToZone(area)));
   editorRef.current?.focus();
 };
 
-export const paster = async ({ store, dispatch }: ContextMenuProps, onlyValue = false) => {
+export const paster = async ({ store, sync }: ContextMenuProps, onlyValue = false) => {
   const { editorRef } = store;
   const items = await navigator.clipboard.read();
   let cells: RawCellType[][] = [];
@@ -40,166 +52,80 @@ export const paster = async ({ store, dispatch }: ContextMenuProps, onlyValue = 
       }
     }
   }
-  dispatch(paste({ matrix: cells, onlyValue }));
+  sync(paste({ matrix: cells, onlyValue }));
   editorRef.current?.focus();
 };
 
-export const undoer = async ({ store, dispatch }: ContextMenuProps) => {
+export const undoer = async ({ store, sync }: ContextMenuProps) => {
   const { editorRef } = store;
-  dispatch(undo(null));
+  sync(undo(null));
   editorRef.current?.focus();
 };
 
-export const redoer = async ({ store, dispatch }: ContextMenuProps) => {
+export const redoer = async ({ store, sync }: ContextMenuProps) => {
   const { editorRef } = store;
-  dispatch(redo(null));
+  sync(redo(null));
   editorRef.current?.focus();
 };
 
-export const rowsInserterAbove = async ({ store, dispatch }: ContextMenuProps) => {
-  const { table, selectingZone, choosing, editorRef } = store;
+export const rowsInserterAbove = async ({ store, sync }: ContextMenuProps) => {
+  const { selectingZone, editorRef } = store;
   const { top } = zoneToArea(selectingZone);
   const numRows = zoneShape({ ...selectingZone, base: 1 }).height;
-
-  const newTable = table.insertRows({
-    y: top,
-    numRows,
-    baseY: top,
-    undoReflection: {
-      sheetId: table.sheetId,
-      selectingZone,
-      choosing,
-    },
-    redoReflection: {
-      sheetId: table.sheetId,
-      selectingZone,
-      choosing,
-    },
-  });
-  dispatch(updateTable(newTable));
+  sync(insertRowsAbove({ numRows, y: top, operator: 'USER' }));
   editorRef.current?.focus();
 };
 
-export const rowsInserterBelow = async ({ store, dispatch }: ContextMenuProps) => {
-  const { table, selectingZone, choosing, editorRef } = store;
+export const rowsInserterBelow = async ({ store, sync }: ContextMenuProps) => {
+  const { selectingZone, editorRef } = store;
   const { bottom } = zoneToArea(selectingZone);
   const numRows = zoneShape({ ...selectingZone, base: 1 }).height;
-  selectingZone.startY += numRows;
-  selectingZone.endY += numRows;
-
-  const newTable = table.insertRows({
-    y: bottom + 1,
-    numRows,
-    baseY: bottom,
-    undoReflection: {
-      sheetId: table.sheetId,
-      selectingZone,
-      choosing,
-    },
-    redoReflection: {
-      sheetId: table.sheetId,
-      selectingZone,
-      choosing,
-    },
-  });
-  dispatch(updateTable(newTable));
+  sync(insertRowsBelow({ numRows, y: bottom, operator: 'USER' }));
   editorRef.current?.focus();
 };
 
-export const colsInserterLeft = async ({ store, dispatch }: ContextMenuProps) => {
-  const { table, selectingZone, choosing, editorRef } = store;
+export const colsInserterLeft = async ({ store, sync }: ContextMenuProps) => {
+  const { selectingZone, editorRef } = store;
   const { left } = zoneToArea(selectingZone);
   const numCols = zoneShape({ ...selectingZone, base: 1 }).width;
-
-  const newTable = table.insertCols({
-    x: left,
-    numCols,
-    baseX: left,
-    undoReflection: {
-      sheetId: table.sheetId,
-      selectingZone,
-      choosing,
-    },
-    redoReflection: {
-      sheetId: table.sheetId,
-      selectingZone,
-      choosing,
-    },
-  });
-  dispatch(updateTable(newTable));
+  sync(insertColsLeft({ numCols, x: left, operator: 'USER' }));
   editorRef.current?.focus();
 };
 
-export const colsInserterRight = async ({ store, dispatch }: ContextMenuProps) => {
-  const { table, selectingZone, choosing, editorRef } = store;
+export const colsInserterRight = async ({ store, sync }: ContextMenuProps) => {
+  const { selectingZone, editorRef } = store;
   const { right } = zoneToArea(selectingZone);
   const numCols = zoneShape({ ...selectingZone, base: 1 }).width;
-  selectingZone.startX += numCols;
-  selectingZone.endX += numCols;
-
-  const newTable = table.insertCols({
-    x: right + 1,
-    numCols,
-    baseX: right,
-    undoReflection: {
-      sheetId: table.sheetId,
-      selectingZone,
-      choosing,
-    },
-    redoReflection: {
-      sheetId: table.sheetId,
-      selectingZone,
-      choosing,
-    },
-  });
-  dispatch(updateTable(newTable.clone()));
+  sync(insertColsRight({ numCols, x: right, operator: 'USER' }));
   editorRef.current?.focus();
 };
 
-export const rowsRemover = async ({ store, dispatch }: ContextMenuProps) => {
-  const { table, selectingZone, choosing, editorRef } = store;
+export const rowsRemover = async ({ store, sync }: ContextMenuProps) => {
+  const { selectingZone, editorRef } = store;
   const { top } = zoneToArea(selectingZone);
   const numRows = zoneShape({ ...selectingZone, base: 1 }).height;
-
-  const newTable = table.removeRows({
-    y: top,
-    numRows,
-    operator: 'USER',
-    undoReflection: {
-      sheetId: table.sheetId,
-      selectingZone,
-      choosing,
-    },
-    redoReflection: {
-      sheetId: table.sheetId,
-      selectingZone,
-      choosing,
-    },
-  });
-  dispatch(updateTable(newTable));
+  sync(removeRows({ numRows, y: top, operator: 'USER' }));
   editorRef.current?.focus();
 };
 
-export const colsRemover = async ({ store, dispatch }: ContextMenuProps) => {
-  const { table, selectingZone, choosing, editorRef } = store;
+export const colsRemover = async ({ store, sync }: ContextMenuProps) => {
+  const { selectingZone, editorRef } = store;
   const { left } = zoneToArea(selectingZone);
   const numCols = zoneShape({ ...selectingZone, base: 1 }).width;
-
-  const newTable = table.removeCols({
-    x: left,
-    numCols,
-    operator: 'USER',
-    undoReflection: {
-      sheetId: table.sheetId,
-      selectingZone,
-      choosing,
-    },
-    redoReflection: {
-      sheetId: table.sheetId,
-      selectingZone,
-      choosing,
-    },
-  });
-  dispatch(updateTable(newTable));
+  sync(removeCols({ numCols, x: left, operator: 'USER' }));
   editorRef.current?.focus();
+};
+
+export const syncers = {
+  copy: copier,
+  cut: cutter,
+  paste: paster,
+  undo: undoer,
+  redo: redoer,
+  insertRowsAbove: rowsInserterAbove,
+  insertRowsBelow: rowsInserterBelow,
+  insertColsLeft: colsInserterLeft,
+  insertColsRight: colsInserterRight,
+  removeRows: rowsRemover,
+  removeCols: colsRemover,
 };

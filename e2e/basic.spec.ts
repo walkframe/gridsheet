@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { ctrl, drag, paste } from './utils';
 
 test('cell value', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-basic-simple--sheet&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=basic-simple--sheet&viewMode=story');
   const b2 = page.locator("[data-address='B2']");
   expect(await b2.locator('.gs-cell-rendered').textContent()).toContain('2');
 
@@ -17,7 +17,7 @@ test('cell value', async ({ page }) => {
 });
 
 test('pointing', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-basic-simple--sheet&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=basic-simple--sheet&viewMode=story');
   const b2 = page.locator("[data-address='B2']");
   await b2.click();
 
@@ -40,7 +40,7 @@ test('pointing', async ({ page }) => {
 });
 
 test('select', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-basic-simple--sheet&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=basic-simple--sheet&viewMode=story');
   const a1 = page.locator("[data-address='A1']");
   const b2 = page.locator("[data-address='B2']");
   const b3 = page.locator("[data-address='B3']");
@@ -52,7 +52,7 @@ test('select', async ({ page }) => {
 });
 
 test('select by shift, copy and paste', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-basic-simple--sheet&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=basic-simple--sheet&viewMode=story');
   const a1 = page.locator("[data-address='A1']");
   const b2 = page.locator("[data-address='B2']");
   const b3 = page.locator("[data-address='B3']");
@@ -79,7 +79,7 @@ test('select by shift, copy and paste', async ({ page }) => {
 });
 
 test('walk', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-basic-simple--sheet&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=basic-simple--sheet&viewMode=story');
   const a1 = page.locator("[data-address='A1']");
   await a1.click();
 
@@ -116,7 +116,7 @@ test('walk', async ({ page }) => {
 });
 
 test('enter key with alt', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-basic-simple--sheet&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=basic-simple--sheet&viewMode=story');
   const a1 = page.locator("[data-address='A1']");
   await a1.click();
 
@@ -137,7 +137,7 @@ test('enter key with alt', async ({ page }) => {
 });
 
 test('escape key', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-basic-simple--sheet&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=basic-simple--sheet&viewMode=story');
 
   await page.keyboard.type('Change');
   await page.keyboard.press('Escape');
@@ -160,7 +160,7 @@ test('escape key', async ({ page }) => {
 
 test('rendered cell', async ({ page }) => {
   const largeEditor = page.locator('.gs-formula-bar textarea');
-  await page.goto('http://localhost:5233/iframe.html?id=feature-basic-renderer--render-to-kanji&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=basic-renderer--render-to-kanji&viewMode=story');
   const c5 = page.locator("[data-address='C5']");
   await c5.click();
   expect(await c5.locator('.gs-cell-rendered').textContent()).toBe('五〇〇');

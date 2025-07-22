@@ -1,0 +1,599 @@
+# Utility Functions
+
+GridSheet provides several utility functions to help with common spreadsheet operations, coordinate conversions, data initialization, and type conversion.
+
+## Data Type Conversion
+
+### `ensureNumber(value: any, options?: EnsureNumberOptions): number`
+
+Converts a value to a number with comprehensive type handling and error management.
+
+#### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `value` | `any` | The value to convert to a number |
+| `options` | `EnsureNumberOptions` | Optional configuration for conversion behavior |
+
+#### Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `alternative` | `number` | Default value to return if the input is undefined |
+| `ignore` | `boolean` | If true, returns 0 instead of throwing an error for invalid values |
+
+#### Behavior
+
+- **Undefined values**: Returns `alternative` if provided, otherwise throws error
+- **Falsy values**: Returns 0 (including `null`, `false`, `""`)
+- **Table instances**: Extracts the first value using `stripTable`
+- **Date objects**: Returns timestamp in milliseconds
+- **Percentage strings**: Converts "50%" to 0.5
+- **String numbers**: Parses numeric strings
+- **Invalid values**: Throws `FormulaError` with "#VALUE!" code (unless `ignore` is true)
+
+#### Examples
+
+```tsx
+import { ensureNumber } from '@gridsheet/react-core';
+
+// Basic conversions
+ensureNumber(42);           // 42
+ensureNumber("123");        // 123
+ensureNumber("50%");        // 0.5
+ensureNumber(new Date());   // timestamp in milliseconds
+
+// Falsy values
+ensureNumber(null);         // 0
+ensureNumber("");           // 0
+ensureNumber(false);        // 0
+
+// With options
+ensureNumber(undefined, { alternative: 10 });  // 10
+ensureNumber("invalid", { ignore: true });     // 0
+
+// Error cases
+ensureNumber("invalid");    // throws FormulaError("#VALUE!")
+ensureNumber(undefined);    // throws FormulaError("#VALUE!")
+```
+
+### `ensureString(value: any): string`
+
+Converts a value to a string with special handling for different data types.
+
+#### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `value` | `any` | The value to convert to a string |
+
+#### Behavior
+
+- **Zero values**: Returns "0" (preserves zero as string)
+- **Falsy values**: Returns empty string (except 0)
+- **Table instances**: Extracts the first value using `stripTable`
+- **Date objects**: Formats using `FULLDATE_FORMAT_UTC` format
+- **Other values**: Uses `String()` constructor
+
+#### Examples
+
+```tsx
+import { ensureString } from '@gridsheet/react-core';
+
+// Basic conversions
+ensureString(42);           // "42"
+ensureString("hello");      // "hello"
+ensureString(0);            // "0"
+
+// Falsy values
+ensureString(null);         // ""
+ensureString("");           // ""
+ensureString(false);        // "false"
+
+// Date formatting
+ensureString(new Date());   // "2024-01-15T10:30:00.000Z" (formatted)
+
+// Table instances
+ensureString(tableInstance); // Extracts first value and converts
+```
+
+### `ensureBoolean(value: any, options?: EnsureBooleanOptions): boolean`
+
+Converts a value to a boolean with strict string parsing and fallback handling.
+
+#### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `value` | `any` | The value to convert to a boolean |
+| `options` | `EnsureBooleanOptions` | Optional configuration for conversion behavior |
+
+#### Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `alternative` | `boolean` | Default value to return if the input is undefined |
+| `ignore` | `boolean` | If true, returns false instead of throwing an error for invalid string values |
+
+#### Behavior
+
+- **Undefined values**: Returns `alternative` if provided, otherwise throws error
+- **Null values**: Returns `false`
+- **Table instances**: Extracts the first value using `stripTable`
+- **String values**: Parses "true"/"false" (case-insensitive)
+- **Other values**: Uses `Boolean()` constructor
+
+#### String Parsing
+
+Only the exact strings "true" and "false" (case-insensitive) are parsed as booleans. Any other string will throw an error (unless `ignore` is true).
+
+#### Examples
+
+```tsx
+import { ensureBoolean } from '@gridsheet/react-core';
+
+// Basic conversions
+ensureBoolean(true);        // true
+ensureBoolean(false);       // false
+ensureBoolean(1);           // true
+ensureBoolean(0);           // false
+
+// String parsing
+ensureBoolean("true");      // true
+ensureBoolean("TRUE");      // true
+ensureBoolean("false");     // false
+ensureBoolean("FALSE");     // false
+
+// Falsy values
+ensureBoolean(null);        // false
+ensureBoolean("");          // false
+
+// With options
+ensureBoolean(undefined, { alternative: true });   // true
+ensureBoolean(undefined, { alternative: false });  // false
+ensureBoolean("invalid", { ignore: true });        // false
+
+// Error cases
+ensureBoolean("yes");       // throws FormulaError("#VALUE!")
+ensureBoolean("no");        // throws FormulaError("#VALUE!")
+ensureBoolean(undefined);   // throws FormulaError("#VALUE!")
+```
+
+### Type Definitions
+
+```tsx
+interface EnsureNumberOptions {
+  alternative?: number;
+  ignore?: boolean;
+}
+
+interface EnsureBooleanOptions {
+  alternative?: boolean;
+  ignore?: boolean;
+}
+```
+
+## Data Initialization
+
+### `buildInitialCells(config: InitialCellsConfig)`
+
+Creates a properly formatted initial cells configuration for the GridSheet component. This function accepts matrices at multiple base points and expands them into cell configurations.
+
+#### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `config` | `InitialCellsConfig` | Configuration object with matrices, cells, ensured, and other options |
+
+#### Configuration Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `matrices` | `MatricesByAddress<any>` | Matrices to be expanded at specific base points |
+| `cells` | `CellsByAddressType` | Individual cell data and configuration |
+| `ensured` | `{ numRows?: number; numCols?: number }` | Minimum table dimensions |
+| `flattenAs` | `keyof CellType` | Property to flatten matrices into |
+
+#### Matrix Expansion
+
+The `matrices` object contains matrices at specific base points. Each matrix will be expanded starting from its base point:
+
+```tsx
+import { buildInitialCells } from '@gridsheet/react-core';
+
+const initialCells = buildInitialCells({
+  matrices: {
+    // Matrix starting at A1
+    'A1': [
+      ['Name', 'Age', 'City'],
+      ['John', 25, 'New York'],
+      ['Jane', 30, 'Los Angeles']
+    ],
+    // Matrix starting at D5
+    'D5': [
+      ['Product', 'Price', 'Stock'],
+      ['Apple', 1.50, 100],
+      ['Orange', 2.00, 75]
+    ]
+  },
+  cells: {
+    // Individual cell configuration
+    'A': { width: 150 }, // Column A width
+    '1': { height: 40 }, // Row 1 height
+    'B': { validation: { type: 'number', min: 0, max: 100 } }
+  },
+  ensured: {
+    numRows: 20,
+    numCols: 10,
+  },
+});
+
+// Use with GridSheet component
+// <GridSheet initialCells={initialCells} />
+```
+
+This will create:
+- A table starting at A1 with the first matrix
+- A table starting at D5 with the second matrix
+- Column A width set to 150px
+- Row 1 height set to 40px
+- Column B with number validation (0-100)
+
+### `buildInitialCellsFromOrigin(config: InitialCellsOriginConfig)`
+
+Creates initial cells configuration from matrix data, automatically generating column names.
+
+#### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `config` | `InitialCellsOriginConfig` | Configuration with matrix data and options |
+
+#### Configuration Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `matrix` | `MatrixType` | 2D array of data |
+| `origin` | `Address` | Starting address for the matrix |
+| `cells` | `CellsByAddressType` | Individual cell data and configuration |
+| `ensured` | `{ numRows?: number; numCols?: number }` | Minimum table dimensions |
+| `flattenAs` | `keyof CellType` | Property to flatten matrix into |
+
+#### Example
+
+```tsx
+import { buildInitialCellsFromOrigin } from '@gridsheet/react-core';
+
+const data = [
+  ['Name', 'Age', 'City'],
+  ['John', 25, 'New York'],
+  ['Jane', 30, 'Los Angeles'],
+  ['Bob', 35, 'Chicago'],
+];
+
+const initialCells = buildInitialCellsFromOrigin({
+  matrix: data,
+  origin: 'A1',
+  ensured: {
+    numRows: 20,
+    numCols: 10,
+  },
+});
+
+// Use with GridSheet component
+// <GridSheet initialCells={initialCells} />
+```
+
+## Coordinate Conversion
+
+### Column Index to Letter
+
+#### `x2c(x: number): string`
+
+Converts a column index (0-based) to a column letter.
+
+```tsx
+import { x2c } from '@gridsheet/react-core';
+
+console.log(x2c(0));  // 'A'
+console.log(x2c(25)); // 'Z'
+console.log(x2c(26)); // 'AA'
+console.log(x2c(27)); // 'AB'
+```
+
+### Letter to Column Index
+
+#### `c2x(c: string): number`
+
+Converts a column letter to a column index (0-based).
+
+```tsx
+import { c2x } from '@gridsheet/react-core';
+
+console.log(c2x('A'));  // 0
+console.log(c2x('Z'));  // 25
+console.log(c2x('AA')); // 26
+console.log(c2x('AB')); // 27
+```
+
+### Row Index to Number
+
+#### `y2r(y: number): number`
+
+Converts a row index (0-based) to a row number (1-based).
+
+```tsx
+import { y2r } from '@gridsheet/react-core';
+
+console.log(y2r(0)); // 1
+console.log(y2r(9)); // 10
+console.log(y2r(99)); // 100
+```
+
+### Row Number to Index
+
+#### `r2y(r: number): number`
+
+Converts a row number (1-based) to a row index (0-based).
+
+```tsx
+import { r2y } from '@gridsheet/react-core';
+
+console.log(r2y(1));  // 0
+console.log(r2y(10)); // 9
+console.log(r2y(100)); // 99
+```
+
+### Point to Address
+
+#### `p2a(p: PointType): string`
+
+Converts a point object to a cell address string. The point coordinates are 1-based for cell addresses.
+
+```tsx
+import { p2a } from '@gridsheet/react-core';
+
+console.log(p2a({ y: 1, x: 1 })); // 'A1'
+console.log(p2a({ y: 10, x: 26 })); // 'Z10'
+console.log(p2a({ y: 100, x: 27 })); // 'AA100'
+```
+
+### Address to Point
+
+#### `a2p(a: string): PointType`
+
+Converts a cell address string to a point object. Returns 1-based coordinates for cell addresses.
+
+```tsx
+import { a2p } from '@gridsheet/react-core';
+
+console.log(a2p('A1'));     // `{ y: 1, x: 1 }`
+console.log(a2p('Z10'));    // `{ y: 10, x: 26 }`
+console.log(a2p('AA100'));  // `{ y: 100, x: 27 }`
+```
+
+**Note**: 
+- Cell addresses use 1-based coordinates (A1 = `{ y: 1, x: 1 }`)
+- Column settings use `{ y: 0, x: x }` format
+- Row settings use `{ y: y, x: 0 }` format
+- The point `{ y: 0, x: 0 }` is not used
+
+## Practical Examples
+
+### Converting Between Formats
+
+```tsx
+import { x2c, c2x, y2r, r2y, p2a, a2p } from '@gridsheet/react-core';
+
+// Working with programmatic coordinates
+const colIndex = 5;
+const rowIndex = 10;
+
+// Convert to address
+const address = p2a({ y: rowIndex, x: colIndex });
+console.log(address); // 'F10'
+
+// Convert back to coordinates
+const point = a2p(address);
+console.log(point); // `{ y: 10, x: 5 }`
+
+// Column operations
+const colLetter = x2c(colIndex);
+console.log(colLetter); // 'F'
+
+const backToIndex = c2x(colLetter);
+console.log(backToIndex); // 5
+
+// Row operations
+const rowNumber = y2r(rowIndex);
+console.log(rowNumber); // 10
+
+const backToRowIndex = r2y(rowNumber);
+console.log(backToRowIndex); // 10
+```
+
+### Dynamic Cell Generation
+
+```tsx
+import { buildInitialCells, p2a } from '@gridsheet/react-core';
+
+// Generate a multiplication table
+const generateMultiplicationTable = (size: number) => {
+  const cells: any = {};
+  
+  // Headers
+  for (let i = 0; i <= size; i++) {
+    cells[p2a({ y: 1, x: i + 1 })] = { value: i || '', style: { fontWeight: 'bold' } };
+    cells[p2a({ y: i + 1, x: 1 })] = { value: i || '', style: { fontWeight: 'bold' } };
+  }
+  
+  // Multiplication values
+  for (let row = 1; row <= size; row++) {
+    for (let col = 1; col <= size; col++) {
+      cells[p2a({ y: row + 1, x: col + 1 })] = { value: row * col };
+    }
+  }
+  
+  return buildInitialCells({
+    cells,
+    ensured: { numRows: size + 1, numCols: size + 1 },
+  });
+};
+
+const multiplicationTable = generateMultiplicationTable(10);
+```
+
+### Range Operations
+
+```tsx
+import { a2p, p2a } from '@gridsheet/react-core';
+
+// Parse a range
+const parseRange = (range: string) => {
+  const [start, end] = range.split(':');
+  return {
+    start: a2p(start),
+    end: a2p(end),
+  };
+};
+
+// Generate all addresses in a range
+const getAddressesInRange = (range: string) => {
+  const { start, end } = parseRange(range);
+  const addresses = [];
+  
+  for (let row = start.row; row <= end.row; row++) {
+    for (let col = start.col; col <= end.col; col++) {
+      addresses.push(p2a({ row, col }));
+    }
+  }
+  
+  return addresses;
+};
+
+console.log(getAddressesInRange('A1:C3'));
+// ['A1', 'B1', 'C1', 'A2', 'B2', 'C2', 'A3', 'B3', 'C3']
+```
+
+## Type Definitions
+
+```tsx
+interface PointType {
+  y: number;
+  x: number;
+}
+
+interface InitialCellsConfig {
+  matrices?: MatricesByAddress<any>;
+  cells?: CellsByAddressType;
+  ensured?: {
+    numRows?: number;
+    numCols?: number;
+  };
+  flattenAs?: keyof CellType;
+}
+
+interface InitialCellsOriginConfig {
+  matrix?: MatrixType;
+  origin?: Address;
+  cells?: CellsByAddressType;
+  ensured?: {
+    numRows?: number;
+    numCols?: number;
+  };
+  flattenAs?: keyof CellType;
+}
+```
+
+## Performance Notes
+
+- Coordinate conversion functions are optimized for performance
+- `buildInitialCells` and `buildInitialCellsFromOrigin` should be called during component initialization, not in render
+- For large datasets, consider using `buildInitialCellsFromOrigin` with matrix data for better performance
+- Coordinate conversion functions are pure functions and can be safely memoized
+
+## Connector Management
+
+### `useConnector()`
+
+Creates a connector reference that provides access to both table and store managers for programmatic control of GridSheet instances.
+
+#### Returns
+
+```tsx
+RefObject<Connector | null>
+```
+
+#### Connector Interface
+
+```tsx
+interface Connector {
+  tableManager: {
+    instance: UserTable;
+    sync: (table: UserTable) => void;
+  };
+  storeManager: {
+    instance: StoreType;
+    sync: Dispatcher;
+  };
+}
+```
+
+#### Usage Example
+
+```tsx
+import { useConnector } from '@gridsheet/react-core';
+
+function MyComponent() {
+  const connector = useConnector();
+
+  const handleUpdateCell = () => {
+    const { tableManager } = connector.current;
+    if (tableManager) {
+      const { instance: table, sync } = tableManager;
+      
+      // Update cells
+      const newTable = table.update({
+        diff: { 'A1': { value: 'Updated' } }
+      });
+      sync(newTable);
+    }
+  };
+
+  const handleAccessStore = () => {
+    const { storeManager } = connector.current;
+    if (storeManager) {
+      const { instance: store, sync } = storeManager;
+      // Use store and sync as needed
+    }
+  };
+
+  return (
+    <GridSheet 
+      connector={connector} 
+      initialCells={initialCells}
+    />
+  );
+}
+```
+
+### `createConnector()`
+
+Creates a connector reference outside of React components. Useful for creating connectors in utility functions or class components.
+
+#### Returns
+
+```tsx
+RefObject<Connector | null>
+```
+
+#### Usage Example
+
+```tsx
+import { createConnector } from '@gridsheet/react-core';
+
+const connector = createConnector();
+
+// Use in class components or utility functions
+<GridSheet connector={connector} initialCells={initialCells} />
+``` 

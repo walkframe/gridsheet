@@ -6,11 +6,11 @@
     render as preactRender,
     type HubType,
   } from '@gridsheet/preact-core';
-  import type { 
-    CellsByAddressType, 
-    OptionsType, 
-    TableRef,
-  } from '@gridsheet/preact-core';
+  import type {
+    CellsByAddressType,
+    OptionsType,
+    Connector,
+  } from '@gridsheet/react-core';
 
   interface RefObject<T> {
     readonly current: T | null;
@@ -20,22 +20,22 @@
     initialCells: CellsByAddressType;
     sheetName?: string;
     hub?: HubType;
-    tableRef?: RefObject<TableRef | null>;
+    connector?: RefObject<Connector | null>;
     options?: OptionsType;
     className?: string;
     style?: Record<string, any>;
   }
 
-  let { 
+  let {
     initialCells,
     sheetName = '',
     hub,
-    tableRef,
+    connector,
     options = {},
     className = '',
     style = {}
   }: Props = $props();
-  
+
   let root: HTMLElement | null = null;
   let container: HTMLElement;
 
@@ -44,7 +44,7 @@
       initialCells,
       sheetName,
       hub,
-      tableRef,
+      connector,
       options,
       className,
       style
@@ -58,7 +58,7 @@
         preactH(PreactGridSheet, getPreactProps()),
         root
       );
-      
+
     }
   }
 

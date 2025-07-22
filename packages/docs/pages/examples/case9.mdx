@@ -1,0 +1,53 @@
+import Case9 from './case9.component';
+
+# Case 9: Security & Data Protection
+
+This example demonstrates advanced security features in GridSheet, including data masking, clipboard protection, and custom security functions for password management.
+
+<Case9 />
+
+## Features
+
+- **Data Masking**: Password column is partially masked in display (first 2 characters visible, rest as asterisks)
+- **Clipboard Protection**: Copying sensitive data results in masked values in clipboard
+- **Custom Security Functions**: Built-in security functions for data hashing and encryption
+- **Selective Protection**: Only the Password column is protected while others remain fully accessible
+- **Formula Bar Hidden**: Formula bar is disabled to prevent password exposure
+
+## How it works
+
+The security system uses a combination of policies and renderers to protect sensitive data:
+
+1. **Security Policy**: Intercepts clipboard operations and replaces sensitive data with asterisks
+2. **Security Renderer**: Displays partially masked values in the grid interface
+3. **Custom Functions**: Security functions for data hashing and processing
+4. **Selective Application**: Security features are applied only to the Password column
+
+## Security Functions
+
+- `SECURE_HASH(text)`: Creates a secure hash of the input text for password storage
+
+## Implementation
+
+The security features are implemented using:
+- Custom policies with `onClip` handlers for clipboard protection
+- Custom renderers with `string` methods for display masking
+- Custom functions extending `BaseFunction` for security operations
+- Hub configuration to register all security components
+
+This approach ensures that sensitive data remains protected both during display and when copied to external applications.
+
+## Try it out
+
+1. **Data Masking**: Notice how the Password column shows only the first 2 characters, with the rest masked as asterisks
+2. **Clipboard Protection**: Try copying cells from the Password column - you'll get asterisks in your clipboard
+3. **Custom Functions**: The Hash column uses the SECURE_HASH function to generate secure hashes of passwords
+4. **Visual Indicators**: Different colored borders and backgrounds indicate security levels
+
+## Security Features Explained
+
+- **Data Masking**: Password column shows only first 2 characters, rest are masked with asterisks
+- **Clipboard Protection**: Copying sensitive cells results in asterisks in clipboard
+- **Custom Functions**: SECURE_HASH creates hexadecimal hashes for secure password storage
+- **Selective Protection**: Only the Password column is protected, others remain fully accessible
+- **Formula Bar Hidden**: Formula bar is disabled to prevent password exposure in the formula bar 

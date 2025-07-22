@@ -1,6 +1,4 @@
-export { GridSheet } from './components/GridSheet';
-export { useTableRef, createTableRef } from './components/Tabular';
-export { useStoreRef, createStoreRef } from './components/StoreObserver';
+export { GridSheet, createConnector, useConnector } from './components/GridSheet';
 export { Renderer } from './renderers/core';
 export type { RendererMixinType, RendererCallProps, RenderProps } from './renderers/core';
 export { Parser } from './parsers/core';
@@ -9,7 +7,7 @@ export {
   oa2aa,
   aa2oa,
   buildInitialCells,
-  buildInitialCellsOrigin,
+  buildInitialCellsFromOrigin,
   zoneToArea,
   areaToZone,
   areaToRange,
@@ -35,7 +33,9 @@ export type {
   AreaType,
   ZoneType,
   Props,
-  TableRef,
+  Connector,
+  EditorEvent,
+  CursorStateType,
 } from './types';
 
 export type { HubType, WireProps, TransmitProps } from './lib/hub';
@@ -45,7 +45,7 @@ export { ThousandSeparatorRendererMixin } from './renderers/thousand_separator';
 export { CheckboxRendererMixin } from './renderers/checkbox';
 export { BaseFunction } from './formula/functions/__base';
 export { FormulaError } from './formula/evaluator';
-export { Table } from './lib/table';
+export { Table, type UserTable } from './lib/table';
 export { Policy } from './policy/core';
 export type { PolicyType, PolicyOption, PolicyMixinType } from './policy/core';
 
@@ -56,3 +56,7 @@ export { userActions } from './store/actions';
 export { clip } from './lib/clipboard';
 
 export { makeBorder } from './styles/utils';
+export { syncers } from './store/dispatchers';
+
+export { ensureString, ensureNumber, ensureBoolean } from './formula/functions/__utils';
+export type { EnsureNumberOptions, EnsureBooleanOptions } from './formula/functions/__utils';

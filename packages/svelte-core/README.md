@@ -39,7 +39,7 @@ pnpm add @gridsheet/svelte-core
 | `initialCells` | `CellsByAddressType` | Yes | - | Initial cell data |
 | `sheetName` | `string` | No | `''` | Name of the sheet |
 | `hub` | `HubType` | No | `null` | Hub instance for cross-sheet communication |
-| `tableRef` | `RefObject<TableRef \| null>` | No | `null` | Reference to the table instance |
+| `connector` | `RefObject<Connector \| null>` | No | `null` | Reference to the connector instance |
 | `options` | `OptionsType` | No | `{}` | GridSheet options |
 | `className` | `string` | No | `''` | CSS class name |
 | `style` | `Record<string, any>` | No | `{}` | Inline styles |

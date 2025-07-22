@@ -82,6 +82,12 @@ export const r2y = (row: number | string, absolute = false) => {
 };
 
 export const p2a = ({ y, x, absX, absY }: ExtraPointType) => {
+  if (x === 0 && y === 0) {
+    return '0';
+  }
+  if (x === -1 && y === -1) {
+    return '?';
+  }
   return `${absX ? '$' : ''}${x2c(x)}${absY ? '$' : ''}${y2r(y)}`;
 };
 
@@ -89,10 +95,13 @@ export const a2p = (address: Address): ExtraPointType => {
   const m = address.match(/(\$)?([A-Z]*)(\$)?([0-9]*)/);
   if (m == null) {
     console.error('invalid address', address);
-    return { y: 1, x: 1 };
+    return { y: -1, x: -1 };
   }
   const [, _absX, col, _absY, row] = m.slice();
   const [absX, absY] = [_absX != null, _absY != null];
+  if (col === '' && row === '') {
+    return { y: -1, x: -1, absX: false, absY: false };
+  }
   return { y: r2y(row) || 0, x: c2x(col) || 0, absX, absY };
 };
 

@@ -29,8 +29,8 @@ export const SideMenuItems = () => {
   if (!pluginProvided) {
     return null;
   }
-  const { store, dispatch } = pluginContext;
-  if (store == null || dispatch == null) {
+  const { store, sync } = pluginContext as any;
+  if (store == null || sync == null) {
     return null;
   }
   const { largeEditorRef, mainRef } = store;
@@ -46,10 +46,10 @@ export const SideMenuItems = () => {
     >
       <div className="gs-rightmenu-items">
         <div className="gs-rightmenu-item">
-          <InsertRows store={store} dispatch={dispatch} />
+          <InsertRows store={store} sync={sync} />
         </div>
         <div className="gs-rightmenu-item">
-          <InsertCols store={store} dispatch={dispatch} />
+          <InsertCols store={store} sync={sync} />
         </div>
       </div>
     </div>
@@ -58,10 +58,10 @@ export const SideMenuItems = () => {
 
 type ItemProps = {
   store: StoreType;
-  dispatch: Dispatcher;
+  sync: Dispatcher;
 };
 
-export const InsertRows = ({ store, dispatch }: ItemProps) => {
+export const InsertRows = ({ store, sync }: ItemProps) => {
   const [numRows, setNumRows] = React.useState(1000);
   const [at, setAt] = React.useState<string>('below');
   const [above, setAbove] = React.useState(1);
@@ -94,7 +94,7 @@ export const InsertRows = ({ store, dispatch }: ItemProps) => {
         args = { y: below + 1, baseY: below };
     }
     const newTable = table.insertRows({ ...args, numRows });
-    dispatch(updateTable(newTable));
+    sync(updateTable(newTable));
   };
 
   return (
@@ -183,7 +183,7 @@ export const InsertRows = ({ store, dispatch }: ItemProps) => {
   );
 };
 
-export const InsertCols = ({ store, dispatch }: ItemProps) => {
+export const InsertCols = ({ store, sync }: ItemProps) => {
   const [numCols, setNumCols] = React.useState(store.table.getNumCols());
   const [at, setAt] = React.useState<string>('right');
   const [left, setLeft] = React.useState(1);
@@ -216,7 +216,7 @@ export const InsertCols = ({ store, dispatch }: ItemProps) => {
         args = { x: right + 1, baseX: right };
     }
     const newTable = table.insertCols({ ...args, numCols });
-    dispatch(updateTable(newTable));
+    sync(updateTable(newTable));
   };
 
   return (

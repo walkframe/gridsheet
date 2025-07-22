@@ -27,7 +27,11 @@ export class Autofill {
   private readonly direction: Direction;
   private readonly table: Table;
   constructor(store: StoreType, draggingTo: PointType) {
-    const { table, choosing, selectingZone } = store;
+    const { tableReactive: tableRef, choosing, selectingZone } = store;
+    const table = tableRef.current;
+    if (!table) {
+      throw new Error('Table is not available');
+    }
     this.src = complementSelectingArea(zoneToArea(selectingZone), choosing);
     this.direction = this.suggestDirection(draggingTo);
     this.dst = this.getDestinationArea(draggingTo);
@@ -36,7 +40,7 @@ export class Autofill {
 
   public get applied(): Table {
     const [orientation, sign] = DirectionMapping[this.direction];
-    const matrix = this.table.getMatrix({ area: this.src, refEvaluation: 'system' });
+    const matrix = this.table.getMatrix({ area: this.src, refEvaluation: 'SYSTEM' });
     const srcShape = areaShape({ ...this.src, base: 1 });
     const dstShape = areaShape({ ...this.dst, base: 1 });
 

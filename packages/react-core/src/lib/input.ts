@@ -88,8 +88,8 @@ export const resetInput = (input: HTMLTextAreaElement | null, table: Table, poin
   if (style == null) {
     return;
   }
-  const width = table.getByPoint({ x: point.x, y: 0 })?.width ?? DEFAULT_WIDTH;
-  const height = table.getByPoint(point)?.height ?? DEFAULT_HEIGHT;
+  const width = table.getCellByPoint({ x: point.x, y: 0 }, 'SYSTEM')?.width ?? DEFAULT_WIDTH;
+  const height = table.getCellByPoint(point, 'SYSTEM')?.height ?? DEFAULT_HEIGHT;
   style.width = `${width}px`;
   style.height = `${height}px`;
 };

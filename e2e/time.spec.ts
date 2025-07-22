@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('time + delta, time + number(days)', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-basic-simple--sheet&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=basic-simple--sheet&viewMode=story');
   const a4 = page.locator("[data-address='A4']");
   const b4 = page.locator("[data-address='B4']");
   const c4 = page.locator("[data-address='C4']");
@@ -14,7 +14,7 @@ test('time + delta, time + number(days)', async ({ page }) => {
 });
 
 test('input DD MMM [YYYY] format', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-basic-simple--sheet&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=basic-simple--sheet&viewMode=story');
 
   const b5 = page.locator("[data-address='B5']");
   await b5.click();

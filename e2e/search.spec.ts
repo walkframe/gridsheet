@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
+import { ctrl } from './utils';
 
 test('search and next', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-basic-large--sheet&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=basic-large--sheet&viewMode=story');
   const a1 = page.locator("[data-address='A1']");
   await a1.click();
 
@@ -9,7 +10,7 @@ test('search and next', async ({ page }) => {
   const progress = page.locator('.gs-search-progress');
   expect(await searchBar.count()).toBe(0);
 
-  await page.keyboard.press('Control+f');
+  await ctrl(page, 'f');
   await page.waitForSelector('.gs-search-bar', { timeout: 3000 });
 
   expect(await searchBar.count()).toBe(1);

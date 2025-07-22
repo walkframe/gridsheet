@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { ctrl, drag, paste } from './utils';
 
 test('render', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-multiple-sheets--sheets&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=multiple-sheets--sheets&viewMode=story');
   const sheet1 = page.locator('[data-sheet-name="Sheet1"]');
   const a11 = sheet1.locator("[data-address='A1']");
   const a21 = sheet1.locator("[data-address='A2']");
@@ -44,7 +44,7 @@ test('render', async ({ page }) => {
 });
 
 test('absolute ref should not be changed', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-formula-lookup--look-up&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=formula-lookup--look-up&viewMode=story');
   const sheet2 = page.locator('[data-sheet-name="year"]');
 
   const b3 = sheet2.locator("[data-address='B3']");
@@ -60,7 +60,7 @@ test('absolute ref should not be changed', async ({ page }) => {
 });
 
 test('inserting absolute ref', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-basic-labeler--labeler&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=basic-labeler--labeler&viewMode=story');
   const largeEditor = page.locator('.gs-formula-bar textarea');
   // single ref
   const a2 = page.locator("[data-address='A2']");
@@ -81,7 +81,7 @@ test('inserting absolute ref', async ({ page }) => {
 });
 
 test('referencing error', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-formula-ref--refs&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=formula-ref--refs&viewMode=story');
   const editor = page.locator('.gs-editor textarea');
 
   // B
@@ -118,7 +118,7 @@ test('referencing error', async ({ page }) => {
 });
 
 test('insert ref by selection', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-basic-simple--sheet&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=basic-simple--sheet&viewMode=story');
   const editor = page.locator('.gs-editor textarea');
   const a1 = page.locator("[data-address='A1']");
   const a2 = page.locator("[data-address='A2']");
@@ -155,7 +155,7 @@ test('insert ref by selection', async ({ page }) => {
 });
 
 test('insert ref by selection in multiple sheets', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-multiple-sheets--sheets&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=multiple-sheets--sheets&viewMode=story');
 
   const sheet1 = page.locator('[data-sheet-name="Sheet1"]');
   const sheet2 = page.locator('[data-sheet-name="Sheet2"]');
@@ -190,7 +190,7 @@ test('insert ref by selection in multiple sheets', async ({ page }) => {
 });
 
 test('insert cols range and rows range by selection in multiple sheets', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-multiple-sheets--sheets&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=multiple-sheets--sheets&viewMode=story');
 
   const sheet1 = page.locator('[data-sheet-name="Sheet1"]');
   const sheet2 = page.locator('[data-sheet-name="Sheet2"]');
@@ -222,7 +222,7 @@ test('insert cols range and rows range by selection in multiple sheets', async (
 });
 
 test('disable formula', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-formula-disabled--disabled&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=formula-disabled--disabled&viewMode=story');
   const a1 = page.locator("[data-address='A1']");
   const b1 = page.locator("[data-address='B1']");
   const a2 = page.locator("[data-address='A2']");
@@ -243,7 +243,7 @@ test('disable formula', async ({ page }) => {
 });
 
 test('copy and slide ref', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-multiple-sheets--sheets&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=multiple-sheets--sheets&viewMode=story');
   const sheet1 = page.locator('[data-sheet-name="Sheet1"]');
   const sheet2 = page.locator('[data-sheet-name="Sheet2"]');
   const sheet3 = page.locator('[data-sheet-name="Sheet 3"]');
@@ -275,10 +275,14 @@ test('copy and slide ref', async ({ page }) => {
   await paste(page);
   expect(await b33.locator('.gs-cell-rendered').textContent()).toBe('#REF!');
   expect(await largeEditor3.inputValue()).toBe("=SUM('Sheet1'!C3:#REF!) + 20");
+
+  // fixed: detecting circular reference
+  const a31 = sheet1.locator("[data-address='A3']");
+  expect(await a31.locator('.gs-cell-rendered').textContent()).toBe('1633');
 });
 
 test('add col and slide ref', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-multiple-sheets--sheets&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=multiple-sheets--sheets&viewMode=story');
   const sheet1 = page.locator('[data-sheet-name="Sheet1"]');
   const sheet2 = page.locator('[data-sheet-name="Sheet2"]');
   const sheet3 = page.locator('[data-sheet-name="Sheet 3"]');

@@ -1,0 +1,183 @@
+import Case4 from './case4.component';
+
+# 📊 Budget Management System with Policies
+
+This demo showcases advanced Policy functionality for data validation, business rules, and real-time event monitoring.
+
+It demonstrates a comprehensive budget management system with multiple policy types including department selection, status validation, budget constraints, and comprehensive event handling.
+
+The status options can be dynamically managed using a modern multi-select interface, and all spreadsheet operations are monitored through event handlers.
+
+<Case4 />
+
+## Implementation Guide
+
+### 📊 Policy-Based Data Validation Overview
+This comprehensive budget management system demonstrates how GridSheet can implement sophisticated business rules and data validation through policies. The system enforces data integrity, provides user-friendly interfaces, and maintains consistency across complex business processes.
+
+### 🔧 Policy Features
+
+#### 📋 Department Selection Policy
+Dropdown-based department selection with predefined options and validation. Users can only select from valid department options with emoji icons and keyword search functionality.
+
+#### 🔄 Dynamic Status Policy
+Status options can be dynamically updated in real-time using a modern CreatableSelect interface. Changes in the status options immediately reflect in the budget grid.
+
+#### 💰 Budget Validation Policy
+Numeric validation with range constraints (0 - 1,000,000). Prevents invalid budget entries and provides automatic correction.
+
+### 📋 Department Selection Policy
+Implement dropdown-based department selection with comprehensive validation. This policy provides predefined department options with icons and keywords for search functionality. Include validation logic to ensure only valid departments can be selected.
+
+### 🔍 Keyword-Based Search Functionality
+The Department Selection Policy includes advanced keyword search capabilities that allow multiple keywords to match a single department. Each department has multiple keywords associated with it, enabling flexible search patterns. For example, searching for "dev", "development", or "Engineering" will all match the Engineering department. This provides intuitive search experience where users can find departments using various related terms.
+
+### 🔄 Dynamic Status Policy with CreatableSelect
+Create dynamic status policies using `react-select/creatable` for modern, user-friendly status management. This approach provides:
+
+- **Multi-select interface**: Users can select multiple status options
+- **Create new options**: Type and press Enter to create new status options with automatic emoji prefix
+- **Remove options**: Click the "×" button to remove status options
+- **Clear all**: Built-in clear functionality for resetting all options
+- **Real-time updates**: Changes immediately reflect in the GridSheet status column
+
+The status options start with 3 essential options (Approved, Pending, Under Review) and can be expanded as needed.
+
+### 💰 Budget Validation Policy
+Implement numeric validation policies for budget amounts with range constraints. These policies ensure budget values fall within acceptable ranges and handle edge cases like negative values or excessive amounts. Provide automatic correction for invalid inputs.
+
+### 🖼️ Border Styling with makeBorder
+Implement professional border styling using the makeBorder utility function. This utility provides a clean API for applying consistent border styles across cells and ranges. The makeBorder function accepts options for individual sides (top, right, bottom, left) or applies uniform styling to all sides.
+
+### 🔧 makeBorder Utility Function
+The makeBorder utility generates CSSProperties objects with individual border styles. It supports both uniform border application using the "all" option and selective side styling. The function avoids outputting the shorthand "border" property, ensuring compatibility with existing styles and preventing unintentional style overrides.
+
+### 📏 Default Border Implementation
+Apply consistent default borders to all cells using `makeBorder({ all: "1px solid #000000" })`. This creates a professional grid appearance with uniform black borders that match traditional spreadsheet applications. Default borders provide visual structure and improve data readability.
+
+### ⬇️ Special Border Patterns
+Implement special border patterns for emphasis and visual hierarchy. Use double borders (`makeBorder({ bottom: "4px double #000000" })`) to separate summary sections like totals. Double borders create clear visual breaks and indicate important data boundaries.
+
+### 🎨 Border Style Options
+Utilize various border styles including solid, dashed, and double borders. Apply different border widths and colors to create visual emphasis. Use border styling to highlight important data, separate sections, and improve overall grid readability.
+
+### ⚡ Real-time Validation
+Implement real-time validation that provides immediate feedback to users. Validate data as users type and provide clear error messages for invalid inputs. Include visual indicators for validation status.
+
+### 🎨 Conditional Styling
+Apply conditional styling based on policy values and validation status. Use color coding to indicate different statuses, validation errors, and data categories. Create visual hierarchy that helps users quickly understand data state.
+
+### ⚙️ Dynamic Options Management with CreatableSelect
+Create modern interfaces for managing policy options dynamically using `react-select/creatable`. This approach provides:
+
+- **TypeScript support**: Full type safety with proper interfaces
+- **Custom styling**: Consistent styling with the rest of the application
+- **Accessibility**: Built-in accessibility features
+- **Performance**: Optimized rendering for large option sets
+- **Flexibility**: Easy to extend with custom functionality
+
+### 📱 Responsive Design
+Design the interface to work across different screen sizes and devices. Implement responsive layouts that adapt to mobile and desktop environments. Ensure all policy controls remain accessible on smaller screens.
+
+### ⚠️ Error Handling
+Implement comprehensive error handling for policy validation failures. Provide meaningful error messages, fallback values, and recovery mechanisms. Handle edge cases and unexpected data scenarios gracefully.
+
+### ⚡ Performance Optimization
+Optimize policy validation performance for large datasets. Implement efficient validation algorithms, minimize unnecessary re-validations, and use proper caching strategies. Consider batch validation for bulk operations.
+
+### ✅ Best Practices
+1. **Data Integrity**: Ensure all policies maintain data consistency and integrity
+2. **User Experience**: Provide clear feedback and intuitive interfaces for policy interactions
+3. **Validation Logic**: Implement robust validation that handles all edge cases
+4. **Performance**: Optimize validation performance for large datasets
+5. **Accessibility**: Ensure all policy controls are accessible to all users
+6. **Documentation**: Document policy rules and validation logic clearly
+7. **Testing**: Thoroughly test all policy scenarios and edge cases
+8. **Border Consistency**: Use makeBorder for consistent border styling across the application
+9. **Visual Hierarchy**: Apply appropriate border styles to create clear data sections
+10. **Modern UI Components**: Use modern, stable UI libraries like react-select for better user experience
+
+### 🎯 Common Use Cases
+- **Budget Management**: Enforce budget constraints and approval workflows
+- **HR Systems**: Validate employee data and policy compliance
+- **Inventory Management**: Enforce stock limits and category rules
+- **Project Management**: Validate project parameters and resource allocation
+- **Financial Systems**: Enforce accounting rules and compliance requirements
+- **Spreadsheet Applications**: Create professional grid interfaces with consistent styling
+
+### 🚀 Advanced Features
+- **Conditional Policies**: Policies that change based on other field values
+- **Multi-level Validation**: Hierarchical validation with different rule sets
+- **Audit Trails**: Track policy changes and validation history
+- **Integration**: Connect policies with external validation systems
+- **Workflow Integration**: Integrate policies with business process workflows
+- **Custom Border Patterns**: Create sophisticated border designs for special use cases
+- **Dynamic Status Management**: Real-time status option management with modern UI components
+
+### 📋 Policy Management Patterns
+- **Centralized Policy Management**: Single source of truth for all policies
+- **Dynamic Policy Updates**: Real-time policy modification capabilities
+- **Policy Inheritance**: Hierarchical policy structures with inheritance
+- **Policy Templates**: Reusable policy templates for common scenarios
+- **Policy Versioning**: Track policy changes and maintain version history
+- **Modern UI Integration**: Use modern UI libraries for better user experience
+
+### 🖼️ Border Management Patterns
+- **Default Border Application**: Consistent border styling across all cells
+- **Section Border Design**: Special borders for headers, totals, and important sections
+- **Border Style Variation**: Different border styles for different purposes
+- **Responsive Border Design**: Adaptive border styling for different screen sizes
+- **Border Performance**: Efficient border rendering for large datasets
+
+### 📊 Event Handling and Monitoring
+This budget management system includes comprehensive event handling to monitor all spreadsheet operations in real-time:
+
+#### 🔍 Real-time Event Monitoring
+- **Data Events**: Monitor when budget data is saved or changed
+- **Selection Events**: Track cell selection changes for user interaction analysis
+- **Structure Events**: Monitor row and column insertions/removals for audit trails
+- **Keyboard Events**: Track keyboard interactions for user experience analysis
+- **Initialization Events**: Monitor table initialization for system health
+
+#### 📈 Event Logging System
+The system includes a real-time event log that displays:
+- **Timestamp**: Precise timing of each event
+- **Event Type**: Clear identification of the operation type
+- **Affected Data**: Information about what data was modified
+- **User Actions**: Tracking of user interactions and changes
+
+#### 🎯 Event Handler Implementation
+```tsx
+const hub = useHub({
+  // Data monitoring events
+  onSave: ({ table, points }) => {
+    addEventLog(`Budget data saved at ${Array.isArray(points) ? points.length : 1} position(s)`);
+  },
+  onChange: ({ table, points }) => {
+    addEventLog(`Budget data changed at ${Array.isArray(points) ? points.length : 1} position(s)`);
+  },
+  
+  // Structure monitoring events
+  onRemoveRows: ({ table, ys }) => {
+    addEventLog(`Removed ${ys.length} row(s): ${ys.join(', ')}`);
+  },
+  onInsertRows: ({ table, y, numRows }) => {
+    addEventLog(`Inserted ${numRows} row(s) at position ${y}`);
+  },
+  
+  // User interaction events
+  onSelect: ({ table, points }) => {
+    addEventLog(`Selected ${Array.isArray(points) ? points.length : 1} cell(s)`);
+  },
+  onKeyUp: (e, points) => {
+    addEventLog(`Key pressed: ${e.key}`);
+  },
+});
+```
+
+#### 🔄 Event-Driven Architecture Benefits
+- **Audit Trails**: Complete tracking of all budget modifications
+- **User Analytics**: Understanding of user interaction patterns
+- **Debugging**: Real-time monitoring for troubleshooting
+- **Compliance**: Meeting regulatory requirements for data tracking
+- **Performance Monitoring**: Tracking system performance and usage patterns

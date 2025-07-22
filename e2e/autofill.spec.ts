@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { dragAutofill, dragAutofillRange, cut, paste } from './utils';
 
 test('autofill drag and cut paste', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-formula-ref--refs&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=formula-ref--refs&viewMode=story');
 
   const c13 = page.locator("[data-address='C13']");
   await c13.click();
@@ -35,7 +35,7 @@ test('autofill drag and cut paste', async ({ page }) => {
 });
 
 test('autofill range D9:D10 to D13', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=feature-formula-ref--refs&viewMode=story');
+  await page.goto('http://localhost:5233/iframe.html?id=formula-ref--refs&viewMode=story');
   await dragAutofillRange(page, 'D9', 'D10', 'D13');
 
   const d11 = page.locator("[data-address='D11']");

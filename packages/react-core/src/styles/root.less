@@ -2,6 +2,7 @@
   display: inline-block;
   position: relative;
   border-spacing: 0;
+  width: fit-content;
   max-width: 100%;
   overflow: auto;
   font-family:
@@ -57,6 +58,18 @@
     cursor: cell;
   };
 
+}
+
+.gs-hidden {
+  visibility: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: -1;
 }
 
 .gs-fixed {

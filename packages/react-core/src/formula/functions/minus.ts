@@ -22,7 +22,7 @@ export class MinusFunction extends BaseFunction {
     }
     this.bareArgs = this.bareArgs.map((arg) => {
       if (arg instanceof Table) {
-        arg = stripTable(arg, 0, 0);
+        arg = stripTable({ value: arg });
       }
       return typeof arg === 'object' ? arg : ensureNumber(arg);
     });

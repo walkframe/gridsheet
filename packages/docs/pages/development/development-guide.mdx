@@ -1,0 +1,193 @@
+# Development Guide
+
+This guide covers the development workflow, tools, and best practices for contributing to GridSheet.
+
+## Development Setup
+
+### Prerequisites
+
+- **Node.js**: Version 24.1.0
+- **pnpm**: For package management
+- **Git**: For version control
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/your-org/gridsheet.git
+cd gridsheet
+
+# Install dependencies
+pnpm install
+```
+
+### Development Scripts
+
+```bash
+# Start development server for testing
+pnpm dev
+
+# Run unit tests
+pnpm test
+
+# Run e2e tests (uses server)
+pnpm e2e
+
+# Run linting and apply prettier
+pnpm lint:fix
+```
+
+## Testing Strategy
+
+### Testing Policy
+
+GridSheet follows a specific testing strategy:
+
+- **Formula Functions**: When adding new formula functions, unit tests are required
+- **Other Features**: All other features are covered by e2e tests
+- **Component Behavior**: Use e2e tests to verify component interactions and user workflows
+- **Integration**: E2e tests ensure proper integration between components
+
+### E2E Test Example
+
+```typescript
+import { test, expect } from '@playwright/test';
+
+test('basic cell editing', async ({ page }) => {
+  await page.goto('/story/basic--default');
+  
+  // Click on cell A1
+  await page.click('[data-testid="cell-A1"]');
+  
+  // Type value
+  await page.keyboard.type('Hello World');
+  await page.keyboard.press('Enter');
+  
+  // Verify value
+  const cell = page.locator('[data-testid="cell-A1"]');
+  await expect(cell).toHaveText('Hello World');
+});
+```
+
+## Formula Functions
+
+### Creating Custom Formula Functions
+
+When adding new formula functions to GridSheet, follow these guidelines:
+
+#### Google Spreadsheet Compatibility
+
+When adding new functions, prioritize those that are also supported by Google Spreadsheet:
+
+- **Target Functions**: Focus on functions that exist in Google Sheets
+- **Specification Matching**: Follow Google Sheets' function specifications and behavior
+- **Parameter Compatibility**: Match argument types, order, and validation rules
+- **Return Value Consistency**: Ensure return values match Google Sheets' behavior
+- **Error Handling**: Implement the same error conditions and messages
+
+#### BaseFunction Inheritance
+
+All custom formula functions must extend the `BaseFunction` class:
+
+```typescript
+import { BaseFunction, ensureString } from '@gridsheet/react-core';
+
+class CustomFunction extends BaseFunction {
+  // Required properties for documentation
+  example = 'CUSTOM_FUNCTION("value", 123)';
+  helpText = ['Performs a custom operation on the input values'];
+  helpArgs = [
+    { name: 'value', description: 'The input value to process' },
+    { name: 'number', description: 'A numeric parameter' }
+  ];
+
+  // Required validation method
+  protected validate() {
+    if (this.bareArgs.length !== 2) {
+      throw new Error('CUSTOM_FUNCTION requires exactly 2 arguments');
+    }
+    // Ensure proper types
+    this.bareArgs[0] = ensureString(this.bareArgs[0]);
+    this.bareArgs[1] = Number(this.bareArgs[1]);
+  }
+
+  // Required main implementation
+  protected main(value: string, number: number) {
+    // Your custom logic here
+    return `Processed: ${value} with ${number}`;
+  }
+}
+```
+
+#### Documentation Properties
+
+Every formula function must include these properties for future help system integration:
+
+- **`example`**: Shows how to use the function in a formula
+- **`helpText`**: Array of description strings explaining what the function does
+- **`helpArgs`**: Array of argument descriptions with name and description
+
+#### Function Registration
+
+Functions must be registered in `formula/mapping.ts`:
+
+```typescript
+// formula/mapping.ts
+import { CustomFunction } from './functions/CustomFunction';
+
+export const functions = {
+  // ... existing functions
+  CUSTOM_FUNCTION: CustomFunction,
+};
+```
+
+## Documentation
+
+### API Documentation
+
+```bash
+# Generate API docs
+pnpm docs:api
+
+# Serve docs locally
+pnpm docs:dev
+```
+
+### Storybook
+
+```bash
+# Start Storybook
+pnpm storybook
+
+# Build Storybook
+pnpm storybook:build
+
+# Test Storybook
+pnpm storybook:test
+```
+
+## Contributing
+
+### Pull Request Process
+
+1. **Create Feature Branch**: `git checkout -b feature/new-feature`
+2. **Make Changes**: Implement your feature
+3. **Run Tests**: Ensure all tests pass (`pnpm test` and `pnpm e2e`)
+4. **Update Documentation**: Update relevant docs
+5. **Submit PR**: Create pull request with description
+
+### Code Review Checklist
+
+- [ ] Code follows style guidelines
+- [ ] Tests are included and passing
+- [ ] Documentation is updated
+- [ ] No breaking changes (or documented)
+- [ ] Performance impact considered
+
+### Release Process
+
+1. **Version Bump**: Update version in package.json
+2. **Changelog**: Update CHANGELOG.md
+3. **Build**: Run full build and test suite
+4. **Publish**: Publish to npm
+5. **Tag**: Create git tag for release 

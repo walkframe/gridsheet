@@ -1,13 +1,15 @@
 import { RenderProps } from './core';
 
 export const CheckboxRendererMixin = {
-  bool({ value, writer }: RenderProps<boolean>): any {
+  bool({ value, sync, table, point }: RenderProps<boolean>): any {
     return (
       <input
         type="checkbox"
         checked={value}
         onChange={(e) => {
-          writer?.(e.currentTarget.checked.toString());
+          if (sync) {
+            sync(table.write({ point, value: e.currentTarget.checked.toString() }));
+          }
           e.currentTarget.blur();
         }}
       />

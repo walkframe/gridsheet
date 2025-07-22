@@ -1,4 +1,4 @@
-import { useEffect, useContext, useRef, useState, createRef } from 'react';
+import { useEffect, useContext, useRef, useState, createRef, useCallback, RefObject } from 'react';
 
 import { Cell } from './Cell';
 import { HeaderCellTop } from './HeaderCellTop';
@@ -7,8 +7,7 @@ import { HeaderCellLeft } from './HeaderCellLeft';
 import { Context } from '../store';
 import { choose, select, updateTable } from '../store/actions';
 
-import { Table } from '../lib/table';
-import type { RefPaletteType, PointType, StoreType, TableRef, Virtualization } from '../types';
+import type { RefPaletteType, PointType, StoreType, Connector, Virtualization } from '../types';
 import { virtualize } from '../lib/virtualization';
 import { a2p, p2a, stripAddressAbsolute } from '../lib/converters';
 import { zoneToArea } from '../lib/structs';
@@ -17,31 +16,63 @@ import { COLOR_PALETTE } from '../lib/palette';
 import { Autofill } from '../lib/autofill';
 import { ScrollHandle } from './ScrollHandle';
 
-type Props = {
-  tableRef: React.MutableRefObject<TableRef | null> | undefined;
-};
-
-export const createTableRef = () => createRef<TableRef | null>();
-export const useTableRef = () => useRef<TableRef | null>(null);
-export const Tabular = ({ tableRef }: Props) => {
+export const Tabular = () => {
   const [palette, setPalette] = useState<RefPaletteType>({});
   const { store, dispatch } = useContext(Context);
   const {
-    sheetWidth,
-    sheetHeight,
-    table,
+    tableReactive,
+    choosing,
+    editingAddress,
     tabularRef,
     mainRef,
-    headerWidth,
-    headerHeight,
-    editingAddress,
+    sheetWidth,
+    sheetHeight,
     inputting,
-    choosing,
     leftHeaderSelecting,
     topHeaderSelecting,
+    totalWidth,
+    totalHeight,
   } = store;
+  const table = tableReactive.current;
+
+  const [virtualized, setVirtualized] = useState<Virtualization | null>(null);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleScroll = useCallback(
+    (e: React.UIEvent<HTMLDivElement>) => {
+      if (table) {
+        setVirtualized(virtualize(table, e.currentTarget));
+      }
+    },
+    [tableReactive],
+  );
+
+  const handleSelectAllClick = useCallback(() => {
+    if (!table) {
+      return;
+    }
+    dispatch(choose({ y: -1, x: -1 }));
+    requestAnimationFrame(() => {
+      dispatch(choose({ y: 1, x: 1 }));
+      dispatch(
+        select({
+          startY: 1,
+          startX: 1,
+          endY: table.getNumRows(),
+          endX: table.getNumCols(),
+        }),
+      );
+    });
+  }, [tableReactive]);
 
   useEffect(() => {
+    if (!table) {
+      return;
+    }
     const formulaEditing = editingAddress && inputting.startsWith('=');
     if (!formulaEditing) {
       setPalette({});
@@ -79,87 +110,61 @@ export const Tabular = ({ tableRef }: Props) => {
     }
     setPalette(palette);
     table.wire.paletteBySheetName = paletteBySheetName;
-  }, [store.inputting, store.editingAddress]);
+  }, [store.inputting, store.editingAddress, tableReactive]);
 
   useEffect(() => {
-    if (tableRef && table.isInitialized) {
-      tableRef.current = {
-        table,
-        dispatch: (table) => {
-          dispatch(updateTable(table as Table));
-        },
-      };
+    if (!table) {
+      return;
     }
-  }, [table]);
-  useEffect(() => {
     table.wire.choosingAddress = p2a(choosing);
   }, [choosing]);
-  const [virtualized, setVirtualized] = useState<Virtualization | null>(null);
+
   useEffect(() => {
+    if (!table) {
+      return;
+    }
     setVirtualized(virtualize(table, tabularRef.current));
-  }, [tabularRef.current, table, mainRef.current?.clientHeight, mainRef.current?.clientWidth]);
+  }, [tabularRef.current, tableReactive, mainRef.current?.clientHeight, mainRef.current?.clientWidth]);
+
+  if (!table || !table.wire.ready) {
+    return null;
+  }
 
   const operationStyles = useOperationStyles(store, {
     ...palette,
     ...table.wire.paletteBySheetName[table.sheetName],
   });
 
-  if (!table.wire.ready) {
-    return null;
-  }
-
   return (
     <>
       <div
         className="gs-tabular"
         style={{
-          //width: sheetWidth === -1 ? undefined : sheetWidth,
+          width: sheetWidth === -1 ? undefined : sheetWidth,
           height: sheetHeight === -1 ? undefined : sheetHeight,
         }}
         ref={tabularRef}
-        onMouseMove={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-        onScroll={(e) => {
-          setVirtualized(virtualize(table, e.currentTarget));
-        }}
+        onMouseMove={handleMouseMove}
+        onScroll={handleScroll}
       >
         <div
           className={'gs-tabular-inner'}
           style={{
-            width: table.totalWidth + 1,
-            height: table.totalHeight + 1,
+            width: totalWidth + 1,
+            height: totalHeight + 1,
           }}
         >
-          <table
-            className={`gs-table`}
-            style={{
-              width: table.totalWidth,
-            }}
-          >
-            <thead className="gs-thead" style={{ height: headerHeight }}>
+          <table className={`gs-table`}>
+            <thead className="gs-thead" style={{ height: table.headerHeight }}>
               <tr className="gs-row">
                 <th
                   className="gs-th gs-th-left gs-th-top"
-                  style={{ position: 'sticky', width: headerWidth, height: headerHeight }}
-                  onClick={() => {
-                    dispatch(choose({ y: -1, x: -1 }));
-                    window.setTimeout(() => {
-                      dispatch(choose({ y: 1, x: 1 }));
-                      dispatch(
-                        select({
-                          startY: 1,
-                          startX: 1,
-                          endY: table.getNumRows(),
-                          endX: table.getNumCols(),
-                        }),
-                      );
-                    }, 100);
-                  }}
+                  style={{ position: 'sticky', width: table.headerWidth, height: table.headerHeight }}
+                  onClick={handleSelectAllClick}
                 >
                   <div className="gs-th-inner">
                     <ScrollHandle
+                      className={leftHeaderSelecting || topHeaderSelecting ? 'gs-hidden' : ''}
                       style={{ position: 'absolute' }}
                       horizontal={leftHeaderSelecting ? 0 : -1}
                       vertical={topHeaderSelecting ? 0 : -1}
@@ -226,12 +231,22 @@ const useOperationStyles = (store: StoreType, refs: RefPaletteType) => {
     cellStyles[address] = cellStyles[address] || {};
     Object.assign(cellStyles[address], style);
   };
-  const { choosing, selectingZone, matchingCells, matchingCellIndex, table, autofillDraggingTo, editingAddress } =
-    store;
-  const { wire: hub } = table;
-  const { copyingSheetId, copyingZone, cutting } = hub;
-
-  const editingAnywhere = !!(table.wire.editingAddress || editingAddress);
+  const {
+    choosing,
+    selectingZone,
+    matchingCells,
+    matchingCellIndex,
+    tableReactive,
+    autofillDraggingTo,
+    editingAddress,
+  } = store;
+  const table = tableReactive.current;
+  if (!table) {
+    return {};
+  }
+  const { wire } = table;
+  const { copyingSheetId, copyingZone, cutting } = wire;
+  const editingAnywhere = !!(wire.editingAddress || editingAddress);
 
   {
     // selecting

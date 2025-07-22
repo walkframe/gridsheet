@@ -4,7 +4,6 @@ const path = require('path');
 module.exports = {
   stories: ['../stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)'],
   addons: [
-    '@storybook/addon-docs',
     '@storybook/addon-essentials',
     '@storybook/addon-onboarding',
     '@storybook/addon-interactions',
@@ -13,9 +12,6 @@ module.exports = {
   framework: {
     name: '@storybook/react-vite',
     options: {},
-  },
-  docs: {
-    autodocs: 'tag',
   },
   managerHead: (entry) => [
     ...entry,

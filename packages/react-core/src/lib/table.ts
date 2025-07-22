@@ -10,17 +10,13 @@ import {
   PointType,
   Address,
   CellFilter,
-  Labelers,
   MatrixType,
   CellType,
-  Parsers,
-  Renderers,
   HistoryType,
   StorePatchType,
   ShapeType,
   OperatorType,
   OperationType,
-  Policies,
   RawCellType,
   ExtraPointType,
   StoreType,
@@ -55,8 +51,6 @@ type Props = {
   maxNumRows?: number;
   minNumCols?: number;
   maxNumCols?: number;
-  headerHeight?: number;
-  headerWidth?: number;
   functions?: FunctionMapping;
   sheetName?: string;
   hub?: Wire;
@@ -65,7 +59,7 @@ type Props = {
 const noFilter: CellFilter = () => true;
 
 type GetProps = {
-  // do not use 'system', it is reserved for internal use.
+  // do not use 'SYSTEM', it is reserved for internal use.
   refEvaluation?: RefEvaluation;
   raise?: boolean;
   filter?: CellFilter;
@@ -82,7 +76,7 @@ type MoveProps = {
 };
 
 type GetFieldProps = GetProps & {
-  key?: keyof CellType;
+  field?: keyof CellType;
 };
 
 type GetPropsWithArea = GetProps & {
@@ -104,11 +98,10 @@ export interface UserTable {
   maxNumRows: number;
   minNumCols: number;
   maxNumCols: number;
-  totalWidth: number;
-  totalHeight: number;
   headerWidth: number;
   headerHeight: number;
   currentHistory?: HistoryType;
+  sheetName: string;
 
   /**
    * Returns the raw table object, which is used for internal operations.
@@ -117,24 +110,18 @@ export interface UserTable {
   __raw__: Table;
 
   getRectSize(area: AreaType): ShapeType;
-  getAddressById(id: Id, slideY: number, slideX: number): string | undefined;
-  getAddressesByIds(ids: CellsByIdType): CellsByAddressType;
-  getPointById(id: Id): PointType;
-  getByPoint(point: PointType): CellType | undefined;
-  getId(point: PointType): Id;
-  getById(id: Id): CellType | undefined;
+  getCellByPoint(point: PointType, refEvaluation?: RefEvaluation, raise?: boolean): CellType | undefined;
+  getCellByAddress(address: Address, refEvaluation?: RefEvaluation, raise?: boolean): CellType | undefined;
   getNumRows(base?: number): number;
   getNumCols(base?: number): number;
   getFieldMatrix(args?: GetFieldPropsWithArea): any[][];
-  getFieldObject(args?: GetFieldProps): CellsByAddressType;
-  getFieldRows(args?: GetFieldProps): CellsByAddressType[];
-  getFieldCols(args?: GetFieldProps): CellsByAddressType[];
+  getFieldObject(args?: GetFieldProps): { [address: Address]: any };
+  getFieldRows(args?: GetFieldProps): { [address: Address]: any }[];
+  getFieldCols(args?: GetFieldProps): { [address: Address]: any }[];
   getMatrix(args?: GetPropsWithArea): (CellType | null)[][];
   getObject(args?: GetProps): CellsByAddressType;
   getRows(args?: GetProps): CellsByAddressType[];
   getCols(args?: GetProps): CellsByAddressType[];
-  getTableBySheetName(sheetName: string): UserTable;
-  getSheetId(): number;
   getHistories(): HistoryType[];
   move(args: MoveProps): UserTable;
   copy(args: MoveProps & { onlyValue?: boolean }): UserTable;
@@ -152,39 +139,38 @@ export interface UserTable {
     reflection?: StorePatchType;
   }): UserTable;
   write(args: { point: PointType; value: string; updateChangedAt?: boolean; reflection?: StorePatchType }): UserTable;
-  insertRowsAndUpdate(args: {
+  insertRows(args: {
     y: number;
     numRows: number;
     baseY: number;
-    diff: CellsByAddressType;
+    diff?: CellsByAddressType;
     partial?: boolean;
     updateChangedAt?: boolean;
     reflection?: StorePatchType;
   }): UserTable;
-  insertRows(args: { y: number; numRows: number; baseY: number; reflection?: StorePatchType }): UserTable;
   removeRows(args: { y: number; numRows: number; reflection?: StorePatchType }): UserTable;
-  insertColsAndUpdate(args: {
+  insertCols(args: {
     x: number;
     numCols: number;
     baseX: number;
-    diff: CellsByAddressType;
+    diff?: CellsByAddressType;
     partial?: boolean;
     updateChangedAt?: boolean;
     reflection?: StorePatchType;
   }): UserTable;
-  insertCols(args: { x: number; numCols: number; baseX: number; reflection?: StorePatchType }): UserTable;
   removeCols(args: { x: number; numCols: number; reflection?: StorePatchType }): UserTable;
   undo(): {
     history: HistoryType | null;
-    newTable: UserTable;
   };
   redo(): {
     history: HistoryType | null;
-    newTable: UserTable;
   };
   getHistories(): HistoryType[];
   getHistoryIndex(): number;
   getHistorySize(): number;
+  setHeaderHeight(height: number, historicize?: boolean): UserTable;
+  setHeaderWidth(width: number, historicize?: boolean): UserTable;
+
   stringify(props: { point: PointType; cell?: CellType; refEvaluation?: RefEvaluation }): string;
 }
 
@@ -195,16 +181,12 @@ export class Table implements UserTable {
   public maxNumRows: number;
   public minNumCols: number;
   public maxNumCols: number;
-  public totalWidth: number = 0;
-  public totalHeight: number = 0;
-  public headerWidth: number = 0;
-  public headerHeight: number = 0;
   public sheetId: number = 0;
   public sheetName: string = '';
   public prevSheetName: string = '';
   public status: 0 | 1 | 2 = 0; // 0: not initialized, 1: initialized, 2: formula absoluted
   public wire: Wire;
-  public idsToBeAbsoluted: Id[] = [];
+  public idsToBeIdentified: Id[] = [];
 
   private version = 0;
   private idMatrix: IdMatrix;
@@ -216,8 +198,6 @@ export class Table implements UserTable {
     maxNumRows = -1,
     minNumCols = 1,
     maxNumCols = -1,
-    headerWidth = HEADER_WIDTH,
-    headerHeight = HEADER_HEIGHT,
     sheetName,
     hub = createWire({}),
   }: Props) {
@@ -227,10 +207,32 @@ export class Table implements UserTable {
     this.maxNumRows = maxNumRows || 0;
     this.minNumCols = minNumCols || 0;
     this.maxNumCols = maxNumCols || 0;
-    this.headerHeight = headerHeight;
-    this.headerWidth = headerWidth;
     this.sheetName = sheetName || '';
     this.wire = hub;
+  }
+
+  get headerHeight() {
+    return this.getCellByPoint({ y: 0, x: 0 }, 'SYSTEM')?.height || HEADER_HEIGHT;
+  }
+
+  setHeaderHeight(height: number, historicize = true) {
+    return this.update({
+      diff: { 0: { height } },
+      partial: true,
+      historicize,
+    });
+  }
+
+  get headerWidth() {
+    return this.getCellByPoint({ y: 0, x: 0 }, 'SYSTEM')?.width || HEADER_WIDTH;
+  }
+
+  setHeaderWidth(width: number, historicize = true) {
+    return this.update({
+      diff: { 0: { width } },
+      partial: true,
+      historicize,
+    });
   }
 
   get isInitialized() {
@@ -258,7 +260,7 @@ export class Table implements UserTable {
   }
 
   public identifyFormula() {
-    this.idsToBeAbsoluted.forEach((id) => {
+    this.idsToBeIdentified.forEach((id) => {
       const cell = this.wire.data[id];
       if (cell?.system?.sheetId == null) {
         return;
@@ -268,7 +270,7 @@ export class Table implements UserTable {
         dependency: id,
       });
     });
-    this.idsToBeAbsoluted = [];
+    this.idsToBeIdentified = [];
     this.status = 2;
   }
 
@@ -278,15 +280,19 @@ export class Table implements UserTable {
 
   public getTableBySheetName(sheetName: string) {
     const sheetId = this.wire.sheetIdsByName[sheetName];
+    console.log('sheetId', sheetId);
     return this.getTableBySheetId(sheetId);
   }
   public getTableBySheetId(sheetId: number) {
-    return this.wire.contextsBySheetId[sheetId]?.store?.table;
+    return this.wire.contextsBySheetId[sheetId]?.store?.tableReactive?.current;
   }
 
   public initialize(cells: CellsByAddressType) {
     if (this.status > 1) {
       return;
+    }
+    if (cells[0] == null) {
+      cells[0] = { width: HEADER_WIDTH, height: HEADER_HEIGHT };
     }
     const auto = getMaxSizesFromCells(cells);
     const changedAt = new Date();
@@ -354,7 +360,7 @@ export class Table implements UserTable {
         } as CellType;
 
         if (stacked?.value?.startsWith?.('=')) {
-          this.idsToBeAbsoluted.push(id);
+          this.idsToBeIdentified.push(id);
         }
         if (y === 0) {
           if (stacked.width == null) {
@@ -373,7 +379,6 @@ export class Table implements UserTable {
         this.wire.data[id] = stacked;
       }
     }
-    this.setTotalSize();
     this.status = 1; // initialized
     this.wire.sheetIdsByName[this.sheetName] = this.sheetId;
   }
@@ -393,14 +398,15 @@ export class Table implements UserTable {
     let width = 0,
       height = 0;
     for (let x = left || 1; x < right; x++) {
-      width += this.getByPoint({ y: 0, x })?.width || DEFAULT_WIDTH;
+      width += this.getCellByPoint({ y: 0, x }, 'SYSTEM')?.width || DEFAULT_WIDTH;
     }
     for (let y = top || 1; y < bottom; y++) {
-      height += this.getByPoint({ y, x: 0 })?.height || DEFAULT_HEIGHT;
+      height += this.getCellByPoint({ y, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
     }
     return { width, height };
   }
-  private setTotalSize() {
+
+  public getTotalSize() {
     const { bottom, right } = this.area;
     const { width, height } = this.getRectSize({
       top: 1,
@@ -408,23 +414,29 @@ export class Table implements UserTable {
       bottom: bottom + 1,
       right: right + 1,
     });
-    this.totalWidth = width + this.headerWidth;
-    this.totalHeight = height + this.headerHeight;
+    return {
+      totalWidth: width + this.headerWidth,
+      totalHeight: height + this.headerHeight,
+    };
   }
 
-  public clone(keepAddressCache = true) {
+  public refresh(keepAddressCache = true): Table {
     this.incrementVersion();
-    const copied: Table = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
-    copied.changedAt = new Date();
-    copied.lastChangedAt = this.changedAt;
-    copied.setTotalSize();
-    copied.clearSolvedCaches();
+    this.lastChangedAt = this.changedAt;
+    this.changedAt = new Date();
+
+    this.clearSolvedCaches();
 
     if (!keepAddressCache) {
       // force reset
-      copied.addressCaches.clear();
+      this.addressCaches.clear();
     }
-    return copied;
+    return this;
+  }
+
+  public clone(keepAddressCache = true): Table {
+    const copied: Table = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
+    return copied.refresh(keepAddressCache);
   }
 
   public getPointById(
@@ -467,7 +479,7 @@ export class Table implements UserTable {
         }
       }
     }
-    return { y: 0, x: 0, absCol, absRow };
+    return { y: -1, x: -1, absCol, absRow };
   }
 
   public getAddressById(id: Id, slideY = 0, slideX = 0): string | undefined {
@@ -508,7 +520,7 @@ export class Table implements UserTable {
     };
   }
 
-  public getByPoint(point: PointType) {
+  public getCellByPoint(point: PointType, refEvaluation: RefEvaluation = 'COMPLETE', raise = false) {
     const { y, x } = point;
     if (y === -1 || x === -1) {
       return undefined;
@@ -517,8 +529,23 @@ export class Table implements UserTable {
     if (id == null) {
       return undefined;
     }
-    const value = this.wire.data[id];
-    return value;
+    const cell = this.wire.data[id];
+    if (cell == null) {
+      return undefined;
+    }
+    const value = solveFormula({
+      value: cell.value,
+      table: this,
+      raise,
+      refEvaluation,
+      origin: point,
+    });
+    return { ...cell, value } as CellType;
+  }
+
+  public getCellByAddress(address: Address, refEvaluation: RefEvaluation = 'COMPLETE', raise = false) {
+    const point = a2p(address);
+    return this.getCellByPoint(point, refEvaluation, raise);
   }
 
   public getById(id: Id) {
@@ -557,8 +584,8 @@ export class Table implements UserTable {
 
   public getFieldMatrix({
     area,
-    key = 'value',
-    refEvaluation = 'complete',
+    field = 'value',
+    refEvaluation = 'COMPLETE',
     raise = false,
     filter = noFilter,
   }: GetFieldPropsWithArea = {}) {
@@ -566,17 +593,10 @@ export class Table implements UserTable {
     const matrix = createMatrix(bottom - top + 1, right - left + 1);
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        const cell = this.getByPoint({ y, x }) ?? {};
-        if (!filter(cell)) {
-          continue;
+        const cell = this.getCellByPoint({ y, x }, refEvaluation, raise) ?? {};
+        if (filter(cell)) {
+          matrix[y - top][x - left] = cell[field];
         }
-        matrix[y - top][x - left] = solveFormula({
-          value: cell[key],
-          table: this,
-          raise,
-          refEvaluation,
-          origin: { y, x },
-        });
       }
     }
     return matrix;
@@ -584,24 +604,18 @@ export class Table implements UserTable {
 
   public getFieldObject({
     area,
-    key = 'value',
-    refEvaluation = 'complete',
+    field = 'value',
+    refEvaluation = 'COMPLETE',
     raise = false,
     filter = noFilter,
   }: GetFieldPropsWithArea = {}) {
-    const result: CellsByAddressType = {};
+    const result: { [Address: Address]: any } = {};
     const { top, left, bottom, right } = area ?? this.area;
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        const cell = this.getByPoint({ y, x });
-        if (cell != null && filter(cell)) {
-          result[p2a({ y, x })] = solveFormula({
-            value: cell[key],
-            table: this,
-            raise,
-            refEvaluation,
-            origin: { y, x },
-          });
+        const cell = this.getCellByPoint({ y, x }, refEvaluation, raise) ?? {};
+        if (filter(cell)) {
+          result[p2a({ y, x })] = cell[field];
         }
       }
     }
@@ -609,8 +623,8 @@ export class Table implements UserTable {
   }
 
   public getFieldRows({
-    key = 'value',
-    refEvaluation = 'complete',
+    field = 'value',
+    refEvaluation = 'COMPLETE',
     raise = false,
     filter = noFilter,
   }: GetFieldProps = {}) {
@@ -620,15 +634,9 @@ export class Table implements UserTable {
       const row: CellsByAddressType = {};
       result.push(row);
       for (let x = left; x <= right; x++) {
-        const cell = this.getByPoint({ y: y - top, x: x - left });
-        if (cell != null && filter(cell)) {
-          row[x2c(x) || y2r(y)] = solveFormula({
-            value: cell[key],
-            table: this,
-            raise,
-            refEvaluation,
-            origin: { y, x },
-          });
+        const cell = this.getCellByPoint({ y, x }, refEvaluation, raise) ?? {};
+        if (filter(cell)) {
+          row[x2c(x)] = cell[field];
         }
       }
     }
@@ -636,8 +644,8 @@ export class Table implements UserTable {
   }
 
   public getFieldCols({
-    key = 'value',
-    refEvaluation = 'complete',
+    field = 'value',
+    refEvaluation = 'COMPLETE',
     raise = false,
     filter = noFilter,
   }: GetFieldProps = {}) {
@@ -647,15 +655,9 @@ export class Table implements UserTable {
       const col: CellsByAddressType = {};
       result.push(col);
       for (let y = top; y <= bottom; y++) {
-        const cell = this.getByPoint({ y: y - top, x: x - left });
-        if (cell != null && filter(cell)) {
-          col[y2r(y) || x2c(x)] = solveFormula({
-            value: cell[key],
-            table: this,
-            raise,
-            refEvaluation,
-            origin: { y, x },
-          });
+        const cell = this.getCellByPoint({ y, x }, refEvaluation, raise) ?? {};
+        if (filter(cell)) {
+          col[y2r(y)] = cell[field];
         }
       }
     }
@@ -664,7 +666,7 @@ export class Table implements UserTable {
 
   public getMatrix({
     area,
-    refEvaluation = 'complete',
+    refEvaluation = 'SYSTEM',
     raise = false,
     filter = noFilter,
   }: GetPropsWithArea = {}): (CellType | null)[][] {
@@ -677,24 +679,15 @@ export class Table implements UserTable {
     const matrix = createMatrix(bottom - top + 1, right - left + 1);
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        const cell = this.getByPoint({ y, x });
-        if (cell != null && filter(cell)) {
-          matrix[y - top][x - left] = {
-            ...cell,
-            value: solveFormula({
-              value: cell?.value,
-              table: this,
-              raise,
-              refEvaluation,
-              origin: { y, x },
-            }),
-          };
+        const cell = this.getCellByPoint({ y, x }, refEvaluation, raise) ?? {};
+        if (filter(cell)) {
+          matrix[y - top][x - left] = cell;
         }
       }
     }
     return matrix;
   }
-  public getObject({ refEvaluation = 'complete', area, raise = false, filter = noFilter }: GetPropsWithArea = {}) {
+  public getObject({ refEvaluation = 'SYSTEM', area, raise = false, filter = noFilter }: GetPropsWithArea = {}) {
     const result: CellsByAddressType = {};
     const { top, left, bottom, right } = area || {
       top: 1,
@@ -704,66 +697,39 @@ export class Table implements UserTable {
     };
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        const cell = this.getByPoint({ y, x });
-        if (cell != null && filter(cell)) {
-          result[p2a({ y, x })] = {
-            ...cell,
-            value: solveFormula({
-              value: cell?.value,
-              table: this,
-              raise,
-              refEvaluation,
-              origin: { y, x },
-            }),
-          };
+        const cell = this.getCellByPoint({ y, x }, refEvaluation, raise) ?? {};
+        if (filter(cell)) {
+          result[p2a({ y, x })] = cell;
         }
       }
     }
     return result;
   }
-  public getRows({ refEvaluation = 'complete', raise = false, filter = noFilter }: GetProps = {}) {
+  public getRows({ refEvaluation = 'COMPLETE', raise = false, filter = noFilter }: GetProps = {}) {
     const result: CellsByAddressType[] = [];
     const { top, left, bottom, right } = this.area;
     for (let y = top; y <= bottom; y++) {
       const row: CellsByAddressType = {};
       result.push(row);
       for (let x = left; x <= right; x++) {
-        const cell = this.getByPoint({ y: y - top, x: x - left });
-        if (cell != null && filter(cell)) {
-          row[x2c(x) || y2r(y)] = {
-            ...cell,
-            value: solveFormula({
-              value: cell?.value,
-              table: this,
-              raise,
-              refEvaluation,
-              origin: { y, x },
-            }),
-          };
+        const cell = this.getCellByPoint({ y: y - top, x: x - left }, refEvaluation, raise) ?? {};
+        if (filter(cell)) {
+          row[x2c(x)] = cell;
         }
       }
     }
     return result;
   }
-  public getCols({ refEvaluation = 'complete', raise = false, filter = noFilter }: GetProps = {}) {
+  public getCols({ refEvaluation = 'COMPLETE', raise = false, filter = noFilter }: GetProps = {}) {
     const result: CellsByAddressType[] = [];
     const { top, left, bottom, right } = this.area;
     for (let x = left; x <= right; x++) {
       const col: CellsByAddressType = {};
       result.push(col);
       for (let y = top; y <= bottom; y++) {
-        const cell = this.getByPoint({ y: y - top, x: x - left });
-        if (cell != null && filter(cell)) {
-          col[y2r(y) || x2c(x)] = {
-            ...cell,
-            value: solveFormula({
-              value: cell?.value,
-              table: this,
-              raise,
-              refEvaluation,
-              origin: { y, x },
-            }),
-          };
+        const cell = this.getCellByPoint({ y: y - top, x: x - left }, refEvaluation, raise) ?? {};
+        if (filter(cell)) {
+          col[y2r(y)] = cell;
         }
       }
     }
@@ -850,8 +816,30 @@ export class Table implements UserTable {
     if (cell?.system == null) {
       return null;
     }
-    cell.system!.changedAt = changedAt || new Date();
+    cell.system!.changedAt = changedAt ?? new Date();
     return cell;
+  }
+
+  private getUpdatedArea(diff: CellsByAddressType): AreaType {
+    let minY = Infinity;
+    let minX = Infinity;
+    let maxY = -Infinity;
+    let maxX = -Infinity;
+
+    Object.keys(diff).forEach((address) => {
+      const point = a2p(address);
+      minY = Math.min(minY, point.y);
+      minX = Math.min(minX, point.x);
+      maxY = Math.max(maxY, point.y);
+      maxX = Math.max(maxX, point.x);
+    });
+
+    return {
+      top: minY,
+      left: minX,
+      bottom: maxY,
+      right: maxX,
+    };
   }
 
   private copyCellLayout(cell: CellType | undefined) {
@@ -947,7 +935,7 @@ export class Table implements UserTable {
     });
 
     const srcTableRaw = srcTable.__raw__;
-    const srcContext = this.wire.contextsBySheetId[srcTable.getSheetId()];
+    const srcContext = this.wire.contextsBySheetId[srcTableRaw.sheetId];
     // to src(from)
     putMatrix(srcTableRaw.idMatrix, matrixNew, src, (newId, srcId) => {
       preserver.map[srcId] = newId;
@@ -965,6 +953,7 @@ export class Table implements UserTable {
         operation: operation.MoveFrom,
       });
       srcTableRaw.wire.data[newId] = {
+        value: null,
         ...patch,
         system: {
           id: newId,
@@ -976,19 +965,18 @@ export class Table implements UserTable {
       return true;
     });
 
-    this.clearAddressCaches();
     const resolvedDiff = preserver.resolveDependents();
     Object.assign(diffBefore, resolvedDiff);
     if (srcTable !== this && srcContext !== null) {
-      const { dispatch } = srcContext;
-      requestAnimationFrame(() => dispatch(updateTable(srcTableRaw)));
+      const { sync } = srcContext;
+      sync(updateTable(srcTableRaw));
     }
 
     if (historicize) {
       this.pushHistory({
         applyed: true,
         operation: 'MOVE',
-        srcSheetId: srcTable.getSheetId(),
+        srcSheetId: srcTableRaw.sheetId,
         dstSheetId: this.sheetId,
         undoReflection,
         redoReflection,
@@ -1002,7 +990,15 @@ export class Table implements UserTable {
         lostRows,
       });
     }
-    return this.clone(false);
+
+    // Call onEdit with cloned tables containing moved areas
+    if (this.wire.onEdit) {
+      // Clone srcTable with from area
+      this.wire.onEdit({ table: srcTable.__raw__.trim(src) });
+      this.wire.onEdit({ table: this.__raw__.trim(dst) });
+    }
+
+    return this.refresh(false);
   }
 
   public copy({
@@ -1036,10 +1032,13 @@ export class Table implements UserTable {
         const slideY = isXSheet ? 0 : toY - fromY;
         const slideX = isXSheet ? 0 : toX - fromX;
         const cell: CellType = {
-          ...srcTable.getByPoint({
-            y: topFrom + (i % maxHeight),
-            x: leftFrom + (j % maxWidth),
-          }),
+          ...srcTable.getCellByPoint(
+            {
+              y: topFrom + (i % maxHeight),
+              x: leftFrom + (j % maxWidth),
+            },
+            'SYSTEM',
+          ),
         };
         const dstPoint = { y: toY, x: toX };
         const value = identifyFormula(cell?.value, {
@@ -1051,7 +1050,7 @@ export class Table implements UserTable {
         this.setChangedAt(cell, changedAt);
         const address = p2a(dstPoint);
         if (onlyValue) {
-          const dstCell = this.getByPoint(dstPoint);
+          const dstCell = this.getCellByPoint(dstPoint, 'SYSTEM');
           cell.style = dstCell?.style;
           cell.justifyContent = dstCell?.justifyContent;
           cell.alignItems = dstCell?.alignItems;
@@ -1070,7 +1069,7 @@ export class Table implements UserTable {
   }
 
   public getPolicyByPoint(point: PointType): PolicyType {
-    const cell = this.getByPoint(point);
+    const cell = this.getCellByPoint(point, 'SYSTEM');
     if (cell?.policy == null) {
       return defaultPolicy;
     }
@@ -1102,7 +1101,7 @@ export class Table implements UserTable {
       const point = a2p(address);
       const id = this.getId(point);
       const original = this.wire.data[id]!;
-      let patch = { ...diff[address] };
+      let patch: Record<string, any> = { ...diff[address] };
       if (operator === 'USER' && operation.hasOperation(original.prevention, operation.Update)) {
         return;
       }
@@ -1154,6 +1153,13 @@ export class Table implements UserTable {
         diffAfter[id] = this.wire.data[id] = patch;
       }
     });
+
+    // Call onEdit with cloned table containing updated area
+    if (this.wire.onEdit && Object.keys(diff).length > 0) {
+      const updatedArea = this.getUpdatedArea(diff);
+      this.wire.onEdit({ table: this.__raw__.trim(updatedArea) });
+    }
+
     //this.clearSolvedCaches();
     return {
       diffBefore,
@@ -1201,7 +1207,7 @@ export class Table implements UserTable {
         partial,
       });
     }
-    return this.clone(true);
+    return this.refresh(true);
   }
 
   public writeRawCellMatrix({
@@ -1240,7 +1246,7 @@ export class Table implements UserTable {
         const parsed = this.parse(point, newCell.value ?? '');
         parsed.style = { ...newCell.style, ...parsed.style };
         if (onlyValue) {
-          const currentCell = this.getByPoint(point);
+          const currentCell = this.getCellByPoint(point, 'SYSTEM');
           parsed.style = currentCell?.style;
           parsed.justifyContent = currentCell?.justifyContent;
           parsed.alignItems = currentCell?.alignItems;
@@ -1284,7 +1290,7 @@ export class Table implements UserTable {
   }) {
     const { point, value } = props;
     const parsed = this.parse(point, value ?? '');
-    const current = this.getByPoint(point);
+    const current = this.getCellByPoint(point, 'RAW');
     if (current?.value === parsed.value) {
       // no change
       return this;
@@ -1298,7 +1304,7 @@ export class Table implements UserTable {
     });
   }
 
-  public insertRowsAndUpdate({
+  public insertRows({
     y,
     numRows,
     baseY,
@@ -1312,37 +1318,9 @@ export class Table implements UserTable {
     y: number;
     numRows: number;
     baseY: number;
-    diff: CellsByAddressType;
+    diff?: CellsByAddressType;
     partial?: boolean;
     updateChangedAt?: boolean;
-    operator?: OperatorType;
-    undoReflection?: StorePatchType;
-    redoReflection?: StorePatchType;
-  }) {
-    const returned = this.insertRows({
-      y,
-      numRows,
-      baseY,
-      undoReflection,
-      redoReflection,
-    });
-
-    Object.assign(this.wire.lastHistory!, this._update({ diff, partial, updateChangedAt, operator }), { partial });
-
-    return returned;
-  }
-
-  public insertRows({
-    y,
-    numRows,
-    baseY,
-    // operator = 'SYSTEM',
-    undoReflection,
-    redoReflection,
-  }: {
-    y: number;
-    numRows: number;
-    baseY: number;
     operator?: OperatorType;
     undoReflection?: StorePatchType;
     redoReflection?: StorePatchType;
@@ -1359,7 +1337,7 @@ export class Table implements UserTable {
       for (let j = 0; j < numCols; j++) {
         const id = this.generateId();
         row.push(id);
-        const cell = this.getByPoint({ y: baseY, x: j });
+        const cell = this.getCellByPoint({ y: baseY, x: j }, 'SYSTEM');
         const copied = this.copyCellLayout(cell);
         this.wire.data[id] = {
           ...copied,
@@ -1387,7 +1365,24 @@ export class Table implements UserTable {
       numRows,
       idMatrix: rows,
     });
-    return this.clone(false);
+
+    // If diff is provided, update the cells after insertion
+    if (diff) {
+      Object.assign(this.wire.lastHistory!, this._update({ diff, partial, updateChangedAt, operator }), { partial });
+    }
+    if (this.wire.onInsertRows) {
+      const cloned = this.clone();
+      cloned.area = {
+        top: y,
+        bottom: y + numRows - 1,
+        left: this.area.left,
+        right: this.area.right,
+      };
+      cloned.addressCaches = new Map();
+      this.wire.onInsertRows({ table: cloned, y, numRows });
+    }
+
+    return this.refresh(false);
   }
   public removeRows({
     y,
@@ -1409,13 +1404,15 @@ export class Table implements UserTable {
 
     const preserver = new ReferencePreserver(this);
     const ys: number[] = [];
+    const backup = this.idMatrix.map((ids) => [...ids]); // backup before deletion
+
     for (let yi = y; yi < y + numRows; yi++) {
-      const cell = this.getByPoint({ y: yi, x: 0 });
+      const cell = this.getCellByPoint({ y: yi, x: 0 }, 'SYSTEM');
       if (operator === 'USER' && operation.hasOperation(cell?.prevention, operation.RemoveRows)) {
         console.warn(`Cannot delete row ${yi}.`);
         return this;
       }
-      for (let xi = 1; xi < this.getNumCols(); xi++) {
+      for (let xi = 1; xi <= this.getNumCols(); xi++) {
         const id = this.getId({ y: yi, x: xi });
         if (id == null) {
           continue;
@@ -1431,7 +1428,8 @@ export class Table implements UserTable {
       deleted.unshift(row[0]);
     });
     this.area.bottom -= ys.length;
-    const diffBefore = preserver.resolveDependents();
+
+    const diffBefore = preserver.resolveDependents('removeRows');
 
     this.pushHistory({
       applyed: true,
@@ -1444,50 +1442,41 @@ export class Table implements UserTable {
       diffBefore,
       deleted,
     });
-    return this.clone(false);
-  }
 
-  public insertColsAndUpdate({
-    x,
-    numCols,
-    baseX,
-    diff,
-    partial,
-    updateChangedAt,
-    undoReflection,
-    redoReflection,
-  }: {
-    x: number;
-    numCols: number;
-    baseX: number;
-    diff: CellsByAddressType;
-    partial?: boolean;
-    updateChangedAt?: boolean;
-    undoReflection?: StorePatchType;
-    redoReflection?: StorePatchType;
-  }) {
-    const returned = this.insertCols({
-      x,
-      numCols,
-      baseX,
-      undoReflection,
-      redoReflection,
-    });
+    if (this.wire.onRemoveRows) {
+      const cloned = this.clone();
+      cloned.idMatrix = backup;
+      cloned.area = {
+        top: y,
+        bottom: y + numRows - 1,
+        left: this.area.left,
+        right: this.area.right,
+      };
+      cloned.addressCaches = new Map();
+      this.wire.onRemoveRows({ table: cloned, ys: ys.reverse() });
+    }
 
-    Object.assign(this.wire.lastHistory!, this._update({ diff, partial, updateChangedAt }), { partial });
-    return returned;
+    return this.refresh(false);
   }
 
   public insertCols({
     x,
     numCols,
     baseX,
+    diff,
+    partial,
+    updateChangedAt,
+    operator = 'SYSTEM',
     undoReflection,
     redoReflection,
   }: {
     x: number;
     numCols: number;
     baseX: number;
+    diff?: CellsByAddressType;
+    partial?: boolean;
+    updateChangedAt?: boolean;
+    operator?: OperatorType;
     undoReflection?: StorePatchType;
     redoReflection?: StorePatchType;
   }) {
@@ -1503,7 +1492,7 @@ export class Table implements UserTable {
       for (let j = 0; j < numCols; j++) {
         const id = this.generateId();
         row.push(id);
-        const cell = this.getByPoint({ y: i, x: baseX });
+        const cell = this.getCellByPoint({ y: i, x: baseX }, 'SYSTEM');
         const copied = this.copyCellLayout(cell);
         this.idMatrix[i].splice(x, 0, id);
         this.wire.data[id] = {
@@ -1531,7 +1520,23 @@ export class Table implements UserTable {
       numCols,
       idMatrix: rows,
     });
-    return this.clone(false);
+
+    // If diff is provided, update the cells after insertion
+    if (diff) {
+      Object.assign(this.wire.lastHistory!, this._update({ diff, partial, updateChangedAt, operator }), { partial });
+    }
+    if (this.wire.onInsertCols) {
+      const cloned = this.clone();
+      cloned.area = {
+        top: this.area.top,
+        bottom: this.area.bottom,
+        left: x,
+        right: x + numCols - 1,
+      };
+      cloned.addressCaches = new Map();
+      this.wire.onInsertCols({ table: cloned, x, numCols });
+    }
+    return this.refresh(false);
   }
   public removeCols({
     x,
@@ -1553,13 +1558,15 @@ export class Table implements UserTable {
 
     const preserver = new ReferencePreserver(this);
     const xs: number[] = [];
+    const backup = this.idMatrix.map((ids) => [...ids]); // backup before deletion
+
     for (let xi = x; xi < x + numCols; xi++) {
-      const cell = this.getByPoint({ y: 0, x: xi });
+      const cell = this.getCellByPoint({ y: 0, x: xi }, 'SYSTEM');
       if (operator === 'USER' && operation.hasOperation(cell?.prevention, operation.RemoveCols)) {
         console.warn(`Cannot delete col ${xi}.`);
         continue;
       }
-      for (let yi = 1; yi < this.getNumRows(); yi++) {
+      for (let yi = 1; yi <= this.getNumRows(); yi++) {
         const id = this.getId({ y: yi, x: xi });
         if (id == null) {
           continue;
@@ -1580,7 +1587,7 @@ export class Table implements UserTable {
       });
     });
     this.area.right -= xs.length;
-    const diffBefore = preserver.resolveDependents();
+    const diffBefore = preserver.resolveDependents('removeCols');
 
     this.pushHistory({
       applyed: true,
@@ -1593,7 +1600,20 @@ export class Table implements UserTable {
       diffBefore,
       deleted,
     });
-    return this.clone(false);
+
+    if (this.wire.onRemoveCols) {
+      const cloned = this.clone();
+      cloned.idMatrix = backup;
+      cloned.area = {
+        top: this.area.top,
+        bottom: this.area.bottom,
+        left: x,
+        right: x + numCols - 1,
+      };
+      cloned.addressCaches = new Map();
+      this.wire.onRemoveCols({ table: cloned, xs: xs.reverse() });
+    }
+    return this.refresh(false);
   }
   public getHistories() {
     return [...this.wire.histories];
@@ -1613,29 +1633,29 @@ export class Table implements UserTable {
   }
 
   public parse(point: PointType, value: string) {
-    const cell = this.getByPoint(point) ?? {};
+    const cell = this.getCellByPoint(point, 'SYSTEM') ?? {};
     const parser = this.parsers[cell.parser ?? ''] ?? defaultParser;
     return parser.call(value, cell);
   }
 
   public render(props: RendererCallProps) {
-    const { point, writer } = props;
-    const cell = this.getByPoint(point) ?? {};
+    const { point, sync } = props;
+    const cell = this.getCellByPoint(point, 'SYSTEM') ?? {};
     const renderer = this.renderers[cell.renderer ?? ''] ?? defaultRenderer;
-    return renderer.call({ table: this, point, writer });
+    return renderer.call({ table: this, point, sync });
   }
 
   public stringify({
     point,
     cell,
-    refEvaluation = 'complete',
+    refEvaluation = 'COMPLETE',
   }: {
     point: PointType;
     cell?: CellType;
     refEvaluation?: RefEvaluation;
   }) {
     if (cell == null) {
-      cell = this.getByPoint(point);
+      cell = this.getCellByPoint(point, refEvaluation, true);
     }
     if (cell == null) {
       return '';
@@ -1644,16 +1664,16 @@ export class Table implements UserTable {
     const s = renderer.stringify({ value: cell.value, cell, table: this, point });
 
     if (s[0] === '=') {
-      if (refEvaluation === 'system') {
+      if (refEvaluation === 'SYSTEM') {
         return s; // do not evaluate system references
       }
-      if (refEvaluation === 'raw') {
+      if (refEvaluation === 'RAW') {
         const lexer = new Lexer(s.substring(1));
         lexer.tokenize();
         return '=' + lexer.display({ table: this });
       }
       const solved = solveFormula({ value: s, table: this, raise: false, refEvaluation, origin: point });
-      const value = stripTable(solved, 0, 0, false);
+      const value = stripTable({ value: solved, raise: false });
       return renderer.stringify({ value, cell, table: this, point });
     }
     return s;
@@ -1671,13 +1691,15 @@ export class Table implements UserTable {
     if (!partial) {
       //Object.assign(this.wire.data, diff);
       Object.keys(diff).forEach((id) => {
-        const newCell = diff[id];
-        this.wire.data[id] = { ...newCell };
+        const cell = diff[id] ?? {};
+        this.setChangedAt(cell);
+        this.wire.data[id] = { ...cell };
       });
       return;
     }
     Object.keys(diff).map((id) => {
-      const cell = diff[id];
+      const cell = diff[id] ?? {};
+      this.setChangedAt(cell);
       this.wire.data[id] = { ...this.getById(id), ...cell };
     });
   }
@@ -1688,17 +1710,22 @@ export class Table implements UserTable {
     }
     const history = this.wire.histories[this.wire.historyIndex--];
     history.applyed = false;
-    this.wire.currentHistory = history;
+    this.wire.currentHistory = this.wire.histories[this.wire.historyIndex];
+
     const srcTable = this.getTableBySheetId(history.srcSheetId);
     const dstTable = this.getTableBySheetId(history.dstSheetId);
+
+    if (!dstTable) {
+      return { history: null, newTable: this.__raw__ };
+    }
+
     switch (history.operation) {
       case 'UPDATE':
-        // diffBefore is guaranteed as total of cell (not partial)
         dstTable.applyDiff(history.diffBefore, false);
         break;
       case 'INSERT_ROWS': {
         if (history.diffBefore) {
-          dstTable.applyDiff(history.diffBefore, false);
+          dstTable.applyDiff(history.diffBefore, history.partial);
         }
         const { height } = matrixShape({ matrix: history.idMatrix });
         dstTable.idMatrix.splice(history.y, height);
@@ -1707,7 +1734,7 @@ export class Table implements UserTable {
       }
       case 'INSERT_COLS': {
         if (history.diffBefore) {
-          this.applyDiff(history.diffBefore, false);
+          dstTable.applyDiff(history.diffBefore, false);
         }
         const { width } = matrixShape({ matrix: history.idMatrix });
         dstTable.idMatrix.forEach((row) => {
@@ -1743,12 +1770,14 @@ export class Table implements UserTable {
           matrix: history.matrixFrom,
           base: -1,
         });
-        putMatrix(srcTable.idMatrix, history.matrixFrom, {
-          top: yFrom,
-          left: xFrom,
-          bottom: yFrom + rows,
-          right: xFrom + cols,
-        });
+        if (srcTable) {
+          putMatrix(srcTable.idMatrix, history.matrixFrom, {
+            top: yFrom,
+            left: xFrom,
+            bottom: yFrom + rows,
+            right: xFrom + cols,
+          });
+        }
         putMatrix(dstTable.idMatrix, history.matrixTo, {
           top: yTo,
           left: xTo,
@@ -1764,11 +1793,11 @@ export class Table implements UserTable {
         break;
       }
     }
+    this.refresh(!shouldTracking(history.operation));
     return {
       history,
-      newTable: this.clone(!shouldTracking(history.operation)),
-      callback: ({ table: { wire } }: StoreType) => {
-        wire.transmit(history.undoReflection?.transmit);
+      callback: ({ tableReactive: tableRef }: StoreType) => {
+        tableRef.current?.wire.transmit(history.undoReflection?.transmit);
       },
     };
   }
@@ -1783,6 +1812,10 @@ export class Table implements UserTable {
 
     const srcTable = this.getTableBySheetId(history.srcSheetId);
     const dstTable = this.getTableBySheetId(history.dstSheetId);
+
+    if (!dstTable) {
+      return { history: null, newTable: this.__raw__ };
+    }
 
     switch (history.operation) {
       case 'UPDATE':
@@ -1830,14 +1863,16 @@ export class Table implements UserTable {
       }
       case 'MOVE': {
         const { src, dst } = history;
-        dstTable.move({ srcTable, src, dst, operator: 'USER', historicize: false });
+        if (srcTable) {
+          dstTable.move({ srcTable, src, dst, operator: 'USER', historicize: false });
+        }
       }
     }
+    this.refresh(!shouldTracking(history.operation));
     return {
       history,
-      newTable: this.clone(!shouldTracking(history.operation)),
-      callback: ({ table: { wire } }: StoreType) => {
-        wire.transmit(history.redoReflection?.transmit);
+      callback: ({ tableReactive: tableRef }: StoreType) => {
+        tableRef.current?.wire.transmit(history.redoReflection?.transmit);
       },
     };
   }

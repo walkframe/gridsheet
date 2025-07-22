@@ -1,0 +1,277 @@
+import Case10 from './case10.component';
+
+# Inventory Management with Event Handlers
+
+This demo showcases comprehensive event handling in a real-world inventory management application.
+
+It demonstrates how to build an interactive inventory system with real-time stock monitoring, automatic value calculations, and comprehensive activity tracking.
+
+The system includes custom renderers for stock levels and categories, along with event-driven inventory analytics.
+
+<Case10 />
+
+## Implementation Guide
+
+### Inventory Management Overview
+This comprehensive inventory management system demonstrates how GridSheet can be used to build sophisticated business applications with real-time event monitoring. The system combines stock tracking, value calculations, and event-driven analytics to create a powerful inventory management tool.
+
+### Event-Driven Architecture
+
+#### Real-time Inventory Updates
+The system uses event handlers to automatically update inventory statistics whenever data changes:
+- **Product Count**: Total number of products in inventory
+- **Low Stock Alerts**: Number of products with stock levels ≤ 10
+- **Total Value**: Calculated inventory value (stock × unit price)
+- **Category Count**: Number of unique product categories
+
+#### Event Handler Integration
+All inventory operations trigger statistics updates:
+
+```tsx
+const updateInventoryStats = (table: any) => {
+  const data = table.getFieldMatrix();
+  let totalItems = 0;
+  let lowStockItems = 0;
+  let totalValue = 0;
+  const categories = new Set();
+
+  for (let row = 1; row < data.length; row++) {
+    if (data[row][0]) { // Product name exists
+      totalItems++;
+      if (data[row][2] && data[row][2] <= 10) lowStockItems++;
+      if (data[row][2] && data[row][3]) {
+        totalValue += (data[row][2] * data[row][3]);
+      }
+      if (data[row][1]) categories.add(data[row][1]);
+    }
+  }
+
+  setInventoryStats({
+    totalItems,
+    lowStockItems,
+    totalValue: Math.round(totalValue),
+    categories: categories.size,
+  });
+};
+
+const hub = useHub({
+  onSave: ({ table, points }) => {
+    addActivityLog(`Inventory data saved at ${Array.isArray(points) ? points.length : 1} position(s)`);
+    updateInventoryStats(table); // Update stats on save
+  },
+  onChange: ({ table, points }) => {
+    addActivityLog(`Inventory updated at ${Array.isArray(points) ? points.length : 1} position(s)`);
+    updateInventoryStats(table); // Update stats on change
+  },
+});
+```
+
+### Custom Renderers
+
+#### Stock Level Renderer
+Visual stock indicators with color-coded status:
+
+```tsx
+const StockRendererMixin: RendererMixinType = {
+  number({ value }: RenderProps<number>) {
+    const color = value <= 10 ? '#e74c3c' : value <= 50 ? '#f39c12' : '#27ae60';
+    const status = value <= 10 ? 'LOW' : value <= 50 ? 'MEDIUM' : 'GOOD';
+    
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px' }}>
+        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: color }} />
+        <span style={{ fontWeight: 'bold', color }}>{value}</span>
+        <span style={{ fontSize: '9px', color: '#666' }}>({status})</span>
+      </div>
+    );
+  },
+};
+```
+
+#### Category Badge Renderer
+Color-coded category indicators with badges:
+
+```tsx
+const CategoryRendererMixin: RendererMixinType = {
+  string({ value }: RenderProps<string>) {
+    const colors = {
+      'Electronics': '#3498db',
+      'Clothing': '#e67e22',
+      'Books': '#9b59b6',
+      'Home': '#1abc9c',
+      'Sports': '#e74c3c',
+    };
+    const color = colors[value as keyof typeof colors] || '#95a5a6';
+    
+    return (
+      <span style={{
+        backgroundColor: color,
+        color: 'white',
+        padding: '1px 6px',
+        borderRadius: '8px',
+        fontSize: '9px',
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+      }}>
+        {value}
+      </span>
+    );
+  },
+};
+```
+
+### Inventory Dashboard
+
+#### Real-time Statistics
+The inventory dashboard provides instant feedback on inventory status:
+- **Total Products**: Count of all products in inventory
+- **Low Stock Items**: Number of products requiring restocking
+- **Total Value**: Calculated inventory value in dollars
+- **Categories**: Number of unique product categories
+
+#### Automatic Updates
+Statistics update automatically when:
+- Products are added or removed
+- Stock levels are modified
+- Unit prices are changed
+- Categories are updated
+
+### Activity Logging System
+
+#### Comprehensive Monitoring
+The system logs all inventory operations:
+- **Data Changes**: When product information is modified
+- **Selection Events**: Which products are being viewed
+- **Structure Changes**: Product additions and removals
+- **Keyboard Activity**: Editing actions and navigation
+- **System Events**: Initialization and setup activities
+
+#### Activity Tracking
+Real-time activity logs provide:
+- **Timestamp**: Precise timing of each operation
+- **Event Type**: Clear identification of the operation
+- **Context**: Relevant details about the change
+- **User Actions**: Tracking of user interaction patterns
+
+### Visual Design
+
+#### Statistics Cards
+Color-coded metric cards with visual hierarchy:
+- **Green**: Total products and positive metrics
+- **Red**: Low stock items requiring attention
+- **Blue**: Total inventory value
+- **Yellow**: Category count and neutral metrics
+
+#### Stock Visualization
+Visual stock indicators with:
+- **Color Coding**: Red (≤10), Yellow (11-50), Green (>50)
+- **Status Labels**: Clear text indicators (LOW, MEDIUM, GOOD)
+- **Compact Design**: Efficient use of space
+- **Responsive Layout**: Adapts to different screen sizes
+
+### Performance Optimization
+
+#### Efficient Statistics Updates
+- **Selective Updates**: Only recalculate when necessary
+- **Error Handling**: Graceful handling of calculation errors
+- **Memory Management**: Efficient state updates
+- **Batch Processing**: Group related updates together
+
+#### Data Processing
+- **Matrix Extraction**: Efficient data retrieval from tables
+- **Type Safety**: Proper type checking for calculations
+- **Error Recovery**: Fallback values for invalid data
+- **Performance Monitoring**: Track calculation performance
+
+### Event Handler Patterns
+
+#### Data Event Patterns
+```tsx
+// Monitor inventory changes
+onChange: ({ table, points }) => {
+  addActivityLog(`Inventory updated at ${Array.isArray(points) ? points.length : 1} position(s)`);
+  updateInventoryStats(table); // Update statistics
+},
+
+// Monitor data saves
+onSave: ({ table, points }) => {
+  addActivityLog(`Inventory data saved at ${Array.isArray(points) ? points.length : 1} position(s)`);
+  updateInventoryStats(table); // Update statistics
+},
+```
+
+#### Selection Event Patterns
+```tsx
+// Track user focus
+onSelect: ({ table, points }) => {
+  addActivityLog(`Selected ${Array.isArray(points) ? points.length : 1} item(s)`);
+},
+```
+
+#### Structure Event Patterns
+```tsx
+// Monitor product additions
+onInsertRows: ({ table, y, numRows }) => {
+  addActivityLog(`➕ Added ${numRows} new product(s) to inventory`);
+  updateInventoryStats(table); // Update statistics
+},
+
+// Monitor product removals
+onRemoveRows: ({ table, ys }) => {
+  addActivityLog(`🗑️ Removed ${ys.length} product(s) from inventory`);
+  updateInventoryStats(table); // Update statistics
+},
+```
+
+#### Keyboard Event Patterns
+```tsx
+// Track editing activities
+onKeyUp: (e, points) => {
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    addActivityLog(`⌨️ Editing inventory data`);
+  }
+},
+```
+
+### Best Practices
+
+1. **Event-Driven Design**: Use events to trigger UI updates and statistics
+2. **Real-time Feedback**: Provide immediate visual feedback for user actions
+3. **Performance Monitoring**: Track system performance and user interactions
+4. **Error Handling**: Implement robust error handling for all event handlers
+5. **User Experience**: Design intuitive interfaces with clear visual hierarchy
+6. **Data Integrity**: Ensure statistics calculations are accurate and reliable
+7. **Accessibility**: Make all features accessible to all users
+8. **Responsive Design**: Ensure the interface works across all devices
+9. **Visual Feedback**: Use color coding and status indicators for clarity
+10. **Activity Logging**: Maintain comprehensive logs for debugging and analytics
+
+### Common Use Cases
+
+- **Inventory Management**: Track product stock levels and values
+- **Stock Monitoring**: Monitor low stock items and restocking needs
+- **Value Calculation**: Calculate total inventory value automatically
+- **Category Management**: Organize products by categories
+- **Performance Analytics**: Track inventory turnover and trends
+- **Audit Trails**: Maintain complete activity logs for compliance
+
+### Advanced Features
+
+- **Real-time Collaboration**: Multiple users can manage inventory simultaneously
+- **Advanced Analytics**: Complex inventory metrics and trend analysis
+- **Integration**: Connect with external inventory management systems
+- **Automation**: Automated stock alerts and reorder notifications
+- **Reporting**: Generate detailed inventory reports and analytics
+- **Custom Workflows**: Implement custom inventory processes
+- **Mobile Support**: Responsive design for mobile devices
+
+### Analytics Integration
+
+- **Real-time Updates**: Statistics update immediately when data changes
+- **Performance Metrics**: Track system performance and user interactions
+- **Trend Analysis**: Identify patterns and trends in inventory data
+- **Predictive Analytics**: Forecast stock needs and reorder timing
+- **Custom Metrics**: Implement inventory-specific analytics and KPIs
+- **Export Functionality**: Export inventory data for external reporting
+
+This inventory management system demonstrates how GridSheet's event handling capabilities can be used to build sophisticated, real-time business applications with comprehensive monitoring and analytics. 
