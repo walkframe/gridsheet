@@ -48,20 +48,23 @@ export const StoreObserver: FC<StoreObserverProps> = ({
     }
     const { wire } = table;
     requestAnimationFrame(() => wire.identifyFormula());
-    wire.contextsBySheetId[table.sheetId] = { store, sync: dispatch };
+    wire.contextsBySheetId[table.sheetId] = { store, dispatch };
     wire.transmit();
 
     if (connector) {
       connector.current = {
         tableManager: {
-          instance: table,
+          table,
           sync: (table) => {
             dispatch(updateTable(table as Table));
           },
         },
         storeManager: {
-          instance: store,
-          sync: dispatch,
+          store,
+          sync: (store) => {
+            dispatch(setStore(store));
+          },
+          dispatch,
         },
       };
     }

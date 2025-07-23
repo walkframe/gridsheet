@@ -235,7 +235,7 @@ export class Table implements UserTable {
   }
 
   get isInitialized() {
-    return this.version > 0;
+    return this.status === 2;
   }
 
   get functions() {
@@ -966,8 +966,8 @@ export class Table implements UserTable {
     const resolvedDiff = preserver.resolveDependents();
     Object.assign(diffBefore, resolvedDiff);
     if (srcTable !== this && srcContext !== null) {
-      const { sync } = srcContext;
-      sync(updateTable(srcTableRaw));
+      const { dispatch } = srcContext;
+      dispatch(updateTable(srcTableRaw));
     }
 
     if (historicize) {

@@ -633,8 +633,8 @@ class UndoAction<T extends null> extends CoreAction<T> {
       return store;
     }
     if (history.dstSheetId !== table.sheetId) {
-      const { sync, store: dstStore } = table.wire.contextsBySheetId[history.dstSheetId];
-      sync(setStore({ ...dstStore, ...history.undoReflection }));
+      const { dispatch, store: dstStore } = table.wire.contextsBySheetId[history.dstSheetId];
+      dispatch(setStore({ ...dstStore, ...history.undoReflection }));
       return store;
     }
     return {
@@ -661,8 +661,8 @@ class RedoAction<T extends null> extends CoreAction<T> {
       return store;
     }
     if (history.dstSheetId !== table.sheetId) {
-      const { sync, store: dstStore } = table.wire.contextsBySheetId[history.dstSheetId];
-      sync(setStore({ ...dstStore, ...history.redoReflection }));
+      const { dispatch, store: dstStore } = table.wire.contextsBySheetId[history.dstSheetId];
+      dispatch(setStore({ ...dstStore, ...history.redoReflection }));
       return store;
     }
     return {

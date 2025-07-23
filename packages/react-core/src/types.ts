@@ -145,8 +145,15 @@ export type Manager<T> = {
 };
 
 export type Connector = {
-  tableManager: Manager<UserTable>;
-  storeManager: Manager<StoreType>;
+  tableManager: {
+    table: UserTable;
+    sync: (table: UserTable) => void;
+  };
+  storeManager: {
+    store: StoreType;
+    sync: (store: StoreType) => void;
+    dispatch: Dispatcher;
+  };
 };
 
 export type Props = {
@@ -277,7 +284,7 @@ export type OperationType = number;
 
 export type StoreDispatchType = {
   store: StoreType;
-  sync: Dispatcher;
+  dispatch: Dispatcher;
 };
 export type ContextsBySheetId = { [sheetId: string]: StoreDispatchType }; // id: { store, sync }
 export type SheetIdsByName = { [sheetName: string]: number }; // name: id

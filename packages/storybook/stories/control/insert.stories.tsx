@@ -51,8 +51,8 @@ const InsertComponent: React.FC = () => {
       return;
     }
     const { storeManager } = connector.current;
-    const { instance: store, sync } = storeManager;
-    syncers.insertRowsAbove({ store, sync });
+    const { store, dispatch } = storeManager;
+    syncers.insertRowsAbove({ store, dispatch });
   };
 
   const handleInsertRowsBelow = () => {
@@ -60,8 +60,8 @@ const InsertComponent: React.FC = () => {
       return;
     }
     const { storeManager } = connector.current;
-    const { instance: store, sync } = storeManager;
-    syncers.insertRowsBelow({ store, sync });
+    const { store, dispatch } = storeManager;
+    syncers.insertRowsBelow({ store, dispatch });
   };
 
   const handleInsertColsLeft = () => {
@@ -69,8 +69,8 @@ const InsertComponent: React.FC = () => {
       return;
     }
     const { storeManager } = connector.current;
-    const { instance: store, sync } = storeManager;
-    syncers.insertColsLeft({ store, sync });
+    const { store, dispatch } = storeManager;
+    syncers.insertColsLeft({ store, dispatch });
   };
 
   const handleInsertColsRight = () => {
@@ -78,8 +78,8 @@ const InsertComponent: React.FC = () => {
       return;
     }
     const { storeManager } = connector.current;
-    const { instance: store, sync } = storeManager;
-    syncers.insertColsRight({ store, sync });
+    const { store, dispatch } = storeManager;
+    syncers.insertColsRight({ store, dispatch });
   };
 
   const handleRemoveRows = () => {
@@ -87,8 +87,8 @@ const InsertComponent: React.FC = () => {
       return;
     }
     const { storeManager } = connector.current;
-    const { instance: store, sync } = storeManager;
-    syncers.removeRows({ store, sync });
+    const { store, dispatch } = storeManager;
+    syncers.removeRows({ store, dispatch });
   };
 
   const handleRemoveCols = () => {
@@ -96,8 +96,8 @@ const InsertComponent: React.FC = () => {
       return;
     }
     const { storeManager } = connector.current;
-    const { instance: store, sync } = storeManager;
-    syncers.removeCols({ store, sync });
+    const { store, dispatch } = storeManager;
+    syncers.removeCols({ store, dispatch });
   };
 
   return (

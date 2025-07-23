@@ -111,7 +111,7 @@ export default function RealTimeCollaboration() {
           setTimeout(() => {
             if (connector.current) {
               const { tableManager } = connector.current;
-              const { instance: table, sync } = tableManager;
+              const { table: table, sync } = tableManager;
               const cellAddress = `${String.fromCharCode(64 + newCol)}${newRow}`;
 
               // Select appropriate data based on column
@@ -172,10 +172,10 @@ export default function RealTimeCollaboration() {
               }
 
               // Update the cell
-              const updatedTable = table.update({
+              table.update({
                 diff: { [cellAddress]: { value: newValue } },
               });
-              sync(updatedTable);
+              sync(table);
 
               addActivity(randomUser.name, 'edited cell', cellAddress);
             }
@@ -196,7 +196,7 @@ export default function RealTimeCollaboration() {
       return null;
     }
     const { tableManager } = connector.current;
-    const { instance: table } = tableManager;
+    const { table: table } = tableManager;
     // Simulate getting current user from table context
     return virtualUsers[0]; // For demo, always return Alice
   };
@@ -240,7 +240,7 @@ export default function RealTimeCollaboration() {
                 }
 
                 const { tableManager } = connector.current;
-                const { instance: table } = tableManager;
+                const { table: table } = tableManager;
                 const position = pos as { row: number; col: number };
 
                 // Get actual column width and row height

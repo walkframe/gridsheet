@@ -39,9 +39,9 @@ const RemoveComponent: React.FC = () => {
       return;
     }
     const { storeManager } = connector.current;
-    const { instance: store, sync } = storeManager;
+    const { store, dispatch } = storeManager;
     // Remove 2nd row (index 2)
-    syncers.removeRows({ store, sync });
+    syncers.removeRows({ store, dispatch });
   };
 
   const handleRemoveCols = () => {
@@ -49,9 +49,9 @@ const RemoveComponent: React.FC = () => {
       return;
     }
     const { storeManager } = connector.current;
-    const { instance: store, sync } = storeManager;
+    const { store, dispatch } = storeManager;
     // Remove 2nd column (index 2)
-    syncers.removeCols({ store, sync });
+    syncers.removeCols({ store, dispatch });
   };
 
   return (

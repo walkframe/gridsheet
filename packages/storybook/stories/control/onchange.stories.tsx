@@ -53,7 +53,7 @@ const SheetOnChangeComponent: React.FC = () => {
   const [evaluates, setEvaluates] = React.useState<boolean>(true);
   const [histories, setHistories] = React.useState<HistoryType[]>([]);
   const connector = useConnector();
-  const table = connector.current?.tableManager.instance;
+  const table = connector.current?.tableManager.table;
 
   const hub = useHub({
     onChange: ({ table, points }) => {

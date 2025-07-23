@@ -360,7 +360,7 @@ export default function AdvancedFeatures() {
         const connector = connectors[activeSheet]?.current;
         if (connector) {
           const { tableManager } = connector;
-          const { instance: table } = tableManager;
+          const { table } = tableManager;
           const matrixData = table.getMatrix({ refEvaluation: 'RAW' });
           const cleanMatrixData = matrixData.map((row: any[]) =>
             row.map((cell: any) => {
@@ -404,7 +404,7 @@ export default function AdvancedFeatures() {
         const connector = connectors[activeSheet]?.current;
         if (connector) {
           const { storeManager } = connector;
-          const { instance: store, sync } = storeManager;
+          const { store, sync } = storeManager;
           sync(userActions.undo(null));
           showNotification('Undo action performed');
         }
@@ -414,7 +414,7 @@ export default function AdvancedFeatures() {
         const connector = connectors[activeSheet]?.current;
         if (connector) {
           const { storeManager } = connector;
-          const { instance: store, sync } = storeManager;
+          const { store, sync } = storeManager;
           sync(userActions.redo(null));
           showNotification('Redo action performed');
         }
@@ -424,7 +424,7 @@ export default function AdvancedFeatures() {
         const connector = connectors[activeSheet]?.current;
         if (connector) {
           const { storeManager } = connector;
-          const { instance: store, sync } = storeManager;
+          const { store, sync } = storeManager;
           const area = clip(store);
           sync(userActions.cut(areaToZone(area)));
           showNotification('Cut to clipboard');
@@ -435,7 +435,7 @@ export default function AdvancedFeatures() {
         const connector = connectors[activeSheet]?.current;
         if (connector) {
           const { storeManager } = connector;
-          const { instance: store, sync } = storeManager;
+          const { store, sync } = storeManager;
           const area = clip(store);
           sync(userActions.copy(areaToZone(area)));
           showNotification('Copied to clipboard');
@@ -446,7 +446,7 @@ export default function AdvancedFeatures() {
         const connector = connectors[activeSheet]?.current;
         if (connector) {
           const { storeManager } = connector;
-          const { instance: store, sync } = storeManager;
+          const { store, sync } = storeManager;
           sync(userActions.paste({ matrix: [], onlyValue: false }));
           showNotification('Pasted from clipboard');
         }
@@ -456,7 +456,7 @@ export default function AdvancedFeatures() {
         const connector = connectors[activeSheet]?.current;
         if (connector) {
           const { storeManager } = connector;
-          const { instance: store, sync } = storeManager;
+          const { store, sync } = storeManager;
           sync(userActions.paste({ matrix: [], onlyValue: true }));
           showNotification('Pasted values only');
         }

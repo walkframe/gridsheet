@@ -13,7 +13,15 @@
   Arial,
   Meiryo,
   sans-serif;
-  
+
+  visibility: hidden;
+  opacity: 0;
+  &.gs-initialized {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.2s ease-in-out;
+  }
+
   .gs-main {
     flex: 1;
     max-width: 100%;
@@ -86,3 +94,9 @@
 @import 'editor.less';
 @import 'tabular.less';
 @import 'search.less';
+
+/* Loading indicator animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

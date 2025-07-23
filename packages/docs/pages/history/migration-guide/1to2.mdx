@@ -35,11 +35,11 @@ const connector = useConnector();
 
 // Access table manager
 const { tableManager } = connector.current;
-const { instance: table, sync } = tableManager;
+const { table, sync } = tableManager;
 
 // Access store manager
 const { storeManager } = connector.current;
-const { instance: store, sync } = storeManager;
+const { store, sync } = storeManager;
 ```
 
 ### 2. Hook Unification
@@ -62,11 +62,11 @@ const connector = useConnector();
 
 // Access table manager
 const { tableManager } = connector.current;
-const { instance: table, sync } = tableManager;
+const { table, sync } = tableManager;
 
 // Access store manager
 const { storeManager } = connector.current;
-const { instance: store, sync } = storeManager;
+const { store, sync } = storeManager;
 ```
 
 ### Hook and Function Renaming
@@ -366,11 +366,11 @@ function MyComponent() {
   const handleUpdate = () => {
     const { tableManager } = connector.current;
     if (tableManager) {
-      const { instance: table, sync } = tableManager;
-      const updatedTable = table.update({
+      const { table, sync } = tableManager;
+      table.update({
         diff: { 'A1': { value: 'Updated' } }
       });
-      sync(updatedTable);
+      sync(table);
     }
   };
 }
@@ -590,11 +590,11 @@ const connector = useConnector();
 
 // Access table manager
 const { tableManager } = connector.current;
-const { instance: table, sync } = tableManager;
+const { table, sync } = tableManager;
 
 // Access store manager
 const { storeManager } = connector.current;
-const { instance: store, sync } = storeManager;
+const { store, sync } = storeManager;
 ```
 
 ### Step 3: Migrate Renderers
@@ -771,8 +771,8 @@ if (tableRef.current) {
 // After (2.x)
 const { tableManager } = connector.current;
 if (tableManager) {
-  const { instance: table, sync } = tableManager;
-  const updatedTable = table.update({ diff: { 'A1': { value: 'New' } } });
-  sync(updatedTable);
+  const { table, sync } = tableManager;
+  table.update({ diff: { 'A1': { value: 'New' } } });
+  sync(table);
 }
 ```

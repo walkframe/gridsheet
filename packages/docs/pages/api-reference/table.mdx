@@ -130,9 +130,9 @@ function MyComponent() {
   const handleUpdate = () => {
     if (connector.current) {
       const { tableManager } = connector.current;
-      const { instance: table, sync } = tableManager;
-      const updatedTable = table.write({ point: { x: 1, y: 1 }, value: 'New Value' });
-      sync(updatedTable);
+      const { table, sync } = tableManager;
+      table.write({ point: { x: 1, y: 1 }, value: 'New Value' });
+      sync(table);
     }
   };
 

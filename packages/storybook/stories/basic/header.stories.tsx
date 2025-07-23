@@ -21,7 +21,7 @@ const HeaderSheet = () => {
   useEffect(() => {
     if (connector.current) {
       const { tableManager } = connector.current;
-      const { instance: table, sync } = tableManager;
+      const { table, sync } = tableManager;
       sync(table.setHeaderHeight(headerHeight));
     }
   }, [headerHeight]);
@@ -29,7 +29,7 @@ const HeaderSheet = () => {
   useEffect(() => {
     if (connector.current) {
       const { tableManager } = connector.current;
-      const { instance: table, sync } = tableManager;
+      const { table, sync } = tableManager;
       sync(table.setHeaderWidth(headerWidth));
     }
   }, [headerWidth]);
@@ -37,7 +37,7 @@ const HeaderSheet = () => {
   const handleSetHeaderHeight = () => {
     if (connector.current) {
       const { tableManager } = connector.current;
-      const { instance: table, sync } = tableManager;
+      const { table, sync } = tableManager;
       sync(table.setHeaderHeight(60));
     }
   };
@@ -45,7 +45,7 @@ const HeaderSheet = () => {
   const handleSetHeaderWidth = () => {
     if (connector.current) {
       const { tableManager } = connector.current;
-      const { instance: table, sync } = tableManager;
+      const { table, sync } = tableManager;
       sync(table.setHeaderWidth(80));
     }
   };

@@ -102,14 +102,13 @@ export class Wire {
       tobe.push(storeDispatch);
     }
     for (let i = 0; i < tobe.length; i++) {
-      const { store, sync } = tobe[i];
+      const { store, dispatch } = tobe[i];
       const table = store.tableReactive.current;
       if (!table) {
         continue;
       }
       table.identifyFormula();
-      const newTable = table.clone();
-      sync(updateTable(newTable));
+      dispatch(updateTable(table));
     }
     this.ready = true;
   }

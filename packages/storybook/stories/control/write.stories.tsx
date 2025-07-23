@@ -49,7 +49,7 @@ const WriteComponent: React.FC<Props> = ({ x, y, value }: Props) => {
       return;
     }
     const { tableManager } = connector.current;
-    const { instance: table, sync } = tableManager;
+    const { table, sync } = tableManager;
     sync(table.write({ point: { x, y }, value }));
   }, [x, y, value, connector]);
 

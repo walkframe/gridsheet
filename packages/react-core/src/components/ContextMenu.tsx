@@ -40,7 +40,7 @@ export const ContextMenu = () => {
       <div className={'gs-contextmenu'} style={{ top: top, left: left }}>
         <ul>
           {contextMenuItems.map((Item, index) => {
-            return <Item key={index} store={store} sync={dispatch} />;
+            return <Item key={index} store={store} dispatch={dispatch} />;
           })}
         </ul>
       </div>

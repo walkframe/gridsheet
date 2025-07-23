@@ -550,7 +550,7 @@ function MyComponent() {
   const handleUpdateCell = () => {
     const { tableManager } = connector.current;
     if (tableManager) {
-      const { instance: table, sync } = tableManager;
+      const { table, sync } = tableManager;
       
       // Update cells
       const newTable = table.update({
@@ -563,7 +563,7 @@ function MyComponent() {
   const handleAccessStore = () => {
     const { storeManager } = connector.current;
     if (storeManager) {
-      const { instance: store, sync } = storeManager;
+      const { store, sync } = storeManager;
       // Use store and sync as needed
     }
   };

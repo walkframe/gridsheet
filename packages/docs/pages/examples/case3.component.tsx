@@ -233,9 +233,9 @@ export default function DataManagement() {
         const parsedData = JSON.parse(savedData);
         if (parsedData.cells && connector.current) {
           const { tableManager } = connector.current;
-          const { instance: table, sync } = tableManager;
-          const updatedTable = table.update({ diff: parsedData.cells });
-          sync(updatedTable);
+          const { table: table, sync } = tableManager;
+          table.update({ diff: parsedData.cells });
+          sync(table);
         }
       }
     } catch (error) {
@@ -250,7 +250,7 @@ export default function DataManagement() {
     try {
       if (connector.current) {
         const { tableManager } = connector.current;
-        const { instance: table } = tableManager;
+        const { table: table } = tableManager;
         const cells = table.getObject();
 
         // Extract only cells with colors
@@ -341,8 +341,8 @@ export default function DataManagement() {
     }
 
     const { tableManager, storeManager } = connector.current;
-    const { instance: table, sync } = tableManager;
-    const { instance: store } = storeManager;
+    const { table: table, sync } = tableManager;
+    const { store: store } = storeManager;
 
     // Get current selection area
     const area = clip(store);
@@ -362,8 +362,8 @@ export default function DataManagement() {
       }
     }
 
-    const updatedTable = table.update({ diff });
-    sync(updatedTable);
+    table.update({ diff });
+    sync(table);
   };
 
   return (

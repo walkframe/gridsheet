@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import {
   GridSheet,
@@ -34,10 +34,9 @@ const UpdateComponent: React.FC = () => {
   }`);
 
   const update = () => {
-    console.log('update', connector.current);
     if (connector.current) {
       const { tableManager } = connector.current;
-      const { instance: table, sync } = tableManager;
+      const { table, sync } = tableManager;
       const diff = JSON.parse(json);
       console.log(diff);
       sync(table.update({ diff }));
@@ -86,7 +85,7 @@ const InsertRowsAndUpdateComponent: React.FC = () => {
   const add = () => {
     if (connector.current) {
       const { tableManager } = connector.current;
-      const { instance: table, sync } = tableManager;
+      const { table, sync } = tableManager;
       sync(
         table.insertRows({
           y: 5,
@@ -141,7 +140,7 @@ const InsertColsAndUpdateComponent: React.FC = () => {
   const add = () => {
     if (connector.current) {
       const { tableManager } = connector.current;
-      const { instance: table, sync } = tableManager;
+      const { table, sync } = tableManager;
       sync(
         table.insertCols({
           x: 4,
