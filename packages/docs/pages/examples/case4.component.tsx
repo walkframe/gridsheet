@@ -167,10 +167,10 @@ export default function BudgetManagement() {
     onInsertCols: ({ table, x, numCols }) => {
       addEventLog(`Inserted ${numCols} column(s) at position ${x}`);
     },
-    onKeyUp: ({e, points}) => {
+    onKeyUp: ({ e, points }) => {
       addEventLog(`Key pressed: ${e.key}`);
     },
-    onInit: ({table}) => {
+    onInit: ({ table }) => {
       addEventLog(`Budget table initialized: ${table.sheetName}`);
     },
   });

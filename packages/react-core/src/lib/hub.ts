@@ -40,8 +40,8 @@ export type WireProps = {
   onInsertRows?: (args: { table: UserTable; y: number; numRows: number }) => void;
   onInsertCols?: (args: { table: UserTable; x: number; numCols: number }) => void;
   onSelect?: FeedbackType;
-  onKeyUp?: (args: {e: EditorEvent, points: CursorStateType}) => void;
-  onInit?: (args: {table: UserTable}) => void;
+  onKeyUp?: (args: { e: EditorEvent; points: CursorStateType }) => void;
+  onInit?: (args: { table: UserTable }) => void;
 };
 
 export class Wire {
@@ -79,8 +79,8 @@ export class Wire {
   onInsertRows?: (args: { table: UserTable; y: number; numRows: number }) => void;
   onInsertCols?: (args: { table: UserTable; x: number; numCols: number }) => void;
   onSelect?: FeedbackType;
-  onKeyUp?: (args: {e: EditorEvent, points: CursorStateType}) => void;
-  onInit?: (args: {table: UserTable}) => void;
+  onKeyUp?: (args: { e: EditorEvent; points: CursorStateType }) => void;
+  onInit?: (args: { table: UserTable }) => void;
 
   transmit: (newHub?: TransmitProps) => void = (newHub?: TransmitProps) => {
     // This method will be overridden by useHub

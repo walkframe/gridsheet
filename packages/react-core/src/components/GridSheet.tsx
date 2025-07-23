@@ -73,7 +73,7 @@ export function GridSheet({
     wire.sheetIdsByName[sheetName] = sheetId;
 
     table.initialize(initialCells);
-    wire.onInit?.({table});
+    wire.onInit?.({ table });
 
     tableReactive.current = table;
 
