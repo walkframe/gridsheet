@@ -183,7 +183,8 @@ export default function SalesDashboard() {
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         margin: '0 auto',
         padding: '20px',
-        maxWidth: 'calc(100vw - 300px)',
+        maxWidth: 'calc(100vw - 40px)',
+        minWidth: '320px',
       }}
     >
       {/* Sales Dashboard - Full Width */}
@@ -298,7 +299,7 @@ export default function SalesDashboard() {
           })}
           options={{
             sheetHeight: 450,
-            sheetWidth: 1200,
+            sheetWidth: typeof window !== 'undefined' ? Math.min(1200, window.innerWidth - 60) : 1200,
           }}
         />
         <div style={{ marginTop: '10px' }}>
@@ -330,7 +331,7 @@ export default function SalesDashboard() {
         style={{
           display: 'grid',
           gap: '20px',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gridAutoRows: 'min-content',
           alignItems: 'start',
         }}

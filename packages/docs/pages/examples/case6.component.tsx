@@ -233,7 +233,12 @@ export default function CustomRendering() {
   });
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: 24 }}>
+    <div style={{ 
+      maxWidth: 'calc(100vw - 40px)', 
+      minWidth: '320px',
+      margin: '0 auto', 
+      padding: '20px' 
+    }}>
       <GridSheet
         hub={hub}
         initialCells={buildInitialCells({
@@ -257,7 +262,7 @@ export default function CustomRendering() {
           },
         })}
         options={{
-          sheetWidth: 900,
+          sheetWidth: typeof window !== 'undefined' ? Math.min(900, window.innerWidth - 60) : 900,
           sheetHeight: 450,
           showAddress: false,
         }}

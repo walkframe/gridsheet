@@ -393,7 +393,11 @@ export default function AdvancedFeatures() {
           }
         });
         showNotification('Data reset successfully. Reloading...');
-        setTimeout(() => window.location.reload(), 1000);
+        setTimeout(() => {
+          if (typeof window !== 'undefined') {
+            window.location.reload();
+          }
+        }, 1000);
         break;
       }
       case 'undo': {
@@ -469,6 +473,9 @@ export default function AdvancedFeatures() {
       style={{
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         backgroundColor: '#f8f9fa',
+        maxWidth: 'calc(100vw - 40px)',
+        minWidth: '320px',
+        margin: '0 auto',
       }}
     >
       {/* Header */}

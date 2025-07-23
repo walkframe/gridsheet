@@ -220,14 +220,21 @@ export default function LargeDatasetDemo() {
   }
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center' }}>
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'center',
+      maxWidth: 'calc(100vw - 40px)',
+      minWidth: '320px',
+      margin: '0 auto',
+      padding: '20px'
+    }}>
       <GridSheet
         hub={hub}
         sheetName="large-dataset"
         initialCells={initialCells}
         options={{
           sheetHeight: 600,
-          sheetWidth: 1200,
+          sheetWidth: typeof window !== 'undefined' ? Math.min(1200, window.innerWidth - 60) : 1200,
           sheetResize: 'both',
           showAddress: true,
         }}

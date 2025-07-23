@@ -272,7 +272,8 @@ export default function InventoryManagement() {
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         margin: '0 auto',
         padding: '20px',
-        maxWidth: 'calc(100vw - 300px)',
+        maxWidth: 'calc(100vw - 40px)',
+        minWidth: '320px',
       }}
     >
       {/* Inventory Management Dashboard */}

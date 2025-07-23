@@ -89,13 +89,16 @@ export default function BudgetManagement() {
   // Check screen width on mount and resize
   React.useEffect(() => {
     const checkScreenWidth = () => {
-      setIsMobile(window.innerWidth <= 900);
+      if (typeof window !== 'undefined') {
+        setIsMobile(window.innerWidth <= 900);
+      }
     };
 
     checkScreenWidth();
-    window.addEventListener('resize', checkScreenWidth);
-
-    return () => window.removeEventListener('resize', checkScreenWidth);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', checkScreenWidth);
+      return () => window.removeEventListener('resize', checkScreenWidth);
+    }
   }, []);
 
   // Convert tags to statusOptionsRef format for the policy
@@ -188,7 +191,8 @@ export default function BudgetManagement() {
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         margin: '0 auto',
         padding: '20px',
-        maxWidth: 'calc(100vw - 300px)',
+        maxWidth: 'calc(100vw - 40px)',
+        minWidth: '320px',
       }}
     >
       {/* Main Budget Grid */}
@@ -372,7 +376,7 @@ export default function BudgetManagement() {
           })}
           options={{
             sheetHeight: 500,
-            sheetWidth: 700,
+            sheetWidth: typeof window !== 'undefined' ? Math.min(700, window.innerWidth - 60) : 700,
           }}
         />
 

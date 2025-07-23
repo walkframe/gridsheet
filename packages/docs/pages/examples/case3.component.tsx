@@ -284,7 +284,9 @@ export default function DataManagement() {
     }
     if (confirm('Are you sure you want to reset all data? This cannot be undone.')) {
       localStorage.removeItem('demo3');
-      window.location.reload();
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
     }
   };
 
@@ -365,7 +367,12 @@ export default function DataManagement() {
   };
 
   return (
-    <div style={{ padding: '10px' }}>
+    <div style={{ 
+      padding: '20px',
+      maxWidth: 'calc(100vw - 40px)',
+      minWidth: '320px',
+      margin: '0 auto'
+    }}>
       {/* Color palette */}
       <div style={{ marginBottom: '20px' }}>
         <div
@@ -448,7 +455,10 @@ export default function DataManagement() {
           showAddress: false,
           showFormulaBar: false,
         }}
-        style={{ width: '400px', height: '400px' }}
+        style={{ 
+          width: typeof window !== 'undefined' ? Math.min(400, window.innerWidth - 60) : 400, 
+          height: typeof window !== 'undefined' ? Math.min(400, window.innerHeight - 200) : 400
+        }}
       />
     </div>
   );

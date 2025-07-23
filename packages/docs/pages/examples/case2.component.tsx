@@ -118,7 +118,8 @@ export default function GitHubContributors() {
         margin: '0 auto',
         padding: '20px',
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        maxWidth: 'calc(100vw - 300px)',
+        maxWidth: 'calc(100vw - 40px)',
+        minWidth: '320px',
       }}
     >
       {loading ? (

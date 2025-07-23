@@ -143,9 +143,11 @@ export default function Case9Component() {
       style={{
         background: 'white',
         borderRadius: '12px',
-        padding: '25px',
+        padding: '20px',
         boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
-        margin: '20px 0',
+        margin: '20px auto',
+        maxWidth: 'calc(100vw - 40px)',
+        minWidth: '320px',
       }}
     >
       <GridSheet
