@@ -1,3 +1,12 @@
+# ⚠️ DEPRECATION NOTICE
+
+**@gridsheet/react-right-menu is deprecated and will no longer be maintained.**
+
+- Do not use this package for new projects.
+- Please consider using the core package (`@gridsheet/react-core`) or other alternatives for right-click menu functionality.
+
+---
+
 ![unittest workflow](https://github.com/walkframe/gridsheet/actions/workflows/unittest.yaml/badge.svg?branch=master)
 ![e2e workflow](https://github.com/walkframe/gridsheet/actions/workflows/e2e.yaml/badge.svg?branch=master)
 
