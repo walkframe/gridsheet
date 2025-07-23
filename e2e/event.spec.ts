@@ -23,11 +23,24 @@ test('formula evaluation with evaluates flag', async ({ page }) => {
 
   // Verify that formulas are evaluated in initial state
   const tsvData = page.locator('#changes');
+  
+  // Wait for TSV data to be populated
+  await page.waitForFunction(() => {
+    const element = document.querySelector('#changes') as HTMLInputElement;
+    return element && element.value && element.value.trim().length > 0;
+  }, { timeout: 5000 });
+  
   let tsvText = await tsvData.inputValue();
+
+  // Debug: Log TSV content for troubleshooting
+  // console.log('TSV Text:', tsvText);
+  // console.log('TSV Lines:', tsvText.split('\n'));
 
   // Verify that formula calculation results are included (formula results are in 3rd row)
   const lines = tsvText.split('\n');
+  expect(lines.length).toBeGreaterThan(2); // Ensure we have at least 3 rows
   const thirdLine = lines[2]; // 3rd row (0-indexed so 2)
+  expect(thirdLine).toBeDefined(); // Ensure third line exists
 
   expect(thirdLine).toContain('7'); // A3: =A1+A2 result
   expect(thirdLine).toContain('16'); // B3: =SUM(A1:B2) result
@@ -43,11 +56,15 @@ test('formula evaluation with evaluates flag', async ({ page }) => {
   const evaluates = page.locator('#evaluates');
   await evaluates.uncheck();
 
+  // Wait for TSV data to update after unchecking evaluates
+  await page.waitForTimeout(100);
   tsvText = await tsvData.inputValue();
 
   // Verify that raw formulas are included
   const lines2 = tsvText.split('\n');
+  expect(lines2.length).toBeGreaterThan(2); // Ensure we have at least 3 rows
   const thirdLine2 = lines2[2]; // 3rd row
+  expect(thirdLine2).toBeDefined(); // Ensure third line exists
 
   expect(thirdLine2).toContain('=A1+A2');
   expect(thirdLine2).toContain('=SUM(A1:B2)');
@@ -63,11 +80,15 @@ test('formula evaluation with evaluates flag', async ({ page }) => {
   // Turn Evaluates flag back on and verify that calculation results are displayed again
   await evaluates.check();
 
+  // Wait for TSV data to update after checking evaluates
+  await page.waitForTimeout(100);
   tsvText = await tsvData.inputValue();
 
   // Verify that calculation results are included again
   const lines3 = tsvText.split('\n');
+  expect(lines3.length).toBeGreaterThan(2); // Ensure we have at least 3 rows
   const thirdLine3 = lines3[2]; // 3rd row
+  expect(thirdLine3).toBeDefined(); // Ensure third line exists
 
   expect(thirdLine3).toContain('7'); // A3: =A1+A2 result
   expect(thirdLine3).toContain('16'); // B3: =SUM(A1:B2) result
