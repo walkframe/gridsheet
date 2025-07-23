@@ -23,13 +23,16 @@ test('formula evaluation with evaluates flag', async ({ page }) => {
 
   // Verify that formulas are evaluated in initial state
   const tsvData = page.locator('#changes');
-  
+
   // Wait for TSV data to be populated
-  await page.waitForFunction(() => {
-    const element = document.querySelector('#changes') as HTMLInputElement;
-    return element && element.value && element.value.trim().length > 0;
-  }, { timeout: 5000 });
-  
+  await page.waitForFunction(
+    () => {
+      const element = document.querySelector('#changes') as HTMLInputElement;
+      return element && element.value && element.value.trim().length > 0;
+    },
+    { timeout: 5000 },
+  );
+
   let tsvText = await tsvData.inputValue();
 
   // Debug: Log TSV content for troubleshooting

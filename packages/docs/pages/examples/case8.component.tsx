@@ -220,14 +220,16 @@ export default function LargeDatasetDemo() {
   }
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'center',
-      maxWidth: 'calc(100vw - 40px)',
-      minWidth: '320px',
-      margin: '0 auto',
-      padding: '20px'
-    }}>
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        maxWidth: 'calc(100vw - 40px)',
+        minWidth: '320px',
+        margin: '0 auto',
+        padding: '20px',
+      }}
+    >
       <GridSheet
         hub={hub}
         sheetName="large-dataset"

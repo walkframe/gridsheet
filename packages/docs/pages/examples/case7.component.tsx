@@ -202,17 +202,21 @@ export default function RealTimeCollaboration() {
   };
 
   return (
-    <div style={{ 
-      maxWidth: 'calc(100vw - 40px)', 
-      minWidth: '320px',
-      margin: '0 auto', 
-      padding: '20px' 
-    }}>
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
-        gap: '20px' 
-      }}>
+    <div
+      style={{
+        maxWidth: 'calc(100vw - 40px)',
+        minWidth: '320px',
+        margin: '0 auto',
+        padding: '20px',
+      }}
+    >
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: '20px',
+        }}
+      >
         {/* Main grid */}
         <div>
           <div
@@ -341,10 +345,10 @@ export default function RealTimeCollaboration() {
                   },
                 },
               })}
-                          options={{
-              sheetWidth: typeof window !== 'undefined' ? Math.min(800, window.innerWidth - 60) : 800,
-              sheetHeight: 300,
-            }}
+              options={{
+                sheetWidth: typeof window !== 'undefined' ? Math.min(800, window.innerWidth - 60) : 800,
+                sheetHeight: 300,
+              }}
             />
           </div>
         </div>

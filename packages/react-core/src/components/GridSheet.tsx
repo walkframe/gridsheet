@@ -151,9 +151,9 @@ export function GridSheet({
 
   return (
     <Context.Provider value={{ store, dispatch }}>
-      <div 
-        className={`gs-root1 ${wire.ready ? 'gs-initialized' : ''}`} 
-        ref={rootRef} 
+      <div
+        className={`gs-root1 ${wire.ready ? 'gs-initialized' : ''}`}
+        ref={rootRef}
         data-sheet-name={sheetName}
         data-mode={mode}
       >

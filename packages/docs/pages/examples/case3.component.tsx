@@ -367,12 +367,14 @@ export default function DataManagement() {
   };
 
   return (
-    <div style={{ 
-      padding: '20px',
-      maxWidth: 'calc(100vw - 40px)',
-      minWidth: '320px',
-      margin: '0 auto'
-    }}>
+    <div
+      style={{
+        padding: '20px',
+        maxWidth: 'calc(100vw - 40px)',
+        minWidth: '320px',
+        margin: '0 auto',
+      }}
+    >
       {/* Color palette */}
       <div style={{ marginBottom: '20px' }}>
         <div
@@ -455,9 +457,9 @@ export default function DataManagement() {
           showAddress: false,
           showFormulaBar: false,
         }}
-        style={{ 
-          width: typeof window !== 'undefined' ? Math.min(400, window.innerWidth - 60) : 400, 
-          height: typeof window !== 'undefined' ? Math.min(400, window.innerHeight - 200) : 400
+        style={{
+          width: typeof window !== 'undefined' ? Math.min(400, window.innerWidth - 60) : 400,
+          height: typeof window !== 'undefined' ? Math.min(400, window.innerHeight - 200) : 400,
         }}
       />
     </div>
