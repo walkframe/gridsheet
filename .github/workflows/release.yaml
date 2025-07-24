@@ -46,19 +46,3 @@ jobs:
           pnpm build --mode development
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
           npm publish --access public || true
-
-      - name: upload svelte-core
-        run: |
-          cd packages/svelte-core
-          pnpm install
-          pnpm build --mode development
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
-          npm publish --access public || true
-
-      - name: upload react-right-menu
-        run: |
-          cd packages/react-right-menu
-          pnpm install
-          pnpm build --mode development
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
-          npm publish --access public || true

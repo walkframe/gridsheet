@@ -101,25 +101,15 @@ export const Resizer = () => {
       onMouseUp={handleResizeEnd}
       onMouseMove={handleResizeMove}
     >
-      <div
-        className={`gs-line ${x === -1 ? 'gs-hidden' : ''}`}
-        style={{
-          width: 1,
-          height: '100%',
-          left: endX - offsetX,
-        }}
-      >
-        <span style={{ left: '-50%' }}>{width}px</span>
+      <div className={x === -1 ? 'gs-hidden' : ''}>
+        <div className={'gs-line'} style={{ width: 1, height: '100%', left: endX - offsetX }}>
+          <span style={{ left: '-50%' }}>{width}px</span>
+        </div>
       </div>
-      <div
-        className={`gs-line ${y === -1 ? 'gs-hidden' : ''}`}
-        style={{
-          width: '100%',
-          height: 1,
-          top: endY - offsetY,
-        }}
-      >
-        <span style={{ top: '-50%' }}>{height}px</span>
+      <div className={y === -1 ? 'gs-hidden' : ''}>
+        <div className={'gs-line'} style={{ width: '100%', height: 1, top: endY - offsetY }}>
+          <span style={{ top: '-50%' }}>{height}px</span>
+        </div>
       </div>
     </div>
   );

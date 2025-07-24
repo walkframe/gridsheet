@@ -1,14 +1,15 @@
 {
   "name": "@gridsheet/preact-core",
-  "version": "2.0.0-rc.5",
+  "version": "2.0.0-rc.7",
   "description": "Spreadsheet component for Preact",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "dev": "vite example",
     "copy-types": "rsync -avm --include='*/' --include='*.d.ts' --exclude='*' ../react-core/dist/ ./dist/",
     "append-preact": "echo '\nexport { h, render } from \"preact\";' >> dist/index.d.ts && cat exports.ts >> dist/index.d.ts",
-    "build": "rm -rf ./dist || true && vite build && pnpm copy-types && pnpm append-preact"
+    "build": "rm -rf ./dist || true && vite build --mode development && pnpm copy-types && pnpm append-preact"
   },
   "repository": {
     "type": "git",
@@ -31,6 +32,9 @@
     "url": "https://github.com/walkframe/gridsheet/issues"
   },
   "homepage": "https://gridsheet.walkframe.com/",
+  "files": [
+    "dist"
+  ],
   "author": "righ",
   "license": "Apache-2.0"
 }

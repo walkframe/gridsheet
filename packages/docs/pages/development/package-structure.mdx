@@ -12,7 +12,6 @@ gridsheet/
 │   ├── react-core/          # React implementation
 │   ├── preact-core/         # Preact implementation
 │   ├── vue-core/           # Vue.js implementation
-│   ├── svelte-core/        # Svelte implementation
 │   ├── docs/              # Documentation site
 │   └── storybook/         # Component examples and testing
 ├── package.json           # Root package configuration
@@ -33,12 +32,11 @@ These core packages always maintain identical versions following semantic versio
 
 ### Wrapper Packages
 
-The Vue and Svelte implementations are wrappers around the preact-core:
+The Vue implementation is a wrapper around the preact-core:
 
 - **@gridsheet/vue-core**: Vue.js wrapper around preact-core
-- **@gridsheet/svelte-core**: Svelte wrapper around preact-core
 
-When only the wrapper layer is updated, these packages use the format: `MAJOR.MINOR.PATCH-X` where X starts from 0 and increments as integers.
+When only the wrapper layer is updated, this package uses the format: `MAJOR.MINOR.PATCH-X` where X starts from 0 and increments as integers.
 
 ### Version Examples
 
@@ -57,17 +55,12 @@ When only the wrapper layer is updated, these packages use the format: `MAJOR.MI
   "name": "@gridsheet/vue-core",
   "version": "2.0.0-rc.2-0"
 }
-
-{
-  "name": "@gridsheet/svelte-core",
-  "version": "2.0.0-rc.2-0"
-}
 ```
 
 ### Version Bumping Rules
 
 - **Core Updates**: Both `react-core` and `preact-core` bump together
-- **Wrapper Updates**: Only `vue-core` or `svelte-core` increment the suffix (0, 1, 2, ...)
+- **Wrapper Updates**: Only `vue-core` increment the suffix (0, 1, 2, ...)
 - **Breaking Changes**: All packages bump major version
 - **New Features**: All packages bump minor version
 - **Bug Fixes**: All packages bump patch version 

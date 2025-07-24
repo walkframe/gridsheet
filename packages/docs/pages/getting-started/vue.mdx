@@ -14,29 +14,12 @@ pnpm add @gridsheet/vue-core
 
 ## Basic Usage
 
-```vue filename="App.vue" copy
-<template>
-  <GridSheet
-    :initialCells="buildInitialCellsFromOrigin({
-      matrix: [
-        ['Name', 'Age', 'City'],
-        ['John', 25, 'New York'],
-        ['Jane', 30, 'Los Angeles'],
-        ['Bob', 35, 'Chicago']
-      ]
-    })"
-    :options="{
-      sheetHeight: 400,
-      sheetWidth: 600,
-      sheetResize: 'both'
-    }"
-    sheetName="MySheet"
-  />
-</template>
+<iframe
+  src="https://stackblitz.com/edit/gridsheet-vue-core?embed=1&file=src%2FApp.vue"
+  style={{ width: '100%', height: '500px', border: 'none' }}
+/>
 
-<script setup lang="ts">
-import { GridSheet, buildInitialCellsFromOrigin } from '@gridsheet/vue-core';
-</script>
-```
+**Note:** This Vue implementation is a wrapped version of the Preact core, which means some advanced features may be limited. Additionally, while GridSheet supports custom renderers for arbitrary components, Vue components cannot be passed directly to GridSheet. For custom component rendering, you need to write the code in Preact and pass it to GridSheet.
 
-**Note:** This Vue implementation is a wrapped version of the Preact core, which means some advanced features may be limited. Additionally, while GridSheet supports custom renderers for arbitrary components, Vue components cannot be passed directly to GridSheet. For custom component rendering, you need to write the code in Preact and pass it to GridSheet. 
+## Next Steps
+- You can find more examples in the [examples section](/examples/case1).

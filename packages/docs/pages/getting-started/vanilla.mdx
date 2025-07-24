@@ -14,31 +14,11 @@ pnpm add @gridsheet/preact-core
 
 ## Basic Usage
 
-```html
-<script type="module">
-  import { GridSheet, h, render, buildInitialCellsFromOrigin } from '@gridsheet/preact-core';
-
-  const app = h(GridSheet, {
-    initialCells: buildInitialCellsFromOrigin({
-      matrix: [
-        ['Name', 'Age', 'City'],
-        ['John', 25, 'New York'],
-        ['Jane', 30, 'Los Angeles'],
-        ['Bob', 35, 'Chicago']
-      ],
-    }),
-    options: {
-      sheetHeight: 400,
-      sheetWidth: 600,
-      sheetResize: 'both'
-    },
-  });
-  render(app, document.body);
-</script>
-```
+<iframe
+  src="https://stackblitz.com/edit/gridsheet-preact-core?embed=1&file=src%2Fapp.jsx"
+  style={{ width: '100%', height: '500px', border: 'none' }} 
+/>
 
 ## Next Steps
-
-- Explore the [Features](/features) section to learn about all available options
-- Check out [Examples](/examples) for more use cases
-- Read the [API Reference](/api) for detailed documentation 
+- You can find more examples in the [examples section](/examples/case1).
+- Refer to the [API Reference](/api-reference/props) for detailed documentation.

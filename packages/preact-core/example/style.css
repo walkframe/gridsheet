@@ -1,0 +1,35 @@
+main {
+  padding: 1rem;
+}
+
+h1 {
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.labeler-control {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  border: 1px solid #e9ecef;
+}
+
+.labeler-control label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  color: #495057;
+  cursor: pointer;
+}
+
+.labeler-control input[type="checkbox"] {
+  margin: 0;
+}
+
+.grid-container {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  overflow: hidden;
+} 

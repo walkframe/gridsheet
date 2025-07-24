@@ -4,14 +4,14 @@ import {
   GridSheet as PreactGridSheet,
   h as preactH,
   render as preactRender,
-  type HubType,
 } from '@gridsheet/preact-core';
 import type { Ref } from 'vue';
 
 import type { 
   CellsByAddressType, 
   OptionsType, 
-  TableRef,
+  HubType,
+  Connector,
 } from '@gridsheet/preact-core';
 
 interface RefObject<T> {
@@ -33,8 +33,8 @@ export default defineComponent({
       type: Object as () => HubType | Ref<HubType>,
       default: null,
     },
-    tableRef: {
-      type: Object as () => RefObject<TableRef | null>,
+    connector: {
+      type: Object as () => RefObject<Connector | null>,
       default: null,
     },
     options: {
@@ -55,8 +55,10 @@ export default defineComponent({
     let root: HTMLElement | null = null;
 
     function getPreactProps() {
+      // Remove legacy tableRef, use connector instead
+      const { tableRef, ...rest } = props as any;
       return {
-        ...props,
+        ...rest,
         hub: isRef(props.hub) ? (props.hub.value as HubType | undefined) : (props.hub as HubType | undefined),
       };
     }

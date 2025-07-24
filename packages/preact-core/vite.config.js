@@ -7,7 +7,7 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   build: {
     lib: {
       entry: path.resolve(__dirname, './index.ts'),
@@ -22,7 +22,9 @@ export default defineConfig({
     rollupOptions: {
       external: [/^preact/],
       input: path.resolve(__dirname, './index.ts'),
-    }
+    },
+    sourcemap: mode === "development",
+    minify: mode === "development" ? false : "esbuild",
   },
   optimizeDeps: {
     include: ['preact/jsx-runtime'],
@@ -34,4 +36,4 @@ export default defineConfig({
       'react/jsx-runtime': 'preact/jsx-runtime',
     },
   },
-});
+}));

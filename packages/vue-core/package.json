@@ -1,6 +1,6 @@
 {
   "name": "@gridsheet/vue-core",
-  "version": "2.0.0-0.rc.2",
+  "version": "2.0.0-rc.7-0",
   "description": "Spreadsheet component for Vue 3",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -11,6 +11,7 @@
     "build": "vite build",
     "preview": "vite preview"
   },
+  "homepage": "https://gridsheet.walkframe.com/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/walkframe/gridsheet.git"
@@ -19,7 +20,7 @@
     "vue": "^3.3.0"
   },
   "dependencies": {
-    "@gridsheet/preact-core": "^2.0.0-rc.2"
+    "@gridsheet/preact-core": "^2.0.0-rc.7"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.4",
