@@ -28,7 +28,6 @@
   },
   "paths": {
     "@gridsheet/react-core": ["../react-core/src"],
-    "@gridsheet/react-right-menu": ["../react-right-menu"],
     "@gridsheet/preact-core": ["../preact-core"],
   }
 }
