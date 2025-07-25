@@ -14,30 +14,10 @@ pnpm add @gridsheet/react-core
 
 ## Basic Usage
 
-```tsx filename="App.tsx" copy
-import { GridSheet, buildInitialCellsFromOrigin } from '@gridsheet/react-core';
-
-function App() {
-  return (
-    <GridSheet
-      sheetName="MySheet"
-      initialCells={buildInitialCellsFromOrigin({
-        matrix: [
-          ['Name', 'Age', 'City'],
-          ['John', 25, 'New York'],
-          ['Jane', 30, 'Los Angeles'],
-          ['Bob', 35, 'Chicago']
-        ]
-      })}
-      options={{
-        sheetHeight: 400,
-        sheetWidth: 600,
-        sheetResize: 'both'
-      }}
-    />
-  );
-}
-``` 
+<iframe
+  src="https://stackblitz.com/edit/gridsheet-react-core-basic?embed=1&file=src%2FApp.tsx"
+  style={{ width: '100%', height: '500px', border: 'none' }}  
+/>
 
 ## Next Steps
 - See examples in the [examples section](/examples/case1).

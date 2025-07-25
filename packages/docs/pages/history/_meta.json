@@ -1,0 +1,11 @@
+{
+  "2.x.x": {
+    "title": "GridSheet 2.x.x"
+  },
+  "1.x.x": {
+    "title": "GridSheet 1.x.x"
+  },
+  "migration-guide": {
+    "title": "Migration Guide"
+  }
+} 

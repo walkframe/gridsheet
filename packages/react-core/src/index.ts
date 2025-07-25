@@ -38,7 +38,7 @@ export type {
   CursorStateType,
 } from './types';
 
-export type { HubType, WireProps, TransmitProps } from './lib/hub';
+export type { HubType, HubProps, WireProps, TransmitProps } from './lib/hub';
 export { Wire, useHub, createHub } from './lib/hub';
 export type { Dispatcher } from './store';
 export { ThousandSeparatorRendererMixin } from './renderers/thousand_separator';

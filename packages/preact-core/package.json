@@ -1,6 +1,6 @@
 {
   "name": "@gridsheet/preact-core",
-  "version": "2.0.0-rc.8",
+  "version": "2.0.0",
   "description": "Spreadsheet component for Preact",
   "main": "dist/index.js",
   "module": "dist/index.js",

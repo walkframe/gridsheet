@@ -10,6 +10,7 @@ import {
   RenderProps,
   makeBorder,
   operations,
+  type UserTable,
 } from '@gridsheet/react-core';
 
 // Stock level renderer
@@ -67,9 +68,9 @@ const CategoryRendererMixin: RendererMixinType = {
 
 // Delete button renderer
 const DeleteButtonRendererMixin: RendererMixinType = {
-  string({ value, point, sync, table }: RenderProps<string>) {
-    // Only show delete button for product rows (rows 2-21)
-    const shouldShowButton = point.y >= 2 && point.y <= 21;
+  null({ value, point, sync, table }: RenderProps<string>) {
+    // Only show delete button for product rows
+    const shouldShowButton = point.y >= 2;
 
     // Get product name for tooltip
     let productName = 'Unknown';
@@ -132,9 +133,32 @@ const DeleteButtonRendererMixin: RendererMixinType = {
   },
 };
 
+// TSV conversion utility function
+const convertToTSV = (table: UserTable, evaluates: boolean = true): string => {
+  if (!table) return '';
+  const matrix = table.getFieldMatrix({ refEvaluation: evaluates ? 'COMPLETE' : 'RAW' });
+  if (!matrix || matrix.length === 0) return '';
+  return matrix
+    .map((row) =>
+      row
+        .map((cell) => {
+          if (cell === null || cell === undefined) return '';
+          const cellStr = String(cell);
+          if (cellStr.includes('\t') || cellStr.includes('\n')) {
+            return cellStr.replace(/\t/g, ' ').replace(/\n/g, ' ');
+          }
+          return cellStr;
+        })
+        .join('\t'),
+    )
+    .join('\n');
+};
+
 export default function InventoryManagement() {
   const [activityLogs, setActivityLogs] = React.useState<string[]>([]);
   const [pendingDeleteInfo, setPendingDeleteInfo] = React.useState<{ row: number; productName: string } | null>(null);
+  const [tsv, setTsv] = React.useState<string>('');
+  // Remove tableForTsv state and related useEffect
 
   const addActivityLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -165,69 +189,67 @@ export default function InventoryManagement() {
         : `(${points.pointing.y},${points.pointing.x})`;
       addActivityLog(`💾 Inventory data saved at ${Array.isArray(points) ? points.length : 1} position(s): ${posInfo}`);
     },
-    onChange: ({ table, points }) => {
-      const posInfo = Array.isArray(points)
-        ? points.map((p) => `(${p.pointing.y},${p.pointing.x})`).join(', ')
-        : `(${points.pointing.y},${points.pointing.x})`;
-      addActivityLog(`✏️ Updated at ${Array.isArray(points) ? points.length : 1} position(s): ${posInfo}`);
+    onEdit: ({ table }: { table: UserTable }) => {
+      const { top, left, bottom, right } = table;
+      addActivityLog(`✏️ Inventory edited. (onEdit) Range: [${top},${left}] - [${bottom},${right}]`);
     },
-    onRemoveRows: ({ table, ys }) => {
-      ys.forEach((y) => {
-        // Check if we have pending delete info for this row
-        if (pendingDeleteInfo && pendingDeleteInfo.row === y) {
+    onRemoveRows: ({ table, ys }: { table: UserTable; ys: number[] }) => {
+      ys.forEach((y, i) => {
+        if (pendingDeleteInfo && pendingDeleteInfo.row === i) {
           const productName = pendingDeleteInfo.productName;
-          setPendingDeleteInfo(null); // Clear the pending info
-          return `row ${y} (${productName})`;
-        }
-
-        const fieldRows = table.getFieldRows();
-        fieldRows.forEach((row, index) => {
-          const productName = row?.['B'] ?? 'Unknown';
+          setPendingDeleteInfo(null);
           addActivityLog(`🗑️ Removed product: row ${y} (${productName})`);
-        });
+        } else {
+          const fieldRows = table.getFieldRows();
+          const productName = fieldRows[i]?.['B'] ?? 'Unknown';
+          addActivityLog(`🗑️ Removed product: row ${y} (${productName})`);
+        }
       });
     },
-    onRemoveCols: ({ table, xs }) => {
+    onRemoveCols: ({ table, xs }: { table: UserTable; xs: number[] }) => {
       const colInfo = xs.map((x) => `col ${String.fromCharCode(65 + x)}`).join(', ');
       addActivityLog(`🗑️ Removed ${xs.length} column(s) from inventory: ${colInfo}`);
     },
-    onInsertRows: ({ table, y, numRows }) => {
+    onInsertRows: ({ table, y, numRows }: { table: UserTable; y: number; numRows: number }) => {
       addActivityLog(`➕ Added ${numRows} new product(s) to inventory at row ${y}`);
     },
-    onInsertCols: ({ table, x, numCols }) => {
+    onInsertCols: ({ table, x, numCols }: { table: UserTable; x: number; numCols: number }) => {
       const colName = String.fromCharCode(65 + x);
       addActivityLog(`➕ Added ${numCols} new column(s) to inventory at column ${colName}`);
     },
-    onInit: (table) => {
+    onInit: ({ table }) => {
       addActivityLog(`📦 Inventory management system initialized`);
+    },
+    onChange: ({ table }) => {
+      setTsv(convertToTSV(table));
     },
   });
 
   const initialCells = buildInitialCells({
     matrices: {
       A1: [
-        ['', 'Product Name', 'Stock Level', 'Unit Price'],
-        ['', 'Laptop Pro X1', 15, 1299.99],
-        ['', 'Wireless Mouse', 45, 29.99],
-        ['', 'Cotton T-Shirt', 8, 19.99],
-        ['', 'Programming Book', 22, 49.99],
-        ['', 'Coffee Maker', 5, 89.99],
-        ['', 'Yoga Mat', 35, 39.99],
-        ['', 'Bluetooth Headphones', 12, 79.99],
-        ['', 'USB Cable', 67, 9.99],
-        ['', 'Notebook', 23, 15.99],
-        ['', 'Desk Lamp', 7, 45.99],
-        ['', 'Water Bottle', 89, 12.99],
-        ['', 'Phone Case', 34, 24.99],
-        ['', 'Power Bank', 18, 59.99],
-        ['', 'Keyboard', 9, 89.99],
-        ['', 'Mouse Pad', 56, 8.99],
-        ['', 'Monitor Stand', 3, 129.99],
-        ['', 'Cable Organizer', 41, 6.99],
-        ['', 'Desk Mat', 28, 19.99],
-        ['', 'Webcam', 14, 69.99],
-        ['', 'Microphone', 6, 149.99],
-        ['', 'Gaming Mouse', 11, 79.99],
+        [null, 'Product Name', 'Stock Level', 'Unit Price'],
+        [null, 'Laptop Pro X1', 15, 1299.99],
+        [null, 'Wireless Mouse', 45, 29.99],
+        [null, 'Cotton T-Shirt', 8, 19.99],
+        [null, 'Programming Book', 22, 49.99],
+        [null, 'Coffee Maker', 5, 89.99],
+        [null, 'Yoga Mat', 35, 39.99],
+        [null, 'Bluetooth Headphones', 12, 79.99],
+        [null, 'USB Cable', 67, 9.99],
+        [null, 'Notebook', 23, 15.99],
+        [null, 'Desk Lamp', 7, 45.99],
+        [null, 'Water Bottle', 89, 12.99],
+        [null, 'Phone Case', 34, 24.99],
+        [null, 'Power Bank', 18, 59.99],
+        [null, 'Keyboard', 9, 89.99],
+        [null, 'Mouse Pad', 56, 8.99],
+        [null, 'Monitor Stand', 3, 129.99],
+        [null, 'Cable Organizer', 41, 6.99],
+        [null, 'Desk Mat', 28, 19.99],
+        [null, 'Webcam', 14, 69.99],
+        [null, 'Microphone', 6, 149.99],
+        [null, 'Gaming Mouse', 11, 79.99],
       ],
     },
     cells: {
@@ -262,13 +284,10 @@ export default function InventoryManagement() {
     },
   });
 
-  const clearLogs = () => {
-    setActivityLogs([]);
-  };
-
   return (
     <div
       style={{
+        height: 500,
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         margin: '0 auto',
         padding: '20px',
@@ -277,26 +296,19 @@ export default function InventoryManagement() {
       }}
     >
       {/* Inventory Management Dashboard */}
-      <div style={{ display: 'flex', gap: '20px' }}>
+      <div style={{ display: 'flex', gap: '20px', padding: 10 }}>
+        <GridSheet
+          hub={hub}
+          sheetName="inventory-management"
+          initialCells={initialCells}
+          style={{ border: '1px solid #ccc' }}
+          options={{
+            sheetHeight: 250,
+          }}
+        />
+
         {/* Activity Logs */}
-        <div style={{ flex: 1, maxWidth: '300px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <h4 style={{ color: '#2c3e50', margin: 0, fontSize: '14px', fontWeight: '600' }}>Activity Logs</h4>
-            <button
-              onClick={clearLogs}
-              style={{
-                padding: '4px 8px',
-                backgroundColor: '#6c757d',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '11px',
-              }}
-            >
-              Clear
-            </button>
-          </div>
+        <div style={{ flex: 1, maxWidth: '300px', maxHeight: 250, overflow: 'auto' }}>
           <div
             ref={(el) => {
               if (el && activityLogs.length > 0) {
@@ -304,12 +316,10 @@ export default function InventoryManagement() {
               }
             }}
             style={{
-              height: '400px',
               overflowY: 'auto',
               border: '1px solid var(--nextra-border-color, #ccc)',
               padding: '10px',
               backgroundColor: 'var(--nextra-bg-color, #f8f9fa)',
-              borderRadius: '6px',
               fontFamily: 'monospace',
               fontSize: '10px',
               lineHeight: '1.4',
@@ -323,7 +333,10 @@ export default function InventoryManagement() {
               activityLogs.map((log, index) => (
                 <div
                   key={index}
-                  style={{ marginBottom: '3px', wordBreak: 'break-all', color: 'var(--nextra-text-color, #333)' }}
+                  style={{ 
+                    marginBottom: '5px', wordBreak: 'break-all', color: 'var(--nextra-text-color, #333)',
+                    borderBottom: 'solid 1px #aaa',
+                  }}
                 >
                   {log}
                 </div>
@@ -331,27 +344,15 @@ export default function InventoryManagement() {
             )}
           </div>
         </div>
-
-        {/* Inventory Table */}
-        <div style={{ flex: 2 }}>
-          <h3
-            style={{
-              color: '#2c3e50',
-              margin: '0 0 15px 0',
-              fontSize: '18px',
-              fontWeight: '600',
-            }}
-          >
-            Inventory Management System
-          </h3>
-
-          <GridSheet
-            hub={hub}
-            sheetName="inventory-management"
-            initialCells={initialCells}
-            style={{ border: '1px solid #ccc' }}
-          />
-        </div>
+      </div>
+      {/* TSV Dump */}
+      <div style={{ marginTop: 16 }}>
+        <div style={{ fontSize: 12, color: '#333', marginBottom: 4 }}>TSV Dump:</div>
+        <textarea
+          style={{ width: '100%', height: 120, fontFamily: 'monospace', fontSize: 12 }}
+          value={tsv}
+          readOnly
+        />
       </div>
     </div>
   );

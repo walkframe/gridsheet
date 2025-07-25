@@ -44,6 +44,8 @@ export type WireProps = {
   onInit?: (args: { table: UserTable }) => void;
 };
 
+export type HubProps = WireProps;
+
 export class Wire {
   sheetHead: number = 0;
   cellHead: number = 0;
