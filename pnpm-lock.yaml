@@ -251,8 +251,8 @@ importers:
   packages/vue-core:
     dependencies:
       '@gridsheet/preact-core':
-        specifier: ^2.0.1
-        version: 2.0.1(dayjs@1.11.13)(preact@10.26.6)
+        specifier: ^2.0.2
+        version: 2.0.2(dayjs@1.11.13)(preact@10.26.6)
     devDependencies:
       '@vitejs/plugin-vue':
         specifier: ^5.2.4
@@ -806,8 +806,8 @@ packages:
   '@floating-ui/utils@0.2.10':
     resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
 
-  '@gridsheet/preact-core@2.0.1':
-    resolution: {integrity: sha512-88TUWQwwc+/Lp57f2MCWp1nIKyMlcmNO8gLlnlHGYUTi1nLvUIZKlEYJaVNFdytgz0JM11KwHP1fyX7OpUpXvA==}
+  '@gridsheet/preact-core@2.0.2':
+    resolution: {integrity: sha512-nQhSYYhyakPcz1OwbnV/0ZxrlvG433GGaW1I73sbJg8cd+gDc1fpHSzVj8Gv0TFR0H1gX8PENcY6sWhAcQEktg==}
     peerDependencies:
       dayjs: ^1.11.13
       preact: ^10.26.6
@@ -6116,7 +6116,7 @@ snapshots:
 
   '@floating-ui/utils@0.2.10': {}
 
-  '@gridsheet/preact-core@2.0.1(dayjs@1.11.13)(preact@10.26.6)':
+  '@gridsheet/preact-core@2.0.2(dayjs@1.11.13)(preact@10.26.6)':
     dependencies:
       dayjs: 1.11.13
       preact: 10.26.6
