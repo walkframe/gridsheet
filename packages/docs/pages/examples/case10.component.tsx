@@ -135,14 +135,20 @@ const DeleteButtonRendererMixin: RendererMixinType = {
 
 // TSV conversion utility function
 const convertToTSV = (table: UserTable, evaluates: boolean = true): string => {
-  if (!table) return '';
+  if (!table) {
+    return '';
+  }
   const matrix = table.getFieldMatrix({ refEvaluation: evaluates ? 'COMPLETE' : 'RAW' });
-  if (!matrix || matrix.length === 0) return '';
+  if (!matrix || matrix.length === 0) {
+    return '';
+  }
   return matrix
     .map((row) =>
       row
         .map((cell) => {
-          if (cell === null || cell === undefined) return '';
+          if (cell === null || cell === undefined) {
+            return '';
+          }
           const cellStr = String(cell);
           if (cellStr.includes('\t') || cellStr.includes('\n')) {
             return cellStr.replace(/\t/g, ' ').replace(/\n/g, ' ');
@@ -333,8 +339,10 @@ export default function InventoryManagement() {
               activityLogs.map((log, index) => (
                 <div
                   key={index}
-                  style={{ 
-                    marginBottom: '5px', wordBreak: 'break-all', color: 'var(--nextra-text-color, #333)',
+                  style={{
+                    marginBottom: '5px',
+                    wordBreak: 'break-all',
+                    color: 'var(--nextra-text-color, #333)',
                     borderBottom: 'solid 1px #aaa',
                   }}
                 >
@@ -348,11 +356,7 @@ export default function InventoryManagement() {
       {/* TSV Dump */}
       <div style={{ marginTop: 16 }}>
         <div style={{ fontSize: 12, color: '#333', marginBottom: 4 }}>TSV Dump:</div>
-        <textarea
-          style={{ width: '100%', height: 120, fontFamily: 'monospace', fontSize: 12 }}
-          value={tsv}
-          readOnly
-        />
+        <textarea style={{ width: '100%', height: 120, fontFamily: 'monospace', fontSize: 12 }} value={tsv} readOnly />
       </div>
     </div>
   );

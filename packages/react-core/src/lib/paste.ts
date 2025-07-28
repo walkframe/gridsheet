@@ -102,8 +102,12 @@ function parseStyleString(element: Element | null): React.CSSProperties | undefi
   const styleObj: React.CSSProperties = {};
 
   styleString.split(';').forEach((d) => {
-    const [rawKey, rawValue] = d.split(':');
+    let [rawKey, rawValue] = d.split(':');
     if (!rawKey || !rawValue) {
+      return;
+    }
+    rawKey = rawKey.trim();
+    if (rawKey === 'height' || rawKey === 'width') {
       return;
     }
     const key = rawKey.trim().replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());

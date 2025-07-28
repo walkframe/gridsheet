@@ -267,15 +267,15 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
     const { wire } = dstTable;
     const { copyingSheetId, copyingZone, cutting } = wire;
     const srcTable = dstTable.getTableBySheetId(copyingSheetId);
-    if (!srcTable) {
-      return store;
-    }
 
     let selectingArea = zoneToArea(selectingZone);
     const copyingArea = zoneToArea(copyingZone);
     const { matrix, onlyValue } = payload;
 
     if (cutting) {
+      if (!srcTable) {
+        return store;
+      }
       const src = copyingArea;
       const { height: h, width: w } = areaShape(copyingArea);
       const dst: AreaType =
@@ -355,6 +355,9 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
         },
       });
     } else {
+      if (srcTable == null) {
+        return store;
+      }
       let { height, width } = areaShape(copyingArea);
       if (selectingArea.top !== -1) {
         y = selectingArea.top;
