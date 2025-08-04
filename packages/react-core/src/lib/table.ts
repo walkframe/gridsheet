@@ -23,6 +23,7 @@ import {
   RefEvaluation,
 } from '../types';
 import {
+  among,
   areaShape,
   createMatrix,
   expandRange,
@@ -889,7 +890,7 @@ export class Table implements UserTable {
     const preserver = new ReferencePreserver(this);
 
     // to dst(to)
-    const lostRows = putMatrix(this.idMatrix, matrixFrom, dst, (srcId, dstId, point) => {
+    const lostRows = putMatrix(this.idMatrix, matrixFrom, dst, ({ srcValue: srcId, dstValue: dstId }) => {
       if (srcId == null || dstId == null) {
         return false;
       }
@@ -935,9 +936,12 @@ export class Table implements UserTable {
     const srcTableRaw = srcTable.__raw__;
     const srcContext = this.wire.contextsBySheetId[srcTableRaw.sheetId];
     // to src(from)
-    putMatrix(srcTableRaw.idMatrix, matrixNew, src, (newId, srcId) => {
+    putMatrix(srcTableRaw.idMatrix, matrixNew, src, ({ srcValue: newId, dstValue: srcId, dstPoint: srcPoint }) => {
+      // if the srcPoint is in the dst(Area), we do not need to rewrite
+      if (among(dst, srcPoint) && srcTable === this) {
+        return false;
+      }
       preserver.map[srcId] = newId;
-
       const srcCell = srcTableRaw.wire.data[srcId];
       if (operator === 'USER' && operation.hasOperation(srcCell?.prevention, operation.MoveFrom)) {
         return false;
@@ -967,7 +971,9 @@ export class Table implements UserTable {
     Object.assign(diffBefore, resolvedDiff);
     if (srcTable !== this && srcContext !== null) {
       const { dispatch } = srcContext;
-      dispatch(updateTable(srcTableRaw));
+      requestAnimationFrame(() => {
+        dispatch(updateTable(srcTableRaw));
+      });
     }
 
     if (historicize) {
