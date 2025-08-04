@@ -150,11 +150,18 @@ export const aa2oa = (aa: MatrixType, fields: string[]): { [s: string]: any }[] 
   return oa;
 };
 
+type PutMatrixFilterProps<T = any> = {
+  srcValue: T;
+  dstValue: T;
+  srcPoint: PointType;
+  dstPoint: PointType;
+};
+
 export const putMatrix = <T = any>(
   dst: T[][],
   src: T[][],
   dstArea: AreaType,
-  filter: (srcValue: T, dstValue: T, point: PointType) => boolean = () => true,
+  filter: (arg: PutMatrixFilterProps) => boolean = () => true,
 ) => {
   const lostRows: MatricesByAddress<T> = {};
   const { top, left, bottom, right } = dstArea;
@@ -165,16 +172,18 @@ export const putMatrix = <T = any>(
   for (let y = top; y <= bottom; y++) {
     const lostRow: T[] = [];
     for (let x = left; x <= right; x++) {
+      const srcPoint = { y: y - top, x: x - left };
+      const dstPoint = { y, x };
       const value = src[y - top][x - left];
       // -1 means excluding headers
       if (y < dstNumRows - 1 && x < dstNumCols - 1) {
-        if (filter(value, dst[y][x], { y, x })) {
+        if (filter({ srcValue: value, dstValue: dst[y][x], srcPoint, dstPoint })) {
           dst[y][x] = value;
         }
         continue;
       }
       if (lostRow.length === 0) {
-        lostRows[p2a({ y, x })] = [lostRow];
+        lostRows[p2a(dstPoint)] = [lostRow];
       }
       lostRow.push(value);
     }

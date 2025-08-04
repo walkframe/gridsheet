@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { ctrl, drag, paste } from './utils';
+import { ctrl, drag, paste, cut } from './utils';
 
 test.describe('Control Operations', () => {
   test.describe('Insert Operations', () => {
@@ -524,6 +524,63 @@ test.describe('Control Operations', () => {
 
       expect(sheet1C5AfterRedo).toBeDefined();
       expect(sheet2A3AfterRedo).toBeDefined();
+    });
+
+    test('move operation with overlapping src and dst', async ({ page }) => {
+      await page.goto('http://localhost:5233/iframe.html?id=multiple-sheets--sheets&viewMode=story');
+
+      // Wait for the page to load and locate Sheet2
+      await page.waitForSelector('[data-address="A1"]');
+
+      // Find Sheet2 by looking for the sheet with the correct initial values
+      // Sheet2 has A1=50, B2=1200, B3=30
+      const sheet2 = page.locator('[data-sheet-name="Sheet2"]').first();
+
+      // Define cell locators
+      const a1 = sheet2.locator("[data-address='A1']");
+      const a2 = sheet2.locator("[data-address='A2']");
+      const a3 = sheet2.locator("[data-address='A3']");
+      const b1 = sheet2.locator("[data-address='B1']");
+      const b2 = sheet2.locator("[data-address='B2']");
+      const b3 = sheet2.locator("[data-address='B3']");
+
+      // Select Sheet2!A1:B3 range
+      await drag(sheet2, 'A1', 'B3', page);
+
+      // Verify initial values
+      expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('50');
+      expect(await a2.locator('.gs-cell-rendered').textContent()).toBe('633');
+      expect(await a3.locator('.gs-cell-rendered').textContent()).toBe('');
+      expect(await b1.locator('.gs-cell-rendered').textContent()).toBe('999');
+      expect(await b2.locator('.gs-cell-rendered').textContent()).toBe('1200');
+      expect(await b3.locator('.gs-cell-rendered').textContent()).toBe('30');
+
+      // Cut the selected range (A1:B3)
+      await cut(page);
+
+      // Click on B2 to set destination
+      await b2.click();
+
+      // Paste to B2 (which overlaps with the original range)
+      await paste(page);
+
+      // Check the actual behavior - it seems the move operation doesn't work as expected
+      // Let's verify what actually happens
+      const b2ValueAfterMove = await b2.locator('.gs-cell-rendered').textContent();
+      const b3ValueAfterMove = await b3.locator('.gs-cell-rendered').textContent();
+
+      // Verify that the move operation doesn't break the application
+      // and that we can still interact with the cells
+      expect(await b2.locator('.gs-cell-rendered').textContent()).toBeDefined();
+      expect(await b3.locator('.gs-cell-rendered').textContent()).toBeDefined();
+
+      // Verify that we can still select and edit cells
+      await b2.click();
+      expect(await b2.getAttribute('class')).toContain('gs-choosing');
+
+      // Verify that the move operation works correctly when src and dst overlap
+      expect(b2ValueAfterMove).toBe('50');
+      expect(b3ValueAfterMove).toBe('633');
     });
   });
 });
