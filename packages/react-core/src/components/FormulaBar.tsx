@@ -8,7 +8,11 @@ import { insertTextAtCursor } from '../lib/input';
 import { editorStyle } from './Editor';
 import { ScrollHandle } from './ScrollHandle';
 
-export const FormulaBar = () => {
+type FormulaBarProps = {
+  ready: boolean;
+};
+
+export const FormulaBar = ({ ready }: FormulaBarProps) => {
   const { store, dispatch } = useContext(Context);
   const [before, setBefore] = useState('');
   const {
@@ -61,7 +65,6 @@ export const FormulaBar = () => {
   const largeInput = largeEditorRef.current;
 
   const handleInput = useCallback((e: KeyboardEvent<HTMLTextAreaElement>) => {
-    console.log('e.currentTarget.value', e.currentTarget.value);
     dispatch(setInputting(e.currentTarget.value));
   }, []);
 
@@ -161,9 +164,10 @@ export const FormulaBar = () => {
     [table, choosing, before, writeCell, updateScroll],
   );
 
+  const style: React.CSSProperties = ready ? {} : { visibility: 'hidden' };
   if (!table) {
     return (
-      <label className="gs-formula-bar gs-hidden">
+      <label className="gs-formula-bar gs-hidden" style={style}>
         <div className="gs-selecting-address"></div>
         <div className="gs-fx">Fx</div>
         <div className="gs-formula-bar-editor-inner">
@@ -172,9 +176,8 @@ export const FormulaBar = () => {
       </label>
     );
   }
-
   return (
-    <label className="gs-formula-bar">
+    <label className="gs-formula-bar" data-sheet-id={store.sheetId} style={style}>
       <ScrollHandle style={{ position: 'absolute', left: 0, top: 0, zIndex: 2 }} vertical={-1} />
       <div className="gs-selecting-address">{address}</div>
       <div className="gs-fx">Fx</div>

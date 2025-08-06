@@ -161,7 +161,7 @@ export function GridSheet({
         <ScrollHandle style={{ position: 'absolute', zIndex: 4, right: 0, top: 0, width: 5 }} horizontal={1} />
         <ScrollHandle style={{ position: 'absolute', zIndex: 4, left: 0, bottom: 0, height: 5 }} vertical={1} />
 
-        {typeof store.searchQuery === 'undefined' ? showFormulaBar && <FormulaBar /> : <SearchBar />}
+        {typeof store.searchQuery === 'undefined' ? showFormulaBar && <FormulaBar ready={wire.ready} /> : <SearchBar />}
         <div
           className={`gs-main ${className || ''}`}
           ref={mainRef}
