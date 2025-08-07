@@ -8,7 +8,7 @@ Spreadsheet component for Preact
 npm install @gridsheet/preact-core
 ```
 
-## Peer Dependencies
+### Peer Dependencies
 
 This package requires the following peer dependencies:
 
@@ -66,6 +66,11 @@ This package exports all the core GridSheet functionality along with Preact comp
 - All React compatibility exports from `preact/compat`
 - Core GridSheet components and utilities
 - Preact-specific exports (`h`, `render`)
+
+## Docs
+
+- [GridSheet document](https://gridsheet.walkframe.com/)
+- [Examples](https://gridsheet.walkframe.com/examples/case1)
 
 ## Development
 

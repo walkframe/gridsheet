@@ -18,9 +18,8 @@ $ npm install @gridsheet/react-core --save
 
 ## Docs
 
-- [ReactGridsheet document](https://docs.walkframe.com/gridsheet/react)
-- [Examples](https://docs.walkframe.com/gridsheet/Examples/react-case1)
-- [Histories](https://docs.walkframe.com/gridsheet/history)
+- [GridSheet document](https://gridsheet.walkframe.com/)
+- [Examples](https://gridsheet.walkframe.com/examples/case1)
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwalkframe%2Freact-gridsheet?ref=badge_large)

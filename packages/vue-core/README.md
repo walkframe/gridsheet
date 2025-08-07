@@ -8,7 +8,7 @@ Spreadsheet component for Vue 3
 npm install @gridsheet/vue-core
 ```
 
-## Peer Dependencies
+### Peer Dependencies
 
 This package requires the following peer dependency:
 
@@ -78,6 +78,11 @@ This package exports:
 - All core GridSheet functionality from `@gridsheet/preact-core`
 - `GridSheet` - Vue 3 component
 - `useHub` - Vue 3-specific reactive hub composable
+
+## Docs
+
+- [GridSheet document](https://gridsheet.walkframe.com/)
+- [Examples](https://gridsheet.walkframe.com/examples/case1)
 
 ## Development
 
