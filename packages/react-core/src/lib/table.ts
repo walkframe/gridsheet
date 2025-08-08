@@ -419,14 +419,14 @@ export class Table implements UserTable {
     this.totalHeight = height + this.headerHeight;
   }
 
-  public refresh(keepAddressCache = true, resize = false): Table {
+  public refresh(relocate = false, resize = false): Table {
     this.incrementVersion();
     this.lastChangedAt = this.changedAt;
     this.changedAt = new Date();
 
     this.clearSolvedCaches();
 
-    if (!keepAddressCache) {
+    if (relocate) {
       // force reset
       this.addressCaches.clear();
     }
@@ -436,9 +436,9 @@ export class Table implements UserTable {
     return this;
   }
 
-  public clone(keepAddressCache = true): Table {
+  public clone(relocate = false): Table {
     const copied: Table = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
-    return copied.refresh(keepAddressCache);
+    return copied.refresh(relocate);
   }
 
   public getPointById(
@@ -1005,7 +1005,7 @@ export class Table implements UserTable {
       this.wire.onEdit({ table: this.__raw__.trim(dst) });
     }
 
-    return this.refresh(false);
+    return this.refresh(true);
   }
 
   public copy({
@@ -1220,7 +1220,7 @@ export class Table implements UserTable {
         partial,
       });
     }
-    return this.refresh(true, resized);
+    return this.refresh(false, resized);
   }
 
   public writeRawCellMatrix({
@@ -1394,7 +1394,7 @@ export class Table implements UserTable {
       cloned.addressCaches = new Map();
       this.wire.onInsertRows({ table: cloned, y, numRows });
     }
-    return this.refresh(false, true);
+    return this.refresh(true, true);
   }
   public removeRows({
     y,
@@ -1467,7 +1467,7 @@ export class Table implements UserTable {
       cloned.addressCaches = new Map();
       this.wire.onRemoveRows({ table: cloned, ys: ys.reverse() });
     }
-    return this.refresh(false, true);
+    return this.refresh(true, true);
   }
 
   public insertCols({
@@ -1547,7 +1547,7 @@ export class Table implements UserTable {
       cloned.addressCaches = new Map();
       this.wire.onInsertCols({ table: cloned, x, numCols });
     }
-    return this.refresh(false, true);
+    return this.refresh(true, true);
   }
   public removeCols({
     x,
@@ -1624,7 +1624,7 @@ export class Table implements UserTable {
       cloned.addressCaches = new Map();
       this.wire.onRemoveCols({ table: cloned, xs: xs.reverse() });
     }
-    return this.refresh(false, true);
+    return this.refresh(true, true);
   }
   public getHistories() {
     return [...this.wire.histories];
@@ -1804,7 +1804,7 @@ export class Table implements UserTable {
         break;
       }
     }
-    this.refresh(!shouldTracking(history.operation), true);
+    this.refresh(shouldTracking(history.operation), true);
     return {
       history,
       callback: ({ tableReactive: tableRef }: StoreType) => {
@@ -1879,7 +1879,7 @@ export class Table implements UserTable {
         }
       }
     }
-    this.refresh(!shouldTracking(history.operation), true);
+    this.refresh(shouldTracking(history.operation), true);
     return {
       history,
       callback: ({ tableReactive: tableRef }: StoreType) => {
