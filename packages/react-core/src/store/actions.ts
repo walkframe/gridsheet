@@ -893,7 +893,6 @@ class InsertRowsAboveAction<T extends { numRows: number; y: number; operator?: O
     });
     return {
       ...store,
-      ...table.getTotalSize(),
       tableReactive: { current: table },
     };
   }
@@ -933,7 +932,6 @@ class InsertRowsBelowAction<T extends { numRows: number; y: number; operator?: O
     });
     return {
       ...store,
-      ...table.getTotalSize(),
       selectingZone: nextSelectingZone,
       choosing: nextChoosing,
       tableReactive: { current: table },
@@ -969,7 +967,6 @@ class InsertColsLeftAction<T extends { numCols: number; x: number; operator?: Op
     });
     return {
       ...store,
-      ...table.getTotalSize(),
       tableReactive: { current: table },
     };
   }
@@ -1012,7 +1009,6 @@ class InsertColsRightAction<T extends { numCols: number; x: number; operator?: O
     });
     return {
       ...store,
-      ...table.getTotalSize(),
       selectingZone: nextSelectingZone,
       choosing: nextChoosing,
       tableReactive: { current: table },
@@ -1049,7 +1045,6 @@ class RemoveRowsAction<T extends { numRows: number; y: number; operator?: Operat
 
     return {
       ...store,
-      ...table.getTotalSize(),
       tableReactive: { current: table },
     };
   }
@@ -1084,7 +1079,6 @@ class RemoveColsAction<T extends { numCols: number; x: number; operator?: Operat
 
     return {
       ...store,
-      ...table.getTotalSize(),
       tableReactive: { current: table },
     };
   }

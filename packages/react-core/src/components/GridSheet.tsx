@@ -75,6 +75,7 @@ export function GridSheet({
     table.initialize(initialCells);
     wire.onInit?.({ table });
 
+    table.setTotalSize();
     tableReactive.current = table;
 
     const store: StoreType = {
@@ -112,7 +113,6 @@ export function GridSheet({
       minNumCols: 1,
       maxNumCols: -1,
       mode: 'light',
-      ...table.getTotalSize(),
     };
     return store;
   });
@@ -167,8 +167,8 @@ export function GridSheet({
           ref={mainRef}
           style={{
             //width: '100%',
-            maxWidth: (store.totalWidth || 0) + 2,
-            maxHeight: (store.totalHeight || 0) + 2,
+            maxWidth: (store.tableReactive.current?.totalWidth || 0) + 2,
+            maxHeight: (store.tableReactive.current?.totalHeight || 0) + 2,
             overflow: 'auto',
             resize: sheetResize,
             ...style,

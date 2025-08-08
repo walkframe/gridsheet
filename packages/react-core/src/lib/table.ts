@@ -187,6 +187,8 @@ export class Table implements UserTable {
   public status: 0 | 1 | 2 = 0; // 0: not initialized, 1: initialized, 2: formula absoluted
   public wire: Wire;
   public idsToBeIdentified: Id[] = [];
+  public totalWidth = 0;
+  public totalHeight = 0;
 
   private version = 0;
   private idMatrix: IdMatrix;
@@ -405,7 +407,7 @@ export class Table implements UserTable {
     return { width, height };
   }
 
-  public getTotalSize() {
+  public setTotalSize() {
     const { bottom, right } = this.area;
     const { width, height } = this.getRectSize({
       top: 1,
@@ -413,29 +415,30 @@ export class Table implements UserTable {
       bottom: bottom + 1,
       right: right + 1,
     });
-    return {
-      totalWidth: width + this.headerWidth,
-      totalHeight: height + this.headerHeight,
-    };
+    this.totalWidth = width + this.headerWidth;
+    this.totalHeight = height + this.headerHeight;
   }
 
-  public refresh(keepAddressCache = true): Table {
+  public refresh(relocate = false, resize = false): Table {
     this.incrementVersion();
     this.lastChangedAt = this.changedAt;
     this.changedAt = new Date();
 
     this.clearSolvedCaches();
 
-    if (!keepAddressCache) {
+    if (relocate) {
       // force reset
       this.addressCaches.clear();
+    }
+    if (resize) {
+      this.setTotalSize();
     }
     return this;
   }
 
-  public clone(keepAddressCache = true): Table {
+  public clone(relocate = false): Table {
     const copied: Table = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
-    return copied.refresh(keepAddressCache);
+    return copied.refresh(relocate);
   }
 
   public getPointById(
@@ -1002,7 +1005,7 @@ export class Table implements UserTable {
       this.wire.onEdit({ table: this.__raw__.trim(dst) });
     }
 
-    return this.refresh(false);
+    return this.refresh(true);
   }
 
   public copy({
@@ -1101,14 +1104,16 @@ export class Table implements UserTable {
     const diffAfter: CellsByIdType = {};
     const changedAt = new Date();
 
+    let resized = false;
     Object.keys(diff).forEach((address) => {
       const point = a2p(address);
       const id = this.getId(point);
       const original = this.wire.data[id]!;
-      let patch: Record<string, any> = { ...diff[address] };
       if (operator === 'USER' && operation.hasOperation(original.prevention, operation.Update)) {
         return;
       }
+
+      let patch: Record<string, any> = { ...diff[address] };
 
       if (formulaIdentify) {
         patch.value = identifyFormula(patch.value, {
@@ -1139,6 +1144,9 @@ export class Table implements UserTable {
       if (updateChangedAt) {
         this.setChangedAt(patch, changedAt);
       }
+      if (patch.width != null || patch.height != null) {
+        resized = true;
+      }
       // must not partial
       diffBefore[id] = { ...original };
 
@@ -1168,6 +1176,7 @@ export class Table implements UserTable {
     return {
       diffBefore,
       diffAfter,
+      resized,
     };
   }
 
@@ -1190,7 +1199,7 @@ export class Table implements UserTable {
     undoReflection?: StorePatchType;
     redoReflection?: StorePatchType;
   }) {
-    const { diffBefore, diffAfter } = this._update({
+    const { diffBefore, diffAfter, resized } = this._update({
       diff,
       partial,
       operator,
@@ -1211,7 +1220,7 @@ export class Table implements UserTable {
         partial,
       });
     }
-    return this.refresh(true);
+    return this.refresh(false, resized);
   }
 
   public writeRawCellMatrix({
@@ -1385,8 +1394,7 @@ export class Table implements UserTable {
       cloned.addressCaches = new Map();
       this.wire.onInsertRows({ table: cloned, y, numRows });
     }
-
-    return this.refresh(false);
+    return this.refresh(true, true);
   }
   public removeRows({
     y,
@@ -1459,8 +1467,7 @@ export class Table implements UserTable {
       cloned.addressCaches = new Map();
       this.wire.onRemoveRows({ table: cloned, ys: ys.reverse() });
     }
-
-    return this.refresh(false);
+    return this.refresh(true, true);
   }
 
   public insertCols({
@@ -1540,7 +1547,7 @@ export class Table implements UserTable {
       cloned.addressCaches = new Map();
       this.wire.onInsertCols({ table: cloned, x, numCols });
     }
-    return this.refresh(false);
+    return this.refresh(true, true);
   }
   public removeCols({
     x,
@@ -1617,7 +1624,7 @@ export class Table implements UserTable {
       cloned.addressCaches = new Map();
       this.wire.onRemoveCols({ table: cloned, xs: xs.reverse() });
     }
-    return this.refresh(false);
+    return this.refresh(true, true);
   }
   public getHistories() {
     return [...this.wire.histories];
@@ -1797,7 +1804,7 @@ export class Table implements UserTable {
         break;
       }
     }
-    this.refresh(!shouldTracking(history.operation));
+    this.refresh(shouldTracking(history.operation), true);
     return {
       history,
       callback: ({ tableReactive: tableRef }: StoreType) => {
@@ -1872,7 +1879,7 @@ export class Table implements UserTable {
         }
       }
     }
-    this.refresh(!shouldTracking(history.operation));
+    this.refresh(shouldTracking(history.operation), true);
     return {
       history,
       callback: ({ tableReactive: tableRef }: StoreType) => {
