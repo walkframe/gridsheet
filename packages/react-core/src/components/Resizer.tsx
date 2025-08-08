@@ -70,7 +70,6 @@ export const Resizer = () => {
     dispatch(
       setStore({
         tableReactive: { current: table },
-        ...table.getTotalSize(),
       }),
     );
     dispatch(setResizingPositionY([-1, -1, -1]));

@@ -135,8 +135,6 @@ export type StoreType = {
   contextMenuItems: FC<ContextMenuProps>[];
   resizingPositionY: [Y, Y, Y]; // indexY, startY, endY
   resizingPositionX: [X, X, X]; // indexX, startX, endX
-  totalWidth: number;
-  totalHeight: number;
 };
 
 export type Manager<T> = {
