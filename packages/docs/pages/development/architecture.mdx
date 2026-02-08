@@ -252,9 +252,83 @@ GridSheet is composed of several key components that work together to provide th
   - **SearchBar**: Provides search functionality across the grid
   - **Editor**: Handles cell editing and input validation
   - **Tabular**: Core grid rendering component
+    - **CellStateOverlay**: Canvas-based overlay for selection visuals
     - **HeaderCellLeft...**: Left-side row headers
     - **HeaderCellTop...**: Top-side column headers
     - **Cell...**: Individual cell components
   - **StoreObserver**: Monitors state changes and triggers updates
   - **ContextMenu**: Right-click context menu functionality
   - **Resizer**: Handles column/row resizing operations
+
+## Canvas Overlay (CellStateOverlay)
+
+Selection visuals (choosing border, selecting range, copy/cut dashed border, autofill, formula references, search highlights, and header highlights) are rendered on a single `<canvas>` element instead of applying per-cell inline styles. This architecture prevents memory leaks caused by mounting style objects on every individual cell component.
+
+### Why Canvas?
+
+In the previous approach, each cell received an `operationStyle` prop containing selection-related CSS (background color, border). This caused:
+
+- **Memory leaks**: Style objects were created for every cell in the selection range on each state change
+- **Excessive re-renders**: Changing selection triggered re-renders across all affected cells
+- **DOM overhead**: Hundreds or thousands of DOM style mutations per selection change
+
+The canvas overlay draws all selection visuals in a single paint operation, independent of the number of cells involved.
+
+### Rendering Architecture
+
+```mermaid
+graph TB
+    subgraph TABULAR ["Tabular (gs-tabular)"]
+        subgraph INNER ["gs-tabular-inner"]
+            CANVAS["CellStateOverlay<br/>(canvas, sticky, z-index: 10)"]
+            TABLE["table<br/>(gs-table)"]
+        end
+    end
+
+    EDITOR["Editor<br/>(z-index: 11)"]
+
+    style CANVAS fill:#e3f2fd,color:#1565c0
+    style TABLE fill:#e8f5e8,color:#2e7d32
+    style EDITOR fill:#fff3e0,color:#e65100
+```
+
+- The canvas is placed inside a **sticky wrapper** (`position: sticky; top: 0; left: 0; width: 0; height: 0; overflow: visible`) so it stays fixed relative to the viewport while scrolling
+- The canvas is **viewport-sized** (matches `gs-tabular` client dimensions), not full-table-sized, to avoid canvas size limits on large tables
+- The **Editor** has `z-index: 11`, above the overlay's `z-index: 10`, ensuring the editing input is always interactive
+
+### Drawing Layers
+
+The canvas draws 7 layers in order:
+
+1. **Selecting zone** — fill + border for the current selection range (clipped to cell area, excluding headers)
+2. **Autofill dragging** — dashed border for autofill drag preview
+3. **Choosing cell** — solid border around the currently pointed cell
+4. **Copy/Cut zone** — dashed border for the clipboard range
+5. **Formula references** — colored borders for formula cell references (using the color palette)
+6. **Search matches** — highlighted background for search results
+7. **Header highlights** — semi-transparent fills on top/left headers (drawn outside the cell-area clip region)
+
+Layers 1–6 are drawn within a clip region (`ctx.clip()`) that excludes the sticky header area, so cell selections don't bleed into headers. Layer 7 is drawn after restoring the full canvas to overlay the header region.
+
+### Coordinate System
+
+Cell positions are resolved via `System.offsetTop` / `System.offsetLeft` metadata stored on header cells. This provides **O(1) coordinate lookup** instead of iterating over rows/columns:
+
+- `System.offsetTop` on row header cells (`y, x=0`) stores the cumulative top offset
+- `System.offsetLeft` on column header cells (`y=0, x`) stores the cumulative left offset
+- These offsets are computed once in `setTotalSize()` during table initialization
+
+Drawing coordinates are converted from absolute table coordinates to viewport coordinates by subtracting `scrollTop` / `scrollLeft`.
+
+### Scroll Synchronization
+
+The overlay listens to the `scroll` event on `gs-tabular` and redraws **synchronously** (not via `requestAnimationFrame`) to avoid 1-frame lag between scroll position and overlay rendering. State-driven redraws (e.g., selection changes) use `requestAnimationFrame` for batching.
+
+### CSS Classes vs Canvas
+
+Cell and header elements still retain their CSS classes (`gs-choosing`, `gs-selecting`, `gs-th-selecting`) for:
+
+- **E2E test selectors**: Tests query these classes to verify selection state
+- **Non-visual styling**: e.g., `gs-selecting .gs-cell-label { display: block }` to show address labels in the selection range
+
+Only the **background-color** styling for selection states has been moved to the canvas. The classes remain on the DOM elements.

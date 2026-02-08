@@ -4,21 +4,18 @@ import { Table } from './table';
 import type { AreaType, PointType, Virtualization } from '../types';
 
 export const getCellRectPositions = (table: Table, { y, x }: PointType) => {
-  let { width, height } = table.getRectSize({
-    top: 1,
-    left: 1,
-    bottom: y,
-    right: x,
-  });
-  width += table.headerWidth;
-  height += table.headerHeight;
-  const w = table.getCellByPoint({ y: 0, x }, 'SYSTEM')?.width || DEFAULT_WIDTH;
-  const h = table.getCellByPoint({ y, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
+  // Use System.offsetLeft / offsetTop stored on header cells for O(1) lookup
+  const colCell = table.getCellByPoint({ y: 0, x }, 'SYSTEM');
+  const rowCell = table.getCellByPoint({ y, x: 0 }, 'SYSTEM');
+  const left = colCell?.system?.offsetLeft ?? 0;
+  const top = rowCell?.system?.offsetTop ?? 0;
+  const w = colCell?.width || DEFAULT_WIDTH;
+  const h = rowCell?.height || DEFAULT_HEIGHT;
   return {
-    top: height,
-    left: width,
-    bottom: height + h,
-    right: width + w,
+    top,
+    left,
+    bottom: top + h,
+    right: left + w,
     width: w,
     height: h,
   };

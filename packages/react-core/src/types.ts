@@ -44,6 +44,10 @@ export type System = {
   sheetId: number;
   changedAt: Date;
   dependents: Set<string>;
+  /** Cumulative top offset (px) from table origin. Set on row-header cells (x=0). */
+  offsetTop?: number;
+  /** Cumulative left offset (px) from table origin. Set on col-header cells (y=0). */
+  offsetLeft?: number;
 };
 
 export type CellType<T = any, Custom = any> = {
