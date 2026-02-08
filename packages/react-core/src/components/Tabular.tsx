@@ -198,9 +198,7 @@ export const Tabular = () => {
                   <tr key={y} className="gs-row">
                     <HeaderCellLeft y={y} />
                     <td className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-left" />
-                    {virtualized?.xs?.map((x) => (
-                      <Cell key={x} y={y} x={x} />
-                    ))}
+                    {virtualized?.xs?.map((x) => <Cell key={x} y={y} x={x} />)}
                     <td className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-right" />
                   </tr>
                 );
@@ -212,5 +210,3 @@ export const Tabular = () => {
     </>
   );
 };
-
-

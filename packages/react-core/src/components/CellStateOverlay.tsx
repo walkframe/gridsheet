@@ -38,14 +38,7 @@ type Props = {
 
 type Ctx2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
-const fillRect = (
-  ctx: Ctx2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  color: string,
-) => {
+const fillRect = (ctx: Ctx2D, x: number, y: number, width: number, height: number, color: string) => {
   ctx.fillStyle = color;
   ctx.fillRect(x, y, width, height);
 };
@@ -88,7 +81,9 @@ const drawAreaRectViewport = (
   fillColor?: string,
 ) => {
   const { top, left, bottom, right } = area;
-  if (top === -1 || left === -1 || bottom === -1 || right === -1) return;
+  if (top === -1 || left === -1 || bottom === -1 || right === -1) {
+    return;
+  }
 
   const topLeft = getCellRectPositions(table, { y: top, x: left });
   const bottomRight = getCellRectPositions(table, { y: bottom, x: right });
@@ -99,7 +94,9 @@ const drawAreaRectViewport = (
   const y2 = bottomRight.bottom - scrollTop;
 
   // Quick reject if entirely off-screen
-  if (x2 < 0 || x1 > viewW || y2 < 0 || y1 > viewH) return;
+  if (x2 < 0 || x1 > viewW || y2 < 0 || y1 > viewH) {
+    return;
+  }
 
   drawRect(ctx, x1, y1, x2 - x1, y2 - y1, color, lineWidth, dashPattern, fillColor);
 };
@@ -132,7 +129,9 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+      return;
+    }
 
     const container = tabularRef.current;
     const dpr = window.devicePixelRatio || 1;
@@ -210,7 +209,9 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
       const vy = pos.top - scrollTop;
 
       // Skip if off-screen
-      if (vx + pos.width < 0 || vx > w || vy + pos.height < 0 || vy > h) return;
+      if (vx + pos.width < 0 || vx > w || vy + pos.height < 0 || vy > h) {
+        return;
+      }
 
       const isCurrentMatch = index === matchingCellIndex;
       drawRect(
@@ -243,11 +244,15 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
       if (choosing.x === x) {
         color = headerColors.choosing;
       }
-      if (!color) continue;
+      if (!color) {
+        continue;
+      }
 
       const pos = getCellRectPositions(table, { y: 1, x });
       const left = pos.left - scrollLeft;
-      if (left + pos.width < headerW || left > w) continue;
+      if (left + pos.width < headerW || left > w) {
+        continue;
+      }
       fillRect(ctx, left, 0, pos.width, headerH, color);
     }
 
@@ -260,11 +265,15 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
       if (choosing.y === y) {
         color = headerColors.choosing;
       }
-      if (!color) continue;
+      if (!color) {
+        continue;
+      }
 
       const pos = getCellRectPositions(table, { y, x: 1 });
       const top = pos.top - scrollTop;
-      if (top + pos.height < headerH || top > h) continue;
+      if (top + pos.height < headerH || top > h) {
+        continue;
+      }
       fillRect(ctx, 0, top, headerW, pos.height, color);
     }
   }, [
@@ -300,7 +309,9 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
 
   useEffect(() => {
     const container = tabularRef.current;
-    if (!container) return;
+    if (!container) {
+      return;
+    }
     container.addEventListener('scroll', handleScroll);
     return () => {
       container.removeEventListener('scroll', handleScroll);
