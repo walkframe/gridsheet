@@ -12,12 +12,6 @@
   -webkit-user-select: none;
   -moz-user-select: none;
   
-  .gs-cell-inner-wrap {
-    &.gs-selecting {
-      background-color: rgba(0, 128, 255, 0.2);
-    }
-  }
-
   &.gs-copying {
     textarea:focus {
       outline: solid 1px #0077ff;
@@ -25,9 +19,6 @@
   }
   &.gs-selecting {
     z-index: 1;
-    .gs-cell-inner {
-      background-color: rgba(0, 128, 255, 0.2);
-    }
     .gs-cell-label {
       display: block;
     }

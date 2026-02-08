@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { useContext, useCallback, memo, useRef } from 'react';
 import { x2c } from '../lib/converters';
-import { between, zoneToArea } from '../lib/structs';
+import { zoneToArea } from '../lib/structs';
 import { Context } from '../store';
 import {
   choose,
@@ -195,13 +195,7 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
   return (
     <th
       data-x={x}
-      className={`gs-th gs-th-top ${choosing.x === x ? 'gs-choosing' : ''} ${
-        between({ start: selectingZone.startX, end: selectingZone.endX }, x)
-          ? topHeaderSelecting
-            ? 'gs-th-selecting'
-            : 'gs-selecting'
-          : ''
-      }`}
+      className={`gs-th gs-th-top`}
       style={{ width, minWidth: width, maxWidth: width }}
       onContextMenu={(e) => {
         if (contextMenuItems.length > 0) {

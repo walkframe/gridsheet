@@ -19,17 +19,16 @@ import { Context } from '../store';
 import { FormulaError } from '../formula/evaluator';
 import { insertRef, isRefInsertable } from '../lib/input';
 import { isXSheetFocused } from '../store/helpers';
-import type { CSSProperties, FC, RefObject } from 'react';
+import type { FC, RefObject } from 'react';
 import { isTouching, safePreventDefault } from '../lib/events';
 import type { UserTable } from '../lib/table';
 
 type Props = {
   y: number;
   x: number;
-  operationStyle?: CSSProperties;
 };
 
-export const Cell: FC<Props> = memo(({ y, x, operationStyle }) => {
+export const Cell: FC<Props> = memo(({ y, x }) => {
   const rowId = y2r(y);
   const colId = x2c(x);
   const address = `${colId}${rowId}`;
@@ -315,7 +314,6 @@ export const Cell: FC<Props> = memo(({ y, x, operationStyle }) => {
       }`}
       style={{
         ...cell?.style,
-        ...operationStyle,
       }}
       onContextMenu={onContextMenu}
       onDoubleClick={onDoubleClick}

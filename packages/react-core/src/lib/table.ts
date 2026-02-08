@@ -396,27 +396,56 @@ export class Table implements UserTable {
   }
 
   public getRectSize({ top, left, bottom, right }: AreaType) {
-    let width = 0,
-      height = 0;
-    for (let x = left || 1; x < right; x++) {
-      width += this.getCellByPoint({ y: 0, x }, 'SYSTEM')?.width || DEFAULT_WIDTH;
-    }
-    for (let y = top || 1; y < bottom; y++) {
-      height += this.getCellByPoint({ y, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
-    }
+    // Use System.offsetLeft / System.offsetTop stored on header cells for O(1) lookup.
+    // offsetLeft on (y=0, x) = absolute left of column x
+    // offsetTop on (y, x=0) = absolute top of row y
+    const l = left || 1;
+    const t = top || 1;
+
+    const colRightCell = this.getCellByPoint({ y: 0, x: right }, 'SYSTEM');
+    const colLeftCell = this.getCellByPoint({ y: 0, x: l }, 'SYSTEM');
+    const rowBottomCell = this.getCellByPoint({ y: bottom, x: 0 }, 'SYSTEM');
+    const rowTopCell = this.getCellByPoint({ y: t, x: 0 }, 'SYSTEM');
+
+    const rw = colRightCell?.system?.offsetLeft ?? 0;
+    const lw = colLeftCell?.system?.offsetLeft ?? 0;
+    const rh = rowBottomCell?.system?.offsetTop ?? 0;
+    const th = rowTopCell?.system?.offsetTop ?? 0;
+
+    const width = Math.max(0, rw - lw);
+    const height = Math.max(0, rh - th);
     return { width, height };
   }
 
   public setTotalSize() {
-    const { bottom, right } = this.area;
-    const { width, height } = this.getRectSize({
-      top: 1,
-      left: 1,
-      bottom: bottom + 1,
-      right: right + 1,
-    });
-    this.totalWidth = width + this.headerWidth;
-    this.totalHeight = height + this.headerHeight;
+    const numCols = this.getNumCols();
+    const numRows = this.getNumRows();
+    const headerW = this.headerWidth;
+    const headerH = this.headerHeight;
+
+    // Write offsetLeft into column-header cells (y=0, x=1..numCols)
+    let accW = 0;
+    for (let x = 1; x <= numCols; x++) {
+      const cell = this.getCellByPoint({ y: 0, x }, 'SYSTEM');
+      const w = cell?.width || DEFAULT_WIDTH;
+      if (cell?.system) {
+        cell.system.offsetLeft = headerW + accW;
+      }
+      accW += w;
+    }
+    this.totalWidth = headerW + accW;
+
+    // Write offsetTop into row-header cells (y=1..numRows, x=0)
+    let accH = 0;
+    for (let y = 1; y <= numRows; y++) {
+      const cell = this.getCellByPoint({ y, x: 0 }, 'SYSTEM');
+      const h = cell?.height || DEFAULT_HEIGHT;
+      if (cell?.system) {
+        cell.system.offsetTop = headerH + accH;
+      }
+      accH += h;
+    }
+    this.totalHeight = headerH + accH;
   }
 
   public refresh(relocate = false, resize = false): Table {
