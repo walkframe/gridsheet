@@ -258,6 +258,9 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
 
     // Left headers
     for (let y = 1; y <= numRows; y++) {
+      if (table.isRowFiltered(y)) {
+        continue;
+      }
       let color: string | null = null;
       if (between({ start: selectingZone.startY, end: selectingZone.endY }, y)) {
         color = leftHeaderSelecting ? headerColors.thSelecting : headerColors.selecting;

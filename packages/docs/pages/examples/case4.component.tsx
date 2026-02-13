@@ -224,14 +224,13 @@ export default function BudgetManagement() {
           initialCells={buildInitialCells({
             matrices: {
               A1: [
-                ['Department', 'Budget Request', 'Actual Spent', 'Remaining', 'Status', 'Done'],
-                ['Engineering', 50000, 42000, '=B2-C2', 'Approved', true],
-                ['Marketing', 75000, 68000, '=B3-C3', 'Approved', true],
-                ['Sales', 120000, 95000, '=B4-C4', 'Under Review', false],
-                ['HR', 30000, 28000, '=B5-C5', 'Pending', false],
-                ['Finance', 45000, 52000, '=B6-C6', 'Rejected', false],
+                ['Engineering', 50000, 42000, '=B1-C1', 'Approved', true],
+                ['Marketing', 75000, 68000, '=B2-C2', 'Approved', true],
+                ['Sales', 120000, 95000, '=B3-C3', 'Under Review', false],
+                ['HR', 30000, 28000, '=B4-C4', 'Pending', false],
+                ['Finance', 45000, 52000, '=B5-C5', 'Rejected', false],
                 ['', '', '', '', '', ''],
-                ['Total Budget', '=SUM(B2:B6)', '=SUM(C2:C6)', '=SUM(D2:D6)', '', '=COUNTIF(F2:F6,true)'],
+                ['Total Budget', '=SUM(B1:B5)', '=SUM(C1:C5)', '=SUM(D1:D5)', '', '=COUNTIF(F1:F5,true)'],
               ],
             },
             cells: {
@@ -242,17 +241,8 @@ export default function BudgetManagement() {
                   ...makeBorder({ all: '1px solid #000000' }),
                 },
               },
-              1: { height: 50 },
-              'A1:F1': {
-                style: {
-                  backgroundColor: '#2c3e50',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  textAlign: 'center',
-                },
-                prevention: operations.Write,
-              },
               A: {
+                label: 'Department',
                 width: 100,
                 style: {
                   borderRight: 'double 3px #000000',
@@ -260,6 +250,7 @@ export default function BudgetManagement() {
                 policy: 'department',
               },
               B: {
+                label: 'Budget Request',
                 width: 80,
                 style: {
                   backgroundColor: '#e8f5e8',
@@ -268,6 +259,7 @@ export default function BudgetManagement() {
                 renderer: 'thousand_separator',
               },
               C: {
+                label: 'Actual Spent',
                 width: 80,
                 style: {
                   backgroundColor: '#fff3cd',
@@ -276,6 +268,7 @@ export default function BudgetManagement() {
                 renderer: 'thousand_separator',
               },
               D: {
+                label: 'Remaining',
                 width: 80,
                 style: {
                   backgroundColor: '#d1ecf1',
@@ -285,10 +278,12 @@ export default function BudgetManagement() {
                 renderer: 'thousand_separator',
               },
               E: {
+                label: 'Status',
                 width: 90,
                 policy: 'status',
               },
               F: {
+                label: 'Done',
                 width: 50,
                 renderer: 'checkbox',
                 style: {
@@ -298,42 +293,42 @@ export default function BudgetManagement() {
                 justifyContent: 'center',
               },
               // Double border above Total row
-              'A7:F7': {
+              'A6:F6': {
                 style: {
                   ...makeBorder({
                     bottom: '4px double #000000',
                   }),
                 },
               },
-              '8': {
+              '7': {
                 style: {
                   fontWeight: 'bold',
                   textAlign: 'center',
                 },
                 prevention: operations.Write,
               },
-              B8: {
+              B7: {
                 style: {
                   backgroundColor: '#27ae60',
                   color: 'white',
                   fontWeight: 'bold',
                 },
               },
-              C8: {
+              C7: {
                 style: {
                   backgroundColor: '#e67e22',
                   color: 'white',
                   fontWeight: 'bold',
                 },
               },
-              D8: {
+              D7: {
                 style: {
                   backgroundColor: '#3498db',
                   color: 'white',
                   fontWeight: 'bold',
                 },
               },
-              F8: {
+              F7: {
                 style: {
                   backgroundColor: '#9b59b6',
                   color: 'white',
@@ -342,6 +337,12 @@ export default function BudgetManagement() {
                 prevention: operations.Write,
               },
               // Conditional styling for status
+              E1: {
+                style: {
+                  backgroundColor: '#d4edda',
+                  color: '#155724',
+                },
+              },
               E2: {
                 style: {
                   backgroundColor: '#d4edda',
@@ -350,23 +351,17 @@ export default function BudgetManagement() {
               },
               E3: {
                 style: {
-                  backgroundColor: '#d4edda',
-                  color: '#155724',
-                },
-              },
-              E4: {
-                style: {
                   backgroundColor: '#fff3cd',
                   color: '#856404',
                 },
               },
-              E5: {
+              E4: {
                 style: {
                   backgroundColor: '#f8d7da',
                   color: '#721c24',
                 },
               },
-              E6: {
+              E5: {
                 style: {
                   backgroundColor: '#f8d7da',
                   color: '#721c24',

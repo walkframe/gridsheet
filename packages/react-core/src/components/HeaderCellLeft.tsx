@@ -225,7 +225,7 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
             }}
             horizontal={-1}
           />
-          {table.getLabel(row?.labeler, y) ?? rowId}
+          {table.getLabel(row?.label, row?.labeler, y) ?? rowId}
           <div
             className={`
               gs-resizer

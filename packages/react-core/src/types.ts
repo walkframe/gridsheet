@@ -50,11 +50,36 @@ export type System = {
   offsetLeft?: number;
 };
 
+export type FilterConditionMethod =
+  | 'eq'
+  | 'ne'
+  | 'gt'
+  | 'gte'
+  | 'lt'
+  | 'lte'
+  | 'blank'
+  | 'nonblank'
+  | 'includes'
+  | 'excludes'
+
+;
+
+export type FilterCondition = {
+  method: FilterConditionMethod;
+  value: string[];
+};
+
+export type FilterConfig = {
+  mode?: 'and' | 'or'; // default: 'or'
+  conditions: FilterCondition[];
+};
+
 export type CellType<T = any, Custom = any> = {
   value?: T;
   style?: CSSProperties;
   justifyContent?: CSSProperties['justifyContent'];
   alignItems?: CSSProperties['alignItems'];
+  label?: string;
   labeler?: string;
   width?: Width;
   height?: Height;
@@ -65,6 +90,10 @@ export type CellType<T = any, Custom = any> = {
   disableFormula?: boolean;
   prevention?: OperationType;
   system?: System;
+  /** Filter configuration. Set on col-header cells (y=0). */
+  filter?: FilterConfig;
+  /** Whether this row is hidden by a filter. Set on row-header cells (x=0). */
+  filtered?: boolean;
 };
 
 export type RawCellType = {
@@ -139,6 +168,7 @@ export type StoreType = {
   contextMenuItems: FC<ContextMenuProps>[];
   resizingPositionY: [Y, Y, Y]; // indexY, startY, endY
   resizingPositionX: [X, X, X]; // indexX, startX, endX
+  columnMenuState: { x: number; position: PositionType } | null;
 };
 
 export type Manager<T> = {
@@ -267,13 +297,27 @@ export type HistoryRemoveColsType = {
   deleted: IdMatrix;
 };
 
+export type HistorySortRowsType = {
+  operation: 'SORT_ROWS';
+  srcSheetId: number;
+  dstSheetId: number;
+  applyed: boolean;
+  undoReflection?: StorePatchType;
+  redoReflection?: StorePatchType;
+  /** idMatrix data rows before sort (index 0 = row 1) */
+  rowsBefore: IdMatrix;
+  /** idMatrix data rows after sort */
+  rowsAfter: IdMatrix;
+};
+
 export type HistoryType =
   | HistoryUpdateType
   | HistoryMoveType
   | HistoryInsertRowsType
   | HistoryRemoveRowsType
   | HistoryInsertColsType
-  | HistoryRemoveColsType;
+  | HistoryRemoveColsType
+  | HistorySortRowsType;
 
 export type Virtualization = {
   xs: number[];

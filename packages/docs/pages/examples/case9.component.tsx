@@ -167,56 +167,20 @@ export default function Case9Component() {
             },
             A: {
               width: 80,
+              label: 'ID',
             },
-            // Headers with enhanced styling
-            A1: {
-              value: 'ID',
-              style: {
-                fontWeight: 'bold',
-                backgroundColor: '#2c3e50',
-                color: 'white',
-                textAlign: 'center',
-                fontSize: '13px',
-                ...makeBorder({ all: '2px solid #34495e' }),
-                width: 80,
-              },
+            B: {
+              label: 'Username',
             },
-            B1: {
-              value: 'Username',
-              style: {
-                fontWeight: 'bold',
-                backgroundColor: '#2c3e50',
-                color: 'white',
-                textAlign: 'center',
-                fontSize: '13px',
-                ...makeBorder({ all: '2px solid #34495e' }),
-              },
+            C: {
+              label: '🔐 Password',
             },
-            C1: {
-              value: '🔐 Password',
-              style: {
-                fontWeight: 'bold',
-                backgroundColor: '#e74c3c',
-                color: 'white',
-                textAlign: 'center',
-                fontSize: '13px',
-                ...makeBorder({ all: '2px solid #c0392b' }),
-              },
-            },
-            D1: {
-              value: '🔑 Hash',
-              style: {
-                fontWeight: 'bold',
-                backgroundColor: '#9b59b6',
-                color: 'white',
-                textAlign: 'center',
-                fontSize: '13px',
-                ...makeBorder({ all: '2px solid #8e44ad' }),
-              },
+            D: {
+              label: '🔑 Hash',
             },
 
             // Data rows with alternating colors
-            A2: {
+            A1: {
               value: '001',
               renderer: 'id',
               style: {
@@ -226,7 +190,7 @@ export default function Case9Component() {
                 ...makeBorder({ all: '1px solid #e1e5e9' }),
               },
             },
-            B2: {
+            B1: {
               value: 'john_doe',
               style: {
                 backgroundColor: '#f8f9fa',
@@ -234,8 +198,47 @@ export default function Case9Component() {
                 ...makeBorder({ all: '1px solid #e1e5e9' }),
               },
             },
-            C2: {
+            C1: {
               value: 'super_secret_password_123',
+              policy: 'security',
+              renderer: 'security',
+              style: {
+                backgroundColor: '#fdf2f2',
+                ...makeBorder({ all: '2px solid #e74c3c' }),
+                fontWeight: '500',
+              },
+            },
+            D1: {
+              value: '=SECURE_HASH(C1)',
+              style: {
+                backgroundColor: '#f8f4ff',
+                ...makeBorder({ all: '2px solid #9b59b6' }),
+                fontWeight: '500',
+                fontFamily: 'monospace',
+                fontSize: '12px',
+              },
+            },
+
+            A2: {
+              value: '002',
+              renderer: 'id',
+              style: {
+                backgroundColor: 'white',
+                textAlign: 'center',
+                fontWeight: '500',
+                ...makeBorder({ all: '1px solid #e1e5e9' }),
+              },
+            },
+            B2: {
+              value: 'jane_smith',
+              style: {
+                backgroundColor: 'white',
+                fontWeight: '500',
+                ...makeBorder({ all: '1px solid #e1e5e9' }),
+              },
+            },
+            C2: {
+              value: 'another_secure_password',
               policy: 'security',
               renderer: 'security',
               style: {
@@ -256,25 +259,25 @@ export default function Case9Component() {
             },
 
             A3: {
-              value: '002',
+              value: '003',
               renderer: 'id',
               style: {
-                backgroundColor: 'white',
+                backgroundColor: '#f8f9fa',
                 textAlign: 'center',
                 fontWeight: '500',
                 ...makeBorder({ all: '1px solid #e1e5e9' }),
               },
             },
             B3: {
-              value: 'jane_smith',
+              value: 'admin_user',
               style: {
-                backgroundColor: 'white',
+                backgroundColor: '#f8f9fa',
                 fontWeight: '500',
                 ...makeBorder({ all: '1px solid #e1e5e9' }),
               },
             },
             C3: {
-              value: 'another_secure_password',
+              value: 'admin_password_2024',
               policy: 'security',
               renderer: 'security',
               style: {
@@ -295,25 +298,25 @@ export default function Case9Component() {
             },
 
             A4: {
-              value: '003',
+              value: '004',
               renderer: 'id',
               style: {
-                backgroundColor: '#f8f9fa',
+                backgroundColor: 'white',
                 textAlign: 'center',
                 fontWeight: '500',
                 ...makeBorder({ all: '1px solid #e1e5e9' }),
               },
             },
             B4: {
-              value: 'admin_user',
+              value: 'guest_user',
               style: {
-                backgroundColor: '#f8f9fa',
+                backgroundColor: 'white',
                 fontWeight: '500',
                 ...makeBorder({ all: '1px solid #e1e5e9' }),
               },
             },
             C4: {
-              value: 'admin_password_2024',
+              value: 'guest_password',
               policy: 'security',
               renderer: 'security',
               style: {
@@ -332,47 +335,8 @@ export default function Case9Component() {
                 fontSize: '12px',
               },
             },
-
-            A5: {
-              value: '004',
-              renderer: 'id',
-              style: {
-                backgroundColor: 'white',
-                textAlign: 'center',
-                fontWeight: '500',
-                ...makeBorder({ all: '1px solid #e1e5e9' }),
-              },
-            },
-            B5: {
-              value: 'guest_user',
-              style: {
-                backgroundColor: 'white',
-                fontWeight: '500',
-                ...makeBorder({ all: '1px solid #e1e5e9' }),
-              },
-            },
-            C5: {
-              value: 'guest_password',
-              policy: 'security',
-              renderer: 'security',
-              style: {
-                backgroundColor: '#fdf2f2',
-                ...makeBorder({ all: '2px solid #e74c3c' }),
-                fontWeight: '500',
-              },
-            },
-            D5: {
-              value: '=SECURE_HASH(C5)',
-              style: {
-                backgroundColor: '#f8f4ff',
-                ...makeBorder({ all: '2px solid #9b59b6' }),
-                fontWeight: '500',
-                fontFamily: 'monospace',
-                fontSize: '12px',
-              },
-            },
           },
-          ensured: { numRows: 6, numCols: 4 },
+          ensured: { numRows: 5, numCols: 4 },
         })}
       />
     </div>

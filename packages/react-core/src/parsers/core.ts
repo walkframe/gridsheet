@@ -1,10 +1,6 @@
 import { CellType } from '../types';
 import { TimeDelta } from '../lib/time';
-import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc.js';
-import timezone from 'dayjs/plugin/timezone.js';
-dayjs.extend(timezone);
-dayjs.extend(utc);
+import { parseDate } from '../lib/date';
 
 type Condition = (value: string) => boolean;
 type Stringify = (value: string) => any;
@@ -16,10 +12,6 @@ type Props = {
 };
 
 const BOOLS = { true: true, false: false } as { [s: string]: boolean };
-const NUMS = new Set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
-const NUMS_Z = new Set([...NUMS, 'Z', 'z']);
-const JFMASOND = new Set(['J', 'F', 'M', 'A', 'S', 'O', 'N', 'D', ...NUMS]);
-const NBRYNLGPTVC = new Set(['N', 'B', 'R', 'Y', 'N', 'L', 'G', 'P', 'T', 'V', 'C', ...NUMS_Z]);
 
 export interface ParserMixinType {
   functions?: ((value: string, cell?: CellType) => any)[];
@@ -135,24 +127,7 @@ export class Parser implements ParserMixinType {
   }
 
   date(value: string, cell?: CellType): Date | undefined {
-    const first = value[0];
-    if (first == null || !JFMASOND.has(first.toUpperCase())) {
-      return;
-    }
-    if (!NBRYNLGPTVC.has(value[value.length - 1].toUpperCase())) {
-      return;
-    }
-    if (value.match(/[=*&#@!?[\]{}"'()|%\\<>~+\r\n]/)) {
-      return;
-    }
-    let timeZone = 'UTC';
-    try {
-      timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    } catch (e) {}
-    try {
-      const day = dayjs.tz(value, timeZone);
-      return day.toDate();
-    } catch (e) {}
+    return parseDate(value);
   }
 }
 

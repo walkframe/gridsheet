@@ -9,6 +9,7 @@ import {
   select,
   selectCols,
   setAutofillDraggingTo,
+  setColumnMenu,
   setContextMenuPosition,
   setDragging,
   setEditingAddress,
@@ -42,11 +43,13 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
     autofillDraggingTo,
     dragging,
     contextMenuItems,
+    columnMenuState,
   } = store;
   const table = tableRef.current;
 
   const col = table?.getCellByPoint({ y: 0, x }, 'SYSTEM');
   const width = col?.width || DEFAULT_WIDTH;
+  const hasFilter = !!(col?.filter && col.filter.conditions.length > 0);
 
   const xSheetFocused = isXSheetFocused(store);
   const lastFocused = table?.wire.lastFocused;
@@ -228,7 +231,25 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
             }}
             vertical={-1}
           />
-          {table.getLabel(col?.labeler, x) ?? colId}
+          {table.getLabel(col?.label, col?.labeler, x) ?? colId}
+          {!prevention.hasOperation(col?.prevention, prevention.ColumnMenu) && (
+            <button
+              className={`gs-column-menu-btn ${hasFilter ? 'gs-filtered' : ''} ${columnMenuState?.x === x ? 'gs-active' : ''}`}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                const rect = (e.target as HTMLElement).getBoundingClientRect();
+                if (columnMenuState?.x === x) {
+                  dispatch(setColumnMenu(null));
+                } else {
+                  dispatch(setColumnMenu({ x, position: { y: rect.bottom, x: rect.left } }));
+                }
+              }}
+              title="Sort & Filter"
+            >
+              ⋮
+            </button>
+          )}
           <div
             className={`
               gs-resizer 

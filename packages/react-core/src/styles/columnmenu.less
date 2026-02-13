@@ -1,0 +1,316 @@
+
+.gs-column-menu-modal {
+  width: 100%;
+  height: 100vh;
+  z-index: 12;
+}
+
+.gs-column-menu {
+  z-index: 12;
+  position: fixed;
+  background-color: #ffffff;
+  padding: 5px 0;
+  border-radius: 5px;
+  box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px,
+    rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+
+  ul {
+    min-width: 200px;
+    color: #555555;
+    margin: 0;
+    padding: 0;
+  }
+  li {
+    padding: 5px 10px;
+    list-style-type: none;
+
+    &.gs-enabled {
+      cursor: pointer;
+      &:hover {
+        background-color: #eeeeee;
+      }
+    }
+
+    &.gs-disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &.gs-menu-divider {
+      background-color: #aaaaaa;
+      margin: 5px 0;
+      padding: 0;
+      height: 1px;
+    }
+
+    .gs-menu-name {
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+  }
+
+  .gs-column-menu-label {
+    padding: 5px 10px;
+  }
+
+  .gs-label-input-row {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .gs-label-input {
+    flex: 1;
+    font-size: 13px;
+    padding: 4px 6px;
+    border: none;
+    border-bottom: 1px solid #ccc;
+    border-radius: 0;
+    outline: none;
+    min-width: 0;
+    background-color: transparent;
+    box-shadow: none;
+
+    &:focus {
+      border-bottom-color: #0077ff;
+      outline: none;
+      box-shadow: none;
+    }
+  }
+
+  .gs-label-apply-btn {
+    font-size: 12px;
+    padding: 3px 13px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    background-color: transparent;
+    color: #1a8a1a;
+    cursor: pointer;
+    font-weight: bold;
+    letter-spacing: 1px;
+
+    &:hover {
+      border-color: #1a8a1a;
+    }
+  }
+
+  .gs-column-menu-filter {
+    padding: 5px 10px;
+  }
+
+  .gs-filter-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .gs-filter-mode-toggle {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      color: #888;
+      cursor: pointer;
+      user-select: none;
+
+      input[type='radio'] {
+        margin: 0;
+        cursor: pointer;
+      }
+
+      &.gs-active {
+        color: #0077ff;
+      }
+    }
+
+    &.gs-disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+  }
+
+  .gs-filter-conditions {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 6px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .gs-filter-condition-row {
+    display: flex;
+    gap: 4px;
+    align-items: normal;
+  }
+
+  .gs-filter-method-select {
+    font-size: 12px;
+    padding: 4px 4px;
+    border: none;
+    border-bottom: 1px solid #ccc;
+    border-radius: 0;
+    outline: none;
+    background-color: #fff;
+    box-shadow: none;
+    min-width: 40px;
+    max-width: 80px;
+    cursor: pointer;
+
+    &:focus {
+      border-bottom-color: #0077ff;
+      outline: none;
+      box-shadow: none;
+    }
+  }
+
+  .gs-filter-value-input {
+    flex: 1;
+    font-size: 13px;
+    padding: 4px 6px;
+    border: none;
+    border-bottom: 1px solid #ccc;
+    border-radius: 0;
+    outline: none;
+    min-width: 0;
+    width: 80px;
+    background-color: transparent;
+    box-shadow: none;
+
+    &:focus {
+      border-bottom-color: #0077ff;
+      outline: none;
+      box-shadow: none;
+    }
+  }
+
+  .gs-filter-remove-btn {
+    font-size: 12px;
+    padding: 0;
+    border: none;
+    border-radius: 3px;
+    background-color: transparent;
+    cursor: pointer;
+    color: #999;
+    line-height: 1;
+    flex-shrink: 0;
+
+    &:hover {
+      color: #c33;
+    }
+  }
+
+  .gs-filter-actions {
+    display: flex;
+    gap: 4px;
+    margin-top: 10px;
+    justify-content: space-between;
+    align-items: center;
+
+    .gs-filter-add-btn {
+      font-size: 12px;
+      padding: 3px 9px;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      background-color: transparent;
+      cursor: pointer;
+      color: #555;
+      letter-spacing: 1px;
+
+      &:hover {
+        border-color: #555;
+      }
+    }
+
+    .gs-filter-actions-right {
+      display: flex;
+      gap: 4px;
+    }
+
+    .gs-filter-reset-btn {
+      font-size: 12px;
+      padding: 3px 9px;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      background-color: transparent;
+      cursor: pointer;
+      color: #e08000;
+      font-weight: bold;
+      letter-spacing: 1px;
+
+      &:hover {
+        border-color: #e08000;
+      }
+    }
+
+    .gs-filter-apply-btn {
+      font-size: 12px;
+      padding: 3px 13px;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      background-color: transparent;
+      color: #0077ff;
+      cursor: pointer;
+      font-weight: bold;
+      letter-spacing: 1px;
+
+      &:hover {
+        border-color: #0077ff;
+      }
+    }
+  }
+}
+
+.gs-column-menu-btn {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(128, 128, 128, 0.3);
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1;
+  color: #888;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 2;
+
+  &:hover {
+    //background-color: #e0e0e0;
+    //color: #333;
+  }
+
+  &.gs-filtered {
+    opacity: 1;
+    background-color: #e0edff;
+    border-color: #0077ff;
+    color: #0077ff;
+  }
+
+  &.gs-active {
+    opacity: 1;
+    background-color: #d0e0ff;
+    border-color: #0077ff;
+    color: #0077ff;
+  }
+}
+
+.gs-th-top:hover .gs-column-menu-btn {
+  opacity: 1;
+}

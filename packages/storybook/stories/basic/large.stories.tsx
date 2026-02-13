@@ -17,10 +17,6 @@ const DESCRIPTION = [
 const generateLargeData = () => {
   const data: any[][] = [];
 
-  // Header row
-  const headers = ['ID', 'Name', 'Date', 'Status', 'Category', 'Score', 'Notes'];
-  data.push(headers);
-
   // Generate 2000 rows of data
   for (let i = 1; i <= 2000; i++) {
     const row = [
@@ -64,40 +60,36 @@ const LargeSheet = () => {
           cells: {
             default: {
               width: 120,
-              height: 30,
+              height: 24,
               labeler: 'raw',
             },
-            'A1:G1': {
-              style: {
-                backgroundColor: '#2c3e50',
-                color: 'white',
-                fontWeight: 'bold',
-                textAlign: 'center',
-              },
-              height: 40,
-            },
-            A: { width: 60 }, // ID column
-            B: { width: 150 }, // Name column
+            A: { width: 60, label: 'ID' },
+            B: { width: 150, label: 'Name' },
             C: {
               width: 100,
+              label: 'Date',
               style: { backgroundColor: '#f8f9fa' },
-            }, // Date column
+            },
             D: {
               width: 80,
+              label: 'Status',
               style: { backgroundColor: '#e8f5e8' },
-            }, // Status column
+            },
             E: {
               width: 60,
+              label: 'Category',
               style: { backgroundColor: '#fff3cd' },
-            }, // Category column
+            },
             F: {
               width: 60,
+              label: 'Score',
               style: { backgroundColor: '#f8d7da' },
-            }, // Score column
+            },
             G: {
               width: 200,
+              label: 'Notes',
               style: { backgroundColor: '#f8f9fa' },
-            }, // Notes column
+            },
           },
           ensured: { numRows: 2000, numCols: 100 },
         })}

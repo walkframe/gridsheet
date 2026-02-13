@@ -11,6 +11,7 @@ import {
   ModeType,
   RawCellType,
   OperatorType,
+  FilterConfig,
 } from '../types';
 import { zoneToArea, superposeArea, matrixShape, areaShape, areaToZone, zoneShape, restrictZone } from '../lib/structs';
 import { Table } from '../lib/table';
@@ -720,13 +721,24 @@ class ArrowAction<
     if (nextY < 1 || numRows < nextY || nextX < 1 || numCols < nextX) {
       return store;
     }
+    // Skip hidden rows
+    let resolvedY = nextY;
+    if (table.isRowFiltered(resolvedY)) {
+      const dir = deltaY >= 0 ? 1 : -1;
+      while (resolvedY >= 1 && resolvedY <= numRows && table.isRowFiltered(resolvedY)) {
+        resolvedY += dir;
+      }
+      if (resolvedY < 1 || resolvedY > numRows) {
+        return store; // no visible row in that direction
+      }
+    }
     let { y: editorTop, x: editorLeft, height, width } = store.editorRect;
     if (deltaY > 0) {
-      for (let i = y; i < nextY; i++) {
+      for (let i = y; i < resolvedY; i++) {
         editorTop += table.getCellByPoint({ y: i, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
       }
     } else if (deltaY < 0) {
-      for (let i = y - 1; i >= nextY; i--) {
+      for (let i = y - 1; i >= resolvedY; i--) {
         editorTop -= table.getCellByPoint({ y: i, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
       }
     }
@@ -740,15 +752,15 @@ class ArrowAction<
       }
     }
 
-    const cell = table.getCellByPoint({ y: nextY, x: nextX }, 'SYSTEM');
+    const cell = table.getCellByPoint({ y: resolvedY, x: nextX }, 'SYSTEM');
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
 
-    smartScroll(table, tabularRef.current, { y: nextY, x: nextX });
+    smartScroll(table, tabularRef.current, { y: resolvedY, x: nextX });
     return {
       ...store,
       selectingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
-      choosing: { y: nextY, x: nextX } as PointType,
+      choosing: { y: resolvedY, x: nextX } as PointType,
       editorRect: { y: editorTop, x: editorLeft, height, width },
     };
   }
@@ -825,6 +837,20 @@ class WalkAction<
     if (nextY < 1 || numRows < nextY || nextX < 1 || numCols < nextX) {
       return store;
     }
+
+    // Skip hidden rows
+    if (table.isRowFiltered(nextY)) {
+      const dir = deltaY >= 0 ? 1 : -1;
+      const lo = top !== -1 ? top : 1;
+      const hi = bottom !== -1 ? bottom : numRows;
+      while (nextY >= lo && nextY <= hi && table.isRowFiltered(nextY)) {
+        nextY += dir;
+      }
+      if (nextY < lo || nextY > hi || table.isRowFiltered(nextY)) {
+        return store; // no visible row in range
+      }
+    }
+
     if (deltaY > 0) {
       for (let i = y; i < nextY; i++) {
         editorTop += table.getCellByPoint({ y: i, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
@@ -1085,6 +1111,157 @@ class RemoveColsAction<T extends { numCols: number; x: number; operator?: Operat
 }
 export const removeCols = new RemoveColsAction().bind();
 
+class SortRowsAction<T extends { x: number; direction: 'asc' | 'desc' }> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
+    const { x, direction } = payload;
+    const { tableReactive: tableRef, selectingZone, choosing } = store;
+    const table = tableRef.current;
+    if (table == null) {
+      return store;
+    }
+    table.sortRows({
+      x,
+      direction,
+      undoReflection: {
+        sheetId: table.sheetId,
+        selectingZone,
+        choosing,
+      },
+      redoReflection: {
+        sheetId: table.sheetId,
+        selectingZone,
+        choosing,
+      },
+    });
+    return {
+      ...store,
+      tableReactive: { current: table },
+    };
+  }
+}
+export const sortRows = new SortRowsAction().bind();
+
+class FilterRowsAction<T extends { x: number; filter: FilterConfig }> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
+    const { x, filter } = payload;
+    const { tableReactive: tableRef, selectingZone, choosing } = store;
+    const table = tableRef.current;
+    if (table == null) {
+      return store;
+    }
+    table.filterRows({
+      x,
+      filter,
+      undoReflection: {
+        sheetId: table.sheetId,
+        selectingZone,
+        choosing,
+      },
+      redoReflection: {
+        sheetId: table.sheetId,
+        selectingZone,
+        choosing,
+      },
+    });
+    let newChoosing = choosing;
+    if (table.isRowFiltered(choosing.y)) {
+      for (let y = 1; y <= table.getNumRows(); y++) {
+        if (!table.isRowFiltered(y)) {
+          newChoosing = { y, x: choosing.x };
+          break;
+        }
+      }
+    }
+    return {
+      ...store,
+      choosing: newChoosing,
+      selectingZone: newChoosing !== choosing ? resetZone : selectingZone,
+      tableReactive: { current: table },
+    };
+  }
+}
+export const filterRows = new FilterRowsAction().bind();
+
+class ClearFilterRowsAction<T extends { x?: number }> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
+    const { x } = payload;
+    const { tableReactive: tableRef, selectingZone, choosing } = store;
+    const table = tableRef.current;
+    if (table == null) {
+      return store;
+    }
+    table.clearFilterRows(
+      x,
+      {
+        sheetId: table.sheetId,
+        selectingZone,
+        choosing,
+      },
+      {
+        sheetId: table.sheetId,
+        selectingZone,
+        choosing,
+      },
+    );
+    let newChoosing = choosing;
+    if (table.isRowFiltered(choosing.y)) {
+      for (let y = 1; y <= table.getNumRows(); y++) {
+        if (!table.isRowFiltered(y)) {
+          newChoosing = { y, x: choosing.x };
+          break;
+        }
+      }
+    }
+    return {
+      ...store,
+      choosing: newChoosing,
+      selectingZone: newChoosing !== choosing ? resetZone : selectingZone,
+      tableReactive: { current: table },
+    };
+  }
+}
+export const clearFilterRows = new ClearFilterRowsAction().bind();
+
+class SetColumnMenuAction<T extends { x: number; position: { y: number; x: number } } | null> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
+    return {
+      ...store,
+      columnMenuState: payload,
+    };
+  }
+}
+export const setColumnMenu = new SetColumnMenuAction().bind();
+
+class SetColLabelAction<T extends { x: number; label: string }> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
+    const { x, label } = payload;
+    const { tableReactive: tableRef, selectingZone, choosing } = store;
+    const table = tableRef.current;
+    if (table == null) {
+      return store;
+    }
+    table.setColLabel({
+      x,
+      label,
+      undoReflection: {
+        sheetId: table.sheetId,
+        selectingZone,
+        choosing,
+      },
+      redoReflection: {
+        sheetId: table.sheetId,
+        selectingZone,
+        choosing,
+      },
+    });
+    return {
+      ...store,
+      tableReactive: { current: table },
+    };
+  }
+}
+export const setColLabel = new SetColLabelAction().bind();
+
 class setStoreAction<T extends Partial<StoreType>> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     return {
@@ -1119,4 +1296,8 @@ export const userActions = {
   insertColsRight,
   removeRows,
   removeCols,
+  sortRows,
+  filterRows,
+  clearFilterRows,
+  setColLabel,
 };

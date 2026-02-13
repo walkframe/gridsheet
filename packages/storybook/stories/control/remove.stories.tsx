@@ -95,7 +95,6 @@ const RemoveComponent: React.FC = () => {
         initialCells={buildInitialCells({
           matrices: {
             A1: [
-              ['Header1', 'Header2', 'Header3', 'Header4'],
               ['Data1', 'Data2', 'Data3', 'Data4'],
               ['Data5', 'Data6', 'Data7', 'Data8'],
               ['Data9', 'Data10', 'Data11', 'Data12'],
@@ -106,6 +105,10 @@ const RemoveComponent: React.FC = () => {
               width: 80,
               height: 30,
             },
+            A: { label: 'Header1' },
+            B: { label: 'Header2' },
+            C: { label: 'Header3' },
+            D: { label: 'Header4' },
           },
           ensured: {
             numRows: 10,

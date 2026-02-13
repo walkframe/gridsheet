@@ -20,39 +20,39 @@ test('search and next', async ({ page }) => {
   await page.keyboard.type('200');
   expect(await progress.textContent()).toBe('1 / 9');
 
-  const a201 = page.locator("[data-address='A201']");
-  expect(await a201.getAttribute('class')).toContain('gs-choosing');
+  const a200 = page.locator("[data-address='A200']");
+  expect(await a200.getAttribute('class')).toContain('gs-choosing');
 
   await page.keyboard.press('Enter');
   expect(await progress.textContent()).toBe('2 / 9');
-  const b201 = page.locator("[data-address='B201']");
-  expect(await b201.getAttribute('class')).toContain('gs-choosing');
+  const b200 = page.locator("[data-address='B200']");
+  expect(await b200.getAttribute('class')).toContain('gs-choosing');
 
   await page.keyboard.press('Enter');
   expect(await progress.textContent()).toBe('3 / 9');
-  const g201 = page.locator("[data-address='G201']");
-  expect(await g201.getAttribute('class')).toContain('gs-choosing');
+  const g200 = page.locator("[data-address='G200']");
+  expect(await g200.getAttribute('class')).toContain('gs-choosing');
 
-  const a2001 = page.locator("[data-address='A2001']");
+  const a2000 = page.locator("[data-address='A2000']");
   // update the keyword to '2000'
   await page.keyboard.type('0');
   expect(await progress.textContent()).toBe('1 / 3');
-  expect(await a2001.getAttribute('class')).toContain('gs-choosing');
+  expect(await a2000.getAttribute('class')).toContain('gs-choosing');
 
-  const b2001 = page.locator("[data-address='B2001']");
+  const b2000 = page.locator("[data-address='B2000']");
   await page.keyboard.press('Enter');
   expect(await progress.textContent()).toBe('2 / 3');
-  expect(await b2001.getAttribute('class')).toContain('gs-choosing');
+  expect(await b2000.getAttribute('class')).toContain('gs-choosing');
 
-  const g2001 = page.locator("[data-address='G2001']");
+  const g2000 = page.locator("[data-address='G2000']");
   await page.keyboard.press('Enter');
   expect(await progress.textContent()).toBe('3 / 3');
-  expect(await g2001.getAttribute('class')).toContain('gs-choosing');
+  expect(await g2000.getAttribute('class')).toContain('gs-choosing');
 
   // back to the first result
   await page.keyboard.press('Enter');
   expect(await progress.textContent()).toBe('1 / 3');
-  expect(await a2001.getAttribute('class')).toContain('gs-choosing');
+  expect(await a2000.getAttribute('class')).toContain('gs-choosing');
 
   await page.keyboard.press('Escape');
   expect(await searchBar.count()).toBe(0);

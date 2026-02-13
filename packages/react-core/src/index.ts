@@ -20,6 +20,9 @@ export { PluginBase, useInitialPluginContext, usePluginContext } from './compone
 export type {
   MatrixType,
   CellType,
+  FilterCondition,
+  FilterConditionMethod,
+  FilterConfig,
   FeedbackType,
   OptionsType,
   WriterType,
@@ -28,6 +31,7 @@ export type {
   ModeType,
   HeadersType,
   HistoryType,
+  HistorySortRowsType,
   StoreType,
   PointType,
   AreaType,

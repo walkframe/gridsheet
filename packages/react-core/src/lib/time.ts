@@ -71,6 +71,10 @@ export class TimeDelta {
     return result;
   }
 
+  public toMilliseconds(): number {
+    return this.date1.getTime() - this.date2.getTime();
+  }
+
   public toJSON() {
     return this.stringify();
   }

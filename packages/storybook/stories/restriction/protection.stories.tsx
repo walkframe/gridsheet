@@ -43,11 +43,18 @@ const PreventionComponent: React.FC = () => {
             style: { backgroundColor: '#dddddd' },
           },
           A: {
-            prevention: operations.Resize,
+            prevention: operations.Resize | operations.ViewOnly,
             style: { backgroundColor: '#eeeeee' },
+          },
+          B: {
+            prevention: operations.SetLabeler,
           },
           C: {
             style: { backgroundColor: '#ffffff' },
+            prevention: operations.Sort,
+          },
+          D: {
+            prevention: operations.Filter,
           },
           B2: {
             value: 'READONLY',

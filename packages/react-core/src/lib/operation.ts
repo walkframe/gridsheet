@@ -13,14 +13,18 @@ export const Style: operations = 0b000000000000000000000000000000000000000000010
 export const Copy: operations = 0b00000000000000000000000000000000000000010000000000000; // 8192
 export const Resize: operations = 0b00000000000000000000000000000000000000000010000000000; // 1024
 export const SetRenderer: operations = 0b00000000000000000000000000000000000000000100000000000; // 2048
-export const SetParser: operations = 0b00000000000000000000000000000000000000001000000000000; // 4096
-export const SetPolicy: operations = 0b00000000000000000000000000000000000000100000000000000; // 16384
+export const SetParser: operations =   0b00000000000000000000000000000000000000001000000000000; // 4096
+export const SetPolicy: operations =   0b00000000000000000000000000000000000000100000000000000; // 16384
+export const Sort:      operations =   0b00000000000000000000000000000000000001000000000000000; // 32768
+export const Filter: operations =      0b00000000000000000000000000000000000010000000000000000; // 65536
+export const SetLabel:   operations =  0b00000000000000000000000000000000000100000000000000000; // 131072
+export const SetLabeler: operations =  0b00000000000000000000000000000000001000000000000000000; // 262144
 
 export const NoOperation: operations = 0;
 
 export const Move: operations = MoveFrom | MoveTo; // 192
 
-export const Update: operations = Write | Style | Copy | Resize | SetRenderer | SetParser | SetPolicy; // 7936
+export const Update: operations = Write | Style | Copy | Resize | SetRenderer | SetParser | SetPolicy | SetLabel | SetLabeler; // 7936
 
 export const InsertRows: operations = InsertRowsAbove | InsertRowsBelow; // 12
 
@@ -30,7 +34,11 @@ export const Add: operations = InsertRows | InsertCols; // 60
 
 export const Delete: operations = RemoveRows | RemoveCols; // 3
 
-export const ReadOnly: operations = Update | Delete | Add | Move; //
+export const ReadOnly: operations = Update | Delete | Add | Move;
+
+export const ColumnMenu: operations = Filter | Sort | SetLabel;
+
+export const ViewOnly: operations = ReadOnly | ColumnMenu;
 
 export const hasOperation = (operation: operations | undefined, flag: operations) => {
   if (operation === undefined) {
@@ -80,6 +88,18 @@ export const debugOperations = (prevention: operations | undefined) => {
   }
   if (hasOperation(prevention, SetParser)) {
     operations.push('SetParser');
+  }
+  if (hasOperation(prevention, SetPolicy)) {
+    operations.push('SetPolicy');
+  }
+  if (hasOperation(prevention, SetLabel)) {
+    operations.push('SetLabel');
+  }
+  if (hasOperation(prevention, Sort)) {
+    operations.push('Sort');
+  }
+  if (hasOperation(prevention, Filter)) {
+    operations.push('Filter');
   }
   return operations;
 };

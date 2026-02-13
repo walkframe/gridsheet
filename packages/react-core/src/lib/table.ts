@@ -12,7 +12,9 @@ import {
   CellFilter,
   MatrixType,
   CellType,
+  FilterConfig,
   HistoryType,
+  HistorySortRowsType,
   StorePatchType,
   ShapeType,
   OperatorType,
@@ -44,6 +46,7 @@ import * as operation from './operation';
 import { Wire, createWire } from './hub';
 import { safeQueueMicrotask } from './time';
 import { defaultPolicy, PolicyType } from '../policy/core';
+import { evaluateFilterConfig } from './filter';
 import { escapeSheetName, getSheetPrefix } from './sheet';
 import { ReferencePreserver } from './reference';
 
@@ -171,6 +174,23 @@ export interface UserTable {
   setHeaderHeight(height: number, historicize?: boolean): UserTable;
   setHeaderWidth(width: number, historicize?: boolean): UserTable;
 
+  sortRows(args: {
+    x: number;
+    direction: 'asc' | 'desc';
+    undoReflection?: StorePatchType;
+    redoReflection?: StorePatchType;
+  }): UserTable;
+
+  filterRows(args: {
+    x: number;
+    filter: FilterConfig;
+    undoReflection?: StorePatchType;
+    redoReflection?: StorePatchType;
+  }): UserTable;
+  clearFilterRows(x?: number, undoReflection?: StorePatchType, redoReflection?: StorePatchType): UserTable;
+  isRowFiltered(y: number): boolean;
+  hasActiveFilters(): boolean;
+
   stringify(props: { point: PointType; cell?: CellType; refEvaluation?: RefEvaluation }): string;
 }
 
@@ -235,6 +255,336 @@ export class Table implements UserTable {
       partial: true,
       historicize,
     });
+  }
+
+  /** Get the raw (mutable) cell data for a point. Unlike getCellByPoint, this returns the actual wire.data reference. */
+  private _getRawCellByPoint({ y, x }: PointType): CellType | undefined {
+    const id = this.idMatrix[y]?.[x];
+    if (id == null) return undefined;
+    return this.wire.data[id];
+  }
+
+  public isRowFiltered(y: number): boolean {
+    return !!(this._getRawCellByPoint({ y, x: 0 })?.filtered);
+  }
+
+  public hasActiveFilters(): boolean {
+    const numCols = this.getNumCols();
+    for (let col = 1; col <= numCols; col++) {
+      const colCell = this._getRawCellByPoint({ y: 0, x: col });
+      if (colCell?.filter && colCell.filter.conditions.length > 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /** Capture the current state of all filter-related cells (column headers + row headers) as a CellsByIdType snapshot */
+  /** Capture the full cell state of all filter-related header cells as a CellsByIdType snapshot */
+  private _captureFilterCellStates(): CellsByIdType {
+    const snapshot: CellsByIdType = {};
+    const numCols = this.getNumCols();
+    const numRows = this.getNumRows();
+    // Column header cells (filter config)
+    for (let col = 1; col <= numCols; col++) {
+      const id = this.idMatrix[0]?.[col];
+      if (id != null) {
+        snapshot[id] = { ...this.wire.data[id] };
+      }
+    }
+    // Row header cells (filtered flag)
+    for (let y = 1; y <= numRows; y++) {
+      const id = this.idMatrix[y]?.[0];
+      if (id != null) {
+        snapshot[id] = { ...this.wire.data[id] };
+      }
+    }
+    return snapshot;
+  }
+
+  public filterRows({
+    x,
+    filter,
+    undoReflection,
+    redoReflection,
+  }: {
+    x: number;
+    filter: FilterConfig;
+    undoReflection?: StorePatchType;
+    redoReflection?: StorePatchType;
+  }) {
+    const diffBefore = this._captureFilterCellStates();
+
+    // Store filter config on column header cell (y=0, x)
+    const colCell = this._getRawCellByPoint({ y: 0, x });
+    if (colCell) {
+      colCell.filter = filter;
+    }
+    this._reapplyFilters();
+
+    const diffAfter = this._captureFilterCellStates();
+
+    this.pushHistory({
+      applyed: true,
+      operation: 'UPDATE',
+      srcSheetId: this.sheetId,
+      dstSheetId: this.sheetId,
+      undoReflection,
+      redoReflection,
+      diffBefore,
+      diffAfter,
+      partial: false,
+    });
+
+    return this.refresh(false, true);
+  }
+
+  public setColLabel({
+    x,
+    label,
+    undoReflection,
+    redoReflection,
+  }: {
+    x: number;
+    label: string;
+    undoReflection?: StorePatchType;
+    redoReflection?: StorePatchType;
+  }) {
+    const id = this.idMatrix[0]?.[x];
+    const diffBefore: CellsByIdType = {};
+    if (id != null) {
+      diffBefore[id] = { ...this.wire.data[id] };
+    }
+
+    const colCell = this._getRawCellByPoint({ y: 0, x });
+    if (colCell) {
+      if (label === '') {
+        delete colCell.label;
+      } else {
+        colCell.label = label;
+      }
+    }
+
+    const diffAfter: CellsByIdType = {};
+    if (id != null) {
+      diffAfter[id] = { ...this.wire.data[id] };
+    }
+
+    const changed = Object.keys(diffBefore).some(
+      (id) => JSON.stringify(diffBefore[id]) !== JSON.stringify(diffAfter[id]),
+    );
+
+    if (changed) {
+      this.pushHistory({
+        applyed: true,
+        operation: 'UPDATE',
+        srcSheetId: this.sheetId,
+        dstSheetId: this.sheetId,
+        undoReflection,
+        redoReflection,
+        diffBefore,
+        diffAfter,
+        partial: false,
+      });
+    }
+
+    return this.refresh(false, true);
+  }
+
+  public clearFilterRows(x?: number, undoReflection?: StorePatchType, redoReflection?: StorePatchType) {
+    const diffBefore = this._captureFilterCellStates();
+
+    if (x != null) {
+      const colCell = this._getRawCellByPoint({ y: 0, x });
+      if (colCell) {
+        delete colCell.filter;
+      }
+    } else {
+      // Clear all filters
+      const numCols = this.getNumCols();
+      for (let col = 1; col <= numCols; col++) {
+        const colCell = this._getRawCellByPoint({ y: 0, x: col });
+        if (colCell?.filter) {
+          delete colCell.filter;
+        }
+      }
+    }
+    this._reapplyFilters();
+
+    const diffAfter = this._captureFilterCellStates();
+
+    // Only push history if cell state actually changed
+    const changed = Object.keys(diffBefore).some((id) =>
+      JSON.stringify(diffBefore[id]) !== JSON.stringify(diffAfter[id])
+    );
+
+    if (changed) {
+      this.pushHistory({
+        applyed: true,
+        operation: 'UPDATE',
+        srcSheetId: this.sheetId,
+        dstSheetId: this.sheetId,
+        undoReflection,
+        redoReflection,
+        diffBefore,
+        diffAfter,
+        partial: false,
+      });
+    }
+
+    return this.refresh(false, true);
+  }
+
+  private _evaluateFilterConfig(filter: FilterConfig, cellValue: any): boolean {
+    return evaluateFilterConfig(filter, cellValue);
+  }
+
+  private _reapplyFilters() {
+    // Collect active filters from column header cells
+    const numCols = this.getNumCols();
+    const activeFilters: { x: number; filter: FilterConfig }[] = [];
+    for (let col = 1; col <= numCols; col++) {
+      const colCell = this._getRawCellByPoint({ y: 0, x: col });
+      if (colCell?.filter && colCell.filter.conditions.length > 0) {
+        activeFilters.push({ x: col, filter: colCell.filter });
+      }
+    }
+
+    const numRows = this.getNumRows();
+    // Clear all filtered flags first
+    for (let y = 1; y <= numRows; y++) {
+      const rowCell = this._getRawCellByPoint({ y, x: 0 });
+      if (rowCell) {
+        delete rowCell.filtered;
+      }
+    }
+
+    if (activeFilters.length === 0) {
+      return;
+    }
+
+    // Evaluate each row against all active column filters (AND across columns)
+    for (let y = 1; y <= numRows; y++) {
+      let visible = true;
+      for (const { x: col, filter } of activeFilters) {
+        const cell = this.getCellByPoint({ y, x: col }, 'COMPLETE');
+        if (!this._evaluateFilterConfig(filter, cell?.value)) {
+          visible = false;
+          break;
+        }
+      }
+      if (!visible) {
+        const rowCell = this._getRawCellByPoint({ y, x: 0 });
+        if (rowCell) {
+          rowCell.filtered = true;
+        }
+      }
+    }
+  }
+
+  public sortRows({
+    x,
+    direction,
+    undoReflection,
+    redoReflection,
+  }: {
+    x: number;
+    direction: 'asc' | 'desc';
+    undoReflection?: StorePatchType;
+    redoReflection?: StorePatchType;
+  }) {
+    const numRows = this.getNumRows();
+    if (numRows <= 1) {
+      return this;
+    }
+
+    // Save idMatrix data rows before sort
+    const rowsBefore: IdMatrix = [];
+    for (let y = 1; y <= numRows; y++) {
+      rowsBefore.push([...this.idMatrix[y]]);
+    }
+
+    // Collect row indices (data rows: 1..numRows)
+    const rowIndices: number[] = [];
+    for (let y = 1; y <= numRows; y++) {
+      rowIndices.push(y);
+    }
+
+    // Sort by resolved cell value at column x
+    rowIndices.sort((a, b) => {
+      const cellA = this.getCellByPoint({ y: a, x }, 'COMPLETE');
+      const cellB = this.getCellByPoint({ y: b, x }, 'COMPLETE');
+      const valA = cellA?.value;
+      const valB = cellB?.value;
+
+      // null/undefined goes to the end
+      if (valA == null && valB == null) return 0;
+      if (valA == null) return 1;
+      if (valB == null) return -1;
+
+      let cmp = 0;
+      if (typeof valA === 'number' && typeof valB === 'number') {
+        cmp = valA - valB;
+      } else if (valA instanceof Date && valB instanceof Date) {
+        cmp = valA.getTime() - valB.getTime();
+      } else {
+        cmp = String(valA).localeCompare(String(valB));
+      }
+      return direction === 'asc' ? cmp : -cmp;
+    });
+
+    // Check if order actually changed
+    let changed = false;
+    for (let i = 0; i < rowIndices.length; i++) {
+      if (rowIndices[i] !== i + 1) {
+        changed = true;
+        break;
+      }
+    }
+    if (!changed) {
+      return this;
+    }
+
+    // Apply the sort by rearranging idMatrix rows
+    this._applySortOrder(rowIndices);
+
+    // Save idMatrix data rows after sort
+    const rowsAfter: IdMatrix = [];
+    for (let y = 1; y <= numRows; y++) {
+      rowsAfter.push([...this.idMatrix[y]]);
+    }
+
+    this.pushHistory({
+      applyed: true,
+      operation: 'SORT_ROWS',
+      srcSheetId: this.sheetId,
+      dstSheetId: this.sheetId,
+      undoReflection,
+      redoReflection,
+      rowsBefore,
+      rowsAfter,
+    } as HistorySortRowsType);
+
+    return this.refresh(true, true);
+  }
+
+  private _applySortOrder(newOrder: number[]) {
+    // newOrder[i] = original row index that should end up at position i+1
+    const savedRows: Ids[] = [];
+    for (let i = 0; i < newOrder.length; i++) {
+      savedRows.push(this.idMatrix[newOrder[i]]);
+    }
+    for (let i = 0; i < newOrder.length; i++) {
+      this.idMatrix[i + 1] = savedRows[i];
+    }
+    this.addressCaches.clear();
+  }
+
+  private _restoreRows(rows: IdMatrix) {
+    for (let i = 0; i < rows.length; i++) {
+      this.idMatrix[i + 1] = [...rows[i]];
+    }
+    this.addressCaches.clear();
   }
 
   get isInitialized() {
@@ -374,6 +724,7 @@ export class Table implements UserTable {
         } else {
           delete stacked.height;
           delete stacked.width;
+          delete stacked.label;
           delete stacked.labeler;
         }
         stacked.system = { id, changedAt, dependents: new Set(), sheetId: this.sheetId };
@@ -437,15 +788,19 @@ export class Table implements UserTable {
 
     // Write offsetTop into row-header cells (y=1..numRows, x=0)
     let accH = 0;
+    let fullH = 0;
     for (let y = 1; y <= numRows; y++) {
       const cell = this.getCellByPoint({ y, x: 0 }, 'SYSTEM');
       const h = cell?.height || DEFAULT_HEIGHT;
       if (cell?.system) {
         cell.system.offsetTop = headerH + accH;
       }
-      accH += h;
+      if (!cell?.filtered) {
+        accH += h;
+      }
+      fullH += h;
     }
-    this.totalHeight = headerH + accH;
+    this.totalHeight = headerH + fullH;
   }
 
   public refresh(relocate = false, resize = false): Table {
@@ -1116,7 +1471,7 @@ export class Table implements UserTable {
     diff,
     partial = true,
     updateChangedAt = true,
-    ignoreFields = ['labeler'],
+    ignoreFields = ['label', 'labeler'],
     operator = 'SYSTEM',
     operation: op = operation.Update,
     formulaIdentify = true,
@@ -1765,7 +2120,7 @@ export class Table implements UserTable {
         break;
       case 'INSERT_ROWS': {
         if (history.diffBefore) {
-          dstTable.applyDiff(history.diffBefore, history.partial);
+          dstTable.applyDiff(history.diffBefore, false);
         }
         const { height } = matrixShape({ matrix: history.idMatrix });
         dstTable.idMatrix.splice(history.y, height);
@@ -1832,6 +2187,11 @@ export class Table implements UserTable {
         }
         break;
       }
+      case 'SORT_ROWS': {
+        dstTable._restoreRows(history.rowsBefore);
+        dstTable._reapplyFilters();
+        break;
+      }
     }
     this.refresh(shouldTracking(history.operation), true);
     return {
@@ -1859,11 +2219,11 @@ export class Table implements UserTable {
 
     switch (history.operation) {
       case 'UPDATE':
-        dstTable.applyDiff(history.diffAfter, history.partial);
+        dstTable.applyDiff(history.diffAfter, false);
         break;
       case 'INSERT_ROWS': {
         if (history.diffAfter) {
-          dstTable.applyDiff(history.diffAfter, history.partial);
+          dstTable.applyDiff(history.diffAfter, false);
         }
         const { height } = matrixShape({ matrix: history.idMatrix });
         dstTable.idMatrix.splice(history.y, 0, ...history.idMatrix);
@@ -1872,7 +2232,7 @@ export class Table implements UserTable {
       }
       case 'INSERT_COLS': {
         if (history.diffAfter) {
-          dstTable.applyDiff(history.diffAfter, history.partial);
+          dstTable.applyDiff(history.diffAfter, false);
         }
         const { width } = matrixShape({ matrix: history.idMatrix });
         dstTable.idMatrix.map((row, i) => {
@@ -1906,6 +2266,12 @@ export class Table implements UserTable {
         if (srcTable) {
           dstTable.move({ srcTable, src, dst, operator: 'USER', historicize: false });
         }
+        break;
+      }
+      case 'SORT_ROWS': {
+        dstTable._restoreRows(history.rowsAfter);
+        dstTable._reapplyFilters();
+        break;
       }
     }
     this.refresh(shouldTracking(history.operation), true);
@@ -1920,12 +2286,18 @@ export class Table implements UserTable {
     return this.functions[name];
   }
 
-  public getLabel(key: string | undefined, n: number) {
-    if (key == null) {
+  public getLabel(label: string | undefined, labelerKey: string | undefined, n: number) {
+    if (label != null) {
+      return label;
+    }
+    if (labelerKey == null) {
       return null;
     }
-    const labeler = this.labelers[key];
-    return labeler?.(n);
+    const labeler = this.labelers[labelerKey];
+    if (labeler) {
+      return labeler(n);
+    }
+    return null;
   }
   public getBase() {
     return this;

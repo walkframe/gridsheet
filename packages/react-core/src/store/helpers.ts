@@ -57,6 +57,8 @@ export const shouldTracking = (operation: string) => {
       return true;
     case 'MOVE':
       return true;
+    case 'SORT_ROWS':
+      return true;
   }
   return false;
 };
