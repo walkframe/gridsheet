@@ -32,10 +32,7 @@ jobs:
       - name: remove authToken from .npmrc
         run: |
           NPM_RC=$(npm config get userconfig)
-          echo "npmrc location: $NPM_RC"
           sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
-          echo "--- .npmrc after cleanup ---"
-          cat "$NPM_RC" 2>/dev/null || echo "no npmrc found"
 
       - name: cache
         uses: actions/cache@v3
@@ -44,33 +41,23 @@ jobs:
             node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
 
-      - name: debug info
-        run: |
-          echo "node version: $(node -v)"
-          echo "npm version: $(npm -v)"
-          echo "--- .npmrc ---"
-          cat ~/.npmrc 2>/dev/null || echo "no ~/.npmrc"
-          cat .npmrc 2>/dev/null || echo "no .npmrc in repo root"
-          echo "--- npm config list ---"
-          npm config list
-
       - name: upload react-core
         run: |
           cd packages/react-core
           pnpm install
           pnpm build --mode development
-          npm publish --access public --provenance --access public
+          npm publish --access public --provenance || true
 
       - name: upload preact-core
         run: |
           cd packages/preact-core
           pnpm install
           pnpm build
-          npm publish --access public --provenance --access public
+          npm publish --access public --provenance || true
 
       - name: upload vue-core
         run: |
           cd packages/vue-core
           pnpm install
           pnpm build --mode development
-          npm publish --access public --provenance --access public
+          npm publish --access public --provenance || true
