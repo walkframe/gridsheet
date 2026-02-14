@@ -5,6 +5,10 @@ on:
       - master
       - fix/*
 
+permissions:
+  id-token: write # Required for npm trusted publishing (OIDC)
+  contents: read
+
 jobs:
   package-release:
     # needs: test
@@ -12,9 +16,15 @@ jobs:
     if: github.ref == 'refs/heads/master'
     name: npm upload
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: setup pnpm
         uses: pnpm/action-setup@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.1.0'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: cache
         uses: actions/cache@v3
@@ -28,7 +38,6 @@ jobs:
           cd packages/react-core
           pnpm install
           pnpm build --mode development
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
           npm publish --access public || true
 
       - name: upload preact-core
@@ -36,7 +45,6 @@ jobs:
           cd packages/preact-core
           pnpm install
           pnpm build
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
           npm publish --access public || true
 
       - name: upload vue-core
@@ -44,5 +52,4 @@ jobs:
           cd packages/vue-core
           pnpm install
           pnpm build --mode development
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
           npm publish --access public || true
