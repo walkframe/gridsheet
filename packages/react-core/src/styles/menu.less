@@ -1,11 +1,12 @@
+// Shared mixins for contextmenu and columnmenu
 
-.gs-column-menu-modal {
+.gs-menu-modal() {
   width: 100%;
   height: 100vh;
   z-index: 12;
 }
 
-.gs-column-menu {
+.gs-menu-container() {
   z-index: 12;
   position: fixed;
   background-color: #ffffff;
@@ -13,39 +14,106 @@
   border-radius: 5px;
   box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px,
     rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+}
+
+.gs-menu-ul() {
+  color: #555555;
+  margin: 0;
+  padding: 0;
+}
+
+.gs-menu-li() {
+  padding: 5px 10px;
+  list-style-type: none;
+
+  &.gs-enabled {
+    cursor: pointer;
+    &:hover {
+      background-color: #eeeeee;
+    }
+  }
+
+  &.gs-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .gs-menu-name {
+    font-size: 13px;
+    letter-spacing: 1px;
+  }
+}
+
+.gs-menu-divider() {
+  background-color: #aaaaaa;
+  padding: 0;
+  height: 1px;
+}
+
+// Context menu
+
+.gs-contextmenu-modal {
+  .gs-menu-modal();
+}
+
+.gs-contextmenu {
+  .gs-menu-container();
 
   ul {
-    min-width: 200px;
-    color: #555555;
-    margin: 0;
-    padding: 0;
+    .gs-menu-ul();
+    min-width: 250px;
   }
   li {
-    padding: 5px 10px;
-    list-style-type: none;
-
-    &.gs-enabled {
-      cursor: pointer;
-      &:hover {
-        background-color: #eeeeee;
-      }
-    }
-
-    &.gs-disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
+    .gs-menu-li();
+    display: flex;
 
     &.gs-menu-divider {
-      background-color: #aaaaaa;
-      margin: 5px 0;
-      padding: 0;
-      height: 1px;
+      .gs-menu-divider();
+      margin: 10px 0;
     }
 
     .gs-menu-name {
-      font-size: 13px;
-      letter-spacing: 1px;
+      flex: 1;
+    }
+
+    .gs-menu-shortcut {
+      font-size: 10px;
+      line-height: 20px;
+      color: #999999;
+
+      &:before {
+        content: "( ";
+      }
+      &:after {
+        content: " )";
+      }
+
+      .gs-menu-underline {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+// Column menu
+
+.gs-column-menu-modal {
+  .gs-menu-modal();
+}
+
+.gs-column-menu {
+  .gs-menu-container();
+
+  ul {
+    .gs-menu-ul();
+    min-width: 200px;
+  }
+  li {
+    .gs-menu-li();
+
+    &.gs-menu-divider {
+      .gs-menu-divider();
+      margin: 5px 0;
     }
   }
 
@@ -290,11 +358,6 @@
   opacity: 0;
   transition: opacity 0.15s ease;
   z-index: 2;
-
-  &:hover {
-    //background-color: #e0e0e0;
-    //color: #333;
-  }
 
   &.gs-filtered {
     opacity: 1;
