@@ -38,18 +38,18 @@ jobs:
           cd packages/react-core
           pnpm install
           pnpm build --mode development
-          npm publish --access public || true
+          npm publish --access public --provenance || true
 
       - name: upload preact-core
         run: |
           cd packages/preact-core
           pnpm install
           pnpm build
-          npm publish --access public || true
+          npm publish --access public --provenance || true
 
       - name: upload vue-core
         run: |
           cd packages/vue-core
           pnpm install
           pnpm build --mode development
-          npm publish --access public || true
+          npm publish --access public --provenance || true
