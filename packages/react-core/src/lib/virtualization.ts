@@ -10,7 +10,7 @@ export const getCellRectPositions = (table: Table, { y, x }: PointType) => {
   const left = colCell?.system?.offsetLeft ?? 0;
   const top = rowCell?.system?.offsetTop ?? 0;
   const w = colCell?.width || DEFAULT_WIDTH;
-  const h = rowCell?.filtered ? 0 : (rowCell?.height || DEFAULT_HEIGHT);
+  const h = rowCell?.filtered ? 0 : rowCell?.height || DEFAULT_HEIGHT;
   return {
     top,
     left,

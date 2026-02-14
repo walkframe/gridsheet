@@ -60,9 +60,7 @@ export type FilterConditionMethod =
   | 'blank'
   | 'nonblank'
   | 'includes'
-  | 'excludes'
-
-;
+  | 'excludes';
 
 export type FilterCondition = {
   method: FilterConditionMethod;

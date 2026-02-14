@@ -9,10 +9,18 @@ const _str = (v: any): string => (v == null ? '' : String(v));
 type ValueType = 'number' | 'date' | 'timedelta' | 'boolean' | 'string';
 
 function detectType(cellValue: any): ValueType {
-  if (typeof cellValue === 'number') return 'number';
-  if (cellValue instanceof Date) return 'date';
-  if (TimeDelta.is(cellValue)) return 'timedelta';
-  if (typeof cellValue === 'boolean') return 'boolean';
+  if (typeof cellValue === 'number') {
+    return 'number';
+  }
+  if (cellValue instanceof Date) {
+    return 'date';
+  }
+  if (TimeDelta.is(cellValue)) {
+    return 'timedelta';
+  }
+  if (typeof cellValue === 'boolean') {
+    return 'boolean';
+  }
   return 'string';
 }
 
@@ -30,7 +38,9 @@ function parseAsType(v: string, type: ValueType): { ok: boolean; num: number } {
     }
     case 'date': {
       const d = parseDate(v);
-      if (!d) return { ok: false, num: NaN };
+      if (!d) {
+        return { ok: false, num: NaN };
+      }
       return { ok: true, num: d.getTime() };
     }
     case 'timedelta': {
@@ -39,8 +49,12 @@ function parseAsType(v: string, type: ValueType): { ok: boolean; num: number } {
     }
     case 'boolean': {
       const bv = v.toLowerCase();
-      if (bv === 'true') return { ok: true, num: 1 };
-      if (bv === 'false') return { ok: true, num: 0 };
+      if (bv === 'true') {
+        return { ok: true, num: 1 };
+      }
+      if (bv === 'false') {
+        return { ok: true, num: 0 };
+      }
       return { ok: false, num: NaN };
     }
     default:
@@ -167,7 +181,9 @@ export function evaluateFilterCondition(condition: FilterCondition, cellValue: a
 
 export function evaluateFilterConfig(filter: FilterConfig, cellValue: any): boolean {
   const mode = filter.mode ?? 'or';
-  if (filter.conditions.length === 0) return true;
+  if (filter.conditions.length === 0) {
+    return true;
+  }
   if (mode === 'and') {
     return filter.conditions.every((c) => evaluateFilterCondition(c, cellValue));
   } else {

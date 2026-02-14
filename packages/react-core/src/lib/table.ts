@@ -260,12 +260,14 @@ export class Table implements UserTable {
   /** Get the raw (mutable) cell data for a point. Unlike getCellByPoint, this returns the actual wire.data reference. */
   private _getRawCellByPoint({ y, x }: PointType): CellType | undefined {
     const id = this.idMatrix[y]?.[x];
-    if (id == null) return undefined;
+    if (id == null) {
+      return undefined;
+    }
     return this.wire.data[id];
   }
 
   public isRowFiltered(y: number): boolean {
-    return !!(this._getRawCellByPoint({ y, x: 0 })?.filtered);
+    return !!this._getRawCellByPoint({ y, x: 0 })?.filtered;
   }
 
   public hasActiveFilters(): boolean {
@@ -414,8 +416,8 @@ export class Table implements UserTable {
     const diffAfter = this._captureFilterCellStates();
 
     // Only push history if cell state actually changed
-    const changed = Object.keys(diffBefore).some((id) =>
-      JSON.stringify(diffBefore[id]) !== JSON.stringify(diffAfter[id])
+    const changed = Object.keys(diffBefore).some(
+      (id) => JSON.stringify(diffBefore[id]) !== JSON.stringify(diffAfter[id]),
     );
 
     if (changed) {
@@ -518,9 +520,15 @@ export class Table implements UserTable {
       const valB = cellB?.value;
 
       // null/undefined goes to the end
-      if (valA == null && valB == null) return 0;
-      if (valA == null) return 1;
-      if (valB == null) return -1;
+      if (valA == null && valB == null) {
+        return 0;
+      }
+      if (valA == null) {
+        return 1;
+      }
+      if (valB == null) {
+        return -1;
+      }
 
       let cmp = 0;
       if (typeof valA === 'number' && typeof valB === 'number') {

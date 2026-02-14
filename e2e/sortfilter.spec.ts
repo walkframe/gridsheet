@@ -173,7 +173,7 @@ test.describe('Sort & Filter', () => {
     expect(visibleNames).toContain('Charlie');
     expect(visibleNames).toContain('Diana');
     expect(visibleNames).not.toContain('Alice'); // 90 > 85
-    expect(visibleNames).not.toContain('Eve');   // 40 < 60
+    expect(visibleNames).not.toContain('Eve'); // 40 < 60
   });
 
   test('filter boolean column (Active = true)', async ({ page }) => {
@@ -199,8 +199,8 @@ test.describe('Sort & Filter', () => {
     expect(visibleNames).toContain('Alice');
     expect(visibleNames).toContain('Charlie');
     expect(visibleNames).toContain('Diana');
-    expect(visibleNames).not.toContain('Bob');   // false
-    expect(visibleNames).not.toContain('Eve');   // false
+    expect(visibleNames).not.toContain('Bob'); // false
+    expect(visibleNames).not.toContain('Eve'); // false
   });
 
   test('filter boolean column (Active = false)', async ({ page }) => {
@@ -224,9 +224,9 @@ test.describe('Sort & Filter', () => {
     const visibleNames = await getVisibleNames(page);
     expect(visibleNames).toContain('Bob');
     expect(visibleNames).toContain('Eve');
-    expect(visibleNames).not.toContain('Alice');   // true
+    expect(visibleNames).not.toContain('Alice'); // true
     expect(visibleNames).not.toContain('Charlie'); // true
-    expect(visibleNames).not.toContain('Diana');   // true
+    expect(visibleNames).not.toContain('Diana'); // true
   });
 
   test('sort then undo and redo', async ({ page }) => {

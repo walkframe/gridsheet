@@ -129,11 +129,7 @@ export const rowsSorterDesc = async ({ store, dispatch }: ContextMenuProps, x: n
   store.editorRef.current?.focus();
 };
 
-export const rowsFilterer = async (
-  { store, dispatch }: ContextMenuProps,
-  x: number,
-  filter: FilterConfig,
-) => {
+export const rowsFilterer = async ({ store, dispatch }: ContextMenuProps, x: number, filter: FilterConfig) => {
   dispatch(filterRows({ x, filter }));
   store.editorRef.current?.focus();
 };

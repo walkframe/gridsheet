@@ -1,6 +1,15 @@
 import { type FC, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { Context } from '../store';
-import { setColumnMenu, setColLabel, sortRows, filterRows, clearFilterRows, insertColsLeft, insertColsRight, removeCols } from '../store/actions';
+import {
+  setColumnMenu,
+  setColLabel,
+  sortRows,
+  filterRows,
+  clearFilterRows,
+  insertColsLeft,
+  insertColsRight,
+  removeCols,
+} from '../store/actions';
 import { Fixed } from './Fixed';
 import type { FilterCondition, FilterConditionMethod } from '../types';
 import * as prevention from '../lib/operation';
@@ -57,31 +66,41 @@ export const ColumnMenu: FC = () => {
   }, [dispatch, editorRef]);
 
   const handleApplyLabel = useCallback(() => {
-    if (x == null) return;
+    if (x == null) {
+      return;
+    }
     dispatch(setColLabel({ x, label }));
     dispatch(setColumnMenu(null));
     editorRef.current?.focus();
   }, [dispatch, x, label, editorRef]);
 
   const handleSortAsc = useCallback(() => {
-    if (x == null) return;
+    if (x == null) {
+      return;
+    }
     dispatch(sortRows({ x, direction: 'asc' }));
     dispatch(setColumnMenu(null));
     editorRef.current?.focus();
   }, [dispatch, x, editorRef]);
 
   const handleSortDesc = useCallback(() => {
-    if (x == null) return;
+    if (x == null) {
+      return;
+    }
     dispatch(sortRows({ x, direction: 'desc' }));
     dispatch(setColumnMenu(null));
     editorRef.current?.focus();
   }, [dispatch, x, editorRef]);
 
   const handleApplyFilter = useCallback(() => {
-    if (x == null) return;
+    if (x == null) {
+      return;
+    }
     // Build valid conditions (skip empty values for methods that need values)
     const valid = conditions.filter((c) => {
-      if (NO_VALUE_METHODS.includes(c.method)) return true;
+      if (NO_VALUE_METHODS.includes(c.method)) {
+        return true;
+      }
       return c.value.some((v) => v.trim() !== '');
     });
     if (valid.length === 0) {
@@ -106,16 +125,13 @@ export const ColumnMenu: FC = () => {
     editorRef.current?.focus();
   }, [dispatch, editorRef]);
 
-  const updateCondition = useCallback(
-    (index: number, patch: Partial<FilterCondition>) => {
-      setConditions((prev) => {
-        const next = [...prev];
-        next[index] = { ...next[index], ...patch };
-        return next;
-      });
-    },
-    [],
-  );
+  const updateCondition = useCallback((index: number, patch: Partial<FilterCondition>) => {
+    setConditions((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], ...patch };
+      return next;
+    });
+  }, []);
 
   const addCondition = useCallback(() => {
     setConditions((prev) => [...prev, { ...DEFAULT_CONDITION, value: [''] }]);
@@ -123,7 +139,9 @@ export const ColumnMenu: FC = () => {
 
   const removeCondition = useCallback((index: number) => {
     setConditions((prev) => {
-      if (prev.length <= 1) return [{ ...DEFAULT_CONDITION, value: [''] }];
+      if (prev.length <= 1) {
+        return [{ ...DEFAULT_CONDITION, value: [''] }];
+      }
       return prev.filter((_, i) => i !== index);
     });
   }, []);
@@ -139,10 +157,8 @@ export const ColumnMenu: FC = () => {
   const filterDisabled = prevention.hasOperation(colCell?.prevention, prevention.Filter);
   const labelDisabled = prevention.hasOperation(colCell?.prevention, prevention.SetLabel);
   const labelPlaceholder = table.getLabel(undefined, colCell?.labeler, x) ?? x2c(x);
-  const insertDisabled =
-    table.maxNumCols !== -1 && table.getNumCols() + 1 > table.maxNumCols;
-  const insertLeftDisabled =
-    insertDisabled || prevention.hasOperation(colCell?.prevention, prevention.InsertColsLeft);
+  const insertDisabled = table.maxNumCols !== -1 && table.getNumCols() + 1 > table.maxNumCols;
+  const insertLeftDisabled = insertDisabled || prevention.hasOperation(colCell?.prevention, prevention.InsertColsLeft);
   const insertRightDisabled =
     insertDisabled || prevention.hasOperation(colCell?.prevention, prevention.InsertColsRight);
   const removeDisabled =
@@ -218,9 +234,15 @@ export const ColumnMenu: FC = () => {
                       disabled={filterDisabled}
                       onChange={(e) => updateCondition(i, { value: [e.target.value] })}
                       onKeyDown={(e) => {
-                        if (e.nativeEvent.isComposing) return;
-                        if (e.key === 'Enter') handleApplyFilter();
-                        if (e.key === 'Escape') handleClose();
+                        if (e.nativeEvent.isComposing) {
+                          return;
+                        }
+                        if (e.key === 'Enter') {
+                          handleApplyFilter();
+                        }
+                        if (e.key === 'Escape') {
+                          handleClose();
+                        }
                       }}
                     />
                   )}
@@ -254,13 +276,21 @@ export const ColumnMenu: FC = () => {
           <li className="gs-menu-divider" />
           <li
             className={sortDisabled ? 'gs-disabled' : 'gs-enabled'}
-            onClick={() => { if (!sortDisabled) handleSortAsc(); }}
+            onClick={() => {
+              if (!sortDisabled) {
+                handleSortAsc();
+              }
+            }}
           >
             <div className="gs-menu-name">Sort A to Z</div>
           </li>
           <li
             className={sortDisabled ? 'gs-disabled' : 'gs-enabled'}
-            onClick={() => { if (!sortDisabled) handleSortDesc(); }}
+            onClick={() => {
+              if (!sortDisabled) {
+                handleSortDesc();
+              }
+            }}
           >
             <div className="gs-menu-name">Sort Z to A</div>
           </li>
@@ -277,9 +307,15 @@ export const ColumnMenu: FC = () => {
                 disabled={labelDisabled}
                 onChange={(e) => setLabel(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.nativeEvent.isComposing) return;
-                  if (e.key === 'Enter') handleApplyLabel();
-                  if (e.key === 'Escape') handleClose();
+                  if (e.nativeEvent.isComposing) {
+                    return;
+                  }
+                  if (e.key === 'Enter') {
+                    handleApplyLabel();
+                  }
+                  if (e.key === 'Escape') {
+                    handleClose();
+                  }
                 }}
               />
               <button className="gs-label-apply-btn" onClick={handleApplyLabel} disabled={labelDisabled}>
