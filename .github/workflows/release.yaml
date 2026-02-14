@@ -26,12 +26,28 @@ jobs:
           node-version: '24.1.0'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: remove authToken from .npmrc
+        run: |
+          sed -i '/_authToken/d' ~/.npmrc 2>/dev/null || true
+          echo "--- .npmrc after cleanup ---"
+          cat ~/.npmrc 2>/dev/null || echo "no ~/.npmrc"
+
       - name: cache
         uses: actions/cache@v3
         with:
           path: |
             node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: debug info
+        run: |
+          echo "node version: $(node -v)"
+          echo "npm version: $(npm -v)"
+          echo "--- .npmrc ---"
+          cat ~/.npmrc 2>/dev/null || echo "no ~/.npmrc"
+          cat .npmrc 2>/dev/null || echo "no .npmrc in repo root"
+          echo "--- npm config list ---"
+          npm config list
 
       - name: upload react-core
         run: |
