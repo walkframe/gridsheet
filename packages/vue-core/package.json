@@ -1,6 +1,6 @@
 {
   "name": "@gridsheet/vue-core",
-  "version": "2.0.5-0",
+  "version": "2.1.0-0",
   "description": "Spreadsheet component for Vue 3",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -20,7 +20,7 @@
     "vue": "^3.3.0"
   },
   "dependencies": {
-    "@gridsheet/preact-core": "^2.0.5"
+    "@gridsheet/preact-core": "^2.1.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.4",
