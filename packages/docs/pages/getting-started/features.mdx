@@ -62,6 +62,14 @@ Comprehensive event system for spreadsheet operations:
 - **Initialization Events**: `onInit` for table initialization
 - **Real-time Feedback**: Immediate event notifications for all operations
 
+### Column Menu
+
+Interactive column header menu accessible via the ⋮ button on each column:
+- **Sort**: Sort rows ascending (A→Z) or descending (Z→A) by column values
+- **Filter**: Show/hide rows based on conditions (equals, contains, greater than, etc.) with AND/OR logic and multiple conditions
+- **Label Editing**: Rename column headers directly from the menu
+- **Prevention Support**: Granular control over which operations are available per column using `operations.Sort`, `operations.Filter`, `operations.SetLabel`, `operations.SetLabeler`
+
 ## Performance Features
 
 - **Virtual Scrolling**: Efficient rendering for large datasets

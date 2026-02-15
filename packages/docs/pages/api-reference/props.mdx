@@ -72,6 +72,7 @@ Some properties are only valid for columns or rows:
 |----------|-----------|-------------|
 | `width` | Columns only | Column width in pixels |
 | `height` | Rows only | Row height in pixels |
+| `label` | Columns only | Custom display text for the column header |
 | `labeler` | Both | Custom labeler for headers |
 
 **Note**: If you specify `width` or `height` on a cell address like `D3`, it will be ignored.
@@ -86,6 +87,7 @@ Each cell can be configured with the following properties:
 | `style` | `CSSProperties` | CSS properties for appearance |
 | `justifyContent` | `CSSProperties['justifyContent']` | Horizontal alignment within the cell |
 | `alignItems` | `CSSProperties['alignItems']` | Vertical alignment within the cell |
+| `label` | `string` | Custom display text for column headers (only valid on column specifications, e.g., `A`, `B`) |
 | `labeler` | `string` | Key of a labeler registered in the hub |
 | `width` | `Width` | Cell width in pixels |
 | `height` | `Height` | Cell height in pixels |
@@ -99,6 +101,60 @@ Each cell can be configured with the following properties:
 **Important Notes:**
 - **Serialization**: Cell values (except `system` field) are designed to be serializable. Avoid storing non-serializable objects like class instances.
 - **System Field**: The `system` field contains values used by the system to display correct values. Do not modify this field manually.
+
+### Prevention Flags
+
+The `prevention` property uses bitwise flags from the `operations` export to restrict specific operations on cells, columns, or rows. Multiple flags can be combined with the `|` (OR) operator.
+
+```tsx
+import { operations } from '@gridsheet/react-core';
+```
+
+| Flag | Value | Description |
+|------|-------|-------------|
+| `RemoveRows` | 1 | Prevent removing rows |
+| `RemoveCols` | 2 | Prevent removing columns |
+| `InsertRowsAbove` | 4 | Prevent inserting rows above |
+| `InsertRowsBelow` | 8 | Prevent inserting rows below |
+| `InsertColsLeft` | 16 | Prevent inserting columns to the left |
+| `InsertColsRight` | 32 | Prevent inserting columns to the right |
+| `MoveFrom` | 64 | Prevent moving cells from this location |
+| `MoveTo` | 128 | Prevent moving cells to this location |
+| `Write` | 256 | Prevent editing cell values |
+| `Style` | 512 | Prevent changing cell styles |
+| `Resize` | 1024 | Prevent resizing rows/columns |
+| `SetRenderer` | 2048 | Prevent changing cell renderer |
+| `SetParser` | 4096 | Prevent changing cell parser |
+| `Copy` | 8192 | Prevent copying cells |
+| `SetPolicy` | 16384 | Prevent changing cell policy |
+| `Sort` | 32768 | Prevent sorting by this column |
+| `Filter` | 65536 | Prevent filtering by this column |
+| `SetLabel` | 131072 | Prevent editing the column header label |
+| `SetLabeler` | 262144 | Prevent changing the column header labeler |
+
+**Convenience aliases:**
+| Alias | Combines | Description |
+|-------|----------|-------------|
+| `Move` | `MoveFrom \| MoveTo` | Prevent all move operations |
+| `ReadOnly` | `Write \| Style \| Move \| Copy` | Prevent all data modifications |
+| `ViewOnly` | `ReadOnly \| Resize` | Prevent all modifications including resize |
+
+```tsx
+// Prevent sorting and filtering on column C
+{
+  C: {
+    prevention: operations.Sort | operations.Filter,
+  },
+}
+
+// Column with a custom label, protected from label editing
+{
+  A: {
+    label: 'Name',
+    prevention: operations.SetLabel,
+  },
+}
+```
 
 ### Example Usage
 

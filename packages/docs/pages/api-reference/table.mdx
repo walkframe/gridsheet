@@ -282,3 +282,108 @@ const newTable = table.copy({
 });
 sync(newTable); // Required to apply changes
 ```
+
+### Sort and Filter Operations
+
+#### `sortRows(args: { x: number; direction: 'asc' | 'desc' }): UserTable`
+Sorts all data rows by the values in the specified column. Supports ascending and descending order. Null/undefined values are sorted to the end. This operation is recorded in the undo/redo history.
+
+```tsx
+// Sort by column B ascending
+const newTable = table.sortRows({ x: 2, direction: 'asc' });
+sync(newTable);
+
+// Sort by column A descending
+const newTable = table.sortRows({ x: 1, direction: 'desc' });
+sync(newTable);
+```
+
+#### `filterRows(args: { x: number; filter: FilterConfig }): UserTable`
+Applies a filter to the specified column. Rows that do not match the filter conditions are hidden. Multiple columns can have independent filters, and they are combined with AND logic across columns.
+
+The `FilterConfig` object has the following structure:
+
+```tsx
+type FilterConfig = {
+  mode: 'and' | 'or';        // How multiple conditions are combined
+  conditions: FilterCondition[];
+};
+
+type FilterCondition = {
+  method: FilterConditionMethod;  // e.g., 'eq', 'contains', 'gt', etc.
+  value: string[];
+};
+```
+
+Available filter methods:
+
+| Method | Description |
+|--------|-------------|
+| `eq` | Equals |
+| `ne` | Not equals |
+| `gt` | Greater than |
+| `gte` | Greater than or equal |
+| `lt` | Less than |
+| `lte` | Less than or equal |
+| `contains` | Contains substring |
+| `notContains` | Does not contain substring |
+| `empty` | Cell is empty (no value required) |
+| `notEmpty` | Cell is not empty (no value required) |
+
+```tsx
+// Filter column B: show only rows where value > 80
+const newTable = table.filterRows({
+  x: 2,
+  filter: {
+    mode: 'and',
+    conditions: [{ method: 'gt', value: ['80'] }],
+  },
+});
+sync(newTable);
+```
+
+#### `clearFilterRows(x?: number): UserTable`
+Clears filter conditions. If `x` is provided, clears only the filter for that column. If omitted, clears all column filters.
+
+```tsx
+// Clear filter on column B only
+const newTable = table.clearFilterRows(2);
+sync(newTable);
+
+// Clear all filters
+const newTable = table.clearFilterRows();
+sync(newTable);
+```
+
+#### `isRowFiltered(y: number): boolean`
+Returns `true` if the specified row is currently hidden by a filter.
+
+```tsx
+if (table.isRowFiltered(3)) {
+  console.log('Row 3 is hidden by a filter');
+}
+```
+
+#### `hasActiveFilters(): boolean`
+Returns `true` if any column has an active filter.
+
+```tsx
+if (table.hasActiveFilters()) {
+  console.log('Some filters are active');
+}
+```
+
+### Column Label Operations
+
+#### `setColLabel(args: { x: number; label: string }): UserTable`
+Sets a custom display label for the specified column header. If an empty string is provided, the label is removed and the default column letter (A, B, C, ...) is displayed. This operation is recorded in the undo/redo history.
+
+```tsx
+// Set column A header to "Name"
+const newTable = table.setColLabel({ x: 1, label: 'Name' });
+sync(newTable);
+
+// Reset column A header to default ("A")
+const newTable = table.setColLabel({ x: 1, label: '' });
+sync(newTable);
+```
