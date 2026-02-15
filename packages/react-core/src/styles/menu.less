@@ -170,6 +170,21 @@
     display: flex;
     align-items: center;
     gap: 8px;
+
+    .gs-filter-add-btn {
+      font-size: 12px;
+      padding: 3px 9px;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      background-color: transparent;
+      cursor: pointer;
+      color: #555;
+      letter-spacing: 1px;
+
+      &:hover {
+        border-color: #555;
+      }
+    }
   }
 
   .gs-filter-mode-toggle {
@@ -279,27 +294,28 @@
     display: flex;
     gap: 4px;
     margin-top: 10px;
-    justify-content: space-between;
     align-items: center;
 
-    .gs-filter-add-btn {
+    .gs-filter-reset-all-btn {
       font-size: 12px;
       padding: 3px 9px;
       border: 1px solid transparent;
       border-radius: 3px;
       background-color: transparent;
       cursor: pointer;
-      color: #555;
+      color: #cc3333;
+      font-weight: bold;
       letter-spacing: 1px;
 
       &:hover {
-        border-color: #555;
+        border-color: #cc3333;
       }
     }
 
     .gs-filter-actions-right {
       display: flex;
       gap: 4px;
+      margin-left: auto;
     }
 
     .gs-filter-reset-btn {

@@ -170,7 +170,7 @@ export function GridSheet({
           style={{
             //width: '100%',
             maxWidth: (store.tableReactive.current?.totalWidth || 0) + 2,
-            maxHeight: (store.tableReactive.current?.totalHeight || 0) + 2,
+            maxHeight: (store.tableReactive.current?.fullHeight || 0) + 2,
             overflow: 'auto',
             resize: sheetResize,
             ...style,

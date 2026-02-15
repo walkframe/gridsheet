@@ -209,6 +209,7 @@ export class Table implements UserTable {
   public idsToBeIdentified: Id[] = [];
   public totalWidth = 0;
   public totalHeight = 0;
+  public fullHeight = 0;
 
   private version = 0;
   private idMatrix: IdMatrix;
@@ -808,7 +809,8 @@ export class Table implements UserTable {
       }
       fullH += h;
     }
-    this.totalHeight = headerH + fullH;
+    this.totalHeight = headerH + accH;
+    this.fullHeight = headerH + fullH;
   }
 
   public refresh(relocate = false, resize = false): Table {

@@ -117,7 +117,16 @@ export const ColumnMenu: FC = () => {
     editorRef.current?.focus();
   }, [dispatch, x, conditions, mode, editorRef]);
 
-  const handleReset = useCallback(() => {
+  const handleResetColumn = useCallback(() => {
+    if (x == null) return;
+    dispatch(clearFilterRows({ x }));
+    setConditions([{ ...DEFAULT_CONDITION, value: [''] }]);
+    setMode('or');
+    dispatch(setColumnMenu(null));
+    editorRef.current?.focus();
+  }, [dispatch, x, editorRef]);
+
+  const handleResetAll = useCallback(() => {
     dispatch(clearFilterRows({}));
     setConditions([{ ...DEFAULT_CONDITION, value: [''] }]);
     setMode('or');
@@ -183,6 +192,9 @@ export const ColumnMenu: FC = () => {
           <li className={`gs-column-menu-filter${filterDisabled ? ' gs-disabled' : ''}`}>
             <div className="gs-filter-header">
               <div className="gs-menu-name">Filter</div>
+              <button className="gs-filter-add-btn" onClick={addCondition} disabled={filterDisabled}>
+                + ADD
+              </button>
               <div className={`gs-filter-mode-toggle${conditions.length <= 1 ? ' gs-disabled' : ''}`}>
                 <label className={mode === 'and' ? 'gs-active' : ''}>
                   <input
@@ -258,12 +270,14 @@ export const ColumnMenu: FC = () => {
               ))}
             </div>
             <div className="gs-filter-actions">
-              <button className="gs-filter-add-btn" onClick={addCondition} disabled={filterDisabled}>
-                + ADD
-              </button>
+              {hasAnyFilter && (
+                <button className="gs-filter-reset-all-btn" onClick={handleResetAll} disabled={filterDisabled}>
+                  RESET ALL
+                </button>
+              )}
               <div className="gs-filter-actions-right">
-                {hasAnyFilter && (
-                  <button className="gs-filter-reset-btn" onClick={handleReset} disabled={filterDisabled}>
+                {colCell?.filter && (
+                  <button className="gs-filter-reset-btn" onClick={handleResetColumn} disabled={filterDisabled}>
                     RESET
                   </button>
                 )}
