@@ -39,7 +39,7 @@ import { FunctionMapping } from '../formula/functions/__base';
 import { identifyFormula, Lexer, splitRef, stripSheetName } from '../formula/evaluator';
 import { solveFormula, stripTable } from '../formula/solver';
 
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH, HEADER_HEIGHT, HEADER_WIDTH, DEFAULT_HISTORY_LIMIT } from '../constants';
+import { DEFAULT_HEIGHT, DEFAULT_WIDTH, HEADER_HEIGHT, HEADER_WIDTH, DEFAULT_HISTORY_LIMIT, Pending } from '../constants';
 import { shouldTracking } from '../store/helpers';
 import { updateTable } from '../store/actions';
 import * as operation from './operation';
@@ -190,6 +190,8 @@ export interface UserTable {
   clearFilterRows(x?: number, undoReflection?: StorePatchType, redoReflection?: StorePatchType): UserTable;
   isRowFiltered(y: number): boolean;
   hasActiveFilters(): boolean;
+  hasPendingCells(): boolean;
+  waitForPending(): Promise<void>;
 
   stringify(props: { point: PointType; cell?: CellType; refEvaluation?: RefEvaluation }): string;
 }
@@ -280,6 +282,59 @@ export class Table implements UserTable {
       }
     }
     return false;
+  }
+
+  /**
+   * Returns true if any data cell in this sheet currently holds a Pending value
+   * (i.e. an async formula that hasn't resolved yet).
+   */
+  public hasPendingCells(): boolean {
+    const numRows = this.getNumRows();
+    const numCols = this.getNumCols();
+    for (let y = 1; y <= numRows; y++) {
+      for (let x = 1; x <= numCols; x++) {
+        const cell = this.getCellByPoint({ y, x }, 'COMPLETE');
+        if (cell?.value instanceof Pending) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Returns a Promise that resolves when all in-flight async formula computations
+   * have completed and no data cells hold Pending values.
+   * If nothing is pending, resolves immediately.
+   * Useful for waiting before sort/filter so that cell values are fully resolved.
+   */
+  public waitForPending(): Promise<void> {
+    const pendingMap = this.wire.asyncPending;
+    // If there are in-flight promises, wait for them first
+    if (pendingMap.size > 0) {
+      const promises = Array.from(pendingMap.values()).map((p) => p.promise);
+      return Promise.all(promises).then(() => this.waitForPending());
+    }
+    // Even if asyncPending is empty, cells may still hold Pending values
+    // (e.g. propagated pending from dependent formulas).
+    // In that case, wait for the next transmit cycle and re-check.
+    if (this.hasPendingCells()) {
+      return new Promise<void>((resolve) => {
+        const check = () => {
+          if (this.wire.asyncPending.size > 0) {
+            const promises = Array.from(this.wire.asyncPending.values()).map((p) => p.promise);
+            Promise.all(promises).then(check);
+          } else if (this.hasPendingCells()) {
+            // Still pending — wait a tick for transmit/re-render
+            setTimeout(check, 50);
+          } else {
+            resolve();
+          }
+        };
+        check();
+      });
+    }
+    return Promise.resolve();
   }
 
   /** Capture the current state of all filter-related cells (column headers + row headers) as a CellsByIdType snapshot */

@@ -120,16 +120,28 @@ export const colsRemover = async ({ store, dispatch }: ContextMenuProps) => {
 };
 
 export const rowsSorterAsc = async ({ store, dispatch }: ContextMenuProps, x: number) => {
+  const table = store.tableReactive.current;
+  if (table && (table.hasPendingCells() || table.wire.asyncPending.size > 0)) {
+    await table.waitForPending();
+  }
   dispatch(sortRows({ x, direction: 'asc' }));
   store.editorRef.current?.focus();
 };
 
 export const rowsSorterDesc = async ({ store, dispatch }: ContextMenuProps, x: number) => {
+  const table = store.tableReactive.current;
+  if (table && (table.hasPendingCells() || table.wire.asyncPending.size > 0)) {
+    await table.waitForPending();
+  }
   dispatch(sortRows({ x, direction: 'desc' }));
   store.editorRef.current?.focus();
 };
 
 export const rowsFilterer = async ({ store, dispatch }: ContextMenuProps, x: number, filter: FilterConfig) => {
+  const table = store.tableReactive.current;
+  if (table && (table.hasPendingCells() || table.wire.asyncPending.size > 0)) {
+    await table.waitForPending();
+  }
   dispatch(filterRows({ x, filter }));
   store.editorRef.current?.focus();
 };

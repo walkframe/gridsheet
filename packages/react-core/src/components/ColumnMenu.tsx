@@ -40,9 +40,60 @@ export const ColumnMenu: FC = () => {
   const [mode, setMode] = useState<'and' | 'or'>('or');
   const [label, setLabel] = useState('');
   const labelInputRef = useRef<HTMLInputElement>(null);
+  // Pending action: holds the action to execute after async formulas resolve
+  const [pendingAction, setPendingAction] = useState<{
+    type: 'sortAsc' | 'sortDesc' | 'filter';
+    x: number;
+    filter?: { mode: 'and' | 'or'; conditions: FilterCondition[] };
+  } | null>(null);
+  const waiting = pendingAction != null;
 
   const x = columnMenuState?.x;
   const position = columnMenuState?.position;
+
+  // Callback ref: auto-focus the first filter value input when it mounts
+  const firstValueRef = useCallback((node: HTMLInputElement | null) => {
+    if (node) {
+      node.focus();
+    }
+  }, [x]);
+
+  // When a pending action is set, wait for async formulas then execute
+  useEffect(() => {
+    if (!pendingAction) {
+      return;
+    }
+    let cancelled = false;
+    const execute = () => {
+      if (cancelled) return;
+      const currentTable = tableRef.current;
+      if (!currentTable) return;
+      const { type, x: actionX, filter } = pendingAction;
+      if (type === 'sortAsc') {
+        dispatch(sortRows({ x: actionX, direction: 'asc' }));
+      } else if (type === 'sortDesc') {
+        dispatch(sortRows({ x: actionX, direction: 'desc' }));
+      } else if (type === 'filter' && filter) {
+        if (filter.conditions.length === 0) {
+          dispatch(clearFilterRows({ x: actionX }));
+        } else {
+          dispatch(filterRows({ x: actionX, filter }));
+        }
+      }
+      setPendingAction(null);
+      dispatch(setColumnMenu(null));
+      editorRef.current?.focus();
+    };
+    const currentTable = tableRef.current;
+    if (currentTable && (currentTable.hasPendingCells() || currentTable.wire.asyncPending.size > 0)) {
+      currentTable.waitForPending().then(execute);
+    } else {
+      execute();
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [pendingAction, dispatch, editorRef, tableRef]);
 
   // Restore conditions and label from existing state when menu opens
   useEffect(() => {
@@ -75,27 +126,17 @@ export const ColumnMenu: FC = () => {
   }, [dispatch, x, label, editorRef]);
 
   const handleSortAsc = useCallback(() => {
-    if (x == null) {
-      return;
-    }
-    dispatch(sortRows({ x, direction: 'asc' }));
-    dispatch(setColumnMenu(null));
-    editorRef.current?.focus();
-  }, [dispatch, x, editorRef]);
+    if (x == null) return;
+    setPendingAction({ type: 'sortAsc', x });
+  }, [x]);
 
   const handleSortDesc = useCallback(() => {
-    if (x == null) {
-      return;
-    }
-    dispatch(sortRows({ x, direction: 'desc' }));
-    dispatch(setColumnMenu(null));
-    editorRef.current?.focus();
-  }, [dispatch, x, editorRef]);
+    if (x == null) return;
+    setPendingAction({ type: 'sortDesc', x });
+  }, [x]);
 
   const handleApplyFilter = useCallback(() => {
-    if (x == null) {
-      return;
-    }
+    if (x == null) return;
     // Build valid conditions (skip empty values for methods that need values)
     const valid = conditions.filter((c) => {
       if (NO_VALUE_METHODS.includes(c.method)) {
@@ -103,22 +144,16 @@ export const ColumnMenu: FC = () => {
       }
       return c.value.some((v) => v.trim() !== '');
     });
-    if (valid.length === 0) {
-      dispatch(clearFilterRows({ x }));
-    } else {
-      dispatch(
-        filterRows({
-          x,
-          filter: { mode, conditions: valid },
-        }),
-      );
-    }
-    dispatch(setColumnMenu(null));
-    editorRef.current?.focus();
-  }, [dispatch, x, conditions, mode, editorRef]);
+    setPendingAction({
+      type: 'filter',
+      x,
+      filter: { mode, conditions: valid },
+    });
+  }, [x, conditions, mode]);
 
   const handleResetColumn = useCallback(() => {
     if (x == null) return;
+    setPendingAction(null);
     dispatch(clearFilterRows({ x }));
     setConditions([{ ...DEFAULT_CONDITION, value: [''] }]);
     setMode('or');
@@ -127,12 +162,35 @@ export const ColumnMenu: FC = () => {
   }, [dispatch, x, editorRef]);
 
   const handleResetAll = useCallback(() => {
+    setPendingAction(null);
     dispatch(clearFilterRows({}));
     setConditions([{ ...DEFAULT_CONDITION, value: [''] }]);
     setMode('or');
     dispatch(setColumnMenu(null));
     editorRef.current?.focus();
   }, [dispatch, editorRef]);
+
+  const handleCancel = useCallback(() => {
+    setPendingAction(null);
+    dispatch(setColumnMenu(null));
+    editorRef.current?.focus();
+  }, [dispatch, editorRef]);
+
+  // Escape key cancels pending action during waiting
+  useEffect(() => {
+    if (!waiting) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        handleCancel();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown, true);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown, true);
+    };
+  }, [waiting, handleCancel]);
 
   const updateCondition = useCallback((index: number, patch: Partial<FilterCondition>) => {
     setConditions((prev) => {
@@ -174,15 +232,35 @@ export const ColumnMenu: FC = () => {
     (table.minNumCols !== -1 && table.getNumCols() - 1 < table.minNumCols) ||
     prevention.hasOperation(colCell?.prevention, prevention.RemoveCols);
 
+  const waitingMessage =
+    pendingAction?.type === 'filter' ? 'Filtering...' :
+    pendingAction?.type === 'sortAsc' || pendingAction?.type === 'sortDesc' ? 'Sorting...' :
+    'Processing...';
+
   return (
     <Fixed
       className="gs-column-menu-modal"
       onClick={(e: MouseEvent) => {
         e.preventDefault();
-        handleClose();
+        if (!waiting) {
+          handleClose();
+        }
         return false;
       }}
     >
+      {waiting ? (
+        <div
+          className="gs-column-menu gs-column-menu-waiting"
+          style={{ top: position.y, left: position.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="gs-waiting-message">{waitingMessage}</div>
+          <div className="gs-waiting-spinner" />
+          <button className="gs-waiting-cancel-btn" onClick={handleCancel}>
+            CANCEL
+          </button>
+        </div>
+      ) : (
       <div
         className="gs-column-menu"
         style={{ top: position.y, left: position.x }}
@@ -239,6 +317,7 @@ export const ColumnMenu: FC = () => {
                   </select>
                   {!NO_VALUE_METHODS.includes(cond.method) && (
                     <input
+                      ref={i === 0 ? firstValueRef : undefined}
                       className="gs-filter-value-input"
                       type="text"
                       placeholder="Value"
@@ -271,17 +350,21 @@ export const ColumnMenu: FC = () => {
             </div>
             <div className="gs-filter-actions">
               {hasAnyFilter && (
-                <button className="gs-filter-reset-all-btn" onClick={handleResetAll} disabled={filterDisabled}>
+                <button className="gs-filter-reset-all-btn" onClick={handleResetAll}>
                   RESET ALL
                 </button>
               )}
               <div className="gs-filter-actions-right">
                 {colCell?.filter && (
-                  <button className="gs-filter-reset-btn" onClick={handleResetColumn} disabled={filterDisabled}>
+                  <button className="gs-filter-reset-btn" onClick={handleResetColumn}>
                     RESET
                   </button>
                 )}
-                <button className="gs-filter-apply-btn" onClick={handleApplyFilter} disabled={filterDisabled}>
+                <button
+                  className="gs-filter-apply-btn"
+                  onClick={handleApplyFilter}
+                  disabled={filterDisabled}
+                >
                   APPLY
                 </button>
               </div>
@@ -339,6 +422,7 @@ export const ColumnMenu: FC = () => {
           </li>
         </ul>
       </div>
+      )}
     </Fixed>
   );
 };

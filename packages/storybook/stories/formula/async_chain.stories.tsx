@@ -16,11 +16,11 @@ const meta: Meta = {
 export default meta;
 
 /**
- * SUM_DELAY: async version of SUM that returns the result after 5 seconds.
+ * SUM_DELAY: async version of SUM that returns the result after 2 seconds.
  */
 class SumDelayFunction extends BaseFunction {
   example = 'SUM_DELAY(1, 2, 3)';
-  helpTexts = ['Returns the sum of values after a 5-second delay.'];
+  helpTexts = ['Returns the sum of values after a 2-second delay.'];
   helpArgs = [{ name: 'value1', description: 'Numbers to sum.' }];
 
   protected validate() {
@@ -40,7 +40,7 @@ class SumDelayFunction extends BaseFunction {
   }
 
   async main(...values: number[]) {
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     return values.reduce((a, b) => a + b, 0);
   }
 }
