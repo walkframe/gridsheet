@@ -1,0 +1,35 @@
+import Case11 from './case11.component';
+
+# 📈 GitHub Repository Comparison with Async Formulas
+
+This demo showcases **async formula functions** in GridSheet by fetching live repository data from the GitHub API.
+
+It compares popular frontend frameworks and runtimes — React, Vue, and Svelte — displaying stars, forks, open issues, language, license, and last updated date side by side.
+
+Each cell containing a `GH_REPO` formula fetches data asynchronously and shows a **loading animation** while the request is in flight. The bottom row uses `SUM` to total stars, forks, and issues — it stays pending until all async cells resolve.
+
+<Case11 />
+
+## Implementation Guide
+
+<a href="https://github.com/walkframe/gridsheet/tree/master/packages/docs/pages/examples/case11.component.tsx" target="_blank" rel="noopener noreferrer" style={{display: 'inline-block', background: '#007bff', color: 'white', padding: '8px 16px', textDecoration: 'none', borderRadius: '4px', fontWeight: '500', margin: '10px 0'}}>📄 View Source Code</a>
+
+### 🔌 Custom Async Formula: `GH_REPO`
+The `GH_REPO(repo, field)` formula is implemented by extending `BaseFunction` with an `async main()` method. When the formula is evaluated, GridSheet automatically detects the async return and displays a pending animation while the network request completes.
+
+### 📡 GitHub API Integration
+The function calls GitHub's public REST API (`api.github.com/repos/...`) to retrieve repository metadata. No authentication is required for public repos, and the API supports CORS out of the box.
+
+### 🔗 Chained Dependencies
+The summary row uses `SUM(B2:B9)` to total all stars — since each source cell is async, the SUM automatically propagates the pending state until all upstream cells resolve.
+
+### 🎨 Custom Renderers
+- **Repository renderer**: Clickable links to GitHub
+- **Number renderer**: Locale-aware formatting with thousands separators
+- **Language renderer**: Color-coded dots matching GitHub's language colors
+- **Header renderer**: Dark themed header row
+
+### ✅ Try It Out
+- Edit a repository name in column A to fetch data for any public repo
+- Watch the loading animation cascade through dependent cells
+- The total row stays pending until all repos are loaded

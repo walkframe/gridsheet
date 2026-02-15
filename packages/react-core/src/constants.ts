@@ -26,6 +26,18 @@ export class Special {
   }
 }
 
+/**
+ * Sentinel value representing an in-flight async formula computation.
+ * Cells whose solved cache contains a Pending will render a loading indicator.
+ * Dependent cells that encounter a Pending value also become pending.
+ */
+export class Pending {
+  public promise: Promise<any>;
+  constructor(promise: Promise<any>) {
+    this.promise = promise;
+  }
+}
+
 export const SECONDS_IN_DAY = 86400;
 export const FULLDATE_FORMAT_UTC = 'YYYY-MM-DDTHH:mm:ss.SSSZ';
 

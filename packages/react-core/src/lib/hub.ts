@@ -1,4 +1,4 @@
-import { DEFAULT_HISTORY_LIMIT, RESET_ZONE } from '../constants';
+import { DEFAULT_HISTORY_LIMIT, Pending, RESET_ZONE } from '../constants';
 
 import type {
   HistoryType,
@@ -59,6 +59,10 @@ export class Wire {
   paletteBySheetName: { [sheetName: string]: RefPaletteType } = {};
   lastFocused: HTMLTextAreaElement | null = null;
   solvedCaches: Map<Id, any> = new Map();
+  /** Cached results from completed async formula computations (keyed by function+args). */
+  asyncCaches: Map<string, any> = new Map();
+  /** Currently in-flight async formula Pending sentinels (keyed by function+args). */
+  asyncPending: Map<string, Pending> = new Map();
   copyingSheetId: number = 0;
   copyingZone: ZoneType = RESET_ZONE;
   cutting: boolean = false;

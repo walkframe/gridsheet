@@ -4,6 +4,8 @@ import { CellType, PointType, WriterType } from '../types';
 import { Table, UserTable } from '../lib/table';
 import { solveFormula, solveTable } from '../formula/solver';
 import { FormulaError } from '../formula/evaluator';
+import { Pending } from '../constants';
+import { AsyncFormulaError } from '../formula/functions/__async_base';
 import { TimeDelta } from '../lib/time';
 import { stripTable } from '../formula/solver';
 
@@ -110,6 +112,12 @@ export class Renderer implements RendererMixinType {
     if (this.condition && !this.condition(value)) {
       return this.complement ? this.complement(value) : this.stringify(props);
     }
+    if (value instanceof Pending) {
+      return this.pending(props);
+    }
+    if (value instanceof AsyncFormulaError) {
+      throw new FormulaError(value.code, value.message, value.error);
+    }
     if (value == null) {
       return this.null(props);
     }
@@ -144,9 +152,16 @@ export class Renderer implements RendererMixinType {
     return '';
   }
 
+  pending(_props: RenderProps): any {
+    return '';
+  }
+
   stringify({ value, cell, table, point }: RenderProps): string {
     if (value === undefined) {
       value = cell?.value;
+    }
+    if (value instanceof Pending) {
+      return '';
     }
     if (value instanceof Date) {
       return this.date({ value, cell, table, point });

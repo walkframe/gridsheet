@@ -1,4 +1,4 @@
-import { Special } from '../constants';
+import { Pending, Special } from '../constants';
 import { Table } from '../lib/table';
 import { Id, MatrixType, PointType, RefEvaluation } from '../types';
 import { FormulaError, Lexer, Parser } from './evaluator';
@@ -44,6 +44,9 @@ export const solveFormula = ({ value, table, raise = true, refEvaluation = 'TABL
   } else {
     table.setSolvedCache(origin, solved);
   }
+  if (solved instanceof Pending) {
+    table.setSolvedCache(origin, solved);
+  }
   return solved;
 };
 
@@ -65,6 +68,8 @@ export const solveTable = ({ table, raise = true }: SolveTableProps): MatrixType
       try {
         if (cache === SOLVING) {
           throw new FormulaError('#REF!', 'References are circulating.', new Error(value as string));
+        } else if (cache instanceof Pending) {
+          return cache;
         } else if (cache instanceof FormulaError) {
           throw cache;
         } else if (cache != null) {
@@ -94,6 +99,9 @@ export type StripTableProps = {
 };
 
 export const stripTable = ({ value, y = 0, x = 0, raise = true, history = new Set() }: StripTableProps): any => {
+  if (value instanceof Pending) {
+    return value;
+  }
   if (value instanceof Table) {
     const id = value.getId({ x, y });
     if (history.has(id)) {
