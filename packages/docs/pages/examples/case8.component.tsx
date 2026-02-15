@@ -31,19 +31,11 @@ export default function LargeDatasetDemo() {
       return result;
     };
 
-    // Generate header row
+    // Generate column labels
     for (let col = 1; col <= cols; col++) {
       const colLetter = getColumnLetter(col);
-      cells[`${colLetter}1`] = {
-        value: `Column ${col}`,
-        style: {
-          backgroundColor: '#1e40af',
-          color: 'white',
-          fontWeight: 'bold',
-          textAlign: 'center',
-          fontSize: '12px',
-          ...makeBorder({ all: '1px solid #d1d5db' }),
-        },
+      cells[colLetter] = {
+        label: `Column ${col}`,
       };
     }
 
@@ -52,8 +44,8 @@ export default function LargeDatasetDemo() {
     const totalBatches = Math.ceil(rows / batchSize);
 
     const generateBatch = (batchIndex: number) => {
-      const startRow = batchIndex * batchSize + 2;
-      const endRow = Math.min(startRow + batchSize - 1, rows + 1);
+      const startRow = batchIndex * batchSize + 1;
+      const endRow = Math.min(startRow + batchSize - 1, rows);
 
       for (let row = startRow; row <= endRow; row++) {
         for (let col = 1; col <= cols; col++) {
@@ -70,7 +62,7 @@ export default function LargeDatasetDemo() {
 
           if (col === 1) {
             // ID column
-            value = row - 1;
+            value = row;
             style = {
               ...style,
               backgroundColor: '#f8fafc',
@@ -80,7 +72,7 @@ export default function LargeDatasetDemo() {
           } else if (col === 2) {
             // Name column
             const names = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry', 'Ivy', 'Jack'];
-            value = `${names[(row - 2) % names.length]} ${Math.floor((row - 2) / names.length) + 1}`;
+            value = `${names[(row - 1) % names.length]} ${Math.floor((row - 1) / names.length) + 1}`;
             style = {
               ...style,
               backgroundColor: '#f0f9ff',
@@ -98,7 +90,7 @@ export default function LargeDatasetDemo() {
               'Product',
               'Support',
             ];
-            value = departments[(row - 2) % departments.length];
+            value = departments[(row - 1) % departments.length];
             style = {
               ...style,
               backgroundColor: '#fef3c7',
@@ -117,7 +109,7 @@ export default function LargeDatasetDemo() {
           } else if (col === 5) {
             // Status column
             const statuses = ['Active', 'Inactive', 'Pending', 'Terminated'];
-            value = statuses[(row - 2) % statuses.length];
+            value = statuses[(row - 1) % statuses.length];
             style = {
               ...style,
               backgroundColor: '#f3f4f6',
@@ -166,7 +158,9 @@ export default function LargeDatasetDemo() {
     return cells;
   }, []);
 
-  const [initialCells, setInitialCells] = React.useState<{ [address: string]: any }>({});
+  const [initialCells, setInitialCells] = React.useState<{ [address: string]: any }>({
+    default: { width: 80, height: 20 },
+  });
 
   React.useEffect(() => {
     const cells = generateLargeDataset();

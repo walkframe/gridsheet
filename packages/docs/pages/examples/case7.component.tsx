@@ -98,7 +98,7 @@ export default function RealTimeCollaboration() {
         }
 
         // Update cursor position randomly
-        const newRow = Math.floor(Math.random() * 5) + 2; // Rows 2-6 (excluding header)
+        const newRow = Math.floor(Math.random() * 5) + 1; // Rows 1-5
         const newCol = Math.floor(Math.random() * 5) + 1; // Columns 1-5 (removed assignee column)
 
         setUserCursors((prev) => ({
@@ -309,7 +309,6 @@ export default function RealTimeCollaboration() {
               initialCells={buildInitialCells({
                 matrices: {
                   A1: [
-                    ['Project', 'Status', 'Due Date', 'Progress', 'Priority'],
                     ['Website Redesign', 'In Progress', '2024-02-15', '75%', 'High'],
                     ['Mobile App', 'Planning', '2024-03-01', '25%', 'Medium'],
                     ['Database Migration', 'Completed', '2024-01-30', '100%', 'Low'],
@@ -323,20 +322,12 @@ export default function RealTimeCollaboration() {
                     height: 40,
                   },
                   0: { height: 32, width: 30 }, // Header row height
-                  A: { width: 150 }, // Project column wider
-                  B: { width: 100 }, // Status column narrower
-                  C: { width: 120 }, // Due Date column
-                  D: { width: 80 }, // Progress column narrower
-                  E: { width: 100 }, // Priority column
-                  'A1:E1': {
-                    style: {
-                      backgroundColor: '#34495e',
-                      color: 'white',
-                      fontWeight: 'bold',
-                      textAlign: 'center',
-                    },
-                  },
-                  'E2:E6': {
+                  A: { width: 150, label: 'Project' },
+                  B: { width: 100, label: 'Status' },
+                  C: { width: 120, label: 'Due Date' },
+                  D: { width: 80, label: 'Progress' },
+                  E: { width: 100, label: 'Priority' },
+                  'E1:E5': {
                     style: {
                       textAlign: 'center',
                       fontWeight: 'bold',

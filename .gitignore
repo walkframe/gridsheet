@@ -111,3 +111,5 @@ storybook-static/
 test-results/
 
 *storybook.log
+
+.vscode/

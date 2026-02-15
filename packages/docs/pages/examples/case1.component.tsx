@@ -217,81 +217,77 @@ export default function SalesDashboard() {
           initialCells={buildInitialCells({
             matrices: {
               A1: [
-                ['Product', 'Chart', 'Q1 Sales', 'Q2 Sales', 'Q3 Sales', 'Q4 Sales', 'Total', 'Trend'],
                 [
                   'Widget A',
-                  '=C2:F2',
+                  '=C1:F1',
                   30,
                   50,
                   78,
                   95,
-                  '=SUM(C2:F2)',
-                  '=IF((F2-E2)/E2>0.1,"📈 Up",IF((F2-E2)/E2<-0.1,"📉 Down","➡️ Stable"))',
+                  '=SUM(C1:F1)',
+                  '=IF((F1-E1)/E1>0.1,"📈 Up",IF((F1-E1)/E1<-0.1,"📉 Down","➡️ Stable"))',
                 ],
                 [
                   'Widget B',
-                  '=C3:F3',
+                  '=C2:F2',
                   90,
                   88,
                   91,
                   64,
-                  '=SUM(C3:F3)',
-                  '=IF((F3-E3)/E3>0.1,"📈 Up",IF((F3-E3)/E3<-0.1,"📉 Down","➡️ Stable"))',
+                  '=SUM(C2:F2)',
+                  '=IF((F2-E2)/E2>0.1,"📈 Up",IF((F2-E2)/E2<-0.1,"📉 Down","➡️ Stable"))',
                 ],
                 [
                   'Widget C',
-                  '=C4:F4',
+                  '=C3:F3',
                   70,
                   87,
                   93,
                   89,
-                  '=SUM(C4:F4)',
-                  '=IF((F4-E4)/E4>0.1,"📈 Up",IF((F4-E4)/E4<-0.1,"📉 Down","➡️ Stable"))',
+                  '=SUM(C3:F3)',
+                  '=IF((F3-E3)/E3>0.1,"📈 Up",IF((F3-E3)/E3<-0.1,"📉 Down","➡️ Stable"))',
                 ],
                 [
                   'Widget D',
-                  '=C5:F5',
+                  '=C4:F4',
                   64,
                   60,
                   82,
                   91,
-                  '=SUM(C5:F5)',
-                  '=IF((F5-E5)/E5>0.1,"📈 Up",IF((F5-E5)/E5<-0.1,"📉 Down","➡️ Stable"))',
+                  '=SUM(C4:F4)',
+                  '=IF((F4-E4)/E4>0.1,"📈 Up",IF((F4-E4)/E4<-0.1,"📉 Down","➡️ Stable"))',
                 ],
               ],
             },
             cells: {
               default: { width: 120, height: 60 },
-              1: { height: 25 },
-              'A1:H1': {
-                style: {
-                  backgroundColor: '#2c3e50',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  textAlign: 'center',
-                },
-                prevention: operations.Write,
-              },
-              A: { width: 80 },
+              A: { width: 80, label: 'Product' },
               'A:G': {
                 alignItems: 'center',
               },
               B: {
                 width: 200,
+                label: 'Chart',
                 renderer: 'lineChart',
                 style: { backgroundColor: '#f8f9fa' },
               },
+              C: { label: 'Q1 Sales' },
+              D: { label: 'Q2 Sales' },
+              E: { label: 'Q3 Sales' },
+              F: { label: 'Q4 Sales' },
               'C:F': {
                 style: { backgroundColor: '#ecf0f1' },
                 renderer: 'barChart',
               },
               G: {
                 width: 60,
+                label: 'Total',
                 style: { backgroundColor: '#e8f5e8', fontWeight: 'bold' },
                 prevention: operations.Write,
               },
               H: {
                 width: 80,
+                label: 'Trend',
                 style: { backgroundColor: '#fff3cd' },
                 prevention: operations.Write,
               },
@@ -365,31 +361,23 @@ export default function SalesDashboard() {
             initialCells={buildInitialCells({
               matrices: {
                 A1: [
-                  ['Metric', 'Value', 'Status'],
-                  ['Total Sales', '=SUM(sales!G2:G5)', '=IF(B2>350, "🎉 Excellent", "📊 Good")'],
-                  ['Average per Product', '=AVERAGE(sales!G2:G5)', '=IF(B3>85, "✅ Above Target", "⚠️ Below Target")'],
-                  ['Best Performer', '=INDEX(sales!A2:A5, MATCH(MAX(sales!G2:G5), sales!G2:G5, 0))', '🏆 Top Seller'],
-                  ['Highest Q1 Sales', '=INDEX(sales!A2:A5, MATCH(MAX(sales!C2:C5), sales!C2:C5, 0))', '🔥 Q1 Leader'],
+                  ['Total Sales', '=SUM(sales!G1:G4)', '=IF(B1>350, "🎉 Excellent", "📊 Good")'],
+                  ['Average per Product', '=AVERAGE(sales!G1:G4)', '=IF(B2>85, "✅ Above Target", "⚠️ Below Target")'],
+                  ['Best Performer', '=INDEX(sales!A1:A4, MATCH(MAX(sales!G1:G4), sales!G1:G4, 0))', '🏆 Top Seller'],
+                  ['Highest Q1 Sales', '=INDEX(sales!A1:A4, MATCH(MAX(sales!C1:C4), sales!C1:C4, 0))', '🔥 Q1 Leader'],
                   [
                     'Lowest Total Sales',
-                    '=INDEX(sales!A2:A5, MATCH(MIN(sales!G2:G5), sales!G2:G5, 0))',
+                    '=INDEX(sales!A1:A4, MATCH(MIN(sales!G1:G4), sales!G1:G4, 0))',
                     '⚠️ Needs Support',
                   ],
                 ],
               },
               cells: {
                 default: { width: 120, height: 40 },
-                1: { height: 25 },
-                'A1:C1': {
-                  style: {
-                    backgroundColor: '#34495e',
-                    color: 'white',
-                    fontWeight: 'bold',
-                    textAlign: 'center',
-                  },
-                  alignItems: 'center',
-                },
-                'B2:B6': {
+                A: { label: 'Metric' },
+                B: { label: 'Value' },
+                C: { label: 'Status' },
+                'B1:B5': {
                   style: {
                     backgroundColor: '#d5f4e6',
                     fontWeight: 'bold',
@@ -398,7 +386,7 @@ export default function SalesDashboard() {
                   alignItems: 'center',
                   prevention: operations.Write,
                 },
-                'C2:C6': {
+                'C1:C5': {
                   style: {
                     backgroundColor: '#fef9e7',
                     textAlign: 'center',
@@ -465,38 +453,29 @@ export default function SalesDashboard() {
             initialCells={buildInitialCells({
               matrices: {
                 A1: [
-                  ['Trend Type', 'Count', 'Status'],
                   [
                     'Upward Trends',
-                    '=COUNTIF(sales!H2:H5, "📈 Up")',
-                    '=IF(B2>0, "📈 " & B2 & " products growing", "No growth")',
+                    '=COUNTIF(sales!H1:H4, "📈 Up")',
+                    '=IF(B1>0, "📈 " & B1 & " products growing", "No growth")',
                   ],
                   [
                     'Stable Trends',
-                    '=COUNTIF(sales!H2:H5, "➡️ Stable")',
-                    '=IF(B3>0, "➡️ " & B3 & " products stable", "No stable")',
+                    '=COUNTIF(sales!H1:H4, "➡️ Stable")',
+                    '=IF(B2>0, "➡️ " & B2 & " products stable", "No stable")',
                   ],
                   [
                     'Downward Trends',
-                    '=COUNTIF(sales!H2:H5, "📉 Down")',
-                    '=IF(B4>0, "📉 " & B4 & " products declining", "No decline")',
+                    '=COUNTIF(sales!H1:H4, "📉 Down")',
+                    '=IF(B3>0, "📉 " & B3 & " products declining", "No decline")',
                   ],
                 ],
               },
               cells: {
                 default: { width: 120, height: 40 },
-                1: { height: 25 },
-                'A1:C1': {
-                  style: {
-                    backgroundColor: '#3498db',
-                    color: 'white',
-                    fontWeight: 'bold',
-                    textAlign: 'center',
-                    fontSize: '14px',
-                  },
-                  alignItems: 'center',
-                },
-                'B2:B4': {
+                A: { label: 'Trend Type' },
+                B: { label: 'Count' },
+                C: { label: 'Status' },
+                'B1:B3': {
                   style: {
                     backgroundColor: '#e8f5e8',
                     fontWeight: 'bold',
@@ -505,7 +484,7 @@ export default function SalesDashboard() {
                   alignItems: 'center',
                   prevention: operations.Write,
                 },
-                'C2:C4': {
+                'C1:C3': {
                   style: {
                     backgroundColor: '#fff3cd',
                     textAlign: 'center',

@@ -57,32 +57,36 @@ const MENU_ITEMS = [
 // Sample data for different sheets
 const SHEET_DATA = {
   Sales: [
-    ['Product', 'Q1', 'Q2', 'Q3', 'Q4', 'Total'],
-    ['Laptops', 1200, 1350, 1100, 1400, '=SUM(B2:E2)'],
-    ['Monitors', 800, 950, 850, 1000, '=SUM(B3:E3)'],
-    ['Keyboards', 500, 600, 550, 650, '=SUM(B4:E4)'],
-    ['Mice', 300, 350, 320, 380, '=SUM(B5:E5)'],
+    ['Laptops', 1200, 1350, 1100, 1400, '=SUM(B1:E1)'],
+    ['Monitors', 800, 950, 850, 1000, '=SUM(B2:E2)'],
+    ['Keyboards', 500, 600, 550, 650, '=SUM(B3:E3)'],
+    ['Mice', 300, 350, 320, 380, '=SUM(B4:E4)'],
     ['', '', '', '', '', ''],
-    ['Total', '=SUM(B2:B5)', '=SUM(C2:C5)', '=SUM(D2:D5)', '=SUM(E2:E5)', '=SUM(F2:F5)'],
+    ['Total', '=SUM(B1:B4)', '=SUM(C1:C4)', '=SUM(D1:D4)', '=SUM(E1:E4)', '=SUM(F1:F4)'],
   ],
   Budget: [
-    ['Department', 'Budget', 'Spent', 'Remaining', 'Status'],
-    ['Engineering', 50000, 42000, '=B2-C2', 'Under Budget'],
-    ['Marketing', 75000, 68000, '=B3-C3', 'Under Budget'],
-    ['Sales', 120000, 95000, '=B4-C4', 'Under Budget'],
-    ['HR', 30000, 28000, '=B5-C5', 'Under Budget'],
-    ['Finance', 45000, 52000, '=B6-C6', 'Over Budget'],
-    ['Operations', 60000, 58000, '=B7-C7', 'Under Budget'],
+    ['Engineering', 50000, 42000, '=B1-C1', 'Under Budget'],
+    ['Marketing', 75000, 68000, '=B2-C2', 'Under Budget'],
+    ['Sales', 120000, 95000, '=B3-C3', 'Under Budget'],
+    ['HR', 30000, 28000, '=B4-C4', 'Under Budget'],
+    ['Finance', 45000, 52000, '=B5-C5', 'Over Budget'],
+    ['Operations', 60000, 58000, '=B6-C6', 'Under Budget'],
   ],
   Inventory: [
-    ['Item', 'SKU', 'Quantity', 'Price', 'Value', 'Status'],
-    ['Laptop Dell XPS', 'DLX001', 45, 1299, '=C2*D2', 'In Stock'],
-    ['Monitor LG 27"', 'LGM001', 32, 299, '=C3*D3', 'In Stock'],
-    ['Keyboard Logitech', 'LGT001', 78, 89, '=C4*D4', 'In Stock'],
-    ['Mouse Wireless', 'MSW001', 120, 25, '=C5*D5', 'In Stock'],
-    ['Headphones Sony', 'SNS001', 15, 199, '=C6*D6', 'Low Stock'],
-    ['Webcam HD', 'WCH001', 8, 79, '=C7*D7', 'Out of Stock'],
+    ['Laptop Dell XPS', 'DLX001', 45, 1299, '=C1*D1', 'In Stock'],
+    ['Monitor LG 27"', 'LGM001', 32, 299, '=C2*D2', 'In Stock'],
+    ['Keyboard Logitech', 'LGT001', 78, 89, '=C3*D3', 'In Stock'],
+    ['Mouse Wireless', 'MSW001', 120, 25, '=C4*D4', 'In Stock'],
+    ['Headphones Sony', 'SNS001', 15, 199, '=C5*D5', 'Low Stock'],
+    ['Webcam HD', 'WCH001', 8, 79, '=C6*D6', 'Out of Stock'],
   ],
+};
+
+// Column labels for each sheet
+const SHEET_LABELS: Record<string, Record<string, string>> = {
+  Sales: { A: 'Product', B: 'Q1', C: 'Q2', D: 'Q3', E: 'Q4', F: 'Total' },
+  Budget: { A: 'Department', B: 'Budget', C: 'Spent', D: 'Remaining', E: 'Status' },
+  Inventory: { A: 'Item', B: 'SKU', C: 'Quantity', D: 'Price', E: 'Value', F: 'Status' },
 };
 
 export default function AdvancedFeatures() {
@@ -251,35 +255,31 @@ export default function AdvancedFeatures() {
               borderRight: '1px solid #e0e0e0',
             },
           },
-          '1': {
-            style: {
-              backgroundColor: '#6c757d',
-              color: '#ffffff',
-              fontWeight: 'bold',
-              textAlign: 'center',
-              borderBottom: '2px solid #dee2e6',
-            },
-          },
-          A: { width: 150 },
+          A: { width: 150, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['A'] },
           B: {
             width: 100,
             renderer: 'thousand_separator',
+            label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['B'],
           },
           C: {
             width: 100,
             renderer: 'thousand_separator',
+            label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['C'],
           },
           D: {
             width: 100,
             renderer: 'thousand_separator',
+            label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['D'],
           },
           E: {
             width: 100,
             renderer: 'thousand_separator',
+            label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['E'],
           },
           F: {
             width: 100,
             renderer: 'thousand_separator',
+            label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['F'],
             ...(currentSheet === 'Sales' && {
               style: {
                 borderLeft: '3px double #000',
@@ -287,7 +287,7 @@ export default function AdvancedFeatures() {
             }),
           },
           ...(currentSheet === 'Sales' && {
-            '7': {
+            '6': {
               style: {
                 backgroundColor: '#f8f9fa',
                 color: '#495057',

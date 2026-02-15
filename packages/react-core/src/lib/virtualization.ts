@@ -10,7 +10,7 @@ export const getCellRectPositions = (table: Table, { y, x }: PointType) => {
   const left = colCell?.system?.offsetLeft ?? 0;
   const top = rowCell?.system?.offsetTop ?? 0;
   const w = colCell?.width || DEFAULT_WIDTH;
-  const h = rowCell?.height || DEFAULT_HEIGHT;
+  const h = rowCell?.filtered ? 0 : rowCell?.height || DEFAULT_HEIGHT;
   return {
     top,
     left,
@@ -55,6 +55,9 @@ export const virtualize = (table: Table, e: HTMLDivElement | null): Virtualizati
     }
   }
   for (let y = 1; y <= table.getNumRows(); y++) {
+    if (table.isRowFiltered(y)) {
+      continue;
+    }
     const h = table.getCellByPoint({ y, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
     height += h;
     if (boundaryTop === 0 && height > top) {
@@ -65,7 +68,7 @@ export const virtualize = (table: Table, e: HTMLDivElement | null): Virtualizati
       break;
     }
   }
-  const ys = range(boundaryTop, boundaryBottom);
+  const ys = boundaryTop === 0 ? [] : range(boundaryTop, boundaryBottom).filter((y) => !table.isRowFiltered(y));
   const xs = range(boundaryLeft, boundaryRight);
   const before = table.getRectSize({
     top: 1,

@@ -8,6 +8,7 @@ import { StoreObserver } from './StoreObserver';
 import { Resizer } from './Resizer';
 import { Emitter } from './Emitter';
 import { ContextMenu, defaultContextMenuItems } from './ContextMenu';
+import { ColumnMenu } from './ColumnMenu';
 import { Table } from '../lib/table';
 import { Tabular } from './Tabular';
 import { getMaxSizesFromCells } from '../lib/structs';
@@ -108,6 +109,7 @@ export function GridSheet({
       contextMenuItems: contextMenuItems ?? defaultContextMenuItems,
       resizingPositionY: [-1, -1, -1],
       resizingPositionX: [-1, -1, -1],
+      columnMenuState: null,
       minNumRows: 1,
       maxNumRows: -1,
       minNumCols: 1,
@@ -168,7 +170,7 @@ export function GridSheet({
           style={{
             //width: '100%',
             maxWidth: (store.tableReactive.current?.totalWidth || 0) + 2,
-            maxHeight: (store.tableReactive.current?.totalHeight || 0) + 2,
+            maxHeight: (store.tableReactive.current?.fullHeight || 0) + 2,
             overflow: 'auto',
             resize: sheetResize,
             ...style,
@@ -178,6 +180,7 @@ export function GridSheet({
           <Tabular />
           <StoreObserver {...{ ...options, sheetHeight, sheetWidth, sheetName, connector }} />
           <ContextMenu />
+          <ColumnMenu />
           <Resizer />
           <Emitter />
         </div>

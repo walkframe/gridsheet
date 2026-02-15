@@ -1,4 +1,4 @@
-import type { ContextMenuProps, RawCellType } from '../types';
+import type { ContextMenuProps, FilterConfig, RawCellType } from '../types';
 import { areaToZone, zoneShape, zoneToArea } from '../lib/structs';
 import {
   copy,
@@ -12,6 +12,9 @@ import {
   insertColsRight,
   removeRows,
   removeCols,
+  sortRows,
+  filterRows,
+  clearFilterRows,
 } from './actions';
 import { clip } from '../lib/clipboard';
 import { parseHTML, parseText } from '../lib/paste';
@@ -116,6 +119,26 @@ export const colsRemover = async ({ store, dispatch }: ContextMenuProps) => {
   editorRef.current?.focus();
 };
 
+export const rowsSorterAsc = async ({ store, dispatch }: ContextMenuProps, x: number) => {
+  dispatch(sortRows({ x, direction: 'asc' }));
+  store.editorRef.current?.focus();
+};
+
+export const rowsSorterDesc = async ({ store, dispatch }: ContextMenuProps, x: number) => {
+  dispatch(sortRows({ x, direction: 'desc' }));
+  store.editorRef.current?.focus();
+};
+
+export const rowsFilterer = async ({ store, dispatch }: ContextMenuProps, x: number, filter: FilterConfig) => {
+  dispatch(filterRows({ x, filter }));
+  store.editorRef.current?.focus();
+};
+
+export const rowsFilterClearer = async ({ store, dispatch }: ContextMenuProps, x?: number) => {
+  dispatch(clearFilterRows({ x }));
+  store.editorRef.current?.focus();
+};
+
 export const syncers = {
   copy: copier,
   cut: cutter,
@@ -128,4 +151,8 @@ export const syncers = {
   insertColsRight: colsInserterRight,
   removeRows: rowsRemover,
   removeCols: colsRemover,
+  sortRowsAsc: rowsSorterAsc,
+  sortRowsDesc: rowsSorterDesc,
+  filterRows: rowsFilterer,
+  clearFilter: rowsFilterClearer,
 };

@@ -9,7 +9,6 @@ import {
   RendererMixinType,
   RenderProps,
   makeBorder,
-  operations,
   type UserTable,
 } from '@gridsheet/react-core';
 
@@ -70,7 +69,7 @@ const CategoryRendererMixin: RendererMixinType = {
 const DeleteButtonRendererMixin: RendererMixinType = {
   null({ value, point, sync, table }: RenderProps<string>) {
     // Only show delete button for product rows
-    const shouldShowButton = point.y >= 2;
+    const shouldShowButton = point.y >= 1;
 
     // Get product name for tooltip
     let productName = 'Unknown';
@@ -234,7 +233,6 @@ export default function InventoryManagement() {
   const initialCells = buildInitialCells({
     matrices: {
       A1: [
-        [null, 'Product Name', 'Stock Level', 'Unit Price'],
         [null, 'Laptop Pro X1', 15, 1299.99],
         [null, 'Wireless Mouse', 45, 29.99],
         [null, 'Cotton T-Shirt', 8, 19.99],
@@ -268,25 +266,9 @@ export default function InventoryManagement() {
         },
       },
       A: { width: 40, renderer: 'delete' },
-      B: { width: 140 },
-      C: { width: 100, renderer: 'stock' },
-      D: { width: 90 },
-      '1': {
-        style: {
-          backgroundColor: '#f8f9fa',
-          fontWeight: 'bold',
-          textAlign: 'center',
-        },
-        prevention: operations.Write,
-      },
-      A1: {
-        style: {
-          backgroundColor: '#f8f9fa',
-          fontWeight: 'bold',
-          textAlign: 'center',
-        },
-        prevention: operations.Write,
-      },
+      B: { width: 140, label: 'Product Name' },
+      C: { width: 100, renderer: 'stock', label: 'Stock Level' },
+      D: { width: 90, label: 'Unit Price' },
     },
   });
 
