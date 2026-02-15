@@ -30,8 +30,7 @@ class GhRepoFunction extends BaseFunction {
     { name: 'repo', description: 'Repository in "owner/repo" format (e.g. "facebook/react").' },
     {
       name: 'field',
-      description:
-        'Data field: "stars", "forks", "issues", "language", "license", "description", "name", "updated".',
+      description: 'Data field: "stars", "forks", "issues", "language", "license", "description", "name", "updated".',
     },
   ];
 
@@ -111,11 +110,7 @@ const RepoRendererMixin: RendererMixinType = {
 
 const NumberRendererMixin: RendererMixinType = {
   number({ value }: RenderProps<number>) {
-    return (
-      <span style={{ fontWeight: 600, fontSize: '13px', color: 'inherit' }}>
-        {value.toLocaleString()}
-      </span>
-    );
+    return <span style={{ fontWeight: 600, fontSize: '13px', color: 'inherit' }}>{value.toLocaleString()}</span>;
   },
 };
 
@@ -156,11 +151,7 @@ const numberRenderer = new Renderer({ mixins: [NumberRendererMixin] });
 const languageRenderer = new Renderer({ mixins: [LanguageRendererMixin] });
 
 // ─── Repositories to compare ───
-const REPOS = [
-  'facebook/react',
-  'vuejs/core',
-  'sveltejs/svelte',
-];
+const REPOS = ['facebook/react', 'vuejs/core', 'sveltejs/svelte'];
 
 export default function Case11() {
   const hub = useHub({
@@ -256,11 +247,10 @@ export default function Case11() {
         }}
       />
       <p style={{ marginTop: '12px', fontSize: '13px', color: '#888' }}>
-        💡 Data is fetched live from the GitHub API. Each cell with a <code>GH_REPO</code> formula
-        shows a loading animation while the request is in flight.
-        Try editing a repository name in column A to fetch data for a different repo.
-        The bottom row uses <code>SUM</code> to total stars, forks, and issues — it stays pending
-        until all async cells resolve.
+        💡 Data is fetched live from the GitHub API. Each cell with a <code>GH_REPO</code> formula shows a loading
+        animation while the request is in flight. Try editing a repository name in column A to fetch data for a
+        different repo. The bottom row uses <code>SUM</code> to total stars, forks, and issues — it stays pending until
+        all async cells resolve.
       </p>
     </div>
   );

@@ -1,10 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import {
-  buildInitialCells,
-  GridSheet,
-  useHub,
-} from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, useHub } from '@gridsheet/react-core';
 
 const meta: Meta = {
   title: 'Multiple/Sheets',

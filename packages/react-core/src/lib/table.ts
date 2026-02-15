@@ -39,7 +39,14 @@ import { FunctionMapping } from '../formula/functions/__base';
 import { identifyFormula, Lexer, splitRef, stripSheetName } from '../formula/evaluator';
 import { solveFormula, stripTable } from '../formula/solver';
 
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH, HEADER_HEIGHT, HEADER_WIDTH, DEFAULT_HISTORY_LIMIT, Pending } from '../constants';
+import {
+  DEFAULT_HEIGHT,
+  DEFAULT_WIDTH,
+  HEADER_HEIGHT,
+  HEADER_WIDTH,
+  DEFAULT_HISTORY_LIMIT,
+  Pending,
+} from '../constants';
 import { shouldTracking } from '../store/helpers';
 import { updateTable } from '../store/actions';
 import * as operation from './operation';

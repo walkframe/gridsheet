@@ -52,11 +52,14 @@ export const ColumnMenu: FC = () => {
   const position = columnMenuState?.position;
 
   // Callback ref: auto-focus the first filter value input when it mounts
-  const firstValueRef = useCallback((node: HTMLInputElement | null) => {
-    if (node) {
-      node.focus();
-    }
-  }, [x]);
+  const firstValueRef = useCallback(
+    (node: HTMLInputElement | null) => {
+      if (node) {
+        node.focus();
+      }
+    },
+    [x],
+  );
 
   // When a pending action is set, wait for async formulas then execute
   useEffect(() => {
@@ -65,9 +68,13 @@ export const ColumnMenu: FC = () => {
     }
     let cancelled = false;
     const execute = () => {
-      if (cancelled) return;
+      if (cancelled) {
+        return;
+      }
       const currentTable = tableRef.current;
-      if (!currentTable) return;
+      if (!currentTable) {
+        return;
+      }
       const { type, x: actionX, filter } = pendingAction;
       if (type === 'sortAsc') {
         dispatch(sortRows({ x: actionX, direction: 'asc' }));
@@ -126,17 +133,23 @@ export const ColumnMenu: FC = () => {
   }, [dispatch, x, label, editorRef]);
 
   const handleSortAsc = useCallback(() => {
-    if (x == null) return;
+    if (x == null) {
+      return;
+    }
     setPendingAction({ type: 'sortAsc', x });
   }, [x]);
 
   const handleSortDesc = useCallback(() => {
-    if (x == null) return;
+    if (x == null) {
+      return;
+    }
     setPendingAction({ type: 'sortDesc', x });
   }, [x]);
 
   const handleApplyFilter = useCallback(() => {
-    if (x == null) return;
+    if (x == null) {
+      return;
+    }
     // Build valid conditions (skip empty values for methods that need values)
     const valid = conditions.filter((c) => {
       if (NO_VALUE_METHODS.includes(c.method)) {
@@ -152,7 +165,9 @@ export const ColumnMenu: FC = () => {
   }, [x, conditions, mode]);
 
   const handleResetColumn = useCallback(() => {
-    if (x == null) return;
+    if (x == null) {
+      return;
+    }
     setPendingAction(null);
     dispatch(clearFilterRows({ x }));
     setConditions([{ ...DEFAULT_CONDITION, value: [''] }]);
@@ -178,7 +193,9 @@ export const ColumnMenu: FC = () => {
 
   // Escape key cancels pending action during waiting
   useEffect(() => {
-    if (!waiting) return;
+    if (!waiting) {
+      return;
+    }
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -233,9 +250,11 @@ export const ColumnMenu: FC = () => {
     prevention.hasOperation(colCell?.prevention, prevention.RemoveCols);
 
   const waitingMessage =
-    pendingAction?.type === 'filter' ? 'Filtering...' :
-    pendingAction?.type === 'sortAsc' || pendingAction?.type === 'sortDesc' ? 'Sorting...' :
-    'Processing...';
+    pendingAction?.type === 'filter'
+      ? 'Filtering...'
+      : pendingAction?.type === 'sortAsc' || pendingAction?.type === 'sortDesc'
+        ? 'Sorting...'
+        : 'Processing...';
 
   return (
     <Fixed
@@ -261,167 +280,163 @@ export const ColumnMenu: FC = () => {
           </button>
         </div>
       ) : (
-      <div
-        className="gs-column-menu"
-        style={{ top: position.y, left: position.x }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <ul>
-          <li className={`gs-column-menu-filter${filterDisabled ? ' gs-disabled' : ''}`}>
-            <div className="gs-filter-header">
-              <div className="gs-menu-name">Filter</div>
-              <button className="gs-filter-add-btn" onClick={addCondition} disabled={filterDisabled}>
-                + ADD
-              </button>
-              <div className={`gs-filter-mode-toggle${conditions.length <= 1 ? ' gs-disabled' : ''}`}>
-                <label className={mode === 'and' ? 'gs-active' : ''}>
-                  <input
-                    type="radio"
-                    name="gs-filter-mode"
-                    checked={mode === 'and'}
-                    onChange={() => setMode('and')}
-                    disabled={filterDisabled || conditions.length <= 1}
-                  />
-                  AND
-                </label>
-                <label className={mode === 'or' ? 'gs-active' : ''}>
-                  <input
-                    type="radio"
-                    name="gs-filter-mode"
-                    checked={mode === 'or'}
-                    onChange={() => setMode('or')}
-                    disabled={filterDisabled || conditions.length <= 1}
-                  />
-                  OR
-                </label>
-              </div>
-            </div>
-            <div className="gs-filter-conditions">
-              {conditions.map((cond, i) => (
-                <div className="gs-filter-condition-row" key={i}>
-                  <select
-                    className="gs-filter-method-select"
-                    value={cond.method}
-                    disabled={filterDisabled}
-                    onChange={(e) =>
-                      updateCondition(i, {
-                        method: e.target.value as FilterConditionMethod,
-                      })
-                    }
-                  >
-                    {(Object.keys(METHOD_LABELS) as FilterConditionMethod[]).map((m) => (
-                      <option key={m} value={m}>
-                        {METHOD_LABELS[m]}
-                      </option>
-                    ))}
-                  </select>
-                  {!NO_VALUE_METHODS.includes(cond.method) && (
-                    <input
-                      ref={i === 0 ? firstValueRef : undefined}
-                      className="gs-filter-value-input"
-                      type="text"
-                      placeholder="Value"
-                      value={cond.value[0] || ''}
-                      disabled={filterDisabled}
-                      onChange={(e) => updateCondition(i, { value: [e.target.value] })}
-                      onKeyDown={(e) => {
-                        if (e.nativeEvent.isComposing) {
-                          return;
-                        }
-                        if (e.key === 'Enter') {
-                          handleApplyFilter();
-                        }
-                        if (e.key === 'Escape') {
-                          handleClose();
-                        }
-                      }}
-                    />
-                  )}
-                  <button
-                    className="gs-filter-remove-btn"
-                    onClick={() => removeCondition(i)}
-                    disabled={filterDisabled}
-                    title="Remove condition"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-            </div>
-            <div className="gs-filter-actions">
-              {hasAnyFilter && (
-                <button className="gs-filter-reset-all-btn" onClick={handleResetAll}>
-                  RESET ALL
+        <div
+          className="gs-column-menu"
+          style={{ top: position.y, left: position.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ul>
+            <li className={`gs-column-menu-filter${filterDisabled ? ' gs-disabled' : ''}`}>
+              <div className="gs-filter-header">
+                <div className="gs-menu-name">Filter</div>
+                <button className="gs-filter-add-btn" onClick={addCondition} disabled={filterDisabled}>
+                  + ADD
                 </button>
-              )}
-              <div className="gs-filter-actions-right">
-                {colCell?.filter && (
-                  <button className="gs-filter-reset-btn" onClick={handleResetColumn}>
-                    RESET
+                <div className={`gs-filter-mode-toggle${conditions.length <= 1 ? ' gs-disabled' : ''}`}>
+                  <label className={mode === 'and' ? 'gs-active' : ''}>
+                    <input
+                      type="radio"
+                      name="gs-filter-mode"
+                      checked={mode === 'and'}
+                      onChange={() => setMode('and')}
+                      disabled={filterDisabled || conditions.length <= 1}
+                    />
+                    AND
+                  </label>
+                  <label className={mode === 'or' ? 'gs-active' : ''}>
+                    <input
+                      type="radio"
+                      name="gs-filter-mode"
+                      checked={mode === 'or'}
+                      onChange={() => setMode('or')}
+                      disabled={filterDisabled || conditions.length <= 1}
+                    />
+                    OR
+                  </label>
+                </div>
+              </div>
+              <div className="gs-filter-conditions">
+                {conditions.map((cond, i) => (
+                  <div className="gs-filter-condition-row" key={i}>
+                    <select
+                      className="gs-filter-method-select"
+                      value={cond.method}
+                      disabled={filterDisabled}
+                      onChange={(e) =>
+                        updateCondition(i, {
+                          method: e.target.value as FilterConditionMethod,
+                        })
+                      }
+                    >
+                      {(Object.keys(METHOD_LABELS) as FilterConditionMethod[]).map((m) => (
+                        <option key={m} value={m}>
+                          {METHOD_LABELS[m]}
+                        </option>
+                      ))}
+                    </select>
+                    {!NO_VALUE_METHODS.includes(cond.method) && (
+                      <input
+                        ref={i === 0 ? firstValueRef : undefined}
+                        className="gs-filter-value-input"
+                        type="text"
+                        placeholder="Value"
+                        value={cond.value[0] || ''}
+                        disabled={filterDisabled}
+                        onChange={(e) => updateCondition(i, { value: [e.target.value] })}
+                        onKeyDown={(e) => {
+                          if (e.nativeEvent.isComposing) {
+                            return;
+                          }
+                          if (e.key === 'Enter') {
+                            handleApplyFilter();
+                          }
+                          if (e.key === 'Escape') {
+                            handleClose();
+                          }
+                        }}
+                      />
+                    )}
+                    <button
+                      className="gs-filter-remove-btn"
+                      onClick={() => removeCondition(i)}
+                      disabled={filterDisabled}
+                      title="Remove condition"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="gs-filter-actions">
+                {hasAnyFilter && (
+                  <button className="gs-filter-reset-all-btn" onClick={handleResetAll}>
+                    RESET ALL
                   </button>
                 )}
-                <button
-                  className="gs-filter-apply-btn"
-                  onClick={handleApplyFilter}
-                  disabled={filterDisabled}
-                >
-                  APPLY
+                <div className="gs-filter-actions-right">
+                  {colCell?.filter && (
+                    <button className="gs-filter-reset-btn" onClick={handleResetColumn}>
+                      RESET
+                    </button>
+                  )}
+                  <button className="gs-filter-apply-btn" onClick={handleApplyFilter} disabled={filterDisabled}>
+                    APPLY
+                  </button>
+                </div>
+              </div>
+            </li>
+            <li className="gs-menu-divider" />
+            <li
+              className={sortDisabled ? 'gs-disabled' : 'gs-enabled'}
+              onClick={() => {
+                if (!sortDisabled) {
+                  handleSortAsc();
+                }
+              }}
+            >
+              <div className="gs-menu-name">Sort A to Z</div>
+            </li>
+            <li
+              className={sortDisabled ? 'gs-disabled' : 'gs-enabled'}
+              onClick={() => {
+                if (!sortDisabled) {
+                  handleSortDesc();
+                }
+              }}
+            >
+              <div className="gs-menu-name">Sort Z to A</div>
+            </li>
+            <li className="gs-menu-divider" />
+            <li className={`gs-column-menu-label${labelDisabled ? ' gs-disabled' : ''}`}>
+              <div className="gs-label-input-row">
+                <div className="gs-menu-name">Label:</div>
+                <input
+                  ref={labelInputRef}
+                  className="gs-label-input"
+                  type="text"
+                  placeholder={labelPlaceholder}
+                  value={label}
+                  disabled={labelDisabled}
+                  onChange={(e) => setLabel(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.nativeEvent.isComposing) {
+                      return;
+                    }
+                    if (e.key === 'Enter') {
+                      handleApplyLabel();
+                    }
+                    if (e.key === 'Escape') {
+                      handleClose();
+                    }
+                  }}
+                />
+                <button className="gs-label-apply-btn" onClick={handleApplyLabel} disabled={labelDisabled}>
+                  UPDATE
                 </button>
               </div>
-            </div>
-          </li>
-          <li className="gs-menu-divider" />
-          <li
-            className={sortDisabled ? 'gs-disabled' : 'gs-enabled'}
-            onClick={() => {
-              if (!sortDisabled) {
-                handleSortAsc();
-              }
-            }}
-          >
-            <div className="gs-menu-name">Sort A to Z</div>
-          </li>
-          <li
-            className={sortDisabled ? 'gs-disabled' : 'gs-enabled'}
-            onClick={() => {
-              if (!sortDisabled) {
-                handleSortDesc();
-              }
-            }}
-          >
-            <div className="gs-menu-name">Sort Z to A</div>
-          </li>
-          <li className="gs-menu-divider" />
-          <li className={`gs-column-menu-label${labelDisabled ? ' gs-disabled' : ''}`}>
-            <div className="gs-label-input-row">
-              <div className="gs-menu-name">Label:</div>
-              <input
-                ref={labelInputRef}
-                className="gs-label-input"
-                type="text"
-                placeholder={labelPlaceholder}
-                value={label}
-                disabled={labelDisabled}
-                onChange={(e) => setLabel(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.nativeEvent.isComposing) {
-                    return;
-                  }
-                  if (e.key === 'Enter') {
-                    handleApplyLabel();
-                  }
-                  if (e.key === 'Escape') {
-                    handleClose();
-                  }
-                }}
-              />
-              <button className="gs-label-apply-btn" onClick={handleApplyLabel} disabled={labelDisabled}>
-                UPDATE
-              </button>
-            </div>
-          </li>
-        </ul>
-      </div>
+            </li>
+          </ul>
+        </div>
       )}
     </Fixed>
   );

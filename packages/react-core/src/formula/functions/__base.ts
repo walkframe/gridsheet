@@ -1,12 +1,7 @@
 import { Table } from '../../lib/table';
 import type { PointType } from '../../types';
 import { Expression } from '../evaluator';
-import {
-  hasPendingArg,
-  buildAsyncCacheKey,
-  handleAsyncResult,
-  createPropagatedPending,
-} from './__async_base';
+import { hasPendingArg, buildAsyncCacheKey, handleAsyncResult, createPropagatedPending } from './__async_base';
 
 export type FunctionProps = {
   args: Expression[];

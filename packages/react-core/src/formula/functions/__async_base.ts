@@ -72,10 +72,7 @@ export const handleAsyncResult = (promise: Promise<any>, wire: Wire, key: string
       wire.asyncCaches.set(key, result);
     })
     .catch((error: any) => {
-      wire.asyncCaches.set(
-        key,
-        new AsyncFormulaError('#ASYNC!', error?.message ?? String(error), error),
-      );
+      wire.asyncCaches.set(key, new AsyncFormulaError('#ASYNC!', error?.message ?? String(error), error));
     })
     .finally(() => {
       wire.asyncPending.delete(key);
@@ -94,4 +91,3 @@ export const handleAsyncResult = (promise: Promise<any>, wire: Wire, key: string
 export const createPropagatedPending = (): Pending => {
   return new Pending(Promise.resolve());
 };
-
