@@ -13,6 +13,8 @@ export class BaseFunction {
   public example = '_BASE()';
   public helpTexts = ["Function's description."];
   public helpArgs = [{ name: 'value1', description: '' }];
+  /** Cache TTL in milliseconds. Override in subclass to set expiry. undefined = never expires. */
+  protected ttlMSec?: number;
   protected bareArgs: any[];
   protected table: Table;
   protected origin?: PointType;
@@ -38,7 +40,7 @@ export class BaseFunction {
     // If main() returns a Promise (async function), handle it via the async cache
     if (result instanceof Promise) {
       const key = buildAsyncCacheKey(this.constructor.name, this.bareArgs);
-      return handleAsyncResult(result, this.table.wire, key);
+      return handleAsyncResult(result, this.table, this.origin!, key, this.ttlMSec);
     }
 
     return result;

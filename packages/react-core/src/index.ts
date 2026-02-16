@@ -20,6 +20,7 @@ export { PluginBase, useInitialPluginContext, usePluginContext } from './compone
 export type {
   MatrixType,
   CellType,
+  AsyncCache,
   FilterCondition,
   FilterConditionMethod,
   FilterConfig,

@@ -59,9 +59,7 @@ export class Wire {
   paletteBySheetName: { [sheetName: string]: RefPaletteType } = {};
   lastFocused: HTMLTextAreaElement | null = null;
   solvedCaches: Map<Id, any> = new Map();
-  /** Cached results from completed async formula computations (keyed by function+args). */
-  asyncCaches: Map<string, any> = new Map();
-  /** Currently in-flight async formula Pending sentinels (keyed by function+args). */
+  /** Currently in-flight async formula Pending sentinels (keyed by cell ID). */
   asyncPending: Map<string, Pending> = new Map();
   copyingSheetId: number = 0;
   copyingZone: ZoneType = RESET_ZONE;
@@ -127,7 +125,7 @@ export class Wire {
     return {
       id,
       sheetId: table.sheetId,
-      changedAt: new Date(),
+      changedTime: Date.now(),
       dependents: new Set(),
     };
   }

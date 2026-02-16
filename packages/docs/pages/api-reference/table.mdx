@@ -17,8 +17,8 @@ The `UserTable` interface provides access to:
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `changedAt` | `Date` | Timestamp of the last change |
-| `lastChangedAt` | `Date` | Timestamp of the previous change |
+| `changedTime` | `number` | Timestamp (ms since epoch) of the last change |
+| `lastChangedTime` | `number` | Timestamp (ms since epoch) of the previous change |
 | `top`, `left`, `bottom`, `right` | `number` | Current table boundaries |
 | `minNumRows`, `maxNumRows` | `number` | Row count limits |
 | `minNumCols`, `maxNumCols` | `number` | Column count limits |
@@ -164,7 +164,7 @@ function MyComponent() {
 
 ### Cell Updates
 
-#### `update(args: { diff: CellsByAddressType; historicize?: boolean; partial?: boolean; updateChangedAt?: boolean; reflection?: StorePatchType }): UserTable`
+#### `update(args: { diff: CellsByAddressType; historicize?: boolean; partial?: boolean; updateChangedTime?: boolean; reflection?: StorePatchType }): UserTable`
 Updates multiple cells at once.
 
 ```tsx
@@ -178,7 +178,7 @@ const newTable = table.update({
 sync(newTable); // Required to apply changes
 ```
 
-#### `write(args: { point: PointType; value: string; updateChangedAt?: boolean; reflection?: StorePatchType }): UserTable`
+#### `write(args: { point: PointType; value: string; updateChangedTime?: boolean; reflection?: StorePatchType }): UserTable`
 Writes a value to a specific cell.
 
 ```tsx
@@ -189,7 +189,7 @@ const newTable = table.write({
 sync(newTable); // Required to apply changes
 ```
 
-#### `writeMatrix(args: { point: PointType; matrix: MatrixType<string>; updateChangedAt?: boolean; reflection?: StorePatchType }): UserTable`
+#### `writeMatrix(args: { point: PointType; matrix: MatrixType<string>; updateChangedTime?: boolean; reflection?: StorePatchType }): UserTable`
 Writes a matrix of values starting at a specific point.
 
 ```tsx
@@ -202,7 +202,7 @@ sync(newTable); // Required to apply changes
 
 ### Row Operations
 
-#### `insertRows(args: { y: number; numRows: number; baseY: number; diff?: CellsByAddressType; partial?: boolean; updateChangedAt?: boolean; reflection?: StorePatchType }): UserTable`
+#### `insertRows(args: { y: number; numRows: number; baseY: number; diff?: CellsByAddressType; partial?: boolean; updateChangedTime?: boolean; reflection?: StorePatchType }): UserTable`
 
 Inserts rows at the specified position. If `diff` is provided, it also updates the cells after insertion.
 
@@ -231,7 +231,7 @@ sync(newTable); // Required to apply changes
 
 ### Column Operations
 
-#### `insertCols(args: { x: number; numCols: number; baseX: number; diff?: CellsByAddressType; partial?: boolean; updateChangedAt?: boolean; reflection?: StorePatchType }): UserTable`
+#### `insertCols(args: { x: number; numCols: number; baseX: number; diff?: CellsByAddressType; partial?: boolean; updateChangedTime?: boolean; reflection?: StorePatchType }): UserTable`
 
 Inserts columns at the specified position. If `diff` is provided, it also updates the cells after insertion.
 

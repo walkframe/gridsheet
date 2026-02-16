@@ -39,15 +39,26 @@ export type FeedbackType = (args: { table: UserTable; points?: CursorStateType }
 export type ModeType = 'light' | 'dark';
 export type HeadersType = 'both' | 'vertical' | 'horizontal' | 'none';
 
+export type AsyncCache = {
+  /** Cached result value from the async computation. */
+  value: any;
+  /** Cache key derived from function name + arguments. Used to detect when inputs change. */
+  key: string;
+  /** Absolute timestamp (ms since epoch) at which the cache expires. undefined means cache never expires. */
+  expireTime?: number;
+};
+
 export type System = {
   id: string;
   sheetId: number;
-  changedAt: Date;
+  changedTime: number;
   dependents: Set<string>;
   /** Cumulative top offset (px) from table origin. Set on row-header cells (x=0). */
   offsetTop?: number;
   /** Cumulative left offset (px) from table origin. Set on col-header cells (y=0). */
   offsetLeft?: number;
+  /** Cached result from an async formula. Invalidated when key changes or expireTime is reached. */
+  asyncCache?: AsyncCache;
 };
 
 export type FilterConditionMethod =

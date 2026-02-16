@@ -99,8 +99,8 @@ type GetFieldPropsWithArea = GetFieldProps & {
 };
 
 export interface UserTable {
-  changedAt: Date;
-  lastChangedAt?: Date;
+  changedTime: number;
+  lastChangedTime?: number;
   top: number;
   left: number;
   bottom: number;
@@ -139,23 +139,23 @@ export interface UserTable {
     diff: CellsByAddressType;
     historicize?: boolean;
     partial?: boolean;
-    updateChangedAt?: boolean;
+    updateChangedTime?: boolean;
     reflection?: StorePatchType;
   }): UserTable;
   writeMatrix(args: {
     point: PointType;
     matrix: MatrixType<string>;
-    updateChangedAt?: boolean;
+    updateChangedTime?: boolean;
     reflection?: StorePatchType;
   }): UserTable;
-  write(args: { point: PointType; value: string; updateChangedAt?: boolean; reflection?: StorePatchType }): UserTable;
+  write(args: { point: PointType; value: string; updateChangedTime?: boolean; reflection?: StorePatchType }): UserTable;
   insertRows(args: {
     y: number;
     numRows: number;
     baseY: number;
     diff?: CellsByAddressType;
     partial?: boolean;
-    updateChangedAt?: boolean;
+    updateChangedTime?: boolean;
     reflection?: StorePatchType;
   }): UserTable;
   removeRows(args: { y: number; numRows: number; reflection?: StorePatchType }): UserTable;
@@ -165,7 +165,7 @@ export interface UserTable {
     baseX: number;
     diff?: CellsByAddressType;
     partial?: boolean;
-    updateChangedAt?: boolean;
+    updateChangedTime?: boolean;
     reflection?: StorePatchType;
   }): UserTable;
   removeCols(args: { x: number; numCols: number; reflection?: StorePatchType }): UserTable;
@@ -204,8 +204,8 @@ export interface UserTable {
 }
 
 export class Table implements UserTable {
-  public changedAt: Date;
-  public lastChangedAt?: Date;
+  public changedTime: number;
+  public lastChangedTime?: number;
   public minNumRows: number;
   public maxNumRows: number;
   public minNumCols: number;
@@ -234,7 +234,7 @@ export class Table implements UserTable {
     hub = createWire({}),
   }: Props) {
     this.idMatrix = [];
-    this.changedAt = new Date();
+    this.changedTime = Date.now();
     this.minNumRows = minNumRows || 0;
     this.maxNumRows = maxNumRows || 0;
     this.minNumCols = minNumCols || 0;
@@ -717,7 +717,7 @@ export class Table implements UserTable {
       cells[0] = { width: HEADER_WIDTH, height: HEADER_HEIGHT };
     }
     const auto = getMaxSizesFromCells(cells);
-    const changedAt = new Date();
+    const changedTime = Date.now();
     this.area = {
       top: 1,
       left: 1,
@@ -798,7 +798,7 @@ export class Table implements UserTable {
           delete stacked.label;
           delete stacked.labeler;
         }
-        stacked.system = { id, changedAt, dependents: new Set(), sheetId: this.sheetId };
+        stacked.system = { id, changedTime, dependents: new Set(), sheetId: this.sheetId };
         this.wire.data[id] = stacked;
       }
     }
@@ -877,8 +877,8 @@ export class Table implements UserTable {
 
   public refresh(relocate = false, resize = false): Table {
     this.incrementVersion();
-    this.lastChangedAt = this.changedAt;
-    this.changedAt = new Date();
+    this.lastChangedTime = this.changedTime;
+    this.changedTime = Date.now();
 
     this.clearSolvedCaches();
 
@@ -1270,11 +1270,11 @@ export class Table implements UserTable {
     return matrix;
   }
 
-  private setChangedAt(cell?: CellType, changedAt?: Date) {
+  private setChangedTime(cell?: CellType, changedTime?: number) {
     if (cell?.system == null) {
       return null;
     }
-    cell.system!.changedAt = changedAt ?? new Date();
+    cell.system!.changedTime = changedTime ?? Date.now();
     return cell;
   }
 
@@ -1381,13 +1381,13 @@ export class Table implements UserTable {
           system: {
             id: srcId,
             sheetId: this.sheetId,
-            changedAt: new Date(),
+            changedTime: Date.now(),
             dependents: srcCell?.system?.dependents ?? new Set(),
           },
         };
       }
       if (srcCell != null) {
-        this.setChangedAt(srcCell, new Date());
+        this.setChangedTime(srcCell, Date.now());
       }
       return true;
     });
@@ -1419,7 +1419,7 @@ export class Table implements UserTable {
         system: {
           id: newId,
           sheetId: srcTableRaw.sheetId,
-          changedAt: new Date(),
+          changedTime: Date.now(),
           dependents: srcCell?.system?.dependents ?? new Set(),
         },
       };
@@ -1478,7 +1478,7 @@ export class Table implements UserTable {
     const { top: topFrom, left: leftFrom } = src;
     const { top: topTo, left: leftTo, bottom: bottomTo, right: rightTo } = dst;
     const diff: CellsByAddressType = {};
-    const changedAt = new Date();
+    const changedTime = Date.now();
 
     for (let i = 0; i <= bottomTo - topTo; i++) {
       const toY = topTo + i;
@@ -1510,7 +1510,7 @@ export class Table implements UserTable {
           slideY,
           slideX,
         });
-        this.setChangedAt(cell, changedAt);
+        this.setChangedTime(cell, changedTime);
         const address = p2a(dstPoint);
         if (onlyValue) {
           const dstCell = this.getCellByPoint(dstPoint, 'SYSTEM');
@@ -1542,7 +1542,7 @@ export class Table implements UserTable {
   private _update({
     diff,
     partial = true,
-    updateChangedAt = true,
+    updateChangedTime = true,
     ignoreFields = ['label', 'labeler'],
     operator = 'SYSTEM',
     operation: op = operation.Update,
@@ -1550,7 +1550,7 @@ export class Table implements UserTable {
   }: {
     diff: CellsByAddressType;
     partial?: boolean;
-    updateChangedAt?: boolean;
+    updateChangedTime?: boolean;
     ignoreFields?: (keyof CellType)[];
     operator?: OperatorType;
     operation?: OperationType;
@@ -1558,7 +1558,7 @@ export class Table implements UserTable {
   }) {
     const diffBefore: CellsByIdType = {};
     const diffAfter: CellsByIdType = {};
-    const changedAt = new Date();
+    const changedTime = Date.now();
 
     let resized = false;
     Object.keys(diff).forEach((address) => {
@@ -1597,8 +1597,8 @@ export class Table implements UserTable {
       if (operator === 'USER' && operation.hasOperation(original?.prevention, operation.SetParser)) {
         delete patch?.parser;
       }
-      if (updateChangedAt) {
-        this.setChangedAt(patch, changedAt);
+      if (updateChangedTime) {
+        this.setChangedTime(patch, changedTime);
       }
       if (patch.width != null || patch.height != null) {
         resized = true;
@@ -1614,7 +1614,7 @@ export class Table implements UserTable {
         original,
         operation: op,
       });
-      patch = { ...p, system: { ...original.system!, changedAt } };
+      patch = { ...p, system: { ...original.system!, changedTime } };
       if (partial) {
         diffAfter[id] = this.wire.data[id] = { ...original, ...patch };
       } else {
@@ -1639,7 +1639,7 @@ export class Table implements UserTable {
   public update({
     diff,
     partial = true,
-    updateChangedAt = true,
+    updateChangedTime = true,
     historicize = true,
     operator = 'SYSTEM',
     operation: op = operation.Update,
@@ -1648,7 +1648,7 @@ export class Table implements UserTable {
   }: {
     diff: CellsByAddressType;
     partial?: boolean;
-    updateChangedAt?: boolean;
+    updateChangedTime?: boolean;
     historicize?: boolean;
     operator?: OperatorType;
     operation?: OperationType;
@@ -1660,7 +1660,7 @@ export class Table implements UserTable {
       partial,
       operator,
       operation: op,
-      updateChangedAt,
+      updateChangedTime,
     });
 
     if (historicize) {
@@ -1682,7 +1682,7 @@ export class Table implements UserTable {
   public writeRawCellMatrix({
     point,
     matrix,
-    updateChangedAt = true,
+    updateChangedTime = true,
     historicize = true,
     onlyValue = false,
     operator = 'SYSTEM',
@@ -1691,7 +1691,7 @@ export class Table implements UserTable {
   }: {
     point: PointType;
     matrix: MatrixType<RawCellType>;
-    updateChangedAt?: boolean;
+    updateChangedTime?: boolean;
     historicize?: boolean;
     onlyValue?: boolean;
     operator?: OperatorType;
@@ -1726,7 +1726,7 @@ export class Table implements UserTable {
     return this.update({
       diff,
       partial: true,
-      updateChangedAt,
+      updateChangedTime,
       historicize,
       operator,
       operation: operation.Write,
@@ -1738,7 +1738,7 @@ export class Table implements UserTable {
   public writeMatrix(props: {
     point: PointType;
     matrix: MatrixType<string>;
-    updateChangedAt?: boolean;
+    updateChangedTime?: boolean;
     historicize?: boolean;
     operator?: OperatorType;
     undoReflection?: StorePatchType;
@@ -1751,7 +1751,7 @@ export class Table implements UserTable {
   public write(props: {
     point: PointType;
     value: string;
-    updateChangedAt?: boolean;
+    updateChangedTime?: boolean;
     historicize?: boolean;
     operator?: OperatorType;
     undoReflection?: StorePatchType;
@@ -1779,7 +1779,7 @@ export class Table implements UserTable {
     baseY,
     diff,
     partial,
-    updateChangedAt,
+    updateChangedTime,
     operator = 'SYSTEM',
     undoReflection,
     redoReflection,
@@ -1789,7 +1789,7 @@ export class Table implements UserTable {
     baseY: number;
     diff?: CellsByAddressType;
     partial?: boolean;
-    updateChangedAt?: boolean;
+    updateChangedTime?: boolean;
     operator?: OperatorType;
     undoReflection?: StorePatchType;
     redoReflection?: StorePatchType;
@@ -1800,7 +1800,7 @@ export class Table implements UserTable {
     }
     const numCols = this.getNumCols(1);
     const rows: IdMatrix = [];
-    const changedAt = new Date();
+    const changedTime = Date.now();
     for (let i = 0; i < numRows; i++) {
       const row: Ids = [];
       for (let j = 0; j < numCols; j++) {
@@ -1813,7 +1813,7 @@ export class Table implements UserTable {
           system: {
             id,
             sheetId: this.sheetId,
-            changedAt,
+            changedTime,
             dependents: new Set(),
           },
         };
@@ -1837,7 +1837,7 @@ export class Table implements UserTable {
 
     // If diff is provided, update the cells after insertion
     if (diff) {
-      Object.assign(this.wire.lastHistory!, this._update({ diff, partial, updateChangedAt, operator }), { partial });
+      Object.assign(this.wire.lastHistory!, this._update({ diff, partial, updateChangedTime, operator }), { partial });
     }
     if (this.wire.onInsertRows) {
       const cloned = this.clone();
@@ -1932,7 +1932,7 @@ export class Table implements UserTable {
     baseX,
     diff,
     partial,
-    updateChangedAt,
+    updateChangedTime,
     operator = 'SYSTEM',
     undoReflection,
     redoReflection,
@@ -1942,7 +1942,7 @@ export class Table implements UserTable {
     baseX: number;
     diff?: CellsByAddressType;
     partial?: boolean;
-    updateChangedAt?: boolean;
+    updateChangedTime?: boolean;
     operator?: OperatorType;
     undoReflection?: StorePatchType;
     redoReflection?: StorePatchType;
@@ -1953,7 +1953,7 @@ export class Table implements UserTable {
     }
     const numRows = this.getNumRows(1);
     const rows: IdMatrix = [];
-    const changedAt = new Date();
+    const changedTime = Date.now();
     for (let i = 0; i <= numRows; i++) {
       const row: Ids = [];
       for (let j = 0; j < numCols; j++) {
@@ -1967,7 +1967,7 @@ export class Table implements UserTable {
           system: {
             id,
             sheetId: this.sheetId,
-            changedAt,
+            changedTime,
             dependents: new Set(),
           },
         };
@@ -1990,7 +1990,7 @@ export class Table implements UserTable {
 
     // If diff is provided, update the cells after insertion
     if (diff) {
-      Object.assign(this.wire.lastHistory!, this._update({ diff, partial, updateChangedAt, operator }), { partial });
+      Object.assign(this.wire.lastHistory!, this._update({ diff, partial, updateChangedTime, operator }), { partial });
     }
     if (this.wire.onInsertCols) {
       const cloned = this.clone();
@@ -2159,14 +2159,14 @@ export class Table implements UserTable {
       //Object.assign(this.wire.data, diff);
       Object.keys(diff).forEach((id) => {
         const cell = diff[id] ?? {};
-        this.setChangedAt(cell);
+        this.setChangedTime(cell);
         this.wire.data[id] = { ...cell };
       });
       return;
     }
     Object.keys(diff).map((id) => {
       const cell = diff[id] ?? {};
-      this.setChangedAt(cell);
+      this.setChangedTime(cell);
       this.wire.data[id] = { ...this.getById(id), ...cell };
     });
   }
