@@ -1,8 +1,8 @@
 import { useContext, useEffect, useRef, useCallback } from 'react';
 import { Context } from '../store';
-import { zoneToArea } from '../lib/structs';
-import { between } from '../lib/structs';
-import { a2p } from '../lib/converters';
+import { zoneToArea } from '../lib/spatial';
+import { between } from '../lib/spatial';
+import { a2p } from '../lib/coords';
 import { COLOR_PALETTE } from '../lib/palette';
 import { Autofill } from '../lib/autofill';
 import { getCellRectPositions } from '../lib/virtualization';

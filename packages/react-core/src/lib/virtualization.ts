@@ -1,5 +1,5 @@
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH, OVERSCAN_X, OVERSCAN_Y } from '../constants';
-import { range, binarySearch, type BinarySearchPredicate } from './structs';
+import { range, binarySearch, type BinarySearchPredicate } from './spatial';
 import { Table } from './table';
 import type { AreaType, PointType, Virtualization } from '../types';
 

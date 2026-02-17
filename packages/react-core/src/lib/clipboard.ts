@@ -1,6 +1,6 @@
 import type { StoreType, AreaType, PointType } from '../types';
 
-import { zoneToArea } from './structs';
+import { zoneToArea } from './spatial';
 import type { Table } from './table';
 
 export const clip = (store: StoreType) => {

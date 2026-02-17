@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { useContext, useCallback, memo, useRef } from 'react';
-import { x2c } from '../lib/converters';
-import { between, zoneToArea } from '../lib/structs';
+import { x2c } from '../lib/coords';
+import { between, zoneToArea } from '../lib/spatial';
 import { Context } from '../store';
 import {
   choose,

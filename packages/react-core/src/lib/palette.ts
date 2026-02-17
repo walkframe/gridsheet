@@ -17,4 +17,6 @@ export const COLOR_PALETTE = [
   '#FF00FF',
   // navy
   '#3366FF',
+  // cyan
+  '#008888',
 ];

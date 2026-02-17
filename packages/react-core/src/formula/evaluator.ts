@@ -1,4 +1,4 @@
-import { a2p, grantAddressAbsolute, p2a } from '../lib/converters';
+import { a2p, grantAddressAbsolute, p2a } from '../lib/coords';
 import { Table } from '../lib/table';
 import { Id, PointType } from '../types';
 

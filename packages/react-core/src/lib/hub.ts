@@ -34,7 +34,6 @@ export type WireProps = {
   policies?: { [policyName: string]: PolicyType | null };
   onSave?: FeedbackType;
   onChange?: FeedbackType;
-  onEdit?: (args: { table: UserTable }) => void;
   onRemoveRows?: (args: { table: UserTable; ys: number[] }) => void;
   onRemoveCols?: (args: { table: UserTable; xs: number[] }) => void;
   onInsertRows?: (args: { table: UserTable; y: number; numRows: number }) => void;
@@ -77,7 +76,6 @@ export class Wire {
   policies: { [policyName: string]: PolicyType | null } = {};
   onSave?: FeedbackType;
   onChange?: FeedbackType;
-  onEdit?: (args: { table: UserTable }) => void;
   onRemoveRows?: (args: { table: UserTable; ys: number[] }) => void;
   onRemoveCols?: (args: { table: UserTable; xs: number[] }) => void;
   onInsertRows?: (args: { table: UserTable; y: number; numRows: number }) => void;
@@ -139,7 +137,6 @@ export class Wire {
     policies = {},
     onSave,
     onChange,
-    onEdit,
     onRemoveRows,
     onRemoveCols,
     onInsertRows,
@@ -161,7 +158,6 @@ export class Wire {
     this.policies = policies;
     this.onSave = onSave;
     this.onChange = onChange;
-    this.onEdit = onEdit;
     this.onRemoveRows = onRemoveRows;
     this.onRemoveCols = onRemoveCols;
     this.onInsertRows = onInsertRows;

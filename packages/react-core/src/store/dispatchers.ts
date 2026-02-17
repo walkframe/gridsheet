@@ -1,5 +1,5 @@
 import type { ContextMenuProps, FilterConfig, RawCellType } from '../types';
-import { areaToZone, zoneShape, zoneToArea } from '../lib/structs';
+import { areaToZone, zoneShape, zoneToArea } from '../lib/spatial';
 import {
   copy,
   cut,
@@ -14,7 +14,6 @@ import {
   removeCols,
   sortRows,
   filterRows,
-  clearFilterRows,
 } from './actions';
 import { clip } from '../lib/clipboard';
 import { parseHTML, parseText } from '../lib/paste';
@@ -147,7 +146,7 @@ export const rowsFilterer = async ({ store, dispatch }: ContextMenuProps, x: num
 };
 
 export const rowsFilterClearer = async ({ store, dispatch }: ContextMenuProps, x?: number) => {
-  dispatch(clearFilterRows({ x }));
+  dispatch(filterRows({ x }));
   store.editorRef.current?.focus();
 };
 

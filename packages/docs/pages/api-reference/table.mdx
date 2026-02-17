@@ -46,35 +46,35 @@ console.log(cell?.value);
 
 ### Matrix and Object Access
 
-#### `getMatrix(args?: GetPropsWithArea): (CellType | null)[][]`
-Retrieves cells as a 2D matrix.
+#### `getCellMatrix(args?: GetCellMatrix): (CellType | null)[][]`
+Retrieves cells as a 2D matrix. Supports `ignoreFields` to exclude specific cell properties.
 
 ```tsx
-const matrix = table.getMatrix({ area: { top: 0, left: 0, bottom: 2, right: 2 } });
+const matrix = table.getCellMatrix({ area: { top: 0, left: 0, bottom: 2, right: 2 } });
 console.log(matrix);
 ```
 
-#### `getObject(args?: GetProps): CellsByAddressType`
-Retrieves cells as an object with addresses as keys.
+#### `getCellObject(args?: GetCellObject): CellsByAddressType`
+Retrieves cells as an object with addresses as keys. Supports `ignoreFields` to exclude specific cell properties.
 
 ```tsx
-const cells = table.getObject({ refEvaluation: 'COMPLETE' });
+const cells = table.getCellObject({ refEvaluation: 'COMPLETE' });
 console.log(cells);
 ```
 
-#### `getRows(args?: GetProps): CellsByAddressType[]`
-Retrieves cells organized by rows.
+#### `getCellRows(args?: GetCellRows): CellsByAddressType[]`
+Retrieves cells organized by rows. Supports `ignoreFields` to exclude specific cell properties.
 
 ```tsx
-const rows = table.getRows();
+const rows = table.getCellRows();
 console.log(rows[0]); // First row cells
 ```
 
-#### `getCols(args?: GetProps): CellsByAddressType[]`
-Retrieves cells organized by columns.
+#### `getCellCols(args?: GetCellCols): CellsByAddressType[]`
+Retrieves cells organized by columns. Supports `ignoreFields` to exclude specific cell properties.
 
 ```tsx
-const cols = table.getCols();
+const cols = table.getCellCols();
 console.log(cols[0]); // First column cells
 ```
 
@@ -298,8 +298,9 @@ const newTable = table.sortRows({ x: 1, direction: 'desc' });
 sync(newTable);
 ```
 
-#### `filterRows(args: { x: number; filter: FilterConfig }): UserTable`
+#### `filterRows(args?: { x?: number; filter?: FilterConfig }): UserTable`
 Applies a filter to the specified column. Rows that do not match the filter conditions are hidden. Multiple columns can have independent filters, and they are combined with AND logic across columns.
+If called without `filter`, clears the filter for the specified column. If called without `x`, clears all column filters.
 
 The `FilterConfig` object has the following structure:
 
@@ -340,18 +341,13 @@ const newTable = table.filterRows({
   },
 });
 sync(newTable);
-```
 
-#### `clearFilterRows(x?: number): UserTable`
-Clears filter conditions. If `x` is provided, clears only the filter for that column. If omitted, clears all column filters.
-
-```tsx
 // Clear filter on column B only
-const newTable = table.clearFilterRows(2);
+const newTable = table.filterRows({ x: 2 });
 sync(newTable);
 
 // Clear all filters
-const newTable = table.clearFilterRows();
+const newTable = table.filterRows();
 sync(newTable);
 ```
 
@@ -371,19 +367,4 @@ Returns `true` if any column has an active filter.
 if (table.hasActiveFilters()) {
   console.log('Some filters are active');
 }
-```
-
-### Column Label Operations
-
-#### `setColLabel(args: { x: number; label: string }): UserTable`
-Sets a custom display label for the specified column header. If an empty string is provided, the label is removed and the default column letter (A, B, C, ...) is displayed. This operation is recorded in the undo/redo history.
-
-```tsx
-// Set column A header to "Name"
-const newTable = table.setColLabel({ x: 1, label: 'Name' });
-sync(newTable);
-
-// Reset column A header to default ("A")
-const newTable = table.setColLabel({ x: 1, label: '' });
-sync(newTable);
 ```

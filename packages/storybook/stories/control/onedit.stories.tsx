@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, buildInitialCells, useConnector, useHub, UserTable } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells, useConnector, useHub, addressesToAreas } from '@gridsheet/react-core';
 
 const meta: Meta = {
   title: 'Control/OnEdit',
@@ -9,15 +9,14 @@ export default meta;
 
 const DESCRIPTION = [
   '## Example',
-  'This demo demonstrates the onEdit event handling in GridSheet with two sheets.',
-  'It shows how to monitor edit operations in real-time and display information about edited areas.',
+  'This demo demonstrates the onChange event handling in GridSheet with two sheets.',
+  'It shows how to monitor changes in real-time and display information about edited areas.',
 
   '## How it works',
   'The interface includes two sheets side by side and shows information about the edited areas.',
-  '1. The onEdit callback is triggered whenever cells are updated or moved.',
-  '2. Edit information shows the area that was modified.',
-  '3. For updates, it shows the range of cells that were changed.',
-  '4. For moves, it shows both the source and destination areas.',
+  '1. The onChange callback is triggered whenever the grid data changes.',
+  '2. `getLastChangedAddresses()` is used to identify which cells were modified.',
+  '3. `getCellObject({ addresses })` retrieves only the changed cells.',
 ].join('\n\n');
 
 const SheetOnEditComponent: React.FC = () => {
@@ -33,11 +32,15 @@ const SheetOnEditComponent: React.FC = () => {
   >([]);
 
   const hub = useHub({
-    onEdit: ({ table }) => {
-      const data = table.getFieldObject();
+    onChange: ({ table }) => {
+      const addresses = table.getLastChangedAddresses();
+      if (addresses.length === 0) return;
+      const data = table.getCellObject({ addresses, ignoreFields: ['system', 'style', 'prevention'] });
+      const areas = addressesToAreas(addresses);
+      const area = areas[0] ?? { top: 0, left: 0, bottom: 0, right: 0 };
       const info = {
         operation: 'EDIT',
-        area: { top: table.top, left: table.left, bottom: table.bottom, right: table.right },
+        area,
         sheetName: table.sheetName,
         timestamp: new Date().toLocaleTimeString(),
         data: data,

@@ -1,6 +1,6 @@
 import { useContext, useRef, useCallback, useEffect, memo, useMemo } from 'react';
-import { x2c, y2r } from '../lib/converters';
-import { zoneToArea, among, areaToRange } from '../lib/structs';
+import { x2c, y2r } from '../lib/coords';
+import { zoneToArea, among, areaToRange } from '../lib/spatial';
 import {
   choose,
   select,

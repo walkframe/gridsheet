@@ -10,7 +10,7 @@ import { choose, select } from '../store/actions';
 
 import type { RefPaletteType, Virtualization } from '../types';
 import { virtualize } from '../lib/virtualization';
-import { p2a, stripAddressAbsolute } from '../lib/converters';
+import { p2a, stripAddressAbsolute } from '../lib/coords';
 import { Lexer, stripSheetName } from '../formula/evaluator';
 import { ScrollHandle } from './ScrollHandle';
 

@@ -1,7 +1,7 @@
 import { type FC, useContext, useRef } from 'react';
 
 import { setContextMenuPosition } from '../store/actions';
-import { zoneShape } from '../lib/structs';
+import { zoneShape } from '../lib/spatial';
 
 import { Context } from '../store';
 import * as prevention from '../lib/operation';

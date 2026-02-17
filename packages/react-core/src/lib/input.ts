@@ -2,7 +2,7 @@ import type { PointType } from '../types';
 import type { Table } from './table';
 import { Lexer, splitRef } from '../formula/evaluator';
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '../constants';
-import { a2p, grantAddressAbsolute } from './converters';
+import { a2p, grantAddressAbsolute } from './coords';
 import { getSheetPrefix } from './sheet';
 
 export const insertTextAtCursor = (input: HTMLTextAreaElement, text: string) => {

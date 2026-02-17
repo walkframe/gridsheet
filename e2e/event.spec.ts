@@ -429,7 +429,7 @@ test.describe('OnEdit Event Tests', () => {
 
     // A2セルの値が更新されていることを確認
     expect(editData).toHaveProperty('A2');
-    expect(editData.A2).toBe('Apple Updated');
+    expect(editData.A2.value).toBe('Apple Updated');
   });
 
   test('should display edit data when moving cells', async ({ page }) => {
@@ -449,7 +449,7 @@ test.describe('OnEdit Event Tests', () => {
     const editData = JSON.parse(latestDataText);
 
     // 編集された値が存在することを確認
-    const hasEditedData = Object.keys(editData).some((key) => editData[key] === 'Apple Moved');
+    const hasEditedData = Object.keys(editData).some((key) => editData[key]?.value === 'Apple Moved');
     expect(hasEditedData).toBe(true);
   });
 

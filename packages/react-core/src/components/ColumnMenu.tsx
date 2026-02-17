@@ -2,18 +2,17 @@ import { type FC, useContext, useState, useCallback, useEffect, useRef } from 'r
 import { Context } from '../store';
 import {
   setColumnMenu,
-  setColLabel,
   sortRows,
   filterRows,
-  clearFilterRows,
   insertColsLeft,
   insertColsRight,
   removeCols,
+  setStore,
 } from '../store/actions';
 import { Fixed } from './Fixed';
 import type { FilterCondition, FilterConditionMethod } from '../types';
 import * as prevention from '../lib/operation';
-import { x2c } from '../lib/converters';
+import { x2c, p2a } from '../lib/coords';
 
 const METHOD_LABELS: Record<FilterConditionMethod, string> = {
   eq: '=',
@@ -82,7 +81,7 @@ export const ColumnMenu: FC = () => {
         dispatch(sortRows({ x: actionX, direction: 'desc' }));
       } else if (type === 'filter' && filter) {
         if (filter.conditions.length === 0) {
-          dispatch(clearFilterRows({ x: actionX }));
+          dispatch(filterRows({ x: actionX }));
         } else {
           dispatch(filterRows({ x: actionX, filter }));
         }
@@ -124,13 +123,33 @@ export const ColumnMenu: FC = () => {
   }, [dispatch, editorRef]);
 
   const handleApplyLabel = useCallback(() => {
-    if (x == null) {
+    if (x == null || table == null) {
       return;
     }
-    dispatch(setColLabel({ x, label }));
+    const address = p2a({ y: 0, x });
+    table.update({
+      diff: { [address]: { label: label || undefined } },
+      partial: true,
+      ignoreFields: [],
+      undoReflection: {
+        sheetId: table.sheetId,
+        selectingZone: store.selectingZone,
+        choosing: store.choosing,
+      },
+      redoReflection: {
+        sheetId: table.sheetId,
+        selectingZone: store.selectingZone,
+        choosing: store.choosing,
+      },
+    });
     dispatch(setColumnMenu(null));
+    dispatch(
+      setStore({
+        tableReactive: { current: table },
+      }),
+    );
     editorRef.current?.focus();
-  }, [dispatch, x, label, editorRef]);
+  }, [dispatch, x, label, editorRef, table, store.selectingZone, store.choosing]);
 
   const handleSortAsc = useCallback(() => {
     if (x == null) {
@@ -169,7 +188,7 @@ export const ColumnMenu: FC = () => {
       return;
     }
     setPendingAction(null);
-    dispatch(clearFilterRows({ x }));
+    dispatch(filterRows({ x }));
     setConditions([{ ...DEFAULT_CONDITION, value: [''] }]);
     setMode('or');
     dispatch(setColumnMenu(null));
@@ -178,7 +197,7 @@ export const ColumnMenu: FC = () => {
 
   const handleResetAll = useCallback(() => {
     setPendingAction(null);
-    dispatch(clearFilterRows({}));
+    dispatch(filterRows({}));
     setConditions([{ ...DEFAULT_CONDITION, value: [''] }]);
     setMode('or');
     dispatch(setColumnMenu(null));

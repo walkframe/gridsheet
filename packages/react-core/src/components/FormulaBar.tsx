@@ -1,7 +1,7 @@
 import type { KeyboardEvent } from 'react';
 import { useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { Context } from '../store';
-import { p2a } from '../lib/converters';
+import { p2a } from '../lib/coords';
 import { setEditingAddress, setInputting, walk, write } from '../store/actions';
 import * as prevention from '../lib/operation';
 import { insertTextAtCursor } from '../lib/input';

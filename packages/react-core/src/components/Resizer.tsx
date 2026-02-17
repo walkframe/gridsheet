@@ -5,9 +5,9 @@ import { Context } from '../store';
 import { setResizingPositionY, setResizingPositionX, updateTable, setStore } from '../store/actions';
 
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH, MIN_WIDTH, MIN_HEIGHT } from '../constants';
-import { zoneToArea, makeSequence, between } from '../lib/structs';
+import { zoneToArea, makeSequence, between } from '../lib/spatial';
 import type { CellsByAddressType } from '../types';
-import { p2a } from '../lib/converters';
+import { p2a } from '../lib/coords';
 
 export const Resizer = () => {
   const { store, dispatch } = useContext(Context);

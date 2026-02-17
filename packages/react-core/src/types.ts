@@ -313,10 +313,8 @@ export type HistorySortRowsType = {
   applyed: boolean;
   undoReflection?: StorePatchType;
   redoReflection?: StorePatchType;
-  /** idMatrix data rows before sort (index 0 = row 1) */
-  rowsBefore: IdMatrix;
-  /** idMatrix data rows after sort */
-  rowsAfter: IdMatrix;
+  /** Mapping from original row index to new row index after sort */
+  sortedRowMapping: { [beforeY: number]: number };
 };
 
 export type HistoryType =

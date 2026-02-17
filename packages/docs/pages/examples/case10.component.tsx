@@ -194,9 +194,12 @@ export default function InventoryManagement() {
         : `(${points.pointing.y},${points.pointing.x})`;
       addActivityLog(`💾 Inventory data saved at ${Array.isArray(points) ? points.length : 1} position(s): ${posInfo}`);
     },
-    onEdit: ({ table }: { table: UserTable }) => {
-      const { top, left, bottom, right } = table;
-      addActivityLog(`✏️ Inventory edited. (onEdit) Range: [${top},${left}] - [${bottom},${right}]`);
+    onChange: ({ table }: { table: UserTable }) => {
+      const addresses = table.getLastChangedAddresses();
+      if (addresses.length > 0) {
+        addActivityLog(`✏️ Inventory edited. (onChange) Cells: ${addresses.join(', ')}`);
+      }
+      setTsv(convertToTSV(table));
     },
     onRemoveRows: ({ table, ys }: { table: UserTable; ys: number[] }) => {
       ys.forEach((y, i) => {
@@ -224,9 +227,6 @@ export default function InventoryManagement() {
     },
     onInit: ({ table }) => {
       addActivityLog(`📦 Inventory management system initialized`);
-    },
-    onChange: ({ table }) => {
-      setTsv(convertToTSV(table));
     },
   });
 

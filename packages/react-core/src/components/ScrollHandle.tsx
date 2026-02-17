@@ -4,7 +4,7 @@ import { Context } from '../store';
 import { drag, setAutofillDraggingTo, setDragging, submitAutofill } from '../store/actions';
 import { getAreaInTabular } from '../lib/virtualization';
 import { insertRef, isFocus } from '../lib/input';
-import { areaToRange, zoneToArea } from '../lib/structs';
+import { areaToRange, zoneToArea } from '../lib/spatial';
 import { isXSheetFocused } from '../store/helpers';
 
 type Props = {

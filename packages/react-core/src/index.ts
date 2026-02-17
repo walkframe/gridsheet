@@ -11,15 +11,19 @@ export {
   zoneToArea,
   areaToZone,
   areaToRange,
-} from './lib/structs';
+  addressesToAreas,
+  addressesToCols,
+  addressesToRows,
+} from './lib/spatial';
 
 export { TimeDelta } from './lib/time';
-export { x2c, c2x, y2r, r2y, p2a, a2p } from './lib/converters';
+export { x2c, c2x, y2r, r2y, p2a, a2p } from './lib/coords';
 export { updateTable } from './store/actions';
 export { PluginBase, useInitialPluginContext, usePluginContext } from './components/PluginBase';
 export type {
   MatrixType,
   CellType,
+  Address,
   AsyncCache,
   FilterCondition,
   FilterConditionMethod,

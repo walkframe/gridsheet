@@ -13,10 +13,10 @@ import {
   OperatorType,
   FilterConfig,
 } from '../types';
-import { zoneToArea, superposeArea, matrixShape, areaShape, areaToZone, zoneShape, restrictZone } from '../lib/structs';
+import { zoneToArea, superposeArea, matrixShape, areaShape, areaToZone, zoneShape, restrictZone } from '../lib/spatial';
 import { Table } from '../lib/table';
 
-import { p2a, a2p } from '../lib/converters';
+import { p2a, a2p } from '../lib/coords';
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '../constants';
 import { initSearchStatement, restrictPoints } from './helpers';
 import { smartScroll } from '../lib/virtualization';
@@ -1119,20 +1119,12 @@ class SortRowsAction<T extends { x: number; direction: 'asc' | 'desc' }> extends
     if (table == null) {
       return store;
     }
-    table.sortRows({
-      x,
-      direction,
-      undoReflection: {
-        sheetId: table.sheetId,
-        selectingZone,
-        choosing,
-      },
-      redoReflection: {
-        sheetId: table.sheetId,
-        selectingZone,
-        choosing,
-      },
-    });
+    table.sortRows({ x, direction });
+    const reflection = { sheetId: table.sheetId, selectingZone, choosing };
+    if (table.wire.lastHistory) {
+      table.wire.lastHistory.undoReflection = reflection;
+      table.wire.lastHistory.redoReflection = reflection;
+    }
     return {
       ...store,
       tableReactive: { current: table },
@@ -1141,7 +1133,7 @@ class SortRowsAction<T extends { x: number; direction: 'asc' | 'desc' }> extends
 }
 export const sortRows = new SortRowsAction().bind();
 
-class FilterRowsAction<T extends { x: number; filter: FilterConfig }> extends CoreAction<T> {
+class FilterRowsAction<T extends { x?: number; filter?: FilterConfig }> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { x, filter } = payload;
     const { tableReactive: tableRef, selectingZone, choosing } = store;
@@ -1149,20 +1141,12 @@ class FilterRowsAction<T extends { x: number; filter: FilterConfig }> extends Co
     if (table == null) {
       return store;
     }
-    table.filterRows({
-      x,
-      filter,
-      undoReflection: {
-        sheetId: table.sheetId,
-        selectingZone,
-        choosing,
-      },
-      redoReflection: {
-        sheetId: table.sheetId,
-        selectingZone,
-        choosing,
-      },
-    });
+    table.filterRows({ x, filter });
+    const reflection = { sheetId: table.sheetId, selectingZone, choosing };
+    if (table.wire.lastHistory) {
+      table.wire.lastHistory.undoReflection = reflection;
+      table.wire.lastHistory.redoReflection = reflection;
+    }
     let newChoosing = choosing;
     if (table.isRowFiltered(choosing.y)) {
       for (let y = 1; y <= table.getNumRows(); y++) {
@@ -1182,46 +1166,6 @@ class FilterRowsAction<T extends { x: number; filter: FilterConfig }> extends Co
 }
 export const filterRows = new FilterRowsAction().bind();
 
-class ClearFilterRowsAction<T extends { x?: number }> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreWithCallback {
-    const { x } = payload;
-    const { tableReactive: tableRef, selectingZone, choosing } = store;
-    const table = tableRef.current;
-    if (table == null) {
-      return store;
-    }
-    table.clearFilterRows(
-      x,
-      {
-        sheetId: table.sheetId,
-        selectingZone,
-        choosing,
-      },
-      {
-        sheetId: table.sheetId,
-        selectingZone,
-        choosing,
-      },
-    );
-    let newChoosing = choosing;
-    if (table.isRowFiltered(choosing.y)) {
-      for (let y = 1; y <= table.getNumRows(); y++) {
-        if (!table.isRowFiltered(y)) {
-          newChoosing = { y, x: choosing.x };
-          break;
-        }
-      }
-    }
-    return {
-      ...store,
-      choosing: newChoosing,
-      selectingZone: newChoosing !== choosing ? resetZone : selectingZone,
-      tableReactive: { current: table },
-    };
-  }
-}
-export const clearFilterRows = new ClearFilterRowsAction().bind();
-
 class SetColumnMenuAction<T extends { x: number; position: { y: number; x: number } } | null> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     return {
@@ -1231,36 +1175,6 @@ class SetColumnMenuAction<T extends { x: number; position: { y: number; x: numbe
   }
 }
 export const setColumnMenu = new SetColumnMenuAction().bind();
-
-class SetColLabelAction<T extends { x: number; label: string }> extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreWithCallback {
-    const { x, label } = payload;
-    const { tableReactive: tableRef, selectingZone, choosing } = store;
-    const table = tableRef.current;
-    if (table == null) {
-      return store;
-    }
-    table.setColLabel({
-      x,
-      label,
-      undoReflection: {
-        sheetId: table.sheetId,
-        selectingZone,
-        choosing,
-      },
-      redoReflection: {
-        sheetId: table.sheetId,
-        selectingZone,
-        choosing,
-      },
-    });
-    return {
-      ...store,
-      tableReactive: { current: table },
-    };
-  }
-}
-export const setColLabel = new SetColLabelAction().bind();
 
 class setStoreAction<T extends Partial<StoreType>> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
@@ -1298,6 +1212,4 @@ export const userActions = {
   removeCols,
   sortRows,
   filterRows,
-  clearFilterRows,
-  setColLabel,
 };
