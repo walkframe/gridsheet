@@ -407,97 +407,97 @@ test.describe('OnEdit Event Tests', () => {
   });
 
   test('should display edit data when writing to cells', async ({ page }) => {
-    // Sheet1のA2セル（Apple）をクリック
+    // Click cell A2 (Apple) in Sheet1
     await page.click('[data-sheet-name="Sheet1"] >> text=Apple');
 
-    // セルを編集モードにする（ダブルクリック）
+    // Enter edit mode (double-click)
     await page.dblclick('[data-sheet-name="Sheet1"] .gs-cell >> text=Apple');
 
-    // 値を変更
+    // Change the value
     await page.fill('[data-sheet-name="Sheet1"] input, [data-sheet-name="Sheet1"] textarea', 'Apple Updated');
     await page.keyboard.press('Enter');
 
-    // Edit Historyに変更が反映されることを確認
+    // Verify the change is reflected in Edit History
     await page.waitForFunction(() => {
       const historyElements = document.querySelectorAll('[data-testid="history-item"]');
       return historyElements.length > 0;
     });
 
-    // 最新の履歴データを確認
+    // Check the latest history data
     const latestDataText = await page.locator('[data-testid="history-data"]').first().inputValue();
     const editData = JSON.parse(latestDataText);
 
-    // A2セルの値が更新されていることを確認
+    // Verify the value of cell A2 has been updated
     expect(editData).toHaveProperty('A2');
     expect(editData.A2.value).toBe('Apple Updated');
   });
 
   test('should display edit data when moving cells', async ({ page }) => {
-    // 簡単な編集操作でonEditが動作することを確認
+    // Verify that onEdit fires for a simple edit operation
     await page.dblclick('[data-sheet-name="Sheet1"] .gs-cell >> text=Apple');
     await page.fill('[data-sheet-name="Sheet1"] input, [data-sheet-name="Sheet1"] textarea', 'Apple Moved');
     await page.keyboard.press('Enter');
 
-    // Edit Historyに編集の差分が反映されることを確認
+    // Verify the edit diff is reflected in Edit History
     await page.waitForFunction(() => {
       const historyElements = document.querySelectorAll('[data-testid="history-item"]');
       return historyElements.length > 0;
     });
 
-    // 最新の履歴データを確認
+    // Check the latest history data
     const latestDataText = await page.locator('[data-testid="history-data"]').first().inputValue();
     const editData = JSON.parse(latestDataText);
 
-    // 編集された値が存在することを確認
+    // Verify the edited value exists
     const hasEditedData = Object.keys(editData).some((key) => editData[key]?.value === 'Apple Moved');
     expect(hasEditedData).toBe(true);
   });
 
   test('should display edit history for multiple operations', async ({ page }) => {
-    // 複数のシートで複数の編集操作を実行
+    // Perform multiple edit operations across multiple sheets
 
-    // 1. Sheet1のA2セルを編集
+    // 1. Edit cell A2 in Sheet1
     await page.dblclick('[data-sheet-name="Sheet1"] .gs-cell >> text=Apple');
     await page.fill('[data-sheet-name="Sheet1"] input, [data-sheet-name="Sheet1"] textarea', 'Apple 1');
     await page.keyboard.press('Enter');
 
-    // 2. Sheet1のB2セルを編集
+    // 2. Edit cell B2 in Sheet1
     await page.dblclick('[data-sheet-name="Sheet1"] .gs-cell >> text=100');
     await page.fill('[data-sheet-name="Sheet1"] input, [data-sheet-name="Sheet1"] textarea', '150');
     await page.keyboard.press('Enter');
 
-    // 3. Sheet2で編集
+    // 3. Edit in Sheet2
     await page.click('[data-sheet-name="Sheet2"] .gs-cell >> text=John');
     await page.dblclick('[data-sheet-name="Sheet2"] .gs-cell >> text=John');
     await page.fill('[data-sheet-name="Sheet2"] input, [data-sheet-name="Sheet2"] textarea', 'John Updated');
     await page.keyboard.press('Enter');
 
-    // Edit Historyに複数のエントリが表示されることを確認
+    // Verify multiple entries are shown in Edit History
     await page.waitForFunction(() => {
       const historyElements = document.querySelectorAll('[data-testid="history-item"]');
       return historyElements.length >= 3;
     });
 
-    // 履歴の内容を確認
+    // Verify the history contents
     const historyElements = await page.locator('[data-testid="history-item"]').all();
     expect(historyElements.length).toBeGreaterThanOrEqual(3);
 
-    // 最新の履歴エントリを確認
+    // Check the latest history entry
     const latestHistory = await historyElements[0].textContent();
     expect(latestHistory).toContain('Sheet:');
 
-    // 最新の履歴データを確認
+    // Check the latest history data
     const latestDataText = await page.locator('[data-testid="history-data"]').first().inputValue();
     expect(latestDataText).toContain('John Updated');
   });
 
   test('should show correct area information in edit data', async ({ page }) => {
-    // Sheet1のA2セルを編集
+    // Edit cell A2 in Sheet1
     await page.dblclick('[data-sheet-name="Sheet1"] .gs-cell >> text=Apple');
     await page.fill('[data-sheet-name="Sheet1"] input, [data-sheet-name="Sheet1"] textarea', 'Test Value');
     await page.keyboard.press('Enter');
 
-    // Edit Historyのエリア情報を確認
+    // Check the area information in Edit History
     await page.waitForFunction(() => {
       const historyElements = document.querySelectorAll('[data-testid="history-item"]');
       return historyElements.length > 0;
@@ -505,23 +505,23 @@ test.describe('OnEdit Event Tests', () => {
 
     const historyText = await page.locator('[data-testid="history-item"]').first().textContent();
 
-    // エリア情報が正しく表示されていることを確認（A2セルなので top:2, left:1, bottom:2, right:1）
+    // Verify the area information is displayed correctly (cell A2: top:2, left:1, bottom:2, right:1)
     expect(historyText).toContain('Area:2,1 to 2,1');
   });
 
   test('should handle edits on both sheets independently', async ({ page }) => {
-    // Sheet1で編集
+    // Edit in Sheet1
     await page.dblclick('[data-sheet-name="Sheet1"] .gs-cell >> text=Apple');
     await page.fill('[data-sheet-name="Sheet1"] input, [data-sheet-name="Sheet1"] textarea', 'Sheet1 Edit');
     await page.keyboard.press('Enter');
 
-    // Sheet2で編集
+    // Edit in Sheet2
     await page.click('[data-sheet-name="Sheet2"] .gs-cell >> text=John');
     await page.dblclick('[data-sheet-name="Sheet2"] .gs-cell >> text=John');
     await page.fill('[data-sheet-name="Sheet2"] input, [data-sheet-name="Sheet2"] textarea', 'Sheet2 Edit');
     await page.keyboard.press('Enter');
 
-    // 両方の編集が履歴に記録されることを確認
+    // Verify both edits are recorded in history
     await page.waitForFunction(() => {
       const historyElements = document.querySelectorAll('[data-testid="history-item"]');
       return historyElements.length >= 2;
@@ -530,7 +530,7 @@ test.describe('OnEdit Event Tests', () => {
     const historyElements = await page.locator('[data-testid="history-item"]').all();
     expect(historyElements.length).toBeGreaterThanOrEqual(2);
 
-    // 最新の編集がSheet2のものであることを確認
+    // Verify the latest edit belongs to Sheet2
     const latestHistory = await historyElements[0].textContent();
     expect(latestHistory).toContain('Sheet2 Edit');
   });
