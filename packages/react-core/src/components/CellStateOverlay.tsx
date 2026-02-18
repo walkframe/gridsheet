@@ -17,7 +17,7 @@ const COLOR_COPYING = '#0077ff';
 const COLOR_CUTTING = '#0077ff';
 const SEARCH_MATCHING_BACKGROUND = 'rgba(0, 200, 100, 0.2)';
 const COLOR_SEARCH_MATCHING = '#00aa78';
-const COLOR_AUTOFILL = '#444444';
+const COLOR_AUTOFILL = '#0077aa';
 
 const HEADER_COLORS = {
   light: {
