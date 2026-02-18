@@ -5,7 +5,7 @@ import { Table, UserTable } from '../lib/table';
 import { solveFormula, solveTable } from '../formula/solver';
 import { FormulaError } from '../formula/evaluator';
 import { Pending } from '../constants';
-import { AsyncFormulaError } from '../formula/functions/__async_base';
+import { AsyncFormulaError } from '../formula/functions/__async';
 import { TimeDelta } from '../lib/time';
 import { stripTable } from '../formula/solver';
 
