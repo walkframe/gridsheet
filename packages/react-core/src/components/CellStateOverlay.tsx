@@ -253,7 +253,12 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
       if (left + pos.width < headerW || left > w) {
         continue;
       }
-      fillRect(ctx, left, 0, pos.width, headerH, color);
+      // Prevent drawing into the (0,0) corner
+      const drawLeft = Math.max(left, headerW);
+      const drawWidth = Math.min(left + pos.width, w) - drawLeft;
+      if (drawWidth > 0) {
+        fillRect(ctx, drawLeft, 0, drawWidth, headerH, color);
+      }
     }
 
     // Left headers
@@ -277,7 +282,12 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
       if (top + pos.height < headerH || top > h) {
         continue;
       }
-      fillRect(ctx, 0, top, headerW, pos.height, color);
+      // Prevent drawing into the (0,0) corner
+      const drawTop = Math.max(top, headerH);
+      const drawHeight = Math.min(top + pos.height, h) - drawTop;
+      if (drawHeight > 0) {
+        fillRect(ctx, 0, drawTop, headerW, drawHeight, color);
+      }
     }
   }, [
     table,
