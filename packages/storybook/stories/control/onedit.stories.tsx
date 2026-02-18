@@ -34,7 +34,9 @@ const SheetOnEditComponent: React.FC = () => {
   const hub = useHub({
     onChange: ({ table }) => {
       const addresses = table.getLastChangedAddresses();
-      if (addresses.length === 0) return;
+      if (addresses.length === 0) {
+        return;
+      }
       const data = table.getCellObject({ addresses, ignoreFields: ['system', 'style', 'prevention'] });
       const areas = addressesToAreas(addresses);
       const area = areas[0] ?? { top: 0, left: 0, bottom: 0, right: 0 };

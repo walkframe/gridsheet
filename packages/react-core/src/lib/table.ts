@@ -1340,6 +1340,9 @@ export class Table implements UserTable {
     const diffBefore: CellsByIdType = {};
     const preserver = new ReferencePreserver(this);
 
+    // Track changed addresses for dst table
+    const dstChangedAddresses: Address[] = [];
+
     // to dst(to)
     const lostRows = putMatrix(this.idMatrix, matrixFrom, dst, ({ srcValue: srcId, dstValue: dstId }) => {
       if (srcId == null || dstId == null) {
@@ -1381,11 +1384,18 @@ export class Table implements UserTable {
       if (srcCell != null) {
         this.setChangedTime(srcCell, Date.now());
       }
+      // Record changed address for dst
+      const dstPoint = this.getPointById(dstId);
+      dstChangedAddresses.push(p2a(dstPoint));
       return true;
     });
 
     const srcTableRaw = srcTable.__raw__;
     const srcContext = this.wire.contextsBySheetId[srcTableRaw.sheetId];
+
+    // Track changed addresses for src table
+    const srcChangedAddresses: Address[] = [];
+
     // to src(from)
     putMatrix(srcTableRaw.idMatrix, matrixNew, src, ({ srcValue: newId, dstValue: srcId, dstPoint: srcPoint }) => {
       // if the srcPoint is in the dst(Area), we do not need to rewrite
@@ -1415,11 +1425,24 @@ export class Table implements UserTable {
           dependents: srcCell?.system?.dependents ?? new Set(),
         },
       };
+      // Record changed address for src
+      srcChangedAddresses.push(p2a(srcPoint));
       return true;
     });
 
     const resolvedDiff = preserver.resolveDependents();
     Object.assign(diffBefore, resolvedDiff);
+
+    // Update lastChangedAddresses for dst table (this)
+    // If src and dst are same table, combine both src and dst addresses
+    if (srcTable === this) {
+      this.lastChangedAddresses = [...new Set([...srcChangedAddresses, ...dstChangedAddresses])];
+    } else {
+      this.lastChangedAddresses = dstChangedAddresses;
+      // Update lastChangedAddresses for src table
+      srcTableRaw.lastChangedAddresses = srcChangedAddresses;
+    }
+
     if (srcTable !== this && srcContext !== null) {
       const { dispatch } = srcContext;
       requestAnimationFrame(() => {

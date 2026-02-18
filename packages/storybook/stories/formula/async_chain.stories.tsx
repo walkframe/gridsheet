@@ -40,7 +40,7 @@ class SumDelayFunction extends BaseFunction {
   }
 
   async main(...values: number[]) {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     return values.reduce((a, b) => a + b, 0);
   }
 }
