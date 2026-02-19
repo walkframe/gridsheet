@@ -13,6 +13,7 @@ import {
   setDragging,
   setEditingAddress,
   setResizingPositionY,
+  setRowMenu,
   submitAutofill,
   write,
 } from '../store/actions';
@@ -42,6 +43,7 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
     autofillDraggingTo,
     dragging,
     contextMenuItems,
+    rowMenuState,
   } = store;
   const table = tableRef.current;
 
@@ -226,6 +228,44 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
             horizontal={-1}
           />
           {table.getLabel(row?.label, row?.labeler, y) ?? rowId}
+          {!prevention.hasOperation(row?.prevention, prevention.RowMenu) && (
+            <button
+              className={`gs-row-menu-btn ${rowMenuState?.y === y ? 'gs-active' : ''}`}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                (e.currentTarget as HTMLElement).dataset.pressX = String(e.clientX);
+                (e.currentTarget as HTMLElement).dataset.pressY = String(e.clientY);
+              }}
+              onMouseUp={(e) => {
+                e.stopPropagation();
+                const btn = e.currentTarget as HTMLElement;
+                const pressX = Number(btn.dataset.pressX ?? e.clientX);
+                const pressY = Number(btn.dataset.pressY ?? e.clientY);
+                const moved = Math.abs(e.clientX - pressX) > 4 || Math.abs(e.clientY - pressY) > 4;
+                if (moved) {
+                  return; // was a drag, ignore
+                }
+                const rect = btn.getBoundingClientRect();
+                if (rowMenuState?.y === y) {
+                  dispatch(setRowMenu(null));
+                } else {
+                  const alreadySelected = between(
+                    { start: selectingZone.startY, end: selectingZone.endY },
+                    y,
+                  ) && selectingZone.startX === 1 && selectingZone.endX === table.getNumCols();
+                  if (!alreadySelected) {
+                    dispatch(selectRows({ range: { start: y, end: y }, numCols: table.getNumCols() }));
+                    dispatch(choose({ y, x: 1 }));
+                  }
+                  dispatch(setRowMenu({ y, position: { y: rect.bottom, x: rect.right } }));
+                }
+              }}
+              title="Row menu"
+            >
+              ⋮
+            </button>
+          )}
           <div
             className={`
               gs-resizer

@@ -178,6 +178,7 @@ export type StoreType = {
   resizingPositionY: [Y, Y, Y]; // indexY, startY, endY
   resizingPositionX: [X, X, X]; // indexX, startX, endX
   columnMenuState: { x: number; position: PositionType } | null;
+  rowMenuState: { y: number; position: PositionType } | null;
 };
 
 export type Manager<T> = {

@@ -39,6 +39,8 @@ export const ReadOnly: operations = Update | Delete | Add | Move;
 
 export const ColumnMenu: operations = Filter | Sort | SetLabel;
 
+export const RowMenu: operations = 0b00000000000000000000000000000000010000000000000000000; // 524288
+
 export const ViewOnly: operations = ReadOnly | ColumnMenu;
 
 export const hasOperation = (operation: operations | undefined, flag: operations) => {

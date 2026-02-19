@@ -1176,6 +1176,16 @@ class SetColumnMenuAction<T extends { x: number; position: { y: number; x: numbe
 }
 export const setColumnMenu = new SetColumnMenuAction().bind();
 
+class SetRowMenuAction<T extends { y: number; position: { y: number; x: number } } | null> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
+    return {
+      ...store,
+      rowMenuState: payload,
+    };
+  }
+}
+export const setRowMenu = new SetRowMenuAction().bind();
+
 class setStoreAction<T extends Partial<StoreType>> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     return {

@@ -238,10 +238,30 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
               onMouseDown={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                const rect = (e.target as HTMLElement).getBoundingClientRect();
+                (e.currentTarget as HTMLElement).dataset.pressX = String(e.clientX);
+                (e.currentTarget as HTMLElement).dataset.pressY = String(e.clientY);
+              }}
+              onMouseUp={(e) => {
+                e.stopPropagation();
+                const btn = e.currentTarget as HTMLElement;
+                const pressX = Number(btn.dataset.pressX ?? e.clientX);
+                const pressY = Number(btn.dataset.pressY ?? e.clientY);
+                const moved = Math.abs(e.clientX - pressX) > 4 || Math.abs(e.clientY - pressY) > 4;
+                if (moved) {
+                  return; // was a drag, ignore
+                }
+                const rect = btn.getBoundingClientRect();
                 if (columnMenuState?.x === x) {
                   dispatch(setColumnMenu(null));
                 } else {
+                  const alreadySelected = between(
+                    { start: selectingZone.startX, end: selectingZone.endX },
+                    x,
+                  ) && selectingZone.startY === 1 && selectingZone.endY === table.getNumRows();
+                  if (!alreadySelected) {
+                    dispatch(selectCols({ range: { start: x, end: x }, numRows: table.getNumRows() }));
+                    dispatch(choose({ y: 1, x }));
+                  }
                   dispatch(setColumnMenu({ x, position: { y: rect.bottom, x: rect.left } }));
                 }
               }}

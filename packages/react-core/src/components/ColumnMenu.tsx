@@ -13,6 +13,8 @@ import { Fixed } from './Fixed';
 import type { FilterCondition, FilterConditionMethod } from '../types';
 import * as prevention from '../lib/operation';
 import { x2c, p2a } from '../lib/coords';
+import { between } from '../lib/spatial';
+import { copier, cutter, paster } from '../store/dispatchers';
 
 const METHOD_LABELS: Record<FilterConditionMethod, string> = {
   eq: '=',
@@ -33,7 +35,7 @@ const DEFAULT_CONDITION: FilterCondition = { method: 'eq', value: [''] };
 
 export const ColumnMenu: FC = () => {
   const { store, dispatch } = useContext(Context);
-  const { columnMenuState, tableReactive: tableRef, editorRef } = store;
+  const { columnMenuState, tableReactive: tableRef, editorRef, selectingZone } = store;
   const table = tableRef.current;
   const [conditions, setConditions] = useState<FilterCondition[]>([{ ...DEFAULT_CONDITION }]);
   const [mode, setMode] = useState<'and' | 'or'>('or');
@@ -260,12 +262,23 @@ export const ColumnMenu: FC = () => {
   const filterDisabled = prevention.hasOperation(colCell?.prevention, prevention.Filter);
   const labelDisabled = prevention.hasOperation(colCell?.prevention, prevention.SetLabel);
   const labelPlaceholder = table.getLabel(undefined, colCell?.labeler, x) ?? x2c(x);
-  const insertDisabled = table.maxNumCols !== -1 && table.getNumCols() + 1 > table.maxNumCols;
+
+  // Calculate the number of selected columns that include the current column
+  const selColStart = Math.min(selectingZone.startX, selectingZone.endX);
+  const selColEnd = Math.max(selectingZone.startX, selectingZone.endX);
+  const isFullColSelection =
+    selectingZone.startY === 1 && selectingZone.endY === table.getNumRows();
+  const numSelectedCols =
+    isFullColSelection && between({ start: selectingZone.startX, end: selectingZone.endX }, x)
+      ? selColEnd - selColStart + 1
+      : 1;
+
+  const insertDisabled = table.maxNumCols !== -1 && table.getNumCols() + numSelectedCols > table.maxNumCols;
   const insertLeftDisabled = insertDisabled || prevention.hasOperation(colCell?.prevention, prevention.InsertColsLeft);
   const insertRightDisabled =
     insertDisabled || prevention.hasOperation(colCell?.prevention, prevention.InsertColsRight);
   const removeDisabled =
-    (table.minNumCols !== -1 && table.getNumCols() - 1 < table.minNumCols) ||
+    (table.minNumCols !== -1 && table.getNumCols() - numSelectedCols < table.minNumCols) ||
     prevention.hasOperation(colCell?.prevention, prevention.RemoveCols);
 
   const waitingMessage =
@@ -453,6 +466,56 @@ export const ColumnMenu: FC = () => {
                   UPDATE
                 </button>
               </div>
+            </li>
+            <li className="gs-menu-divider" />
+            <li className="gs-enabled" onClick={async () => { await cutter({ store, dispatch }); dispatch(setColumnMenu(null)); }}>
+              <div className="gs-menu-name">Cut</div>
+            </li>
+            <li className="gs-enabled" onClick={async () => { await copier({ store, dispatch }); dispatch(setColumnMenu(null)); }}>
+              <div className="gs-menu-name">Copy</div>
+            </li>
+            <li className="gs-enabled" onClick={async () => { await paster({ store, dispatch }, false); dispatch(setColumnMenu(null)); }}>
+              <div className="gs-menu-name">Paste</div>
+            </li>
+            <li className="gs-enabled" onClick={async () => { await paster({ store, dispatch }, true); dispatch(setColumnMenu(null)); }}>
+              <div className="gs-menu-name">Paste only value</div>
+            </li>
+            <li className="gs-menu-divider" />
+            <li
+              className={insertLeftDisabled ? 'gs-disabled' : 'gs-enabled'}
+              onClick={() => {
+                if (!insertLeftDisabled) {
+                  dispatch(insertColsLeft({ numCols: numSelectedCols, x, operator: 'USER' }));
+                  dispatch(setColumnMenu(null));
+                  editorRef.current?.focus();
+                }
+              }}
+            >
+              <div className="gs-menu-name">Insert {numSelectedCols} column{numSelectedCols > 1 ? 's' : ''} left</div>
+            </li>
+            <li
+              className={insertRightDisabled ? 'gs-disabled' : 'gs-enabled'}
+              onClick={() => {
+                if (!insertRightDisabled) {
+                  dispatch(insertColsRight({ numCols: numSelectedCols, x, operator: 'USER' }));
+                  dispatch(setColumnMenu(null));
+                  editorRef.current?.focus();
+                }
+              }}
+            >
+              <div className="gs-menu-name">Insert {numSelectedCols} column{numSelectedCols > 1 ? 's' : ''} right</div>
+            </li>
+            <li
+              className={removeDisabled ? 'gs-disabled' : 'gs-enabled'}
+              onClick={() => {
+                if (!removeDisabled) {
+                  dispatch(removeCols({ numCols: numSelectedCols, x, operator: 'USER' }));
+                  dispatch(setColumnMenu(null));
+                  editorRef.current?.focus();
+                }
+              }}
+            >
+              <div className="gs-menu-name">Remove {numSelectedCols} column{numSelectedCols > 1 ? 's' : ''}</div>
             </li>
           </ul>
         </div>

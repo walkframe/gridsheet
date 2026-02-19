@@ -14,6 +14,12 @@
   border-radius: 5px;
   box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px,
     rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+  opacity: 0.9;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 1;
+  }
 }
 
 .gs-menu-ul() {
@@ -48,6 +54,46 @@
   background-color: #aaaaaa;
   padding: 0;
   height: 1px;
+}
+
+// Shared mixin for row/column header menus (same ul/li structure, min-width 200px)
+.gs-header-menu() {
+  .gs-menu-container();
+
+  ul {
+    .gs-menu-ul();
+    min-width: 200px;
+  }
+  li {
+    .gs-menu-li();
+
+    &.gs-menu-divider {
+      .gs-menu-divider();
+      margin: 5px 0;
+    }
+  }
+}
+
+// Shared mixin for header menu trigger buttons (column-menu-btn / row-menu-btn)
+.gs-menu-btn() {
+  position: absolute;
+  background-color: rgba(128, 128, 128, 0.3);
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1;
+  color: #888;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 2;
 }
 
 // Context menu
@@ -102,20 +148,7 @@
 }
 
 .gs-column-menu {
-  .gs-menu-container();
-
-  ul {
-    .gs-menu-ul();
-    min-width: 200px;
-  }
-  li {
-    .gs-menu-li();
-
-    &.gs-menu-divider {
-      .gs-menu-divider();
-      margin: 5px 0;
-    }
-  }
+  .gs-header-menu();
 
   .gs-column-menu-label {
     padding: 5px 10px;
@@ -136,6 +169,7 @@
     border-radius: 0;
     outline: none;
     min-width: 0;
+    width: 100px;
     background-color: transparent;
     box-shadow: none;
 
@@ -148,7 +182,7 @@
 
   .gs-label-apply-btn {
     font-size: 12px;
-    padding: 3px 13px;
+    padding: 3px 6px;
     border: 1px solid transparent;
     border-radius: 3px;
     background-color: transparent;
@@ -336,7 +370,7 @@
 
     .gs-filter-apply-btn {
       font-size: 12px;
-      padding: 3px 13px;
+      padding: 3px 6px;
       border: 1px solid transparent;
       border-radius: 3px;
       background-color: transparent;
@@ -396,27 +430,10 @@
 }
 
 .gs-column-menu-btn {
-  position: absolute;
+  .gs-menu-btn();
   right: 4px;
   top: 50%;
   transform: translateY(-50%);
-  background-color: rgba(128, 128, 128, 0.3);
-  border: 1px solid #ccc;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: bold;
-  line-height: 1;
-  color: #888;
-  width: 18px;
-  height: 18px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-  z-index: 2;
 
   &.gs-filtered {
     opacity: 1;
@@ -434,5 +451,50 @@
 }
 
 .gs-th-top:hover .gs-column-menu-btn {
+  opacity: 1;
+}
+
+// Row menu
+
+.gs-row-menu-modal {
+  .gs-menu-modal();
+}
+
+.gs-row-menu {
+  .gs-header-menu();
+}
+
+.gs-row-menu-btn {
+  .gs-menu-btn();
+  top: 50%;
+  transform: translateY(-50%);
+  right: 2px;
+
+  &.gs-active {
+    opacity: 1;
+    background-color: #d0e0ff;
+    border-color: #0077ff;
+    color: #0077ff;
+  }
+}
+
+.gs-th-left:hover .gs-row-menu-btn {
+  opacity: 1;
+}
+
+.gs-corner-menu-btn {
+  .gs-menu-btn();
+  bottom: 2px;
+  right: 2px;
+
+  &:hover {
+    opacity: 1;
+    background-color: #d0e0ff;
+    border-color: #0077ff;
+    color: #0077ff;
+  }
+}
+
+.gs-th-left.gs-th-top:hover .gs-corner-menu-btn {
   opacity: 1;
 }
