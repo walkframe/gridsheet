@@ -169,7 +169,7 @@ export const Tabular = () => {
                     />
                     {contextMenuItems.length > 0 && (
                       <button
-                        className="gs-corner-menu-btn"
+                        className="gs-menu-btn gs-corner-menu-btn"
                         title="Menu"
                         onClick={(e) => e.stopPropagation()}
                         onMouseDown={(e) => {
@@ -183,7 +183,9 @@ export const Tabular = () => {
                           const pressX = Number(btn.dataset.pressX ?? e.clientX);
                           const pressY = Number(btn.dataset.pressY ?? e.clientY);
                           const moved = Math.abs(e.clientX - pressX) > 4 || Math.abs(e.clientY - pressY) > 4;
-                          if (moved) return;
+                          if (moved) {
+                            return;
+                          }
                           const rect = btn.getBoundingClientRect();
                           dispatch(setContextMenuPosition({ y: rect.bottom, x: rect.left }));
                         }}

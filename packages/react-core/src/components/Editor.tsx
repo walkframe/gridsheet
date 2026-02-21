@@ -267,6 +267,13 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
             return false;
           }
           break;
+        case 'Delete': // DELETE
+          if (!editing) {
+            dispatch(clear(null));
+            dispatch(setInputting(''));
+            return false;
+          }
+          break;
         case 'Shift': // SHIFT
           setShiftKey(true);
           return false;

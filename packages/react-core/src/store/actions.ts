@@ -390,6 +390,8 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
     }
 
     const nextSelectingZone = restrictZone(areaToZone(selectingArea));
+    nextSelectingZone.endX = Math.min(nextSelectingZone.endX, newTable.getNumCols());
+    nextSelectingZone.endY = Math.min(nextSelectingZone.endY, newTable.getNumRows());
     return {
       ...store,
       tableReactive: { current: newTable },
@@ -452,16 +454,27 @@ class SelectRowsAction<T extends { range: RangeType; numCols: number }> extends 
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { range, numCols } = payload;
     const { start, end } = range;
+    const table = store.tableReactive.current;
     const selectingZone = {
       startY: start,
       startX: 1,
       endY: end,
       endX: numCols,
     };
+    // Find the first non-filtered row in the selection for choosing
+    let choosingY = start;
+    if (table) {
+      for (let y = start; y <= end; y++) {
+        if (!table.isRowFiltered(y)) {
+          choosingY = y;
+          break;
+        }
+      }
+    }
     return {
       ...store,
       selectingZone,
-      choosing: { y: start, x: 0 },
+      choosing: { y: choosingY, x: 1 },
       leftHeaderSelecting: true,
       topHeaderSelecting: false,
     };
@@ -473,17 +486,28 @@ class SelectColsAction<T extends { range: RangeType; numRows: number }> extends 
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { range, numRows } = payload;
     const { start, end } = range;
+    const table = store.tableReactive.current;
     const selectingZone = {
       startY: 1,
       startX: start,
       endY: numRows,
       endX: end,
     };
-
+    // Find the first non-filtered row (y=1 is always visible for columns, use y=1)
+    // For columns there is no column-level filter, so choosing y=1 (first data row visible)
+    let choosingY = 1;
+    if (table) {
+      for (let y = 1; y <= numRows; y++) {
+        if (!table.isRowFiltered(y)) {
+          choosingY = y;
+          break;
+        }
+      }
+    }
     return {
       ...store,
       selectingZone,
-      choosing: { y: 0, x: start },
+      choosing: { y: choosingY, x: start },
       leftHeaderSelecting: false,
       topHeaderSelecting: true,
     };
@@ -586,6 +610,9 @@ class ClearAction<T extends null> extends CoreAction<T> {
     const diff: CellsByAddressType = {};
     let diffCount = 0;
     for (let y = top; y <= bottom; y++) {
+      if (table.isRowFiltered(y)) {
+        continue;
+      }
       for (let x = left; x <= right; x++) {
         const cell = table.getCellByPoint({ y, x }, 'SYSTEM');
         const address = p2a({ y, x });
@@ -1161,6 +1188,15 @@ class FilterRowsAction<T extends { x?: number; filter?: FilterConfig }> extends 
       choosing: newChoosing,
       selectingZone: newChoosing !== choosing ? resetZone : selectingZone,
       tableReactive: { current: table },
+      callback: ({ tableReactive: tableRef }) => {
+        const t = tableRef.current;
+        if (t) {
+          t.wire.transmit({
+            cutting: false,
+            copyingZone: resetZone,
+          });
+        }
+      },
     };
   }
 }

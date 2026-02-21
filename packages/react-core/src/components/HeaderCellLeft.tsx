@@ -117,7 +117,6 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
       if (editingAnywhere) {
         writeCell(lastFocused?.value ?? '');
       }
-      dispatch(choose({ y: startY, x: 1 }));
       dispatch(setEditingAddress(''));
       dispatch(setDragging(true));
 
@@ -230,12 +229,13 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
           {table.getLabel(row?.label, row?.labeler, y) ?? rowId}
           {!prevention.hasOperation(row?.prevention, prevention.RowMenu) && (
             <button
-              className={`gs-row-menu-btn ${rowMenuState?.y === y ? 'gs-active' : ''}`}
+              className={`gs-menu-btn gs-row-menu-btn ${rowMenuState?.y === y ? 'gs-active' : ''}`}
               onMouseDown={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
                 (e.currentTarget as HTMLElement).dataset.pressX = String(e.clientX);
                 (e.currentTarget as HTMLElement).dataset.pressY = String(e.clientY);
+                handleDragStart(e);
               }}
               onMouseUp={(e) => {
                 e.stopPropagation();
@@ -250,13 +250,12 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
                 if (rowMenuState?.y === y) {
                   dispatch(setRowMenu(null));
                 } else {
-                  const alreadySelected = between(
-                    { start: selectingZone.startY, end: selectingZone.endY },
-                    y,
-                  ) && selectingZone.startX === 1 && selectingZone.endX === table.getNumCols();
+                  const alreadySelected =
+                    between({ start: selectingZone.startY, end: selectingZone.endY }, y) &&
+                    selectingZone.startX === 1 &&
+                    selectingZone.endX === table.getNumCols();
                   if (!alreadySelected) {
                     dispatch(selectRows({ range: { start: y, end: y }, numCols: table.getNumCols() }));
-                    dispatch(choose({ y, x: 1 }));
                   }
                   dispatch(setRowMenu({ y, position: { y: rect.bottom, x: rect.right } }));
                 }

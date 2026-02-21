@@ -75,7 +75,7 @@
 }
 
 // Shared mixin for header menu trigger buttons (column-menu-btn / row-menu-btn)
-.gs-menu-btn() {
+.gs-menu-btn {
   position: absolute;
   background-color: rgba(128, 128, 128, 0.3);
   border: 1px solid #ccc;
@@ -430,7 +430,6 @@
 }
 
 .gs-column-menu-btn {
-  .gs-menu-btn();
   right: 4px;
   top: 50%;
   transform: translateY(-50%);
@@ -465,7 +464,6 @@
 }
 
 .gs-row-menu-btn {
-  .gs-menu-btn();
   top: 50%;
   transform: translateY(-50%);
   right: 2px;
@@ -483,7 +481,6 @@
 }
 
 .gs-corner-menu-btn {
-  .gs-menu-btn();
   bottom: 2px;
   right: 2px;
 

@@ -9,9 +9,6 @@ test('undo redo for cell writing', async ({ page }) => {
   const originalA1Value = await a1.locator('.gs-cell-rendered').textContent();
 
   await a1.click();
-  const editor = page.locator('.gs-editor textarea');
-  // Clear the editor first
-  await editor.fill('');
   await page.keyboard.type('NewValue');
   await page.keyboard.press('Enter');
 
@@ -90,8 +87,6 @@ test('multiple undo redo operations', async ({ page }) => {
 
   // Multiple operations
   await a1.click();
-  const editor = page.locator('.gs-editor textarea');
-  await editor.fill('');
   await page.keyboard.type('First');
   await page.keyboard.press('Enter');
 

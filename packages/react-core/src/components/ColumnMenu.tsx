@@ -266,8 +266,7 @@ export const ColumnMenu: FC = () => {
   // Calculate the number of selected columns that include the current column
   const selColStart = Math.min(selectingZone.startX, selectingZone.endX);
   const selColEnd = Math.max(selectingZone.startX, selectingZone.endX);
-  const isFullColSelection =
-    selectingZone.startY === 1 && selectingZone.endY === table.getNumRows();
+  const isFullColSelection = selectingZone.startY === 1 && selectingZone.endY === table.getNumRows();
   const numSelectedCols =
     isFullColSelection && between({ start: selectingZone.startX, end: selectingZone.endX }, x)
       ? selColEnd - selColStart + 1
@@ -354,6 +353,7 @@ export const ColumnMenu: FC = () => {
                       className="gs-filter-method-select"
                       value={cond.method}
                       disabled={filterDisabled}
+                      tabIndex={i * 2 + 1}
                       onChange={(e) =>
                         updateCondition(i, {
                           method: e.target.value as FilterConditionMethod,
@@ -374,6 +374,7 @@ export const ColumnMenu: FC = () => {
                         placeholder="Value"
                         value={cond.value[0] || ''}
                         disabled={filterDisabled}
+                        tabIndex={i * 2 + 2}
                         onChange={(e) => updateCondition(i, { value: [e.target.value] })}
                         onKeyDown={(e) => {
                           if (e.nativeEvent.isComposing) {
@@ -468,16 +469,40 @@ export const ColumnMenu: FC = () => {
               </div>
             </li>
             <li className="gs-menu-divider" />
-            <li className="gs-enabled" onClick={async () => { await cutter({ store, dispatch }); dispatch(setColumnMenu(null)); }}>
+            <li
+              className="gs-enabled"
+              onClick={async () => {
+                await cutter({ store, dispatch });
+                dispatch(setColumnMenu(null));
+              }}
+            >
               <div className="gs-menu-name">Cut</div>
             </li>
-            <li className="gs-enabled" onClick={async () => { await copier({ store, dispatch }); dispatch(setColumnMenu(null)); }}>
+            <li
+              className="gs-enabled"
+              onClick={async () => {
+                await copier({ store, dispatch });
+                dispatch(setColumnMenu(null));
+              }}
+            >
               <div className="gs-menu-name">Copy</div>
             </li>
-            <li className="gs-enabled" onClick={async () => { await paster({ store, dispatch }, false); dispatch(setColumnMenu(null)); }}>
+            <li
+              className="gs-enabled"
+              onClick={async () => {
+                await paster({ store, dispatch }, false);
+                dispatch(setColumnMenu(null));
+              }}
+            >
               <div className="gs-menu-name">Paste</div>
             </li>
-            <li className="gs-enabled" onClick={async () => { await paster({ store, dispatch }, true); dispatch(setColumnMenu(null)); }}>
+            <li
+              className="gs-enabled"
+              onClick={async () => {
+                await paster({ store, dispatch }, true);
+                dispatch(setColumnMenu(null));
+              }}
+            >
               <div className="gs-menu-name">Paste only value</div>
             </li>
             <li className="gs-menu-divider" />
@@ -491,7 +516,9 @@ export const ColumnMenu: FC = () => {
                 }
               }}
             >
-              <div className="gs-menu-name">Insert {numSelectedCols} column{numSelectedCols > 1 ? 's' : ''} left</div>
+              <div className="gs-menu-name">
+                Insert {numSelectedCols} column{numSelectedCols > 1 ? 's' : ''} left
+              </div>
             </li>
             <li
               className={insertRightDisabled ? 'gs-disabled' : 'gs-enabled'}
@@ -503,7 +530,9 @@ export const ColumnMenu: FC = () => {
                 }
               }}
             >
-              <div className="gs-menu-name">Insert {numSelectedCols} column{numSelectedCols > 1 ? 's' : ''} right</div>
+              <div className="gs-menu-name">
+                Insert {numSelectedCols} column{numSelectedCols > 1 ? 's' : ''} right
+              </div>
             </li>
             <li
               className={removeDisabled ? 'gs-disabled' : 'gs-enabled'}
@@ -515,7 +544,9 @@ export const ColumnMenu: FC = () => {
                 }
               }}
             >
-              <div className="gs-menu-name">Remove {numSelectedCols} column{numSelectedCols > 1 ? 's' : ''}</div>
+              <div className="gs-menu-name">
+                Remove {numSelectedCols} column{numSelectedCols > 1 ? 's' : ''}
+              </div>
             </li>
           </ul>
         </div>

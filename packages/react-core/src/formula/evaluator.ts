@@ -867,6 +867,8 @@ export class Parser {
   }
 }
 
+// identifyFormula takes a formula string and returns a new formula string with all references identified and updated based on the operation and dependency.
+// when the row slides, the references in the formula should be updated accordingly. For example, if a row is inserted above row 3, all references to row 3 and below should be updated to row 4 and below.
 export const identifyFormula = (value: any, { idMap, ...props }: IdentifyProps) => {
   if (typeof value === 'string' || value instanceof String) {
     if (value.charAt(0) === '=') {

@@ -118,7 +118,6 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
       if (editingAnywhere) {
         writeCell(lastFocused?.value ?? '');
       }
-      dispatch(choose({ y: 1, x: startX }));
       dispatch(setEditingAddress(''));
       dispatch(setDragging(true));
 
@@ -234,7 +233,7 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
           {table.getLabel(col?.label, col?.labeler, x) ?? colId}
           {!prevention.hasOperation(col?.prevention, prevention.ColumnMenu) && (
             <button
-              className={`gs-column-menu-btn ${hasFilter ? 'gs-filtered' : ''} ${columnMenuState?.x === x ? 'gs-active' : ''}`}
+              className={`gs-menu-btn gs-column-menu-btn ${hasFilter ? 'gs-filtered' : ''} ${columnMenuState?.x === x ? 'gs-active' : ''}`}
               onMouseDown={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
@@ -254,13 +253,12 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
                 if (columnMenuState?.x === x) {
                   dispatch(setColumnMenu(null));
                 } else {
-                  const alreadySelected = between(
-                    { start: selectingZone.startX, end: selectingZone.endX },
-                    x,
-                  ) && selectingZone.startY === 1 && selectingZone.endY === table.getNumRows();
+                  const alreadySelected =
+                    between({ start: selectingZone.startX, end: selectingZone.endX }, x) &&
+                    selectingZone.startY === 1 &&
+                    selectingZone.endY === table.getNumRows();
                   if (!alreadySelected) {
                     dispatch(selectCols({ range: { start: x, end: x }, numRows: table.getNumRows() }));
-                    dispatch(choose({ y: 1, x }));
                   }
                   dispatch(setColumnMenu({ x, position: { y: rect.bottom, x: rect.left } }));
                 }

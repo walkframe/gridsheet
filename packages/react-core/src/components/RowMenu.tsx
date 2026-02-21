@@ -1,11 +1,6 @@
 import { type FC, useContext } from 'react';
 import { Context } from '../store';
-import {
-  setRowMenu,
-  insertRowsAbove,
-  insertRowsBelow,
-  removeRows,
-} from '../store/actions';
+import { setRowMenu, insertRowsAbove, insertRowsBelow, removeRows } from '../store/actions';
 import { Fixed } from './Fixed';
 import * as prevention from '../lib/operation';
 import { y2r } from '../lib/coords';
@@ -34,8 +29,7 @@ export const RowMenu: FC = () => {
   // Calculate the number of selected rows that include the current row
   const selRowStart = Math.min(selectingZone.startY, selectingZone.endY);
   const selRowEnd = Math.max(selectingZone.startY, selectingZone.endY);
-  const isFullRowSelection =
-    selectingZone.startX === 1 && selectingZone.endX === table.getNumCols();
+  const isFullRowSelection = selectingZone.startX === 1 && selectingZone.endX === table.getNumCols();
   const numSelectedRows =
     isFullRowSelection && between({ start: selectingZone.startY, end: selectingZone.endY }, y)
       ? selRowEnd - selRowStart + 1
@@ -59,22 +53,42 @@ export const RowMenu: FC = () => {
         return false;
       }}
     >
-      <div
-        className="gs-row-menu"
-        style={{ top: position.y, left: position.x }}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="gs-row-menu" style={{ top: position.y, left: position.x }} onClick={(e) => e.stopPropagation()}>
         <ul>
-          <li className="gs-enabled" onClick={async () => { await cutter({ store, dispatch }); dispatch(setRowMenu(null)); }}>
+          <li
+            className="gs-enabled"
+            onClick={async () => {
+              await cutter({ store, dispatch });
+              dispatch(setRowMenu(null));
+            }}
+          >
             <div className="gs-menu-name">Cut</div>
           </li>
-          <li className="gs-enabled" onClick={async () => { await copier({ store, dispatch }); dispatch(setRowMenu(null)); }}>
+          <li
+            className="gs-enabled"
+            onClick={async () => {
+              await copier({ store, dispatch });
+              dispatch(setRowMenu(null));
+            }}
+          >
             <div className="gs-menu-name">Copy</div>
           </li>
-          <li className="gs-enabled" onClick={async () => { await paster({ store, dispatch }, false); dispatch(setRowMenu(null)); }}>
+          <li
+            className="gs-enabled"
+            onClick={async () => {
+              await paster({ store, dispatch }, false);
+              dispatch(setRowMenu(null));
+            }}
+          >
             <div className="gs-menu-name">Paste</div>
           </li>
-          <li className="gs-enabled" onClick={async () => { await paster({ store, dispatch }, true); dispatch(setRowMenu(null)); }}>
+          <li
+            className="gs-enabled"
+            onClick={async () => {
+              await paster({ store, dispatch }, true);
+              dispatch(setRowMenu(null));
+            }}
+          >
             <div className="gs-menu-name">Paste only value</div>
           </li>
           <li className="gs-menu-divider" />
@@ -88,7 +102,9 @@ export const RowMenu: FC = () => {
               }
             }}
           >
-            <div className="gs-menu-name">Insert {numSelectedRows} row{numSelectedRows > 1 ? 's' : ''} above</div>
+            <div className="gs-menu-name">
+              Insert {numSelectedRows} row{numSelectedRows > 1 ? 's' : ''} above
+            </div>
           </li>
           <li
             className={insertBelowDisabled ? 'gs-disabled' : 'gs-enabled'}
@@ -100,7 +116,9 @@ export const RowMenu: FC = () => {
               }
             }}
           >
-            <div className="gs-menu-name">Insert {numSelectedRows} row{numSelectedRows > 1 ? 's' : ''} below</div>
+            <div className="gs-menu-name">
+              Insert {numSelectedRows} row{numSelectedRows > 1 ? 's' : ''} below
+            </div>
           </li>
           <li
             className={removeDisabled ? 'gs-disabled' : 'gs-enabled'}
@@ -112,7 +130,9 @@ export const RowMenu: FC = () => {
               }
             }}
           >
-            <div className="gs-menu-name">Remove {numSelectedRows} row{numSelectedRows > 1 ? 's' : ''}</div>
+            <div className="gs-menu-name">
+              Remove {numSelectedRows} row{numSelectedRows > 1 ? 's' : ''}
+            </div>
           </li>
         </ul>
       </div>

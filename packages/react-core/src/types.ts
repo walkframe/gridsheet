@@ -236,6 +236,9 @@ export type HistoryUpdateType = {
   partial: boolean;
 };
 
+export type MoveRelationKind = 'vacate' | 'overflow' | 'displace' | null;
+export type MoveRelations = [string, string, MoveRelationKind][];
+
 export type HistoryMoveType = {
   operation: 'MOVE';
   srcSheetId: number;
@@ -245,12 +248,7 @@ export type HistoryMoveType = {
   redoReflection?: StorePatchType;
   diffBefore: CellsByIdType;
   diffAfter: CellsByIdType;
-  src: AreaType;
-  dst: AreaType;
-  matrixFrom: IdMatrix;
-  matrixTo: IdMatrix;
-  matrixNew: IdMatrix;
-  lostRows: MatricesByAddress<Id>;
+  moveRelations: MoveRelations;
 };
 
 export type HistoryInsertRowsType = {
