@@ -1,7 +1,14 @@
 import { Table } from '../../lib/table';
 import type { PointType } from '../../types';
 import { Expression } from '../evaluator';
-import { hasPendingArg, buildAsyncCacheKey, handleAsyncResult, createPropagatedPending } from './__async';
+import {
+  hasPendingArg,
+  buildAsyncCacheKey,
+  getOrSaveAsyncCache,
+  createPropagatedPending,
+  getAsyncCache,
+  asyncCacheMiss,
+} from './__async';
 
 export type FunctionProps = {
   args: Expression[];
@@ -14,7 +21,7 @@ export class BaseFunction {
   public helpTexts = ["Function's description."];
   public helpArgs = [{ name: 'value1', description: '' }];
   /** Cache TTL in milliseconds. Override in subclass to set expiry. undefined = never expires. */
-  protected ttlMSec?: number;
+  protected ttlMilliseconds?: number;
   protected bareArgs: any[];
   protected table: Table;
   protected origin?: PointType;
@@ -26,6 +33,11 @@ export class BaseFunction {
   }
   protected validate() {}
 
+  private get isMainAsync(): boolean {
+    const mainDescriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(this), 'main');
+    return mainDescriptor?.value?.constructor?.name === 'AsyncFunction';
+  }
+
   public call() {
     this.validate();
 
@@ -34,16 +46,22 @@ export class BaseFunction {
       return createPropagatedPending();
     }
 
-    // @ts-expect-error main is not defined in BaseFunction
-    const result = this.main(...this.bareArgs);
-
-    // If main() returns a Promise (async function), handle it via the async cache
-    if (result instanceof Promise) {
+    // For async functions, build cache key and check cache before execution
+    if (this.isMainAsync) {
       const key = buildAsyncCacheKey(this.constructor.name, this.bareArgs);
-      return handleAsyncResult(result, this.table, this.origin!, key, this.ttlMSec);
+      const cachedResult = getAsyncCache(this.table, this.origin!, key);
+      if (cachedResult !== asyncCacheMiss) {
+        return cachedResult;
+      }
+
+      // @ts-expect-error main is not defined in BaseFunction
+      const result = this.main(...this.bareArgs);
+      return getOrSaveAsyncCache(result, this.table, this.origin!, key, this.ttlMilliseconds);
     }
 
-    return result;
+    // For sync functions, just call and return
+    // @ts-expect-error main is not defined in BaseFunction
+    return this.main(...this.bareArgs);
   }
 }
 

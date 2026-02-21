@@ -23,6 +23,8 @@ class SumDelayFunction extends BaseFunction {
   helpTexts = ['Returns the sum of values after a 2-second delay.'];
   helpArgs = [{ name: 'value1', description: 'Numbers to sum.' }];
 
+  ttlMilliseconds = 5000;
+
   protected validate() {
     const spreaded: number[] = [];
     this.bareArgs.forEach((arg) => {

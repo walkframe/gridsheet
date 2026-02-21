@@ -1,0 +1,87 @@
+# Migrating from v2 to v3
+
+This guide covers the breaking changes and migration steps needed when upgrading from GridSheet v2 to v3.
+
+## Overview of Changes
+
+v3.0.0 introduces async/await support for formulas and several breaking changes. The good news is that most of these changes are straightforward to adopt.
+
+## Breaking Changes
+
+### 1. CellType.system Property Rename
+
+**From v2:**
+```tsx
+const cell = table.getCellByPoint({ x: 0, y: 0 });
+if (cell?.system?.changedAt) {
+  console.log('Last changed at:', cell.system.changedAt);
+}
+```
+
+**To v3:**
+```tsx
+const cell = table.getCellByPoint({ x: 0, y: 0 });
+if (cell?.system?.changedTime) {
+  console.log('Last changed at:', cell.system.changedTime);
+}
+```
+
+**What Changed:**
+- `changedAt` property has been removed from `CellType.system`
+- `changedTime` property is now used to track the timestamp of the last change
+- This change provides consistency with the table's `changedTime` and `lastChangedTime` properties
+
+### 2. Table Public Methods
+
+Several table public methods have been refactored to support async operations. Review the [Table API Reference](../api-reference/table.mdx) for the complete and updated method signatures.
+
+### 3. Filter Operations
+
+Filter operations now properly apply to all sheet operations (delete, copy, move, paste). If your code relies on filters being ignored during these operations, you may need to adjust your logic.
+
+## New Features to Adopt
+
+### Async Formulas
+
+v3 introduces first-class support for async formulas. This is completely optional and backward compatible—all existing synchronous formulas continue to work.
+
+To create an async formula:
+
+```tsx
+import { BaseFunction } from '@gridsheet/react-core';
+
+class FetchWeather extends BaseFunction {
+  example = 'FETCH_WEATHER("Tokyo")';
+  helpTexts = ['Fetches weather data for a city'];
+  helpArgs = [{ name: 'city', description: 'City name' }];
+
+  async main(city: string) {
+    const response = await fetch(`https://api.weather.example.com/city=${city}`);
+    const data = await response.json();
+    return data.temperature;
+  }
+}
+```
+
+Async formulas are automatically awaited during evaluation, and filtering/sorting operations automatically wait for all async computations to complete.
+
+### Context Menus on Headers
+
+v3 enhances the context menu system. You can now open menus on row headers and the top-left corner area. Check the [API Reference](../api-reference/table.mdx) for implementation details.
+
+## Migration Checklist
+
+- [ ] Search codebase for `changedAt` and replace with `changedTime`
+- [ ] Review table method implementations and update signatures if needed
+- [ ] Test filter/sort operations, especially with async data
+- [ ] Consider implementing async formulas for external API integration
+- [ ] Update unit tests to reflect the new `changedTime` property
+- [ ] Run full test suite to ensure compatibility
+
+## Need Help?
+
+If you encounter issues during migration:
+
+1. Check the [Table API Reference](../api-reference/table.mdx) for updated method signatures
+2. Review [case11 example](../examples/case11.mdx) for async formula patterns
+3. Refer to the [Architecture Guide](../development/architecture.mdx) for technical details

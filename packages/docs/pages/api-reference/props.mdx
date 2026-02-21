@@ -87,7 +87,7 @@ Each cell can be configured with the following properties:
 | `style` | `CSSProperties` | CSS properties for appearance |
 | `justifyContent` | `CSSProperties['justifyContent']` | Horizontal alignment within the cell |
 | `alignItems` | `CSSProperties['alignItems']` | Vertical alignment within the cell |
-| `label` | `string` | Custom display text for column headers (only valid on column specifications, e.g., `A`, `B`) |
+| `label` | `string` | Fixed custom display text for column headers (columns only). Takes precedence over `labeler` if both are specified. |
 | `labeler` | `string` | Key of a labeler registered in the hub |
 | `width` | `Width` | Cell width in pixels |
 | `height` | `Height` | Cell height in pixels |

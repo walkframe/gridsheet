@@ -1,5 +1,8 @@
 {
+  "2to3": {
+    "title": "Migration from 2.x to 3.x"
+  },
   "1to2": {
     "title": "Migration from 1.x to 2.x"
   }
-} 
+}

@@ -1,0 +1,59 @@
+# Version 3.x.x
+
+The latest major version of GridSheet introducing comprehensive async/await support and enhanced filtering capabilities.
+
+## 3.0.0 - Major Release
+
+### 🚀 Async Function Support
+- **Async Formula Execution**: Full support for async/await patterns in custom formulas, enabling integration with external APIs and async operations
+- **Automatic Promise Resolution**: The framework automatically handles Promise-based results from async formulas
+- **Enhanced Type System**: Updated type definitions to accommodate async function declarations with full TypeScript support
+
+### 🎯 Filtering & Sorting Improvements
+- **Async-Aware Filtering**: Filtering operations now wait for all async computations to complete before applying filters
+- **Async-Aware Sorting**: Sorting operations now properly handle data containing async formulas
+- **Filter Reflection on Operations**: Fixed filter functionality to properly reflect in sheet operations including delete, copy, move, and paste (addresses issue #117)
+
+### 🎨 UI/UX Enhancements
+- **Context Menu Support**: Added handlers to open context menus on row headers and the top-left corner area of the spreadsheet
+- **Improved User Interaction**: Enhanced menu accessibility for better spreadsheet navigation and operations
+
+### 🔧 Technical Improvements
+- **Performance Optimizations**: Optimized async computation handling for responsive UI during long-running operations
+- **Comprehensive Testing**: Added extensive test coverage for async formula scenarios, including error handling and timeout cases
+- **Example Implementation**: Added case11 demonstrating async formula usage and patterns
+
+### Breaking Changes
+
+⚠️ **Important**: This version introduces breaking changes:
+
+#### Table Public Methods
+Several public methods on the table instance have been refactored to support async operations. Method signatures and return types may have been updated. Review the API documentation for updated specifications.
+
+#### CellType.system Changes
+The `CellType.system` type definition has been modified:
+- **Removed**: `changedAt` property
+- **Added**: `changedTime` property
+
+Update your code to use the new `changedTime` property when accessing cell system information.
+
+### How to Create an Async Formula
+
+Creating async formulas is straightforward. Simply make the `main()` method async:
+
+```tsx
+class MyAsyncFunction extends BaseFunction {
+  example = 'MY_FUNC("arg1")';
+  helpTexts = ['Fetches data asynchronously.'];
+  helpArgs = [{ name: 'key', description: 'The key to fetch.' }];
+
+  // Just make main() async — the framework handles the rest
+  async main(key: string) {
+    const res = await fetch(`https://api.example.com/${key}`);
+    const data = await res.json();
+    return data.value;
+  }
+}
+```
+
+The async function will automatically be awaited during formula evaluation.

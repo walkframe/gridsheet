@@ -1,4 +1,7 @@
 {
+  "3.x.x": {
+    "title": "GridSheet 3.x.x"
+  },
   "2.x.x": {
     "title": "GridSheet 2.x.x"
   },
@@ -8,4 +11,4 @@
   "migration-guide": {
     "title": "Migration Guide"
   }
-} 
+}

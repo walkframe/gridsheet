@@ -1,4 +1,4 @@
-import { Pending } from '../../constants';
+import { Pending, Special } from '../../constants';
 import type { Wire } from '../../lib/hub';
 import type { CellType, PointType } from '../../types';
 
@@ -18,6 +18,13 @@ export class AsyncFormulaError {
     this.error = error;
   }
 }
+
+/**
+ * Sentinel value to distinguish cache miss from user-returned undefined/null.
+ * Since user functions can return undefined or null, we need a special marker
+ * to indicate "no cache entry found" vs "cache entry is undefined".
+ */
+export const asyncCacheMiss = new Special('asyncCacheMiss');
 
 /** Returns true if any element of `args` is a Pending sentinel. */
 export const hasPendingArg = (args: any[]): boolean => {
@@ -71,25 +78,17 @@ export const buildAsyncCacheKey = (funcName: string, bareArgs: any[]): string =>
 };
 
 /**
- * Handle an async (Promise) result returned by BaseFunction.main().
+ * Try to retrieve a cached or pending async result for the given cache key.
  *
- * Cache is stored per-cell in cell.system.asyncCache.
- * In-flight tracking uses Wire.asyncPending (keyed by cell ID).
- *
- * Flow:
- * 1. If cell has asyncCache and the key matches (inputs unchanged) and not expired → return cached value
- * 2. If there is already an in-flight promise for this cell → return its Pending
- * 3. Otherwise start the async work, return a new Pending, and on completion
- *    write the result into cell.system.asyncCache and trigger a re-render.
- *
- * @param ttlMSec - Cache time-to-live in **milliseconds**. undefined = never expires.
+ * Returns:
+ * - Cached value if present, valid, and not expired
+ * - Pending if there is an in-flight promise for this cell
+ * - asyncCacheMiss if no cache/pending exists (distinguishes from user-returned undefined/null)
  */
-export const handleAsyncResult = (
-  promise: Promise<any>,
+export const getAsyncCache = (
   table: { wire: Wire; getId: (p: PointType) => string },
   origin: PointType,
   key: string,
-  ttlMSec?: number,
 ): any => {
   const cellId = table.getId(origin);
   const wire = table.wire;
@@ -115,9 +114,35 @@ export const handleAsyncResult = (
   if (wire.asyncPending.has(cellId)) {
     return wire.asyncPending.get(cellId)!;
   }
+  return asyncCacheMiss;
+};
+
+/**
+ * Handle an async (Promise) result returned by BaseFunction.main().
+ *
+ * Cache is stored per-cell in cell.system.asyncCache.
+ * In-flight tracking uses Wire.asyncPending (keyed by cell ID).
+ *
+ * Flow:
+ * 1. If cell has asyncCache and the key matches (inputs unchanged) and not expired → return cached value
+ * 2. If there is already an in-flight promise for this cell → return its Pending
+ * 3. Otherwise start the async work, return a new Pending, and on completion
+ *    write the result into cell.system.asyncCache and trigger a re-render.
+ *
+ * @param ttlMilliseconds - Cache time-to-live in **milliseconds**. undefined = never expires.
+ */
+export const getOrSaveAsyncCache = (
+  promise: Promise<any>,
+  table: { wire: Wire; getId: (p: PointType) => string },
+  origin: PointType,
+  key: string,
+  ttlMilliseconds?: number,
+): any => {
+  const cellId = table.getId(origin);
+  const wire = table.wire;
 
   // Compute expireTime from ttl (ms)
-  const expireTime = ttlMSec != null ? Date.now() + ttlMSec : undefined;
+  const expireTime = ttlMilliseconds != null ? Date.now() + ttlMilliseconds : undefined;
 
   // Start the async computation
   const pending = new Pending(promise);
