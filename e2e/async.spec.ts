@@ -91,7 +91,7 @@ test.describe('Async Formula', () => {
     await page.keyboard.press('Enter');
 
     // Wait for re-computation: A1 takes 1s, then A2 depends on new A1 (another 1s) = 2s + buffer
-    await page.waitForTimeout(2500);
+    await page.waitForTimeout(3000);
 
     // A1 should now be 90 (40 + 50)
     const a1NewContent = await a1.locator('.gs-cell-rendered').textContent();

@@ -648,7 +648,7 @@ export class Table implements UserTable {
   public identifyFormula() {
     this.idsToBeIdentified.forEach((id) => {
       const cell = this.wire.data[id];
-      if (cell?.system?.sheetId == null) {
+      if (cell?._sys?.sheetId == null) {
         return;
       }
       cell.value = identifyFormula(cell?.value, {
@@ -761,7 +761,7 @@ export class Table implements UserTable {
           delete stacked.label;
           delete stacked.labeler;
         }
-        stacked.system = { id, changedTime, dependents: new Set(), sheetId: this.sheetId };
+        stacked._sys = { id, changedTime, dependents: new Set(), sheetId: this.sheetId };
         this.wire.data[id] = stacked;
       }
     }
@@ -792,10 +792,10 @@ export class Table implements UserTable {
     const rowBottomCell = this.getCellByPoint({ y: bottom, x: 0 }, 'SYSTEM');
     const rowTopCell = this.getCellByPoint({ y: t, x: 0 }, 'SYSTEM');
 
-    const rw = colRightCell?.system?.offsetLeft ?? 0;
-    const lw = colLeftCell?.system?.offsetLeft ?? 0;
-    const rh = rowBottomCell?.system?.offsetTop ?? 0;
-    const th = rowTopCell?.system?.offsetTop ?? 0;
+    const rw = colRightCell?._sys?.offsetLeft ?? 0;
+    const lw = colLeftCell?._sys?.offsetLeft ?? 0;
+    const rh = rowBottomCell?._sys?.offsetTop ?? 0;
+    const th = rowTopCell?._sys?.offsetTop ?? 0;
 
     const width = Math.max(0, rw - lw);
     const height = Math.max(0, rh - th);
@@ -813,8 +813,8 @@ export class Table implements UserTable {
     for (let x = 1; x <= numCols; x++) {
       const cell = this.getCellByPoint({ y: 0, x }, 'SYSTEM');
       const w = cell?.width || DEFAULT_WIDTH;
-      if (cell?.system) {
-        cell.system.offsetLeft = headerW + accW;
+      if (cell?._sys) {
+        cell._sys.offsetLeft = headerW + accW;
       }
       accW += w;
     }
@@ -826,8 +826,8 @@ export class Table implements UserTable {
     for (let y = 1; y <= numRows; y++) {
       const cell = this.getCellByPoint({ y, x: 0 }, 'SYSTEM');
       const h = cell?.height || DEFAULT_HEIGHT;
-      if (cell?.system) {
-        cell.system.offsetTop = headerH + accH;
+      if (cell?._sys) {
+        cell._sys.offsetTop = headerH + accH;
       }
       if (!cell?.filtered) {
         accH += h;
@@ -1290,10 +1290,10 @@ export class Table implements UserTable {
   }
 
   private setChangedTime(cell?: CellType, changedTime?: number) {
-    if (cell?.system == null) {
+    if (cell?._sys == null) {
       return null;
     }
-    cell.system!.changedTime = changedTime ?? Date.now();
+    cell._sys!.changedTime = changedTime ?? Date.now();
     return cell;
   }
 
@@ -1608,11 +1608,11 @@ export class Table implements UserTable {
           srcTable.wire.data[fromId] = {
             value: null,
             ...patch,
-            system: {
+            _sys: {
               id: fromId,
               sheetId: srcTable.sheetId,
               changedTime: Date.now(),
-              dependents: toCell?.system?.dependents ?? new Set(),
+              dependents: toCell?._sys?.dependents ?? new Set(),
             },
           };
           preserver.map[toId] = fromId;
@@ -1631,11 +1631,11 @@ export class Table implements UserTable {
             srcTable.wire.data[fromId] = {
               ...fromCell,
               ...patch,
-              system: {
+              _sys: {
                 id: fromId,
                 sheetId: srcTable.sheetId,
                 changedTime: Date.now(),
-                dependents: fromCell?.system?.dependents ?? new Set(),
+                dependents: fromCell?._sys?.dependents ?? new Set(),
               },
             };
           }
@@ -1833,7 +1833,7 @@ export class Table implements UserTable {
         original,
         operation: op,
       });
-      patch = { ...p, system: { ...original.system!, changedTime } };
+      patch = { ...p, system: { ...original._sys!, changedTime } };
       if (partial) {
         diffAfter[id] = this.wire.data[id] = { ...original, ...patch };
       } else {
@@ -2039,7 +2039,7 @@ export class Table implements UserTable {
         const copied = this.copyCellLayout(cell);
         this.wire.data[id] = {
           ...copied,
-          system: {
+          _sys: {
             id,
             sheetId: this.sheetId,
             changedTime,
@@ -2193,7 +2193,7 @@ export class Table implements UserTable {
         this.idMatrix[i].splice(x, 0, id);
         this.wire.data[id] = {
           ...copied,
-          system: {
+          _sys: {
             id,
             sheetId: this.sheetId,
             changedTime,

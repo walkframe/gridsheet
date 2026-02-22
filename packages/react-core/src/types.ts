@@ -96,7 +96,7 @@ export type CellType<T = any, Custom = any> = {
   custom?: Custom;
   disableFormula?: boolean;
   prevention?: OperationType;
-  system?: System;
+  _sys?: System;
   /** Cached result from an async formula. Stored directly on the cell for serializability. */
   asyncCache?: AsyncCache;
   /** Filter configuration. Set on col-header cells (y=0). */

@@ -7,8 +7,8 @@ export const getCellRectPositions = (table: Table, { y, x }: PointType) => {
   // Use System.offsetLeft / offsetTop stored on header cells for O(1) lookup
   const colCell = table.getCellByPoint({ y: 0, x }, 'SYSTEM');
   const rowCell = table.getCellByPoint({ y, x: 0 }, 'SYSTEM');
-  const left = colCell?.system?.offsetLeft ?? 0;
-  const top = rowCell?.system?.offsetTop ?? 0;
+  const left = colCell?._sys?.offsetLeft ?? 0;
+  const top = rowCell?._sys?.offsetTop ?? 0;
   const w = colCell?.width || DEFAULT_WIDTH;
   const h = rowCell?.filtered ? 0 : rowCell?.height || DEFAULT_HEIGHT;
   return {

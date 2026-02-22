@@ -117,8 +117,8 @@ export class Wire {
 
   public getSystem(id: Id, table: Table): System {
     const cell = this.data[id];
-    if (cell?.system) {
-      return cell.system;
+    if (cell?._sys) {
+      return cell._sys;
     }
     return {
       id,

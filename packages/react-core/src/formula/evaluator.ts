@@ -112,7 +112,7 @@ export class RefEntity extends Entity<string> {
       return this.value;
     }
     const system = table.wire.getSystem(id, table);
-    table.wire.data[id]!.system = system;
+    table.wire.data[id]!._sys = system;
     system.dependents.add(dependency);
     return `#${parsed.table.sheetId}!${formula}`;
   }
@@ -155,7 +155,7 @@ export class RangeEntity extends Entity<string> {
         return this.value;
       }
       const system = table.wire.getSystem(id, table);
-      table.wire.data[id]!.system = system;
+      table.wire.data[id]!._sys = system;
       system.dependents.add(dependency);
       formulas.push(formula!);
     }
@@ -207,7 +207,7 @@ export class IdEntity extends Entity<string> {
     if (dependency) {
       ids.forEach((id) => {
         const system = table.wire.getSystem(id, table);
-        table.wire.data[id]!.system = system;
+        table.wire.data[id]!._sys = system;
         system.dependents.add(dependency);
       });
     }
@@ -265,7 +265,7 @@ export class IdRangeEntity extends Entity<string> {
     if (dependency) {
       ids.forEach((id) => {
         const system = table.wire.getSystem(id, table);
-        table.wire.data[id]!.system = system;
+        table.wire.data[id]!._sys = system;
         system.dependents.add(dependency);
       });
     }

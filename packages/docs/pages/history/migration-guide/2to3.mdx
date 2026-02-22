@@ -21,13 +21,13 @@ if (cell?.system?.changedAt) {
 **To v3:**
 ```tsx
 const cell = table.getCellByPoint({ x: 0, y: 0 });
-if (cell?.system?.changedTime) {
-  console.log('Last changed at:', cell.system.changedTime);
+if (cell?._sys?.changedTime) {
+  console.log('Last changed at:', cell._sys.changedTime);
 }
 ```
 
 **What Changed:**
-- `changedAt` property has been removed from `CellType.system`
+- `changedAt` property has been removed from `CellType._sys`
 - `changedTime` property is now used to track the timestamp of the last change
 - This change provides consistency with the table's `changedTime` and `lastChangedTime` properties
 
