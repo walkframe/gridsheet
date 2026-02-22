@@ -9,10 +9,11 @@ import { Resizer } from './Resizer';
 import { Emitter } from './Emitter';
 import { ContextMenu, defaultContextMenuItems } from './ContextMenu';
 import { ColumnMenu } from './ColumnMenu';
+import { RowMenu } from './RowMenu';
 import { Table } from '../lib/table';
 import { Tabular } from './Tabular';
-import { getMaxSizesFromCells } from '../lib/structs';
-import { x2c, y2r } from '../lib/converters';
+import { getMaxSizesFromCells } from '../lib/spatial';
+import { x2c, y2r } from '../lib/coords';
 import { embedStyle } from '../styles/embedder';
 import { FormulaBar } from './FormulaBar';
 import { SearchBar } from './SearchBar';
@@ -110,6 +111,7 @@ export function GridSheet({
       resizingPositionY: [-1, -1, -1],
       resizingPositionX: [-1, -1, -1],
       columnMenuState: null,
+      rowMenuState: null,
       minNumRows: 1,
       maxNumRows: -1,
       minNumCols: 1,
@@ -181,6 +183,7 @@ export function GridSheet({
           <StoreObserver {...{ ...options, sheetHeight, sheetWidth, sheetName, connector }} />
           <ContextMenu />
           <ColumnMenu />
+          <RowMenu />
           <Resizer />
           <Emitter />
         </div>

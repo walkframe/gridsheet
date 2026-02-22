@@ -1,6 +1,6 @@
 import type { StoreType, AreaType, PointType } from '../types';
 
-import { zoneToArea } from './structs';
+import { zoneToArea } from './spatial';
 import type { Table } from './table';
 
 export const clip = (store: StoreType) => {
@@ -46,6 +46,9 @@ export const clip = (store: StoreType) => {
 const table2tsv = (table: Table): string => {
   const lines: string[] = [];
   for (let y = table.top; y <= table.bottom; y++) {
+    if (table.isRowFiltered(y)) {
+      continue;
+    }
     const cols: string[] = [];
     for (let x = table.left; x <= table.right; x++) {
       const point: PointType = { y, x };
@@ -65,6 +68,9 @@ const table2tsv = (table: Table): string => {
 const table2html = (table: Table): string => {
   const lines: string[] = [];
   for (let y = table.top; y <= table.bottom; y++) {
+    if (table.isRowFiltered(y)) {
+      continue;
+    }
     const cols: string[] = [];
     for (let x = table.left; x <= table.right; x++) {
       const point: PointType = { y, x };

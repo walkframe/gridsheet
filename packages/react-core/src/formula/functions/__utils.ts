@@ -2,7 +2,7 @@ import { stripTable } from '../solver';
 import { Table } from '../../lib/table';
 import { FormulaError } from '../evaluator';
 import dayjs from 'dayjs';
-import { FULLDATE_FORMAT_UTC } from '../../constants';
+import { FULLDATE_FORMAT_UTC, Pending } from '../../constants';
 
 export const gt = (left: any, right: any): boolean => {
   if (typeof left === 'string' || typeof right === 'string') {
@@ -54,6 +54,9 @@ export type EnsureBooleanOptions = {
 
 export const ensureNumber = (value: any, options?: EnsureNumberOptions): number => {
   const { alternative, ignore } = options || {};
+  if (value instanceof Pending) {
+    return value as any;
+  }
   if (typeof value === 'undefined' && typeof alternative !== 'undefined') {
     return alternative;
   }
@@ -87,6 +90,9 @@ export const ensureNumber = (value: any, options?: EnsureNumberOptions): number 
 };
 
 export const ensureString = (value: any): string => {
+  if (value instanceof Pending) {
+    return value as any;
+  }
   if (value === 0) {
     return '0';
   }
@@ -109,6 +115,9 @@ export const ensureString = (value: any): string => {
 
 export const ensureBoolean = (value: any, options?: EnsureBooleanOptions): boolean => {
   const { alternative, ignore } = options ?? {};
+  if (value instanceof Pending) {
+    return value as any;
+  }
   if (typeof value === 'undefined' && typeof alternative !== 'undefined') {
     return alternative;
   }

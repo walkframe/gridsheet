@@ -1,4 +1,4 @@
-import { DEFAULT_HISTORY_LIMIT, RESET_ZONE } from '../constants';
+import { DEFAULT_HISTORY_LIMIT, Pending, RESET_ZONE } from '../constants';
 
 import type {
   HistoryType,
@@ -34,7 +34,6 @@ export type WireProps = {
   policies?: { [policyName: string]: PolicyType | null };
   onSave?: FeedbackType;
   onChange?: FeedbackType;
-  onEdit?: (args: { table: UserTable }) => void;
   onRemoveRows?: (args: { table: UserTable; ys: number[] }) => void;
   onRemoveCols?: (args: { table: UserTable; xs: number[] }) => void;
   onInsertRows?: (args: { table: UserTable; y: number; numRows: number }) => void;
@@ -59,6 +58,8 @@ export class Wire {
   paletteBySheetName: { [sheetName: string]: RefPaletteType } = {};
   lastFocused: HTMLTextAreaElement | null = null;
   solvedCaches: Map<Id, any> = new Map();
+  /** Currently in-flight async formula Pending sentinels (keyed by cell ID). */
+  asyncPending: Map<string, Pending> = new Map();
   copyingSheetId: number = 0;
   copyingZone: ZoneType = RESET_ZONE;
   cutting: boolean = false;
@@ -75,7 +76,6 @@ export class Wire {
   policies: { [policyName: string]: PolicyType | null } = {};
   onSave?: FeedbackType;
   onChange?: FeedbackType;
-  onEdit?: (args: { table: UserTable }) => void;
   onRemoveRows?: (args: { table: UserTable; ys: number[] }) => void;
   onRemoveCols?: (args: { table: UserTable; xs: number[] }) => void;
   onInsertRows?: (args: { table: UserTable; y: number; numRows: number }) => void;
@@ -117,13 +117,13 @@ export class Wire {
 
   public getSystem(id: Id, table: Table): System {
     const cell = this.data[id];
-    if (cell?.system) {
-      return cell.system;
+    if (cell?._sys) {
+      return cell._sys;
     }
     return {
       id,
       sheetId: table.sheetId,
-      changedAt: new Date(),
+      changedTime: Date.now(),
       dependents: new Set(),
     };
   }
@@ -137,7 +137,6 @@ export class Wire {
     policies = {},
     onSave,
     onChange,
-    onEdit,
     onRemoveRows,
     onRemoveCols,
     onInsertRows,
@@ -159,7 +158,6 @@ export class Wire {
     this.policies = policies;
     this.onSave = onSave;
     this.onChange = onChange;
-    this.onEdit = onEdit;
     this.onRemoveRows = onRemoveRows;
     this.onRemoveCols = onRemoveCols;
     this.onInsertRows = onInsertRows;

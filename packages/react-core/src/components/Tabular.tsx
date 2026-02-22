@@ -6,11 +6,11 @@ import { HeaderCellLeft } from './HeaderCellLeft';
 import { CellStateOverlay } from './CellStateOverlay';
 
 import { Context } from '../store';
-import { choose, select } from '../store/actions';
+import { choose, select, setContextMenuPosition } from '../store/actions';
 
 import type { RefPaletteType, Virtualization } from '../types';
 import { virtualize } from '../lib/virtualization';
-import { p2a, stripAddressAbsolute } from '../lib/converters';
+import { p2a, stripAddressAbsolute } from '../lib/coords';
 import { Lexer, stripSheetName } from '../formula/evaluator';
 import { ScrollHandle } from './ScrollHandle';
 
@@ -28,6 +28,7 @@ export const Tabular = () => {
     inputting,
     leftHeaderSelecting,
     topHeaderSelecting,
+    contextMenuItems,
   } = store;
   const table = tableReactive.current;
 
@@ -166,6 +167,32 @@ export const Tabular = () => {
                       horizontal={leftHeaderSelecting ? 0 : -1}
                       vertical={topHeaderSelecting ? 0 : -1}
                     />
+                    {contextMenuItems.length > 0 && (
+                      <button
+                        className="gs-menu-btn gs-corner-menu-btn"
+                        title="Menu"
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          (e.currentTarget as HTMLElement).dataset.pressX = String(e.clientX);
+                          (e.currentTarget as HTMLElement).dataset.pressY = String(e.clientY);
+                        }}
+                        onMouseUp={(e) => {
+                          e.stopPropagation();
+                          const btn = e.currentTarget as HTMLElement;
+                          const pressX = Number(btn.dataset.pressX ?? e.clientX);
+                          const pressY = Number(btn.dataset.pressY ?? e.clientY);
+                          const moved = Math.abs(e.clientX - pressX) > 4 || Math.abs(e.clientY - pressY) > 4;
+                          if (moved) {
+                            return;
+                          }
+                          const rect = btn.getBoundingClientRect();
+                          dispatch(setContextMenuPosition({ y: rect.bottom, x: rect.left }));
+                        }}
+                      >
+                        ⋮
+                      </button>
+                    )}
                   </div>
                 </th>
                 <th

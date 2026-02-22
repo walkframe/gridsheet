@@ -39,10 +39,19 @@ export type FeedbackType = (args: { table: UserTable; points?: CursorStateType }
 export type ModeType = 'light' | 'dark';
 export type HeadersType = 'both' | 'vertical' | 'horizontal' | 'none';
 
+export type AsyncCache = {
+  /** Cached result value from the async computation. */
+  value: any;
+  /** Cache key derived from function name + arguments. Used to detect when inputs change. */
+  key: string;
+  /** Absolute timestamp (ms since epoch) at which the cache expires. undefined means cache never expires. */
+  expireTime?: number;
+};
+
 export type System = {
   id: string;
   sheetId: number;
-  changedAt: Date;
+  changedTime: number;
   dependents: Set<string>;
   /** Cumulative top offset (px) from table origin. Set on row-header cells (x=0). */
   offsetTop?: number;
@@ -87,7 +96,9 @@ export type CellType<T = any, Custom = any> = {
   custom?: Custom;
   disableFormula?: boolean;
   prevention?: OperationType;
-  system?: System;
+  _sys?: System;
+  /** Cached result from an async formula. Stored directly on the cell for serializability. */
+  asyncCache?: AsyncCache;
   /** Filter configuration. Set on col-header cells (y=0). */
   filter?: FilterConfig;
   /** Whether this row is hidden by a filter. Set on row-header cells (x=0). */
@@ -167,6 +178,7 @@ export type StoreType = {
   resizingPositionY: [Y, Y, Y]; // indexY, startY, endY
   resizingPositionX: [X, X, X]; // indexX, startX, endX
   columnMenuState: { x: number; position: PositionType } | null;
+  rowMenuState: { y: number; position: PositionType } | null;
 };
 
 export type Manager<T> = {
@@ -224,6 +236,9 @@ export type HistoryUpdateType = {
   partial: boolean;
 };
 
+export type MoveRelationKind = 'vacate' | 'overflow' | 'displace' | null;
+export type MoveRelations = [string, string, MoveRelationKind][];
+
 export type HistoryMoveType = {
   operation: 'MOVE';
   srcSheetId: number;
@@ -233,12 +248,7 @@ export type HistoryMoveType = {
   redoReflection?: StorePatchType;
   diffBefore: CellsByIdType;
   diffAfter: CellsByIdType;
-  src: AreaType;
-  dst: AreaType;
-  matrixFrom: IdMatrix;
-  matrixTo: IdMatrix;
-  matrixNew: IdMatrix;
-  lostRows: MatricesByAddress<Id>;
+  moveRelations: MoveRelations;
 };
 
 export type HistoryInsertRowsType = {
@@ -302,10 +312,8 @@ export type HistorySortRowsType = {
   applyed: boolean;
   undoReflection?: StorePatchType;
   redoReflection?: StorePatchType;
-  /** idMatrix data rows before sort (index 0 = row 1) */
-  rowsBefore: IdMatrix;
-  /** idMatrix data rows after sort */
-  rowsAfter: IdMatrix;
+  /** Mapping from original row index to new row index after sort */
+  sortedRowMapping: { [beforeY: number]: number };
 };
 
 export type HistoryType =

@@ -1,5 +1,5 @@
 import type { ContextMenuProps, FilterConfig, RawCellType } from '../types';
-import { areaToZone, zoneShape, zoneToArea } from '../lib/structs';
+import { areaToZone, zoneShape, zoneToArea } from '../lib/spatial';
 import {
   copy,
   cut,
@@ -14,7 +14,6 @@ import {
   removeCols,
   sortRows,
   filterRows,
-  clearFilterRows,
 } from './actions';
 import { clip } from '../lib/clipboard';
 import { parseHTML, parseText } from '../lib/paste';
@@ -120,22 +119,34 @@ export const colsRemover = async ({ store, dispatch }: ContextMenuProps) => {
 };
 
 export const rowsSorterAsc = async ({ store, dispatch }: ContextMenuProps, x: number) => {
+  const table = store.tableReactive.current;
+  if (table && (table.hasPendingCells() || table.wire.asyncPending.size > 0)) {
+    await table.waitForPending();
+  }
   dispatch(sortRows({ x, direction: 'asc' }));
   store.editorRef.current?.focus();
 };
 
 export const rowsSorterDesc = async ({ store, dispatch }: ContextMenuProps, x: number) => {
+  const table = store.tableReactive.current;
+  if (table && (table.hasPendingCells() || table.wire.asyncPending.size > 0)) {
+    await table.waitForPending();
+  }
   dispatch(sortRows({ x, direction: 'desc' }));
   store.editorRef.current?.focus();
 };
 
 export const rowsFilterer = async ({ store, dispatch }: ContextMenuProps, x: number, filter: FilterConfig) => {
+  const table = store.tableReactive.current;
+  if (table && (table.hasPendingCells() || table.wire.asyncPending.size > 0)) {
+    await table.waitForPending();
+  }
   dispatch(filterRows({ x, filter }));
   store.editorRef.current?.focus();
 };
 
 export const rowsFilterClearer = async ({ store, dispatch }: ContextMenuProps, x?: number) => {
-  dispatch(clearFilterRows({ x }));
+  dispatch(filterRows({ x }));
   store.editorRef.current?.focus();
 };
 

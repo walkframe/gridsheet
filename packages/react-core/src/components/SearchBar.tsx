@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef, useCallback } from 'react';
 
-import { a2p } from '../lib/converters';
+import { a2p } from '../lib/coords';
 
 import { Context } from '../store';
 import { setSearchQuery, search, setSearchCaseSensitive } from '../store/actions';

@@ -1,4 +1,4 @@
-import { a2p, x2c, y2r } from '../lib/converters';
+import { a2p, x2c, y2r } from '../lib/coords';
 import { Table } from '../lib/table';
 import { Address, PointType, StoreType } from '../types';
 

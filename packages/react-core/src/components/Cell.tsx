@@ -1,6 +1,6 @@
 import { useContext, useRef, useCallback, useEffect, memo, useMemo } from 'react';
-import { x2c, y2r } from '../lib/converters';
-import { zoneToArea, among, areaToRange } from '../lib/structs';
+import { x2c, y2r } from '../lib/coords';
+import { zoneToArea, among, areaToRange } from '../lib/spatial';
 import {
   choose,
   select,
@@ -17,6 +17,7 @@ import {
 
 import { Context } from '../store';
 import { FormulaError } from '../formula/evaluator';
+import { Pending } from '../constants';
 import { insertRef, isRefInsertable } from '../lib/input';
 import { isXSheetFocused } from '../store/helpers';
 import type { FC, RefObject } from 'react';
@@ -111,6 +112,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
     }
     // TODO: debug flag
   }
+  const isPendingCell = table.getSolvedCache({ y, x }) instanceof Pending;
   const input = editorRef.current;
 
   const editingAnywhere = !!(table.wire.editingAddress || editingAddress);
@@ -311,7 +313,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
       data-address={address}
       className={`gs-cell ${among(selectingArea, { y, x }) ? 'gs-selecting' : ''} ${pointed ? 'gs-choosing' : ''} ${
         editing ? 'gs-editing' : ''
-      }`}
+      } ${isPendingCell ? 'gs-pending' : ''}`}
       style={{
         ...cell?.style,
       }}

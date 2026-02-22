@@ -1,6 +1,6 @@
 import type { FC, KeyboardEvent } from 'react';
 import { useContext, useEffect, useState, useCallback, memo } from 'react';
-import { x2c, y2r } from '../lib/converters';
+import { x2c, y2r } from '../lib/coords';
 import { clip } from '../lib/clipboard';
 import {
   clear,
@@ -22,7 +22,7 @@ import {
 } from '../store/actions';
 
 import { Context } from '../store';
-import { areaToZone, zoneToArea } from '../lib/structs';
+import { areaToZone, zoneToArea } from '../lib/spatial';
 import * as prevention from '../lib/operation';
 import { expandInput, insertTextAtCursor, isRefInsertable, resetInput } from '../lib/input';
 import { Lexer } from '../formula/evaluator';
@@ -261,6 +261,13 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
           return false;
 
         case 'Backspace': // BACKSPACE
+          if (!editing) {
+            dispatch(clear(null));
+            dispatch(setInputting(''));
+            return false;
+          }
+          break;
+        case 'Delete': // DELETE
           if (!editing) {
             dispatch(clear(null));
             dispatch(setInputting(''));

@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { useContext, useCallback, memo, useRef } from 'react';
-import { x2c } from '../lib/converters';
-import { between, zoneToArea } from '../lib/structs';
+import { x2c } from '../lib/coords';
+import { between, zoneToArea } from '../lib/spatial';
 import { Context } from '../store';
 import {
   choose,
@@ -118,7 +118,6 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
       if (editingAnywhere) {
         writeCell(lastFocused?.value ?? '');
       }
-      dispatch(choose({ y: 1, x: startX }));
       dispatch(setEditingAddress(''));
       dispatch(setDragging(true));
 
@@ -234,14 +233,33 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
           {table.getLabel(col?.label, col?.labeler, x) ?? colId}
           {!prevention.hasOperation(col?.prevention, prevention.ColumnMenu) && (
             <button
-              className={`gs-column-menu-btn ${hasFilter ? 'gs-filtered' : ''} ${columnMenuState?.x === x ? 'gs-active' : ''}`}
+              className={`gs-menu-btn gs-column-menu-btn ${hasFilter ? 'gs-filtered' : ''} ${columnMenuState?.x === x ? 'gs-active' : ''}`}
               onMouseDown={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                const rect = (e.target as HTMLElement).getBoundingClientRect();
+                (e.currentTarget as HTMLElement).dataset.pressX = String(e.clientX);
+                (e.currentTarget as HTMLElement).dataset.pressY = String(e.clientY);
+              }}
+              onMouseUp={(e) => {
+                e.stopPropagation();
+                const btn = e.currentTarget as HTMLElement;
+                const pressX = Number(btn.dataset.pressX ?? e.clientX);
+                const pressY = Number(btn.dataset.pressY ?? e.clientY);
+                const moved = Math.abs(e.clientX - pressX) > 4 || Math.abs(e.clientY - pressY) > 4;
+                if (moved) {
+                  return; // was a drag, ignore
+                }
+                const rect = btn.getBoundingClientRect();
                 if (columnMenuState?.x === x) {
                   dispatch(setColumnMenu(null));
                 } else {
+                  const alreadySelected =
+                    between({ start: selectingZone.startX, end: selectingZone.endX }, x) &&
+                    selectingZone.startY === 1 &&
+                    selectingZone.endY === table.getNumRows();
+                  if (!alreadySelected) {
+                    dispatch(selectCols({ range: { start: x, end: x }, numRows: table.getNumRows() }));
+                  }
                   dispatch(setColumnMenu({ x, position: { y: rect.bottom, x: rect.left } }));
                 }
               }}

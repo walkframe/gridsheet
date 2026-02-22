@@ -28,5 +28,8 @@
   },
   "case10": {
     "title": "Case 10: Project Management with Event Handlers"
+  },
+  "case11": {
+    "title": "Case 11: GitHub Repo Comparison (Async)"
   }
 } 

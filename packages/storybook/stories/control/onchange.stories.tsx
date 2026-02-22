@@ -59,13 +59,9 @@ const SheetOnChangeComponent: React.FC = () => {
     onChange: ({ table, points }) => {
       const tsv = convertToTSV(table, evaluates);
       setCsvData(tsv);
-      const histories = table.getHistories();
-      setHistories(histories);
-      const h = histories[histories.length - 1];
-      if (h?.operation === 'UPDATE') {
-        console.log('histories', table.__raw__.getAddressesByIds(h.diffAfter));
-      }
-      console.log('matrix', table.getFieldMatrix({}));
+      setHistories(table.getHistories());
+      const changed = table.getCellObject({ addresses: table.getLastChangedAddresses() });
+      console.log('changed', changed);
     },
   });
   React.useEffect(() => {

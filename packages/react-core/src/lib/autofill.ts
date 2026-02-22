@@ -1,8 +1,8 @@
 import dayjs from 'dayjs';
 import type { AreaType, CellsByAddressType, CellType, PointType, StoreType } from '../types';
 import { Table } from './table';
-import { areaShape, areaToZone, complementSelectingArea, concatAreas, zoneToArea } from './structs';
-import { p2a } from './converters';
+import { areaShape, areaToZone, complementSelectingArea, concatAreas, zoneToArea } from './spatial';
+import { p2a } from './coords';
 import { identifyFormula } from '../formula/evaluator';
 import { TimeDelta } from './time';
 import { CSSProperties } from 'react';
@@ -40,7 +40,7 @@ export class Autofill {
 
   public get applied(): Table {
     const [orientation, sign] = DirectionMapping[this.direction];
-    const matrix = this.table.getMatrix({ area: this.src, refEvaluation: 'SYSTEM' });
+    const matrix = this.table.getCellMatrix({ area: this.src, refEvaluation: 'SYSTEM' });
     const srcShape = areaShape({ ...this.src, base: 1 });
     const dstShape = areaShape({ ...this.dst, base: 1 });
 

@@ -1,0 +1,305 @@
+# Formula System
+
+GridSheet supports a comprehensive formula system with both synchronous and asynchronous function execution. This guide covers how to create, use, and manage custom formulas.
+
+## Overview
+
+The formula system in GridSheet is built on a flexible architecture that allows developers to:
+- Create custom formula functions
+- Execute synchronous and asynchronous operations
+- Integrate external APIs and data sources
+- Define custom validation and error handling
+- Provide help text and documentation for users
+
+## Creating Custom Formulas
+
+All custom formulas extend the `BaseFunction` class. Here's the basic structure:
+
+```tsx
+import { BaseFunction } from '@gridsheet/react-core';
+
+class MyCustomFunction extends BaseFunction {
+  // Display name and example usage
+  example = 'MY_FUNC(arg1, arg2)';
+  
+  // Help texts for users
+  helpTexts = ['Description of what this function does'];
+  
+  // Argument documentation
+  helpArgs = [
+    { name: 'arg1', description: 'Description of first argument' },
+    { name: 'arg2', description: 'Description of second argument' }
+  ];
+
+  // The main function logic
+  main(arg1: any, arg2: any) {
+    // Your logic here
+    return result;
+  }
+}
+```
+
+## Synchronous Formulas
+
+Synchronous formulas execute immediately and return a result synchronously.
+
+### Example: Simple Calculator
+
+```tsx
+class Add extends BaseFunction {
+  example = 'ADD(a, b)';
+  helpTexts = ['Adds two numbers'];
+  helpArgs = [
+    { name: 'a', description: 'First number' },
+    { name: 'b', description: 'Second number' }
+  ];
+
+  main(a: number, b: number) {
+    return a + b;
+  }
+}
+```
+
+### Example: String Manipulation
+
+```tsx
+class Concatenate extends BaseFunction {
+  example = 'CONCAT(str1, str2)';
+  helpTexts = ['Concatenates two strings'];
+  helpArgs = [
+    { name: 'str1', description: 'First string' },
+    { name: 'str2', description: 'Second string' }
+  ];
+
+  main(str1: string, str2: string) {
+    return `${str1}${str2}`;
+  }
+}
+```
+
+## Asynchronous Formulas
+
+Asynchronous formulas allow you to fetch data from external APIs, perform database queries, or execute any async operation. The framework automatically handles Promise resolution.
+
+### Creating an Async Formula
+
+Simply make the `main()` method `async`:
+
+```tsx
+class FetchWeather extends BaseFunction {
+  example = 'FETCH_WEATHER("Tokyo")';
+  helpTexts = ['Fetches current weather data for a city'];
+  helpArgs = [
+    { name: 'city', description: 'City name to fetch weather for' }
+  ];
+
+  async main(city: string) {
+    const response = await fetch(`https://api.weather.example.com/city=${city}`);
+    const data = await response.json();
+    return data.temperature;
+  }
+}
+```
+
+### Example: API Integration
+
+```tsx
+class GetUserData extends BaseFunction {
+  example = 'GET_USER("user123")';
+  helpTexts = ['Fetches user information from API'];
+  helpArgs = [
+    { name: 'userId', description: 'The user ID to fetch' }
+  ];
+
+  async main(userId: string) {
+    try {
+      const response = await fetch(`https://api.example.com/users/${userId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const userData = await response.json();
+      return userData.name || 'Unknown';
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      return 'Error';
+    }
+  }
+}
+```
+
+## Async Function Behavior
+
+When async formulas are used in the spreadsheet:
+
+### Evaluation
+- Cells containing async formulas display a loading indicator during evaluation
+- The framework automatically awaits the Promise and updates the cell value when complete
+- If an error occurs, the error is caught and displayed appropriately
+
+### Filtering and Sorting
+- When filtering or sorting data containing async formulas, the framework waits for all async computations to complete
+- This ensures consistent and predictable filtering/sorting results
+- The UI remains responsive during the wait period
+
+### Performance Considerations
+- Use async formulas judiciously, as each async operation adds latency
+- Consider caching results when appropriate to reduce unnecessary API calls
+- Implement timeout logic for long-running operations
+- Handle errors gracefully to provide better user experience
+
+## Error Handling
+
+Proper error handling is important for both sync and async formulas:
+
+```tsx
+class SafeAsyncFunction extends BaseFunction {
+  example = 'SAFE_FUNC(url)';
+  helpTexts = ['Safely fetches data with error handling'];
+  helpArgs = [
+    { name: 'url', description: 'URL to fetch' }
+  ];
+
+  async main(url: string) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+      const data = await response.json();
+      return data.value;
+    } catch (error) {
+      console.error('Fetch error:', error);
+      return '#ERROR'; // Indicate error state
+    }
+  }
+}
+```
+
+## Registering Custom Formulas
+
+Custom formulas are registered through the Hub system. Here's how to register your formulas:
+
+```tsx
+import { createHub } from '@gridsheet/react-core';
+import MyCustomFunction from './MyCustomFunction';
+import FetchWeather from './FetchWeather';
+
+const hub = createHub({
+  functions: [MyCustomFunction, FetchWeather]
+});
+```
+
+## Best Practices
+
+1. **Always Provide Help Documentation**
+   - Use `helpTexts` and `helpArgs` to clearly describe your function
+   - This helps users understand when and how to use your formulas
+
+2. **Handle Errors Gracefully**
+   - Wrap async operations in try-catch blocks
+   - Return meaningful error indicators
+   - Log errors for debugging
+
+3. **Consider Performance**
+   - Avoid unnecessary API calls
+   - Implement caching where appropriate
+   - Set reasonable timeouts for async operations
+
+4. **Type Your Arguments**
+   - Use TypeScript types in your `main()` method signature
+   - This provides better IDE support and error catching
+
+5. **Test Thoroughly**
+   - Test both success and error scenarios
+   - Verify async functions work correctly in filtering/sorting contexts
+   - Ensure error messages are user-friendly
+
+6. **Document Examples**
+   - Provide clear examples in the formula `example` property
+   - Help users understand the expected input/output format
+
+## Type Definitions
+
+### BaseFunction
+
+```tsx
+abstract class BaseFunction {
+  // Display in help/autocomplete
+  abstract example: string;
+  
+  // Help text shown to users
+  abstract helpTexts: string[];
+  
+  // Documentation for arguments
+  abstract helpArgs: Array<{
+    name: string;
+    description: string;
+  }>;
+
+  // Main function implementation (sync or async)
+  abstract main(...args: any[]): any | Promise<any>;
+
+  // ── The following properties are only used when main() is async ──
+
+  // Cache TTL in milliseconds. undefined = never expires.
+  protected ttlMilliseconds?: number;
+
+  // Number of hash segments in the cache key. Higher = lower collision risk. Default: 1
+  protected hashPrecision: number;
+}
+```
+
+### `ttlMilliseconds`
+
+Controls how long the async formula result is cached per cell.
+
+| Value | Behavior |
+|-------|----------|
+| `undefined` (default) | Cache never expires — result is reused until inputs change |
+| `number` | Cache expires after the specified milliseconds |
+
+```tsx
+class MyApiFunction extends BaseFunction {
+  ttlMilliseconds = 60 * 1000; // Cache for 1 minute
+
+  async main(id: string) {
+    const res = await fetch(`/api/data/${id}`);
+    return res.json();
+  }
+}
+```
+
+### `hashPrecision`
+
+Controls the number of hash segments included in the cache key. Each segment is a `cyrb53` hash computed with a different seed, joined by `:`.
+
+| Value | Cache key format | Collision probability |
+|-------|------------------|-----------------------|
+| `1` (default) | `FUNC:length:h0` | ~1 in 9,000 trillion — sufficient for spreadsheet use |
+| `2` | `FUNC:length:h0-h1` | ~1 in 81,000 trillion trillion — virtually zero |
+
+Hash segments are base-36 encoded (digits `0-9` + letters `a-z`), up to 11 characters each.
+
+In practice, `1` is sufficient since collisions only cause a stale cache hit (not data corruption), and the cache key also includes the function name and argument length as additional discrimination.
+
+```tsx
+class MyApiFunction extends BaseFunction {
+  hashPrecision = 2; // Use 2 hash segments for extra safety
+
+  async main(data: string) { /* ... */ }
+}
+```
+
+## Limitations and Considerations
+
+- Async formulas are evaluated on-demand (when viewed or during filter/sort operations)
+- Very large datasets with many async formulas may impact performance
+- Consider implementing caching mechanisms for frequently accessed data
+- Browser security restrictions apply to API calls (CORS, etc.)
+- Network errors should be handled gracefully
+
+## Related Resources
+
+- [Migration Guide: v2 to v3](../history/migration-guide/2to3.mdx) - Information about async formula introduction
+- [Table API Reference](./table.mdx) - Methods for reading and writing cell data
+- [Example: case11](../examples/case11.mdx) - Practical async formula examples

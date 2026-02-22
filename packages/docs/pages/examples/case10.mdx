@@ -2,7 +2,7 @@ import Case10 from './case10.component';
 
 # Inventory Management (Advanced Events)
 
-This example demonstrates a real-world inventory management dashboard built with GridSheet. It highlights how to use advanced event handlers—such as `onEdit`, `onRemoveRows`, `onRemoveCols`, `onInsertRows`, and `onInsertCols`—to track user-driven edits, manage inventory changes, and log detailed activity. The sheet's current state is also shown as a TSV dump, making it easy to export or inspect the data.
+This example demonstrates a real-world inventory management dashboard built with GridSheet. It highlights how to use event handlers—such as `onChange`, `onRemoveRows`, `onRemoveCols`, `onInsertRows`, and `onInsertCols`—to track user-driven edits, manage inventory changes, and log detailed activity. The sheet's current state is also shown as a TSV dump, making it easy to export or inspect the data.
 
 <Case10 />
 
@@ -12,17 +12,10 @@ This example demonstrates a real-world inventory management dashboard built with
 
 ### Key Points
 
-- **onEdit** is used instead of `onChange` for this demo.
-- `onEdit` is triggered **only when the user directly edits the sheet** (cell edits, moves, etc.), providing a more precise hook for user-driven changes.
-- `onChange` is triggered for **any change** to the table, including programmatic or indirect changes (such as undo/redo, API calls, etc.).
-- This example logs activity for each granular event (edit, row/column insert/remove) and shows the edited range.
+- `onChange` is triggered whenever the table changes. Use `getLastChangedAddresses()` to identify which cells were modified.
+- `getObject({ addresses })` retrieves only the changed cells efficiently.
+- This example logs activity for each granular event (edit, row/column insert/remove) and shows the changed addresses.
 - The current sheet is also dumped as TSV below the table, updated on every change.
-
-### When to use onEdit vs onChange
-
-- Use `onEdit` to react **only to user-driven edits** (for example, to trigger business logic or analytics only on user actions).
-- Use `onChange` to track **all changes**, including those made by code, batch operations, or undo/redo.
-
 
 ### 📋 Event-Driven Architecture Overview
 This comprehensive inventory management system demonstrates how GridSheet can be used to build sophisticated business applications with real-time event monitoring. The system combines stock tracking, value calculations, and event-driven analytics to create a powerful inventory management tool.

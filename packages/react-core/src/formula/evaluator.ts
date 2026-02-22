@@ -1,4 +1,4 @@
-import { a2p, grantAddressAbsolute, p2a } from '../lib/converters';
+import { a2p, grantAddressAbsolute, p2a } from '../lib/coords';
 import { Table } from '../lib/table';
 import { Id, PointType } from '../types';
 
@@ -37,10 +37,14 @@ export class FormulaError {
   public code: string;
   public message: string;
   public error?: Error;
+  __isFormulaError = true;
   constructor(code: string, message: string, error?: Error) {
     this.code = code;
     this.message = message;
     this.error = error;
+  }
+  static is(obj: any): boolean {
+    return obj instanceof FormulaError || obj?.__isFormulaError === true;
   }
 }
 
@@ -108,7 +112,7 @@ export class RefEntity extends Entity<string> {
       return this.value;
     }
     const system = table.wire.getSystem(id, table);
-    table.wire.data[id]!.system = system;
+    table.wire.data[id]!._sys = system;
     system.dependents.add(dependency);
     return `#${parsed.table.sheetId}!${formula}`;
   }
@@ -151,7 +155,7 @@ export class RangeEntity extends Entity<string> {
         return this.value;
       }
       const system = table.wire.getSystem(id, table);
-      table.wire.data[id]!.system = system;
+      table.wire.data[id]!._sys = system;
       system.dependents.add(dependency);
       formulas.push(formula!);
     }
@@ -203,7 +207,7 @@ export class IdEntity extends Entity<string> {
     if (dependency) {
       ids.forEach((id) => {
         const system = table.wire.getSystem(id, table);
-        table.wire.data[id]!.system = system;
+        table.wire.data[id]!._sys = system;
         system.dependents.add(dependency);
       });
     }
@@ -261,7 +265,7 @@ export class IdRangeEntity extends Entity<string> {
     if (dependency) {
       ids.forEach((id) => {
         const system = table.wire.getSystem(id, table);
-        table.wire.data[id]!.system = system;
+        table.wire.data[id]!._sys = system;
         system.dependents.add(dependency);
       });
     }
@@ -867,6 +871,8 @@ export class Parser {
   }
 }
 
+// identifyFormula takes a formula string and returns a new formula string with all references identified and updated based on the operation and dependency.
+// when the row slides, the references in the formula should be updated accordingly. For example, if a row is inserted above row 3, all references to row 3 and below should be updated to row 4 and below.
 export const identifyFormula = (value: any, { idMap, ...props }: IdentifyProps) => {
   if (typeof value === 'string' || value instanceof String) {
     if (value.charAt(0) === '=') {

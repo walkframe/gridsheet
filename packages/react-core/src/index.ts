@@ -11,15 +11,20 @@ export {
   zoneToArea,
   areaToZone,
   areaToRange,
-} from './lib/structs';
+  addressesToAreas,
+  addressesToCols,
+  addressesToRows,
+} from './lib/spatial';
 
 export { TimeDelta } from './lib/time';
-export { x2c, c2x, y2r, r2y, p2a, a2p } from './lib/converters';
+export { x2c, c2x, y2r, r2y, p2a, a2p } from './lib/coords';
 export { updateTable } from './store/actions';
 export { PluginBase, useInitialPluginContext, usePluginContext } from './components/PluginBase';
 export type {
   MatrixType,
   CellType,
+  Address,
+  AsyncCache,
   FilterCondition,
   FilterConditionMethod,
   FilterConfig,
@@ -54,7 +59,7 @@ export { Policy } from './policy/core';
 export type { PolicyType, PolicyOption, PolicyMixinType } from './policy/core';
 
 export * as operations from './lib/operation';
-export { DEFAULT_HISTORY_LIMIT } from './constants';
+export { DEFAULT_HISTORY_LIMIT, Pending } from './constants';
 
 export { userActions } from './store/actions';
 export { clip } from './lib/clipboard';
@@ -64,3 +69,4 @@ export { syncers } from './store/dispatchers';
 
 export { ensureString, ensureNumber, ensureBoolean } from './formula/functions/__utils';
 export type { EnsureNumberOptions, EnsureBooleanOptions } from './formula/functions/__utils';
+export { solveTable } from './formula/solver';

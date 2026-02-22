@@ -19,7 +19,7 @@ const SheetsSheet = () => {
   const [sheet2, setSheet2] = React.useState('Sheet2');
   const [sheet3, setSheet3] = React.useState('Sheet 3');
   const [sheet4, setSheet4] = React.useState('Sheet4');
-  const hub = useHub();
+  const hub = useHub({});
   return (
     <div>
       <table style={{ borderCollapse: 'collapse' }}>

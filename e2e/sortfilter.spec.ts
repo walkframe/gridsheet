@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { ctrl } from './utils';
+import { ctrl, drag, copy, cut, paste } from './utils';
 
 const STORY_URL = 'http://localhost:5233/iframe.html?id=basic-sortfilter--sheet&viewMode=story';
 
@@ -275,5 +275,93 @@ test.describe('Sort & Filter', () => {
     // Undo
     await ctrl(page, 'z');
     expect(await thB.textContent()).toContain('Name');
+  });
+
+  // -----------------------------------------------------------------------
+  // Filter + operation tests
+  // Setup: filter Score >= 75 → visible: Alice(row1), Bob(row2), Diana(row4)
+  //                             hidden:  Charlie(row3), Eve(row5)
+  // -----------------------------------------------------------------------
+
+  async function applyScoreGteFilter(page: any) {
+    await openColumnMenu(page, 3); // Column C = Score
+    const methodSelect = page.locator('.gs-filter-method-select').first();
+    await methodSelect.selectOption('gte');
+    const valueInput = page.locator('.gs-filter-value-input').first();
+    await valueInput.fill('75');
+    await page.locator('.gs-filter-apply-btn').click();
+    await page.waitForTimeout(500);
+  }
+
+  async function resetScoreFilter(page: any) {
+    await openColumnMenu(page, 3); // Column C = Score
+    await page.locator('.gs-filter-reset-btn').click();
+    await page.waitForTimeout(500);
+  }
+
+  test('delete skips filtered rows', async ({ page }) => {
+    await page.goto(STORY_URL);
+    await page.waitForSelector('.gs-initialized');
+
+    await applyScoreGteFilter(page);
+    await drag(page, 'B1', 'B4'); // select all visible rows in column B (B1, B4)
+    await page.keyboard.press('Delete');
+    await resetScoreFilter(page);
+
+    // Visible rows B1, B2, B4 should be cleared
+    expect(await cellText(page, 'B1')).toBe('');
+    expect(await cellText(page, 'B2')).toBe('');
+    expect(await cellText(page, 'B4')).toBe('');
+
+    // Hidden rows B3, B5 should be untouched
+    expect(await cellText(page, 'B3')).toBe('Charlie');
+    expect(await cellText(page, 'B5')).toBe('Eve');
+  });
+
+  test('copy-paste skips filtered rows (src and dst)', async ({ page }) => {
+    await page.goto(STORY_URL);
+    await page.waitForSelector('.gs-initialized');
+
+    await applyScoreGteFilter(page);
+    await drag(page, 'B1', 'B4'); // select visible rows B1, B2, B4 (B3 hidden)
+    await copy(page);
+
+    await page.locator("[data-address='D2']").click();
+    await paste(page);
+    await resetScoreFilter(page);
+
+    // D2 (visible) ← Alice, D3 (hidden, skip), D4 (visible) ← Bob
+    expect(await cellText(page, 'D2')).toBe('Alice');
+    expect(await cellText(page, 'D3')).toBe('C'); // untouched (hidden)
+    expect(await cellText(page, 'D4')).toBe('Bob');
+    expect(await cellText(page, 'D5')).toBe('D'); // untouched (hidden)
+  });
+
+  test('cut-paste skips filtered rows (src and dst)', async ({ page }) => {
+    await page.goto(STORY_URL);
+    await page.waitForSelector('.gs-initialized');
+
+    await applyScoreGteFilter(page);
+
+    await drag(page, 'B1', 'B4');
+    await cut(page);
+
+    await page.locator("[data-address='D2']").click();
+    await paste(page);
+    await resetScoreFilter(page);
+
+    // Pasted into visible dst rows
+    expect(await cellText(page, 'D2')).toBe('Alice');
+    expect(await cellText(page, 'D3')).toBe('C'); // untouched (hidden)
+    expect(await cellText(page, 'D4')).toBe('Bob');
+
+    // Visible src rows should be cleared
+    expect(await cellText(page, 'B1')).toBe('');
+    expect(await cellText(page, 'B2')).toBe('');
+    expect(await cellText(page, 'B4')).toBe('');
+
+    // Hidden src rows must be untouched
+    expect(await cellText(page, 'B3')).toBe('Charlie');
+    expect(await cellText(page, 'B5')).toBe('Eve');
   });
 });

@@ -12,7 +12,7 @@ import type {
   CellType,
   Address,
 } from '../types';
-import { a2p, p2a, x2c, c2x } from './converters';
+import { a2p, p2a, x2c, c2x } from './coords';
 
 export const slideArea = (area: AreaType, y: Y, x: X): AreaType => {
   const { top, left, bottom, right } = area;
@@ -417,4 +417,117 @@ export const invertObject = (obj: { [key: string]: string }): { [value: string]:
     }
   }
   return inverted;
+};
+
+/**
+ * Convert a list of addresses into an array of bounding areas.
+ * Adjacent cells (4-connected: up/down/left/right) are grouped into the same area.
+ * Each resulting AreaType is the bounding rectangle of one connected group.
+ */
+export const addressesToAreas = (addresses: Address[]): AreaType[] => {
+  if (addresses.length === 0) {
+    return [];
+  }
+
+  const points = addresses.map((addr) => {
+    const { y, x } = a2p(addr);
+    return { y, x };
+  });
+
+  const key = (y: number, x: number) => `${y},${x}`;
+  const pointSet = new Set(points.map((p) => key(p.y, p.x)));
+  const visited = new Set<string>();
+  const areas: AreaType[] = [];
+
+  for (const p of points) {
+    const k = key(p.y, p.x);
+    if (visited.has(k)) {
+      continue;
+    }
+
+    // BFS to find connected component
+    let top = p.y,
+      left = p.x,
+      bottom = p.y,
+      right = p.x;
+    const queue = [p];
+    visited.add(k);
+
+    while (queue.length > 0) {
+      const { y, x } = queue.shift()!;
+      if (y < top) {
+        top = y;
+      }
+      if (y > bottom) {
+        bottom = y;
+      }
+      if (x < left) {
+        left = x;
+      }
+      if (x > right) {
+        right = x;
+      }
+
+      for (const [dy, dx] of [
+        [0, 1],
+        [0, -1],
+        [1, 0],
+        [-1, 0],
+      ]) {
+        const nk = key(y + dy, x + dx);
+        if (pointSet.has(nk) && !visited.has(nk)) {
+          visited.add(nk);
+          queue.push({ y: y + dy, x: x + dx });
+        }
+      }
+    }
+
+    areas.push({ top, left, bottom, right });
+  }
+
+  return areas;
+};
+
+/**
+ * Extract unique column indices (x) from a list of addresses, ignoring row information.
+ * @param asc - true: ascending, false: descending, null: insertion order
+ */
+export const addressesToCols = (addresses: Address[], asc: boolean | null = true): number[] => {
+  const seen = new Set<number>();
+  const cols: number[] = [];
+  for (const addr of addresses) {
+    const { x } = a2p(addr);
+    if (!seen.has(x)) {
+      seen.add(x);
+      cols.push(x);
+    }
+  }
+  if (asc === true) {
+    cols.sort((a, b) => a - b);
+  } else if (asc === false) {
+    cols.sort((a, b) => b - a);
+  }
+  return cols;
+};
+
+/**
+ * Extract unique row indices (y) from a list of addresses, ignoring column information.
+ * @param asc - true: ascending, false: descending, null: insertion order
+ */
+export const addressesToRows = (addresses: Address[], asc: boolean | null = true): number[] => {
+  const seen = new Set<number>();
+  const rows: number[] = [];
+  for (const addr of addresses) {
+    const { y } = a2p(addr);
+    if (!seen.has(y)) {
+      seen.add(y);
+      rows.push(y);
+    }
+  }
+  if (asc === true) {
+    rows.sort((a, b) => a - b);
+  } else if (asc === false) {
+    rows.sort((a, b) => b - a);
+  }
+  return rows;
 };

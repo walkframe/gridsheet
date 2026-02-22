@@ -36,6 +36,22 @@
     }
   }
 
+  &.gs-pending .gs-cell-rendered {
+    position: relative;
+    overflow: hidden;
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 4px;
+      width: 40%;
+      border-radius: 1px;
+      background: rgba(100, 140, 255, 0.6);
+      animation: gs-pending-slide 1.4s ease-in-out infinite;
+    }
+  }
+
   .gs-formula-error-triangle {
     position: absolute;
     top: 0;

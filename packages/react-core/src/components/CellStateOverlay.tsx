@@ -1,8 +1,8 @@
 import { useContext, useEffect, useRef, useCallback } from 'react';
 import { Context } from '../store';
-import { zoneToArea } from '../lib/structs';
-import { between } from '../lib/structs';
-import { a2p } from '../lib/converters';
+import { zoneToArea } from '../lib/spatial';
+import { between } from '../lib/spatial';
+import { a2p } from '../lib/coords';
 import { COLOR_PALETTE } from '../lib/palette';
 import { Autofill } from '../lib/autofill';
 import { getCellRectPositions } from '../lib/virtualization';
@@ -17,7 +17,7 @@ const COLOR_COPYING = '#0077ff';
 const COLOR_CUTTING = '#0077ff';
 const SEARCH_MATCHING_BACKGROUND = 'rgba(0, 200, 100, 0.2)';
 const COLOR_SEARCH_MATCHING = '#00aa78';
-const COLOR_AUTOFILL = '#444444';
+const COLOR_AUTOFILL = '#0077aa';
 
 const HEADER_COLORS = {
   light: {
@@ -253,7 +253,12 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
       if (left + pos.width < headerW || left > w) {
         continue;
       }
-      fillRect(ctx, left, 0, pos.width, headerH, color);
+      // Prevent drawing into the (0,0) corner
+      const drawLeft = Math.max(left, headerW);
+      const drawWidth = Math.min(left + pos.width, w) - drawLeft;
+      if (drawWidth > 0) {
+        fillRect(ctx, drawLeft, 0, drawWidth, headerH, color);
+      }
     }
 
     // Left headers
@@ -277,7 +282,12 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
       if (top + pos.height < headerH || top > h) {
         continue;
       }
-      fillRect(ctx, 0, top, headerW, pos.height, color);
+      // Prevent drawing into the (0,0) corner
+      const drawTop = Math.max(top, headerH);
+      const drawHeight = Math.min(top + pos.height, h) - drawTop;
+      if (drawHeight > 0) {
+        fillRect(ctx, 0, drawTop, headerW, drawHeight, color);
+      }
     }
   }, [
     table,
