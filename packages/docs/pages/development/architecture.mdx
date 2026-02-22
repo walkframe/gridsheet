@@ -251,7 +251,7 @@ GridSheet provides built-in caching for asynchronous formulas to improve perform
 Async formula results are cached per-cell with the following structure:
 
 ```typescript
-cell.system.asyncCache = {
+cell.asyncCache = {
   value: any,              // The cached result (or error)
   key: string,             // Cache key based on function name + arguments
   expireTime?: number      // Optional expiration timestamp (ms since epoch)
@@ -338,9 +338,9 @@ When filtering data that contains async formulas:
 5. **Error Handling**: If an async formula throws, the cell displays an error value which is treated as a falsy value for filtering
 
 ```typescript
-// If an async formula returns an error, it's treated as failing the filter
-cell.system.asyncCache = {
-  value: new AsyncFormulaError('#ASYNC!', 'Network error'),
+// If an async formula returns an error, it's stored in cell.asyncCache
+cell.asyncCache = {
+  value: new FormulaError('#ASYNC!', 'Network error'),
   key: 'GH_REPO:45:2847391048',
   expireTime: 1708847391048
 }

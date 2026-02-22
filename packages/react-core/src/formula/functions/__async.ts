@@ -1,23 +1,7 @@
 import { Pending, Special } from '../../constants';
+import { FormulaError } from '../evaluator';
 import type { Wire } from '../../lib/hub';
 import type { CellType, PointType } from '../../types';
-
-/**
- * Lightweight error class used inside async formula error handling.
- * Mirrors FormulaError's shape so the renderer can display it identically.
- * We define it here rather than importing FormulaError to keep the
- * dependency graph clean.
- */
-export class AsyncFormulaError {
-  public code: string;
-  public message: string;
-  public error?: Error;
-  constructor(code: string, message: string, error?: Error) {
-    this.code = code;
-    this.message = message;
-    this.error = error;
-  }
-}
 
 /**
  * Sentinel value to distinguish cache miss from user-returned undefined/null.
@@ -96,18 +80,18 @@ export const getAsyncCache = (
   const cell: CellType | undefined = wire.data[cellId];
 
   // Check for a cached result from a previous async run
-  if (cell?.system?.asyncCache != null) {
-    const ac = cell.system.asyncCache;
+  if (cell?.asyncCache != null) {
+    const ac = cell.asyncCache;
     if (ac.key === key) {
       // Check expiry
       if (ac.expireTime == null || Date.now() < ac.expireTime) {
         return ac.value;
       }
       // Expired — clear and re-fetch below
-      cell.system.asyncCache = undefined;
+      delete cell.asyncCache;
     } else {
       // Key changed (inputs changed) — invalidate
-      cell.system.asyncCache = undefined;
+      delete cell.asyncCache;
     }
   }
 
@@ -121,14 +105,14 @@ export const getAsyncCache = (
 /**
  * Handle an async (Promise) result returned by BaseFunction.main().
  *
- * Cache is stored per-cell in cell.system.asyncCache.
+ * Cache is stored per-cell in cell.asyncCache.
  * In-flight tracking uses Wire.asyncPending (keyed by cell ID).
  *
  * Flow:
  * 1. If cell has asyncCache and the key matches (inputs unchanged) and not expired → return cached value
  * 2. If there is already an in-flight promise for this cell → return its Pending
  * 3. Otherwise start the async work, return a new Pending, and on completion
- *    write the result into cell.system.asyncCache and trigger a re-render.
+ *    write the result into cell.asyncCache and trigger a re-render.
  *
  * @param ttlMilliseconds - Cache time-to-live in **milliseconds**. undefined = never expires.
  */
@@ -152,15 +136,15 @@ export const getOrSaveAsyncCache = (
   promise
     .then((result: any) => {
       const c = wire.data[cellId];
-      if (c?.system) {
-        c.system.asyncCache = { value: result, key, expireTime };
+      if (c != null) {
+        c.asyncCache = { value: result, key, expireTime };
       }
     })
     .catch((error: any) => {
-      const errValue = new AsyncFormulaError('#ASYNC!', error?.message ?? String(error), error);
+      const errValue = new FormulaError('#ASYNC!', error?.message ?? String(error), error instanceof Error ? error : undefined);
       const c = wire.data[cellId];
-      if (c?.system) {
-        c.system.asyncCache = { value: errValue, key, expireTime };
+      if (c != null) {
+        c.asyncCache = { value: errValue, key, expireTime };
       }
     })
     .finally(() => {

@@ -57,8 +57,6 @@ export type System = {
   offsetTop?: number;
   /** Cumulative left offset (px) from table origin. Set on col-header cells (y=0). */
   offsetLeft?: number;
-  /** Cached result from an async formula. Invalidated when key changes or expireTime is reached. */
-  asyncCache?: AsyncCache;
 };
 
 export type FilterConditionMethod =
@@ -99,6 +97,8 @@ export type CellType<T = any, Custom = any> = {
   disableFormula?: boolean;
   prevention?: OperationType;
   system?: System;
+  /** Cached result from an async formula. Stored directly on the cell for serializability. */
+  asyncCache?: AsyncCache;
   /** Filter configuration. Set on col-header cells (y=0). */
   filter?: FilterConfig;
   /** Whether this row is hidden by a filter. Set on row-header cells (x=0). */

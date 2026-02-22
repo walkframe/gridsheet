@@ -42,6 +42,9 @@ class SumDelayFunction extends BaseFunction {
   }
 
   async main(...values: number[]) {
+    if (values.length === 0) {
+      throw new Error('SUM_DELAY requires at least one argument.');
+    }
     await new Promise((resolve) => setTimeout(resolve, 1000));
     return values.reduce((a, b) => a + b, 0);
   }
@@ -85,8 +88,10 @@ const AsyncChainSheet = () => {
             B3: { value: 'SUM_DELAY(A2,200) → 330' },
             B4: { value: 'SUM_DELAY(A3,A1) → 360' },
             B5: { value: 'SUM(A1:A4) → 850' },
+            A6: { value: '=SUM_DELAY()' },
+            B6: { value: 'SUM_DELAY() → #ASYNC! ' },
           },
-          ensured: { numRows: 5, numCols: 2 },
+          ensured: { numRows: 6, numCols: 2 },
         })}
       />
     </div>

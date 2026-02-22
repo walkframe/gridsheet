@@ -5,7 +5,6 @@ import { Table, UserTable } from '../lib/table';
 import { solveFormula, solveTable } from '../formula/solver';
 import { FormulaError } from '../formula/evaluator';
 import { Pending } from '../constants';
-import { AsyncFormulaError } from '../formula/functions/__async';
 import { TimeDelta } from '../lib/time';
 import { stripTable } from '../formula/solver';
 
@@ -115,9 +114,6 @@ export class Renderer implements RendererMixinType {
     if (value instanceof Pending) {
       return this.pending(props);
     }
-    if (value instanceof AsyncFormulaError) {
-      throw new FormulaError(value.code, value.message, value.error);
-    }
     if (value == null) {
       return this.null(props);
     }
@@ -136,7 +132,7 @@ export class Renderer implements RendererMixinType {
         if (Array.isArray(value)) {
           return this.array(props);
         }
-        if (value instanceof FormulaError) {
+        if (FormulaError.is(value)) {
           throw value;
         }
         return this.object(props);
