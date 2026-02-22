@@ -79,7 +79,7 @@ test.describe('Async Formula', () => {
 
     // Wait for first async computation
     // A1 takes 1s, then A2 depends on A1 (another 1s) = 2s + buffer
-    await page.waitForTimeout(2500);
+    await page.waitForTimeout(3000);
 
     // A2 should depend on A1, initial value: SUM_DELAY(30, 100) = 130
     let a2Content = await a2.locator('.gs-cell-rendered').textContent();

@@ -45,7 +45,7 @@ class SumDelayFunction extends BaseFunction {
     if (values.length === 0) {
       throw new Error('SUM_DELAY requires at least one argument.');
     }
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 750));
     return values.reduce((a, b) => a + b, 0);
   }
 }
