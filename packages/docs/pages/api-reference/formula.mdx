@@ -238,6 +238,55 @@ abstract class BaseFunction {
 
   // Main function implementation (sync or async)
   abstract main(...args: any[]): any | Promise<any>;
+
+  // ── The following properties are only used when main() is async ──
+
+  // Cache TTL in milliseconds. undefined = never expires.
+  protected ttlMilliseconds?: number;
+
+  // Number of hash segments in the cache key. Higher = lower collision risk. Default: 1
+  protected hashPrecision: number;
+}
+```
+
+### `ttlMilliseconds`
+
+Controls how long the async formula result is cached per cell.
+
+| Value | Behavior |
+|-------|----------|
+| `undefined` (default) | Cache never expires — result is reused until inputs change |
+| `number` | Cache expires after the specified milliseconds |
+
+```tsx
+class MyApiFunction extends BaseFunction {
+  ttlMilliseconds = 60 * 1000; // Cache for 1 minute
+
+  async main(id: string) {
+    const res = await fetch(`/api/data/${id}`);
+    return res.json();
+  }
+}
+```
+
+### `hashPrecision`
+
+Controls the number of hash segments included in the cache key. Each segment is a `cyrb53` hash computed with a different seed, joined by `:`.
+
+| Value | Cache key format | Collision probability |
+|-------|------------------|-----------------------|
+| `1` (default) | `FUNC:length:h0` | ~1 in 9,000 trillion — sufficient for spreadsheet use |
+| `2` | `FUNC:length:h0-h1` | ~1 in 81,000 trillion trillion — virtually zero |
+
+Hash segments are base-36 encoded (digits `0-9` + letters `a-z`), up to 11 characters each.
+
+In practice, `1` is sufficient since collisions only cause a stale cache hit (not data corruption), and the cache key also includes the function name and argument length as additional discrimination.
+
+```tsx
+class MyApiFunction extends BaseFunction {
+  hashPrecision = 2; // Use 2 hash segments for extra safety
+
+  async main(data: string) { /* ... */ }
 }
 ```
 

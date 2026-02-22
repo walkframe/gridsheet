@@ -56,15 +56,15 @@ const cyrb53 = (str: string, seed = 0): number => {
 /**
  * Build a cache key from function name + hashed serialised arguments.
  *
- * Format: `funcName:length:hash`
+ * Format: `funcName:length:hash1-hash2-...`
  *   - length: byte length of the JSON-serialised args
- *   - hash:   cyrb53 hash of the JSON string
+ *   - hash:   cyrb53 hash of the JSON string, repeated hashPrecision times with different seeds
  *
  * When a Table appears as an argument its trimmed area is converted to a
  * value matrix (`any[][]`) via `getFieldMatrix()` so the key reflects the
  * actual cell values the function will operate on.
  */
-export const buildAsyncCacheKey = (funcName: string, bareArgs: any[]): string => {
+export const buildAsyncCacheKey = (funcName: string, bareArgs: any[], hashPrecision: number = 1): string => {
   const argsJson = JSON.stringify(bareArgs, (_key, value) => {
     if (isTable(value)) {
       return value.getFieldMatrix();
@@ -74,7 +74,8 @@ export const buildAsyncCacheKey = (funcName: string, bareArgs: any[]): string =>
     }
     return value;
   });
-  return `${funcName}:${argsJson.length}:${cyrb53(argsJson)}`;
+  const hashes = Array.from({ length: hashPrecision }, (_, i) => cyrb53(argsJson, i).toString(36));
+  return `${funcName}:${argsJson.length}:${hashes.join('-')}`;
 };
 
 /**

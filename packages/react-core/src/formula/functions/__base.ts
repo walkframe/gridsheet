@@ -22,6 +22,8 @@ export class BaseFunction {
   public helpArgs = [{ name: 'value1', description: '' }];
   /** Cache TTL in milliseconds. Override in subclass to set expiry. undefined = never expires. */
   protected ttlMilliseconds?: number;
+  /** Hash precision for cache key generation. Higher values reduce collision risk. Default: 1 */
+  protected hashPrecision: number = 1;
   protected bareArgs: any[];
   protected table: Table;
   protected origin?: PointType;
@@ -48,7 +50,7 @@ export class BaseFunction {
 
     // For async functions, build cache key and check cache before execution
     if (this.isMainAsync) {
-      const key = buildAsyncCacheKey(this.constructor.name, this.bareArgs);
+      const key = buildAsyncCacheKey(this.constructor.name, this.bareArgs, this.hashPrecision);
       const cachedResult = getAsyncCache(this.table, this.origin!, key);
       if (cachedResult !== asyncCacheMiss) {
         return cachedResult;

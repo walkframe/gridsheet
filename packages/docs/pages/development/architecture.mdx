@@ -242,6 +242,127 @@ GridSheet uses a matrix-based data structure where each cell is identified by it
 | 1st Row Info (1,0) | A1 Cell Info (1,1) | B1 Cell Info (1,2) |
 | 2nd Row Info (2,0) | A2 Cell Info (2,1) | B2 Cell Info (2,2) |
 
+## Async Formula Caching
+
+GridSheet provides built-in caching for asynchronous formulas to improve performance and reduce redundant API calls.
+
+### Cache Storage
+
+Async formula results are cached per-cell with the following structure:
+
+```typescript
+cell.system.asyncCache = {
+  value: any,              // The cached result (or error)
+  key: string,             // Cache key based on function name + arguments
+  expireTime?: number      // Optional expiration timestamp (ms since epoch)
+}
+```
+
+The cache key is generated using:
+- **Function name**: Identifies which async formula is being called
+- **Serialized arguments**: Includes cell values, tables as matrices, etc.
+- **Hash**: cyrb53 hash of the serialized arguments for collision detection
+
+```typescript
+// Example: GH_REPO("facebook/react", "stars")
+// Cache key: "GH_REPO:45:2gosa7pa2gv"
+//            funcName:length:base36-hash(up to 11 chars)
+```
+
+### In-Flight Promise Tracking
+
+While an async formula is being evaluated, GridSheet tracks pending promises per-cell:
+
+```typescript
+// In Wire instance
+wire.asyncPending.set(cellId, pendingValue);
+```
+
+This prevents duplicate requests when the same cell is evaluated multiple times during a single render cycle.
+
+### Cache Invalidation
+
+Caches are invalidated in the following scenarios:
+
+1. **Input Changed**: When formula arguments change, the cache key changes and a new fetch is triggered
+2. **Expired**: When the TTL (specified by `ttlMilliseconds`) expires, the cache is discarded
+3. **Dependent Updates**: When upstream cells change, dependent formulas are re-evaluated
+
+### TTL Configuration
+
+Set cache TTL in your async formula class:
+
+```typescript
+class MyAsyncFunction extends BaseFunction {
+  // Cache for 1 minute
+  ttlMilliseconds = 60 * 1000;
+
+  async main(...args: any[]) {
+    // Async logic
+  }
+}
+```
+
+## Filtering & Sorting with Async Formulas
+
+GridSheet stores filtering information in the header cells using special methods:
+
+### Filter Information Storage
+
+- **Filter Conditions**: Stored in column header cells `(0, x)` via `cell.filter()`
+  - Contains the filter predicate and configuration for that column
+  - Used to determine which rows should be visible
+
+- **Filtered Row Tracking**: Stored in row header cells `(y, 0)` via `cell.filtered()`
+  - Indicates whether a row passes all active filters
+  - `true` = row is visible, `false` = row is hidden by filter
+
+```typescript
+// Column header (0, x) stores filter condition
+columnHeaderCell.filter()  // Returns filter config for column x
+
+// Row header (y, 0) tracks if row is visible
+rowHeaderCell.filtered()   // Returns true if row passes filters, false if hidden
+```
+
+### Filter Behavior
+
+When filtering data that contains async formulas:
+
+1. **Async Evaluation**: All cells in the filter scope are evaluated
+2. **Wait for Completion**: GridSheet waits for all pending async operations to complete
+3. **Filter Application**: Once all values are resolved, the filter predicate is applied
+4. **Update Headers**: 
+   - Column header `(0, x)` is updated with the new filter configuration
+   - Row headers `(y, 0)` are updated with visibility status
+5. **Error Handling**: If an async formula throws, the cell displays an error value which is treated as a falsy value for filtering
+
+```typescript
+// If an async formula returns an error, it's treated as failing the filter
+cell.system.asyncCache = {
+  value: new AsyncFormulaError('#ASYNC!', 'Network error'),
+  key: 'GH_REPO:45:2847391048',
+  expireTime: 1708847391048
+}
+
+// Error values are falsy in filter predicates
+```
+
+### Sort Behavior
+
+Sorting works similarly to filtering:
+
+1. **Async Evaluation**: All cells in the sort scope are evaluated
+2. **Wait for Completion**: GridSheet waits for all pending async operations
+3. **Sort Application**: Resolved values are sorted according to the sort comparator
+4. **Deterministic Ordering**: Cells with the same resolved value maintain their original order (stable sort)
+
+### Performance Considerations
+
+- **Caching**: Results are cached with the configured TTL, reducing API calls during repeated filter/sort operations
+- **Parallel Evaluation**: Multiple async formulas in the same column are fetched in parallel via Promise.all
+- **UI Responsiveness**: A loading indicator is shown during the wait period, maintaining a responsive UX
+- **Error Resilience**: Filter/sort operations continue even if individual async formulas fail
 
 ## Component Hierarchy
 
