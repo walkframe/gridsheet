@@ -116,13 +116,13 @@ export const getAsyncCache = (
  *
  * @param ttlMilliseconds - Cache time-to-live in **milliseconds**. undefined = never expires.
  */
-export const getOrSaveAsyncCache = (
+export const awaitAndSave = (
   promise: Promise<any>,
   table: { wire: Wire; getId: (p: PointType) => string },
   origin: PointType,
   key: string,
   ttlMilliseconds?: number,
-): any => {
+): Pending => {
   const cellId = table.getId(origin);
   const wire = table.wire;
 

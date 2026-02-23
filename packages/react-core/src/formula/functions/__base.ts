@@ -4,7 +4,7 @@ import { Expression } from '../evaluator';
 import {
   hasPendingArg,
   buildAsyncCacheKey,
-  getOrSaveAsyncCache,
+  awaitAndSave,
   createPropagatedPending,
   getAsyncCache,
   asyncCacheMiss,
@@ -57,8 +57,8 @@ export class BaseFunction {
       }
 
       // @ts-expect-error main is not defined in BaseFunction
-      const result = this.main(...this.bareArgs);
-      return getOrSaveAsyncCache(result, this.table, this.origin!, key, this.ttlMilliseconds);
+      const promise = this.main(...this.bareArgs);
+      return awaitAndSave(promise, this.table, this.origin!, key, this.ttlMilliseconds);
     }
 
     // For sync functions, just call and return

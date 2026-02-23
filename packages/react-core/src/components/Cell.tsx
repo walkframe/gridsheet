@@ -38,7 +38,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
 
   const cellRef = useRef<HTMLTableCellElement>(null);
   const {
-    tableReactive: tableRef,
+    tableReactive,
     editingAddress,
     choosing,
     selectingZone,
@@ -49,7 +49,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
     autofillDraggingTo,
     contextMenuItems,
   } = store;
-  const table = tableRef.current;
+  const table = tableReactive.current;
 
   // Whether the focus is on another sheet
   const xSheetFocused = isXSheetFocused(store);

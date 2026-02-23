@@ -164,10 +164,15 @@ function MyComponent() {
 
 ### Cell Updates
 
+**Note**: The `sync` function used in the examples below should be obtained from the `connector` as shown in the "Using Table References" section above.
+
 #### `update(args: { diff: CellsByAddressType; historicize?: boolean; partial?: boolean; updateChangedTime?: boolean; reflection?: StorePatchType }): UserTable`
 Updates multiple cells at once.
 
 ```tsx
+// Get sync from connector
+const { table, sync } = connector.current.tableManager;
+
 const newTable = table.update({
   diff: {
     'A1': { value: 'Updated Value' },
@@ -182,6 +187,9 @@ sync(newTable); // Required to apply changes
 Writes a value to a specific cell.
 
 ```tsx
+// Get sync from connector
+const { table, sync } = connector.current.tableManager;
+
 const newTable = table.write({
   point: { x: 1, y: 1 },
   value: 'Hello World'
@@ -193,6 +201,9 @@ sync(newTable); // Required to apply changes
 Writes a matrix of values starting at a specific point.
 
 ```tsx
+// Get sync from connector
+const { table, sync } = connector.current.tableManager;
+
 const newTable = table.writeMatrix({
   point: { x: 1, y: 1 },
   matrix: [['A1', 'B1'], ['A2', 'B2']]
@@ -207,6 +218,9 @@ sync(newTable); // Required to apply changes
 Inserts rows at the specified position. If `diff` is provided, it also updates the cells after insertion.
 
 ```tsx
+// Get sync from connector
+const { table, sync } = connector.current.tableManager;
+
 const newTable = table.insertRows({
   y: 5,
   numRows: 2,
@@ -216,12 +230,16 @@ const newTable = table.insertRows({
     A6: { value: 'New Row 2' },
   },
 });
+sync(newTable); // Required to apply changes
 ```
 
 #### `removeRows(args: { y: number; numRows: number; reflection?: StorePatchType }): UserTable`
 Removes rows at a specific position.
 
 ```tsx
+// Get sync from connector
+const { table, sync } = connector.current.tableManager;
+
 const newTable = table.removeRows({
   y: 2,
   numRows: 3
@@ -236,6 +254,9 @@ sync(newTable); // Required to apply changes
 Inserts columns at the specified position. If `diff` is provided, it also updates the cells after insertion.
 
 ```tsx
+// Get sync from connector
+const { table, sync } = connector.current.tableManager;
+
 const newTable = table.insertCols({
   x: 3,
   numCols: 2,
@@ -245,12 +266,16 @@ const newTable = table.insertCols({
     D1: { value: 'New Col 2' },
   },
 });
+sync(newTable); // Required to apply changes
 ```
 
 #### `removeCols(args: { x: number; numCols: number; reflection?: StorePatchType }): UserTable`
 Removes columns at a specific position.
 
 ```tsx
+// Get sync from connector
+const { table, sync } = connector.current.tableManager;
+
 const newTable = table.removeCols({
   x: 2,
   numCols: 3
@@ -264,6 +289,9 @@ sync(newTable); // Required to apply changes
 Moves cells from one area to another.
 
 ```tsx
+// Get sync from connector
+const { table, sync } = connector.current.tableManager;
+
 const newTable = table.move({
   src: { top: 0, left: 0, bottom: 2, right: 2 },
   dst: { top: 5, left: 5, bottom: 7, right: 7 }
@@ -275,6 +303,9 @@ sync(newTable); // Required to apply changes
 Copies cells from one area to another.
 
 ```tsx
+// Get sync from connector
+const { table, sync } = connector.current.tableManager;
+
 const newTable = table.copy({
   src: { top: 0, left: 0, bottom: 2, right: 2 },
   dst: { top: 5, left: 5, bottom: 7, right: 7 },
@@ -289,6 +320,9 @@ sync(newTable); // Required to apply changes
 Sorts all data rows by the values in the specified column. Supports ascending and descending order. Null/undefined values are sorted to the end. This operation is recorded in the undo/redo history.
 
 ```tsx
+// Get sync from connector
+const { table, sync } = connector.current.tableManager;
+
 // Sort by column B ascending
 const newTable = table.sortRows({ x: 2, direction: 'asc' });
 sync(newTable);
@@ -332,6 +366,9 @@ Available filter methods:
 | `notEmpty` | Cell is not empty (no value required) |
 
 ```tsx
+// Get sync from connector
+const { table, sync } = connector.current.tableManager;
+
 // Filter column B: show only rows where value > 80
 const newTable = table.filterRows({
   x: 2,
