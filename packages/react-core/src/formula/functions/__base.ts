@@ -26,6 +26,8 @@ export class BaseFunction {
   protected ttlMilliseconds?: number;
   /** Hash precision for cache key generation. Higher values reduce collision risk. Default: 1 */
   protected hashPrecision: number = 1;
+  /** If true, reuse the same in-flight promise for matching cache keys across different cells. */
+  protected useInflight: boolean = true;
   protected bareArgs: any[];
   protected table: Table;
   protected origin?: PointType;
@@ -48,14 +50,14 @@ export class BaseFunction {
     // For async functions, build cache key and check cache before execution
     if (this.isAsync) {
       const key = buildAsyncCacheKey(this.constructor.name, this.bareArgs, this.hashPrecision);
-      const cached = getAsyncCache(this.table, this.origin!, key);
+      const cached = getAsyncCache(this.table, this.origin!, key, this.useInflight);
       if (cached !== asyncCacheMiss) {
         return cached;
       }
 
       // @ts-expect-error main is not defined in BaseFunction
       const promise = this.main(...this.bareArgs);
-      return awaitAndSave(promise, this.table, this.origin!, key, this.ttlMilliseconds);
+      return awaitAndSave(promise, this.table, this.origin!, key, this.ttlMilliseconds, this.useInflight);
     }
 
     // For sync functions, just call and return

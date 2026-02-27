@@ -74,6 +74,7 @@ export const getAsyncCache = (
   table: { wire: Wire; getId: (p: PointType) => string },
   origin: PointType,
   key: string,
+  useInflight: boolean = false,
 ): any => {
   const cellId = table.getId(origin);
   const wire = table.wire;
@@ -99,6 +100,12 @@ export const getAsyncCache = (
   if (wire.asyncPending.has(cellId)) {
     return wire.asyncPending.get(cellId)!;
   }
+
+  // If useInflight is enabled, check for an in-flight promise with the same cache key
+  if (useInflight && wire.asyncInflight?.has(key)) {
+    return wire.asyncInflight.get(key)!;
+  }
+
   return asyncCacheMiss;
 };
 
@@ -107,14 +114,17 @@ export const getAsyncCache = (
  *
  * Cache is stored per-cell in cell.asyncCache.
  * In-flight tracking uses Wire.asyncPending (keyed by cell ID).
+ * If useInflight is true, also tracks by cache key in Wire.asyncInflight.
  *
  * Flow:
  * 1. If cell has asyncCache and the key matches (inputs unchanged) and not expired → return cached value
  * 2. If there is already an in-flight promise for this cell → return its Pending
- * 3. Otherwise start the async work, return a new Pending, and on completion
+ * 3. If useInflight is true and there is an in-flight promise for this key → return its Pending
+ * 4. Otherwise start the async work, return a new Pending, and on completion
  *    write the result into cell.asyncCache and trigger a re-render.
  *
  * @param ttlMilliseconds - Cache time-to-live in **milliseconds**. undefined = never expires.
+ * @param useInflight - If true, reuse the same promise for matching cache keys across different cells.
  */
 export const awaitAndSave = (
   promise: Promise<any>,
@@ -122,6 +132,7 @@ export const awaitAndSave = (
   origin: PointType,
   key: string,
   ttlMilliseconds?: number,
+  useInflight: boolean = false,
 ): Pending => {
   const cellId = table.getId(origin);
   const wire = table.wire;
@@ -132,6 +143,14 @@ export const awaitAndSave = (
   // Start the async computation
   const pending = new Pending(promise);
   wire.asyncPending.set(cellId, pending);
+
+  // If useInflight is enabled, also track by cache key
+  if (useInflight) {
+    if (!wire.asyncInflight) {
+      wire.asyncInflight = new Map();
+    }
+    wire.asyncInflight.set(key, pending);
+  }
 
   promise
     .then((result: any) => {
@@ -149,6 +168,10 @@ export const awaitAndSave = (
     })
     .finally(() => {
       wire.asyncPending.delete(cellId);
+      // If useInflight was enabled, also remove from asyncInflight
+      if (useInflight && wire.asyncInflight) {
+        wire.asyncInflight.delete(key);
+      }
       // Clear solvedCaches so dependent formulas re-evaluate
       wire.solvedCaches.clear();
       // Trigger re-render of all sheets

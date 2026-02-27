@@ -60,6 +60,8 @@ export class Wire {
   solvedCaches: Map<Id, any> = new Map();
   /** Currently in-flight async formula Pending sentinels (keyed by cell ID). */
   asyncPending: Map<string, Pending> = new Map();
+  /** In-flight async formula Pending sentinels shared by cache key (for useInflight). */
+  asyncInflight?: Map<string, Pending>;
   copyingSheetId: number = 0;
   copyingZone: ZoneType = RESET_ZONE;
   cutting: boolean = false;
