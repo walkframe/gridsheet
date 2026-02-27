@@ -52,7 +52,7 @@ export { Wire, useHub, createHub } from './lib/hub';
 export type { Dispatcher } from './store';
 export { ThousandSeparatorRendererMixin } from './renderers/thousand_separator';
 export { CheckboxRendererMixin } from './renderers/checkbox';
-export { BaseFunction } from './formula/functions/__base';
+export { BaseFunction, BaseFunctionSync, BaseFunctionAsync } from './formula/functions/__base';
 export { FormulaError } from './formula/evaluator';
 export { Table, type UserTable } from './lib/table';
 export { Policy } from './policy/core';

@@ -83,10 +83,10 @@ Asynchronous formulas allow you to fetch data from external APIs, perform databa
 
 ### Creating an Async Formula
 
-Simply make the `main()` method `async`:
+Extend `BaseFunctionAsync` and make the `main()` method `async`:
 
 ```tsx
-class FetchWeather extends BaseFunction {
+class FetchWeather extends BaseFunctionAsync {
   example = 'FETCH_WEATHER("Tokyo")';
   helpTexts = ['Fetches current weather data for a city'];
   helpArgs = [
@@ -104,7 +104,7 @@ class FetchWeather extends BaseFunction {
 ### Example: API Integration
 
 ```tsx
-class GetUserData extends BaseFunction {
+class GetUserData extends BaseFunctionAsync {
   example = 'GET_USER("user123")';
   helpTexts = ['Fetches user information from API'];
   helpArgs = [
@@ -152,7 +152,7 @@ When async formulas are used in the spreadsheet:
 Proper error handling is important for both sync and async formulas:
 
 ```tsx
-class SafeAsyncFunction extends BaseFunction {
+class SafeAsyncFunction extends BaseFunctionAsync {
   example = 'SAFE_FUNC(url)';
   helpTexts = ['Safely fetches data with error handling'];
   helpArgs = [
@@ -259,7 +259,7 @@ Controls how long the async formula result is cached per cell.
 | `number` | Cache expires after the specified milliseconds |
 
 ```tsx
-class MyApiFunction extends BaseFunction {
+class MyApiFunction extends BaseFunctionAsync {
   ttlMilliseconds = 60 * 1000; // Cache for 1 minute
 
   async main(id: string) {
@@ -283,7 +283,7 @@ Hash segments are base-36 encoded (digits `0-9` + letters `a-z`), up to 11 chara
 In practice, `1` is sufficient since collisions only cause a stale cache hit (not data corruption), and the cache key also includes the function name and argument length as additional discrimination.
 
 ```tsx
-class MyApiFunction extends BaseFunction {
+class MyApiFunction extends BaseFunctionAsync {
   hashPrecision = 2; // Use 2 hash segments for extra safety
 
   async main(data: string) { /* ... */ }

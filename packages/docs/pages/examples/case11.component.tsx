@@ -4,7 +4,7 @@ import * as React from 'react';
 import {
   GridSheet,
   buildInitialCells,
-  BaseFunction,
+  BaseFunctionAsync,
   useHub,
   Renderer,
   RendererMixinType,
@@ -20,7 +20,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 // ─── Async formula: GH_REPO(owner/repo, field) ───
 // Fetches repository data from GitHub API (no auth required for public repos).
 // Fields: "stars", "forks", "issues"
-class GhRepoFunction extends BaseFunction {
+class GhRepoFunction extends BaseFunctionAsync {
   example = 'GH_REPO("facebook/react", "stars")';
   helpTexts = ['Fetches public repository data from GitHub API.'];
   helpArgs = [

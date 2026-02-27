@@ -293,7 +293,7 @@ Caches are invalidated in the following scenarios:
 Set cache TTL in your async formula class:
 
 ```typescript
-class MyAsyncFunction extends BaseFunction {
+class MyAsyncFunction extends BaseFunctionAsync {
   // Cache for 1 minute
   ttlMilliseconds = 60 * 1000;
 

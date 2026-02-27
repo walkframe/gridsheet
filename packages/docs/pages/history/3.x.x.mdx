@@ -39,15 +39,15 @@ Update your code to use the new `changedTime` property when accessing cell syste
 
 ### How to Create an Async Formula
 
-Creating async formulas is straightforward. Simply make the `main()` method async:
+Creating async formulas is straightforward. Extend `BaseFunctionAsync` instead of `BaseFunction`:
 
 ```tsx
-class MyAsyncFunction extends BaseFunction {
+class MyAsyncFunction extends BaseFunctionAsync {
   example = 'MY_FUNC("arg1")';
   helpTexts = ['Fetches data asynchronously.'];
   helpArgs = [{ name: 'key', description: 'The key to fetch.' }];
 
-  // Just make main() async — the framework handles the rest
+  // Make main() async — the framework handles the rest
   async main(key: string) {
     const res = await fetch(`https://api.example.com/${key}`);
     const data = await res.json();

@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import {
-  BaseFunction,
+  BaseFunctionAsync,
   buildInitialCells,
   GridSheet,
   useHub,
@@ -18,7 +18,7 @@ export default meta;
 /**
  * SUM_DELAY: async version of SUM that returns the result after 2 seconds.
  */
-class SumDelayFunction extends BaseFunction {
+class SumDelayFunction extends BaseFunctionAsync {
   example = 'SUM_DELAY(1, 2, 3)';
   helpTexts = ['Returns the sum of values after a 2-second delay.'];
   helpArgs = [{ name: 'value1', description: 'Numbers to sum.' }];

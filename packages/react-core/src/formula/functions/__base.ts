@@ -20,6 +20,8 @@ export class BaseFunction {
   public example = '_BASE()';
   public helpTexts = ["Function's description."];
   public helpArgs = [{ name: 'value1', description: '' }];
+  /** Indicates if this function is async. Override in subclass or use BaseFunctionAsync. */
+  protected isAsync: boolean = false;
   /** Cache TTL in milliseconds. Override in subclass to set expiry. undefined = never expires. */
   protected ttlMilliseconds?: number;
   /** Hash precision for cache key generation. Higher values reduce collision risk. Default: 1 */
@@ -35,11 +37,6 @@ export class BaseFunction {
   }
   protected validate() {}
 
-  private get isMainAsync(): boolean {
-    const mainDescriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(this), 'main');
-    return mainDescriptor?.value?.constructor?.name === 'AsyncFunction';
-  }
-
   public call() {
     this.validate();
 
@@ -49,11 +46,11 @@ export class BaseFunction {
     }
 
     // For async functions, build cache key and check cache before execution
-    if (this.isMainAsync) {
+    if (this.isAsync) {
       const key = buildAsyncCacheKey(this.constructor.name, this.bareArgs, this.hashPrecision);
-      const cachedResult = getAsyncCache(this.table, this.origin!, key);
-      if (cachedResult !== asyncCacheMiss) {
-        return cachedResult;
+      const cached = getAsyncCache(this.table, this.origin!, key);
+      if (cached !== asyncCacheMiss) {
+        return cached;
       }
 
       // @ts-expect-error main is not defined in BaseFunction
@@ -65,6 +62,22 @@ export class BaseFunction {
     // @ts-expect-error main is not defined in BaseFunction
     return this.main(...this.bareArgs);
   }
+}
+
+/**
+ * Base class for sync functions.
+ * Extend this class to create sync functions that support caching.
+ */
+export class BaseFunctionSync extends BaseFunction {
+  protected isAsync: boolean = false;
+}
+
+/**
+ * Base class for async functions.
+ * Extend this class to create async functions that support caching.
+ */
+export class BaseFunctionAsync extends BaseFunction {
+  protected isAsync: boolean = true;
 }
 
 export type FunctionMapping = { [functionName: string]: typeof BaseFunction };
