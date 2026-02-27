@@ -64,18 +64,49 @@ export const shouldTracking = (operation: string) => {
 };
 
 export const initSearchStatement = (table: Table, store: StoreType) => {
-  const { searchQuery, searchCaseSensitive } = store;
+  const { searchQuery, searchCaseSensitive, searchRegex, searchRange } = store;
   let { choosing } = store;
   if (!searchQuery) {
     return { matchingCells: [] };
   }
   const matchingCells: Address[] = [];
-  for (let y = 1; y <= table.bottom; y++) {
-    for (let x = 1; x <= table.right; x++) {
-      const v = table.stringify({ point: { y, x } });
-      const s = searchCaseSensitive ? v : v.toLowerCase();
+  
+  let matcher: (value: string) => boolean;
+  if (searchRegex) {
+    try {
+      const flags = searchCaseSensitive ? '' : 'i';
+      const regex = new RegExp(searchQuery, flags);
+      matcher = (v: string) => regex.test(v);
+    } catch (e) {
+      // Invalid regex, treat as literal string
       const q = searchCaseSensitive ? searchQuery : searchQuery.toLowerCase();
-      if (s.indexOf(q) !== -1) {
+      matcher = (v: string) => {
+        const s = searchCaseSensitive ? v : v.toLowerCase();
+        return s.indexOf(q) !== -1;
+      };
+    }
+  } else {
+    const q = searchCaseSensitive ? searchQuery : searchQuery.toLowerCase();
+    matcher = (v: string) => {
+      const s = searchCaseSensitive ? v : v.toLowerCase();
+      return s.indexOf(q) !== -1;
+    };
+  }
+  
+  // Determine search range
+  let startY = 1, endY = table.bottom;
+  let startX = 1, endX = table.right;
+  if (searchRange) {
+    startY = searchRange.startY;
+    endY = searchRange.endY;
+    startX = searchRange.startX;
+    endX = searchRange.endX;
+  }
+  
+  for (let y = startY; y <= endY; y++) {
+    for (let x = startX; x <= endX; x++) {
+      const v = table.stringify({ point: { y, x } });
+      if (matcher(v)) {
         matchingCells.push(`${x2c(x)}${y2r(y)}`);
       }
     }

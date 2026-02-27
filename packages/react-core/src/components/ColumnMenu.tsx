@@ -14,7 +14,7 @@ import type { FilterCondition, FilterConditionMethod } from '../types';
 import * as prevention from '../lib/operation';
 import { x2c, p2a } from '../lib/coords';
 import { between } from '../lib/spatial';
-import { copier, cutter, paster } from '../store/dispatchers';
+import { copier, cutter, paster, searcher } from '../store/dispatchers';
 
 const METHOD_LABELS: Record<FilterConditionMethod, string> = {
   eq: '=',
@@ -289,7 +289,7 @@ export const ColumnMenu: FC = () => {
 
   return (
     <Fixed
-      className="gs-column-menu-modal"
+      className="gs-menu-modal gs-column-menu-modal"
       onClick={(e: MouseEvent) => {
         e.preventDefault();
         if (!waiting) {
@@ -316,10 +316,10 @@ export const ColumnMenu: FC = () => {
           style={{ top: position.y, left: position.x }}
           onClick={(e) => e.stopPropagation()}
         >
-          <ul>
+          <ul className="gs-menu-items">
             <li className={`gs-column-menu-filter${filterDisabled ? ' gs-disabled' : ''}`}>
               <div className="gs-filter-header">
-                <div className="gs-menu-name">Filter</div>
+                <div className="gs-menu-name">Filter:</div>
                 <button className="gs-filter-add-btn" onClick={addCondition} disabled={filterDisabled}>
                   + ADD
                 </button>
@@ -419,30 +419,39 @@ export const ColumnMenu: FC = () => {
               </div>
             </li>
             <li className="gs-menu-divider" />
-            <li
-              className={sortDisabled ? 'gs-disabled' : 'gs-enabled'}
-              onClick={() => {
-                if (!sortDisabled) {
-                  handleSortAsc();
-                }
-              }}
-            >
-              <div className="gs-menu-name">Sort A to Z</div>
-            </li>
-            <li
-              className={sortDisabled ? 'gs-disabled' : 'gs-enabled'}
-              onClick={() => {
-                if (!sortDisabled) {
-                  handleSortDesc();
-                }
-              }}
-            >
-              <div className="gs-menu-name">Sort Z to A</div>
+            <li className={`gs-menu-item gs-column-menu-sort${sortDisabled ? ' gs-disabled' : ''}`}>
+              <div className="gs-menu-name">Sort:</div>
+              <div className="gs-sort-buttons">
+                <button
+                  className="gs-sort-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!sortDisabled) {
+                      handleSortAsc();
+                    }
+                  }}
+                  disabled={sortDisabled}
+                >
+                  ↓ A to Z
+                </button>
+                <button
+                  className="gs-sort-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!sortDisabled) {
+                      handleSortDesc();
+                    }
+                  }}
+                  disabled={sortDisabled}
+                >
+                  ↑ Z to A
+                </button>
+              </div>
             </li>
             <li className="gs-menu-divider" />
-            <li className={`gs-column-menu-label${labelDisabled ? ' gs-disabled' : ''}`}>
-              <div className="gs-label-input-row">
-                <div className="gs-menu-name">Label:</div>
+            <li className={`gs-menu-item gs-column-menu-label${labelDisabled ? ' gs-disabled' : ''}`}>
+              <label className="gs-label-input-row">
+                <div className="gs-label-input-label">Label:</div>
                 <input
                   ref={labelInputRef}
                   className="gs-label-input"
@@ -466,48 +475,60 @@ export const ColumnMenu: FC = () => {
                 <button className="gs-label-apply-btn" onClick={handleApplyLabel} disabled={labelDisabled}>
                   UPDATE
                 </button>
-              </div>
+              </label>
             </li>
             <li className="gs-menu-divider" />
             <li
-              className="gs-enabled"
+              className="gs-menu-item gs-enabled"
               onClick={async () => {
                 await cutter({ store, dispatch });
                 dispatch(setColumnMenu(null));
               }}
             >
               <div className="gs-menu-name">Cut</div>
+              <div className="gs-menu-shortcut">
+                <span className="gs-menu-underline">X</span>
+              </div>
             </li>
             <li
-              className="gs-enabled"
+              className="gs-menu-item gs-enabled"
               onClick={async () => {
                 await copier({ store, dispatch });
                 dispatch(setColumnMenu(null));
               }}
             >
               <div className="gs-menu-name">Copy</div>
+              <div className="gs-menu-shortcut">
+                <span className="gs-menu-underline">C</span>
+              </div>
             </li>
             <li
-              className="gs-enabled"
+              className="gs-menu-item gs-enabled"
               onClick={async () => {
                 await paster({ store, dispatch }, false);
                 dispatch(setColumnMenu(null));
               }}
             >
               <div className="gs-menu-name">Paste</div>
+              <div className="gs-menu-shortcut">
+                <span className="gs-menu-underline">V</span>
+              </div>
             </li>
             <li
-              className="gs-enabled"
+              className="gs-menu-item gs-enabled"
               onClick={async () => {
                 await paster({ store, dispatch }, true);
                 dispatch(setColumnMenu(null));
               }}
             >
               <div className="gs-menu-name">Paste only value</div>
+              <div className="gs-menu-shortcut">
+                Shift + <span className="gs-menu-underline">V</span>
+              </div>
             </li>
             <li className="gs-menu-divider" />
             <li
-              className={insertLeftDisabled ? 'gs-disabled' : 'gs-enabled'}
+              className={`gs-menu-item ${insertLeftDisabled ? 'gs-disabled' : 'gs-enabled'}`}
               onClick={() => {
                 if (!insertLeftDisabled) {
                   dispatch(insertColsLeft({ numCols: numSelectedCols, x, operator: 'USER' }));
@@ -521,7 +542,7 @@ export const ColumnMenu: FC = () => {
               </div>
             </li>
             <li
-              className={insertRightDisabled ? 'gs-disabled' : 'gs-enabled'}
+              className={`gs-menu-item ${insertRightDisabled ? 'gs-disabled' : 'gs-enabled'}`}
               onClick={() => {
                 if (!insertRightDisabled) {
                   dispatch(insertColsRight({ numCols: numSelectedCols, x, operator: 'USER' }));
@@ -535,7 +556,7 @@ export const ColumnMenu: FC = () => {
               </div>
             </li>
             <li
-              className={removeDisabled ? 'gs-disabled' : 'gs-enabled'}
+              className={`gs-menu-item ${removeDisabled ? 'gs-disabled' : 'gs-enabled'}`}
               onClick={() => {
                 if (!removeDisabled) {
                   dispatch(removeCols({ numCols: numSelectedCols, x, operator: 'USER' }));
@@ -546,6 +567,19 @@ export const ColumnMenu: FC = () => {
             >
               <div className="gs-menu-name">
                 Remove {numSelectedCols} column{numSelectedCols > 1 ? 's' : ''}
+              </div>
+            </li>
+            <li className="gs-menu-divider" />
+            <li
+              className="gs-menu-item gs-enabled"
+              onClick={async () => {
+                await searcher({ store, dispatch });
+                dispatch(setColumnMenu(null));
+              }}
+            >
+              <div className="gs-menu-name">Search</div>
+              <div className="gs-menu-shortcut">
+                <span className="gs-menu-underline">F</span>
               </div>
             </li>
           </ul>

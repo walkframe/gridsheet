@@ -531,3 +531,11 @@ export const addressesToRows = (addresses: Address[], asc: boolean | null = true
   }
   return rows;
 };
+
+export const isAreaNotSelected = (area: AreaType): boolean => {
+  return area.top === -1 || area.left === -1 || area.bottom === -1 || area.right === -1;
+}
+
+export const isZoneNotSelected = (zone: ZoneType): boolean => {
+  return zone.startY === -1 || zone.startX === -1 || zone.endY === -1 || zone.endX === -1;
+}

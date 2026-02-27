@@ -5,7 +5,7 @@ import { Fixed } from './Fixed';
 import * as prevention from '../lib/operation';
 import { y2r } from '../lib/coords';
 import { between } from '../lib/spatial';
-import { copier, cutter, paster } from '../store/dispatchers';
+import { copier, cutter, paster, searcher } from '../store/dispatchers';
 
 export const RowMenu: FC = () => {
   const { store, dispatch } = useContext(Context);
@@ -46,7 +46,7 @@ export const RowMenu: FC = () => {
 
   return (
     <Fixed
-      className="gs-row-menu-modal"
+      className="gs-menu-modal gs-row-menu-modal"
       onClick={(e: MouseEvent) => {
         e.preventDefault();
         handleClose();
@@ -54,46 +54,58 @@ export const RowMenu: FC = () => {
       }}
     >
       <div className="gs-row-menu" style={{ top: position.y, left: position.x }} onClick={(e) => e.stopPropagation()}>
-        <ul>
+        <ul className="gs-menu-items">
           <li
-            className="gs-enabled"
+            className="gs-menu-item gs-enabled"
             onClick={async () => {
               await cutter({ store, dispatch });
               dispatch(setRowMenu(null));
             }}
           >
             <div className="gs-menu-name">Cut</div>
+            <div className="gs-menu-shortcut">
+              <span className="gs-menu-underline">X</span>
+            </div>
           </li>
           <li
-            className="gs-enabled"
+            className="gs-menu-item gs-enabled"
             onClick={async () => {
               await copier({ store, dispatch });
               dispatch(setRowMenu(null));
             }}
           >
             <div className="gs-menu-name">Copy</div>
+            <div className="gs-menu-shortcut">
+              <span className="gs-menu-underline">C</span>
+            </div>
           </li>
           <li
-            className="gs-enabled"
+            className="gs-menu-item gs-enabled"
             onClick={async () => {
               await paster({ store, dispatch }, false);
               dispatch(setRowMenu(null));
             }}
           >
             <div className="gs-menu-name">Paste</div>
+            <div className="gs-menu-shortcut">
+              <span className="gs-menu-underline">V</span>
+            </div>
           </li>
           <li
-            className="gs-enabled"
+            className="gs-menu-item gs-enabled"
             onClick={async () => {
               await paster({ store, dispatch }, true);
               dispatch(setRowMenu(null));
             }}
           >
             <div className="gs-menu-name">Paste only value</div>
+            <div className="gs-menu-shortcut">
+              Shift + <span className="gs-menu-underline">V</span>
+            </div>
           </li>
           <li className="gs-menu-divider" />
           <li
-            className={insertAboveDisabled ? 'gs-disabled' : 'gs-enabled'}
+            className={`gs-menu-item ${insertAboveDisabled ? 'gs-disabled' : 'gs-enabled'}`}
             onClick={() => {
               if (!insertAboveDisabled) {
                 dispatch(insertRowsAbove({ numRows: numSelectedRows, y, operator: 'USER' }));
@@ -107,7 +119,7 @@ export const RowMenu: FC = () => {
             </div>
           </li>
           <li
-            className={insertBelowDisabled ? 'gs-disabled' : 'gs-enabled'}
+            className={`gs-menu-item ${insertBelowDisabled ? 'gs-disabled' : 'gs-enabled'}`}
             onClick={() => {
               if (!insertBelowDisabled) {
                 dispatch(insertRowsBelow({ numRows: numSelectedRows, y, operator: 'USER' }));
@@ -121,7 +133,7 @@ export const RowMenu: FC = () => {
             </div>
           </li>
           <li
-            className={removeDisabled ? 'gs-disabled' : 'gs-enabled'}
+            className={`gs-menu-item ${removeDisabled ? 'gs-disabled' : 'gs-enabled'}`}
             onClick={() => {
               if (!removeDisabled) {
                 dispatch(removeRows({ numRows: numSelectedRows, y, operator: 'USER' }));
@@ -132,6 +144,19 @@ export const RowMenu: FC = () => {
           >
             <div className="gs-menu-name">
               Remove {numSelectedRows} row{numSelectedRows > 1 ? 's' : ''}
+            </div>
+          </li>
+          <li className="gs-menu-divider" />
+          <li
+            className="gs-menu-item gs-enabled"
+            onClick={async () => {
+              await searcher({ store, dispatch });
+              dispatch(setRowMenu(null));
+            }}
+          >
+            <div className="gs-menu-name">Search</div>
+            <div className="gs-menu-shortcut">
+              <span className="gs-menu-underline">F</span>
             </div>
           </li>
         </ul>

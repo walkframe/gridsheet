@@ -94,6 +94,38 @@ class SetSearchCaseSensitiveAction<T extends boolean> extends CoreAction<T> {
 }
 export const setSearchCaseSensitive = new SetSearchCaseSensitiveAction().bind();
 
+class SetSearchRegexAction<T extends boolean> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
+    const searchRegex = payload;
+    const { tableReactive: tableRef } = store;
+    if (tableRef.current == null) {
+      return store;
+    }
+    return {
+      ...store,
+      ...initSearchStatement(tableRef.current, { ...store, searchRegex }),
+      searchRegex,
+    };
+  }
+}
+export const setSearchRegex = new SetSearchRegexAction().bind();
+
+class SetSearchRangeAction<T extends ZoneType | undefined> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
+    const searchRange = payload;
+    const { tableReactive: tableRef } = store;
+    if (tableRef.current == null) {
+      return store;
+    }
+    return {
+      ...store,
+      ...initSearchStatement(tableRef.current, { ...store, searchRange }),
+      searchRange,
+    };
+  }
+}
+export const setSearchRange = new SetSearchRangeAction().bind();
+
 class SetEditingAddressAction<T extends string> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     return {

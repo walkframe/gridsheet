@@ -1,6 +1,6 @@
 // Shared mixins for contextmenu and columnmenu
 
-.gs-menu-modal() {
+.gs-menu-modal {
   width: 100%;
   height: 100vh;
   z-index: 12;
@@ -10,7 +10,7 @@
   z-index: 12;
   position: fixed;
   background-color: #ffffff;
-  padding: 5px 0;
+  padding: 10px 0;
   border-radius: 5px;
   box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px,
     rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
@@ -28,32 +28,17 @@
   padding: 0;
 }
 
-.gs-menu-li() {
-  padding: 5px 10px;
-  list-style-type: none;
-
-  &.gs-enabled {
-    cursor: pointer;
-    &:hover {
-      background-color: #eeeeee;
-    }
-  }
-
-  &.gs-disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .gs-menu-name {
-    font-size: 13px;
-    letter-spacing: 1px;
-  }
+.gs-label-input-label {
+  font-size: 13px;
+  letter-spacing: 1px;
 }
 
-.gs-menu-divider() {
+.gs-menu-divider {
   background-color: #aaaaaa;
   padding: 0;
+  margin: 5px 0;
   height: 1px;
+  list-style-type: none;
 }
 
 // Shared mixin for row/column header menus (same ul/li structure, min-width 200px)
@@ -64,14 +49,7 @@
     .gs-menu-ul();
     min-width: 200px;
   }
-  li {
-    .gs-menu-li();
 
-    &.gs-menu-divider {
-      .gs-menu-divider();
-      margin: 5px 0;
-    }
-  }
 }
 
 // Shared mixin for header menu trigger buttons (column-menu-btn / row-menu-btn)
@@ -98,57 +76,94 @@
 
 // Context menu
 
-.gs-contextmenu-modal {
-  .gs-menu-modal();
-}
-
-.gs-contextmenu {
+.gs-context-menu {
   .gs-menu-container();
 
-  ul {
+  .gs-menu-items {
     .gs-menu-ul();
     min-width: 250px;
   }
-  li {
-    .gs-menu-li();
-    display: flex;
+}
 
-    &.gs-menu-divider {
-      .gs-menu-divider();
-      margin: 10px 0;
+.gs-menu-item {
+  padding: 5px 10px;
+  list-style-type: none;
+  display: flex;
+
+  &.gs-enabled {
+    cursor: pointer;
+
+    &:hover {
+      background-color: #eeeeee;
     }
+  }
 
-    .gs-menu-name {
-      flex: 1;
-    }
+  &.gs-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 
-    .gs-menu-shortcut {
-      font-size: 10px;
-      line-height: 20px;
-      color: #999999;
+  .gs-menu-name {
+    font-size: 13px;
+    letter-spacing: 1px;
+    flex: 1;
+  }
+}
 
-      &:before {
-        content: "( ";
-      }
-      &:after {
-        content: " )";
-      }
+.gs-menu-shortcut {
+  font-size: 10px;
+  line-height: 20px;
+  color: #999999;
 
-      .gs-menu-underline {
-        text-decoration: underline;
-      }
-    }
+  &:before {
+    content: "( ";
+  }
+
+  &:after {
+    content: " )";
+  }
+
+  .gs-menu-underline {
+    text-decoration: underline;
   }
 }
 
 // Column menu
 
-.gs-column-menu-modal {
-  .gs-menu-modal();
-}
 
 .gs-column-menu {
   .gs-header-menu();
+
+  .gs-column-menu-sort {
+    align-items: center;
+
+    .gs-sort-buttons {
+      display: flex;
+      gap: 4px;
+      margin-left: auto;
+    }
+
+    .gs-sort-btn {
+      font-size: 12px;
+      padding: 4px 8px;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      background-color: rgba(180, 180, 180, 0.1);
+      cursor: pointer;
+      color: #555;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+
+      &:hover:not(:disabled) {
+        border-color: #555;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
 
   .gs-column-menu-label {
     padding: 5px 10px;
@@ -182,22 +197,29 @@
 
   .gs-label-apply-btn {
     font-size: 12px;
-    padding: 3px 6px;
+    padding: 4px 8px;
     border: 1px solid transparent;
     border-radius: 3px;
-    background-color: transparent;
-    color: #1a8a1a;
+    background-color: rgba(180, 180, 180, 0.1);
     cursor: pointer;
+    color: #555;
     font-weight: bold;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
 
-    &:hover {
-      border-color: #1a8a1a;
+    &:hover:not(:disabled) {
+      border-color: #555;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
   }
 
   .gs-column-menu-filter {
-    padding: 5px 10px;
+    padding: 1px 10px;
+    list-style-type: none;
+    font-size: 13px;
   }
 
   .gs-filter-header {
@@ -210,7 +232,7 @@
       padding: 3px 9px;
       border: 1px solid transparent;
       border-radius: 3px;
-      background-color: transparent;
+      background-color: rgba(180, 180, 180, 0.1);
       cursor: pointer;
       color: #555;
       letter-spacing: 1px;
@@ -454,10 +476,6 @@
 }
 
 // Row menu
-
-.gs-row-menu-modal {
-  .gs-menu-modal();
-}
 
 .gs-row-menu {
   .gs-header-menu();

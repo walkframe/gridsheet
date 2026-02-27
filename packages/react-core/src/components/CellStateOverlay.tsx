@@ -11,7 +11,7 @@ import type { FC } from 'react';
 import type { RefPaletteType, AreaType, ModeType } from '../types';
 
 const COLOR_POINTED = 'rgba(0, 119, 255, 1)';
-const COLOR_SELECTED = 'rgba(0, 119, 255, 0.4)';
+const COLOR_SELECTED = 'rgba(0, 119, 255, 0.6)';
 const SELECTING_FILL = 'rgba(0, 128, 255, 0.2)';
 const COLOR_COPYING = '#0077ff';
 const COLOR_CUTTING = '#0077ff';
@@ -239,7 +239,7 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
       let color: string | null = null;
       let backgroundColor: string | null = null;
       if (between({ start: selectingZone.startX, end: selectingZone.endX }, x)) {
-        color = COLOR_SELECTED;
+        color = 'rgba(80, 180, 255, 1)';
         if (topHeaderSelecting) {
           backgroundColor = 'rgba(0, 119, 255, 0.15)';
         }
@@ -265,10 +265,10 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
         }
         // Draw bottom border of the header
         ctx.strokeStyle = color;
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(drawLeft, headerH);
-        ctx.lineTo(drawLeft + drawWidth, headerH);
+        ctx.moveTo(drawLeft, headerH + 1);
+        ctx.lineTo(drawLeft + drawWidth, headerH + 1);
         ctx.stroke();
       }
     }
@@ -281,7 +281,7 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
       let color: string | null = null;
       let backgroundColor: string | null = null;
       if (between({ start: selectingZone.startY, end: selectingZone.endY }, y)) {
-        color = COLOR_SELECTED;
+        color = 'rgba(80, 180, 255, 1)';
         if (leftHeaderSelecting) {
           backgroundColor = 'rgba(0, 119, 255, 0.15)';
         }
@@ -307,10 +307,10 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
         }
         // Draw right border of the header
         ctx.strokeStyle = color;
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(headerW, drawTop);
-        ctx.lineTo(headerW, drawTop + drawHeight);
+        ctx.moveTo(headerW + 1, drawTop);
+        ctx.lineTo(headerW + 1, drawTop + drawHeight);
         ctx.stroke();
       }
     }

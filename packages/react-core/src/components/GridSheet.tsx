@@ -104,6 +104,7 @@ export function GridSheet({
       matchingCells: [],
       matchingCellIndex: 0,
       searchCaseSensitive: false,
+      searchRegex: false,
       editingOnEnter: true,
       showAddress: true,
       contextMenuPosition: { y: -1, x: -1 },

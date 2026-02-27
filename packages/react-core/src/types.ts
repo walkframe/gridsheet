@@ -169,6 +169,8 @@ export type StoreType = {
   mode: ModeType;
   searchQuery?: string;
   searchCaseSensitive: boolean;
+  searchRegex: boolean;
+  searchRange?: ZoneType;
   matchingCells: string[];
   matchingCellIndex: number;
   editingOnEnter: boolean;
