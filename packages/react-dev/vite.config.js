@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => ({
       entry: {
         index: "./src/index.ts",
       },
-      name: "GridSheet",
+      name: "GridSheetDev",
       formats: ["es"],
       fileName: (format, entryName) => `${entryName}.js`,
     },
@@ -18,7 +18,6 @@ export default defineConfig(({ mode }) => ({
       external: [/^react/, /^@?react-dom/, "@gridsheet/react-core"],
       output: {
         preserveModules: false,
-        //preserveModulesRoot: process.cwd(),
       },
     },
     sourcemap: mode === "development",

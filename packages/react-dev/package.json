@@ -1,0 +1,42 @@
+{
+  "name": "@gridsheet/react-dev",
+  "version": "3.0.0-rc.0",
+  "description": "Development tools for GridSheet",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "rm -rf ./dist || true && vite build",
+    "typecheck": "pnpm tsc --noEmit"
+  },
+  "author": "righ",
+  "license": "Apache-2.0",
+  "files": [
+    "dist/",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "@gridsheet/react-core": "^3.0.0-rc.0"
+  },
+  "peerDependencies": {
+    "react": ">=16.9.0",
+    "react-dom": ">=16.9.0"
+  },
+  "devDependencies": {
+    "@types/react": "^16.9.24",
+    "@types/react-dom": "^16.9.24",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.2",
+    "vite-plugin-dts": "^4.5.3"
+  }
+}

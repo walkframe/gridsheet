@@ -31,10 +31,22 @@ export class Special {
  * Cells whose solved cache contains a Pending will render a loading indicator.
  * Dependent cells that encounter a Pending value also become pending.
  */
-export class Pending {
-  public promise: Promise<any>;
-  constructor(promise: Promise<any>) {
+export class Pending<T = unknown> {
+  private static counter = 1;
+  private readonly id: number;
+
+  public readonly promise: Promise<T>;
+
+  constructor(promise: Promise<T>) {
     this.promise = promise;
+    this.id = ++Pending.counter;
+    if (this.id === Number.MAX_SAFE_INTEGER) {
+      Pending.counter = 1;
+    }
+  }
+
+  toString(): string {
+    return `<Pending #${this.id}>`;
   }
 }
 

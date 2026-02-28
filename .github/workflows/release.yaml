@@ -59,6 +59,16 @@ jobs:
           TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
           npm publish --access public --provenance $TAG || true
 
+      - name: upload react-dev
+        run: |
+          cd packages/react-dev
+          pnpm install
+          pnpm build --mode development
+          VERSION=$(node -p "require('./package.json').version")
+          TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
+          npm publish --access public --provenance $TAG || true
+
+
       - name: upload vue-core
         run: |
           cd packages/vue-core

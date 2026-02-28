@@ -6,7 +6,6 @@ export const restrictPoints = (store: StoreType, table: Table) => {
   const { choosing, selectingZone } = store;
   let { y, x } = choosing;
   let { startY: y1, startX: x1, endY: y2, endX: x2 } = selectingZone;
-  let { startY: y3, startX: x3, endY: y4, endX: x4 } = table.wire.copyingZone;
   const [numRows, numCols] = [table.getNumRows(), table.getNumCols()];
   if (y > numRows) {
     y = numRows;
@@ -26,22 +25,9 @@ export const restrictPoints = (store: StoreType, table: Table) => {
   if (x2 > numCols) {
     x2 = numCols;
   }
-  if (y3 > numRows) {
-    y3 = numRows;
-  }
-  if (y4 > numRows) {
-    y4 = numRows;
-  }
-  if (x3 > numCols) {
-    x3 = numCols;
-  }
-  if (x4 > numCols) {
-    x4 = numCols;
-  }
   return {
     choosing: { y, x } as PointType,
     selectingZone: { startY: y1, startX: x1, endY: y2, endX: x2 },
-    copyingZone: { startY: y3, startX: x3, endY: y4, endX: x4 },
   };
 };
 
@@ -70,7 +56,7 @@ export const initSearchStatement = (table: Table, store: StoreType) => {
     return { matchingCells: [] };
   }
   const matchingCells: Address[] = [];
-  
+
   let matcher: (value: string) => boolean;
   if (searchRegex) {
     try {
@@ -92,7 +78,7 @@ export const initSearchStatement = (table: Table, store: StoreType) => {
       return s.indexOf(q) !== -1;
     };
   }
-  
+
   // Determine search range
   let startY = 1, endY = table.bottom;
   let startX = 1, endX = table.right;
@@ -102,7 +88,7 @@ export const initSearchStatement = (table: Table, store: StoreType) => {
     startX = searchRange.startX;
     endX = searchRange.endX;
   }
-  
+
   for (let y = startY; y <= endY; y++) {
     for (let x = startX; x <= endX; x++) {
       const v = table.stringify({ point: { y, x } });

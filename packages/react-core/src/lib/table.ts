@@ -279,6 +279,7 @@ export class Table implements UserTable {
     this.minNumCols = minNumCols || 0;
     this.maxNumCols = maxNumCols || 0;
     this.sheetName = sheetName || '';
+    this.prevSheetName = this.sheetName;
     this.wire = hub;
   }
 
@@ -1833,7 +1834,7 @@ export class Table implements UserTable {
         original,
         operation: op,
       });
-      patch = { ...p, system: { ...original._sys!, changedTime } };
+      patch = { ...p, _sys: { ...original._sys!, changedTime } };
       if (partial) {
         diffAfter[id] = this.wire.data[id] = { ...original, ...patch };
       } else {

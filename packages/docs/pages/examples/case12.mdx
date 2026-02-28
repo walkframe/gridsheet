@@ -1,0 +1,31 @@
+import { Callout } from 'nextra/components';
+import DebuggerExample from './case12.component';
+
+# Visualizing Internal State with Debugger 
+
+GridSheet exposes an extensible real-time `Debugger` component to give you full visibility into the internal `wire` state of your tables. This can be extremely useful while you build custom equations, test new event lifecycle hooks, or trace rendering mutations across a large application.
+
+To keep production bundles slim, the Debugger is shipped strictly as an independent package under `@gridsheet/react-dev`.
+
+<Callout type="info">
+  The `Debugger` pulls internal memory every 500ms by default without imposing heavy proxy/mutation observers on the reactive `wire` core overhead, meaning the spreadsheet will behave identically to production.
+</Callout>
+
+### Example Setup
+
+You simply need to provide the `Debugger` component with the same active `hub` connected to your spreadsheet. Any UI interactions on your sheets—selecting a cell, editing a formula, or changing sheets—are immediately mirrored into the debugger's tree layout.
+
+<div className="mt-8 border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-gray-50 p-4">
+  <DebuggerExample />
+</div>
+
+## Implementation Guide
+
+<a href="https://github.com/walkframe/gridsheet/tree/master/packages/docs/pages/examples/case12.component.tsx" target="_blank" rel="noopener noreferrer" style={{display: 'inline-block', background: '#007bff', color: 'white', padding: '8px 16px', textDecoration: 'none', borderRadius: '4px', fontWeight: '500', margin: '10px 0'}}>📄 View Source Code</a>
+
+### 🐛 Target Sheets
+Instantiate your standard \`GridSheet\` component, enabling any required features (such as \`sheetResize\`) and rendering any initial cells you need. In this example, we render a summary sheet and a data sheet to demonstrate **cross-sheet references** and dynamic calculations across tabs.
+
+### ⚙️ Internal State Debugger
+To expose the raw state, import the \`Debugger\` component from the \`@gridsheet/react-dev\` package, and simply pass it the identical \`hub\` instance.
+The Debugger automatically reflects any local changes — renaming sheets via UI inputs, editing cell values, or changing styles — directly within the \`wire\` layer inspector.

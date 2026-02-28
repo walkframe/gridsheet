@@ -31,5 +31,8 @@
   },
   "case11": {
     "title": "Case 11: GitHub Repo Comparison (Async)"
+  },
+  "case12": {
+    "title": "Case 12: Visualizing Internal State with Debugger"
   }
-} 
+}
