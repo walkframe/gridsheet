@@ -103,7 +103,30 @@ export const getAsyncCache = (
 
   // If useInflight is enabled, check for an in-flight promise with the same cache key
   if (useInflight && wire.asyncInflight?.has(key)) {
-    return wire.asyncInflight.get(key)!;
+    const inflight = wire.asyncInflight.get(key)!;
+    // Track for this cell to prevent duplicate `.then` attachment and correctly yield the pending sentinel
+    wire.asyncPending.set(cellId, inflight.pending);
+
+    // Chain to the shared promise to populate this cell's cache when it resolves
+    inflight.pending.promise
+      .then((result: any) => {
+        const c = wire.data[cellId];
+        if (c != null) {
+          c.asyncCache = { value: result, key, expireTime: inflight.expireTime };
+        }
+      })
+      .catch((error: any) => {
+        const errValue = new FormulaError('#ASYNC!', error?.message ?? String(error), error instanceof Error ? error : undefined);
+        const c = wire.data[cellId];
+        if (c != null) {
+          c.asyncCache = { value: errValue, key, expireTime: inflight.expireTime };
+        }
+      })
+      .finally(() => {
+        wire.asyncPending.delete(cellId);
+      });
+
+    return inflight.pending;
   }
 
   return asyncCacheMiss;
@@ -149,7 +172,7 @@ export const awaitAndSave = (
     if (!wire.asyncInflight) {
       wire.asyncInflight = new Map();
     }
-    wire.asyncInflight.set(key, pending);
+    wire.asyncInflight.set(key, { pending, expireTime });
   }
 
   promise
@@ -169,8 +192,10 @@ export const awaitAndSave = (
     .finally(() => {
       wire.asyncPending.delete(cellId);
       // If useInflight was enabled, also remove from asyncInflight
-      if (useInflight && wire.asyncInflight) {
-        wire.asyncInflight.delete(key);
+      if (useInflight) {
+        if (wire.asyncInflight) {
+          wire.asyncInflight.delete(key);
+        }
       }
       // Clear solvedCaches so dependent formulas re-evaluate
       wire.solvedCaches.clear();

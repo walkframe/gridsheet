@@ -235,7 +235,6 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
                 e.preventDefault();
                 (e.currentTarget as HTMLElement).dataset.pressX = String(e.clientX);
                 (e.currentTarget as HTMLElement).dataset.pressY = String(e.clientY);
-                handleDragStart(e);
               }}
               onMouseUp={(e) => {
                 e.stopPropagation();

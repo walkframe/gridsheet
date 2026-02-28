@@ -423,7 +423,7 @@ export const ColumnMenu: FC = () => {
               <div className="gs-menu-name">Sort:</div>
               <div className="gs-sort-buttons">
                 <button
-                  className="gs-sort-btn"
+                  className="gs-sort-btn gs-sort-btn-asc"
                   onClick={(e) => {
                     e.stopPropagation();
                     if (!sortDisabled) {
@@ -435,7 +435,7 @@ export const ColumnMenu: FC = () => {
                   ↓ A to Z
                 </button>
                 <button
-                  className="gs-sort-btn"
+                  className="gs-sort-btn gs-sort-btn-desc"
                   onClick={(e) => {
                     e.stopPropagation();
                     if (!sortDisabled) {
@@ -447,35 +447,6 @@ export const ColumnMenu: FC = () => {
                   ↑ Z to A
                 </button>
               </div>
-            </li>
-            <li className="gs-menu-divider" />
-            <li className={`gs-menu-item gs-column-menu-label${labelDisabled ? ' gs-disabled' : ''}`}>
-              <label className="gs-label-input-row">
-                <div className="gs-label-input-label">Label:</div>
-                <input
-                  ref={labelInputRef}
-                  className="gs-label-input"
-                  type="text"
-                  placeholder={labelPlaceholder}
-                  value={label}
-                  disabled={labelDisabled}
-                  onChange={(e) => setLabel(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.nativeEvent.isComposing) {
-                      return;
-                    }
-                    if (e.key === 'Enter') {
-                      handleApplyLabel();
-                    }
-                    if (e.key === 'Escape') {
-                      handleClose();
-                    }
-                  }}
-                />
-                <button className="gs-label-apply-btn" onClick={handleApplyLabel} disabled={labelDisabled}>
-                  UPDATE
-                </button>
-              </label>
             </li>
             <li className="gs-menu-divider" />
             <li
@@ -581,6 +552,35 @@ export const ColumnMenu: FC = () => {
               <div className="gs-menu-shortcut">
                 <span className="gs-menu-underline">F</span>
               </div>
+            </li>
+            <li className="gs-menu-divider" />
+            <li className={`gs-menu-item gs-column-menu-label${labelDisabled ? ' gs-disabled' : ''}`}>
+              <label className="gs-label-input-row">
+                <div className="gs-label-input-label">Label:</div>
+                <input
+                  ref={labelInputRef}
+                  className="gs-label-input"
+                  type="text"
+                  placeholder={labelPlaceholder}
+                  value={label}
+                  disabled={labelDisabled}
+                  onChange={(e) => setLabel(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.nativeEvent.isComposing) {
+                      return;
+                    }
+                    if (e.key === 'Enter') {
+                      handleApplyLabel();
+                    }
+                    if (e.key === 'Escape') {
+                      handleClose();
+                    }
+                  }}
+                />
+                <button className="gs-label-apply-btn" onClick={handleApplyLabel} disabled={labelDisabled}>
+                  UPDATE
+                </button>
+              </label>
             </li>
           </ul>
         </div>
