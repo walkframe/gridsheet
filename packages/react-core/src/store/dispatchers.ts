@@ -1,5 +1,6 @@
 import type { ContextMenuProps, FilterConfig, RawCellType } from '../types';
 import { areaToZone, zoneShape, zoneToArea } from '../lib/spatial';
+import { focus } from '../lib/dom';
 import {
   copy,
   cut,
@@ -24,14 +25,14 @@ export const copier = async ({ store, dispatch }: ContextMenuProps) => {
   const { editorRef } = store;
   const area = clip(store);
   dispatch(copy(areaToZone(area)));
-  editorRef.current?.focus();
+  focus(editorRef.current);
 };
 
 export const cutter = async ({ store, dispatch }: ContextMenuProps) => {
   const { editorRef } = store;
   const area = clip(store);
   dispatch(cut(areaToZone(area)));
-  editorRef.current?.focus();
+  focus(editorRef.current);
 };
 
 export const paster = async ({ store, dispatch }: ContextMenuProps, onlyValue = false) => {
@@ -57,19 +58,19 @@ export const paster = async ({ store, dispatch }: ContextMenuProps, onlyValue = 
     }
   }
   dispatch(paste({ matrix: cells, onlyValue }));
-  editorRef.current?.focus();
+  focus(editorRef.current);
 };
 
 export const undoer = async ({ store, dispatch }: ContextMenuProps) => {
   const { editorRef } = store;
   dispatch(undo(null));
-  editorRef.current?.focus();
+  focus(editorRef.current);
 };
 
 export const redoer = async ({ store, dispatch }: ContextMenuProps) => {
   const { editorRef } = store;
   dispatch(redo(null));
-  editorRef.current?.focus();
+  focus(editorRef.current);
 };
 
 export const rowsInserterAbove = async ({ store, dispatch }: ContextMenuProps) => {
@@ -77,7 +78,7 @@ export const rowsInserterAbove = async ({ store, dispatch }: ContextMenuProps) =
   const { top } = zoneToArea(selectingZone);
   const numRows = zoneShape({ ...selectingZone, base: 1 }).height;
   dispatch(insertRowsAbove({ numRows, y: top, operator: 'USER' }));
-  editorRef.current?.focus();
+  focus(editorRef.current);
 };
 
 export const rowsInserterBelow = async ({ store, dispatch }: ContextMenuProps) => {
@@ -85,7 +86,7 @@ export const rowsInserterBelow = async ({ store, dispatch }: ContextMenuProps) =
   const { bottom } = zoneToArea(selectingZone);
   const numRows = zoneShape({ ...selectingZone, base: 1 }).height;
   dispatch(insertRowsBelow({ numRows, y: bottom, operator: 'USER' }));
-  editorRef.current?.focus();
+  focus(editorRef.current);
 };
 
 export const colsInserterLeft = async ({ store, dispatch }: ContextMenuProps) => {
@@ -93,7 +94,7 @@ export const colsInserterLeft = async ({ store, dispatch }: ContextMenuProps) =>
   const { left } = zoneToArea(selectingZone);
   const numCols = zoneShape({ ...selectingZone, base: 1 }).width;
   dispatch(insertColsLeft({ numCols, x: left, operator: 'USER' }));
-  editorRef.current?.focus();
+  focus(editorRef.current);
 };
 
 export const colsInserterRight = async ({ store, dispatch }: ContextMenuProps) => {
@@ -101,7 +102,7 @@ export const colsInserterRight = async ({ store, dispatch }: ContextMenuProps) =
   const { right } = zoneToArea(selectingZone);
   const numCols = zoneShape({ ...selectingZone, base: 1 }).width;
   dispatch(insertColsRight({ numCols, x: right, operator: 'USER' }));
-  editorRef.current?.focus();
+  focus(editorRef.current);
 };
 
 export const rowsRemover = async ({ store, dispatch }: ContextMenuProps) => {
@@ -109,7 +110,7 @@ export const rowsRemover = async ({ store, dispatch }: ContextMenuProps) => {
   const { top } = zoneToArea(selectingZone);
   const numRows = zoneShape({ ...selectingZone, base: 1 }).height;
   dispatch(removeRows({ numRows, y: top, operator: 'USER' }));
-  editorRef.current?.focus();
+  focus(editorRef.current);
 };
 
 export const colsRemover = async ({ store, dispatch }: ContextMenuProps) => {
@@ -117,7 +118,7 @@ export const colsRemover = async ({ store, dispatch }: ContextMenuProps) => {
   const { left } = zoneToArea(selectingZone);
   const numCols = zoneShape({ ...selectingZone, base: 1 }).width;
   dispatch(removeCols({ numCols, x: left, operator: 'USER' }));
-  editorRef.current?.focus();
+  focus(editorRef.current);
 };
 
 export const rowsSorterAsc = async ({ store, dispatch }: ContextMenuProps, x: number) => {
@@ -126,7 +127,7 @@ export const rowsSorterAsc = async ({ store, dispatch }: ContextMenuProps, x: nu
     await table.waitForPending();
   }
   dispatch(sortRows({ x, direction: 'asc' }));
-  store.editorRef.current?.focus();
+  focus(store.editorRef.current);
 };
 
 export const rowsSorterDesc = async ({ store, dispatch }: ContextMenuProps, x: number) => {
@@ -135,7 +136,7 @@ export const rowsSorterDesc = async ({ store, dispatch }: ContextMenuProps, x: n
     await table.waitForPending();
   }
   dispatch(sortRows({ x, direction: 'desc' }));
-  store.editorRef.current?.focus();
+  focus(store.editorRef.current);
 };
 
 export const rowsFilterer = async ({ store, dispatch }: ContextMenuProps, x: number, filter: FilterConfig) => {
@@ -144,12 +145,12 @@ export const rowsFilterer = async ({ store, dispatch }: ContextMenuProps, x: num
     await table.waitForPending();
   }
   dispatch(filterRows({ x, filter }));
-  store.editorRef.current?.focus();
+  focus(store.editorRef.current);
 };
 
 export const rowsFilterClearer = async ({ store, dispatch }: ContextMenuProps, x?: number) => {
   dispatch(filterRows({ x }));
-  store.editorRef.current?.focus();
+  focus(store.editorRef.current);
 };
 
 export const searcher = async ({ store, dispatch }: ContextMenuProps) => {
@@ -157,7 +158,7 @@ export const searcher = async ({ store, dispatch }: ContextMenuProps) => {
     dispatch(setSearchQuery(''));
   }
   dispatch(setEntering(false));
-  requestAnimationFrame(() => store.searchInputRef.current?.focus());
+  requestAnimationFrame(() => focus(store.searchInputRef.current));
 };
 
 export const syncers = {

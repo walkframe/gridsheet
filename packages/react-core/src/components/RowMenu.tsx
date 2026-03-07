@@ -6,6 +6,7 @@ import * as prevention from '../lib/operation';
 import { y2r } from '../lib/coords';
 import { between } from '../lib/spatial';
 import { copier, cutter, paster, searcher } from '../store/dispatchers';
+import { focus } from '../lib/dom';
 
 export const RowMenu: FC = () => {
   const { store, dispatch } = useContext(Context);
@@ -17,7 +18,7 @@ export const RowMenu: FC = () => {
 
   const handleClose = () => {
     dispatch(setRowMenu(null));
-    editorRef.current?.focus();
+    focus(editorRef.current);
   };
 
   if (!rowMenuState || !table || y == null || !position) {
@@ -110,7 +111,7 @@ export const RowMenu: FC = () => {
               if (!insertAboveDisabled) {
                 dispatch(insertRowsAbove({ numRows: numSelectedRows, y, operator: 'USER' }));
                 dispatch(setRowMenu(null));
-                editorRef.current?.focus();
+                focus(editorRef.current);
               }
             }}
           >
@@ -124,7 +125,7 @@ export const RowMenu: FC = () => {
               if (!insertBelowDisabled) {
                 dispatch(insertRowsBelow({ numRows: numSelectedRows, y, operator: 'USER' }));
                 dispatch(setRowMenu(null));
-                editorRef.current?.focus();
+                focus(editorRef.current);
               }
             }}
           >
@@ -138,7 +139,7 @@ export const RowMenu: FC = () => {
               if (!removeDisabled) {
                 dispatch(removeRows({ numRows: numSelectedRows, y, operator: 'USER' }));
                 dispatch(setRowMenu(null));
-                editorRef.current?.focus();
+                focus(editorRef.current);
               }
             }}
           >

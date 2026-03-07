@@ -2,6 +2,7 @@ import type { StoreType, AreaType, PointType } from '../types';
 
 import { zoneToArea } from './spatial';
 import type { Table } from './table';
+import { focus } from './dom';
 
 export const clip = (store: StoreType) => {
   const { selectingZone, choosing, editorRef, tableReactive: tableRef } = store;
@@ -34,7 +35,7 @@ export const clip = (store: StoreType) => {
     ]);
   } else if (input != null) {
     input.value = tsv;
-    input.focus();
+    focus(input);
     input.select();
     document.execCommand('copy');
     input.value = '';

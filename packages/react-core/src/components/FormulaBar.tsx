@@ -8,6 +8,7 @@ import { p2a } from '../lib/coords';
 import { setEditingAddress, setInputting, setEditorHovering, walk, write, updateTable } from '../store/actions';
 import * as prevention from '../lib/operation';
 import { insertTextAtCursor, isFocus } from '../lib/input';
+import { focus } from '../lib/dom';
 import { editorStyle } from './Editor';
 import { ScrollHandle } from './ScrollHandle';
 import { useAutocomplete } from './useAutocomplete';
@@ -53,7 +54,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
         dispatch(write({ value }));
       }
       dispatch(setEditingAddress(''));
-      editorRef.current!.focus();
+      focus(editorRef.current);
     },
     [before],
   );
@@ -154,7 +155,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
               dispatch(setInputting(newValue));
               setTimeout(() => {
                 if (largeEditorRef.current) {
-                  largeEditorRef.current.focus();
+                  focus(largeEditorRef.current);
                   largeEditorRef.current.setSelectionRange(newCursor, newCursor);
                 }
               }, 0);
@@ -186,7 +187,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
               dispatch(setInputting(newValue));
               setTimeout(() => {
                 if (largeEditorRef.current) {
-                  largeEditorRef.current.focus();
+                  focus(largeEditorRef.current);
                   largeEditorRef.current.setSelectionRange(newCursor, newCursor);
                 }
               }, 0);
@@ -218,7 +219,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
           dispatch(setInputting(before));
           dispatch(setEditingAddress(''));
           e.preventDefault();
-          editorRef.current!.focus();
+          focus(editorRef.current);
 
           break;
         }
@@ -272,7 +273,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
         dispatch(setInputting(newValue));
         setTimeout(() => {
           if (largeEditorRef.current) {
-            largeEditorRef.current.focus();
+            focus(largeEditorRef.current);
             largeEditorRef.current.setSelectionRange(newCursor, newCursor);
           }
         }, 0);

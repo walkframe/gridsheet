@@ -18,11 +18,9 @@ test.describe('Async Formula', () => {
       // Before waiting, cells should be empty or show pending state
       expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('');
 
-      // Wait for async results to resolve
-      // Chain: A1 (750ms) → A2 (750ms) → A3 (750ms) → A4 (750ms) = ~3s
-      // A5, A6, A7 use literal args so they resolve in first cycle (~750ms)
-      // Adding buffer for render time
-      await page.waitForTimeout(5000);
+      // Wait for the slowest cell in the chain (A4) to resolve
+      // Chain: A1 → A2 → A3 → A4
+      await expect(a4.locator('.gs-cell-rendered')).toHaveText('360', { timeout: 8000 });
 
       // A1: SUM_DELAY(10, 20) = 30
       expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('30');
@@ -75,11 +73,8 @@ test.describe('Async Formula', () => {
     // Initially, A1 should be empty
     expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('');
 
-    // Wait for first async computation (A1 takes 1 second + render time)
-    await page.waitForTimeout(1500);
-
-    // A1 should have computed result
-    expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('30');
+    // Wait for first async computation (A1 takes ~750ms)
+    await expect(a1.locator('.gs-cell-rendered')).toHaveText('30', { timeout: 3000 });
 
     // Click on another cell to trigger re-render without changing A1
     await b1.click();
@@ -95,31 +90,24 @@ test.describe('Async Formula', () => {
     const a1 = sheet.locator("[data-address='A1']");
     const a2 = sheet.locator("[data-address='A2']");
 
-    // Wait for first async computation
-    // A1 takes 1s, then A2 depends on A1 (another 1s) = 2s + buffer
-    await page.waitForTimeout(3000);
+    // Wait for first async computation: A1 (1s) → A2 (1s)
+    await expect(a2.locator('.gs-cell-rendered')).toHaveText('130', { timeout: 5000 });
 
-    // A2 should depend on A1, initial value: SUM_DELAY(30, 100) = 130
-    let a2Content = await a2.locator('.gs-cell-rendered').textContent();
-    expect(a2Content).toBe('130');
-
-    // Change A1 value by double-clicking to enter edit mode
     // Change A1 value by clicking and typing into the formula bar to ensure replacement
     await a1.click();
     const formulaBar = sheet.locator('.gs-formula-bar textarea');
     await formulaBar.fill('=SUM_DELAY(40, 50)');
     await formulaBar.press('Enter');
 
-    // Wait for re-computation: A1 takes 1s, then A2 depends on new A1 (another 1s) = 2s + buffer
-    await page.waitForTimeout(3000);
+    // Wait for re-computation: A1 takes 1s, then A2 depends on new A1 (another 1s)
+    await expect(a1.locator('.gs-cell-rendered')).toHaveText('90', { timeout: 5000 });
 
     // A1 should now be 90 (40 + 50)
     const a1NewContent = await a1.locator('.gs-cell-rendered').textContent();
     expect(a1NewContent).toBe('90');
 
     // A2 should be updated to SUM_DELAY(90, 100) = 190
-    const a2NewContent = await a2.locator('.gs-cell-rendered').textContent();
-    expect(a2NewContent).toBe('190');
+    await expect(a2.locator('.gs-cell-rendered')).toHaveText('190', { timeout: 5000 });
   });
 
   test('should propagate pending through async dependency chain', async ({ page }) => {
@@ -136,15 +124,9 @@ test.describe('Async Formula', () => {
     const a4InitialContent = await a4.locator('.gs-cell-rendered').textContent();
     expect(a4InitialContent).toBe('');
 
-    // Wait for async dependency chain to resolve
-    // A1 (1s) → A2 (1s) → A3 (1s) → A4 (1s) = 4s + buffer
-    await page.waitForTimeout(5000);
-
-    const a1Content = await a1.locator('.gs-cell-rendered').textContent();
-    expect(a1Content).toBe('30');
-
-    const a4Content = await a4.locator('.gs-cell-rendered').textContent();
-    expect(a4Content).toBe('360');
+    // Wait for async dependency chain to resolve: A1 → A2 → A3 → A4
+    await expect(a1.locator('.gs-cell-rendered')).toHaveText('30', { timeout: 8000 });
+    await expect(a4.locator('.gs-cell-rendered')).toHaveText('360', { timeout: 8000 });
   });
 
   test('should display async error code #ASYNC! when async function throws', async ({ page }) => {
@@ -155,8 +137,7 @@ test.describe('Async Formula', () => {
 
     // A8 contains =SUM_DELAY() with no arguments, which should throw an error
     const a8Rendered = a8.locator('.gs-cell-rendered');
-    // Verify that the error code is displayed after a short wait for React render
-    await page.waitForTimeout(500);
+    await expect(a8Rendered).not.toHaveText('', { timeout: 3000 });
     const a8Content = await a8Rendered.textContent();
     expect(a8Content?.trim()).toBe('#ASYNC!');
   });

@@ -20,6 +20,7 @@ import {
 import { DEFAULT_HEIGHT } from '../constants';
 import * as prevention from '../lib/operation';
 import { insertRef } from '../lib/input';
+import { focus } from '../lib/dom';
 import { isXSheetFocused } from '../store/helpers';
 import { ScrollHandle } from './ScrollHandle';
 import { isTouching, safePreventDefault } from '../lib/events';
@@ -138,7 +139,7 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
       safePreventDefault(e);
       dispatch(setDragging(false));
       if (autofillDraggingTo) {
-        editorRef.current!.focus();
+        focus(editorRef.current);
         return false;
       }
     },

@@ -15,6 +15,7 @@ import * as prevention from '../lib/operation';
 import { x2c, p2a } from '../lib/coords';
 import { between } from '../lib/spatial';
 import { copier, cutter, paster, searcher } from '../store/dispatchers';
+import { focus } from '../lib/dom';
 
 const METHOD_LABELS: Record<FilterConditionMethod, string> = {
   eq: '=',
@@ -56,7 +57,7 @@ export const ColumnMenu: FC = () => {
   const firstValueRef = useCallback(
     (node: HTMLInputElement | null) => {
       if (node) {
-        node.focus();
+        focus(node);
       }
     },
     [x],
@@ -90,7 +91,7 @@ export const ColumnMenu: FC = () => {
       }
       setPendingAction(null);
       dispatch(setColumnMenu(null));
-      editorRef.current?.focus();
+      focus(editorRef.current);
     };
     const currentTable = tableRef.current;
     if (currentTable && (currentTable.hasPendingCells() || currentTable.wire.asyncPending.size > 0)) {
@@ -121,7 +122,7 @@ export const ColumnMenu: FC = () => {
 
   const handleClose = useCallback(() => {
     dispatch(setColumnMenu(null));
-    editorRef.current?.focus();
+    focus(editorRef.current);
   }, [dispatch, editorRef]);
 
   const handleApplyLabel = useCallback(() => {
@@ -150,7 +151,7 @@ export const ColumnMenu: FC = () => {
         tableReactive: { current: table },
       }),
     );
-    editorRef.current?.focus();
+    focus(editorRef.current);
   }, [dispatch, x, label, editorRef, table, store.selectingZone, store.choosing]);
 
   const handleSortAsc = useCallback(() => {
@@ -194,7 +195,7 @@ export const ColumnMenu: FC = () => {
     setConditions([{ ...DEFAULT_CONDITION, value: [''] }]);
     setMode('or');
     dispatch(setColumnMenu(null));
-    editorRef.current?.focus();
+    focus(editorRef.current);
   }, [dispatch, x, editorRef]);
 
   const handleResetAll = useCallback(() => {
@@ -203,13 +204,13 @@ export const ColumnMenu: FC = () => {
     setConditions([{ ...DEFAULT_CONDITION, value: [''] }]);
     setMode('or');
     dispatch(setColumnMenu(null));
-    editorRef.current?.focus();
+    focus(editorRef.current);
   }, [dispatch, editorRef]);
 
   const handleCancel = useCallback(() => {
     setPendingAction(null);
     dispatch(setColumnMenu(null));
-    editorRef.current?.focus();
+    focus(editorRef.current);
   }, [dispatch, editorRef]);
 
   // Escape key cancels pending action during waiting
@@ -504,7 +505,7 @@ export const ColumnMenu: FC = () => {
                 if (!insertLeftDisabled) {
                   dispatch(insertColsLeft({ numCols: numSelectedCols, x, operator: 'USER' }));
                   dispatch(setColumnMenu(null));
-                  editorRef.current?.focus();
+                  focus(editorRef.current);
                 }
               }}
             >
@@ -518,7 +519,7 @@ export const ColumnMenu: FC = () => {
                 if (!insertRightDisabled) {
                   dispatch(insertColsRight({ numCols: numSelectedCols, x, operator: 'USER' }));
                   dispatch(setColumnMenu(null));
-                  editorRef.current?.focus();
+                  focus(editorRef.current);
                 }
               }}
             >
@@ -532,7 +533,7 @@ export const ColumnMenu: FC = () => {
                 if (!removeDisabled) {
                   dispatch(removeCols({ numCols: numSelectedCols, x, operator: 'USER' }));
                   dispatch(setColumnMenu(null));
-                  editorRef.current?.focus();
+                  focus(editorRef.current);
                 }
               }}
             >

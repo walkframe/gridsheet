@@ -4,6 +4,7 @@ import { Context } from '../store';
 import { drag, setAutofillDraggingTo, setDragging, submitAutofill } from '../store/actions';
 import { getAreaInTabular } from '../lib/virtualization';
 import { insertRef, isFocus } from '../lib/input';
+import { focus } from '../lib/dom';
 import { areaToRange, zoneToArea } from '../lib/spatial';
 import { isXSheetFocused } from '../store/helpers';
 
@@ -79,7 +80,7 @@ export function ScrollHandle({ style, horizontal = 0, vertical = 0, className = 
         left: currentSpeed * horizontal!,
         top: currentSpeed * vertical!,
       });
-      editorRef.current!.focus();
+      focus(editorRef.current);
 
       const { x, y } = getDestEdge(e);
       if (autofillDraggingTo) {
@@ -142,7 +143,7 @@ export function ScrollHandle({ style, horizontal = 0, vertical = 0, className = 
     isScrolling = false;
     if (!isFocus(searchInputRef.current)) {
       // Pressing Enter on a search result will not focus the editor.
-      editorRef.current?.focus?.();
+      focus(editorRef.current);
     }
   }, []);
 
@@ -159,7 +160,7 @@ export function ScrollHandle({ style, horizontal = 0, vertical = 0, className = 
       if (autofillDraggingTo) {
         const { y: curY, x: curX } = autofillDraggingTo;
         dispatch(submitAutofill({ y: y === -1 ? curY : y, x: x === -1 ? curX : x }));
-        editorRef.current!.focus();
+        focus(editorRef.current);
       } else {
         if (editingAnywhere) {
           // inserting a range

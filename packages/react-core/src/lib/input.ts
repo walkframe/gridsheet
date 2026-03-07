@@ -4,9 +4,10 @@ import { Lexer, splitRef } from '../formula/evaluator';
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '../constants';
 import { a2p, grantAddressAbsolute } from './coords';
 import { getSheetPrefix } from './sheet';
+import { focus } from './dom';
 
 export const insertTextAtCursor = (input: HTMLTextAreaElement, text: string) => {
-  input.focus();
+  focus(input);
   const deprecated = !document.execCommand?.('insertText', false, text);
   if (!deprecated) {
     return;
