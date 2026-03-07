@@ -104,21 +104,22 @@ export const FunctionGuide: React.FC<FunctionGuideProps> = ({
           })}
         </div>
         {(() => {
-          const activeArg = activeFunctionGuide.helpArgs?.[Math.min(activeArgIndex, activeFunctionGuide.helpArgs.length - 1)];
-          if (!activeArg?.description) return null;
+          const activeArg =
+            activeFunctionGuide.helpArgs?.[Math.min(activeArgIndex, activeFunctionGuide.helpArgs.length - 1)];
+          if (!activeArg?.description) {
+            return null;
+          }
           return (
             <div className="gs-fn-guide2-desc" style={{ marginTop: 8, fontSize: 12, color: '#888' }}>
               <p>
                 <strong>{activeArg.name}:</strong>{' '}
-                <code className="gs-fn-guide2-arg-type">
-                  {activeArg.type?.join(' | ') || 'any'}
-                </code>
+                <code className="gs-fn-guide2-arg-type">{activeArg.type?.join(' | ') || 'any'}</code>
                 {activeArg.description}
               </p>
             </div>
           );
         })()}
-        
+
         {activeFunctionGuide.helpTexts?.length > 0 && (
           <div className="gs-fn-guide2-desc">
             {activeFunctionGuide.helpTexts.map((text, j) => (

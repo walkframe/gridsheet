@@ -2,7 +2,6 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Async Formula', () => {
   test('should render async formula result after delay (inflight=off, inflight=on)', async ({ page }) => {
-    
     await page.goto('http://localhost:5233/iframe.html?id=formula-asyncchain--async-chain&viewMode=story');
 
     // =================== inflight = off ===================
@@ -67,7 +66,6 @@ test.describe('Async Formula', () => {
   });
 
   test('should cache async formula result within TTL', async ({ page }) => {
-    
     await page.goto('http://localhost:5233/iframe.html?id=formula-asyncchain--async-chain&viewMode=story');
 
     const sheet = page.locator('[data-sheet-name="AsyncChain"]');
@@ -91,7 +89,6 @@ test.describe('Async Formula', () => {
   });
 
   test('should invalidate async cache when inputs change', async ({ page }) => {
-    
     await page.goto('http://localhost:5233/iframe.html?id=formula-asyncchain--async-chain&viewMode=story');
 
     const sheet = page.locator('[data-sheet-name="AsyncChain"]');
@@ -126,7 +123,6 @@ test.describe('Async Formula', () => {
   });
 
   test('should propagate pending through async dependency chain', async ({ page }) => {
-    
     await page.goto('http://localhost:5233/iframe.html?id=formula-asyncchain--async-chain&viewMode=story');
 
     const sheet = page.locator('[data-sheet-name="AsyncChain"]');
@@ -152,7 +148,6 @@ test.describe('Async Formula', () => {
   });
 
   test('should display async error code #ASYNC! when async function throws', async ({ page }) => {
-    
     await page.goto('http://localhost:5233/iframe.html?id=formula-asyncchain--async-chain&viewMode=story');
 
     const sheet = page.locator('[data-sheet-name="AsyncChain"]');

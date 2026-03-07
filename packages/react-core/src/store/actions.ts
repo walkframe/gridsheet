@@ -687,7 +687,9 @@ export const clear = new ClearAction().bind();
 const FLASH_CLASS = 'gs-flash-overlay--active';
 const FLASH_DURATION_MS = 600;
 const flashSheet = (el: HTMLElement | null) => {
-  if (!el) return;
+  if (!el) {
+    return;
+  }
   el.classList.remove(FLASH_CLASS);
   // force reflow to restart animation when called consecutively
   void el.offsetWidth;
@@ -708,7 +710,13 @@ class UndoAction<T extends null> extends CoreAction<T> {
     }
     if (history.dstSheetId !== table.sheetId) {
       const { dispatch, store: dstStore } = table.wire.contextsBySheetId[history.dstSheetId];
-      dispatch(setStore({ ...dstStore, ...history.undoReflection, tableReactive: { current: dstStore.tableReactive.current } }));
+      dispatch(
+        setStore({
+          ...dstStore,
+          ...history.undoReflection,
+          tableReactive: { current: dstStore.tableReactive.current },
+        }),
+      );
       flashSheet(dstStore.flashRef.current);
       return store;
     }
@@ -740,7 +748,13 @@ class RedoAction<T extends null> extends CoreAction<T> {
     }
     if (history.dstSheetId !== table.sheetId) {
       const { dispatch, store: dstStore } = table.wire.contextsBySheetId[history.dstSheetId];
-      dispatch(setStore({ ...dstStore, ...history.redoReflection, tableReactive: { current: dstStore.tableReactive.current } }));
+      dispatch(
+        setStore({
+          ...dstStore,
+          ...history.redoReflection,
+          tableReactive: { current: dstStore.tableReactive.current },
+        }),
+      );
       flashSheet(dstStore.flashRef.current);
       return store;
     }

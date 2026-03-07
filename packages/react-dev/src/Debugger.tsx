@@ -77,8 +77,8 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
 
   const sheets = snapshot.sheetIdsByName
     ? Object.entries(snapshot.sheetIdsByName)
-      .map(([name, id]) => ({ id: id as number, name }))
-      .sort((a, b) => a.id - b.id)
+        .map(([name, id]) => ({ id: id as number, name }))
+        .sort((a, b) => a.id - b.id)
     : [];
 
   useEffect(() => {
@@ -119,7 +119,9 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
     // Resolve sheet name
     if (wire.sheetIdsByName) {
       const entry = Object.entries(wire.sheetIdsByName).find(([, id]) => id === wire.choosingSheetId);
-      if (entry) wireCellSheetName = entry[0];
+      if (entry) {
+        wireCellSheetName = entry[0];
+      }
     }
 
     if (choosingContext) {
@@ -233,7 +235,6 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
         overflow: 'hidden',
       }}
     >
-
       {/* 上段: Wire State | Wire Cell | Formula Expressions | Formula Tokens */}
       <div
         style={{
@@ -244,7 +245,15 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
         }}
       >
         {/* Wire State */}
-        <div style={{ flex: 1, borderRight: '1px solid #dee2e6', backgroundColor: '#fafafa', overflow: 'auto', position: 'relative' }}>
+        <div
+          style={{
+            flex: 1,
+            borderRight: '1px solid #dee2e6',
+            backgroundColor: '#fafafa',
+            overflow: 'auto',
+            position: 'relative',
+          }}
+        >
           <div
             style={{
               position: 'sticky',
@@ -262,7 +271,15 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
         </div>
 
         {/* Wire Cell Value: wire.choosingSheetId / choosingAddress のセルデータ */}
-        <div style={{ flex: 1, borderRight: '1px solid #dee2e6', overflow: 'auto', backgroundColor: '#f0f8f0', position: 'relative' }}>
+        <div
+          style={{
+            flex: 1,
+            borderRight: '1px solid #dee2e6',
+            overflow: 'auto',
+            backgroundColor: '#f0f8f0',
+            position: 'relative',
+          }}
+        >
           <div
             style={{
               position: 'sticky',
@@ -274,8 +291,8 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
               borderBottom: '2px solid #ccc',
             }}
           >
-            Cell: {wireCellSheetName && `${wireCellSheetName}!`}{wireCellAddress}{' '}
-            {wire?.choosingSheetId != null && `(SheetID: ${wire.choosingSheetId})`}
+            Cell: {wireCellSheetName && `${wireCellSheetName}!`}
+            {wireCellAddress} {wire?.choosingSheetId != null && `(SheetID: ${wire.choosingSheetId})`}
           </div>
           {wireCellData ? (
             <pre style={{ margin: 0, padding: '12px' }}>{JSON.stringify(wireCellData, null, 2)}</pre>
@@ -285,7 +302,15 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
         </div>
 
         {/* Formula Expressions */}
-        <div style={{ flex: 1, borderRight: '1px solid #dee2e6', overflow: 'auto', backgroundColor: '#fffbf0', position: 'relative' }}>
+        <div
+          style={{
+            flex: 1,
+            borderRight: '1px solid #dee2e6',
+            overflow: 'auto',
+            backgroundColor: '#fffbf0',
+            position: 'relative',
+          }}
+        >
           <div
             style={{
               position: 'sticky',
@@ -352,7 +377,14 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
       />
 
       {/* Sheet Tabs */}
-      <div style={{ display: 'flex', borderBottom: '1px solid #dee2e6', borderTop: '1px solid #dee2e6', backgroundColor: '#f8f9fa' }}>
+      <div
+        style={{
+          display: 'flex',
+          borderBottom: '1px solid #dee2e6',
+          borderTop: '1px solid #dee2e6',
+          backgroundColor: '#f8f9fa',
+        }}
+      >
         {sheets.map((sheet) => (
           <div
             key={sheet.id}
@@ -430,7 +462,6 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
           )}
         </div>
       </div>
-
 
       {/* Resizer for Bottom Pane */}
       <div

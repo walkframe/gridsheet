@@ -67,7 +67,9 @@ export class Policy implements PolicyMixinType {
   public select(props: RestrictProps) {
     const { next, table, point } = props;
     const options = this.getOptions();
-    if (options.length === 0) return next;
+    if (options.length === 0) {
+      return next;
+    }
 
     const ok = options.some((o) => o.value === next?.value);
     if (!ok) {

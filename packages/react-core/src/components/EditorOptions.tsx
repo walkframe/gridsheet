@@ -32,9 +32,7 @@ export const EditorOptions: React.FC<EditorOptionsProps> = ({
             <span>{option.label ?? option.value}</span>
             {selected === i && <span className="gs-editor-option-tab">⇥ Tab</span>}
           </div>
-          {(option.isFunction || option.tooltip) && selected === i && (
-            <FunctionGuide option={option} />
-          )}
+          {(option.isFunction || option.tooltip) && selected === i && <FunctionGuide option={option} />}
         </li>
       ))}
     </ul>

@@ -30,24 +30,56 @@ const OptionsComponent: React.FC = () => {
         getOptions(): AutocompleteOption[] {
           return [
             {
-              value: 'aqua', label: <span style={{ color: 'aqua' }}>Aqua</span>, guide: () => {
-                return <p><b>Aqua</b><br />The color aqua is a cyan color.</p>;
-              }
+              value: 'aqua',
+              label: <span style={{ color: 'aqua' }}>Aqua</span>,
+              guide: () => {
+                return (
+                  <p>
+                    <b>Aqua</b>
+                    <br />
+                    The color aqua is a cyan color.
+                  </p>
+                );
+              },
             },
             {
-              value: 'red', label: <span style={{ color: 'red' }}>Red</span>, guide: () => {
-                return <p><b>Red</b><br />The color red is a red color.</p>;
-              }
+              value: 'red',
+              label: <span style={{ color: 'red' }}>Red</span>,
+              guide: () => {
+                return (
+                  <p>
+                    <b>Red</b>
+                    <br />
+                    The color red is a red color.
+                  </p>
+                );
+              },
             },
             {
-              value: 'green', label: <span style={{ color: 'green' }}>Green</span>, guide: () => {
-                return <p><b>Green</b><br />The color green is a green color.</p>;
-              }
+              value: 'green',
+              label: <span style={{ color: 'green' }}>Green</span>,
+              guide: () => {
+                return (
+                  <p>
+                    <b>Green</b>
+                    <br />
+                    The color green is a green color.
+                  </p>
+                );
+              },
             },
             {
-              value: 'blue', label: <span style={{ color: 'blue' }}>Blue</span>, guide: () => {
-                return <p><b>Blue</b><br />The color blue is a blue color.</p>;
-              }
+              value: 'blue',
+              label: <span style={{ color: 'blue' }}>Blue</span>,
+              guide: () => {
+                return (
+                  <p>
+                    <b>Blue</b>
+                    <br />
+                    The color blue is a blue color.
+                  </p>
+                );
+              },
             },
           ];
         },

@@ -8,7 +8,9 @@ export class Sentinel {
 
   static is(obj: any, code?: string): obj is Sentinel {
     const match = obj instanceof Sentinel || obj?.__isSentinel === true;
-    if (!match) return false;
+    if (!match) {
+      return false;
+    }
     return code == null || obj.code === code;
   }
 }

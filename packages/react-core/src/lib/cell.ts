@@ -31,6 +31,8 @@ export const ensureSys = (cell: CellType, defaults: Partial<System> = {}): Syste
  * `asyncCaches` record if it does not yet exist.
  */
 export const setAsyncCache = (cell: CellType, key: string, ac: AsyncCache): void => {
-  if (!cell.asyncCaches) cell.asyncCaches = {};
+  if (!cell.asyncCaches) {
+    cell.asyncCaches = {};
+  }
   cell.asyncCaches[key] = ac;
 };

@@ -214,7 +214,6 @@ const AsyncChainSheet = () => {
             value={logs2.join('\n')}
           ></textarea>
         </div>
-
       </div>
       <Debugger hub={hub} />
     </>

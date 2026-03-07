@@ -52,7 +52,7 @@ export class BaseFunction {
     this.table = table;
     this.origin = origin;
   }
-  protected validate() { }
+  protected validate() {}
 
   public call() {
     this.validate();

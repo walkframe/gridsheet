@@ -370,7 +370,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
           onScroll={updateScroll}
           onMouseEnter={(e) => {
             dispatch(setEditorHovering(true));
-          }}  
+          }}
           onMouseLeave={(e) => {
             dispatch(setEditorHovering(false));
           }}

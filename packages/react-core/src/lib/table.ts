@@ -43,13 +43,7 @@ import { identifyFormula, Lexer, splitRef, stripSheetName } from '../formula/eva
 import { solveFormula, stripTable } from '../formula/solver';
 import { ensureSys, filterCellFields } from './cell';
 
-import {
-  DEFAULT_HEIGHT,
-  DEFAULT_WIDTH,
-  HEADER_HEIGHT,
-  HEADER_WIDTH,
-  DEFAULT_HISTORY_LIMIT,
-} from '../constants';
+import { DEFAULT_HEIGHT, DEFAULT_WIDTH, HEADER_HEIGHT, HEADER_WIDTH, DEFAULT_HISTORY_LIMIT } from '../constants';
 import { Pending, SOLVING } from '../sentinels';
 import { shouldTracking } from '../store/helpers';
 import { updateTable } from '../store/actions';
@@ -2622,13 +2616,17 @@ export class Table implements UserTable {
   }
 
   public finishSolvedCache(point: PointType, value: any) {
-    if (SOLVING.is(value)) return;
+    if (SOLVING.is(value)) {
+      return;
+    }
 
     const id = this.getId(point);
     this.wire.solvedCaches.set(id, value);
 
     const cell = this.wire.data[id];
-    if (cell == null) return;
+    if (cell == null) {
+      return;
+    }
     const tmp = cell._sys?.tmpAsyncCaches;
 
     if (tmp != null) {

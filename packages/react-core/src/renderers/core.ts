@@ -219,7 +219,7 @@ export class Renderer implements RendererMixinType {
     return JSON.stringify(value);
   }
 
-  null({ }: RenderProps<null | undefined>): any {
+  null({}: RenderProps<null | undefined>): any {
     return '';
   }
 }

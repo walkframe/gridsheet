@@ -309,8 +309,9 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
       data-x={x}
       data-y={y}
       data-address={address}
-      className={`gs-cell ${among(selectingArea, { y, x }) ? 'gs-selecting' : ''} ${pointed ? 'gs-choosing' : ''} ${editing ? 'gs-editing' : ''
-        } ${isPendingCell ? 'gs-pending' : ''}`}
+      className={`gs-cell ${among(selectingArea, { y, x }) ? 'gs-selecting' : ''} ${pointed ? 'gs-choosing' : ''} ${
+        editing ? 'gs-editing' : ''
+      } ${isPendingCell ? 'gs-pending' : ''}`}
       style={{
         ...cell?.style,
       }}
