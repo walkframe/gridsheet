@@ -10,7 +10,7 @@ import {
   RendererMixinType,
   Policy,
   PolicyMixinType,
-  PolicyOption,
+  AutocompleteOption,
 } from '@gridsheet/react-core';
 
 // Star rating renderer
@@ -60,7 +60,7 @@ const StarRatingRendererMixin: RendererMixinType = {
 
 // Status Policy with dynamic styling
 const StatusPolicy: PolicyMixinType = {
-  getOptions: (): PolicyOption[] => [
+  getOptions: (): AutocompleteOption[] => [
     { value: 'Not Started', label: '⏸️ Not Started' },
     { value: 'In Progress', label: '🔄 In Progress' },
     { value: 'Pending', label: '⏳ Pending' },

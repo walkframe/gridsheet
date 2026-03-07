@@ -1,18 +1,20 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 
 export class RoundupFunction extends BaseFunction {
   example = 'ROUNDUP(99.44,1)';
   helpText = ['Round up a number to the specified number of decimal places according to standard rules.'];
-  helpArgs = [
+  helpArgs: HelpArg[] = [
     {
       name: 'value',
       description: 'A number to be rounded up.',
+      type: ['number'],
     },
     {
       name: 'digit',
       description: 'The number of decimal places after rounding.',
+      type: ['number'],
       optional: true,
     },
   ];

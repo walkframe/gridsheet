@@ -240,12 +240,11 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
       let backgroundColor: string | null = null;
       if (between({ start: selectingZone.startX, end: selectingZone.endX }, x)) {
         color = 'rgba(80, 180, 255, 1)';
-        if (topHeaderSelecting) {
-          backgroundColor = 'rgba(0, 119, 255, 0.15)';
-        }
+        backgroundColor = topHeaderSelecting ? 'rgba(128, 128, 128, 0.25)' : 'rgba(0, 119, 255, 0.05)';
       }
       if (choosing.x === x) {
         color = COLOR_POINTED;
+        backgroundColor = topHeaderSelecting ? 'rgba(128, 128, 128, 0.45)' : 'rgba(0, 119, 255, 0.15)';
       }
       if (!color) {
         continue;
@@ -259,7 +258,6 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
       const drawLeft = Math.max(left, headerW);
       const drawWidth = Math.min(left + pos.width, w) - drawLeft;
       if (drawWidth > 0) {
-        // Draw background if header is being selected
         if (backgroundColor) {
           fillRect(ctx, drawLeft, 0, drawWidth, headerH, backgroundColor);
         }
@@ -282,12 +280,11 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
       let backgroundColor: string | null = null;
       if (between({ start: selectingZone.startY, end: selectingZone.endY }, y)) {
         color = 'rgba(80, 180, 255, 1)';
-        if (leftHeaderSelecting) {
-          backgroundColor = 'rgba(0, 119, 255, 0.15)';
-        }
+        backgroundColor = leftHeaderSelecting ? 'rgba(128, 128, 128, 0.25)' : 'rgba(0, 119, 255, 0.05)';
       }
       if (choosing.y === y) {
         color = COLOR_POINTED;
+        backgroundColor = leftHeaderSelecting ? 'rgba(128, 128, 128, 0.45)' : 'rgba(0, 119, 255, 0.15)';
       }
       if (!color) {
         continue;
@@ -301,7 +298,6 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
       const drawTop = Math.max(top, headerH);
       const drawHeight = Math.min(top + pos.height, h) - drawTop;
       if (drawHeight > 0) {
-        // Draw background if header is being selected
         if (backgroundColor) {
           fillRect(ctx, 0, drawTop, headerW, drawHeight, backgroundColor);
         }

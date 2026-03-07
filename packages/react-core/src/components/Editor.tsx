@@ -1,5 +1,19 @@
-import type { FC, KeyboardEvent } from 'react';
-import { useContext, useEffect, useState, useCallback, memo } from 'react';
+import type { FC } from 'react';
+import {
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  memo,
+  CSSProperties,
+  FocusEvent,
+  KeyboardEvent,
+  SyntheticEvent,
+  useRef,
+} from 'react';
+import { createPortal } from 'react-dom';
+import { FunctionGuide } from './FunctionGuide';
+import { EditorOptions } from './EditorOptions';
 import { x2c, y2r } from '../lib/coords';
 import { clip } from '../lib/clipboard';
 import {
@@ -18,15 +32,17 @@ import {
   setSearchQuery,
   setEntering,
   setInputting,
+  setEditorHovering,
   updateTable,
 } from '../store/actions';
 
 import { Context } from '../store';
 import { areaToZone, zoneToArea } from '../lib/spatial';
 import * as prevention from '../lib/operation';
-import { expandInput, insertTextAtCursor, isRefInsertable, resetInput } from '../lib/input';
+import { expandInput, insertTextAtCursor, isFocus, isRefInsertable, resetInput } from '../lib/input';
 import { Lexer } from '../formula/evaluator';
 import { COLOR_PALETTE } from '../lib/palette';
+import { useAutocomplete } from './useAutocomplete';
 import { CursorStateType, EditorEventWithNativeEvent, FeedbackType, ModeType } from '../types';
 import { Fixed } from './Fixed';
 import { parseHTML, parseText } from '../lib/paste';
@@ -38,8 +54,9 @@ type Props = {
 
 export const Editor: FC<Props> = ({ mode }: Props) => {
   const { store, dispatch } = useContext(Context);
-  const [selected, setSelected] = useState(0);
   const [shiftKey, setShiftKey] = useState(false);
+  const [selectionStart, setSelectionStart] = useState(0);
+  const [isFocused, setIsFocused] = useState(false);
   const {
     choosing,
     inputting,
@@ -56,8 +73,49 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
     editingOnEnter,
     tableReactive: tableRef,
     sheetId,
+    dragging,
   } = store;
   const table = tableRef.current;
+
+  const renderOverlays = () => {
+    if (!isFocused || !editing || typeof document === 'undefined') {
+      return null;
+    }
+    if (editorRef.current !== document.activeElement) {
+      return null;
+    }
+
+    const rect = editorRef.current?.getBoundingClientRect();
+    if (!rect) {
+      return null;
+    }
+    const { bottom: top, left } = rect;
+
+    return createPortal(
+      <>
+        {activeFunctionHelp &&
+          filteredOptions.length === 0 &&
+          (!selectingZone || (selectingZone.endY === -1 && selectingZone.endX === -1)) && (
+            <FunctionGuide
+              activeFunctionGuide={activeFunctionHelp}
+              activeArgIndex={activeArgIndex}
+              top={top}
+              left={left}
+            />
+          )}
+        {filteredOptions.length > 0 && (
+          <EditorOptions
+            filteredOptions={filteredOptions}
+            top={top}
+            left={left}
+            selected={selected}
+            onOptionMouseDown={handleOptionMouseDown}
+          />
+        )}
+      </>,
+      document.body,
+    );
+  };
 
   if (!table) {
     return null;
@@ -65,51 +123,27 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
 
   const policy = table.getPolicyByPoint(choosing);
   const optionsAll = policy.getOptions();
-  const inputLower = inputting.toLocaleLowerCase();
-  const filteredOptions = optionsAll
-    .map((option) => {
-      const keywords = option.keywords ?? [String(option.value)];
-      let bestMatch = { index: -1, startsWith: false, keyword: '' };
 
-      for (const keyword of keywords) {
-        const keywordLower = keyword.toLowerCase();
-        const index = keywordLower.indexOf(inputLower);
-        if (index !== -1) {
-          const startsWith = keywordLower.startsWith(inputLower);
-          if (
-            bestMatch.index === -1 ||
-            index < bestMatch.index ||
-            (index === bestMatch.index && startsWith && !bestMatch.startsWith)
-          ) {
-            bestMatch = { index, startsWith, keyword };
-          }
-        }
-      }
+  const handleSelect = useCallback((e: React.SyntheticEvent<HTMLTextAreaElement>) => {
+    setSelectionStart(e.currentTarget.selectionStart);
+  }, []);
 
-      return {
-        option,
-        ...bestMatch,
-        keywordCount: keywords.length, // Add hierarchy (number of keywords)
-      };
-    })
-    .filter(({ index }) => index !== -1)
-    .sort((a, b) => {
-      // First priority: starts with input
-      if (a.startsWith !== b.startsWith) {
-        return b.startsWith ? 1 : -1;
-      }
-      // Second priority: earlier match position
-      if (a.index !== b.index) {
-        return a.index - b.index;
-      }
-      // Third priority: more keywords (higher hierarchy)
-      if (a.keywordCount !== b.keywordCount) {
-        return b.keywordCount - a.keywordCount;
-      }
-      // Fourth priority: alphabetical order
-      return a.keyword.localeCompare(b.keyword);
-    })
-    .map(({ option }) => option);
+  const {
+    filteredOptions,
+    selected,
+    setSelected,
+    replaceWithOption,
+    handleArrowUp,
+    handleArrowDown,
+    isFormula,
+    activeFunctionHelp,
+    activeArgIndex,
+  } = useAutocomplete({
+    inputting,
+    selectionStart,
+    optionsAll,
+    functions: table.wire.functions,
+  });
 
   useEffect(() => {
     editorRef?.current?.focus?.({ preventScroll: true });
@@ -148,21 +182,43 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
   const valueString = table.stringify({ point: choosing, cell, refEvaluation: 'RAW' });
   const [before, setBefore] = useState<string>(valueString);
 
+  const writeCell = useCallback(
+    (value: string) => {
+      if (before !== value) {
+        dispatch(write({ value }));
+      }
+      setBefore(value);
+    },
+    [before, dispatch],
+  );
+
   const selectValue = useCallback(
-    (selected: number) => {
-      const option = filteredOptions[selected];
+    (selectedIndex: number) => {
+      const option = filteredOptions[selectedIndex];
       if (option) {
-        const t = table.update({
-          diff: { [address]: { value: option.value } },
-          partial: true,
-        });
-        dispatch(updateTable(t.clone()));
-        dispatch(setEditingAddress(''));
-        dispatch(setInputting(''));
+        if (option.isFunction) {
+          const { value: newValue, selectionStart: newCursor } = replaceWithOption(option);
+          dispatch(setInputting(newValue));
+
+          setTimeout(() => {
+            if (editorRef.current) {
+              editorRef.current.focus();
+              editorRef.current.setSelectionRange(newCursor, newCursor);
+            }
+          }, 0);
+        } else {
+          const t = table.update({
+            diff: { [address]: { value: option.value } },
+            partial: true,
+          });
+          dispatch(updateTable(t.clone()));
+          dispatch(setEditingAddress(''));
+          dispatch(setInputting(''));
+        }
         setSelected(0);
       }
     },
-    [filteredOptions, table, address],
+    [filteredOptions, table, address, inputting, writeCell, dispatch, editorRef],
   );
 
   useEffect(() => {
@@ -172,16 +228,6 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
   }, [choosing, valueString, dispatch, editorRef, table]);
 
   const { y: top, x: left, height, width } = editorRect;
-
-  const writeCell = useCallback(
-    (value: string) => {
-      if (before !== value) {
-        dispatch(write({ value }));
-      }
-      setBefore(value);
-    },
-    [before],
-  );
 
   const numLines = valueString.split('\n').length;
   const [isKeyDown, setIsKeyDown] = useState(false);
@@ -205,7 +251,11 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
           e.preventDefault();
           if (editing) {
             if (filteredOptions.length) {
+              const isFunction = filteredOptions[selected]?.isFunction;
               selectValue(selected);
+              if (isFunction) {
+                return false;
+              }
             } else {
               writeCell(input.value);
               dispatch(setEditingAddress(''));
@@ -225,7 +275,14 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
 
         case 'Enter': // ENTER
           if (editing) {
-            if (e.altKey) {
+            if (filteredOptions.length) {
+              const isFunction = filteredOptions[selected]?.isFunction;
+              selectValue(selected);
+              if (isFunction) {
+                e.preventDefault();
+                return false;
+              }
+            } else if (e.altKey) {
               insertTextAtCursor(input, '\n');
               dispatch(setInputting(input.value));
               e.preventDefault();
@@ -234,13 +291,9 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
               if (e.nativeEvent.isComposing) {
                 return false;
               }
-              if (filteredOptions.length) {
-                selectValue(selected);
-              } else {
-                writeCell(input.value);
-                dispatch(setEditingAddress(''));
-                dispatch(setInputting(''));
-              }
+              writeCell(input.value);
+              dispatch(setEditingAddress(''));
+              dispatch(setInputting(''));
             }
           } else if (editingOnEnter && selectingZone.endY === -1) {
             const dblclick = document.createEvent('MouseEvents');
@@ -324,12 +377,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
             );
             return false;
           }
-          if (filteredOptions.length > 1) {
-            if (selected <= 0) {
-              setSelected(filteredOptions.length - 1);
-            } else {
-              setSelected(selected - 1);
-            }
+          if (handleArrowUp(e as unknown as React.KeyboardEvent<HTMLTextAreaElement>)) {
             return true;
           }
           break;
@@ -360,12 +408,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
             );
             return false;
           }
-          if (filteredOptions.length > 1) {
-            if (selected >= filteredOptions.length - 1) {
-              setSelected(0);
-            } else {
-              setSelected(selected + 1);
-            }
+          if (handleArrowDown(e as unknown as React.KeyboardEvent<HTMLTextAreaElement>)) {
             return true;
           }
           break;
@@ -519,6 +562,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
 
   const handleFocus = useCallback(
     (e: React.FocusEvent<HTMLTextAreaElement>) => {
+      setIsFocused(true);
       table.wire.lastFocused = e.currentTarget;
     },
     [table],
@@ -547,6 +591,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
 
   const handleBlur = useCallback(
     (e: React.FocusEvent<HTMLTextAreaElement>) => {
+      setIsFocused(false);
       if (isRefInsertable(e.currentTarget)) {
         return true;
       } else {
@@ -556,7 +601,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
       }
       dispatch(setEditingAddress(''));
     },
-    [editing, writeCell],
+    [editing, writeCell, dispatch],
   );
 
   const handleChange = useCallback(
@@ -657,22 +702,19 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
           onBlur={handleBlur}
           value={inputting}
           onChange={handleChange}
+          onSelect={handleSelect}
           onPaste={handlePaste}
           onKeyDown={handleKeyDown}
           onKeyUp={handleKeyUpInternal}
+          onMouseEnter={() => {
+            dispatch(setEditorHovering(true));
+          }}
+          onMouseLeave={() => {
+            dispatch(setEditorHovering(false));
+          }}
         />
       </div>
-      <ul className="gs-editor-options" style={{ marginTop: editorRef.current?.scrollHeight }}>
-        {filteredOptions.map((option, i) => (
-          <li
-            key={i}
-            className={`gs-editor-option ${selected === i ? ' gs-editor-option-selected' : ''}`}
-            onMouseDown={(e) => handleOptionMouseDown(e, i)}
-          >
-            {option.label ?? option.value}
-          </li>
-        ))}
-      </ul>
+      {renderOverlays()}
     </Fixed>
   );
 };

@@ -1,14 +1,15 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 
 export class AcosFunction extends BaseFunction {
   example = 'ACOS(0)';
   helpText = ['Returns the inverse cos of the value in radians.'];
-  helpArgs = [
+  helpArgs: HelpArg[] = [
     {
       name: 'value',
       description: 'A value for the inverse cos between -1 and 1.',
+      type: ['number'],
     },
   ];
 

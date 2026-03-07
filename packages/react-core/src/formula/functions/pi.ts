@@ -1,10 +1,10 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 
 export class PiFunction extends BaseFunction {
   example = 'PI()';
   helpText = ['Returns the value of pi.'];
-  helpArgs = [];
+  helpArgs: HelpArg[] = [];
 
   protected validate() {
     if (this.bareArgs.length !== 0) {

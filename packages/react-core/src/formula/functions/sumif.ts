@@ -1,7 +1,7 @@
 import { FormulaError } from '../evaluator';
 import { solveTable } from '../solver';
 import { Table } from '../../lib/table';
-import { BaseFunction } from './__base';
+import { BaseFunction, conditionArg, HelpArg } from './__base';
 import { check, ensureString } from './__utils';
 import { stripTable } from '../../formula/solver';
 import { AreaType } from '../../types';
@@ -9,17 +9,10 @@ import { AreaType } from '../../types';
 export class SumifFunction extends BaseFunction {
   example = 'SUMIF(A1:A10,">20")';
   helpText = ['Returns the sum of a series of cells.'];
-  helpArgs = [
-    { name: 'range1', description: 'A condition range.' },
-    {
-      name: 'condition',
-      description: 'A condition for summarization.',
-    },
-    {
-      name: 'range2',
-      description: 'A range to be summarized.',
-      optional: true,
-    },
+  helpArgs: HelpArg[] = [
+    { name: 'range1', description: 'A condition range.', type: ['range'] },
+    conditionArg,
+    { name: 'range2', description: 'A range to be summarized.', type: ['range'], optional: true },
   ];
 
   protected validate() {

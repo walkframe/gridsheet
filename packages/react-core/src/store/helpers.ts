@@ -1,6 +1,6 @@
 import { a2p, x2c, y2r } from '../lib/coords';
 import { Table } from '../lib/table';
-import { Address, PointType, StoreType } from '../types';
+import type { Address, PointType, StoreType } from '../types';
 
 export const restrictPoints = (store: StoreType, table: Table) => {
   const { choosing, selectingZone } = store;
@@ -80,8 +80,10 @@ export const initSearchStatement = (table: Table, store: StoreType) => {
   }
 
   // Determine search range
-  let startY = 1, endY = table.bottom;
-  let startX = 1, endX = table.right;
+  let startY = 1,
+    endY = table.bottom;
+  let startX = 1,
+    endX = table.right;
   if (searchRange) {
     startY = searchRange.startY;
     endY = searchRange.endY;

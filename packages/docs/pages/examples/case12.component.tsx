@@ -1,11 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import {
-  GridSheet,
-  buildInitialCells,
-  useHub,
-} from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells, useHub } from '@gridsheet/react-core';
 import { Debugger } from '@gridsheet/react-dev';
 
 export default function DebuggerExample() {
@@ -24,7 +20,7 @@ export default function DebuggerExample() {
         minWidth: '320px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '20px'
+        gap: '20px',
       }}
     >
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
@@ -120,7 +116,7 @@ export default function DebuggerExample() {
             initialCells={buildInitialCells({
               cells: {
                 A1: { value: 'Global Revenue' },
-                B1: { value: '=\'Data Sheet\'!B1+\'Data Sheet\'!B2' },
+                B1: { value: "='Data Sheet'!B1+'Data Sheet'!B2" },
                 A2: { value: 'Global Expenses' },
                 B2: { value: 4500 },
                 A3: { value: 'Net Profit' },

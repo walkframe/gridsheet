@@ -1,12 +1,16 @@
 import type { KeyboardEvent } from 'react';
-import { useContext, useEffect, useState, useRef, useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useContext } from 'react';
+import { createPortal } from 'react-dom';
+import { FunctionGuide } from './FunctionGuide';
+import { EditorOptions } from './EditorOptions';
 import { Context } from '../store';
 import { p2a } from '../lib/coords';
-import { setEditingAddress, setInputting, walk, write } from '../store/actions';
+import { setEditingAddress, setInputting, setEditorHovering, walk, write, updateTable } from '../store/actions';
 import * as prevention from '../lib/operation';
-import { insertTextAtCursor } from '../lib/input';
+import { insertTextAtCursor, isFocus } from '../lib/input';
 import { editorStyle } from './Editor';
 import { ScrollHandle } from './ScrollHandle';
+import { useAutocomplete } from './useAutocomplete';
 
 type FormulaBarProps = {
   ready: boolean;
@@ -15,13 +19,17 @@ type FormulaBarProps = {
 export const FormulaBar = ({ ready }: FormulaBarProps) => {
   const { store, dispatch } = useContext(Context);
   const [before, setBefore] = useState('');
+  const [selectionStart, setSelectionStart] = useState(0);
+  const [isFocused, setIsFocused] = useState(false);
   const {
     choosing,
+    selectingZone,
     editorRef,
     largeEditorRef,
     tableReactive: tableRef,
     inputting,
     editingAddress: editingCell,
+    dragging,
   } = store;
   const table = tableRef.current;
   const hlRef = useRef<HTMLDivElement | null>(null);
@@ -62,10 +70,34 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
     };
   }, []);
 
+  const policy = table?.getPolicyByPoint(choosing);
+  const optionsAll = policy?.getOptions() || [];
+
+  const {
+    filteredOptions,
+    selected,
+    setSelected,
+    replaceWithOption,
+    handleArrowUp,
+    handleArrowDown,
+    isFormula,
+    activeFunctionHelp,
+    activeArgIndex,
+  } = useAutocomplete({
+    inputting,
+    selectionStart,
+    optionsAll,
+    functions: table?.wire.functions,
+  });
+
   const largeInput = largeEditorRef.current;
 
-  const handleInput = useCallback((e: KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleInput = useCallback((e: React.SyntheticEvent<HTMLTextAreaElement>) => {
     dispatch(setInputting(e.currentTarget.value));
+  }, []);
+
+  const handleSelect = useCallback((e: React.SyntheticEvent<HTMLTextAreaElement>) => {
+    setSelectionStart(e.currentTarget.selectionStart);
   }, []);
 
   const updateScroll = useCallback(() => {
@@ -82,6 +114,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
       if (!largeInput || !table) {
         return;
       }
+      setIsFocused(true);
       dispatch(setEditingAddress(address));
       table.wire.lastFocused = e.currentTarget;
     },
@@ -90,6 +123,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
 
   const handleBlur = useCallback(
     (e: React.FocusEvent<HTMLTextAreaElement>) => {
+      setIsFocused(false);
       if (e.currentTarget.value!.startsWith('=')) {
         return true;
       } else {
@@ -109,7 +143,58 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
       const input = e.currentTarget;
 
       switch (e.key) {
+        case 'Tab': // TAB
+          e.preventDefault();
+          if (filteredOptions.length) {
+            const option = filteredOptions[selected];
+            const isFunc = option?.isFunction;
+
+            if (isFunc) {
+              const { value: newValue, selectionStart: newCursor } = replaceWithOption(option);
+              dispatch(setInputting(newValue));
+              setTimeout(() => {
+                if (largeEditorRef.current) {
+                  largeEditorRef.current.focus();
+                  largeEditorRef.current.setSelectionRange(newCursor, newCursor);
+                }
+              }, 0);
+              return false;
+            } else {
+              // ... regular completion ...
+              const t = table.update({ diff: { [address]: { value: option.value } }, partial: true });
+              dispatch(updateTable(t.clone()));
+              dispatch(setEditingAddress(''));
+              dispatch(setInputting(''));
+            }
+          }
+          break;
+        case 'ArrowUp':
+          if (handleArrowUp(e as unknown as React.KeyboardEvent<HTMLTextAreaElement>)) {
+            return true;
+          }
+          break;
+        case 'ArrowDown':
+          if (handleArrowDown(e as unknown as React.KeyboardEvent<HTMLTextAreaElement>)) {
+            return true;
+          }
+          break;
         case 'Enter': {
+          if (filteredOptions.length) {
+            const option = filteredOptions[selected];
+            if (option?.isFunction) {
+              const { value: newValue, selectionStart: newCursor } = replaceWithOption(option);
+              dispatch(setInputting(newValue));
+              setTimeout(() => {
+                if (largeEditorRef.current) {
+                  largeEditorRef.current.focus();
+                  largeEditorRef.current.setSelectionRange(newCursor, newCursor);
+                }
+              }, 0);
+              e.preventDefault();
+              return false;
+            }
+          }
+
           if (e.altKey) {
             insertTextAtCursor(input, '\n');
           } else {
@@ -161,7 +246,39 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
       updateScroll();
       return false;
     },
-    [table, choosing, before, writeCell, updateScroll],
+    [
+      table,
+      choosing,
+      address,
+      before,
+      writeCell,
+      updateScroll,
+      filteredOptions,
+      selected,
+      replaceWithOption,
+      handleArrowUp,
+      handleArrowDown,
+    ],
+  );
+
+  const handleOptionMouseDown = useCallback(
+    (e: React.MouseEvent, i: number) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const option = filteredOptions[i];
+      if (option.isFunction) {
+        const { value: newValue, selectionStart: newCursor } = replaceWithOption(option);
+        writeCell(newValue);
+        dispatch(setInputting(newValue));
+        setTimeout(() => {
+          if (largeEditorRef.current) {
+            largeEditorRef.current.focus();
+            largeEditorRef.current.setSelectionRange(newCursor, newCursor);
+          }
+        }, 0);
+      }
+    },
+    [filteredOptions, replaceWithOption, writeCell, dispatch],
   );
 
   const style: React.CSSProperties = ready ? {} : { visibility: 'hidden' };
@@ -176,8 +293,50 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
       </label>
     );
   }
+  const renderOverlays = () => {
+    if (!isFocused || typeof document === 'undefined') {
+      return null;
+    }
+    if (largeEditorRef.current !== document.activeElement) {
+      return null;
+    }
+
+    const rect = largeEditorRef.current?.getBoundingClientRect();
+    if (!rect) {
+      return null;
+    }
+
+    const top = rect.bottom;
+    const left = rect.left;
+
+    return createPortal(
+      <>
+        {activeFunctionHelp &&
+          filteredOptions.length === 0 &&
+          (!selectingZone || (selectingZone.endY === -1 && selectingZone.endX === -1)) && (
+            <FunctionGuide
+              activeFunctionGuide={activeFunctionHelp}
+              activeArgIndex={activeArgIndex}
+              top={top}
+              left={left}
+            />
+          )}
+        {filteredOptions.length > 0 && choosing.x !== -1 && (
+          <EditorOptions
+            filteredOptions={filteredOptions}
+            top={top}
+            left={left}
+            selected={selected}
+            onOptionMouseDown={handleOptionMouseDown}
+          />
+        )}
+      </>,
+      document.body,
+    );
+  };
+
   return (
-    <label className="gs-formula-bar" data-sheet-id={store.sheetId} style={style}>
+    <div className="gs-formula-bar" data-sheet-id={store.sheetId} style={style}>
       <ScrollHandle style={{ position: 'absolute', left: 0, top: 0, zIndex: 2 }} vertical={-1} />
       <div className="gs-selecting-address">{address}</div>
       <div className="gs-fx">Fx</div>
@@ -202,12 +361,22 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
           value={inputting}
           onInput={handleInput}
           onFocus={handleFocus}
-          onBlur={handleBlur}
+          onSelect={handleSelect}
+          onPaste={(e) => {
+            e.stopPropagation();
+          }}
           onKeyDown={handleKeyDown}
           onKeyUp={updateScroll}
           onScroll={updateScroll}
+          onMouseEnter={(e) => {
+            dispatch(setEditorHovering(true));
+          }}  
+          onMouseLeave={(e) => {
+            dispatch(setEditorHovering(false));
+          }}
         ></textarea>
+        {renderOverlays()}
       </div>
-    </label>
+    </div>
   );
 };

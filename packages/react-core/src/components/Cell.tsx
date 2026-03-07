@@ -17,7 +17,7 @@ import {
 
 import { Context } from '../store';
 import { FormulaError } from '../formula/evaluator';
-import { Pending } from '../constants';
+import { Pending } from '../sentinels';
 import { insertRef, isRefInsertable } from '../lib/input';
 import { isXSheetFocused } from '../store/helpers';
 import type { FC, RefObject } from 'react';
@@ -102,17 +102,15 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
   try {
     rendered = table.render({ table, point: { y, x }, sync });
   } catch (e: any) {
-    if (e instanceof FormulaError) {
+    if (FormulaError.is(e)) {
       errorMessage = e.message;
       rendered = e.code;
     } else {
       errorMessage = e.message;
       rendered = '#UNKNOWN';
-      console.error(e);
     }
-    // TODO: debug flag
   }
-  const isPendingCell = table.getSolvedCache({ y, x }) instanceof Pending;
+  const isPendingCell = Pending.is(table.getSolvedCache({ y, x }));
   const input = editorRef.current;
 
   const editingAnywhere = !!(table.wire.editingAddress || editingAddress);
@@ -311,9 +309,8 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
       data-x={x}
       data-y={y}
       data-address={address}
-      className={`gs-cell ${among(selectingArea, { y, x }) ? 'gs-selecting' : ''} ${pointed ? 'gs-choosing' : ''} ${
-        editing ? 'gs-editing' : ''
-      } ${isPendingCell ? 'gs-pending' : ''}`}
+      className={`gs-cell ${among(selectingArea, { y, x }) ? 'gs-selecting' : ''} ${pointed ? 'gs-choosing' : ''} ${editing ? 'gs-editing' : ''
+        } ${isPendingCell ? 'gs-pending' : ''}`}
       style={{
         ...cell?.style,
       }}

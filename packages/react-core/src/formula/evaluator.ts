@@ -111,9 +111,7 @@ export class RefEntity extends Entity<string> {
     if (id == null) {
       return this.value;
     }
-    const system = table.wire.getSystem(id, table);
-    table.wire.data[id]!._sys = system;
-    system.dependents.add(dependency);
+    table.addDependents(id, dependency);
     return `#${parsed.table.sheetId}!${formula}`;
   }
 }
@@ -154,9 +152,7 @@ export class RangeEntity extends Entity<string> {
       if (id == null) {
         return this.value;
       }
-      const system = table.wire.getSystem(id, table);
-      table.wire.data[id]!._sys = system;
-      system.dependents.add(dependency);
+      table.addDependents(id, dependency);
       formulas.push(formula!);
     }
     return `#${parsed.table.sheetId}!${formulas.join(':')}`;
@@ -206,9 +202,7 @@ export class IdEntity extends Entity<string> {
     const { formula, ids } = parseRef(address, props);
     if (dependency) {
       ids.forEach((id) => {
-        const system = table.wire.getSystem(id, table);
-        table.wire.data[id]!._sys = system;
-        system.dependents.add(dependency);
+        table.addDependents(id, dependency);
       });
     }
     return formula || '#?';
@@ -264,9 +258,7 @@ export class IdRangeEntity extends Entity<string> {
     const { formula, ids } = parseRef(range, props);
     if (dependency) {
       ids.forEach((id) => {
-        const system = table.wire.getSystem(id, table);
-        table.wire.data[id]!._sys = system;
-        system.dependents.add(dependency);
+        table.addDependents(id, dependency);
       });
     }
     return formula;
@@ -870,6 +862,9 @@ export class Parser {
     return complement();
   }
 }
+
+/** Alias for Parser, exported for external tooling (e.g. Debugger). */
+export const FormulaParser = Parser;
 
 // identifyFormula takes a formula string and returns a new formula string with all references identified and updated based on the operation and dependency.
 // when the row slides, the references in the formula should be updated accordingly. For example, if a row is inserted above row 3, all references to row 3 and below should be updated to row 4 and below.

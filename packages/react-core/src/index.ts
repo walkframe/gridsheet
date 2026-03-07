@@ -53,13 +53,14 @@ export type { Dispatcher } from './store';
 export { ThousandSeparatorRendererMixin } from './renderers/thousand_separator';
 export { CheckboxRendererMixin } from './renderers/checkbox';
 export { BaseFunction, BaseFunctionSync, BaseFunctionAsync } from './formula/functions/__base';
-export { FormulaError } from './formula/evaluator';
+export { FormulaError, Lexer, FormulaParser } from './formula/evaluator';
 export { Table, type UserTable } from './lib/table';
 export { Policy } from './policy/core';
-export type { PolicyType, PolicyOption, PolicyMixinType } from './policy/core';
+export type { PolicyType, AutocompleteOption, PolicyMixinType } from './policy/core';
 
 export * as operations from './lib/operation';
-export { DEFAULT_HISTORY_LIMIT, Pending } from './constants';
+export { DEFAULT_HISTORY_LIMIT } from './constants';
+export { Pending } from './sentinels';
 
 export { userActions } from './store/actions';
 export { clip } from './lib/clipboard';

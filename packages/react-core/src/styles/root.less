@@ -119,3 +119,21 @@
   50% { left: 0; width: 100%; }
   100% { left: 100%; width: 0; }
 }
+
+@keyframes gs-flash {
+  0%   { opacity: 0; }
+  20%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.gs-flash-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: rgba(0, 119, 255, 0.15);
+  opacity: 0;
+  &--active {
+    animation: gs-flash 0.6s ease-out forwards;
+  }
+}

@@ -1,16 +1,17 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 
 export class DivideFunction extends BaseFunction {
   example = 'DIVIDE(4, 2)';
   helpText = ['Returns the result of dividing one number by another.', "This is the same as the '/' operator."];
-  helpArgs = [
+  helpArgs: HelpArg[] = [
     {
       name: 'dividend',
       description: 'A number that will be divided by divisor.',
+      type: ['number'],
     },
-    { name: 'divisor', description: 'A number that will divide a dividend.' },
+    { name: 'divisor', description: 'A number that will divide a dividend. Must be non-zero.', type: ['number'] },
   ];
 
   protected validate() {

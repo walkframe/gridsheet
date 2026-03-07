@@ -1,14 +1,15 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 
 export class ExpFunction extends BaseFunction {
   example = 'EXP(2)';
   helpText = ['Returns the power of a number whose base is the Euler number e.'];
-  helpArgs = [
+  helpArgs: HelpArg[] = [
     {
       name: 'exponent',
       description: 'It is an exponent of power with e as the base.',
+      type: ['number'],
     },
   ];
 

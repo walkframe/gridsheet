@@ -92,3 +92,14 @@ export const cut = async (page: any) => {
 export const copy = async (page: any) => {
   await ctrl(page, 'c');
 };
+
+export const dragByBox = async (page: any, startSelector: string, endSelector: string) => {
+  const startBox = await page.locator(startSelector).boundingBox();
+  const endBox = await page.locator(endSelector).boundingBox();
+  if (startBox && endBox) {
+    await page.mouse.move(startBox.x + startBox.width / 2, startBox.y + startBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(endBox.x + endBox.width / 2, endBox.y + endBox.height / 2);
+    await page.mouse.up();
+  }
+};

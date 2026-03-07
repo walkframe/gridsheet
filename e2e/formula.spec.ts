@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { ctrl, drag, paste } from './utils';
+import { ctrl, drag, dragByBox, paste } from './utils';
 
 test('render', async ({ page }) => {
   await page.goto('http://localhost:5233/iframe.html?id=multiple-sheets--sheets&viewMode=story');
@@ -135,19 +135,13 @@ test('insert ref by selection', async ({ page }) => {
 
   await b1.click();
   await page.keyboard.type('=sum(');
-  await page.locator("[data-address='B2']").hover();
-  await page.mouse.down();
-  await page.locator("[data-address='C3']").hover();
-  await page.mouse.up();
+  await dragByBox(page, "[data-address='B2']", "[data-address='C3']");
   await page.keyboard.type(')');
   await page.keyboard.press('Enter');
 
   await c1.click();
   await page.keyboard.type('=sum()');
-  await page.locator("[data-address='B2']").hover();
-  await page.mouse.down();
-  await page.locator("[data-address='C3']").hover();
-  await page.mouse.up();
+  await dragByBox(page, "[data-address='B2']", "[data-address='C3']");
 
   expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('2');
   expect(await b1.locator('.gs-cell-rendered').textContent()).toBe('5');

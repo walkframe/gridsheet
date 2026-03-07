@@ -684,6 +684,17 @@ class ClearAction<T extends null> extends CoreAction<T> {
 }
 export const clear = new ClearAction().bind();
 
+const FLASH_CLASS = 'gs-flash-overlay--active';
+const FLASH_DURATION_MS = 600;
+const flashSheet = (el: HTMLElement | null) => {
+  if (!el) return;
+  el.classList.remove(FLASH_CLASS);
+  // force reflow to restart animation when called consecutively
+  void el.offsetWidth;
+  el.classList.add(FLASH_CLASS);
+  setTimeout(() => el.classList.remove(FLASH_CLASS), FLASH_DURATION_MS);
+};
+
 class UndoAction<T extends null> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { tableReactive: tableRef } = store;
@@ -697,7 +708,8 @@ class UndoAction<T extends null> extends CoreAction<T> {
     }
     if (history.dstSheetId !== table.sheetId) {
       const { dispatch, store: dstStore } = table.wire.contextsBySheetId[history.dstSheetId];
-      dispatch(setStore({ ...dstStore, ...history.undoReflection }));
+      dispatch(setStore({ ...dstStore, ...history.undoReflection, tableReactive: { current: dstStore.tableReactive.current } }));
+      flashSheet(dstStore.flashRef.current);
       return store;
     }
     return {
@@ -706,7 +718,10 @@ class UndoAction<T extends null> extends CoreAction<T> {
       ...history.undoReflection,
       ...initSearchStatement(table, store),
       tableReactive: { current: table },
-      callback,
+      callback: (s: StoreType) => {
+        callback?.(s);
+        flashSheet(store.flashRef.current);
+      },
     };
   }
 }
@@ -725,7 +740,8 @@ class RedoAction<T extends null> extends CoreAction<T> {
     }
     if (history.dstSheetId !== table.sheetId) {
       const { dispatch, store: dstStore } = table.wire.contextsBySheetId[history.dstSheetId];
-      dispatch(setStore({ ...dstStore, ...history.redoReflection }));
+      dispatch(setStore({ ...dstStore, ...history.redoReflection, tableReactive: { current: dstStore.tableReactive.current } }));
+      flashSheet(dstStore.flashRef.current);
       return store;
     }
     return {
@@ -734,7 +750,10 @@ class RedoAction<T extends null> extends CoreAction<T> {
       ...history.redoReflection,
       ...initSearchStatement(table, store),
       tableReactive: { current: table },
-      callback,
+      callback: (s: StoreType) => {
+        callback?.(s);
+        flashSheet(store.flashRef.current);
+      },
     };
   }
 }
@@ -1253,6 +1272,16 @@ class SetRowMenuAction<T extends { y: number; position: { y: number; x: number }
   }
 }
 export const setRowMenu = new SetRowMenuAction().bind();
+
+class SetEditorHoveringAction<T extends boolean> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
+    return {
+      ...store,
+      editorHovering: payload,
+    };
+  }
+}
+export const setEditorHovering = new SetEditorHoveringAction().bind();
 
 class setStoreAction<T extends Partial<StoreType>> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {

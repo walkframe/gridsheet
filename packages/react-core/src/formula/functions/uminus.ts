@@ -1,11 +1,11 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 
 export class UminusFunction extends BaseFunction {
   example = 'UMINUS(4)';
   helpText = ['Returns a number with positive and negative values reversed.'];
-  helpArgs = [{ name: 'value1', description: 'A number that will be subtracted.' }];
+  helpArgs: HelpArg[] = [{ name: 'value1', description: 'A number that will be subtracted.', type: ['number'] }];
 
   protected validate() {
     if (this.bareArgs.length !== 1) {

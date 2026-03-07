@@ -1,14 +1,15 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureBoolean } from './__utils';
 
 export class NotFunction extends BaseFunction {
   example = 'NOT(TRUE)';
   helpText = ['Returns the inverse of the Boolean; if TRUE, NOT returns FALSE.', 'If FALSE, NOT returns TRUE.'];
-  helpArgs = [
+  helpArgs: HelpArg[] = [
     {
       name: 'logical expression',
       description: 'A logical expression as a boolean.',
+      type: ['boolean'],
     },
   ];
 

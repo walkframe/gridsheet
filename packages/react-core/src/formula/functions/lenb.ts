@@ -1,14 +1,15 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureString } from './__utils';
 
 export class LenbFunction extends BaseFunction {
   example = 'LENB(A2)';
   helpText = ['Returns the number of bytes in the length of the string.'];
-  helpArgs = [
+  helpArgs: HelpArg[] = [
     {
       name: 'text',
       description: 'A text to be returned the length of the bytes.',
+      type: ['string'],
     },
   ];
 

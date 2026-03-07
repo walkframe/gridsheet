@@ -1,4 +1,5 @@
-import { DEFAULT_HISTORY_LIMIT, Pending, RESET_ZONE } from '../constants';
+import { DEFAULT_HISTORY_LIMIT, RESET_ZONE } from '../constants';
+import { Pending } from '../sentinels';
 
 import type {
   HistoryType,
@@ -9,8 +10,6 @@ import type {
   CellsByIdType,
   Id,
   StoreDispatchType,
-  CellType,
-  System,
   FeedbackType,
   EditorEvent,
   CursorStateType,
@@ -115,19 +114,6 @@ export class Wire {
       dispatch(updateTable(table));
     }
     this.ready = true;
-  }
-
-  public getSystem(id: Id, table: Table): System {
-    const cell = this.data[id];
-    if (cell?._sys) {
-      return cell._sys;
-    }
-    return {
-      id,
-      sheetId: table.sheetId,
-      changedTime: Date.now(),
-      dependents: new Set(),
-    };
   }
 
   constructor({

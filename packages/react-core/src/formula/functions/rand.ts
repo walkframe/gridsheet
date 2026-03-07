@@ -1,10 +1,10 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 
 export class RandFunction extends BaseFunction {
   example = 'RAND()';
   helpText = ['Returns a random number between 0 and 1.'];
-  helpArgs = [];
+  helpArgs: HelpArg[] = [];
 
   protected validate() {
     if (this.bareArgs.length !== 0) {

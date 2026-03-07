@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import {
   GridSheet,
   Policy,
-  PolicyOption,
+  AutocompleteOption,
   buildInitialCells,
   buildInitialCellsFromOrigin,
   operations,
@@ -42,13 +42,13 @@ const DynamicOptionsComponent: React.FC = () => {
       new Policy({
         mixins: [
           {
-            getDefault({ value }) {
+            getFallback({ value }) {
               return { value, style: { color: '#f88' } };
             },
-            getOptions(): PolicyOption[] {
+            getOptions(): AutocompleteOption[] {
               return optionMatrix.map(([value, label]) => ({ value, label }));
             },
-            validate({ patch, table, point }) {
+            validate({ next: patch, table, point }) {
               const { value, style } = patch ?? {};
               return { value, style };
             },
@@ -61,17 +61,11 @@ const DynamicOptionsComponent: React.FC = () => {
     policies: {
       fw: fwPolicy,
     },
-    labelers: {
-      value: (n: number) => {
-        return 'Value';
-      },
-      label: (n: number) => {
-        return 'Label';
-      },
-    },
     onChange: ({ table, points }) => {
-      const matrix = table.getFieldMatrix() as [string, string][];
-      setOptionMatrix(matrix);
+      if (table.sheetName === 'options') {
+        const matrix = table.getFieldMatrix() as [string, string][];
+        setOptionMatrix(matrix);
+      }
     },
   });
 
@@ -90,15 +84,16 @@ const DynamicOptionsComponent: React.FC = () => {
       <hr />
 
       <GridSheet
+        sheetName="options"
         hub={hub}
         initialCells={buildInitialCellsFromOrigin({
           matrix: optionMatrix,
           cells: {
             A: {
-              labeler: 'value',
+              label: 'Value',
             },
             B: {
-              labeler: 'label',
+              label: 'Label',
             },
             default: {
               prevention: operations.InsertCols,

@@ -8,7 +8,7 @@ import {
   ensureNumber,
   p2a,
   solveTable,
-  Table
+  Table,
 } from '@gridsheet/react-core';
 import { Debugger } from '@gridsheet/react-dev';
 
@@ -35,11 +35,7 @@ const DebuggerSheet = () => {
       <div style={{ display: 'flex', gap: '16px' }}>
         <div style={{ flex: 1 }}>
           <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>
-            <input
-              type="text"
-              value={sheetName1}
-              onChange={(e) => setSheetName1(e.target.value)}
-            />
+            <input type="text" value={sheetName1} onChange={(e) => setSheetName1(e.target.value)} />
           </div>
           <GridSheet
             hub={hub}
@@ -58,23 +54,20 @@ const DebuggerSheet = () => {
                 C3: { value: '=SUM_DELAY_INFLIGHT(A3, 100)' },
                 A4: { value: '=SUM(A3, B3)' },
               },
-              ensured: { numRows: 10, numCols: 5 },
+              ensured: { numRows: 8, numCols: 4 },
             })}
           />
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>
-            <input
-              type="text"
-              value={sheetName2}
-              onChange={(e) => setSheetName2(e.target.value)}
-            />
+            <input type="text" value={sheetName2} onChange={(e) => setSheetName2(e.target.value)} />
           </div>
           <GridSheet
             hub={hub}
             sheetName={sheetName2}
             options={{
               sheetResize: 'both',
+              mode: 'dark',
             }}
             initialCells={buildInitialCells({
               cells: {
@@ -82,7 +75,7 @@ const DebuggerSheet = () => {
                 B1: { value: 999 },
                 C1: { value: '=B1 + 1' },
               },
-              ensured: { numRows: 10, numCols: 5 },
+              ensured: { numRows: 8, numCols: 4 },
             })}
           />
         </div>

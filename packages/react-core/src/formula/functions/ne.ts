@@ -1,5 +1,5 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ne } from './__utils';
 
 export class NeFunction extends BaseFunction {
@@ -8,9 +8,9 @@ export class NeFunction extends BaseFunction {
     'Returns TRUE if the two specified values are not equal, FALSE if they are.',
     "This is the same as the '<>' operator.",
   ];
-  helpArgs = [
-    { name: 'value1', description: 'First value.' },
-    { name: 'value2', description: 'A value to be compared with value1.' },
+  helpArgs: HelpArg[] = [
+    { name: 'value1', description: 'First value.', type: ['number'] },
+    { name: 'value2', description: 'A value to be compared with value1.', type: ['number'] },
   ];
 
   protected validate() {

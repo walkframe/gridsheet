@@ -16,10 +16,25 @@ export type FunctionProps = {
   origin?: PointType;
 };
 
+export type HelpArg = {
+  name: string;
+  description: string;
+  optional?: boolean;
+  iterable?: boolean;
+  type?: ('number' | 'string' | 'boolean' | 'date' | 'time' | 'range' | 'reference' | 'any')[];
+};
+
+export const conditionArg: HelpArg = {
+  name: 'condition',
+  description:
+    'The condition to evaluate. Use "=" for equal, "<" for less than, ">" for greater than, "<=" for less than or equal, ">=" for greater than or equal, "<>" for not equal.',
+  type: ['string'],
+};
+
 export class BaseFunction {
   public example = '_BASE()';
   public helpTexts = ["Function's description."];
-  public helpArgs = [{ name: 'value1', description: '' }];
+  public helpArgs: HelpArg[] = [];
   /** Indicates if this function is async. Override in subclass or use BaseFunctionAsync. */
   protected isAsync: boolean = false;
   /** Cache TTL in milliseconds. Override in subclass to set expiry. undefined = never expires. */

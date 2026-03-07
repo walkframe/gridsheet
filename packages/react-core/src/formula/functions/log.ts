@@ -1,16 +1,17 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 
 export class LogFunction extends BaseFunction {
   example = 'LOG(128, 2)';
   helpText = ['Returns the logarithm of a number whose base is the specified number.'];
-  helpArgs = [
+  helpArgs: HelpArg[] = [
     {
       name: 'value',
       description: 'The value for the logarithm of the specified number as base.',
+      type: ['number'],
     },
-    { name: 'base', description: 'An exponent to power the base.' },
+    { name: 'base', description: 'An exponent to power the base.', type: ['number'] },
   ];
 
   protected validate() {

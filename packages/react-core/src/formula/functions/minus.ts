@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 
 import { FormulaError } from '../evaluator';
 import { TimeDelta } from '../../lib/time';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 import { stripTable } from '../../formula/solver';
 import { Table } from '../../lib/table';
@@ -11,9 +11,9 @@ import { SECONDS_IN_DAY } from '../../constants';
 export class MinusFunction extends BaseFunction {
   example = 'MINUS(8, 3)';
   helpText = ['Returns the difference of two numbers.', "This is the same as the '-' operator."];
-  helpArgs = [
-    { name: 'value1', description: 'A number that will be subtracted.' },
-    { name: 'value2', description: 'A number that will subtract from value1.' },
+  helpArgs: HelpArg[] = [
+    { name: 'value1', description: 'A number that will be subtracted.', type: ['number'] },
+    { name: 'value2', description: 'A number that will subtract from value1.', type: ['number'] },
   ];
 
   protected validate() {

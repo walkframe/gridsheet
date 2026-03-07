@@ -84,14 +84,20 @@ export const SearchBar = () => {
   }, [searchRegex]);
 
   const hasSelection = useMemo(() => {
-    if (!selectingZone) return false;
-    if (isZoneNotSelected(selectingZone)) return false;
+    if (!selectingZone) {
+      return false;
+    }
+    if (isZoneNotSelected(selectingZone)) {
+      return false;
+    }
     const { startY, startX, endY, endX } = selectingZone;
     return !(startY === endY && startX === endX);
   }, [selectingZone]);
 
   const selectionLabel = useMemo(() => {
-    if (!selectingZone || !hasSelection) return '';
+    if (!selectingZone || !hasSelection) {
+      return '';
+    }
     const { startY, startX, endY, endX } = selectingZone;
     const topLeft = `${x2c(Math.min(startX, endX))}${y2r(Math.min(startY, endY))}`;
     const bottomRight = `${x2c(Math.max(startX, endX))}${y2r(Math.max(startY, endY))}`;
@@ -105,17 +111,21 @@ export const SearchBar = () => {
     } else if (selectingZone && hasSelection) {
       // Set search range to current selection
       const { startY, startX, endY, endX } = selectingZone;
-      dispatch(setSearchRange({
-        startY: Math.min(startY, endY),
-        startX: Math.min(startX, endX),
-        endY: Math.max(startY, endY),
-        endX: Math.max(startX, endX),
-      }));
+      dispatch(
+        setSearchRange({
+          startY: Math.min(startY, endY),
+          startX: Math.min(startX, endX),
+          endY: Math.max(startY, endY),
+          endX: Math.max(startX, endX),
+        }),
+      );
     }
   }, [searchRange, selectingZone, hasSelection]);
 
   const searchRangeLabel = useMemo(() => {
-    if (!searchRange) return '';
+    if (!searchRange) {
+      return '';
+    }
     const { startY, startX, endY, endX } = searchRange;
     const topLeft = `${x2c(startX)}${y2r(startY)}`;
     const bottomRight = `${x2c(endX)}${y2r(endY)}`;
@@ -149,7 +159,8 @@ export const SearchBar = () => {
         <textarea
           ref={searchInputRef}
           value={searchQuery}
-          onChange={handleChange} onKeyDown={handleKeyDown}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
           placeholder="Search"
           title="Press Enter to next, Shift+Enter to previous"
         ></textarea>
@@ -168,10 +179,7 @@ export const SearchBar = () => {
         )}
         {!searchRange && hasSelection && (
           <div className="gs-search-button gs-search-range">
-            <span
-              onClick={handleRangeClick}
-              title={`Limit to range: ${selectionLabel}`}
-            >
+            <span onClick={handleRangeClick} title={`Limit to range: ${selectionLabel}`}>
               in {selectionLabel}
             </span>
           </div>

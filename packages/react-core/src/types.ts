@@ -42,21 +42,20 @@ export type HeadersType = 'both' | 'vertical' | 'horizontal' | 'none';
 export type AsyncCache = {
   /** Cached result value from the async computation. */
   value: any;
-  /** Cache key derived from function name + arguments. Used to detect when inputs change. */
-  key: string;
   /** Absolute timestamp (ms since epoch) at which the cache expires. undefined means cache never expires. */
   expireTime?: number;
 };
 
 export type System = {
-  id: string;
-  sheetId: number;
-  changedTime: number;
-  dependents: Set<string>;
+  id?: string;
+  sheetId?: number;
+  changedTime?: number;
+  dependents?: Set<string>;
   /** Cumulative top offset (px) from table origin. Set on row-header cells (x=0). */
   offsetTop?: number;
   /** Cumulative left offset (px) from table origin. Set on col-header cells (y=0). */
   offsetLeft?: number;
+  tmpAsyncCaches?: Record<string, AsyncCache>;
 };
 
 export type FilterConditionMethod =
@@ -98,7 +97,7 @@ export type CellType<T = any, Custom = any> = {
   prevention?: OperationType;
   _sys?: System;
   /** Cached result from an async formula. Stored directly on the cell for serializability. */
-  asyncCache?: AsyncCache;
+  asyncCaches?: Record<string, AsyncCache>;
   /** Filter configuration. Set on col-header cells (y=0). */
   filter?: FilterConfig;
   /** Whether this row is hidden by a filter. Set on row-header cells (x=0). */
@@ -145,6 +144,7 @@ export type StoreType = {
   sheetId: number;
   tableReactive: RefObject<Table>;
   rootRef: RefObject<HTMLDivElement>;
+  flashRef: RefObject<HTMLDivElement>;
   mainRef: RefObject<HTMLDivElement>;
   editorRef: RefObject<HTMLTextAreaElement>;
   largeEditorRef: RefObject<HTMLTextAreaElement>;
@@ -181,6 +181,7 @@ export type StoreType = {
   resizingPositionX: [X, X, X]; // indexX, startX, endX
   columnMenuState: { x: number; position: PositionType } | null;
   rowMenuState: { y: number; position: PositionType } | null;
+  editorHovering: boolean;
 };
 
 export type Manager<T> = {
@@ -238,8 +239,15 @@ export type HistoryUpdateType = {
   partial: boolean;
 };
 
-export type MoveRelationKind = 'vacate' | 'overflow' | 'displace' | null;
-export type MoveRelations = [string, string, MoveRelationKind][];
+export type MoveRelation = {
+  before?: string; // policy before
+  after?: string; // policy after
+  src: Address; // address
+  dst?: Address; // address
+  new?: Id; // id
+  lost?: Id; // id
+};
+export type MoveRelations = MoveRelation[];
 
 export type HistoryMoveType = {
   operation: 'MOVE';

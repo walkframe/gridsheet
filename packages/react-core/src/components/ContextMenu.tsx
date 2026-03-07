@@ -15,7 +15,10 @@ import {
   paster,
   redoer,
   rowsInserterAbove,
-  rowsInserterBelow, rowsRemover, undoer, searcher
+  rowsInserterBelow,
+  rowsRemover,
+  undoer,
+  searcher,
 } from '../store/dispatchers';
 import type { ContextMenuProps } from '../types';
 
@@ -96,7 +99,11 @@ export const PasteItem = (props: ContextMenuProps) => {
 
 export const PasteOnlyValueItem = (props: ContextMenuProps) => {
   return (
-    <li className="gs-menu-item gs-enabled" data-testid="paste-only-value-item" onClick={async () => await paster(props, true)}>
+    <li
+      className="gs-menu-item gs-enabled"
+      data-testid="paste-only-value-item"
+      onClick={async () => await paster(props, true)}
+    >
       <div className="gs-menu-name">Paste only value</div>
       <div className="gs-menu-shortcut">
         Shift + <span className="gs-menu-underline">V</span>

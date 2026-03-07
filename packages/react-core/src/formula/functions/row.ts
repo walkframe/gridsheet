@@ -1,15 +1,16 @@
 import { Table } from '../../lib/table';
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 
 export class RowFunction extends BaseFunction {
   example = 'ROW(A9)';
   helpText = ['Returns the row number of a specified cell.'];
-  helpArgs = [
+  helpArgs: HelpArg[] = [
     {
       name: 'cell_reference',
       description: 'The cell whose row number will be returned.',
-      option: true,
+      type: ['reference'],
+      optional: true,
     },
   ];
 

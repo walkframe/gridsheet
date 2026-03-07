@@ -9,7 +9,7 @@ import {
   useHub,
   Policy,
   PolicyMixinType,
-  PolicyOption,
+  AutocompleteOption,
   Renderer,
   ThousandSeparatorRendererMixin,
   CheckboxRendererMixin,
@@ -19,7 +19,7 @@ import {
 
 // Department selection policy
 const DepartmentPolicy: PolicyMixinType = {
-  getOptions: (): PolicyOption[] => [
+  getOptions: (): AutocompleteOption[] => [
     { value: 'Engineering', label: '🔧 Engineering', keywords: ['Engineering', 'dev', 'development'] } as any,
     { value: 'Marketing', label: '📢 Marketing', keywords: ['Marketing', 'promotion', 'advertising'] } as any,
     { value: 'Sales', label: '💰 Sales', keywords: ['Sales', 'revenue', 'selling'] } as any,
@@ -111,7 +111,7 @@ export default function BudgetManagement() {
   // Dynamic status policy using ref for real-time updates
   const StatusPolicy = React.useMemo(
     () => ({
-      getOptions: (): PolicyOption[] => {
+      getOptions: (): AutocompleteOption[] => {
         return statusOptionsRef.current.map(([value, label]) => ({ value, label }));
       },
       getDefault: (props: any) => {

@@ -16,7 +16,7 @@ async function openColumnMenu(page: any, x: number) {
 /** Close the column menu by clicking the modal backdrop */
 async function closeColumnMenu(page: any) {
   await page.locator('.gs-column-menu-modal').click({ position: { x: 0, y: 0 } });
-  await page.waitForSelector('.gs-column-menu', { state: 'hidden' }).catch(() => { });
+  await page.waitForSelector('.gs-column-menu', { state: 'hidden' }).catch(() => {});
 }
 
 /** Helper to get rendered text of a cell */
