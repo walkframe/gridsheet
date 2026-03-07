@@ -18,6 +18,7 @@
     "@gridsheet/preact-core": "workspace:^",
     "@gridsheet/react-core": "workspace:^",
     "@gridsheet/react-dev": "workspace:^",
+    "@gridsheet/functions": "workspace:^",
     "@storybook/addon-docs": "^8.6.7",
     "@storybook/addon-essentials": "^8.6.7",
     "@storybook/addon-interactions": "^8.6.7",

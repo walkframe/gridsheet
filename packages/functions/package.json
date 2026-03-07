@@ -1,0 +1,79 @@
+{
+  "name": "@gridsheet/functions",
+  "version": "3.0.0-rc.1",
+  "description": "Extended formula functions for @gridsheet/react-core",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./math": {
+      "types": "./dist/math/index.d.ts",
+      "import": "./dist/math/index.js",
+      "default": "./dist/math/index.js"
+    },
+    "./statistics": {
+      "types": "./dist/statistics/index.d.ts",
+      "import": "./dist/statistics/index.js",
+      "default": "./dist/statistics/index.js"
+    },
+    "./string": {
+      "types": "./dist/string/index.d.ts",
+      "import": "./dist/string/index.js",
+      "default": "./dist/string/index.js"
+    },
+    "./lookup": {
+      "types": "./dist/lookup/index.d.ts",
+      "import": "./dist/lookup/index.js",
+      "default": "./dist/lookup/index.js"
+    },
+    "./time": {
+      "types": "./dist/time/index.d.ts",
+      "import": "./dist/time/index.js",
+      "default": "./dist/time/index.js"
+    }
+  },
+  "scripts": {
+    "build": "rm -rf ./dist || true && vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/walkframe/gridsheet.git"
+  },
+  "keywords": [
+    "spreadsheet",
+    "formula",
+    "functions"
+  ],
+  "author": "righ",
+  "license": "Apache-2.0",
+  "files": [
+    "dist/",
+    "package.json",
+    "README.md"
+  ],
+  "bugs": {
+    "url": "https://github.com/walkframe/gridsheet/issues"
+  },
+  "homepage": "https://gridsheet.walkframe.com/",
+  "packageManager": "pnpm@10.6.5",
+  "devDependencies": {
+    "typescript": "^5.8.2",
+    "vite": "^6.2.2",
+    "vite-plugin-dts": "^4.5.3",
+    "jest": "^29.4.3",
+    "@types/jest": "^29.4.0",
+    "@gridsheet/react-core": "workspace:*"
+  },
+  "peerDependencies": {
+    "@gridsheet/react-core": "^3.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

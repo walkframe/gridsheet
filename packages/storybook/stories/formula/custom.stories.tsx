@@ -2,6 +2,7 @@ import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { BaseFunction, useHub } from '@gridsheet/react-core';
 import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Formula/Custom',
@@ -17,6 +18,7 @@ const DESCRIPTION = [
 const CustomFunctionSheet = () => {
   const hub = useHub({
     additionalFunctions: {
+      ...allFunctions,
       hope: class HopeFunction extends BaseFunction {
         main(text: string) {
           return `😸${text}😸`;

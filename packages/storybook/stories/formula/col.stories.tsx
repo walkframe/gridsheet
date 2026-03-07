@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, useHub } from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Formula/Col',
@@ -14,8 +15,12 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const ColSheet = () => {
+  const hub = useHub({
+    additionalFunctions: allFunctions,
+  })
   return (
     <GridSheet
+      hub={hub}
       initialCells={buildInitialCells({
         cells: {
           A1: { value: '=COL()' },
@@ -26,7 +31,9 @@ const ColSheet = () => {
         },
         ensured: { numRows: 100, numCols: 100 },
       })}
-      options={{}}
+      options={{
+        
+      }}
     />
   );
 };
