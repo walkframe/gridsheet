@@ -19,6 +19,7 @@ import { Context } from '../store';
 import { FormulaError } from '../formula/evaluator';
 import { Pending } from '../sentinels';
 import { insertRef, isRefInsertable } from '../lib/input';
+import { focus } from '../lib/dom';
 import { isXSheetFocused } from '../store/helpers';
 import type { FC, RefObject } from 'react';
 import { isTouching, safePreventDefault } from '../lib/events';
@@ -155,7 +156,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
       }
 
       table.wire.lastFocused = input;
-      input.focus();
+      focus(input);
       dispatch(setEditingAddress(''));
 
       if (autofillDraggingTo) {
@@ -184,7 +185,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
       dispatch(setDragging(false));
       if (autofillDraggingTo) {
         dispatch(submitAutofill(autofillDraggingTo));
-        input?.focus();
+        focus(input);
         return false;
       }
       if (editingAnywhere) {

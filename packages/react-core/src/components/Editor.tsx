@@ -40,6 +40,7 @@ import { Context } from '../store';
 import { areaToZone, zoneToArea } from '../lib/spatial';
 import * as prevention from '../lib/operation';
 import { expandInput, insertTextAtCursor, isFocus, isRefInsertable, resetInput } from '../lib/input';
+import { focus } from '../lib/dom';
 import { Lexer } from '../formula/evaluator';
 import { COLOR_PALETTE } from '../lib/palette';
 import { useAutocomplete } from './useAutocomplete';
@@ -146,7 +147,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
   });
 
   useEffect(() => {
-    editorRef?.current?.focus?.({ preventScroll: true });
+    focus(editorRef?.current);
   }, [editorRef]);
 
   useEffect(() => {
@@ -202,7 +203,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
 
           setTimeout(() => {
             if (editorRef.current) {
-              editorRef.current.focus();
+              focus(editorRef.current);
               editorRef.current.setSelectionRange(newCursor, newCursor);
             }
           }, 0);
@@ -434,7 +435,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
               e.preventDefault();
               const area = clip(store);
               dispatch(copy(areaToZone(area)));
-              input.focus(); // refocus
+              focus(input); // refocus
               return false;
             }
             return true;
@@ -448,7 +449,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
                 dispatch(setSearchQuery(''));
               }
               dispatch(setEntering(false));
-              requestAnimationFrame(() => searchInputRef.current!.focus());
+              requestAnimationFrame(() => focus(searchInputRef.current));
               return false;
             }
           }
@@ -498,7 +499,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
               e.preventDefault();
               const area = clip(store);
               dispatch(cut(areaToZone(area)));
-              input.focus(); // refocus
+              focus(input); // refocus
 
               return false;
             }

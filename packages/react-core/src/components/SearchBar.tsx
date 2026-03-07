@@ -8,6 +8,7 @@ import { setSearchQuery, search, setSearchCaseSensitive, setSearchRegex, setSear
 import { smartScroll } from '../lib/virtualization';
 import { SearchIcon } from './svg/SearchIcon';
 import { CloseIcon } from './svg/CloseIcon';
+import { focus } from '../lib/dom';
 
 export const SearchBar = () => {
   const { store, dispatch } = useContext(Context);
@@ -41,7 +42,7 @@ export const SearchBar = () => {
 
   const handleProgressClick = useCallback((e: React.MouseEvent) => {
     const input = e.currentTarget.previousSibling as HTMLInputElement;
-    input?.nodeName === 'INPUT' && input.focus();
+    input?.nodeName === 'INPUT' && focus(input);
   }, []);
 
   const handleSearchClick = useCallback(() => {
@@ -57,7 +58,7 @@ export const SearchBar = () => {
       if (e.key === 'Escape') {
         const el = editorRef?.current;
         if (el) {
-          el.focus();
+          focus(el);
         }
         dispatch(setSearchQuery(undefined));
       }
@@ -134,7 +135,7 @@ export const SearchBar = () => {
 
   const handleCloseClick = useCallback(() => {
     dispatch(setSearchQuery(undefined));
-    editorRef.current?.focus();
+    focus(editorRef.current);
   }, [editorRef]);
 
   if (typeof searchQuery === 'undefined') {

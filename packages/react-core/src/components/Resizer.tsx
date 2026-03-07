@@ -8,6 +8,7 @@ import { DEFAULT_HEIGHT, DEFAULT_WIDTH, MIN_WIDTH, MIN_HEIGHT } from '../constan
 import { zoneToArea, makeSequence, between } from '../lib/spatial';
 import type { CellsByAddressType } from '../types';
 import { p2a } from '../lib/coords';
+import { focus } from '../lib/dom';
 
 export const Resizer = () => {
   const { store, dispatch } = useContext(Context);
@@ -74,7 +75,7 @@ export const Resizer = () => {
     );
     dispatch(setResizingPositionY([-1, -1, -1]));
     dispatch(setResizingPositionX([-1, -1, -1]));
-    editorRef.current!.focus();
+    focus(editorRef.current);
   };
   const handleResizeMove = (e: MouseEvent) => {
     if (y !== -1) {
