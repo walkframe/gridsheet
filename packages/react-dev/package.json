@@ -1,6 +1,6 @@
 {
   "name": "@gridsheet/react-dev",
-  "version": "3.0.0-rc.0",
+  "version": "3.0.0-rc.1",
   "description": "Development tools for GridSheet",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -24,12 +24,19 @@
     "README.md",
     "LICENSE"
   ],
-  "dependencies": {
-    "@gridsheet/react-core": "^3.0.0-rc.0"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/walkframe/gridsheet.git"
   },
+  "bugs": {
+    "url": "https://github.com/walkframe/gridsheet/issues"
+  },
+  "homepage": "https://gridsheet.walkframe.com/",
+  "packageManager": "pnpm@10.6.5",
   "peerDependencies": {
     "react": ">=16.9.0",
-    "react-dom": ">=16.9.0"
+    "react-dom": ">=16.9.0",
+    "@gridsheet/react-core": ">=3.0.0-rc.1"
   },
   "devDependencies": {
     "@types/react": "^16.9.24",

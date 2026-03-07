@@ -172,8 +172,8 @@ importers:
   packages/react-dev:
     dependencies:
       '@gridsheet/react-core':
-        specifier: ^3.0.0-rc.0
-        version: 3.0.0-rc.0(dayjs@1.11.13)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
+        specifier: '>=3.0.0-rc.1'
+        version: 3.0.0-rc.1(dayjs@1.11.13)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
       react:
         specifier: 18.2.0
         version: 18.2.0
@@ -849,8 +849,8 @@ packages:
       dayjs: ^1.11.13
       preact: ^10.26.6
 
-  '@gridsheet/react-core@3.0.0-rc.0':
-    resolution: {integrity: sha512-J0uDo8jIfaSUNOw0sHxoUGA46UB+jE/27zbgj4bCvsuMHWZDf33coLbjy6/HPtWjUxUEPi2ziFXZnTM97/JSpg==}
+  '@gridsheet/react-core@3.0.0-rc.1':
+    resolution: {integrity: sha512-HeSTTnxAqD7IZ+ehcilHxe678JwUwwS9uQXALZGXO0rQsu54J0XhfIqryfE4+2RN3FmTcmYmRf7hn0d4Of+tQA==}
     peerDependencies:
       dayjs: ^1.11.13
       react: 18.2.0
@@ -6166,7 +6166,7 @@ snapshots:
       dayjs: 1.11.13
       preact: 10.26.6
 
-  '@gridsheet/react-core@3.0.0-rc.0(dayjs@1.11.13)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)':
+  '@gridsheet/react-core@3.0.0-rc.1(dayjs@1.11.13)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)':
     dependencies:
       dayjs: 1.11.13
       react: 18.2.0
