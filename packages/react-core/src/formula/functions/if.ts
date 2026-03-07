@@ -1,5 +1,5 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureBoolean } from './__utils';
 
 export class IfFunction extends BaseFunction {
@@ -8,16 +8,18 @@ export class IfFunction extends BaseFunction {
     'If the logical expression is TRUE, the second argument is returned.',
     'If FALSE, the third argument is returned.',
   ];
-  helpArgs = [
-    { name: 'condition', description: 'An expression as a condition' },
+  helpArgs: HelpArg[] = [
+    { name: 'condition', description: 'An expression as a condition', type: ['boolean'] },
     {
       name: 'value1',
       description: 'value to be returned if the condition is true.',
+      type: ['any'],
     },
     {
       name: 'value2',
       description: 'value to be returned if the condition is false.',
       optional: true,
+      type: ['any'],
     },
   ];
 

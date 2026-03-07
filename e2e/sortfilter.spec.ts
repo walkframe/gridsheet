@@ -50,7 +50,7 @@ test.describe('Sort & Filter', () => {
     await openColumnMenu(page, 3);
 
     // Click "Sort A to Z" (ascending)
-    const sortAsc = page.locator('.gs-column-menu li.gs-enabled >> text=Sort A to Z');
+    const sortAsc = page.locator('.gs-column-menu .gs-sort-btn-asc');
     await sortAsc.click();
 
     // After ascending sort by Score: Eve(40), Charlie(60), Bob(75), Diana(85), Alice(90)
@@ -74,7 +74,7 @@ test.describe('Sort & Filter', () => {
     await openColumnMenu(page, 3);
 
     // Click "Sort Z to A" (descending)
-    const sortDesc = page.locator('.gs-column-menu li.gs-enabled >> text=Sort Z to A');
+    const sortDesc = page.locator('.gs-column-menu .gs-sort-btn-desc');
     await sortDesc.click();
 
     // After descending sort by Score: Alice(90), Diana(85), Bob(75), Charlie(60), Eve(40)
@@ -238,7 +238,7 @@ test.describe('Sort & Filter', () => {
 
     // Sort ascending by Score
     await openColumnMenu(page, 3);
-    const sortAsc = page.locator('.gs-column-menu li.gs-enabled >> text=Sort A to Z');
+    const sortAsc = page.locator('.gs-column-menu .gs-sort-btn-asc');
     await sortAsc.click();
 
     // After sort: Eve is first

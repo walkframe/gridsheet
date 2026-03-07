@@ -10,8 +10,8 @@ import type { Table } from '../lib/table';
 import type { FC } from 'react';
 import type { RefPaletteType, AreaType, ModeType } from '../types';
 
-const COLOR_POINTED = '#0077ff';
-const COLOR_SELECTED = '#0077ff';
+const COLOR_POINTED = 'rgba(0, 119, 255, 1)';
+const COLOR_SELECTED = 'rgba(0, 119, 255, 0.6)';
 const SELECTING_FILL = 'rgba(0, 128, 255, 0.2)';
 const COLOR_COPYING = '#0077ff';
 const COLOR_CUTTING = '#0077ff';
@@ -230,19 +230,21 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
     // Restore full canvas for header drawing
     ctx.restore();
 
-    // 7. Header highlights (top and left) — using metadata O(1) lookup
-    const headerColors = HEADER_COLORS[mode] || HEADER_COLORS.light;
+    // 7. Header highlights (top and left) — draw bottom border for top headers, right border for left headers
     const numCols = table.getNumCols();
     const numRows = table.getNumRows();
 
-    // Top headers
+    // Top headers - draw bottom border and background
     for (let x = 1; x <= numCols; x++) {
       let color: string | null = null;
+      let backgroundColor: string | null = null;
       if (between({ start: selectingZone.startX, end: selectingZone.endX }, x)) {
-        color = topHeaderSelecting ? headerColors.thSelecting : headerColors.selecting;
+        color = 'rgba(80, 180, 255, 1)';
+        backgroundColor = topHeaderSelecting ? 'rgba(128, 128, 128, 0.25)' : 'rgba(0, 119, 255, 0.05)';
       }
       if (choosing.x === x) {
-        color = headerColors.choosing;
+        color = COLOR_POINTED;
+        backgroundColor = topHeaderSelecting ? 'rgba(128, 128, 128, 0.45)' : 'rgba(0, 119, 255, 0.15)';
       }
       if (!color) {
         continue;
@@ -253,25 +255,36 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
       if (left + pos.width < headerW || left > w) {
         continue;
       }
-      // Prevent drawing into the (0,0) corner
       const drawLeft = Math.max(left, headerW);
       const drawWidth = Math.min(left + pos.width, w) - drawLeft;
       if (drawWidth > 0) {
-        fillRect(ctx, drawLeft, 0, drawWidth, headerH, color);
+        if (backgroundColor) {
+          fillRect(ctx, drawLeft, 0, drawWidth, headerH, backgroundColor);
+        }
+        // Draw bottom border of the header
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(drawLeft, headerH + 1);
+        ctx.lineTo(drawLeft + drawWidth, headerH + 1);
+        ctx.stroke();
       }
     }
 
-    // Left headers
+    // Left headers - draw right border and background
     for (let y = 1; y <= numRows; y++) {
       if (table.isRowFiltered(y)) {
         continue;
       }
       let color: string | null = null;
+      let backgroundColor: string | null = null;
       if (between({ start: selectingZone.startY, end: selectingZone.endY }, y)) {
-        color = leftHeaderSelecting ? headerColors.thSelecting : headerColors.selecting;
+        color = 'rgba(80, 180, 255, 1)';
+        backgroundColor = leftHeaderSelecting ? 'rgba(128, 128, 128, 0.25)' : 'rgba(0, 119, 255, 0.05)';
       }
       if (choosing.y === y) {
-        color = headerColors.choosing;
+        color = COLOR_POINTED;
+        backgroundColor = leftHeaderSelecting ? 'rgba(128, 128, 128, 0.45)' : 'rgba(0, 119, 255, 0.15)';
       }
       if (!color) {
         continue;
@@ -282,11 +295,19 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
       if (top + pos.height < headerH || top > h) {
         continue;
       }
-      // Prevent drawing into the (0,0) corner
       const drawTop = Math.max(top, headerH);
       const drawHeight = Math.min(top + pos.height, h) - drawTop;
       if (drawHeight > 0) {
-        fillRect(ctx, 0, drawTop, headerW, drawHeight, color);
+        if (backgroundColor) {
+          fillRect(ctx, 0, drawTop, headerW, drawHeight, backgroundColor);
+        }
+        // Draw right border of the header
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(headerW + 1, drawTop);
+        ctx.lineTo(headerW + 1, drawTop + drawHeight);
+        ctx.stroke();
       }
     }
   }, [

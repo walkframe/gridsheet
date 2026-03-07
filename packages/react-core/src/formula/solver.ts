@@ -1,9 +1,7 @@
-import { Pending, Special } from '../constants';
+import { Pending, SOLVING } from '../sentinels';
 import { Table } from '../lib/table';
 import { Id, MatrixType, PointType, RefEvaluation } from '../types';
 import { FormulaError, Lexer, Parser } from './evaluator';
-
-const SOLVING = new Special('solving');
 
 type SolveFormulaProps = {
   value: any;
@@ -17,6 +15,7 @@ export const solveFormula = ({ value, table, raise = true, refEvaluation = 'TABL
   if (refEvaluation === 'SYSTEM') {
     return value;
   }
+
   let solved = value;
 
   if (typeof value === 'string') {
@@ -31,7 +30,7 @@ export const solveFormula = ({ value, table, raise = true, refEvaluation = 'TABL
         const expr = parser.build();
         solved = expr?.evaluate?.({ table });
       } catch (e) {
-        table.setSolvedCache(origin, e);
+        table.finishSolvedCache(origin, e);
         if (raise) {
           throw e;
         }
@@ -42,10 +41,10 @@ export const solveFormula = ({ value, table, raise = true, refEvaluation = 'TABL
   if (refEvaluation === 'COMPLETE' && solved instanceof Table) {
     solved = solveTable({ table: solved, raise })[0][0];
   } else {
-    table.setSolvedCache(origin, solved);
+    table.finishSolvedCache(origin, solved);
   }
-  if (solved instanceof Pending) {
-    table.setSolvedCache(origin, solved);
+  if (Pending.is(solved)) {
+    table.finishSolvedCache(origin, solved);
   }
   return solved;
 };
@@ -66,21 +65,21 @@ export const solveTable = ({ table, raise = true }: SolveTableProps): MatrixType
       const cache = table.getSolvedCache(point);
 
       try {
-        if (cache === SOLVING) {
+        if (SOLVING.is(cache)) {
           throw new FormulaError('#REF!', 'References are circulating.', new Error(value as string));
-        } else if (cache instanceof Pending) {
+        } else if (Pending.is(cache)) {
           return cache;
         } else if (cache instanceof FormulaError) {
           throw cache;
         } else if (cache != null) {
           return cache;
         }
-        table.setSolvedCache(point, SOLVING);
+        table.setSolvingCache(point);
         const solved = solveFormula({ value, table, raise, origin: point, refEvaluation: 'COMPLETE' });
-        table.setSolvedCache(point, solved);
+        table.finishSolvedCache(point, solved);
         return solved;
       } catch (e) {
-        table.setSolvedCache(point, e);
+        table.finishSolvedCache(point, e);
         if (raise) {
           throw e;
         }
@@ -99,7 +98,7 @@ export type StripTableProps = {
 };
 
 export const stripTable = ({ value, y = 0, x = 0, raise = true, history = new Set() }: StripTableProps): any => {
-  if (value instanceof Pending) {
+  if (Pending.is(value)) {
     return value;
   }
   if (value instanceof Table) {

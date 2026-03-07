@@ -1,5 +1,5 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 
 export class Atan2Function extends BaseFunction {
@@ -7,14 +7,16 @@ export class Atan2Function extends BaseFunction {
   helpText = [
     'Returns the angle in radians between the x-axis and a line passing from the origin through a given coordinate point (x, y).',
   ];
-  helpArgs = [
+  helpArgs: HelpArg[] = [
     {
       name: 'x',
       description: 'x of the point.',
+      type: ['number'],
     },
     {
       name: 'y',
       description: 'y of the point.',
+      type: ['number'],
     },
   ];
 

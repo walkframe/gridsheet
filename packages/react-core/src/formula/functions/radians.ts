@@ -1,14 +1,15 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 
 export class RadiansFunction extends BaseFunction {
   example = 'RADIANS(180)';
   helpText = ['Converts an angle from degrees to radians.'];
-  helpArgs = [
+  helpArgs: HelpArg[] = [
     {
       name: 'angle',
       description: 'The angle to convert from degrees to radians.',
+      type: ['number'],
     },
   ];
 

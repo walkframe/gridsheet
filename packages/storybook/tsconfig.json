@@ -3,7 +3,13 @@
     "target": "ES2020",
     "module": "ES2020",
     "moduleResolution": "node",
-    "lib": ["DOM", "ES2020", "DOM.Iterable", "ScriptHost", "ES2016.Array.Include"],
+    "lib": [
+      "DOM",
+      "ES2020",
+      "DOM.Iterable",
+      "ScriptHost",
+      "ES2016.Array.Include"
+    ],
     "declaration": true,
     "declarationMap": true,
     "allowJs": true,
@@ -21,13 +27,29 @@
     "resolveJsonModule": true,
     "isolatedModules": true
   },
-  "exclude": ["node_modules", "storybook-static", "dist", "e2e"],
-  "include": ["**/*.ts", "**/*.tsx", ".storybook/**/*"],
+  "exclude": [
+    "node_modules",
+    "storybook-static",
+    "dist",
+    "e2e"
+  ],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".storybook/**/*"
+  ],
   "ts-node": {
     "esm": true
   },
   "paths": {
-    "@gridsheet/react-core": ["../react-core/src"],
-    "@gridsheet/preact-core": ["../preact-core"],
+    "@gridsheet/react-core": [
+      "../react-core/src"
+    ],
+    "@gridsheet/react-core/dev": [
+      "../react-core/src/dev"
+    ],
+    "@gridsheet/preact-core": [
+      "../preact-core"
+    ],
   }
 }

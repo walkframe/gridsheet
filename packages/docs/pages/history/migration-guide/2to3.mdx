@@ -45,12 +45,12 @@ Filter operations now properly apply to all sheet operations (delete, copy, move
 
 v3 introduces first-class support for async formulas. This is completely optional and backward compatible—all existing synchronous formulas continue to work.
 
-To create an async formula:
+To create an async formula, extend `BaseFunctionAsync`:
 
 ```tsx
-import { BaseFunction } from '@gridsheet/react-core';
+import { BaseFunctionAsync } from '@gridsheet/react-core';
 
-class FetchWeather extends BaseFunction {
+class FetchWeather extends BaseFunctionAsync {
   example = 'FETCH_WEATHER("Tokyo")';
   helpTexts = ['Fetches weather data for a city'];
   helpArgs = [{ name: 'city', description: 'City name' }];

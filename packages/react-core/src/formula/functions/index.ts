@@ -1,6 +1,6 @@
 import { FormulaError } from '../evaluator';
 import { Table } from '../../lib/table';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 
 export class IndexFunction extends BaseFunction {
@@ -9,10 +9,20 @@ export class IndexFunction extends BaseFunction {
     'Returns a trimmed table based on row and column indices.',
     'If row or column is 0 or omitted, returns all rows or columns.',
   ];
-  helpArgs = [
-    { name: 'table', description: 'A range of cells.' },
-    { name: 'y', description: 'The row number in the table (0 or omitted for all rows).', optional: true },
-    { name: 'x', description: 'The column number in the table (0 or omitted for all columns).', optional: true },
+  helpArgs: HelpArg[] = [
+    { name: 'range', description: 'A range of cells.', type: ['range'] },
+    {
+      name: 'row_num',
+      description: 'The row number in the range (0 or omitted for all rows).',
+      optional: true,
+      type: ['number'],
+    },
+    {
+      name: 'column_num',
+      description: 'The column number in the range (0 or omitted for all columns).',
+      optional: true,
+      type: ['number'],
+    },
   ];
 
   protected validate() {

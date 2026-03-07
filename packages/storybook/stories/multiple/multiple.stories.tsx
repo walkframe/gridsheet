@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { buildInitialCells, GridSheet, useHub } from '@gridsheet/react-core';
+import { Debugger } from '@gridsheet/react-dev';
 
 const meta: Meta = {
   title: 'Multiple/Sheets',
@@ -129,6 +130,11 @@ const SheetsSheet = () => {
           </tr>
         </tbody>
       </table>
+
+      <div style={{ marginTop: '20px', height: '400px' }}>
+        <h3 style={{ fontFamily: 'sans-serif' }}>Internal State Debugger</h3>
+        <Debugger hub={hub} />
+      </div>
     </div>
   );
 };

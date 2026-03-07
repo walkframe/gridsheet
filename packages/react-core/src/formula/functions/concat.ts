@@ -1,13 +1,13 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureString } from './__utils';
 
 export class ConcatFunction extends BaseFunction {
   example = 'CONCAT("Hello", "World")';
   helpText = ['Returns the concatenation of two values.', "This is the same as the '&' operator."];
-  helpArgs = [
-    { name: 'value1', description: 'A value to be concatenated with value2.' },
-    { name: 'value2', description: 'A value to be concatenated with value1' },
+  helpArgs: HelpArg[] = [
+    { name: 'value1', description: 'A value to be concatenated with value2.', type: ['string'] },
+    { name: 'value2', description: 'A value to be concatenated with value1', type: ['string'] },
   ];
 
   protected validate() {

@@ -1,17 +1,18 @@
 import { FormulaError } from '../evaluator';
 import { solveTable } from '../solver';
 import { Table } from '../../lib/table';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 
 export class MaxFunction extends BaseFunction {
   example = 'MAX(A2:A100, 101)';
   helpText = ['Returns the max in a series of numbers or cells.'];
-  helpArgs = [
-    { name: 'value1', description: 'First number or range.' },
+  helpArgs: HelpArg[] = [
+    { name: 'value1', description: 'First number or range.', type: ['number'] },
     {
       name: 'value2',
       description: 'Additional numbers or ranges',
+      type: ['number'],
       optional: true,
       iterable: true,
     },

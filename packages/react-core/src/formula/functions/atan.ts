@@ -1,14 +1,15 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 
 export class AtanFunction extends BaseFunction {
   example = 'ATAN(1)';
   helpText = ['Returns the inverse tan of the value in radians.'];
-  helpArgs = [
+  helpArgs: HelpArg[] = [
     {
       name: 'value',
       description: 'A value for the inverse tan.',
+      type: ['number'],
     },
   ];
 

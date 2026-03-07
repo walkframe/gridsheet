@@ -1,17 +1,19 @@
+import type { FC, ReactNode } from 'react';
 import type { UserTable } from '../lib/table';
 import type { CellPatchType, CellType, OperationType, PointType } from '../types';
 
-export type PolicyOption = {
+export type AutocompleteOption = {
   value: any;
   label?: any;
   keywords?: string[];
+  tooltip?: ReactNode | FC<{ value?: any }>;
 };
 
 export type RestrictProps = {
   table: UserTable;
   point: PointType;
-  original?: CellType;
-  patch?: CellType;
+  current?: CellType;
+  next?: CellType;
   operation: OperationType;
 };
 
@@ -20,26 +22,30 @@ export type OnClipProps = {
   point: PointType;
 };
 
-export type GetDefaultProps = {
+export type GetFallbackProps = {
   table: UserTable;
   point: PointType;
   value: any;
 };
 
 export type PolicyMixinType = {
-  getDefault?: (props: GetDefaultProps) => CellType | undefined;
+  getFallback?: (props: GetFallbackProps) => CellType | undefined;
   select?: (props: RestrictProps) => CellType | undefined;
   validate?: (props: RestrictProps) => CellType | undefined;
   onClip?: (props: OnClipProps) => string;
-  getOptions?: () => PolicyOption[];
+  getOptions?: () => AutocompleteOption[];
 };
 
 type PolicyProps = {
   mixins?: PolicyMixinType[];
+  priority?: number;
 };
 
 export class Policy implements PolicyMixinType {
+  public priority: number = 0;
+
   constructor(props?: PolicyProps) {
+    this.priority = props?.priority ?? 1;
     this.applyMixins(props?.mixins);
   }
 
@@ -54,28 +60,32 @@ export class Policy implements PolicyMixinType {
     }
   }
 
-  public getDefault(props: GetDefaultProps): any {
+  public getFallback(props: GetFallbackProps): any {
     return { value: null };
   }
 
   public select(props: RestrictProps) {
-    const { patch, table, point } = props;
+    const { next, table, point } = props;
     const options = this.getOptions();
-    const index = options.findIndex((option) => option.value === patch?.value);
-    if (options.length > 0 && index === -1) {
-      return { ...patch, ...this.getDefault({ table, point, value: patch?.value }) };
+    if (options.length === 0) {
+      return next;
     }
-    return patch;
+
+    const ok = options.some((o) => o.value === next?.value);
+    if (!ok) {
+      return { ...next, ...this.getFallback({ table, point, value: next?.value }) };
+    }
+    return next;
   }
 
   public validate(props: RestrictProps): CellPatchType | undefined {
-    const { patch } = props;
-    return patch;
+    const { next } = props;
+    return next;
   }
 
   public restrict(props: RestrictProps): CellPatchType | undefined {
-    const patch = this.select(props);
-    return this.validate({ ...props, patch });
+    const next = this.select(props);
+    return this.validate({ ...props, next });
   }
 
   public onClip(props: OnClipProps): string {
@@ -83,10 +93,11 @@ export class Policy implements PolicyMixinType {
     return table.stringify({ point }) ?? '';
   }
 
-  public getOptions(): PolicyOption[] {
+  public getOptions(): AutocompleteOption[] {
     return [];
   }
 }
 
 export type PolicyType = Policy;
-export const defaultPolicy = new Policy();
+export const DEFAULT_POLICY_NAME = 'default';
+export const nonePolicy = new Policy({ priority: 0 });

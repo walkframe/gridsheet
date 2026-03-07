@@ -55,7 +55,7 @@ import { LenbFunction } from './functions/lenb';
 import { UminusFunction } from './functions/uminus';
 import { RowFunction } from './functions/row';
 import { ColFunction } from './functions/col';
-import type { FunctionMapping } from './functions/__base';
+import type { FunctionMapping, HelpArg } from './functions/__base';
 
 export const functions: FunctionMapping = {
   abs: AbsFunction,
@@ -118,4 +118,31 @@ export const functions: FunctionMapping = {
   atan2: Atan2Function,
   len: LenFunction,
   lenb: LenbFunction,
+};
+
+export type FunctionHelp = {
+  name: string;
+  example: string;
+  helpTexts: string[];
+  helpArgs: HelpArg[];
+};
+
+const _functionHelpsCache = new Map<FunctionMapping, FunctionHelp[]>();
+
+export const getFunctionHelps = (customFunctions: FunctionMapping = functions): FunctionHelp[] => {
+  let helps = _functionHelpsCache.get(customFunctions);
+  if (!helps) {
+    helps = Object.keys(customFunctions).map((name) => {
+      const FnClass = customFunctions[name];
+      const instance = new FnClass({ args: [], table: {} as any });
+      return {
+        name: name.toUpperCase(),
+        example: instance.example,
+        helpTexts: (instance as any).helpText || (instance as any).helpTexts || [],
+        helpArgs: instance.helpArgs || [],
+      };
+    });
+    _functionHelpsCache.set(customFunctions, helps);
+  }
+  return helps;
 };

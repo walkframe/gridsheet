@@ -14,6 +14,8 @@ import {
   removeCols,
   sortRows,
   filterRows,
+  setSearchQuery,
+  setEntering,
 } from './actions';
 import { clip } from '../lib/clipboard';
 import { parseHTML, parseText } from '../lib/paste';
@@ -150,6 +152,14 @@ export const rowsFilterClearer = async ({ store, dispatch }: ContextMenuProps, x
   store.editorRef.current?.focus();
 };
 
+export const searcher = async ({ store, dispatch }: ContextMenuProps) => {
+  if (typeof store.searchQuery === 'undefined') {
+    dispatch(setSearchQuery(''));
+  }
+  dispatch(setEntering(false));
+  requestAnimationFrame(() => store.searchInputRef.current?.focus());
+};
+
 export const syncers = {
   copy: copier,
   cut: cutter,
@@ -166,4 +176,5 @@ export const syncers = {
   sortRowsDesc: rowsSorterDesc,
   filterRows: rowsFilterer,
   clearFilter: rowsFilterClearer,
+  search: searcher,
 };

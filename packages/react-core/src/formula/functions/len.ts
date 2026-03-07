@@ -1,14 +1,15 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureString } from './__utils';
 
 export class LenFunction extends BaseFunction {
   example = 'LEN(A2)';
   helpText = ['Returns the length of a string.'];
-  helpArgs = [
+  helpArgs: HelpArg[] = [
     {
       name: 'text',
       description: 'A text to be returned the length.',
+      type: ['string'],
     },
   ];
 

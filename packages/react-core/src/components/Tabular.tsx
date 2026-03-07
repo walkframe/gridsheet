@@ -114,6 +114,7 @@ export const Tabular = () => {
       return;
     }
     table.wire.choosingAddress = p2a(choosing);
+    table.wire.choosingSheetId = table.sheetId;
   }, [choosing]);
 
   useEffect(() => {

@@ -31,6 +31,7 @@ module.exports = {
     config.optimizeDeps.exclude = ['@gridsheet/react-core', '@gridsheet/preact-core', '@gridsheet/react-right-menu'];
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
+      '@gridsheet/react-core/dev': path.resolve(__dirname, '../../react-core/src/dev.ts'),
       '@gridsheet/react-core': path.resolve(__dirname, '../../react-core/src/index.ts'),
       '@gridsheet/preact-core': path.resolve(__dirname, '../../preact-core/dist/index.js'),
     };

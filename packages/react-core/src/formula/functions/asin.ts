@@ -1,14 +1,15 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 
 export class AsinFunction extends BaseFunction {
   example = 'ASIN(0)';
   helpText = ['Returns the inverse sin of the value in radians.'];
-  helpArgs = [
+  helpArgs: HelpArg[] = [
     {
       name: 'value',
       description: 'A value for the inverse sin between -1 and 1.',
+      type: ['number'],
     },
   ];
 

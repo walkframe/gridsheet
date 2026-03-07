@@ -1,15 +1,16 @@
 import { Table } from '../../lib/table';
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 
 export class ColFunction extends BaseFunction {
   example = 'COL(A9)';
   helpText = ['Returns the col number of a specified cell.'];
-  helpArgs = [
+  helpArgs: HelpArg[] = [
     {
       name: 'cell_reference',
       description: 'The cell whose col number will be returned.',
-      option: true,
+      optional: true,
+      type: ['reference'],
     },
   ];
 

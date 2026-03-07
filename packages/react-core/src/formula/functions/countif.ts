@@ -1,19 +1,13 @@
 import { FormulaError } from '../evaluator';
 import { solveTable } from '../solver';
 import { Table } from '../../lib/table';
-import { BaseFunction } from './__base';
+import { BaseFunction, conditionArg, HelpArg } from './__base';
 import { check, ensureString } from './__utils';
 
 export class CountifFunction extends BaseFunction {
   example = 'COUNTIF(A1:A10,">20")';
   helpText = ['Returns the count of a series of cells.'];
-  helpArgs = [
-    { name: 'range', description: 'Target range.' },
-    {
-      name: 'condition',
-      description: 'A condition for count.',
-    },
-  ];
+  helpArgs: HelpArg[] = [{ name: 'range', description: 'Target range.', type: ['range'] }, conditionArg];
 
   protected validate() {
     if (this.bareArgs.length !== 2) {

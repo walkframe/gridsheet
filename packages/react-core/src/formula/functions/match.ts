@@ -1,7 +1,7 @@
 import { FormulaError } from '../evaluator';
 import { solveTable } from '../solver';
 import { Table } from '../../lib/table';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 import { stripTable } from '../../formula/solver';
 
@@ -11,12 +11,13 @@ export class MatchFunction extends BaseFunction {
     'Searches for a value in a table and returns its position.',
     'Returns the position of the matched value (1-based index).',
   ];
-  helpArgs = [
-    { name: 'search_key', description: 'The value to search for.' },
-    { name: 'range', description: 'The range to search in.' },
+  helpArgs: HelpArg[] = [
+    { name: 'search_key', description: 'The value to search for.', type: ['any'] },
+    { name: 'range', description: 'The range to search in.', type: ['range'] },
     {
       name: 'search_type',
       description: '0 for exact match, 1 for less than or equal, -1 for greater than or equal.',
+      type: ['number'],
       optional: true,
     },
   ];

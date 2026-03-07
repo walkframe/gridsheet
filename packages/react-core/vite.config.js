@@ -6,10 +6,12 @@ export default defineConfig(({ mode }) => ({
   plugins: [react(), dts({ insertTypesEntry: true, exclude: ['**/*.spec.ts', '**/*.spec.tsx'] })],
   build: {
     lib: {
-      entry: "./src/index.ts",
+      entry: {
+        index: "./src/index.ts",
+      },
       name: "GridSheet",
       formats: ["es"],
-      fileName: (_, name) => `${name}.js`,
+      fileName: (format, entryName) => `${entryName}.js`,
     },
     outDir: 'dist',
     rollupOptions: {

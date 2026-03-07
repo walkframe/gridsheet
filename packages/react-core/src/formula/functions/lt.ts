@@ -1,5 +1,5 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { lt } from './__utils';
 
 export class LtFunction extends BaseFunction {
@@ -8,9 +8,9 @@ export class LtFunction extends BaseFunction {
     'Returns TRUE if the first argument is truely less than the second argument, FALSE otherwise.',
     "This is the same as the '<' operator.",
   ];
-  helpArgs = [
-    { name: 'value1', description: 'First value.' },
-    { name: 'value2', description: 'A value to be compared with value1.' },
+  helpArgs: HelpArg[] = [
+    { name: 'value1', description: 'First value.', type: ['number'] },
+    { name: 'value2', description: 'A value to be compared with value1.', type: ['number'] },
   ];
 
   protected validate() {

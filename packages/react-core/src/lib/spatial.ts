@@ -276,7 +276,10 @@ export const buildCells = <T>({
 
 export const getMaxSizesFromCells = (cells: CellsByAddressType = {}) => {
   let [lastY, lastX] = [0, 0];
-  Object.keys(cells).map((address) => {
+  Object.keys(cells).forEach((address) => {
+    if (address === 'default') {
+      return;
+    }
     const { y, x } = a2p(address);
     if (lastY < y) {
       lastY = y;
@@ -530,4 +533,12 @@ export const addressesToRows = (addresses: Address[], asc: boolean | null = true
     rows.sort((a, b) => b - a);
   }
   return rows;
+};
+
+export const isAreaNotSelected = (area: AreaType): boolean => {
+  return area.top === -1 || area.left === -1 || area.bottom === -1 || area.right === -1;
+};
+
+export const isZoneNotSelected = (zone: ZoneType): boolean => {
+  return zone.startY === -1 || zone.startX === -1 || zone.endY === -1 || zone.endX === -1;
 };

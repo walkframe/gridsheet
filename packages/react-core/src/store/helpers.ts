@@ -1,12 +1,11 @@
 import { a2p, x2c, y2r } from '../lib/coords';
 import { Table } from '../lib/table';
-import { Address, PointType, StoreType } from '../types';
+import type { Address, PointType, StoreType } from '../types';
 
 export const restrictPoints = (store: StoreType, table: Table) => {
   const { choosing, selectingZone } = store;
   let { y, x } = choosing;
   let { startY: y1, startX: x1, endY: y2, endX: x2 } = selectingZone;
-  let { startY: y3, startX: x3, endY: y4, endX: x4 } = table.wire.copyingZone;
   const [numRows, numCols] = [table.getNumRows(), table.getNumCols()];
   if (y > numRows) {
     y = numRows;
@@ -26,22 +25,9 @@ export const restrictPoints = (store: StoreType, table: Table) => {
   if (x2 > numCols) {
     x2 = numCols;
   }
-  if (y3 > numRows) {
-    y3 = numRows;
-  }
-  if (y4 > numRows) {
-    y4 = numRows;
-  }
-  if (x3 > numCols) {
-    x3 = numCols;
-  }
-  if (x4 > numCols) {
-    x4 = numCols;
-  }
   return {
     choosing: { y, x } as PointType,
     selectingZone: { startY: y1, startX: x1, endY: y2, endX: x2 },
-    copyingZone: { startY: y3, startX: x3, endY: y4, endX: x4 },
   };
 };
 
@@ -64,18 +50,51 @@ export const shouldTracking = (operation: string) => {
 };
 
 export const initSearchStatement = (table: Table, store: StoreType) => {
-  const { searchQuery, searchCaseSensitive } = store;
+  const { searchQuery, searchCaseSensitive, searchRegex, searchRange } = store;
   let { choosing } = store;
   if (!searchQuery) {
     return { matchingCells: [] };
   }
   const matchingCells: Address[] = [];
-  for (let y = 1; y <= table.bottom; y++) {
-    for (let x = 1; x <= table.right; x++) {
-      const v = table.stringify({ point: { y, x } });
-      const s = searchCaseSensitive ? v : v.toLowerCase();
+
+  let matcher: (value: string) => boolean;
+  if (searchRegex) {
+    try {
+      const flags = searchCaseSensitive ? '' : 'i';
+      const regex = new RegExp(searchQuery, flags);
+      matcher = (v: string) => regex.test(v);
+    } catch (e) {
+      // Invalid regex, treat as literal string
       const q = searchCaseSensitive ? searchQuery : searchQuery.toLowerCase();
-      if (s.indexOf(q) !== -1) {
+      matcher = (v: string) => {
+        const s = searchCaseSensitive ? v : v.toLowerCase();
+        return s.indexOf(q) !== -1;
+      };
+    }
+  } else {
+    const q = searchCaseSensitive ? searchQuery : searchQuery.toLowerCase();
+    matcher = (v: string) => {
+      const s = searchCaseSensitive ? v : v.toLowerCase();
+      return s.indexOf(q) !== -1;
+    };
+  }
+
+  // Determine search range
+  let startY = 1,
+    endY = table.bottom;
+  let startX = 1,
+    endX = table.right;
+  if (searchRange) {
+    startY = searchRange.startY;
+    endY = searchRange.endY;
+    startX = searchRange.startX;
+    endX = searchRange.endX;
+  }
+
+  for (let y = startY; y <= endY; y++) {
+    for (let x = startX; x <= endX; x++) {
+      const v = table.stringify({ point: { y, x } });
+      if (matcher(v)) {
         matchingCells.push(`${x2c(x)}${y2r(y)}`);
       }
     }

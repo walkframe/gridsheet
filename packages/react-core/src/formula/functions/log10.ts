@@ -1,14 +1,15 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 
 export class Log10Function extends BaseFunction {
   example = 'LOG10(100)';
   helpText = ['Returns the logarithm of 10'];
-  helpArgs = [
+  helpArgs: HelpArg[] = [
     {
       name: 'value',
       description: 'The value for the logarithm of 10',
+      type: ['number'],
     },
   ];
 

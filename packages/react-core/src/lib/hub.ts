@@ -1,4 +1,5 @@
-import { DEFAULT_HISTORY_LIMIT, Pending, RESET_ZONE } from '../constants';
+import { DEFAULT_HISTORY_LIMIT, RESET_ZONE } from '../constants';
+import { Pending } from '../sentinels';
 
 import type {
   HistoryType,
@@ -9,8 +10,6 @@ import type {
   CellsByIdType,
   Id,
   StoreDispatchType,
-  CellType,
-  System,
   FeedbackType,
   EditorEvent,
   CursorStateType,
@@ -60,6 +59,8 @@ export class Wire {
   solvedCaches: Map<Id, any> = new Map();
   /** Currently in-flight async formula Pending sentinels (keyed by cell ID). */
   asyncPending: Map<string, Pending> = new Map();
+  /** In-flight async formulas shared by cache key (for useInflight). */
+  asyncInflight?: Map<string, { pending: Pending; expireTime?: number }>;
   copyingSheetId: number = 0;
   copyingZone: ZoneType = RESET_ZONE;
   cutting: boolean = false;
@@ -113,19 +114,6 @@ export class Wire {
       dispatch(updateTable(table));
     }
     this.ready = true;
-  }
-
-  public getSystem(id: Id, table: Table): System {
-    const cell = this.data[id];
-    if (cell?._sys) {
-      return cell._sys;
-    }
-    return {
-      id,
-      sheetId: table.sheetId,
-      changedTime: Date.now(),
-      dependents: new Set(),
-    };
   }
 
   constructor({

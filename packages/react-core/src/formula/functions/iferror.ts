@@ -2,7 +2,7 @@
 
 import { Table } from '../../lib/table';
 import { Expression, FormulaError } from '../evaluator';
-import { FunctionProps } from './__base';
+import { FunctionProps, HelpArg } from './__base';
 import { stripTable } from '../../formula/solver';
 
 export class IfErrorFunction {
@@ -10,15 +10,17 @@ export class IfErrorFunction {
   helpText = [
     'Returns the first argument if it is not an error value, otherwise returns the second argument if present, or a blank if the second argument is absent.',
   ];
-  helpArgs = [
+  helpArgs: HelpArg[] = [
     {
       name: 'value',
       description: 'The value to return if value itself is not an error.',
+      type: ['any'],
     },
     {
       name: 'value_if_error',
       description: 'The value the function returns if value is an error.',
       optional: true,
+      type: ['any'],
     },
   ];
   private args: Expression[];

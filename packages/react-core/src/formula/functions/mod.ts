@@ -1,16 +1,17 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 
 export class ModFunction extends BaseFunction {
   example = 'MOD(10, 4)';
   helpText = ['Returns the result of the modulo operation.'];
-  helpArgs = [
+  helpArgs: HelpArg[] = [
     {
       name: 'dividend',
       description: 'A number that will be divided by divisor.',
+      type: ['number'],
     },
-    { name: 'divisor', description: 'A number that will divide a dividend.' },
+    { name: 'divisor', description: 'A number that will divide a dividend.', type: ['number'] },
   ];
 
   protected validate() {

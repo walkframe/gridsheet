@@ -1,0 +1,45 @@
+{
+  "compilerOptions": {
+    "types": [
+      "vite/client",
+      "react"
+    ],
+    "target": "ES2015",
+    "module": "ES2015",
+    "moduleResolution": "node",
+    "lib": [
+      "DOM",
+      "ESNext",
+      "DOM.Iterable",
+      "ScriptHost",
+      "ES2016.Array.Include"
+    ],
+    "declaration": true,
+    "declarationMap": true,
+    "allowJs": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "sourceMap": true,
+    "outDir": "./dist/",
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": "./",
+    "paths": {
+      "@gridsheet/react-core": [
+        "../react-core/src/index.ts"
+      ]
+    },
+    "forceConsistentCasingInFileNames": true
+  },
+  "exclude": [
+    "node_modules",
+    "dist"
+  ],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ]
+}

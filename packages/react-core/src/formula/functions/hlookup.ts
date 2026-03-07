@@ -1,7 +1,7 @@
 import { FormulaError } from '../evaluator';
 import { solveTable } from '../solver';
 import { Table } from '../../lib/table';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureBoolean, ensureNumber } from './__utils';
 import { stripTable } from '../../formula/solver';
 
@@ -10,21 +10,24 @@ export class HlookupFunction extends BaseFunction {
   helpText = [
     'Searches horizontally for the specified key in the first row of the range and returns the value of the specified cell in the same column.',
   ];
-  helpArgs = [
+  helpArgs: HelpArg[] = [
     { name: 'key', description: 'Search key.' },
     {
       name: 'range',
       description: 'A range for search',
+      type: ['range'],
     },
     {
       name: 'index',
       description: 'The index of the row in the range.',
+      type: ['number'],
     },
     {
       name: 'is_sorted',
       description:
         'FALSE: Exact match. This is recommended. TRUE: Approximate match. Before you use an approximate match, sort your search key in ascending order. Otherwise, you may likely get a wrong return value.',
-      option: true,
+      optional: true,
+      type: ['boolean'],
     },
   ];
 

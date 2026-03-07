@@ -1,14 +1,15 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 
 export class CosFunction extends BaseFunction {
   example = 'COS(PI()/2)';
   helpText = ['Returns the cos of the angle specified in radians.'];
-  helpArgs = [
+  helpArgs: HelpArg[] = [
     {
       name: 'angle',
       description: 'An angle in radians, at which you want the cos.',
+      type: ['number'],
     },
   ];
 

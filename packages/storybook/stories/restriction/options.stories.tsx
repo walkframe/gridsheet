@@ -1,6 +1,7 @@
 import React, { type CSSProperties } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, Policy, PolicyOption, buildInitialCells, useHub } from '@gridsheet/react-core';
+import { GridSheet, Policy, AutocompleteOption, buildInitialCells, useHub } from '@gridsheet/react-core';
+import { Debugger } from '@gridsheet/react-dev';
 
 const meta: Meta = {
   title: 'Restriction/Options',
@@ -23,36 +24,91 @@ const DESCRIPTION = [
 
 const OptionsComponent: React.FC = () => {
   const colorPolicy = new Policy({
+    priority: 2,
     mixins: [
       {
-        getOptions(): PolicyOption[] {
+        getOptions(): AutocompleteOption[] {
           return [
-            { value: 'aqua', label: <span style={{ color: 'aqua' }}>Aqua</span> },
-            { value: 'red', label: <span style={{ color: 'red' }}>Red</span> },
-            { value: 'green', label: <span style={{ color: 'green' }}>Green</span> },
-            { value: 'blue', label: <span style={{ color: 'blue' }}>Blue</span> },
+            {
+              value: 'aqua',
+              label: <span style={{ color: 'aqua' }}>Aqua</span>,
+              guide: () => {
+                return (
+                  <p>
+                    <b>Aqua</b>
+                    <br />
+                    The color aqua is a cyan color.
+                  </p>
+                );
+              },
+            },
+            {
+              value: 'red',
+              label: <span style={{ color: 'red' }}>Red</span>,
+              guide: () => {
+                return (
+                  <p>
+                    <b>Red</b>
+                    <br />
+                    The color red is a red color.
+                  </p>
+                );
+              },
+            },
+            {
+              value: 'green',
+              label: <span style={{ color: 'green' }}>Green</span>,
+              guide: () => {
+                return (
+                  <p>
+                    <b>Green</b>
+                    <br />
+                    The color green is a green color.
+                  </p>
+                );
+              },
+            },
+            {
+              value: 'blue',
+              label: <span style={{ color: 'blue' }}>Blue</span>,
+              guide: () => {
+                return (
+                  <p>
+                    <b>Blue</b>
+                    <br />
+                    The color blue is a blue color.
+                  </p>
+                );
+              },
+            },
           ];
         },
-        validate({ patch, table, point }) {
-          let { value } = patch ?? {};
-          if (value == null) {
-            value = table.getCellByPoint(point)?.value;
+        validate({ next, table, point, current }) {
+          let { value } = next ?? {};
+          if (value === 'aqua' || value === 'red' || value === 'green' || value === 'blue') {
+            return { value, style: { backgroundColor: value } };
           }
-          return { value, style: { backgroundColor: value } };
+          // Fall back to current cell value when invalid
+          const fallbackValue = current?.value ?? null;
+          if (fallbackValue != null) {
+            return { value: fallbackValue, style: { backgroundColor: fallbackValue } };
+          }
+          return { value: null };
         },
       },
     ],
   });
   const animalPolicy = new Policy({
+    priority: 1,
     mixins: [
       {
-        getDefault({ value }) {
+        getFallback({ value }) {
           return { value };
         },
-        getOptions(): PolicyOption[] {
+        getOptions(): AutocompleteOption[] {
           return [{ value: 'cat' }, { value: 'dog' }, { value: 'bird' }];
         },
-        validate({ patch }) {
+        validate({ next: patch }) {
           const { value, width } = patch ?? {};
           return { value, width };
         },
@@ -75,35 +131,38 @@ const OptionsComponent: React.FC = () => {
   });
 
   return (
-    <GridSheet
-      hub={hub}
-      initialCells={buildInitialCells({
-        cells: {
-          A: {
-            labeler: 'color',
-            policy: 'color',
+    <div>
+      <GridSheet
+        hub={hub}
+        initialCells={buildInitialCells({
+          cells: {
+            A: {
+              labeler: 'color',
+              policy: 'color',
+            },
+            B: {
+              labeler: 'animal',
+              policy: 'animal',
+            },
+            A3: {
+              value: 'red',
+              style: { backgroundColor: 'red' },
+            },
+            B3: {
+              value: 'alpaca',
+            },
+            B4: {
+              value: 'dog',
+            },
+            B8: {
+              value: 'green',
+            },
           },
-          B: {
-            labeler: 'animal',
-            policy: 'animal',
-          },
-          A3: {
-            value: 'red',
-            style: { backgroundColor: 'red' },
-          },
-          B3: {
-            value: 'alpaca',
-          },
-          B4: {
-            value: 'dog',
-          },
-          B8: {
-            value: 'green',
-          },
-        },
-        ensured: { numRows: 10, numCols: 10 },
-      })}
-    />
+          ensured: { numRows: 10, numCols: 10 },
+        })}
+      />
+      <Debugger hub={hub} />
+    </div>
   );
 };
 

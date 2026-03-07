@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 import { stripTable } from '../../formula/solver';
 import { Table } from '../../lib/table';
@@ -11,9 +11,9 @@ import { SECONDS_IN_DAY } from '../../constants';
 export class AddFunction extends BaseFunction {
   example = 'ADD(2, 3)';
   helpText = ['Returns the sum of two numbers.', "This is the same as the '+' operator."];
-  helpArgs = [
-    { name: 'value1', description: 'First additive.' },
-    { name: 'value2', description: 'Second additive.' },
+  helpArgs: HelpArg[] = [
+    { name: 'value1', description: 'First additive.', type: ['number', 'date', 'time'] },
+    { name: 'value2', description: 'Second additive.', type: ['number', 'date', 'time'] },
   ];
 
   protected validate() {

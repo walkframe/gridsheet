@@ -1,13 +1,13 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 
 export class MultiplyFunction extends BaseFunction {
   example = 'MULTIPLY(6, 7)';
   helpText = ['Returns the product of two numbers.', "This is the same as the '*' operator."];
-  helpArgs = [
-    { name: 'factor1', description: 'First factor.' },
-    { name: 'factor2', description: 'Second factor.' },
+  helpArgs: HelpArg[] = [
+    { name: 'factor1', description: 'First factor.', type: ['number'] },
+    { name: 'factor2', description: 'Second factor.', type: ['number'] },
   ];
 
   protected validate() {

@@ -1,7 +1,7 @@
 import { FormulaError } from '../evaluator';
 import { solveTable } from '../solver';
 import { Table } from '../../lib/table';
-import { BaseFunction } from './__base';
+import { BaseFunction, HelpArg } from './__base';
 import { ensureBoolean, ensureNumber } from './__utils';
 import { stripTable } from '../../formula/solver';
 
@@ -10,21 +10,24 @@ export class VlookupFunction extends BaseFunction {
   helpText = [
     'Searches vertically for the specified key in the first column of the range and returns the value of the specified cell in the same row.',
   ];
-  helpArgs = [
-    { name: 'key', description: 'Search key.' },
+  helpArgs: HelpArg[] = [
+    { name: 'key', description: 'Search key.', type: ['any'] },
     {
       name: 'range',
       description: 'A range for search',
+      type: ['range'],
     },
     {
       name: 'index',
       description: 'The index of the column in the range.',
+      type: ['number'],
     },
     {
       name: 'is_sorted',
       description:
         'FALSE: Exact match. This is recommended. TRUE: Approximate match. Before you use an approximate match, sort your search key in ascending order. Otherwise, you may likely get a wrong return value.',
-      option: true,
+      type: ['boolean'],
+      optional: true,
     },
   ];
 

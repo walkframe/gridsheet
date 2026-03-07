@@ -63,7 +63,7 @@ export const x2c = (x: number): string => {
 };
 
 export const c2x = (col: string, absolute = false): number => {
-  const n = getNumberFromColumnLetter(col);
+  const n = getNumberFromColumnLetter(col.toUpperCase());
   return absolute ? -n : n;
 };
 
@@ -92,9 +92,8 @@ export const p2a = ({ y, x, absX, absY }: ExtraPointType) => {
 };
 
 export const a2p = (address: Address): ExtraPointType => {
-  const m = address.match(/(\$)?([A-Z]*)(\$)?([0-9]*)/);
+  const m = address.match(/(\$)?([a-zA-Z]*)(\$)?([0-9]*)/);
   if (m == null) {
-    console.error('invalid address', address);
     return { y: -1, x: -1 };
   }
   const [, _absX, col, _absY, row] = m.slice();
@@ -108,10 +107,10 @@ export const a2p = (address: Address): ExtraPointType => {
 export const grantAddressAbsolute = (address: Address, absCol: boolean, absRow: boolean) => {
   const m = address.match(/([A-Z]*)([0-9]*)/);
   if (m == null) {
-    return;
+    return address;
   }
   const [, col, row] = m.slice();
-  return `${absCol ? '$' : ''}${col}${absRow ? '$' : ''}${row}`;
+  return `${absCol ? '$' : ''}${col.toUpperCase()}${absRow ? '$' : ''}${row}`;
 };
 
 export const stripAddressAbsolute = (address: Address) => {

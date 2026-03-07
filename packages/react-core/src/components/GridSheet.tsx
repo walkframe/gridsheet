@@ -34,6 +34,7 @@ export function GridSheet({
 }: Props) {
   const { sheetResize, showFormulaBar = true, mode = 'light' } = options;
   const rootRef = useRef<HTMLDivElement>(null);
+  const flashRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLTextAreaElement>(null);
   const editorRef = useRef<HTMLTextAreaElement>(null);
@@ -84,6 +85,7 @@ export function GridSheet({
       sheetId,
       tableReactive,
       rootRef,
+      flashRef,
       mainRef,
       searchInputRef,
       editorRef,
@@ -104,6 +106,7 @@ export function GridSheet({
       matchingCells: [],
       matchingCellIndex: 0,
       searchCaseSensitive: false,
+      searchRegex: false,
       editingOnEnter: true,
       showAddress: true,
       contextMenuPosition: { y: -1, x: -1 },
@@ -112,6 +115,7 @@ export function GridSheet({
       resizingPositionX: [-1, -1, -1],
       columnMenuState: null,
       rowMenuState: null,
+      editorHovering: true,
       minNumRows: 1,
       maxNumRows: -1,
       minNumCols: 1,
@@ -161,6 +165,7 @@ export function GridSheet({
         data-sheet-name={sheetName}
         data-mode={mode}
       >
+        <div className="gs-flash-overlay" ref={flashRef} />
         <ScrollHandle style={{ position: 'fixed', top: 0, left: 0 }} />
         <ScrollHandle style={{ position: 'absolute', zIndex: 4, right: 0, top: 0, width: 5 }} horizontal={1} />
         <ScrollHandle style={{ position: 'absolute', zIndex: 4, left: 0, bottom: 0, height: 5 }} vertical={1} />
