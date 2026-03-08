@@ -1,4 +1,4 @@
-import { BaseFunction, HelpArg } from './__base';
+import { BaseFunction, FunctionCategory, HelpArg } from './__base';
 import { ensureBoolean } from './__utils';
 
 export class OrFunction extends BaseFunction {
@@ -14,6 +14,7 @@ export class OrFunction extends BaseFunction {
       iterable: true,
     },
   ];
+  category: FunctionCategory = 'logical';
 
   protected validate() {
     this.bareArgs = this.bareArgs.map((arg) => ensureBoolean(arg));

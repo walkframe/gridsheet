@@ -1,6 +1,7 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
 import { ensureNumber } from '@gridsheet/react-core';
+import type { FunctionCategory } from '@gridsheet/react-core';
 
 export class RoundFunction extends BaseFunction {
   example = 'ROUND(99.44,1)';
@@ -18,6 +19,7 @@ export class RoundFunction extends BaseFunction {
       optional: true,
     },
   ];
+  category: FunctionCategory = 'math';
 
   protected validate() {
     if (this.bareArgs.length !== 1 && this.bareArgs.length !== 2) {

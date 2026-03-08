@@ -1,5 +1,5 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction, HelpArg } from './__base';
+import { BaseFunction, FunctionCategory, HelpArg } from './__base';
 import { ne } from './__utils';
 
 export class NeFunction extends BaseFunction {
@@ -12,6 +12,7 @@ export class NeFunction extends BaseFunction {
     { name: 'value1', description: 'First value.', type: ['number'] },
     { name: 'value2', description: 'A value to be compared with value1.', type: ['number'] },
   ];
+  category: FunctionCategory = 'logical';
 
   protected validate() {
     if (this.bareArgs.length !== 2) {

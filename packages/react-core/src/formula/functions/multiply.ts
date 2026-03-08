@@ -1,5 +1,5 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction, HelpArg } from './__base';
+import { BaseFunction, FunctionCategory, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 
 export class MultiplyFunction extends BaseFunction {
@@ -9,6 +9,7 @@ export class MultiplyFunction extends BaseFunction {
     { name: 'factor1', description: 'First factor.', type: ['number'] },
     { name: 'factor2', description: 'Second factor.', type: ['number'] },
   ];
+  category: FunctionCategory = 'math';
 
   protected validate() {
     if (this.bareArgs.length !== 2) {

@@ -1,11 +1,12 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction, HelpArg } from './__base';
+import { BaseFunction, FunctionCategory, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 
 export class AbsFunction extends BaseFunction {
   example = 'ABS(-2)';
   helpText = ['Returns the absolute value of a number'];
   helpArgs: HelpArg[] = [{ name: 'value', description: 'target number', type: ['number'] }];
+  category: FunctionCategory = 'math';
 
   protected validate() {
     if (this.bareArgs.length !== 1) {

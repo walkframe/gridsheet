@@ -1,5 +1,5 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction, HelpArg } from './__base';
+import { BaseFunction, FunctionCategory, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 
 export class PowerFunction extends BaseFunction {
@@ -9,6 +9,7 @@ export class PowerFunction extends BaseFunction {
     { name: 'base', description: 'A number to be multiplied by an exponent.', type: ['number'] },
     { name: 'exponent', description: 'An exponent to power the base.', type: ['number'] },
   ];
+  category: FunctionCategory = 'math';
 
   protected validate() {
     if (this.bareArgs.length !== 2) {

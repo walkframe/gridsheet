@@ -1,17 +1,19 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
 import { ensureNumber } from '@gridsheet/react-core';
+import type { FunctionCategory } from '@gridsheet/react-core';
 
 export class RadiansFunction extends BaseFunction {
   example = 'RADIANS(180)';
-  helpText = ['Converts an angle from degrees to radians.'];
+  helpText = ['Converts an angle value in degrees to radians.'];
   helpArgs: HelpArg[] = [
     {
       name: 'angle',
-      description: 'The angle to convert from degrees to radians.',
+      description: 'An angle in degrees that you want to convert to radians.',
       type: ['number'],
     },
   ];
+  category: FunctionCategory = 'math';
 
   protected validate() {
     if (this.bareArgs.length !== 1) {

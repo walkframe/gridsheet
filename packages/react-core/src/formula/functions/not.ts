@@ -1,5 +1,5 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction, HelpArg } from './__base';
+import { BaseFunction, FunctionCategory, HelpArg } from './__base';
 import { ensureBoolean } from './__utils';
 
 export class NotFunction extends BaseFunction {
@@ -12,6 +12,7 @@ export class NotFunction extends BaseFunction {
       type: ['boolean'],
     },
   ];
+  category: FunctionCategory = 'logical';
 
   protected validate() {
     if (this.bareArgs.length === 1) {

@@ -21,10 +21,10 @@
       "import": "./dist/statistics/index.js",
       "default": "./dist/statistics/index.js"
     },
-    "./string": {
-      "types": "./dist/string/index.d.ts",
-      "import": "./dist/string/index.js",
-      "default": "./dist/string/index.js"
+    "./text": {
+      "types": "./dist/text/index.d.ts",
+      "import": "./dist/text/index.js",
+      "default": "./dist/text/index.js"
     },
     "./lookup": {
       "types": "./dist/lookup/index.d.ts",

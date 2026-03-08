@@ -1,5 +1,5 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction, HelpArg } from './__base';
+import { BaseFunction, FunctionCategory, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 
 export class DivideFunction extends BaseFunction {
@@ -13,6 +13,7 @@ export class DivideFunction extends BaseFunction {
     },
     { name: 'divisor', description: 'A number that will divide a dividend. Must be non-zero.', type: ['number'] },
   ];
+  category: FunctionCategory = 'math';
 
   protected validate() {
     if (this.bareArgs.length !== 2) {

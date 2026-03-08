@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 
 import { FormulaError } from '../evaluator';
 import { TimeDelta } from '../../lib/time';
-import { BaseFunction, HelpArg } from './__base';
+import { BaseFunction, FunctionCategory, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 import { stripTable } from '../../formula/solver';
 import { Table } from '../../lib/table';
@@ -15,6 +15,7 @@ export class MinusFunction extends BaseFunction {
     { name: 'value1', description: 'A number that will be subtracted.', type: ['number'] },
     { name: 'value2', description: 'A number that will subtract from value1.', type: ['number'] },
   ];
+  category: FunctionCategory = 'math';
 
   protected validate() {
     if (this.bareArgs.length !== 2) {

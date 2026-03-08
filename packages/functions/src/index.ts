@@ -1,7 +1,7 @@
 import type { FunctionMapping } from '@gridsheet/react-core';
 import { mathFunctions } from './math';
 import { statisticsFunctions } from './statistics';
-import { stringFunctions } from './string';
+import { textFunctions } from './text';
 import { lookupFunctions } from './lookup';
 import { timeFunctions } from './time';
 
@@ -9,7 +9,7 @@ import { timeFunctions } from './time';
 export const allFunctions: FunctionMapping = {
   ...mathFunctions,
   ...statisticsFunctions,
-  ...stringFunctions,
+  ...textFunctions,
   ...lookupFunctions,
   ...timeFunctions,
 };

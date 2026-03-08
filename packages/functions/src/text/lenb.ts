@@ -1,6 +1,7 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
 import { ensureString } from '@gridsheet/react-core';
+import type { FunctionCategory } from '@gridsheet/react-core';
 
 export class LenbFunction extends BaseFunction {
   example = 'LENB(A2)';
@@ -12,6 +13,7 @@ export class LenbFunction extends BaseFunction {
       type: ['string'],
     },
   ];
+  category: FunctionCategory = 'text';
 
   protected validate() {
     if (this.bareArgs.length !== 1) {

@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 
 import { FormulaError } from '../evaluator';
-import { BaseFunction, HelpArg } from './__base';
+import { BaseFunction, FunctionCategory, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 import { stripTable } from '../../formula/solver';
 import { Table } from '../../lib/table';
@@ -15,6 +15,7 @@ export class AddFunction extends BaseFunction {
     { name: 'value1', description: 'First additive.', type: ['number', 'date', 'time'] },
     { name: 'value2', description: 'Second additive.', type: ['number', 'date', 'time'] },
   ];
+  category: FunctionCategory = 'math';
 
   protected validate() {
     if (this.bareArgs.length !== 2) {

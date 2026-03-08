@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => ({
         index: "./src/index.ts",
         "math/index": "./src/math/index.ts",
         "statistics/index": "./src/statistics/index.ts",
-        "string/index": "./src/string/index.ts",
+        "text/index": "./src/text/index.ts",
         "lookup/index": "./src/lookup/index.ts",
         "time/index": "./src/time/index.ts",
       },

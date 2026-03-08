@@ -1,5 +1,6 @@
 import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
 import { ensureString } from '@gridsheet/react-core';
+import type { FunctionCategory } from '@gridsheet/react-core';
 
 export class ConcatenateFunction extends BaseFunction {
   example = 'CONCATENATE("Hello", "World")';
@@ -14,6 +15,7 @@ export class ConcatenateFunction extends BaseFunction {
       type: ['string'],
     },
   ];
+  category: FunctionCategory = 'text';
 
   protected validate() {
     this.bareArgs = this.bareArgs.map((arg) => ensureString(arg));

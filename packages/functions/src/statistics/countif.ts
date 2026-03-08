@@ -1,11 +1,13 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
 import { Table, solveTable, ensureString, check, conditionArg } from '@gridsheet/react-core';
+import type { FunctionCategory } from '@gridsheet/react-core';
 
 export class CountifFunction extends BaseFunction {
   example = 'COUNTIF(A1:A10,">20")';
   helpText = ['Returns the count of a series of cells.'];
   helpArgs: HelpArg[] = [{ name: 'range', description: 'Target range.', type: ['range'] }, conditionArg];
+  category: FunctionCategory = 'statistics';
 
   protected validate() {
     if (this.bareArgs.length !== 2) {

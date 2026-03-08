@@ -1,6 +1,7 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
 import { ensureNumber } from '@gridsheet/react-core';
+import type { FunctionCategory } from '@gridsheet/react-core';
 
 export class AtanFunction extends BaseFunction {
   example = 'ATAN(1)';
@@ -12,6 +13,7 @@ export class AtanFunction extends BaseFunction {
       type: ['number'],
     },
   ];
+  category: FunctionCategory = 'math';
 
   protected validate() {
     if (this.bareArgs.length !== 1) {

@@ -6,6 +6,7 @@ import { Context } from '../store';
 type OptionWithGuide = AutocompleteOption & {
   isFunction?: boolean;
   example?: string;
+  category?: string;
   helpTexts?: string[];
   helpArgs?: any[];
 };
@@ -42,6 +43,11 @@ export const FunctionGuide: React.FC<FunctionGuideProps> = ({
           e.stopPropagation();
         }}
       >
+        {option.category && option.isFunction && (
+          <span className={`gs-fn-guide-category gs-fn-guide-category-${option.category}`}>
+            {option.category}
+          </span>
+        )}
         {option.tooltip && (
           <div className="gs-fn-guide1-tooltip">
             {typeof option.tooltip === 'function'
@@ -51,7 +57,9 @@ export const FunctionGuide: React.FC<FunctionGuideProps> = ({
         )}
         {option.isFunction && (
           <>
-            <div className="gs-fn-guide1-example">{option.example}</div>
+            <div className="gs-fn-guide1-example">
+              {option.example}
+            </div>
             {option.helpTexts && option.helpTexts.length > 0 && (
               <div className="gs-fn-guide1-desc">
                 {option.helpTexts.map((text, j) => (
@@ -85,7 +93,14 @@ export const FunctionGuide: React.FC<FunctionGuideProps> = ({
         className={`gs-fn-guide2 ${isHidden ? 'gs-fn-guide2-hidden' : ''}`}
         style={top !== undefined && left !== undefined ? { top: top + 4, left } : undefined}
       >
-        <div className="gs-fn-guide2-name">{activeFunctionGuide.example}</div>
+        {activeFunctionGuide.category && (
+          <span className={`gs-fn-guide-category gs-fn-guide-category-${activeFunctionGuide.category}`}>
+            {activeFunctionGuide.category}
+          </span>
+        )}
+        <div className="gs-fn-guide2-name">
+          {activeFunctionGuide.example}
+        </div>
         <div className="gs-fn-guide2-args-inline">
           {activeFunctionGuide.helpArgs?.map((arg: any, j: number) => {
             const isIterable = arg.iterable;

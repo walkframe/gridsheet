@@ -18,6 +18,7 @@ import { AsinFunction } from './asin';
 import { AcosFunction } from './acos';
 import { AtanFunction } from './atan';
 import { Atan2Function } from './atan2';
+import { RandFunction } from './rand';
 
 export const mathFunctions: FunctionMapping = {
   mod: ModFunction,
@@ -39,6 +40,7 @@ export const mathFunctions: FunctionMapping = {
   acos: AcosFunction,
   atan: AtanFunction,
   atan2: Atan2Function,
+  rand: RandFunction,
 };
 
 export default mathFunctions;

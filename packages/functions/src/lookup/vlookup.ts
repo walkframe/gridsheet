@@ -1,6 +1,7 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
 import { Table, solveTable, stripTable, ensureBoolean, ensureNumber } from '@gridsheet/react-core';
+import type { FunctionCategory } from '@gridsheet/react-core';
 
 export class VlookupFunction extends BaseFunction {
   example = 'VLOOKUP(10003, A2:B26, 2, FALSE)';
@@ -27,6 +28,7 @@ export class VlookupFunction extends BaseFunction {
       optional: true,
     },
   ];
+  category: FunctionCategory = 'lookup';
 
   protected validate() {
     if (this.bareArgs.length !== 3 && this.bareArgs.length !== 4) {

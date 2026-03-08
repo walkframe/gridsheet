@@ -2,6 +2,7 @@ import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
 import { Table, solveTable, stripTable, ensureString, check, conditionArg } from '@gridsheet/react-core';
 import type { AreaType } from '@gridsheet/react-core';
+import type { FunctionCategory } from '@gridsheet/react-core';
 
 export class SumifFunction extends BaseFunction {
   example = 'SUMIF(A1:A10,">20")';
@@ -11,6 +12,7 @@ export class SumifFunction extends BaseFunction {
     conditionArg,
     { name: 'range2', description: 'A range to be summarized.', type: ['range'], optional: true },
   ];
+  category: FunctionCategory = 'statistics';
 
   protected validate() {
     if (this.bareArgs.length !== 2 && this.bareArgs.length !== 3) {

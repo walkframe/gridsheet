@@ -10,6 +10,8 @@ import {
   asyncCacheMiss,
 } from './__async';
 
+export type FunctionCategory = 'math' | 'statistics' | 'text' | 'time' | 'lookup' | 'information' | 'finance' | 'engineering' | 'logical' | 'other';
+
 export type FunctionProps = {
   args: Expression[];
   table: Table;
@@ -35,6 +37,7 @@ export class BaseFunction {
   public example = '_BASE()';
   public helpTexts = ["Function's description."];
   public helpArgs: HelpArg[] = [];
+  public category: FunctionCategory = 'other';
   /** Indicates if this function is async. Override in subclass or use BaseFunctionAsync. */
   protected isAsync: boolean = false;
   /** Cache TTL in milliseconds. Override in subclass to set expiry. undefined = never expires. */

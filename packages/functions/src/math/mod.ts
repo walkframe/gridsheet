@@ -1,6 +1,7 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
 import { ensureNumber } from '@gridsheet/react-core';
+import type { FunctionCategory } from '@gridsheet/react-core';
 
 export class ModFunction extends BaseFunction {
   example = 'MOD(10, 4)';
@@ -13,6 +14,7 @@ export class ModFunction extends BaseFunction {
     },
     { name: 'divisor', description: 'A number that will divide a dividend.', type: ['number'] },
   ];
+  category: FunctionCategory = 'math';
 
   protected validate() {
     if (this.bareArgs.length !== 2) {

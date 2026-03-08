@@ -1,20 +1,22 @@
 import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
 import { Table, solveTable } from '@gridsheet/react-core';
 import { ensureNumber } from '@gridsheet/react-core';
+import type { FunctionCategory } from '@gridsheet/react-core';
 
 export class ProductFunction extends BaseFunction {
-  example = 'PRODUCT(A2:A100)';
-  helpText = ['Returns the product of a series of numbers or cells.'];
+  example = 'PRODUCT(2,3,4)';
+  helpText = ['Returns the product of a series of numbers.'];
   helpArgs: HelpArg[] = [
-    { name: 'value1', description: 'First number or range.', type: ['number'] },
+    { name: 'value1', description: 'First number or range.', type: ['number', 'range'] },
     {
       name: 'value2',
       description: 'Additional numbers or ranges',
-      type: ['number'],
+      type: ['number', 'range'],
       optional: true,
       iterable: true,
     },
   ];
+  category: FunctionCategory = 'math';
 
   protected validate() {
     const spreaded: number[] = [];

@@ -1,6 +1,6 @@
 import { solveTable } from '../solver';
 import { Table } from '../../lib/table';
-import { BaseFunction, HelpArg } from './__base';
+import { BaseFunction, FunctionCategory, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 import { FormulaError } from '../evaluator';
 
@@ -17,6 +17,7 @@ export class SumFunction extends BaseFunction {
       iterable: true,
     },
   ];
+  category: FunctionCategory = 'math';
 
   protected validate() {
     if (this.bareArgs.length === 0) {

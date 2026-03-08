@@ -1,6 +1,6 @@
 import { solveTable } from '../solver';
 import { Table } from '../../lib/table';
-import { BaseFunction, HelpArg } from './__base';
+import { BaseFunction, FunctionCategory, HelpArg } from './__base';
 import { ensureNumber } from './__utils';
 
 export class CountFunction extends BaseFunction {
@@ -16,6 +16,7 @@ export class CountFunction extends BaseFunction {
       type: ['number', 'range'],
     },
   ];
+  category: FunctionCategory = 'statistics';
 
   protected validate() {
     const spreaded: any[] = [];

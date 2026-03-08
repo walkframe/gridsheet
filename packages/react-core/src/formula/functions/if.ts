@@ -1,5 +1,5 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction, HelpArg } from './__base';
+import { BaseFunction, FunctionCategory, HelpArg } from './__base';
 import { ensureBoolean } from './__utils';
 
 export class IfFunction extends BaseFunction {
@@ -22,6 +22,7 @@ export class IfFunction extends BaseFunction {
       type: ['any'],
     },
   ];
+  category: FunctionCategory = 'logical';
 
   protected validate() {
     if (this.bareArgs.length === 2 || this.bareArgs.length === 3) {

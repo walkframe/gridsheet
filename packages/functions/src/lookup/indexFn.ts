@@ -1,6 +1,7 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
 import { Table, ensureNumber } from '@gridsheet/react-core';
+import type { FunctionCategory } from '@gridsheet/react-core';
 
 export class IndexFunction extends BaseFunction {
   example = 'INDEX(A1:C10, 2, 3)';
@@ -23,6 +24,7 @@ export class IndexFunction extends BaseFunction {
       type: ['number'],
     },
   ];
+  category: FunctionCategory = 'lookup';
 
   protected validate() {
     if (this.bareArgs.length < 1 || this.bareArgs.length > 3) {

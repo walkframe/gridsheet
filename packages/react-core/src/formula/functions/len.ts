@@ -1,5 +1,5 @@
 import { FormulaError } from '../evaluator';
-import { BaseFunction, HelpArg } from './__base';
+import { BaseFunction, FunctionCategory, HelpArg } from './__base';
 import { ensureString } from './__utils';
 
 export class LenFunction extends BaseFunction {
@@ -12,6 +12,7 @@ export class LenFunction extends BaseFunction {
       type: ['string'],
     },
   ];
+  category: FunctionCategory = 'text';
 
   protected validate() {
     if (this.bareArgs.length !== 1) {

@@ -53,7 +53,7 @@ export type { Dispatcher } from './store';
 export { ThousandSeparatorRendererMixin } from './renderers/thousand_separator';
 export { CheckboxRendererMixin } from './renderers/checkbox';
 export { BaseFunction, BaseFunctionSync, BaseFunctionAsync } from './formula/functions/__base';
-export type { FunctionProps, HelpArg, FunctionMapping } from './formula/functions/__base';
+export type { FunctionProps, HelpArg, FunctionCategory, FunctionMapping } from './formula/functions/__base';
 export { FormulaError, Lexer, FormulaParser, RefEntity, ValueEntity, RangeEntity } from './formula/evaluator';
 export { Table, type UserTable } from './lib/table';
 export { Policy } from './policy/core';

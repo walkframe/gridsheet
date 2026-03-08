@@ -1,6 +1,7 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
 import { ensureNumber } from '@gridsheet/react-core';
+import type { FunctionCategory } from '@gridsheet/react-core';
 
 export class LogFunction extends BaseFunction {
   example = 'LOG(128, 2)';
@@ -13,6 +14,7 @@ export class LogFunction extends BaseFunction {
     },
     { name: 'base', description: 'An exponent to power the base.', type: ['number'] },
   ];
+  category: FunctionCategory = 'math';
 
   protected validate() {
     if (this.bareArgs.length !== 2) {

@@ -25,10 +25,10 @@ import { MaxFunction } from './functions/max';
 import { MinFunction } from './functions/min';
 import { LenFunction } from './functions/len';
 import { UminusFunction } from './functions/uminus';
-import type { FunctionMapping, HelpArg } from './functions/__base';
+import type { FunctionCategory, FunctionMapping, HelpArg } from './functions/__base';
 
 export const functions: FunctionMapping = {
-  // 演算子・比較
+  // Arithmetic & Comparison
   add: AddFunction,
   minus: MinusFunction,
   uminus: UminusFunction,
@@ -44,7 +44,7 @@ export const functions: FunctionMapping = {
   lt: LtFunction,
   lte: LteFunction,
 
-  // 論理
+  // Logical
   if: IfFunction,
   // @ts-expect-error iferror does not extends BaseFunction
   iferror: IfErrorFunction,
@@ -52,7 +52,7 @@ export const functions: FunctionMapping = {
   or: OrFunction,
   not: NotFunction,
 
-  // 統計・基本集計
+  // Statistics & Aggregation
   sum: SumFunction,
   max: MaxFunction,
   min: MinFunction,
@@ -60,18 +60,19 @@ export const functions: FunctionMapping = {
   count: CountFunction,
   counta: CountaFunction,
 
-  // 文字列
+  // Text
   len: LenFunction,
 
-  // 数学
+  // Math
   abs: AbsFunction,
 
-  // 時間
+  // Time
   now: NowFunction,
 };
 
 export type FunctionHelp = {
   name: string;
+  category: FunctionCategory;
   example: string;
   helpTexts: string[];
   helpArgs: HelpArg[];
@@ -87,6 +88,7 @@ export const getFunctionHelps = (customFunctions: FunctionMapping = functions): 
       const instance = new FnClass({ args: [], table: {} as any });
       return {
         name: name.toUpperCase(),
+        category: instance.category,
         example: instance.example,
         helpTexts: (instance as any).helpText || (instance as any).helpTexts || [],
         helpArgs: instance.helpArgs || [],

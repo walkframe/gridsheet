@@ -1,6 +1,7 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
 import { Table, solveTable, stripTable, ensureNumber } from '@gridsheet/react-core';
+import type { FunctionCategory } from '@gridsheet/react-core';
 
 export class MatchFunction extends BaseFunction {
   example = 'MATCH("apple", A1:A10, 0)';
@@ -18,6 +19,7 @@ export class MatchFunction extends BaseFunction {
       optional: true,
     },
   ];
+  category: FunctionCategory = 'lookup';
 
   protected validate() {
     if (this.bareArgs.length < 2 || this.bareArgs.length > 3) {

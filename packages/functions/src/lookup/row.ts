@@ -1,6 +1,7 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
 import { Table } from '@gridsheet/react-core';
+import type { FunctionCategory } from '@gridsheet/react-core';
 
 export class RowFunction extends BaseFunction {
   example = 'ROW(A9)';
@@ -13,6 +14,7 @@ export class RowFunction extends BaseFunction {
       optional: true,
     },
   ];
+  category: FunctionCategory = 'lookup';
 
   protected validate() {
     if (this.bareArgs.length === 0) {
