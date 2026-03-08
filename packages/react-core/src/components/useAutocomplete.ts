@@ -90,6 +90,10 @@ export const useAutocomplete = ({ inputting, selectionStart, optionsAll, functio
             if (['REF', 'RANGE', 'ID', 'ID_RANGE', 'UNREFERENCED'].includes(token.type)) {
               isOnAddress = true;
             }
+            // Inside a string literal (VALUE token whose entity is a string)
+            if (token.type === 'VALUE' && typeof token.entity === 'string') {
+              isOnAddress = true;
+            }
             break;
           }
           if (selectionStart === currentIndex || selectionStart === currentIndex + tLen) {

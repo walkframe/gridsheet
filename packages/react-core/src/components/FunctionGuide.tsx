@@ -44,9 +44,7 @@ export const FunctionGuide: React.FC<FunctionGuideProps> = ({
         }}
       >
         {option.category && option.isFunction && (
-          <span className={`gs-fn-guide-category gs-fn-guide-category-${option.category}`}>
-            {option.category}
-          </span>
+          <span className={`gs-fn-guide-category gs-fn-guide-category-${option.category}`}>{option.category}</span>
         )}
         {option.tooltip && (
           <div className="gs-fn-guide1-tooltip">
@@ -57,9 +55,7 @@ export const FunctionGuide: React.FC<FunctionGuideProps> = ({
         )}
         {option.isFunction && (
           <>
-            <div className="gs-fn-guide1-example">
-              {option.example}
-            </div>
+            <div className="gs-fn-guide1-example">{option.example}</div>
             {option.helpTexts && option.helpTexts.length > 0 && (
               <div className="gs-fn-guide1-desc">
                 {option.helpTexts.map((text, j) => (
@@ -98,9 +94,7 @@ export const FunctionGuide: React.FC<FunctionGuideProps> = ({
             {activeFunctionGuide.category}
           </span>
         )}
-        <div className="gs-fn-guide2-name">
-          {activeFunctionGuide.example}
-        </div>
+        <div className="gs-fn-guide2-name">{activeFunctionGuide.example}</div>
         <div className="gs-fn-guide2-args-inline">
           {activeFunctionGuide.helpArgs?.map((arg: any, j: number) => {
             const isIterable = arg.iterable;

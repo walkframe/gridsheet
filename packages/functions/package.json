@@ -35,6 +35,11 @@
       "types": "./dist/time/index.d.ts",
       "import": "./dist/time/index.js",
       "default": "./dist/time/index.js"
+    },
+    "./logical": {
+      "types": "./dist/logical/index.d.ts",
+      "import": "./dist/logical/index.js",
+      "default": "./dist/logical/index.js"
     }
   },
   "scripts": {

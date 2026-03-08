@@ -36,7 +36,7 @@ export const lte = (left: any, right: any): boolean => {
 };
 
 export const eq = (left: any, right: any): boolean => {
-  return ensureString(left) === ensureString(right);
+  return ensureString(left).toLowerCase() === ensureString(right).toLowerCase();
 };
 
 export const ne = (left: any, right: any): boolean => {

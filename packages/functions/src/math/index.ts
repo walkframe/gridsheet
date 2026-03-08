@@ -19,6 +19,22 @@ import { AcosFunction } from './acos';
 import { AtanFunction } from './atan';
 import { Atan2Function } from './atan2';
 import { RandFunction } from './rand';
+import { UnaryPercentFunction } from './unaryPercent';
+import { UplusFunction } from './uplus';
+import { SumifsFunction } from './sumifs';
+import { AverageifsFunction } from './averageifs';
+import { CountifsFunction } from './countifs';
+import { FactFunction } from './fact';
+import { IntFunction } from './int';
+import { IsevenFunction } from './iseven';
+import { IsoddFunction } from './isodd';
+import { LcmFunction } from './lcm';
+import { OddFunction } from './odd';
+import { EvenFunction } from './even';
+import { SignFunction } from './sign';
+import { SumsqFunction } from './sumsq';
+import { TruncFunction } from './trunc';
+import { BaseConvFunction } from './base';
 
 export const mathFunctions: FunctionMapping = {
   mod: ModFunction,
@@ -41,6 +57,22 @@ export const mathFunctions: FunctionMapping = {
   atan: AtanFunction,
   atan2: Atan2Function,
   rand: RandFunction,
+  unary_percent: UnaryPercentFunction,
+  uplus: UplusFunction,
+  sumifs: SumifsFunction,
+  averageifs: AverageifsFunction,
+  countifs: CountifsFunction,
+  fact: FactFunction,
+  int: IntFunction,
+  iseven: IsevenFunction,
+  isodd: IsoddFunction,
+  lcm: LcmFunction,
+  odd: OddFunction,
+  even: EvenFunction,
+  sign: SignFunction,
+  sumsq: SumsqFunction,
+  trunc: TruncFunction,
+  base: BaseConvFunction,
 };
 
 export default mathFunctions;

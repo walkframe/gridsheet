@@ -4,6 +4,8 @@ import { statisticsFunctions } from './statistics';
 import { textFunctions } from './text';
 import { lookupFunctions } from './lookup';
 import { timeFunctions } from './time';
+import { logicalFunctions } from './logical';
+import { informationFunctions } from './information';
 
 /** All extended functions combined into a single FunctionMapping. */
 export const allFunctions: FunctionMapping = {
@@ -12,6 +14,8 @@ export const allFunctions: FunctionMapping = {
   ...textFunctions,
   ...lookupFunctions,
   ...timeFunctions,
+  ...logicalFunctions,
+  ...informationFunctions,
 };
 
 export default allFunctions;

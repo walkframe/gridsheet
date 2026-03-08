@@ -17,7 +17,7 @@ const DESCRIPTION = [
 const ColSheet = () => {
   const hub = useHub({
     additionalFunctions: allFunctions,
-  })
+  });
   return (
     <GridSheet
       hub={hub}
@@ -31,9 +31,7 @@ const ColSheet = () => {
         },
         ensured: { numRows: 100, numCols: 100 },
       })}
-      options={{
-        
-      }}
+      options={{}}
     />
   );
 };
