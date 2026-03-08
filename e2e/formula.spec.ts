@@ -307,3 +307,49 @@ test('add col and slide ref', async ({ page }) => {
   await a22.click();
   expect(await largeEditor2.inputValue()).toBe("='Sheet1'!D3"); // C3 -> D3
 });
+
+test('formula string auto-close double quote', async ({ page }) => {
+  await page.goto('http://localhost:5233/iframe.html?id=basic-simple--sheet&viewMode=story');
+  const a1 = page.locator("[data-address='A1']");
+  const editor = page.locator('.gs-editor textarea');
+
+  // Step 1: type `="` → should auto-insert `=""` and place cursor inside
+  await a1.click();
+  await page.keyboard.type('=');
+  await page.keyboard.type('"');
+  expect(await editor.inputValue()).toBe('=""');
+  // cursor should be between the two quotes (position 2)
+  const cursorAfterOpen = await editor.evaluate((el: HTMLTextAreaElement) => el.selectionStart);
+  expect(cursorAfterOpen).toBe(2);
+
+  // Step 2: type `a` → should result in `="a"`
+  await page.keyboard.type('a');
+  expect(await editor.inputValue()).toBe('="a"');
+
+  // Step 3: type `"` while cursor is before the closing quote → should skip over it
+  await page.keyboard.type('"');
+  expect(await editor.inputValue()).toBe('="a"');
+  // cursor should now be after the closing quote (position 4)
+  const cursorAfterSkip = await editor.evaluate((el: HTMLTextAreaElement) => el.selectionStart);
+  expect(cursorAfterSkip).toBe(4);
+
+  // Step 4: confirm cell value is saved correctly
+  await page.keyboard.press('Enter');
+  expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('a');
+});
+
+test('formula string auto-close double quote: backspace removes both quotes', async ({ page }) => {
+  await page.goto('http://localhost:5233/iframe.html?id=basic-simple--sheet&viewMode=story');
+  const a1 = page.locator("[data-address='A1']");
+  const editor = page.locator('.gs-editor textarea');
+
+  // type `="` → auto-inserts `=""`; cursor is between the quotes
+  await a1.click();
+  await page.keyboard.type('=');
+  await page.keyboard.type('"');
+  expect(await editor.inputValue()).toBe('=""');
+
+  // Backspace between `""` should delete both quotes, leaving just `=`
+  await page.keyboard.press('Backspace');
+  expect(await editor.inputValue()).toBe('=');
+});

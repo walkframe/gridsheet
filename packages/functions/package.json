@@ -44,7 +44,8 @@
   },
   "scripts": {
     "build": "rm -rf ./dist || true && vite build",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "jest": "jest"
   },
   "repository": {
     "type": "git",
