@@ -4,7 +4,7 @@ import { ensureNumber } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
 export class UnicharFunction extends BaseFunction {
-  example = 'UNICHAR(9731)';
+  example = 'UNICHAR(127843)';
   helpText = ['Returns the Unicode character corresponding to the given numeric code point.'];
   helpArgs: HelpArg[] = [
     { name: 'number', description: 'The Unicode code point (decimal) to convert.', type: ['number'] },
