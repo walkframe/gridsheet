@@ -7,7 +7,7 @@ import { Context } from '../store';
 import { p2a } from '../lib/coords';
 import { setEditingAddress, setInputting, setEditorHovering, walk, write, updateTable } from '../store/actions';
 import * as prevention from '../lib/operation';
-import { insertTextAtCursor, isFocus } from '../lib/input';
+import { handleFormulaQuoteAutoClose, insertTextAtCursor, isFocus } from '../lib/input';
 import { focus } from '../lib/dom';
 import { editorStyle } from './Editor';
 import { ScrollHandle } from './ScrollHandle';
@@ -143,6 +143,12 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
       }
       const input = e.currentTarget;
 
+      // Auto-close double quotes in formula mode
+      if (handleFormulaQuoteAutoClose(e, inputting)) {
+        dispatch(setInputting(input.value));
+        return false;
+      }
+
       switch (e.key) {
         case 'Tab': // TAB
           e.preventDefault();
@@ -259,6 +265,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
       replaceWithOption,
       handleArrowUp,
       handleArrowDown,
+      inputting,
     ],
   );
 

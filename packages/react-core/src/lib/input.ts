@@ -101,3 +101,86 @@ export const isFocus = (input: HTMLTextAreaElement | null): boolean => {
   }
   return document.activeElement === input;
 };
+
+/**
+ * Handles auto-close behavior for double quotes in formula editing.
+ * - Typing `"` inserts `""` and places cursor between them.
+ * - Typing `"` when cursor is right before an auto-closed `"` skips over it.
+ * - Backspace between empty `""` deletes both quotes.
+ *
+ * Returns true if the event was handled (caller should preventDefault), false otherwise.
+ */
+export const handleFormulaQuoteAutoClose = (
+  e: React.KeyboardEvent<HTMLTextAreaElement>,
+  inputting: string,
+): boolean => {
+  const input = e.currentTarget;
+  const isFormula = inputting.startsWith('=');
+  if (!isFormula) {
+    return false;
+  }
+
+  const { selectionStart, selectionEnd } = input;
+
+  if (e.key === '"') {
+    // If text is selected, wrap it in quotes
+    if (selectionStart !== selectionEnd) {
+      e.preventDefault();
+      const selectedText = inputting.slice(selectionStart, selectionEnd);
+      insertTextAtCursor(input, `"${selectedText}"`);
+      requestAnimationFrame(() => {
+        input.setSelectionRange(selectionStart + 1, selectionEnd + 1);
+      });
+      return true;
+    }
+
+    const charAfter = inputting[selectionStart];
+
+    // Count unescaped double quotes before cursor (after '=') to determine if we're inside a string
+    const beforeCursor = inputting.slice(1, selectionStart); // skip '='
+    let quoteCount = 0;
+    for (let i = 0; i < beforeCursor.length; i++) {
+      if (beforeCursor[i] === '"') {
+        // Skip escaped double quotes ("") inside strings
+        if (i + 1 < beforeCursor.length && beforeCursor[i + 1] === '"') {
+          i++; // skip the next quote
+        } else {
+          quoteCount++;
+        }
+      }
+    }
+
+    // If odd number of quotes before cursor, we're inside a string.
+    // If the next char is `"`, it's the closing quote — skip over it.
+    if (quoteCount % 2 === 1 && charAfter === '"') {
+      e.preventDefault();
+      input.setSelectionRange(selectionStart + 1, selectionStart + 1);
+      return true;
+    }
+
+    // Otherwise, insert `""` and place cursor in between
+    e.preventDefault();
+    insertTextAtCursor(input, '""');
+    requestAnimationFrame(() => {
+      input.setSelectionRange(selectionStart + 1, selectionStart + 1);
+    });
+    return true;
+  }
+
+  if (e.key === 'Backspace') {
+    // If cursor is between `""`, delete both
+    if (
+      selectionStart === selectionEnd &&
+      selectionStart > 0 &&
+      inputting[selectionStart - 1] === '"' &&
+      inputting[selectionStart] === '"'
+    ) {
+      e.preventDefault();
+      input.setRangeText('', selectionStart - 1, selectionStart + 1, 'end');
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      return true;
+    }
+  }
+
+  return false;
+};

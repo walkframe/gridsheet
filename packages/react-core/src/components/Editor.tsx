@@ -39,7 +39,7 @@ import {
 import { Context } from '../store';
 import { areaToZone, zoneToArea } from '../lib/spatial';
 import * as prevention from '../lib/operation';
-import { expandInput, insertTextAtCursor, isFocus, isRefInsertable, resetInput } from '../lib/input';
+import { expandInput, handleFormulaQuoteAutoClose, insertTextAtCursor, isFocus, isRefInsertable, resetInput } from '../lib/input';
 import { focus } from '../lib/dom';
 import { Lexer } from '../formula/evaluator';
 import { COLOR_PALETTE } from '../lib/palette';
@@ -245,6 +245,12 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
         });
       }
       const input = e.currentTarget;
+
+      // Auto-close double quotes in formula mode
+      if (handleFormulaQuoteAutoClose(e, inputting)) {
+        dispatch(setInputting(input.value));
+        return false;
+      }
 
       const shiftKey = e.shiftKey;
       switch (e.key) {
@@ -558,6 +564,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
       address,
       writeCell,
       searchQuery,
+      inputting,
     ],
   );
 

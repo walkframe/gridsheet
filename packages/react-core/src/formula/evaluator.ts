@@ -343,18 +343,20 @@ export class Token {
   type: TokenType;
   entity: any;
   precedence: number;
+  closed: boolean;
   private origin?: PointType;
 
-  constructor(type: TokenType, entity: any, precedence = 0, origin?: PointType) {
+  constructor(type: TokenType, entity: any, precedence = 0, origin?: PointType, closed = true) {
     this.type = type;
     this.entity = entity;
     this.precedence = precedence;
     this.origin = origin;
+    this.closed = closed;
   }
 
   public length() {
     if (this.type === 'VALUE' && typeof this.entity === 'string') {
-      return this.entity.length + 2;
+      return this.entity.length + (this.closed ? 2 : 1);
     }
     return new String(this.entity).length;
   }
@@ -362,7 +364,7 @@ export class Token {
   public stringify() {
     if (this.type === 'VALUE') {
       if (typeof this.entity === 'string') {
-        return `"${this.entity}"`;
+        return this.closed ? `"${this.entity}"` : `"${this.entity}`;
       }
       if (typeof this.entity === 'boolean') {
         return this.entity ? 'TRUE' : 'FALSE';
@@ -509,7 +511,7 @@ export class Lexer {
           if (typeof t.entity === 'number' || typeof t.entity === 'boolean') {
             return t.entity;
           }
-          return `"${t.entity}"`;
+          return t.closed ? `"${t.entity}"` : `"${t.entity}`;
 
         case 'ID':
           return new IdEntity(t.entity as string).identify(props);
@@ -536,7 +538,7 @@ export class Lexer {
             if (typeof t.entity === 'number' || typeof t.entity === 'boolean') {
               return t.entity;
             }
-            return `"${t.entity}"`;
+            return t.closed ? `"${t.entity}"` : `"${t.entity}`;
           case 'ID':
             return new IdEntity(t.entity as string).display({ table });
           case 'ID_RANGE':
@@ -614,12 +616,12 @@ export class Lexer {
           this.tokens.push(TOKEN_LT);
           continue;
         case '"': {
-          const buf = this.getString('"');
-          this.tokens.push(new Token('VALUE', buf));
+          const { buf, closed } = this.getString('"');
+          this.tokens.push(new Token('VALUE', buf, 0, undefined, closed));
           continue;
         }
         case "'": {
-          const buf = this.getString("'");
+          const { buf } = this.getString("'");
           char = `'${buf}'`;
           break;
         }
@@ -687,14 +689,14 @@ export class Lexer {
     }
   }
 
-  private getString(quote = '"') {
+  private getString(quote = '"'): { buf: string; closed: boolean } {
     let buf = '';
 
     while (true) {
       const c = this.get();
       this.next();
       if (c == null) {
-        break;
+        return { buf, closed: false };
       }
       if (c === quote) {
         if (quote === '"' && this.get() === quote) {
@@ -707,13 +709,12 @@ export class Lexer {
           buf += c;
           continue;
         } else {
-          break;
+          return { buf, closed: true };
         }
       } else {
         buf += c;
       }
     }
-    return buf;
   }
 
   private resolveIdRange(range: string) {
