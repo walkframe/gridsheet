@@ -30,7 +30,7 @@ describe('sheet', () => {
       expect(f.call()).toBe(3);
     });
 
-    it('returns 1 if sheet not found in wire', () => {
+    it('returns 99 if sheet not found in wire', () => {
       const refTable = new Table({});
       refTable.sheetId = 99;
       refTable.initialize({});
@@ -38,17 +38,17 @@ describe('sheet', () => {
 
       const mockArg = { evaluate: () => refTable } as any;
       const f = new SheetFunction({ table, args: [mockArg] });
-      expect(f.call()).toBe(1);
+      expect(f.call()).toBe(99);
     });
 
-    it('returns 1 if current sheet not found in wire', () => {
+    it('returns 88 if current sheet not found in wire', () => {
       const isolatedTable = new Table({});
       isolatedTable.sheetId = 88;
       isolatedTable.initialize({});
       isolatedTable.wire = { sheetIdsByName: {} } as any;
 
       const f = new SheetFunction({ table: isolatedTable, args: [] });
-      expect(f.call()).toBe(1);
+      expect(f.call()).toBe(88);
     });
   });
 

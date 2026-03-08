@@ -128,10 +128,10 @@ export const InsertRowsAboveItem = (props: ContextMenuProps) => {
     return null;
   }
   const { y } = choosing;
-  const { height } = zoneShape({ ...selectingZone, base: 1 });
+  const { rows } = zoneShape({ ...selectingZone, base: 1 });
   const selectingTopCell = table.getCellByPoint({ y, x: 0 }, 'SYSTEM');
   const disabled =
-    (table.maxNumRows !== -1 && table.getNumRows() + height > table.maxNumRows) ||
+    (table.maxNumRows !== -1 && table.getNumRows() + rows > table.maxNumRows) ||
     prevention.hasOperation(selectingTopCell?.prevention, prevention.InsertRowsAbove);
   return (
     <li
@@ -144,7 +144,7 @@ export const InsertRowsAboveItem = (props: ContextMenuProps) => {
       }}
     >
       <div className="gs-menu-name">
-        Insert {height} row{height > 1 && 's'} above
+        Insert {rows} row{rows > 1 && 's'} above
       </div>
     </li>
   );
@@ -158,10 +158,10 @@ export const InsertRowsBelowItem = (props: ContextMenuProps) => {
     return null;
   }
   const { y } = choosing;
-  const { height } = zoneShape({ ...selectingZone, base: 1 });
+  const { rows } = zoneShape({ ...selectingZone, base: 1 });
   const selectingBottomCell = table.getCellByPoint({ y, x: 0 }, 'SYSTEM');
   const disabled =
-    (table.maxNumRows !== -1 && table.getNumRows() + height > table.maxNumRows) ||
+    (table.maxNumRows !== -1 && table.getNumRows() + rows > table.maxNumRows) ||
     prevention.hasOperation(selectingBottomCell?.prevention, prevention.InsertRowsBelow);
   return (
     <li
@@ -174,7 +174,7 @@ export const InsertRowsBelowItem = (props: ContextMenuProps) => {
       }}
     >
       <div className="gs-menu-name">
-        Insert {height} row{height > 1 && 's'} below
+        Insert {rows} row{rows > 1 && 's'} below
       </div>
     </li>
   );
@@ -188,10 +188,10 @@ export const InsertColsLeftItem = (props: ContextMenuProps) => {
     return null;
   }
   const { x } = choosing;
-  const { width } = zoneShape({ ...selectingZone, base: 1 });
+  const { cols } = zoneShape({ ...selectingZone, base: 1 });
   const selectingLeftCell = table.getCellByPoint({ y: 0, x }, 'SYSTEM');
   const disabled =
-    (table.maxNumCols !== -1 && table.getNumCols() + width > table.maxNumCols) ||
+    (table.maxNumCols !== -1 && table.getNumCols() + cols > table.maxNumCols) ||
     prevention.hasOperation(selectingLeftCell?.prevention, prevention.InsertColsLeft);
   return (
     <li
@@ -204,7 +204,7 @@ export const InsertColsLeftItem = (props: ContextMenuProps) => {
       }}
     >
       <div className="gs-menu-name">
-        Insert {width} column{width > 1 && 's'} left
+        Insert {cols} column{cols > 1 && 's'} left
       </div>
     </li>
   );
@@ -218,10 +218,10 @@ export const InsertColsRightItem = (props: ContextMenuProps) => {
     return null;
   }
   const { x } = choosing;
-  const { width } = zoneShape({ ...selectingZone, base: 1 });
+  const { cols } = zoneShape({ ...selectingZone, base: 1 });
   const selectingRightCell = table.getCellByPoint({ y: 0, x }, 'SYSTEM');
   const disabled =
-    (table.maxNumCols !== -1 && table.getNumCols() + width > table.maxNumCols) ||
+    (table.maxNumCols !== -1 && table.getNumCols() + cols > table.maxNumCols) ||
     prevention.hasOperation(selectingRightCell?.prevention, prevention.InsertColsRight);
   return (
     <li
@@ -234,7 +234,7 @@ export const InsertColsRightItem = (props: ContextMenuProps) => {
       }}
     >
       <div className="gs-menu-name">
-        Insert {width} column{width > 1 && 's'} right
+        Insert {cols} column{cols > 1 && 's'} right
       </div>
     </li>
   );
@@ -248,10 +248,10 @@ export const RemoveRowsItem = (props: ContextMenuProps) => {
     return null;
   }
   const { y } = choosing;
-  const { height } = zoneShape({ ...selectingZone, base: 1 });
+  const { rows } = zoneShape({ ...selectingZone, base: 1 });
   const selectingTopCell = table.getCellByPoint({ y, x: 0 }, 'SYSTEM');
   const disabled =
-    (table.minNumRows !== -1 && table.getNumRows() - height < table.minNumRows) ||
+    (table.minNumRows !== -1 && table.getNumRows() - rows < table.minNumRows) ||
     prevention.hasOperation(selectingTopCell?.prevention, prevention.RemoveRows);
   return (
     <li
@@ -264,7 +264,7 @@ export const RemoveRowsItem = (props: ContextMenuProps) => {
       }}
     >
       <div className="gs-menu-name">
-        Remove {height} row{height > 1 && 's'}
+        Remove {rows} row{rows > 1 && 's'}
       </div>
     </li>
   );
@@ -278,10 +278,10 @@ export const RemoveColsItem = (props: ContextMenuProps) => {
     return null;
   }
   const { x } = choosing;
-  const { width } = zoneShape({ ...selectingZone, base: 1 });
+  const { cols } = zoneShape({ ...selectingZone, base: 1 });
   const selectingRightCell = table.getCellByPoint({ y: 0, x }, 'SYSTEM');
   const disabled =
-    (table.minNumCols !== -1 && table.getNumCols() - width < table.minNumCols) ||
+    (table.minNumCols !== -1 && table.getNumCols() - cols < table.minNumCols) ||
     prevention.hasOperation(selectingRightCell?.prevention, prevention.RemoveCols);
   return (
     <li
@@ -294,7 +294,7 @@ export const RemoveColsItem = (props: ContextMenuProps) => {
       }}
     >
       <div className="gs-menu-name">
-        Remove {width} column{width > 1 && 's'}
+        Remove {cols} column{cols > 1 && 's'}
       </div>
     </li>
   );

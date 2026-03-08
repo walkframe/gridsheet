@@ -1,40 +1,27 @@
-import { FormulaError } from '@gridsheet/react-core';
-import type { HelpArg, FunctionProps } from '@gridsheet/react-core';
+import { BaseFunction, FormulaError } from '@gridsheet/react-core';
+import type { FunctionArgumentDefinition, FunctionProps } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 import { Table } from '@gridsheet/react-core';
 
-export class IserrFunction {
+const description = `Returns TRUE if the value is any error other than #N/A.`;
+
+export class IserrFunction extends BaseFunction {
   example = 'ISERR(A1)';
-  helpText = ['Returns TRUE if the value is any error other than #N/A.'];
-  helpArgs: HelpArg[] = [
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
     {
       name: 'value',
       description: 'The value to check for a non-#N/A error.',
-      type: ['any'],
+      acceptedTypes: ['any'],
+      errorTolerant: true,
     },
   ];
   category: FunctionCategory = 'information';
 
-  private args: any[];
-  private table: Table;
-
-  constructor({ args, table }: FunctionProps) {
-    this.args = args;
-    this.table = table;
-  }
-
-  public call() {
-    if (this.args.length !== 1) {
-      throw new FormulaError('#N/A', 'Number of arguments for ISERR is incorrect.');
+  protected main(value: any) {
+    if (value instanceof Error) {
+      return true;
     }
-    try {
-      const value = this.args[0].evaluate({ table: this.table });
-      return value instanceof FormulaError && value.code !== '#N/A';
-    } catch (e) {
-      if (e instanceof FormulaError) {
-        return e.code !== '#N/A';
-      }
-      return false;
-    }
+    return FormulaError.is(value) && value.code !== '#N/A';
   }
 }

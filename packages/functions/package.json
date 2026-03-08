@@ -77,7 +77,8 @@
     "@gridsheet/react-core": "workspace:*"
   },
   "peerDependencies": {
-    "@gridsheet/react-core": "^3.0.0"
+    "@gridsheet/react-core": "^3.0.0",
+    "dayjs": "^1.11.13"
   },
   "publishConfig": {
     "access": "public"

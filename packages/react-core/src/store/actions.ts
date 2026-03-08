@@ -18,7 +18,7 @@ import { Table } from '../lib/table';
 
 import { p2a, a2p } from '../lib/coords';
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '../constants';
-import { initSearchStatement, restrictPoints } from './helpers';
+import { initSearchStatement, restrictPoints, flashSheet, flashWithCallback } from './helpers';
 import { smartScroll } from '../lib/virtualization';
 import * as prevention from '../lib/operation';
 import { Autofill } from '../lib/autofill';
@@ -310,7 +310,7 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
         return store;
       }
       const src = copyingArea;
-      const { height: h, width: w } = areaShape(copyingArea);
+      const { rows: h, cols: w } = areaShape(copyingArea);
       const dst: AreaType =
         selectingArea.top !== -1
           ? {
@@ -364,7 +364,7 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
     let { y, x } = choosing;
 
     if (copyingArea.top === -1) {
-      const { height, width } = matrixShape({ matrix, base: -1 });
+      const { rows: height, cols: width } = matrixShape({ matrix, base: -1 });
       selectingArea = {
         top: y,
         left: x,
@@ -391,13 +391,13 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
       if (srcTable == null) {
         return store;
       }
-      let { height, width } = areaShape(copyingArea);
+      let { rows: height, cols: width } = areaShape(copyingArea);
       if (selectingArea.top !== -1) {
         y = selectingArea.top;
         x = selectingArea.left;
         const superposed = superposeArea(selectingArea, copyingArea);
-        height = superposed.height;
-        width = superposed.width;
+        height = superposed.rows;
+        width = superposed.cols;
       }
       selectingArea = { top: y, left: x, bottom: y + height, right: x + width };
       newTable = dstTable.copy({
@@ -684,19 +684,6 @@ class ClearAction<T extends null> extends CoreAction<T> {
 }
 export const clear = new ClearAction().bind();
 
-const FLASH_CLASS = 'gs-flash-overlay--active';
-const FLASH_DURATION_MS = 600;
-const flashSheet = (el: HTMLElement | null) => {
-  if (!el) {
-    return;
-  }
-  el.classList.remove(FLASH_CLASS);
-  // force reflow to restart animation when called consecutively
-  void el.offsetWidth;
-  el.classList.add(FLASH_CLASS);
-  setTimeout(() => el.classList.remove(FLASH_CLASS), FLASH_DURATION_MS);
-};
-
 class UndoAction<T extends null> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { tableReactive: tableRef } = store;
@@ -718,6 +705,11 @@ class UndoAction<T extends null> extends CoreAction<T> {
         }),
       );
       flashSheet(dstStore.flashRef.current);
+      // For cross-sheet MOVE: the src (current) table's lastChangedAddresses was also updated.
+      // Return updated tableReactive so this sheet's Emitter fires onChange.
+      if (history.srcSheetId === table.sheetId) {
+        return flashWithCallback(store, table, callback);
+      }
       return store;
     }
     return {
@@ -756,6 +748,11 @@ class RedoAction<T extends null> extends CoreAction<T> {
         }),
       );
       flashSheet(dstStore.flashRef.current);
+      // For cross-sheet MOVE: the src (current) table's lastChangedAddresses was also updated.
+      // Return updated tableReactive so this sheet's Emitter fires onChange.
+      if (history.srcSheetId === table.sheetId) {
+        return flashWithCallback(store, table, callback);
+      }
       return store;
     }
     return {

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, buildInitialCells, useHub } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells, useHub, Policy } from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Basic/Labeler',
@@ -15,9 +16,10 @@ const DESCRIPTION = [
 
 const LabelerSheet = () => {
   const hub = useHub({
-    labelers: {
-      hiragana: (n) => 'あいうえおかきくけこ'.slice(n - 1, n),
-      katakana: (n) => 'アイウエオカキクケコ'.slice(n - 1, n),
+    additionalFunctions: allFunctions,
+    policies: {
+      hiragana: new Policy({ mixins: [{ renderColHeaderLabel: (n) => 'あいうえおかきくけこ'.slice(n - 1, n) }] }),
+      katakana: new Policy({ mixins: [{ renderRowHeaderLabel: (n) => 'アイウエオカキクケコ'.slice(n - 1, n) }] }),
     },
   });
 
@@ -26,16 +28,16 @@ const LabelerSheet = () => {
       hub={hub}
       initialCells={buildInitialCells({
         cells: {
-          A: { labeler: 'hiragana' },
-          B: { labeler: 'hiragana' },
-          C: { labeler: 'hiragana' },
-          D: { labeler: 'hiragana' },
-          E: { labeler: 'hiragana' },
-          1: { labeler: 'katakana' },
-          2: { labeler: 'katakana' },
-          3: { labeler: 'katakana' },
-          4: { labeler: 'katakana' },
-          5: { labeler: 'katakana' },
+          A: { policy: 'hiragana' },
+          B: { policy: 'hiragana' },
+          C: { policy: 'hiragana' },
+          D: { policy: 'hiragana' },
+          E: { policy: 'hiragana' },
+          1: { policy: 'katakana' },
+          2: { policy: 'katakana' },
+          3: { policy: 'katakana' },
+          4: { policy: 'katakana' },
+          5: { policy: 'katakana' },
           A1: { value: '=SUM($B1:C$1)' },
           B1: { value: 1 },
           C1: { value: 100 },

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, TimeDelta, useHub } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, useHub } from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Basic/Two',
@@ -11,9 +12,7 @@ const DESCRIPTION = ['## Example', 'This demo is smallest simple grid sheet with
 
 const TwoSheet = () => {
   const hub = useHub({
-    labelers: {
-      raw: (n) => String(n),
-    },
+    additionalFunctions: allFunctions,
   });
   return (
     <GridSheet

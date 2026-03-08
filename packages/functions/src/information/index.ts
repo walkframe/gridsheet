@@ -17,12 +17,9 @@ import { SheetsFunction } from './sheets';
 export const informationFunctions: FunctionMapping = {
   isformula: IsformulaFunction,
   isblank: IsblankFunction,
-  // @ts-expect-error iserr does not extend BaseFunction
   iserr: IserrFunction,
-  // @ts-expect-error iserror does not extend BaseFunction
   iserror: IserrorFunction,
   islogical: IslogicalFunction,
-  // @ts-expect-error isna does not extend BaseFunction
   isna: IsnaFunction,
   isnontext: IsnontextFunction,
   istext: IstextFunction,

@@ -16,12 +16,14 @@ describe('row', () => {
         expect(f.call()).toBe(100);
       }
       {
+        jest.spyOn(table, 'getPointById').mockReturnValue({ y: 3, x: 5 } as any);
         const f = new RowFunction({
           table,
           args: [],
-          origin: { x: 5, y: 3 },
+          at: '?',
         });
         expect(f.call()).toBe(3);
+        jest.restoreAllMocks();
       }
     });
   });

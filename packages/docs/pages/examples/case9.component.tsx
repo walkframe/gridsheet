@@ -2,27 +2,20 @@ import React from 'react';
 import {
   GridSheet,
   Policy,
-  Renderer,
   buildInitialCells,
   useHub,
   BaseFunction,
   makeBorder,
   ensureString,
 } from '@gridsheet/react-core';
+import { FunctionArgumentDefinition } from '@gridsheet/react-core';
 
 export default function Case9Component() {
   // Custom security functions
   const SecureHashFunction = class extends BaseFunction {
     example = 'SECURE_HASH("password123")';
     helpText = ['Creates a secure hash of the input text'];
-    helpArgs = [{ name: 'text', description: 'Text to hash' }];
-
-    protected validate() {
-      if (this.bareArgs.length !== 1) {
-        throw new Error('SECURE_HASH requires exactly 1 argument');
-      }
-      this.bareArgs[0] = ensureString(this.bareArgs[0]);
-    }
+    defs = [{ name: 'text', description: 'Text to hash' }];
 
     protected main(text: string) {
       // Simple hash function for demonstration
@@ -39,13 +32,9 @@ export default function Case9Component() {
   const ValidateEmailFunction = class extends BaseFunction {
     example = 'VALIDATE_EMAIL("user@example.com")';
     helpText = ['Validates email format and returns security status'];
-    helpArgs = [{ name: 'email', description: 'Email to validate' }];
-
-    protected validate() {
-      if (this.bareArgs.length !== 1) {
-        throw new Error('VALIDATE_EMAIL requires exactly 1 argument');
-      }
-    }
+    defs: FunctionArgumentDefinition[] = [
+      { name: 'email', description: 'Email to validate', acceptedTypes: ['string'] },
+    ];
 
     protected main(email: string) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -57,16 +46,10 @@ export default function Case9Component() {
   const EncryptLevelFunction = class extends BaseFunction {
     example = 'ENCRYPT_LEVEL("sensitive_data", 3)';
     helpText = ['Applies encryption level to sensitive data'];
-    helpArgs = [
-      { name: 'value', description: 'Value to encrypt' },
-      { name: 'level', description: 'Encryption level (1-5)' },
+    defs: FunctionArgumentDefinition[] = [
+      { name: 'value', description: 'Value to encrypt', acceptedTypes: ['string'] },
+      { name: 'level', description: 'Encryption level (1-5)', acceptedTypes: ['number'] },
     ];
-
-    protected validate() {
-      if (this.bareArgs.length !== 2) {
-        throw new Error('ENCRYPT_LEVEL requires exactly 2 arguments');
-      }
-    }
 
     protected main(value: string, level: number) {
       const levels = ['LOW', 'MEDIUM', 'HIGH', 'VERY_HIGH', 'MAXIMUM'];
@@ -75,24 +58,16 @@ export default function Case9Component() {
     }
   };
 
-  // Security policy for clipboard protection
+  // Security policy: clipboard protection + display masking
   const securityPolicy = new Policy({
     mixins: [
       {
-        onClip({ point, table }) {
+        serializeForClipboard({ point, table }) {
           const cellValue = table.stringify({ point }) ?? '';
           // Return asterisks for clipboard copy
           return '*'.repeat(cellValue.length);
         },
-      },
-    ],
-  });
-
-  // Security renderer for display masking
-  const securityRenderer = new Renderer({
-    mixins: [
-      {
-        string({ value }) {
+        renderString({ value }: any) {
           if (value == null || value === '') {
             return '';
           }
@@ -107,11 +82,11 @@ export default function Case9Component() {
     ],
   });
 
-  // ID renderer to ensure text interpretation
-  const idRenderer = new Renderer({
+  // ID policy to ensure text interpretation
+  const idPolicy = new Policy({
     mixins: [
       {
-        string({ value }) {
+        renderString({ value }: any) {
           if (value == null || value === '') {
             return '';
           }
@@ -131,10 +106,7 @@ export default function Case9Component() {
     },
     policies: {
       security: securityPolicy,
-    },
-    renderers: {
-      security: securityRenderer,
-      id: idRenderer,
+      id: idPolicy,
     },
   });
 
@@ -182,7 +154,7 @@ export default function Case9Component() {
             // Data rows with alternating colors
             A1: {
               value: '001',
-              renderer: 'id',
+              policy: 'id',
               style: {
                 backgroundColor: '#f8f9fa',
                 textAlign: 'center',
@@ -201,7 +173,6 @@ export default function Case9Component() {
             C1: {
               value: 'super_secret_password_123',
               policy: 'security',
-              renderer: 'security',
               style: {
                 backgroundColor: '#fdf2f2',
                 ...makeBorder({ all: '2px solid #e74c3c' }),
@@ -221,7 +192,7 @@ export default function Case9Component() {
 
             A2: {
               value: '002',
-              renderer: 'id',
+              policy: 'id',
               style: {
                 backgroundColor: 'white',
                 textAlign: 'center',
@@ -240,7 +211,6 @@ export default function Case9Component() {
             C2: {
               value: 'another_secure_password',
               policy: 'security',
-              renderer: 'security',
               style: {
                 backgroundColor: '#fdf2f2',
                 ...makeBorder({ all: '2px solid #e74c3c' }),
@@ -260,7 +230,7 @@ export default function Case9Component() {
 
             A3: {
               value: '003',
-              renderer: 'id',
+              policy: 'id',
               style: {
                 backgroundColor: '#f8f9fa',
                 textAlign: 'center',
@@ -279,7 +249,6 @@ export default function Case9Component() {
             C3: {
               value: 'admin_password_2024',
               policy: 'security',
-              renderer: 'security',
               style: {
                 backgroundColor: '#fdf2f2',
                 ...makeBorder({ all: '2px solid #e74c3c' }),
@@ -299,7 +268,7 @@ export default function Case9Component() {
 
             A4: {
               value: '004',
-              renderer: 'id',
+              policy: 'id',
               style: {
                 backgroundColor: 'white',
                 textAlign: 'center',
@@ -318,7 +287,6 @@ export default function Case9Component() {
             C4: {
               value: 'guest_password',
               policy: 'security',
-              renderer: 'security',
               style: {
                 backgroundColor: '#fdf2f2',
                 ...makeBorder({ all: '2px solid #e74c3c' }),

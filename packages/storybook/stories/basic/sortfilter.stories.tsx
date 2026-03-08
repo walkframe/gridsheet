@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, buildInitialCells, Renderer, CheckboxRendererMixin, useHub } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells, Policy, CheckboxPolicyMixin, useHub } from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Basic/SortFilter',
@@ -17,8 +18,9 @@ const DESCRIPTION = [
 
 const SortFilterSheet = () => {
   const hub = useHub({
-    renderers: {
-      checkbox: new Renderer({ mixins: [CheckboxRendererMixin] }),
+    additionalFunctions: allFunctions,
+    policies: {
+      checkbox: new Policy({ mixins: [CheckboxPolicyMixin] }),
     },
   });
   return (
@@ -30,7 +32,7 @@ const SortFilterSheet = () => {
       initialCells={buildInitialCells({
         cells: {
           default: { width: 120 },
-          A: { label: 'Active', renderer: 'checkbox', width: 60 },
+          A: { label: 'Active', policy: 'checkbox', width: 60 },
           B: { label: 'Name' },
           C: { label: 'Score' },
           D: { label: 'Grade' },

@@ -23,9 +23,9 @@ describe('sumsq', () => {
   });
 
   describe('validation error', () => {
-    it('handles empty args (returns 0)', () => {
+    it('throws on empty args', () => {
       const f = new SumsqFunction({ table, args: [] });
-      expect(f.call()).toBe(0);
+      expect(f.call.bind(f)).toThrow(FormulaError);
     });
 
     it('ignores invalid types correctly if ignore: true but might fail in strict ensureNumber?', () => {

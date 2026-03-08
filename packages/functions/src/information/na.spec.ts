@@ -6,11 +6,15 @@ describe('na', () => {
   table.initialize({});
 
   describe('normal', () => {
-    it('returns #N/A FormulaError', () => {
+    it('throws #N/A FormulaError', () => {
       const f = new NaFunction({ table, args: [] });
-      const result = f.call();
-      expect(result).toBeInstanceOf(FormulaError);
-      expect((result as FormulaError).code).toBe('#N/A');
+      try {
+        f.call();
+        fail('Expected to throw FormulaError');
+      } catch (e: any) {
+        expect(e).toBeInstanceOf(FormulaError);
+        expect(e.code).toBe('#N/A');
+      }
     });
   });
 

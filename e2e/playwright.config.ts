@@ -6,7 +6,7 @@ export default defineConfig({
     trace: 'on-first-retry',
     video: 'retain-on-failure',
     launchOptions: {
-      slowMo: 250,
+      slowMo: 100,
     },
     permissions: ['clipboard-read', 'clipboard-write'],
   },

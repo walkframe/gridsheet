@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { GridSheet, buildInitialCells, useConnector, useHub, addressesToAreas } from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Control/OnEdit',
@@ -19,36 +20,86 @@ const DESCRIPTION = [
   '3. `getCellObject({ addresses })` retrieves only the changed cells.',
 ].join('\n\n');
 
+type HistoryEntry = {
+  operation: string;
+  area: { top: number; left: number; bottom: number; right: number };
+  sheetName: string;
+  timestamp: string;
+  data: Record<string, any>;
+};
+
+const HistoryPanel: React.FC<{ title: string; history: HistoryEntry[]; testId: string }> = ({
+  title,
+  history,
+  testId,
+}) => (
+  <div style={{ width: '350px', flexShrink: 0 }}>
+    <h4 style={{ textAlign: 'center' }}>{title} History</h4>
+    <div data-testid={testId} style={{ maxHeight: '400px', overflowY: 'auto' }}>
+      {history.map((edit, index) => (
+        <div
+          key={index}
+          data-testid="history-item"
+          style={{ border: '1px solid #ddd', padding: '8px', marginBottom: '8px', fontSize: '12px' }}
+        >
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <tbody>
+              <tr>
+                <td style={{ fontWeight: 'bold', width: '60px' }}>Time:</td>
+                <td>{edit.timestamp}</td>
+              </tr>
+              <tr>
+                <td style={{ fontWeight: 'bold', verticalAlign: 'top' }}>Data:</td>
+                <td colSpan={3}>
+                  <textarea
+                    data-testid="history-data"
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      fontFamily: 'monospace',
+                      fontSize: '10px',
+                      resize: 'none',
+                    }}
+                    value={JSON.stringify(edit.data)}
+                    readOnly
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      ))}
+      {history.length === 0 && <p style={{ color: '#aaa', fontSize: '12px' }}>No history yet.</p>}
+    </div>
+  </div>
+);
+
 const SheetOnEditComponent: React.FC = () => {
-  const [editData, setEditData] = React.useState<Record<string, any>>({});
-  const [editHistory, setEditHistory] = React.useState<
-    Array<{
-      operation: string;
-      area: { top: number; left: number; bottom: number; right: number };
-      sheetName: string;
-      timestamp: string;
-      data: Record<string, any>;
-    }>
-  >([]);
+  const [sheet1History, setSheet1History] = React.useState<HistoryEntry[]>([]);
+  const [sheet2History, setSheet2History] = React.useState<HistoryEntry[]>([]);
 
   const hub = useHub({
+    additionalFunctions: allFunctions,
     onChange: ({ table }) => {
       const addresses = table.getLastChangedAddresses();
       if (addresses.length === 0) {
         return;
       }
-      const data = table.getCellObject({ addresses, ignoreFields: ['system', 'style', 'prevention'] });
+      const data = table.toCellObject({ addresses, ignoreFields: ['_sys', 'style', 'prevention'] });
       const areas = addressesToAreas(addresses);
       const area = areas[0] ?? { top: 0, left: 0, bottom: 0, right: 0 };
-      const info = {
+      const info: HistoryEntry = {
         operation: 'EDIT',
         area,
         sheetName: table.sheetName,
         timestamp: new Date().toLocaleTimeString(),
-        data: data,
+        data,
       };
-      setEditData(data);
-      setEditHistory((prev) => [info, ...prev.slice(0, 9)]); // Keep last 10 edits
+      if (table.sheetName === 'Sheet1') {
+        setSheet1History((prev) => [info, ...prev.slice(0, 9)]);
+      } else {
+        setSheet2History((prev) => [info, ...prev.slice(0, 9)]);
+      }
     },
   });
 
@@ -84,7 +135,7 @@ const SheetOnEditComponent: React.FC = () => {
                 },
               })}
               options={{
-                sheetWidth: 250,
+                sheetWidth: 350,
                 sheetHeight: 200,
               }}
             />
@@ -118,7 +169,7 @@ const SheetOnEditComponent: React.FC = () => {
                 },
               })}
               options={{
-                sheetWidth: 250,
+                sheetWidth: 350,
                 sheetHeight: 200,
               }}
             />
@@ -127,52 +178,9 @@ const SheetOnEditComponent: React.FC = () => {
 
         <div style={{ padding: '20px', maxWidth: '1800px', margin: '0 auto' }}>
           <h3>Edit History</h3>
-          <div data-testid="edit-history" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-            {editHistory.map((edit, index) => (
-              <div
-                key={index}
-                data-testid="history-item"
-                style={{
-                  border: '1px solid #ddd',
-                  padding: '8px',
-                  marginBottom: '8px',
-                  fontSize: '12px',
-                }}
-              >
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <tbody>
-                    <tr>
-                      <td style={{ fontWeight: 'bold', width: '80px' }}>Time:</td>
-                      <td style={{ width: '120px' }}>{edit.timestamp}</td>
-                      <td style={{ fontWeight: 'bold', width: '80px' }}>Sheet:</td>
-                      <td style={{ width: '100px' }}>{edit.sheetName}</td>
-                      <td style={{ fontWeight: 'bold', width: '80px' }}>Area:</td>
-                      <td>
-                        {edit.area.top},{edit.area.left} to {edit.area.bottom},{edit.area.right}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style={{ fontWeight: 'bold', verticalAlign: 'top' }}>Data:</td>
-                      <td colSpan={5}>
-                        <textarea
-                          data-testid="history-data"
-                          style={{
-                            width: '100%',
-                            height: '20px',
-                            fontFamily: 'monospace',
-                            fontSize: '10px',
-                            resize: 'none',
-                          }}
-                          value={JSON.stringify(edit.data)}
-                          readOnly
-                        />
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            ))}
-            {editHistory.length === 0 && <p>No edit history yet.</p>}
+          <div style={{ display: 'flex', gap: '20px' }}>
+            <HistoryPanel title="Sheet1" history={sheet1History} testId="edit-history-sheet1" />
+            <HistoryPanel title="Sheet2" history={sheet2History} testId="edit-history-sheet2" />
           </div>
         </div>
       </div>

@@ -1,26 +1,23 @@
-import { BaseFunction, FunctionCategory, HelpArg } from './__base';
+import { BaseFunction, FunctionCategory, FunctionArgumentDefinition } from './__base';
 import { ensureBoolean } from './__utils';
+
+const description = `Returns TRUE if any argument is logically true.
+Returns FALSE if all arguments are logically false.`;
 
 export class OrFunction extends BaseFunction {
   example = 'OR(A1=1, A2=2)';
-  helpText = ['Returns TRUE if any argument is logically true.', 'Returns FALSE if all arguments are logically false.'];
-  helpArgs: HelpArg[] = [
-    { name: 'expression1', description: 'First logical expression.', type: ['boolean'] },
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
     {
-      name: 'expression2',
-      description: 'Additional expressions',
-      type: ['boolean'],
-      optional: true,
-      iterable: true,
+      name: 'expression',
+      description: 'Logical expressions to evaluate.',
+      acceptedTypes: ['boolean', 'number'],
+      variadic: true,
     },
   ];
   category: FunctionCategory = 'logical';
 
-  protected validate() {
-    this.bareArgs = this.bareArgs.map((arg) => ensureBoolean(arg));
-  }
-
-  protected main(...values: boolean[]) {
-    return values.reduce((a, b) => a || b);
+  protected main(...values: any[]) {
+    return values.map((v) => ensureBoolean(v)).reduce((a, b) => a || b);
   }
 }

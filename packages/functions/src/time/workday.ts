@@ -1,5 +1,5 @@
 import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
 import { ensureNumber, Table, solveTable } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 import { ensureDate } from './__utils';
@@ -40,34 +40,28 @@ function isWeekend(d: Date): boolean {
   return dow === 0 || dow === 6;
 }
 
+const description = `Returns the date that is a given number of working days (Mon–Fri) before or after a start date.
+Optionally excludes a list of holiday dates.`;
+
 export class WorkdayFunction extends BaseFunction {
   example = 'WORKDAY(A1, 5)';
-  helpText = [
-    'Returns the date that is a given number of working days (Mon–Fri) before or after a start date.',
-    'Optionally excludes a list of holiday dates.',
-  ];
-  helpArgs: HelpArg[] = [
-    { name: 'start_date', description: 'The starting date.', type: ['date'] },
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
+    { name: 'start_date', description: 'The starting date.', acceptedTypes: ['date'] },
     {
       name: 'days',
       description: 'The number of working days to add (positive) or subtract (negative).',
-      type: ['number'],
+      acceptedTypes: ['number', 'string'],
     },
     {
       name: 'holidays',
       description: 'An optional list or range of dates to exclude as holidays.',
       optional: true,
-      type: ['range', 'date'],
+      takesMatrix: true,
+      acceptedTypes: ['matrix', 'date'],
     },
   ];
   category: FunctionCategory = 'time';
-
-  protected validate() {
-    if (this.bareArgs.length < 2 || this.bareArgs.length > 3) {
-      throw new FormulaError('#N/A', 'Number of arguments for WORKDAY is incorrect.');
-    }
-    this.bareArgs[1] = ensureNumber(this.bareArgs[1]);
-  }
 
   protected main(startDate: any, days: number, holidays?: any) {
     const start = ensureDate(startDate);

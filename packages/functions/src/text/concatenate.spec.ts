@@ -12,7 +12,10 @@ describe('concatenate', () => {
     });
 
     it('concatenates multiple strings', () => {
-      const f = new ConcatenateFunction({ table, args: [new ValueEntity('A'), new ValueEntity('B'), new ValueEntity('C')] });
+      const f = new ConcatenateFunction({
+        table,
+        args: [new ValueEntity('A'), new ValueEntity('B'), new ValueEntity('C')],
+      });
       expect(f.call()).toBe('ABC');
     });
 

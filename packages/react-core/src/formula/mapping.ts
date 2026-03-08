@@ -25,7 +25,8 @@ import { MaxFunction } from './functions/max';
 import { MinFunction } from './functions/min';
 import { LenFunction } from './functions/len';
 import { UminusFunction } from './functions/uminus';
-import type { FunctionCategory, FunctionMapping, HelpArg } from './functions/__base';
+import { ArrayformulaFunction } from './functions/arrayformula';
+import type { FunctionCategory, FunctionMapping, FunctionArgumentDefinition } from './functions/__base';
 
 export const functions: FunctionMapping = {
   // Arithmetic & Comparison
@@ -46,11 +47,11 @@ export const functions: FunctionMapping = {
 
   // Logical
   if: IfFunction,
-  // @ts-expect-error iferror does not extends BaseFunction
   iferror: IfErrorFunction,
   and: AndFunction,
   or: OrFunction,
   not: NotFunction,
+  arrayformula: ArrayformulaFunction,
 
   // Statistics & Aggregation
   sum: SumFunction,
@@ -74,8 +75,8 @@ export type FunctionHelp = {
   name: string;
   category: FunctionCategory;
   example: string;
-  helpTexts: string[];
-  helpArgs: HelpArg[];
+  description: string;
+  defs: FunctionArgumentDefinition[];
 };
 
 const _functionHelpsCache = new Map<FunctionMapping, FunctionHelp[]>();
@@ -89,9 +90,9 @@ export const getFunctionHelps = (customFunctions: FunctionMapping = functions): 
       return {
         name: name.toUpperCase(),
         category: instance.category,
-        example: instance.example,
-        helpTexts: (instance as any).helpText || (instance as any).helpTexts || [],
-        helpArgs: instance.helpArgs || [],
+        example: instance.example ?? FnClass?.__name ?? 'Unknown',
+        description: instance.description ?? '',
+        defs: instance.defs || [],
       };
     });
     _functionHelpsCache.set(customFunctions, helps);

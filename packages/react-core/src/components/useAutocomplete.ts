@@ -116,8 +116,9 @@ export const useAutocomplete = ({ inputting, selectionStart, optionsAll, functio
             const keywordLower = help.name.toLowerCase();
             const startsWith = keywordLower.startsWith(currentWord);
             const index = startsWith ? 0 : -1;
+            const hasNoArgs = help.defs.length === 0;
             return {
-              option: { ...help, value: help.name + '(', isFunction: true, label: help.name },
+              option: { ...help, value: help.name + (hasNoArgs ? '()' : '('), isFunction: true, label: help.name },
               index,
               startsWith,
               keywordCount: 1,

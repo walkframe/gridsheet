@@ -1,18 +1,14 @@
 import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
+
+const description = `Returns the current date as a Date value.`;
 
 export class TodayFunction extends BaseFunction {
   example = 'TODAY()';
-  helpText = ['Returns the current date as a Date value.'];
-  helpArgs: HelpArg[] = [];
+  description = description;
+  defs: FunctionArgumentDefinition[] = [];
   category: FunctionCategory = 'time';
-
-  protected validate() {
-    if (this.bareArgs.length !== 0) {
-      throw new FormulaError('#N/A', 'Number of arguments for TODAY is incorrect.');
-    }
-  }
 
   protected main() {
     const now = new Date();

@@ -4,9 +4,12 @@ import { Table, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/react-
 describe('rows', () => {
   const table = new Table({});
   table.initialize({
-    A1: { value: 1 }, B1: { value: 2 },
-    A2: { value: 3 }, B2: { value: 4 },
-    A3: { value: 5 }, B3: { value: 6 },
+    A1: { value: 1 },
+    B1: { value: 2 },
+    A2: { value: 3 },
+    B2: { value: 4 },
+    A3: { value: 5 },
+    B3: { value: 6 },
   });
 
   describe('normal', () => {

@@ -26,11 +26,11 @@
     "typecheck:all": "pnpm typecheck:react-core",
     "generate-style": "cd packages/react-core && pnpm generate-style",
     "e2e": "cd e2e && npx playwright test -c playwright.config.ts --workers 4",
-    "jest:react-core": "cd packages/react-core && pnpm jest",
     "jest:functions": "cd packages/functions && pnpm jest",
-    "jest": "pnpm jest:react-core && pnpm jest:functions",
+    "jest": "pnpm jest:functions",
     "test": "pnpm jest && pnpm e2e",
     "prettier": "prettier --write '**/*.{ts,tsx}'",
+    "clean:cache": "rm -rf packages/storybook/node_modules/.cache/storybook",
     "clean": "pnpm store prune && rm -rf node_modules packages/*/node_modules packages/*/.cache packages/*/dist",
     "clean:install": "pnpm clean && pnpm install",
     "lint": "eslint --ext .ts,.tsx .",
@@ -51,7 +51,7 @@
     "install:storybook": "cd packages/storybook && pnpm install",
     "install:docs": "cd packages/docs && pnpm install",
     "install:all": "pnpm install:react-core && pnpm install:react-dev && pnpm install:preact-core && pnpm install:functions && pnpm install:storybook && pnpm install:docs",
-    "reset:all": "pnpm remove:all && pnpm install:all && pnpm build:all"
+    "reset:all": "pnpm remove:all && pnpm install:all && pnpm build:all && pnpm clean:cache"
   },
   "resolutions": {
     "react": "18.2.0",

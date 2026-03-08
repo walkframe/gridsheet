@@ -227,7 +227,7 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
             }}
             horizontal={-1}
           />
-          {table.getLabel(row?.label, row?.labeler, y) ?? rowId}
+          {table.getLabel(row?.label, { y, x: 0 }, y) ?? rowId}
           {!prevention.hasOperation(row?.prevention, prevention.RowMenu) && (
             <button
               className={`gs-menu-btn gs-row-menu-btn ${rowMenuState?.y === y ? 'gs-active' : ''}`}

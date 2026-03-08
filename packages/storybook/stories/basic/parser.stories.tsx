@@ -1,6 +1,8 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { CellType, buildInitialCells, GridSheet, Parser, Renderer, RenderProps, useHub } from '@gridsheet/react-core';
+import { CellType, buildInitialCells, GridSheet, Policy, RenderProps, useHub } from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
+import { Debugger } from '@gridsheet/react-dev';
 
 const meta: Meta = {
   title: 'Basic/Parser',
@@ -13,15 +15,14 @@ const DESCRIPTION = [
   'The example shows a list parser that converts text input into arrays.',
 ].join('\n\n');
 
-class ListRenderer extends Renderer {}
-
 const ParseAsListSheet = () => {
   const hub = useHub({
-    renderers: {
-      list: new Renderer({
+    additionalFunctions: allFunctions,
+    policies: {
+      list: new Policy({
         mixins: [
           {
-            array({ value }: RenderProps<any[]>) {
+            renderArray({ value }: RenderProps<any[]>) {
               return (
                 <ul>
                   {value!.map((v, i) => (
@@ -30,22 +31,12 @@ const ParseAsListSheet = () => {
                 </ul>
               );
             },
-            stringify(cell: CellType): string {
-              const value = cell.value;
-              if (Array.isArray(value)) {
-                return value.join('\n');
+            deserializeFirst: (value: string) => {
+              if (value.charAt(0) === '=') {
+                return { value };
               }
-              return value == null ? '' : String(value);
+              return { value: value.split(/\n/g) };
             },
-          },
-        ],
-      }),
-    },
-    parsers: {
-      list: new Parser({
-        mixins: [
-          {
-            functions: [(value: string) => value.split(/\n/g)],
           },
         ],
       }),
@@ -53,38 +44,40 @@ const ParseAsListSheet = () => {
   });
 
   return (
-    <GridSheet
-      hub={hub}
-      initialCells={buildInitialCells({
-        matrices: {
-          A1: [
-            [
-              [1, 2, 3],
-              [4, 5, 6],
-              [7, 8, 9],
+    <>
+      <GridSheet
+        hub={hub}
+        initialCells={buildInitialCells({
+          matrices: {
+            A1: [
+              [
+                [1, 2, 3],
+                [4, 5, 6],
+                [7, 8, 9],
+              ],
+              [
+                [10, 11, 12],
+                [13, 14, 15],
+                [16, 17, 18],
+              ],
+              [
+                [19, 20, 21],
+                [22, 23, 24],
+                [25, 26, 27],
+              ],
             ],
-            [
-              [10, 11, 12],
-              [13, 14, 15],
-              [16, 17, 18],
-            ],
-            [
-              [19, 20, 21],
-              [22, 23, 24],
-              [25, 26, 27],
-            ],
-          ],
-        },
-        cells: {
-          default: {
-            height: 100,
-            renderer: 'list',
-            parser: 'list',
           },
-        },
-        ensured: { numRows: 30, numCols: 20 },
-      })}
-    />
+          cells: {
+            default: {
+              height: 100,
+              policy: 'list',
+            },
+          },
+          ensured: { numRows: 30, numCols: 20 },
+        })}
+      />
+      <Debugger hub={hub} />
+    </>
   );
 };
 

@@ -31,6 +31,32 @@ export const restrictPoints = (store: StoreType, table: Table) => {
   };
 };
 
+const FLASH_CLASS = 'gs-flash-overlay--active';
+const FLASH_DURATION_MS = 600;
+export const flashSheet = (el: HTMLElement | null) => {
+  if (!el) {
+    return;
+  }
+  el.classList.remove(FLASH_CLASS);
+  // force reflow to restart animation when called consecutively
+  void el.offsetWidth;
+  el.classList.add(FLASH_CLASS);
+  setTimeout(() => el.classList.remove(FLASH_CLASS), FLASH_DURATION_MS);
+};
+
+export const flashWithCallback = (
+  store: StoreType,
+  table: Table,
+  callback: ((s: StoreType) => void) | undefined,
+): StoreType & { callback?: (store: StoreType) => void } => ({
+  ...store,
+  tableReactive: { current: table },
+  callback: (s: StoreType) => {
+    callback?.(s);
+    flashSheet(store.flashRef.current);
+  },
+});
+
 export const shouldTracking = (operation: string) => {
   switch (operation) {
     case 'INSERT_ROWS':

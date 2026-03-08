@@ -1,14 +1,17 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, ModeType } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, ModeType, useHub } from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
 
 type Props = {
   mode: ModeType;
 };
 
 const Sheet = ({ mode }: Props) => {
+  const hub = useHub({ additionalFunctions: allFunctions });
   return (
     <GridSheet
+      hub={hub}
       initialCells={buildInitialCells({
         ensured: { numRows: 10, numCols: 10 },
       })}

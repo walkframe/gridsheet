@@ -1,18 +1,14 @@
 import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
+
+const description = `Returns the value of Pi.`;
 
 export class PiFunction extends BaseFunction {
   example = 'PI()';
-  helpText = ['Returns the value of Pi.'];
-  helpArgs: HelpArg[] = [];
+  description = description;
+  defs: FunctionArgumentDefinition[] = [];
   category: FunctionCategory = 'math';
-
-  protected validate() {
-    if (this.bareArgs.length !== 0) {
-      throw new FormulaError('#N/A', 'Number of arguments for PI is incorrect.');
-    }
-  }
 
   protected main() {
     return Math.PI;

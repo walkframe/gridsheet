@@ -1,25 +1,20 @@
-import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
 import { ensureNumber } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
+const description = `Returns the argument provided as a number.`;
+
 export class NFunction extends BaseFunction {
   example = 'N(A1)';
-  helpText = ['Returns the argument provided as a number.'];
-  helpArgs: HelpArg[] = [
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
     {
       name: 'value',
       description: 'The value to convert to a number.',
-      type: ['any'],
+      acceptedTypes: ['any'],
     },
   ];
   category: FunctionCategory = 'information';
-
-  protected validate() {
-    if (this.bareArgs.length !== 1) {
-      throw new FormulaError('#N/A', 'Number of arguments for N is incorrect.');
-    }
-  }
 
   protected main(value: any) {
     if (typeof value === 'boolean') {

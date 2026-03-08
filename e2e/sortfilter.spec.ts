@@ -38,7 +38,7 @@ async function getVisibleNames(page: any) {
 }
 
 test.describe('Sort & Filter', () => {
-  test('sort ascending by Score column', async ({ page }) => {
+  test('sort ascending, descending, undo and redo by Score column', async ({ page }) => {
     await page.goto(STORY_URL);
     await page.waitForSelector('.gs-initialized');
 
@@ -46,10 +46,8 @@ test.describe('Sort & Filter', () => {
     expect(await cellText(page, 'B1')).toBe('Alice');
     expect(await cellText(page, 'B5')).toBe('Eve');
 
-    // Open column menu for column C (Score, x=3)
+    // ---- Sort ascending ----
     await openColumnMenu(page, 3);
-
-    // Click "Sort A to Z" (ascending)
     const sortAsc = page.locator('.gs-column-menu .gs-sort-btn-asc');
     await sortAsc.click();
 
@@ -64,16 +62,19 @@ test.describe('Sort & Filter', () => {
     expect(await cellText(page, 'C4')).toContain('85');
     expect(await cellText(page, 'B5')).toBe('Alice');
     expect(await cellText(page, 'C5')).toContain('90');
-  });
 
-  test('sort descending by Score column', async ({ page }) => {
-    await page.goto(STORY_URL);
-    await page.waitForSelector('.gs-initialized');
+    // ---- Undo / Redo ----
+    await ctrl(page, 'z');
+    expect(await cellText(page, 'B1')).toBe('Alice');
 
-    // Open column menu for column C (Score, x=3)
+    await ctrl(page, 'z', true);
+    expect(await cellText(page, 'B1')).toBe('Eve');
+
+    // Reset to original order for next section
+    await ctrl(page, 'z');
+
+    // ---- Sort descending ----
     await openColumnMenu(page, 3);
-
-    // Click "Sort Z to A" (descending)
     const sortDesc = page.locator('.gs-column-menu .gs-sort-btn-desc');
     await sortDesc.click();
 
@@ -176,81 +177,47 @@ test.describe('Sort & Filter', () => {
     expect(visibleNames).not.toContain('Eve'); // 40 < 60
   });
 
-  test('filter boolean column (Active = true)', async ({ page }) => {
+  test('filter boolean column (Active = true and Active = false)', async ({ page }) => {
     await page.goto(STORY_URL);
     await page.waitForSelector('.gs-initialized');
 
+    // ---- Active = true ----
     // Column A (Active, x=1): true, false, true, true, false
-    // Open column menu for column A (Active, x=1)
     await openColumnMenu(page, 1);
-
-    // Set filter method to '=' (eq) and value to 'true'
     const methodSelect = page.locator('.gs-filter-method-select').first();
     await methodSelect.selectOption('eq');
-
     const valueInput = page.locator('.gs-filter-value-input').first();
     await valueInput.fill('true');
-
-    // Click APPLY
     await page.locator('.gs-filter-apply-btn').click();
 
     // Active=true: Alice, Charlie, Diana
-    const visibleNames = await getVisibleNames(page);
+    let visibleNames = await getVisibleNames(page);
     expect(visibleNames).toContain('Alice');
     expect(visibleNames).toContain('Charlie');
     expect(visibleNames).toContain('Diana');
-    expect(visibleNames).not.toContain('Bob'); // false
-    expect(visibleNames).not.toContain('Eve'); // false
-  });
+    expect(visibleNames).not.toContain('Bob');
+    expect(visibleNames).not.toContain('Eve');
 
-  test('filter boolean column (Active = false)', async ({ page }) => {
-    await page.goto(STORY_URL);
-    await page.waitForSelector('.gs-initialized');
-
-    // Open column menu for column A (Active, x=1)
+    // Reset filter on column A
     await openColumnMenu(page, 1);
+    await page.locator('.gs-filter-reset-btn').click();
+    await page.waitForTimeout(300);
 
-    // Set filter method to '=' (eq) and value to 'false'
-    const methodSelect = page.locator('.gs-filter-method-select').first();
-    await methodSelect.selectOption('eq');
-
-    const valueInput = page.locator('.gs-filter-value-input').first();
-    await valueInput.fill('false');
-
-    // Click APPLY
+    // ---- Active = false ----
+    await openColumnMenu(page, 1);
+    const methodSelect2 = page.locator('.gs-filter-method-select').first();
+    await methodSelect2.selectOption('eq');
+    const valueInput2 = page.locator('.gs-filter-value-input').first();
+    await valueInput2.fill('false');
     await page.locator('.gs-filter-apply-btn').click();
 
     // Active=false: Bob, Eve
-    const visibleNames = await getVisibleNames(page);
+    visibleNames = await getVisibleNames(page);
     expect(visibleNames).toContain('Bob');
     expect(visibleNames).toContain('Eve');
-    expect(visibleNames).not.toContain('Alice'); // true
-    expect(visibleNames).not.toContain('Charlie'); // true
-    expect(visibleNames).not.toContain('Diana'); // true
-  });
-
-  test('sort then undo and redo', async ({ page }) => {
-    await page.goto(STORY_URL);
-    await page.waitForSelector('.gs-initialized');
-
-    // Verify original order
-    expect(await cellText(page, 'B1')).toBe('Alice');
-
-    // Sort ascending by Score
-    await openColumnMenu(page, 3);
-    const sortAsc = page.locator('.gs-column-menu .gs-sort-btn-asc');
-    await sortAsc.click();
-
-    // After sort: Eve is first
-    expect(await cellText(page, 'B1')).toBe('Eve');
-
-    // Undo
-    await ctrl(page, 'z');
-    expect(await cellText(page, 'B1')).toBe('Alice');
-
-    // Redo
-    await ctrl(page, 'z', true);
-    expect(await cellText(page, 'B1')).toBe('Eve');
+    expect(visibleNames).not.toContain('Alice');
+    expect(visibleNames).not.toContain('Charlie');
+    expect(visibleNames).not.toContain('Diana');
   });
 
   test('label edit via column menu', async ({ page }) => {

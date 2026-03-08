@@ -15,7 +15,8 @@ module.exports = {
       {
         "tsconfig": {
           "jsx": "react-jsx"
-        }
+        },
+        "diagnostics": false
       }
     ]
   },

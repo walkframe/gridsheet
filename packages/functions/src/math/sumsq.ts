@@ -1,41 +1,35 @@
-import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
-import { Table, solveTable, ensureNumber } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/react-core';
+import { ensureNumber } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
+
+const description = `Returns the sum of the squares of a series of numbers or cells.`;
 
 export class SumsqFunction extends BaseFunction {
   example = 'SUMSQ(A1:A10, 3)';
-  helpText = ['Returns the sum of the squares of a series of numbers or cells.'];
-  helpArgs: HelpArg[] = [
-    { name: 'value1', description: 'First number or range.', type: ['number', 'range'] },
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
     {
-      name: 'value2',
-      description: 'Additional numbers or ranges.',
-      type: ['number', 'range'],
-      optional: true,
-      iterable: true,
+      name: 'value',
+      description: 'Numbers or ranges to square and sum.',
+      takesMatrix: true,
+      acceptedTypes: ['number', 'matrix'],
+      variadic: true,
     },
   ];
   category: FunctionCategory = 'math';
 
-  protected validate() {
-    const spread: number[] = [];
-    for (const arg of this.bareArgs) {
-      if (arg instanceof Table) {
-        solveTable({ table: arg })
-          .flat()
-          .forEach((v) => {
-            const n = ensureNumber(v, { ignore: true });
-            spread.push(n);
-          });
-      } else {
-        spread.push(ensureNumber(arg));
-      }
+  protected main(...values: any[]) {
+    let sum = 0;
+    for (const val of values) {
+      eachMatrix(
+        val,
+        (v: any) => {
+          const n = ensureNumber(v, { ignore: true });
+          sum += n * n;
+        },
+        this.at,
+      );
     }
-    this.bareArgs = spread;
-  }
-
-  protected main(...values: number[]) {
-    return values.reduce((acc, v) => acc + v * v, 0);
+    return sum;
   }
 }

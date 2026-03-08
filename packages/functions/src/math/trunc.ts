@@ -1,32 +1,27 @@
 import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
 import { ensureNumber } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
+const description = `Truncates a number to a certain number of significant digits by omitting less significant digits.`;
+
 export class TruncFunction extends BaseFunction {
   example = 'TRUNC(3.14159, 2)';
-  helpText = ['Truncates a number to a certain number of significant digits by omitting less significant digits.'];
-  helpArgs: HelpArg[] = [
-    { name: 'value', description: 'The number to truncate.', type: ['number'] },
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
+    { name: 'value', description: 'The number to truncate.', acceptedTypes: ['number'] },
     {
       name: 'places',
       description: 'The number of significant digits to keep. Defaults to 0.',
-      type: ['number'],
+      acceptedTypes: ['number'],
       optional: true,
     },
   ];
   category: FunctionCategory = 'math';
 
-  protected validate() {
-    if (this.bareArgs.length < 1 || this.bareArgs.length > 2) {
-      throw new FormulaError('#N/A', 'Number of arguments for TRUNC is incorrect.');
-    }
-    this.bareArgs[0] = ensureNumber(this.bareArgs[0]);
-    this.bareArgs[1] = this.bareArgs[1] != null ? Math.floor(ensureNumber(this.bareArgs[1])) : 0;
-  }
-
-  protected main(value: number, places: number) {
-    const factor = Math.pow(10, places);
+  protected main(value: number, places = 0) {
+    const p = Math.floor(places);
+    const factor = Math.pow(10, p);
     return (value >= 0 ? Math.floor : Math.ceil)(value * factor) / factor;
   }
 }

@@ -2,6 +2,7 @@ import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { GridSheet, buildInitialCells, buildInitialCellsFromOrigin, useConnector, useHub } from '@gridsheet/react-core';
 import { syncers } from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Control/Insert',
@@ -28,21 +29,22 @@ const InsertComponent: React.FC = () => {
   const connector = useConnector();
 
   const hub = useHub({
+    additionalFunctions: allFunctions,
     onInsertRows: ({ table, y, numRows }) => {
       console.log('onInsertRows called with:', { table, y, numRows });
-      console.log('Inserted data:', table.getFieldObject());
+      console.log('Inserted data:', table.toValueObject());
     },
     onInsertCols: ({ table, x, numCols }) => {
       console.log('onInsertCols called with:', { table, x, numCols });
-      console.log('Inserted data:', table.getFieldObject());
+      console.log('Inserted data:', table.toValueObject());
     },
     onRemoveRows: ({ table, ys }) => {
       console.log('onRemoveRows called with:', { table, ys });
-      console.log('Removed data:', table.getFieldObject());
+      console.log('Removed data:', table.toValueObject());
     },
     onRemoveCols: ({ table, xs }) => {
       console.log('onRemoveCols called with:', { table, xs });
-      console.log('Removed data:', table.getFieldObject());
+      console.log('Removed data:', table.toValueObject());
     },
   });
 

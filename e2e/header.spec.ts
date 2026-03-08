@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { go } from './utils';
 
 test.describe('Header Customization', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:5233/iframe.html?id=basic-header--header');
+    await go(page, 'basic-header--header');
     await page.waitForSelector('.gs-root1');
   });
 

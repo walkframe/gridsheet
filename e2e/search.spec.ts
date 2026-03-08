@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
-import { ctrl } from './utils';
+import { ctrl, go } from './utils';
 
 test('search and next', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=basic-large--sheet&viewMode=story');
+  await go(page, 'basic-large--sheet');
   const a1 = page.locator("[data-address='A1']");
   await a1.click();
 

@@ -4,7 +4,7 @@ import { Table } from './table';
 import { areaShape, areaToZone, complementSelectingArea, concatAreas, zoneToArea } from './spatial';
 import { p2a } from './coords';
 import { identifyFormula } from '../formula/evaluator';
-import { TimeDelta } from './time';
+import { Time } from './time';
 import { CSSProperties } from 'react';
 
 const BORDER_AUTOFILL_DRAGGING = 'dashed 1px #888888';
@@ -40,26 +40,29 @@ export class Autofill {
 
   public get applied(): Table {
     const [orientation, sign] = DirectionMapping[this.direction];
-    const matrix = this.table.getCellMatrix({ area: this.src, refEvaluation: 'SYSTEM' });
+    const matrix = this.table.toCellMatrix({ area: this.src, refEvaluation: 'SYSTEM' });
     const srcShape = areaShape({ ...this.src, base: 1 });
     const dstShape = areaShape({ ...this.dst, base: 1 });
 
     const diff: CellsByAddressType = {};
     if (orientation === 'horizontal') {
-      for (let i = 0; i < dstShape.height; i++) {
+      for (let i = 0; i < dstShape.rows; i++) {
         // TODO: pass the originPath
         const patterns = this.getChangePatterns(matrix[i], '');
-        for (let j = 0; j < dstShape.width; j++) {
-          const baseCell = matrix[i % srcShape.height]?.[j % srcShape.width];
+        for (let j = 0; j < dstShape.cols; j++) {
+          const baseCell = matrix[i % srcShape.rows]?.[j % srcShape.cols];
           const x = sign > 0 ? this.dst.left + j : this.dst.right - j;
-          const px = sign > 0 ? j % srcShape.width : (srcShape.width - 1 - (j % srcShape.width)) % srcShape.width;
+          const px = sign > 0 ? j % srcShape.cols : (srcShape.cols - 1 - (j % srcShape.cols)) % srcShape.cols;
           const point = { y: this.dst.top + i, x };
           const id = this.table.getId(point);
           const value = patterns[px].next().value;
-          const nextValue = identifyFormula(value, {
-            dependency: id,
-            table: this.table,
-          });
+          const nextValue =
+            (baseCell?.formulaEnabled ?? true)
+              ? identifyFormula(value, {
+                  dependency: id,
+                  table: this.table,
+                })
+              : value;
           diff[p2a(point)] = {
             ...baseCell,
             value: nextValue,
@@ -67,16 +70,16 @@ export class Autofill {
         }
       }
     } else if (orientation === 'vertical') {
-      for (let i = 0; i < dstShape.width; i++) {
+      for (let i = 0; i < dstShape.cols; i++) {
         // TODO: pass the originPath
         const patterns = this.getChangePatterns(
           matrix.map((row) => row[i]),
           '',
         );
-        for (let j = 0; j < dstShape.height; j++) {
-          const baseCell = matrix[j % srcShape.height]?.[i % srcShape.width];
+        for (let j = 0; j < dstShape.rows; j++) {
+          const baseCell = matrix[j % srcShape.rows]?.[i % srcShape.cols];
           const y = sign > 0 ? this.dst.top + j : this.dst.bottom - j;
-          const py = sign > 0 ? j % srcShape.height : (srcShape.height - 1 - (j % srcShape.height)) % srcShape.height;
+          const py = sign > 0 ? j % srcShape.rows : (srcShape.rows - 1 - (j % srcShape.rows)) % srcShape.rows;
           const value = patterns[py].next().value;
           diff[p2a({ y, x: this.dst.left + i })] = { ...baseCell, value };
         }
@@ -265,7 +268,7 @@ export class Autofill {
         }
         case 'date': {
           const next = (d: Date) => {
-            return sign > 0 ? group.timeDelta.add(d) : group.timeDelta.sub(d);
+            return sign > 0 ? group.time.add(d) : group.time.sub(d);
           };
           if (!group.equidistant) {
             result.push(pass(group.first), ...group.nexts.map((v) => pass(v)));
@@ -329,7 +332,7 @@ const extractStringNumber = (value: string) => {
 };
 
 class TypedGroup {
-  public timeDelta: TimeDelta = TimeDelta.create();
+  public time: Time = Time.create();
   public numericDelta: number = 0;
   public kind: GroupKind;
   public nexts: any[];
@@ -369,7 +372,7 @@ class TypedGroup {
     if (this.nexts.length === 0) {
       switch (kind) {
         case 'date': {
-          this.timeDelta = new TimeDelta(value as Date, this.first as Date);
+          this.time = Time.fromDates(value as Date, this.first as Date);
           break;
         }
         case 'number': {
@@ -399,7 +402,7 @@ class TypedGroup {
     let lastGroup: TypedGroup = this;
     switch (this.kind) {
       case 'date': {
-        const eq = this.nexts.every((v, i) => i === 0 || dayjs(v).isSame(this.timeDelta.add(this.nexts[i - 1])));
+        const eq = this.nexts.every((v, i) => i === 0 || dayjs(v).isSame(this.time.add(this.nexts[i - 1])));
         this.equidistant = eq;
         return [];
       }

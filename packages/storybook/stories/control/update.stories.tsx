@@ -9,6 +9,7 @@ import {
   createHub,
   UserTable,
 } from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Control/Update',
@@ -16,13 +17,14 @@ const meta: Meta = {
 export default meta;
 
 const hub = createHub({
+  additionalFunctions: allFunctions,
   onInsertRows: ({ table, y, numRows }) => {
     console.log('onInsertRows called with:', { table, y, numRows });
-    console.log('Inserted data:', table.getFieldObject());
+    console.log('Inserted data:', table.toValueObject());
   },
   onInsertCols: ({ table, x, numCols }) => {
     console.log('onInsertCols called with:', { table, x, numCols });
-    console.log('Inserted data:', table.getFieldObject());
+    console.log('Inserted data:', table.toValueObject());
   },
 });
 

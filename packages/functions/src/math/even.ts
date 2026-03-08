@@ -1,22 +1,17 @@
 import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
 import { ensureNumber } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
+const description = `Rounds a number up to the nearest even integer.`;
+
 export class EvenFunction extends BaseFunction {
   example = 'EVEN(3.1)';
-  helpText = ['Rounds a number up to the nearest even integer.'];
-  helpArgs: HelpArg[] = [
-    { name: 'value', description: 'The value to round up to the nearest even integer.', type: ['number'] },
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
+    { name: 'value', description: 'The value to round up to the nearest even integer.', acceptedTypes: ['number'] },
   ];
   category: FunctionCategory = 'math';
-
-  protected validate() {
-    if (this.bareArgs.length !== 1) {
-      throw new FormulaError('#N/A', 'Number of arguments for EVEN is incorrect.');
-    }
-    this.bareArgs[0] = ensureNumber(this.bareArgs[0]);
-  }
 
   protected main(value: number) {
     if (value === 0) {

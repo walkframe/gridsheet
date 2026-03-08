@@ -1,30 +1,30 @@
 import { BaseFunction, FormulaError } from '@gridsheet/react-core';
-import { type FunctionProps, type HelpArg } from '@gridsheet/react-core';
+import { type FunctionProps, type FunctionArgumentDefinition } from '@gridsheet/react-core';
 import { stripTable } from '@gridsheet/react-core';
 import { ensureBoolean } from '@gridsheet/react-core';
 
+const description = `Evaluates multiple conditions and returns the value corresponding to the first TRUE condition.
+Arguments must be supplied in (condition, value) pairs.`;
+
 export class IfsFunction extends BaseFunction {
   example = 'IFS(A1>90, "A", A1>70, "B", A1>50, "C")';
-  helpText = [
-    'Evaluates multiple conditions and returns the value corresponding to the first TRUE condition.',
-    'Arguments must be supplied in (condition, value) pairs.',
-  ];
-  helpArgs: HelpArg[] = [
-    { name: 'condition1', description: 'First condition to evaluate.', type: ['boolean'] },
-    { name: 'value1', description: 'Value to return if condition1 is TRUE.', type: ['any'] },
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
+    { name: 'condition1', description: 'First condition to evaluate.', acceptedTypes: ['boolean'] },
+    { name: 'value1', description: 'Value to return if condition1 is TRUE.', acceptedTypes: ['any'] },
     {
       name: 'condition2',
       description: 'Additional conditions.',
-      type: ['boolean'],
+      acceptedTypes: ['boolean'],
       optional: true,
-      iterable: true,
+      variadic: true,
     },
     {
       name: 'value2',
       description: 'Additional values.',
-      type: ['any'],
+      acceptedTypes: ['any'],
       optional: true,
-      iterable: true,
+      variadic: true,
     },
   ];
   category = 'logical' as const;

@@ -1,22 +1,23 @@
-import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
 import { ensureString } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
+const description = `Capitalizes the first letter of each word in a string.`;
+
 export class ProperFunction extends BaseFunction {
   example = 'PROPER("hello world")';
-  helpText = ['Capitalizes the first letter of each word in a string.'];
-  helpArgs: HelpArg[] = [{ name: 'text', description: 'The string to convert to title case.', type: ['string'] }];
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
+    {
+      name: 'text',
+      description: 'The string to convert to title case.',
+      acceptedTypes: ['string', 'number', 'boolean'],
+    },
+  ];
   category: FunctionCategory = 'text';
 
-  protected validate() {
-    if (this.bareArgs.length !== 1) {
-      throw new FormulaError('#N/A', 'Number of arguments for PROPER is incorrect.');
-    }
-    this.bareArgs = [ensureString(this.bareArgs[0])];
-  }
-
-  protected main(text: string) {
-    return text.replace(/\p{L}+/gu, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+  protected main(text: any) {
+    text = ensureString(text);
+    return text.replace(/\p{L}+/gu, (word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
   }
 }

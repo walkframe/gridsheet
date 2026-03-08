@@ -1,24 +1,21 @@
 import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
+
+const description = `Returns TRUE if the value is a text string.`;
 
 export class IstextFunction extends BaseFunction {
   example = 'ISTEXT(A1)';
-  helpText = ['Returns TRUE if the value is a text string.'];
-  helpArgs: HelpArg[] = [
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
     {
       name: 'value',
       description: 'The value to check for being text.',
-      type: ['any'],
+      acceptedTypes: ['any'],
+      errorTolerant: true,
     },
   ];
   category: FunctionCategory = 'information';
-
-  protected validate() {
-    if (this.bareArgs.length !== 1) {
-      throw new FormulaError('#N/A', 'Number of arguments for ISTEXT is incorrect.');
-    }
-  }
 
   protected main(value: any) {
     return typeof value === 'string';

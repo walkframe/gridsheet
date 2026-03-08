@@ -6,12 +6,10 @@ import {
   buildInitialCells,
   BaseFunctionAsync,
   useHub,
-  Renderer,
-  RendererMixinType,
+  Policy,
+  PolicyMixinType,
   RenderProps,
   ensureString,
-  solveTable,
-  Table,
   makeBorder,
 } from '@gridsheet/react-core';
 
@@ -23,7 +21,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 class GhRepoFunction extends BaseFunctionAsync {
   example = 'GH_REPO("facebook/react", "stars")';
   helpTexts = ['Fetches public repository data from GitHub API.'];
-  helpArgs = [
+  defs = [
     { name: 'repo', description: 'Repository in "owner/repo" format (e.g. "facebook/react").' },
     {
       name: 'field',
@@ -31,19 +29,6 @@ class GhRepoFunction extends BaseFunctionAsync {
     },
   ];
   ttlMilliseconds = 60 * 1000; // 1 minute cache TTL
-
-  protected validate() {
-    const resolved: any[] = [];
-    this.bareArgs.forEach((arg) => {
-      if (arg instanceof Table) {
-        const flat = solveTable({ table: arg }).reduce((a: any[], b: any[]) => a.concat(b));
-        resolved.push(...flat);
-        return;
-      }
-      resolved.push(arg);
-    });
-    this.bareArgs = resolved;
-  }
 
   async main(repo: string, field: string) {
     const r = ensureString(repo).trim();
@@ -76,8 +61,8 @@ class GhRepoFunction extends BaseFunctionAsync {
 
 // ─── Custom renderers ───
 
-const RepoRendererMixin: RendererMixinType = {
-  string({ value }: RenderProps<string>) {
+const RepoRendererMixin: PolicyMixinType = {
+  renderString({ value }: RenderProps<string>) {
     return (
       <a
         href={`https://github.com/${value}`}
@@ -91,14 +76,14 @@ const RepoRendererMixin: RendererMixinType = {
   },
 };
 
-const NumberRendererMixin: RendererMixinType = {
-  number({ value }: RenderProps<number>) {
+const NumberRendererMixin: PolicyMixinType = {
+  renderNumber({ value }: RenderProps<number>) {
     return <span style={{ fontWeight: 600, fontSize: '13px', color: 'inherit' }}>{value.toLocaleString()}</span>;
   },
 };
 
-const repoRenderer = new Renderer({ mixins: [RepoRendererMixin] });
-const numberRenderer = new Renderer({ mixins: [NumberRendererMixin] });
+const repoPolicy = new Policy({ mixins: [RepoRendererMixin] });
+const numberPolicy = new Policy({ mixins: [NumberRendererMixin] });
 
 // ─── Repositories to compare ───
 const REPOS = ['facebook/react', 'vuejs/core', 'sveltejs/svelte'];
@@ -107,6 +92,10 @@ export default function Case11() {
   const hub = useHub({
     additionalFunctions: {
       gh_repo: GhRepoFunction as any,
+    },
+    policies: {
+      repo: repoPolicy,
+      number: numberPolicy,
     },
   });
 
@@ -124,20 +113,20 @@ export default function Case11() {
       ...makeBorder({ all: '1px solid rgba(128,128,128,0.2)' }),
     };
 
-    cells[`A${row}`] = { value: repo, renderer: repoRenderer, style: rowStyle };
+    cells[`A${row}`] = { value: repo, policy: 'repo', style: rowStyle };
     cells[`B${row}`] = {
       value: `=GH_REPO(A${row}, "stars")`,
-      renderer: numberRenderer,
+      policy: 'number',
       style: rowStyle,
     };
     cells[`C${row}`] = {
       value: `=GH_REPO(A${row}, "forks")`,
-      renderer: numberRenderer,
+      policy: 'number',
       style: rowStyle,
     };
     cells[`D${row}`] = {
       value: `=GH_REPO(A${row}, "issues")`,
-      renderer: numberRenderer,
+      policy: 'number',
       style: rowStyle,
     };
   });
@@ -152,17 +141,17 @@ export default function Case11() {
   cells[`A${summaryRow}`] = { value: 'Total', style: { ...summaryStyle, fontWeight: 700 } };
   cells[`B${summaryRow}`] = {
     value: `=SUM(B1:B${REPOS.length})`,
-    renderer: numberRenderer,
+    policy: 'number',
     style: summaryStyle,
   };
   cells[`C${summaryRow}`] = {
     value: `=SUM(C1:C${REPOS.length})`,
-    renderer: numberRenderer,
+    policy: 'number',
     style: summaryStyle,
   };
   cells[`D${summaryRow}`] = {
     value: `=SUM(D1:D${REPOS.length})`,
-    renderer: numberRenderer,
+    policy: 'number',
     style: summaryStyle,
   };
 

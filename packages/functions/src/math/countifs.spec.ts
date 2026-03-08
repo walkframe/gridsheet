@@ -24,12 +24,7 @@ describe('countifs', () => {
     it('counts with multiple conditions', () => {
       const f = new CountifsFunction({
         table,
-        args: [
-          new RangeEntity('B1:B3'),
-          new ValueEntity('Apple'),
-          new RangeEntity('A1:A3'),
-          new ValueEntity('>15'),
-        ],
+        args: [new RangeEntity('B1:B3'), new ValueEntity('Apple'), new RangeEntity('A1:A3'), new ValueEntity('>15')],
       });
       // Only row 3 matches
       expect(f.call()).toBe(1);

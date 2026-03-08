@@ -1,3 +1,7 @@
+export const go = async (page: any, storyId: string) => {
+  await page.goto(`http://localhost:5233/iframe.html?id=${storyId}&viewMode=story`);
+};
+
 export const jsonMinify = (json: string) => {
   return JSON.stringify(JSON.parse(json));
 };

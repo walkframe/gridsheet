@@ -1,22 +1,23 @@
-import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
 import { ensureString } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
+const description = `Converts all characters in a string to lowercase.`;
+
 export class LowerFunction extends BaseFunction {
   example = 'LOWER("Hello World")';
-  helpText = ['Converts all characters in a string to lowercase.'];
-  helpArgs: HelpArg[] = [{ name: 'text', description: 'The string to convert to lowercase.', type: ['string'] }];
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
+    {
+      name: 'text',
+      description: 'The string to convert to lowercase.',
+      acceptedTypes: ['string', 'number', 'boolean'],
+    },
+  ];
   category: FunctionCategory = 'text';
 
-  protected validate() {
-    if (this.bareArgs.length !== 1) {
-      throw new FormulaError('#N/A', 'Number of arguments for LOWER is incorrect.');
-    }
-    this.bareArgs = [ensureString(this.bareArgs[0])];
-  }
-
-  protected main(text: string) {
-    return text.toLowerCase();
+  protected main(text: any) {
+    const t = ensureString(text);
+    return t.toLowerCase();
   }
 }

@@ -91,6 +91,26 @@
     text-align: center;
   }
 
+  &[data-spill="true"] {
+    background-color: rgba(0, 119, 255, 0.04);
+
+    .gs-selecting-address {
+      color: rgba(80, 160, 255, 0.9);
+      font-style: italic;
+
+      &::after {
+        content: "\2196";
+        margin-left: 2px;
+        font-style: normal;
+        font-size: 9px;
+      }
+    }
+
+    .gs-editor-hl .gs-spill-origin-formula {
+      opacity: 0.5;
+    }
+  }
+
   .gs-fx {
     display: table-cell;
     vertical-align: middle;
@@ -109,6 +129,10 @@
     box-sizing: border-box;
     white-space: pre-wrap;
     word-break: break-all;
+
+    .gs-spill-origin-formula {
+      opacity: 0.5;
+    }
   }
 
   textarea {

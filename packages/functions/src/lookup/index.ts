@@ -4,7 +4,7 @@ import { HlookupFunction } from './hlookup';
 import { IndexFunction } from './indexFn';
 import { MatchFunction } from './match';
 import { RowFunction } from './row';
-import { ColFunction } from './col';
+import { ColumnFunction } from './column';
 import { SheetFunction } from './sheet';
 import { ColumnsFunction } from './columns';
 import { RowsFunction } from './rows';
@@ -15,8 +15,8 @@ export const lookupFunctions: FunctionMapping = {
   index: IndexFunction,
   match: MatchFunction,
   row: RowFunction,
-  col: ColFunction,
-  column: ColFunction,
+  col: ColumnFunction,
+  column: ColumnFunction,
   sheet: SheetFunction,
   columns: ColumnsFunction,
   rows: RowsFunction,

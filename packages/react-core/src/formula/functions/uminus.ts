@@ -1,21 +1,17 @@
-import { FormulaError } from '../evaluator';
-import { BaseFunction, FunctionCategory, HelpArg } from './__base';
+import { BaseFunction, FunctionCategory, FunctionArgumentDefinition } from './__base';
 import { ensureNumber } from './__utils';
+
+const description = `Returns a number with positive and negative values reversed.`;
 
 export class UminusFunction extends BaseFunction {
   example = 'UMINUS(4)';
-  helpText = ['Returns a number with positive and negative values reversed.'];
-  helpArgs: HelpArg[] = [{ name: 'value1', description: 'A number that will be subtracted.', type: ['number'] }];
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
+    { name: 'value1', description: 'A number that will be subtracted.', acceptedTypes: ['number'] },
+  ];
   category: FunctionCategory = 'math';
 
-  protected validate() {
-    if (this.bareArgs.length !== 1) {
-      throw new FormulaError('#N/A', 'A single numerical value is only required.');
-    }
-    this.bareArgs = this.bareArgs.map((arg) => ensureNumber(arg));
-  }
-
-  protected main(v1: number) {
-    return -v1;
+  protected main(v1: any) {
+    return -ensureNumber(v1);
   }
 }

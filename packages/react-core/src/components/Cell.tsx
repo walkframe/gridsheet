@@ -16,7 +16,7 @@ import {
 } from '../store/actions';
 
 import { Context } from '../store';
-import { FormulaError } from '../formula/evaluator';
+import { FormulaError } from '../formula/formula-error';
 import { Pending } from '../sentinels';
 import { insertRef, isRefInsertable } from '../lib/input';
 import { focus } from '../lib/dom';
@@ -111,7 +111,8 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
       rendered = '#UNKNOWN';
     }
   }
-  const isPendingCell = Pending.is(table.getSolvedCache({ y, x }));
+  const [, v] = table.getSolvedCache({ y, x });
+  const isPendingCell = Pending.is(v);
   const input = editorRef.current;
 
   const editingAnywhere = !!(table.wire.editingAddress || editingAddress);

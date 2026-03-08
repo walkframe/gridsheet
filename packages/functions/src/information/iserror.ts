@@ -1,37 +1,23 @@
-import { FormulaError } from '@gridsheet/react-core';
-import type { HelpArg, FunctionProps } from '@gridsheet/react-core';
+import { BaseFunction, FormulaError } from '@gridsheet/react-core';
+import type { FunctionArgumentDefinition, FunctionProps } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
-import { Table } from '@gridsheet/react-core';
 
-export class IserrorFunction {
+const description = `Returns TRUE if the value is any error value.`;
+
+export class IserrorFunction extends BaseFunction {
   example = 'ISERROR(A1)';
-  helpText = ['Returns TRUE if the value is any error value.'];
-  helpArgs: HelpArg[] = [
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
     {
       name: 'value',
       description: 'The value to check for an error.',
-      type: ['any'],
+      acceptedTypes: ['any'],
+      errorTolerant: true,
     },
   ];
   category: FunctionCategory = 'information';
 
-  private args: any[];
-  private table: Table;
-
-  constructor({ args, table }: FunctionProps) {
-    this.args = args;
-    this.table = table;
-  }
-
-  public call() {
-    if (this.args.length !== 1) {
-      throw new FormulaError('#N/A', 'Number of arguments for ISERROR is incorrect.');
-    }
-    try {
-      const value = this.args[0].evaluate({ table: this.table });
-      return value instanceof FormulaError;
-    } catch (e) {
-      return e instanceof FormulaError;
-    }
+  protected main(value: any) {
+    return FormulaError.is(value) || value instanceof Error;
   }
 }

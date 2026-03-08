@@ -13,8 +13,7 @@ export class ReferencePreserver {
 
   addTheDependents(...ids: Id[]) {
     ids.forEach((id) => {
-      const cell = this.table.wire.data[id];
-      cell?._sys?.dependents?.forEach((did) => {
+      this.table.wire.dependents.get(id)?.forEach((did) => {
         this.dependentIds.add(did);
       });
     });

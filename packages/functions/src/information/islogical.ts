@@ -1,24 +1,21 @@
 import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
+
+const description = `Returns TRUE if the value is TRUE or FALSE.`;
 
 export class IslogicalFunction extends BaseFunction {
   example = 'ISLOGICAL(TRUE)';
-  helpText = ['Returns TRUE if the value is TRUE or FALSE.'];
-  helpArgs: HelpArg[] = [
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
     {
       name: 'value',
       description: 'The value to check for being logical (TRUE or FALSE).',
-      type: ['any'],
+      acceptedTypes: ['any'],
+      errorTolerant: true,
     },
   ];
   category: FunctionCategory = 'information';
-
-  protected validate() {
-    if (this.bareArgs.length !== 1) {
-      throw new FormulaError('#N/A', 'Number of arguments for ISLOGICAL is incorrect.');
-    }
-  }
 
   protected main(value: any) {
     return typeof value === 'boolean';

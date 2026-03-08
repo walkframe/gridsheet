@@ -1,27 +1,23 @@
-import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
 import { ensureString } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
+const description = `Returns the concatenation of the values.`;
+
 export class ConcatenateFunction extends BaseFunction {
   example = 'CONCATENATE("Hello", "World")';
-  helpText = ['Returns the concatenation of the values.'];
-  helpArgs: HelpArg[] = [
-    { name: 'value1', description: 'First string value.', type: ['string'] },
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
     {
-      name: 'value2',
-      description: 'Additional string values to be concatenated with the value1',
-      optional: true,
-      iterable: true,
-      type: ['string'],
+      name: 'value',
+      description: 'Values to concatenate.',
+      acceptedTypes: ['string', 'number', 'boolean'],
+      variadic: true,
     },
   ];
   category: FunctionCategory = 'text';
 
-  protected validate() {
-    this.bareArgs = this.bareArgs.map((arg) => ensureString(arg));
-  }
-
-  protected main(...values: string[]) {
-    return values.reduce((a, b) => a + b);
+  protected main(...values: any[]) {
+    return values.flat().map(String).join('');
   }
 }

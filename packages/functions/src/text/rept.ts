@@ -1,29 +1,30 @@
 import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
 import { ensureString, ensureNumber } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
+const description = `Repeats text a specified number of times.`;
+
 export class ReptFunction extends BaseFunction {
   example = 'REPT("ha", 3)';
-  helpText = ['Repeats text a specified number of times.'];
-  helpArgs: HelpArg[] = [
-    { name: 'text', description: 'The text to repeat.', type: ['string'] },
-    { name: 'number_of_times', description: 'The number of times to repeat the text.', type: ['number'] },
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
+    { name: 'text', description: 'The text to repeat.', acceptedTypes: ['string'] },
+    { name: 'number_of_times', description: 'The number of times to repeat the text.', acceptedTypes: ['number'] },
   ];
   category: FunctionCategory = 'text';
 
-  protected validate() {
-    if (this.bareArgs.length !== 2) {
-      throw new FormulaError('#N/A', 'Number of arguments for REPT is incorrect.');
+  protected validate(args: any[]): any[] {
+    args = super.validate(args);
+    if (args[1] < 0) {
+      throw new FormulaError('#VALUE!', 'Number of times must be non-negative.');
     }
-    this.bareArgs[0] = ensureString(this.bareArgs[0]);
-    this.bareArgs[1] = ensureNumber(this.bareArgs[1]);
-    if (this.bareArgs[1] < 0) {
-      throw new FormulaError('#VALUE!', 'REPT: number_of_times must be non-negative.');
-    }
+    return args;
   }
 
   protected main(text: string, times: number) {
+    text = ensureString(text);
+    times = ensureNumber(times);
     return text.repeat(Math.trunc(times));
   }
 }

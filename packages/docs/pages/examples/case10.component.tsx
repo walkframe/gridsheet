@@ -5,16 +5,16 @@ import {
   GridSheet,
   buildInitialCells,
   useHub,
-  Renderer,
-  RendererMixinType,
+  Policy,
+  PolicyMixinType,
   RenderProps,
   makeBorder,
   type UserTable,
 } from '@gridsheet/react-core';
 
-// Stock level renderer
-const StockRendererMixin: RendererMixinType = {
-  number({ value }: RenderProps<number>) {
+// Stock level policy mixin
+const StockPolicyMixin: PolicyMixinType = {
+  renderNumber({ value }: RenderProps<number>) {
     const color = value <= 10 ? '#e74c3c' : value <= 50 ? '#f39c12' : '#27ae60';
     const status = value <= 10 ? 'LOW' : value <= 50 ? 'MEDIUM' : 'GOOD';
 
@@ -35,9 +35,9 @@ const StockRendererMixin: RendererMixinType = {
   },
 };
 
-// Category renderer
-const CategoryRendererMixin: RendererMixinType = {
-  string({ value }: RenderProps<string>) {
+// Category policy mixin
+const CategoryPolicyMixin: PolicyMixinType = {
+  renderString({ value }: RenderProps<string>) {
     const colors = {
       Electronics: '#3498db',
       Clothing: '#e67e22',
@@ -65,29 +65,20 @@ const CategoryRendererMixin: RendererMixinType = {
   },
 };
 
-// Delete button renderer
-const DeleteButtonRendererMixin: RendererMixinType = {
-  null({ value, point, sync, table }: RenderProps<string>) {
+// Delete button policy mixin
+const DeleteButtonPolicyMixin: PolicyMixinType = {
+  renderNull({ value, point, sync, table }: RenderProps<null | undefined>) {
     // Only show delete button for product rows
     const shouldShowButton = point.y >= 1;
 
     // Get product name for tooltip
     let productName = 'Unknown';
     try {
-      const fieldRows = table.getFieldRows();
-      //console.log('Field rows:', fieldRows, 'Row:', point.y);
-      //console.log('Row data at', point.y, ':', fieldRows[point.y]);
-      //console.log('All field rows:', JSON.stringify(fieldRows, null, 2));
-      // Try to get product name from the field rows
-      const rowData = fieldRows[point.y];
-      if (rowData && rowData[1]) {
-        productName = String(rowData[1]);
-        console.log('Found product name:', productName);
-      } else {
-        // at row', point.y, 'column 1');
+      const productCell = table.getCellByPoint({ y: point.y, x: 2 }, 'COMPLETE');
+      if (productCell?.value != null) {
+        productName = String(productCell.value);
       }
     } catch (error) {
-      console.error('Error getting product name:', error);
       // Fallback to unknown
     }
 
@@ -137,7 +128,7 @@ const convertToTSV = (table: UserTable, evaluates: boolean = true): string => {
   if (!table) {
     return '';
   }
-  const matrix = table.getFieldMatrix({ refEvaluation: evaluates ? 'COMPLETE' : 'RAW' });
+  const matrix = table.toValueMatrix({ refEvaluation: evaluates ? 'COMPLETE' : 'RAW' });
   if (!matrix || matrix.length === 0) {
     return '';
   }
@@ -183,10 +174,10 @@ export default function InventoryManagement() {
   }, []);
 
   const hub = useHub({
-    renderers: {
-      stock: new Renderer({ mixins: [StockRendererMixin] }),
-      category: new Renderer({ mixins: [CategoryRendererMixin] }),
-      delete: new Renderer({ mixins: [DeleteButtonRendererMixin] }),
+    policies: {
+      stock: new Policy({ mixins: [StockPolicyMixin] }),
+      category: new Policy({ mixins: [CategoryPolicyMixin] }),
+      delete: new Policy({ mixins: [DeleteButtonPolicyMixin] }),
     },
     onSave: ({ table, points }) => {
       const posInfo = Array.isArray(points)
@@ -208,8 +199,8 @@ export default function InventoryManagement() {
           setPendingDeleteInfo(null);
           addActivityLog(`🗑️ Removed product: row ${y} (${productName})`);
         } else {
-          const fieldRows = table.getFieldRows();
-          const productName = fieldRows[i]?.['B'] ?? 'Unknown';
+          const valueRows = table.toValueRows();
+          const productName = valueRows[y - 1]?.['B'] ?? 'Unknown';
           addActivityLog(`🗑️ Removed product: row ${y} (${productName})`);
         }
       });
@@ -265,9 +256,9 @@ export default function InventoryManagement() {
           fontSize: '11px',
         },
       },
-      A: { width: 40, renderer: 'delete' },
+      A: { width: 40, policy: 'delete' },
       B: { width: 140, label: 'Product Name' },
-      C: { width: 100, renderer: 'stock', label: 'Stock Level' },
+      C: { width: 100, policy: 'stock', label: 'Stock Level' },
       D: { width: 90, label: 'Unit Price' },
     },
   });

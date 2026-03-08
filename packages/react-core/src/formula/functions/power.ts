@@ -1,24 +1,18 @@
-import { FormulaError } from '../evaluator';
-import { BaseFunction, FunctionCategory, HelpArg } from './__base';
+import { BaseFunction, FunctionCategory, FunctionArgumentDefinition } from './__base';
 import { ensureNumber } from './__utils';
+
+const description = `Returns a number multiplied by an exponent.`;
 
 export class PowerFunction extends BaseFunction {
   example = 'POWER(4,0.5)';
-  helpText = ['Returns a number multiplied by an exponent.'];
-  helpArgs: HelpArg[] = [
-    { name: 'base', description: 'A number to be multiplied by an exponent.', type: ['number'] },
-    { name: 'exponent', description: 'An exponent to power the base.', type: ['number'] },
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
+    { name: 'base', description: 'A number to be multiplied by an exponent.', acceptedTypes: ['number'] },
+    { name: 'exponent', description: 'An exponent to power the base.', acceptedTypes: ['number'] },
   ];
   category: FunctionCategory = 'math';
 
-  protected validate() {
-    if (this.bareArgs.length !== 2) {
-      throw new FormulaError('#N/A', 'Number of arguments for POWER is incorrect.');
-    }
-    this.bareArgs = this.bareArgs.map((arg) => ensureNumber(arg));
-  }
-
-  protected main(base: number, exponent: number) {
-    return Math.pow(base, exponent);
+  protected main(base: any, exponent: any) {
+    return Math.pow(ensureNumber(base), ensureNumber(exponent));
   }
 }

@@ -4,9 +4,15 @@ import { Table, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/react-
 describe('hlookup', () => {
   const table = new Table({});
   table.initialize({
-    A1: { value: 10 }, B1: { value: 20 }, C1: { value: 30 },
-    A2: { value: 'apple' }, B2: { value: 'banana' }, C2: { value: 'cherry' },
-    A3: { value: 'red' }, B3: { value: 'yellow' }, C3: { value: 'red' },
+    A1: { value: 10 },
+    B1: { value: 20 },
+    C1: { value: 30 },
+    A2: { value: 'apple' },
+    B2: { value: 'banana' },
+    C2: { value: 'cherry' },
+    A3: { value: 'red' },
+    B3: { value: 'yellow' },
+    C3: { value: 'red' },
   });
 
   describe('normal (exact match)', () => {

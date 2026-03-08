@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { ctrl, drag, paste } from './utils';
+import { ctrl, drag, go, paste } from './utils';
 
-test('select an option in strict accordance with the options', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=restriction-options--options&viewMode=story');
+test('policy options: select, autocomplete, invalid and valid cut-paste', async ({ page }) => {
+  await go(page, 'restriction-options--options');
 
+  // ---- Strict option selection ----
   {
     const a1 = page.locator("[data-address='A1']");
     await a1.dblclick();
@@ -31,11 +32,8 @@ test('select an option in strict accordance with the options', async ({ page }) 
     // no changes if it does not match any option
     expect(await a3.locator('.gs-cell-rendered').textContent()).toBe('red');
   }
-});
 
-test('select an option from the autocomplete suggestions', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=restriction-options--options&viewMode=story');
-
+  // ---- Autocomplete suggestion selection ----
   {
     const b1 = page.locator("[data-address='B1']");
     await b1.click();
@@ -53,57 +51,39 @@ test('select an option from the autocomplete suggestions', async ({ page }) => {
     // word not in the suggestions can still be submitted.
     expect(await b2.locator('.gs-cell-rendered').textContent()).toBe('marmot');
   }
-});
 
-test('move the invalid value to column A', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=restriction-options--options&viewMode=story');
-
+  // ---- Cut invalid value to column A ----
   {
     const b3 = page.locator("[data-address='B3']");
     await b3.click();
     await ctrl(page, 'x');
-
     const a3 = page.locator("[data-address='A3']");
     await a3.click();
     await paste(page);
-
     // invalid value should be replaced with the default value
     expect(await a3.locator('.gs-cell-rendered').textContent()).toBe('red');
     expect(await b3.locator('.gs-cell-rendered').textContent()).toBe('');
-
-    // undo
     await ctrl(page, 'z');
     expect(await a3.locator('.gs-cell-rendered').textContent()).toBe('red');
     expect(await b3.locator('.gs-cell-rendered').textContent()).toBe('alpaca');
-
-    // redo
     await ctrl(page, 'r');
     expect(await a3.locator('.gs-cell-rendered').textContent()).toBe('red');
     expect(await b3.locator('.gs-cell-rendered').textContent()).toBe('');
   }
-});
 
-test('move the valid value to column A', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=restriction-options--options&viewMode=story');
-
+  // ---- Cut valid value to column A ----
   {
     const b8 = page.locator("[data-address='B8']");
     await b8.click();
     await ctrl(page, 'x');
-
     const a8 = page.locator("[data-address='A8']");
     await a8.click();
     await paste(page);
-
     expect(await a8.locator('.gs-cell-rendered').textContent()).toBe('green');
     expect(await b8.locator('.gs-cell-rendered').textContent()).toBe('');
-
-    // undo
     await ctrl(page, 'z');
     expect(await a8.locator('.gs-cell-rendered').textContent()).toBe('');
     expect(await b8.locator('.gs-cell-rendered').textContent()).toBe('green');
-
-    // redo
     await ctrl(page, 'r');
     expect(await a8.locator('.gs-cell-rendered').textContent()).toBe('green');
     expect(await b8.locator('.gs-cell-rendered').textContent()).toBe('');
@@ -111,7 +91,7 @@ test('move the valid value to column A', async ({ page }) => {
 });
 
 test('masked words in clipboard', async ({ page, context }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=restriction-onclip--on-clip&viewMode=story');
+  await go(page, 'restriction-serializeforclipboard--serialize-for-clipboard');
   await drag(page, 'A1', 'B2');
   // Copy A1:B2
   await ctrl(page, 'c');

@@ -1,8 +1,4 @@
 export { GridSheet, createConnector, useConnector } from './components/GridSheet';
-export { Renderer } from './renderers/core';
-export type { RendererMixinType, RendererCallProps, RenderProps } from './renderers/core';
-export { Parser } from './parsers/core';
-export type { ParserMixinType } from './parsers/core';
 export {
   oa2aa,
   aa2oa,
@@ -16,7 +12,7 @@ export {
   addressesToRows,
 } from './lib/spatial';
 
-export { TimeDelta } from './lib/time';
+export { Time } from './lib/time';
 export { x2c, c2x, y2r, r2y, p2a, a2p } from './lib/coords';
 export { updateTable } from './store/actions';
 export { PluginBase, useInitialPluginContext, usePluginContext } from './components/PluginBase';
@@ -50,26 +46,48 @@ export type {
 export type { HubType, HubProps, WireProps, TransmitProps } from './lib/hub';
 export { Wire, useHub, createHub } from './lib/hub';
 export type { Dispatcher } from './store';
-export { ThousandSeparatorRendererMixin } from './renderers/thousand_separator';
-export { CheckboxRendererMixin } from './renderers/checkbox';
+export { ThousandSeparatorPolicyMixin } from './policy/thousand_separator';
+export { CheckboxPolicyMixin } from './policy/checkbox';
 export { BaseFunction, BaseFunctionSync, BaseFunctionAsync } from './formula/functions/__base';
-export type { FunctionProps, HelpArg, FunctionCategory, FunctionMapping } from './formula/functions/__base';
-export { FormulaError, Lexer, FormulaParser, RefEntity, ValueEntity, RangeEntity } from './formula/evaluator';
+export type {
+  FunctionProps,
+  FunctionArgumentDefinition as FunctionArgumentDefinition,
+  FunctionCategory,
+  FunctionMapping,
+} from './formula/functions/__base';
+export { Lexer, FormulaParser, RefEntity, ValueEntity, RangeEntity } from './formula/evaluator';
+export { FormulaError } from './formula/formula-error';
 export { Table, type UserTable } from './lib/table';
 export { Policy } from './policy/core';
-export type { PolicyType, AutocompleteOption, PolicyMixinType } from './policy/core';
+export type {
+  PolicyType,
+  AutocompleteOption,
+  PolicyMixinType,
+  RenderProps,
+  SerializeProps,
+  SelectProps,
+  SelectFallbackProps,
+  SerializeForClipboardProps,
+} from './policy/core';
 
 export * as operations from './lib/operation';
 export { DEFAULT_HISTORY_LIMIT } from './constants';
-export { Pending } from './sentinels';
+export { Pending, Spilling } from './sentinels';
 
 export { userActions } from './store/actions';
-export { clip } from './lib/clipboard';
+export { clip, table2csv } from './lib/clipboard';
 
 export { makeBorder } from './styles/utils';
 export { syncers } from './store/dispatchers';
 
-export { ensureString, ensureNumber, ensureBoolean, check } from './formula/functions/__utils';
+export {
+  ensureString,
+  ensureNumber,
+  ensureBoolean,
+  check,
+  eachMatrix,
+  createBooleanMask,
+} from './formula/functions/__utils';
 export type { EnsureNumberOptions, EnsureBooleanOptions } from './formula/functions/__utils';
 export { conditionArg } from './formula/functions/__base';
 export { solveTable, stripTable } from './formula/solver';

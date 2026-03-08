@@ -17,7 +17,10 @@ describe('join', () => {
     });
 
     it('joins mixed ranges and values', () => {
-      const f = new JoinFunction({ table, args: [new ValueEntity(' '), new RangeEntity('A1:A2'), new ValueEntity('date')] });
+      const f = new JoinFunction({
+        table,
+        args: [new ValueEntity(' '), new RangeEntity('A1:A2'), new ValueEntity('date')],
+      });
       expect(f.call()).toBe('apple banana date');
     });
 

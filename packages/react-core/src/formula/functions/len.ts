@@ -1,27 +1,21 @@
-import { FormulaError } from '../evaluator';
-import { BaseFunction, FunctionCategory, HelpArg } from './__base';
+import { BaseFunction, FunctionCategory, FunctionArgumentDefinition } from './__base';
 import { ensureString } from './__utils';
+
+const description = `Returns the length of a string.`;
 
 export class LenFunction extends BaseFunction {
   example = 'LEN(A2)';
-  helpText = ['Returns the length of a string.'];
-  helpArgs: HelpArg[] = [
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
     {
       name: 'text',
       description: 'A text to be returned the length.',
-      type: ['string'],
+      acceptedTypes: ['string', 'number'],
     },
   ];
   category: FunctionCategory = 'text';
 
-  protected validate() {
-    if (this.bareArgs.length !== 1) {
-      throw new FormulaError('#N/A', 'Number of arguments for LEN is incorrect.');
-    }
-    this.bareArgs = [ensureString(this.bareArgs[0])];
-  }
-
-  protected main(text: string) {
-    return text.length;
+  protected main(text: any) {
+    return ensureString(text).length;
   }
 }

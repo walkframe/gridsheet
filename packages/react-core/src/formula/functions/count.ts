@@ -1,36 +1,40 @@
-import { solveTable } from '../solver';
-import { Table } from '../../lib/table';
-import { BaseFunction, FunctionCategory, HelpArg } from './__base';
-import { ensureNumber } from './__utils';
+import { BaseFunction, FunctionCategory, FunctionArgumentDefinition, isMatrix } from './__base';
+import { ensureNumber, eachMatrix } from './__utils';
+
+const description = `Returns the count of a series of numbers or cells.`;
 
 export class CountFunction extends BaseFunction {
   example = 'COUNT(A2:A100,B2:B100,4,26)';
-  helpText = ['Returns the count of a series of numbers or cells.'];
-  helpArgs: HelpArg[] = [
-    { name: 'value1', description: 'First number or range.', type: ['number', 'range'] },
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
     {
-      name: 'value2',
-      description: 'Additional numbers or ranges',
-      optional: true,
-      iterable: true,
-      type: ['number', 'range'],
+      name: 'value',
+      description: 'Numbers or ranges to count.',
+      takesMatrix: true,
+      acceptedTypes: ['number', 'matrix'],
+      variadic: true,
     },
   ];
-  category: FunctionCategory = 'statistics';
-
-  protected validate() {
-    const spreaded: any[] = [];
-    this.bareArgs.map((arg) => {
-      if (arg instanceof Table) {
-        spreaded.push(...solveTable({ table: arg }).reduce((a, b) => a.concat(b)));
-        return;
-      }
-      spreaded.push(ensureNumber(arg));
-    });
-    this.bareArgs = spreaded;
-  }
+  category: FunctionCategory = 'math';
 
   protected main(...values: any[]) {
-    return values.filter((v) => typeof v === 'number').length;
+    let count = 0;
+    values.forEach((val) => {
+      if (isMatrix(val)) {
+        eachMatrix(
+          val,
+          (v) => {
+            if (typeof v === 'number') {
+              count++;
+            }
+          },
+          this.at,
+        );
+      } else {
+        ensureNumber(val);
+        count++;
+      }
+    });
+    return count;
   }
 }

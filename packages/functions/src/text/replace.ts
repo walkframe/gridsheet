@@ -1,27 +1,29 @@
 import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
 import { ensureString, ensureNumber } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
+const description = `Replaces part of a text string with a different text string.
+position is 1-based.`;
+
 export class ReplaceFunction extends BaseFunction {
   example = 'REPLACE("Hello World", 7, 5, "Excel")';
-  helpText = ['Replaces part of a text string with a different text string.', 'position is 1-based.'];
-  helpArgs: HelpArg[] = [
-    { name: 'text', description: 'The original text string.', type: ['string'] },
-    { name: 'position', description: 'The 1-based position at which to start replacing.', type: ['number'] },
-    { name: 'length', description: 'The number of characters to replace.', type: ['number'] },
-    { name: 'new_text', description: 'The replacement text.', type: ['string'] },
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
+    { name: 'text', description: 'The original text string.', acceptedTypes: ['string'] },
+    { name: 'position', description: 'The 1-based position at which to start replacing.', acceptedTypes: ['number'] },
+    { name: 'length', description: 'The number of characters to replace.', acceptedTypes: ['number'] },
+    { name: 'new_text', description: 'The replacement text.', acceptedTypes: ['string'] },
   ];
   category: FunctionCategory = 'text';
 
-  protected validate() {
-    if (this.bareArgs.length !== 4) {
-      throw new FormulaError('#N/A', 'Number of arguments for REPLACE is incorrect.');
-    }
-    this.bareArgs[0] = ensureString(this.bareArgs[0]);
-    this.bareArgs[1] = ensureNumber(this.bareArgs[1]);
-    this.bareArgs[2] = ensureNumber(this.bareArgs[2]);
-    this.bareArgs[3] = ensureString(this.bareArgs[3]);
+  protected validate(args: any[]): any[] {
+    args = super.validate(args);
+    args[0] = ensureString(args[0]);
+    args[1] = ensureNumber(args[1]);
+    args[2] = ensureNumber(args[2]);
+    args[3] = ensureString(args[3]);
+    return args;
   }
 
   protected main(text: string, position: number, length: number, newText: string) {

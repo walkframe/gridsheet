@@ -1,6 +1,38 @@
 import React, { useEffect, useState } from 'react';
 import type { HubType } from '@gridsheet/react-core';
-import { a2p, x2c, Lexer, FormulaParser } from '@gridsheet/react-core';
+import { a2p, x2c, Lexer, FormulaParser, Table } from '@gridsheet/react-core';
+import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
+import type { SyntaxHighlighterProps } from 'react-syntax-highlighter';
+import jsonLang from 'react-syntax-highlighter/dist/esm/languages/hljs/json';
+import atomOneLight from 'react-syntax-highlighter/dist/esm/styles/hljs/atom-one-light';
+import atomOneDark from 'react-syntax-highlighter/dist/esm/styles/hljs/atom-one-dark';
+import tomorrowNight from 'react-syntax-highlighter/dist/esm/styles/hljs/tomorrow-night';
+import solarizedDark from 'react-syntax-highlighter/dist/esm/styles/hljs/solarized-dark';
+import solarizedLight from 'react-syntax-highlighter/dist/esm/styles/hljs/solarized-light';
+import docco from 'react-syntax-highlighter/dist/esm/styles/hljs/docco';
+import atelierSeasideLight from 'react-syntax-highlighter/dist/esm/styles/hljs/atelier-seaside-light';
+
+SyntaxHighlighter.registerLanguage('json', jsonLang);
+
+type HljsStyle = SyntaxHighlighterProps['style'];
+
+const JsonCode: React.FC<{ data: any; replacer?: (k: string, v: any) => any; theme: HljsStyle }> = ({
+  data,
+  replacer,
+  theme,
+}) => {
+  const code = JSON.stringify(data, replacer, 2) ?? '';
+  return (
+    <SyntaxHighlighter
+      language="json"
+      style={theme}
+      showLineNumbers
+      customStyle={{ margin: 0, fontSize: '12px', minHeight: '100%', borderRadius: 0 }}
+    >
+      {code}
+    </SyntaxHighlighter>
+  );
+};
 
 export type DebuggerProps = {
   hub: HubType;
@@ -45,6 +77,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
         histories,
         asyncPending,
         asyncInflight,
+        dependents,
       } = wire;
 
       setSnapshot({
@@ -66,6 +99,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
         historyIndex,
         historyLimit,
         histories,
+        dependents,
       });
     };
 
@@ -90,7 +124,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
   let activeStoreData = null;
   let activeTableData = null;
 
-  // Cell data for wire.choosingSheetId / choosingAddress
+  // Cell data for the currently selected cell (wire.choosingSheetId / choosingAddress)
   let wireCellData = null;
   let wireCellAddress = wire?.choosingAddress || '';
   let wireCellSheetName = '';
@@ -111,7 +145,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
     }
   }
 
-  // Resolve cell data for wire.choosingSheetId / choosingAddress
+  // Resolve cell data for the currently selected cell (wire.choosingSheetId / choosingAddress)
   if (wire && wire.choosingSheetId != null) {
     const { contextsBySheetId } = wire;
     const choosingContext = contextsBySheetId[wire.choosingSheetId];
@@ -131,7 +165,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
         const rawTable = (table as any).__raw__ || table;
         const idMatrix = rawTable.idMatrix;
 
-        // When a header is selected, refer to y=0 (top) or x=0 (left) header cell
+        // When a header cell is selected, use y=0 (top header) or x=0 (left header)
         const isTopHeaderSelecting = store.topHeaderSelecting;
         const isLeftHeaderSelecting = store.leftHeaderSelecting;
         const pos = isTopHeaderSelecting
@@ -170,12 +204,12 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
     }
   }
 
-  const jsonReplacer = (key: string, value: any) => {
-    // Avoid circular refs, noise, and React RefObjects
+  const baseReplacer = (key: string, value: any) => {
+    // Avoid circular refs, noisy internals, and React RefObjects
     if (
       key === 'wire' ||
       key === '__raw__' ||
-      (value && typeof value === 'object' && 'current' in value && Object.keys(value).length === 1) // basic heuristic to skip ref objects
+      (value && typeof value === 'object' && 'current' in value && Object.keys(value).length === 1) // heuristic to skip React ref objects
     ) {
       return undefined;
     }
@@ -186,6 +220,14 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
       return Array.from(value);
     }
     return value;
+  };
+
+  // Replace nested Table instances with their string representation (for Wire State / Store Data panels)
+  const jsonReplacer = (key: string, value: any) => {
+    if (value instanceof Table) {
+      return value.toString();
+    }
+    return baseReplacer(key, value);
   };
 
   const startDrag = (e: React.MouseEvent) => {
@@ -235,7 +277,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
         overflow: 'hidden',
       }}
     >
-      {/* 上段: Wire State | Wire Cell | Formula Expressions | Formula Tokens */}
+      {/* Top pane: Wire State | Wire Cell | Formula Expressions | Formula Tokens */}
       <div
         style={{
           display: 'flex',
@@ -244,7 +286,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
           overflow: 'hidden',
         }}
       >
-        {/* Wire State */}
+        {/* Wire State panel */}
         <div
           style={{
             flex: 1,
@@ -267,10 +309,10 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
           >
             Wire State
           </div>
-          <pre style={{ margin: 0, padding: '12px' }}>{JSON.stringify(snapshot, jsonReplacer, 2)}</pre>
+          <JsonCode data={snapshot} replacer={jsonReplacer} theme={atomOneLight} />
         </div>
 
-        {/* Wire Cell Value: wire.choosingSheetId / choosingAddress のセルデータ */}
+        {/* Wire Cell Value: cell data for wire.choosingSheetId / choosingAddress */}
         <div
           style={{
             flex: 1,
@@ -295,7 +337,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
             {wireCellAddress} {wire?.choosingSheetId != null && `(SheetID: ${wire.choosingSheetId})`}
           </div>
           {wireCellData ? (
-            <pre style={{ margin: 0, padding: '12px' }}>{JSON.stringify(wireCellData, null, 2)}</pre>
+            <JsonCode data={wireCellData} theme={atelierSeasideLight} />
           ) : (
             <div style={{ fontStyle: 'italic', color: '#6c757d', padding: '12px' }}>No cell data</div>
           )}
@@ -324,16 +366,14 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
           >
             Formula Expressions
           </div>
-          {wireFormulaExpr ? (
-            <pre style={{ margin: 0, padding: '12px' }}>{JSON.stringify(wireFormulaExpr, null, 2)}</pre>
+          {wireCellData ? (
+            <JsonCode data={wireFormulaExpr} theme={solarizedLight} />
           ) : (
-            <div style={{ fontStyle: 'italic', color: '#6c757d', padding: '12px' }}>
-              {wireCellData ? 'Not a formula' : 'No cell selected'}
-            </div>
+            <div style={{ fontStyle: 'italic', color: '#6c757d', padding: '12px' }}>No cell selected</div>
           )}
         </div>
 
-        {/* Formula Tokens: lexer.tokens */}
+        {/* Formula Tokens: raw lexer token list */}
         <div style={{ flex: 1, overflow: 'auto', backgroundColor: '#f5f0ff', position: 'relative' }}>
           <div
             style={{
@@ -348,17 +388,15 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
           >
             Formula Tokens
           </div>
-          {wireFormulaTokens ? (
-            <pre style={{ margin: 0, padding: '12px' }}>{JSON.stringify(wireFormulaTokens, null, 2)}</pre>
+          {wireCellData ? (
+            <JsonCode data={wireFormulaTokens} theme={docco} />
           ) : (
-            <div style={{ fontStyle: 'italic', color: '#6c757d', padding: '12px' }}>
-              {wireCellData ? 'Not a formula' : 'No cell selected'}
-            </div>
+            <div style={{ fontStyle: 'italic', color: '#6c757d', padding: '12px' }}>No cell selected</div>
           )}
         </div>
       </div>
 
-      {/* Resizer for Top Pane */}
+      {/* Resizer for top pane */}
       <div
         onMouseDown={startDrag}
         style={{
@@ -376,7 +414,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
         }}
       />
 
-      {/* Sheet Tabs */}
+      {/* Sheet tabs */}
       <div
         style={{
           display: 'flex',
@@ -403,32 +441,41 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
         {sheets.length === 0 && <div style={{ padding: '8px 16px', color: '#6c757d' }}>No sheets detected</div>}
       </div>
 
-      {/* 下段: Table Data | Store Data */}
+      {/* Bottom pane: Table Data | Store Data */}
       <div
         style={{
           display: 'flex',
           flexDirection: 'row',
           height: `${bottomHeight}px`,
-          backgroundColor: '#fff',
+          backgroundColor: '#282c34',
           overflow: 'hidden',
         }}
       >
-        <div style={{ flex: 1, borderRight: '1px solid #dee2e6', overflow: 'auto', position: 'relative' }}>
+        <div
+          style={{
+            flex: 1,
+            borderRight: '1px solid #3a3a3a',
+            overflow: 'auto',
+            position: 'relative',
+            backgroundColor: '#282c34',
+          }}
+        >
           <div
             style={{
               position: 'sticky',
               top: 0,
-              background: '#fff',
+              background: '#21252b',
               zIndex: 1,
               padding: '8px 12px',
               fontWeight: 'bold',
-              borderBottom: '2px solid #ccc',
+              borderBottom: '2px solid #3a3a3a',
+              color: '#abb2bf',
             }}
           >
             Table Data
           </div>
           {activeTableData ? (
-            <pre style={{ margin: 0, padding: '12px' }}>{JSON.stringify(activeTableData, jsonReplacer, 2)}</pre>
+            <JsonCode data={activeTableData} replacer={baseReplacer} theme={tomorrowNight} />
           ) : (
             <div style={{ fontStyle: 'italic', color: '#6c757d', padding: '12px' }}>Table instance not found</div>
           )}
@@ -438,7 +485,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
           style={{
             flex: 1,
             overflow: 'auto',
-            backgroundColor: '#fdfdfe',
+            backgroundColor: '#282c34',
             position: 'relative',
           }}
         >
@@ -446,24 +493,25 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
             style={{
               position: 'sticky',
               top: 0,
-              background: '#fdfdfe',
+              background: '#21252b',
               zIndex: 1,
               padding: '8px 12px',
               fontWeight: 'bold',
-              borderBottom: '2px solid #ccc',
+              borderBottom: '2px solid #3a3a3a',
+              color: '#abb2bf',
             }}
           >
             Store Data
           </div>
           {activeStoreData ? (
-            <pre style={{ margin: 0, padding: '12px' }}>{JSON.stringify(activeStoreData, jsonReplacer, 2)}</pre>
+            <JsonCode data={activeStoreData} replacer={jsonReplacer} theme={solarizedDark} />
           ) : (
             <div style={{ fontStyle: 'italic', color: '#6c757d', padding: '12px' }}>Store state not found</div>
           )}
         </div>
       </div>
 
-      {/* Resizer for Bottom Pane */}
+      {/* Resizer for bottom pane */}
       <div
         onMouseDown={startDragBottom}
         style={{

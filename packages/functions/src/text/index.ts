@@ -2,7 +2,6 @@ import type { FunctionMapping } from '@gridsheet/react-core';
 import { ConcatenateFunction } from './concatenate';
 import { LenbFunction } from './lenb';
 import { ExactFunction } from './exact';
-import { ValueFunction } from './value';
 import { UnicodeFunction } from './unicode';
 import { ReplaceFunction } from './replace';
 import { CleanFunction } from './clean';
@@ -19,7 +18,6 @@ export const textFunctions: FunctionMapping = {
   concatenate: ConcatenateFunction,
   lenb: LenbFunction,
   exact: ExactFunction,
-  value: ValueFunction,
   unicode: UnicodeFunction,
   replace: ReplaceFunction,
   clean: CleanFunction,

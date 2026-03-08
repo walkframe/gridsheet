@@ -1,7 +1,15 @@
 import React, { type CSSProperties } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, Policy, AutocompleteOption, buildInitialCells, useHub } from '@gridsheet/react-core';
+import {
+  GridSheet,
+  Policy,
+  AutocompleteOption,
+  buildInitialCells,
+  useHub,
+  type SelectProps,
+} from '@gridsheet/react-core';
 import { Debugger } from '@gridsheet/react-dev';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Restriction/Options',
@@ -27,12 +35,23 @@ const OptionsComponent: React.FC = () => {
     priority: 2,
     mixins: [
       {
-        getOptions(): AutocompleteOption[] {
+        select({ next, current }: SelectProps) {
+          const { value } = next ?? {};
+          if (value === 'aqua' || value === 'red' || value === 'green' || value === 'blue') {
+            return { value, style: { backgroundColor: value } };
+          }
+          const fallbackValue = current?.value ?? null;
+          if (fallbackValue != null) {
+            return { value: fallbackValue, style: { backgroundColor: fallbackValue } };
+          }
+          return { value: null };
+        },
+        getSelectOptions(): AutocompleteOption[] {
           return [
             {
               value: 'aqua',
               label: <span style={{ color: 'aqua' }}>Aqua</span>,
-              guide: () => {
+              tooltip: () => {
                 return (
                   <p>
                     <b>Aqua</b>
@@ -45,7 +64,7 @@ const OptionsComponent: React.FC = () => {
             {
               value: 'red',
               label: <span style={{ color: 'red' }}>Red</span>,
-              guide: () => {
+              tooltip: () => {
                 return (
                   <p>
                     <b>Red</b>
@@ -58,7 +77,7 @@ const OptionsComponent: React.FC = () => {
             {
               value: 'green',
               label: <span style={{ color: 'green' }}>Green</span>,
-              guide: () => {
+              tooltip: () => {
                 return (
                   <p>
                     <b>Green</b>
@@ -71,7 +90,7 @@ const OptionsComponent: React.FC = () => {
             {
               value: 'blue',
               label: <span style={{ color: 'blue' }}>Blue</span>,
-              guide: () => {
+              tooltip: () => {
                 return (
                   <p>
                     <b>Blue</b>
@@ -83,18 +102,6 @@ const OptionsComponent: React.FC = () => {
             },
           ];
         },
-        validate({ next, table, point, current }) {
-          let { value } = next ?? {};
-          if (value === 'aqua' || value === 'red' || value === 'green' || value === 'blue') {
-            return { value, style: { backgroundColor: value } };
-          }
-          // Fall back to current cell value when invalid
-          const fallbackValue = current?.value ?? null;
-          if (fallbackValue != null) {
-            return { value: fallbackValue, style: { backgroundColor: fallbackValue } };
-          }
-          return { value: null };
-        },
       },
     ],
   });
@@ -102,28 +109,18 @@ const OptionsComponent: React.FC = () => {
     priority: 1,
     mixins: [
       {
-        getFallback({ value }) {
-          return { value };
-        },
-        getOptions(): AutocompleteOption[] {
+        getSelectOptions(): AutocompleteOption[] {
           return [{ value: 'cat' }, { value: 'dog' }, { value: 'bird' }];
         },
-        validate({ next: patch }) {
-          const { value, width } = patch ?? {};
+        select({ next }: SelectProps) {
+          const { value, width } = next ?? {};
           return { value, width };
         },
       },
     ],
   });
   const hub = useHub({
-    labelers: {
-      color: (n: number) => {
-        return 'Color';
-      },
-      animal: (n: number) => {
-        return 'Animal';
-      },
-    },
+    additionalFunctions: allFunctions,
     policies: {
       color: colorPolicy,
       animal: animalPolicy,
@@ -137,11 +134,11 @@ const OptionsComponent: React.FC = () => {
         initialCells={buildInitialCells({
           cells: {
             A: {
-              labeler: 'color',
+              label: 'color',
               policy: 'color',
             },
             B: {
-              labeler: 'animal',
+              label: 'animal',
               policy: 'animal',
             },
             A3: {

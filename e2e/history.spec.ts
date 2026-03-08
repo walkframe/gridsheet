@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
-import { ctrl, cut, paste } from './utils';
+import { ctrl, cut, go, paste } from './utils';
 
 test('undo redo for cell writing', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=basic-simple--sheet&viewMode=story');
+  await go(page, 'basic-simple--sheet');
 
   // Test A1 (existing value: "A1")
   const a1 = page.locator("[data-address='A1']");
@@ -42,7 +42,7 @@ test('undo redo for cell writing', async ({ page }) => {
 });
 
 test('undo redo for cut and paste', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=basic-simple--sheet&viewMode=story');
+  await go(page, 'basic-simple--sheet');
 
   // Test cut and paste operation
   const a1 = page.locator("[data-address='A1']");
@@ -77,7 +77,7 @@ test('undo redo for cut and paste', async ({ page }) => {
 });
 
 test('multiple undo redo operations', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=basic-simple--sheet&viewMode=story');
+  await go(page, 'basic-simple--sheet');
 
   const a1 = page.locator("[data-address='A1']");
   const a2 = page.locator("[data-address='A2']");

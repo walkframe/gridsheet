@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { GridSheet, buildInitialCells, useConnector, useHub, syncers } from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Control/Remove',
@@ -25,9 +26,10 @@ const RemoveComponent: React.FC = () => {
   const connector = useConnector();
 
   const hub = useHub({
+    additionalFunctions: allFunctions,
     onRemoveRows: ({ table, ys }) => {
       console.log('onRemoveRows called with:', { table, ys });
-      console.log('matrix', table.getFieldObject());
+      console.log('matrix', table.toValueObject());
     },
     onRemoveCols: ({ table, xs }) => {
       console.log('onRemoveCols called with:', { table, xs });

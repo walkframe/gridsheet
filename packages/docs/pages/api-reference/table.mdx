@@ -46,67 +46,68 @@ console.log(cell?.value);
 
 ### Matrix and Object Access
 
-#### `getCellMatrix(args?: GetCellMatrix): (CellType | null)[][]`
-Retrieves cells as a 2D matrix. Supports `ignoreFields` to exclude specific cell properties.
+#### `toValueMatrix(args?: ToValueMatrixProps): any[][]`
+Retrieves cell values as a 2D matrix.
 
 ```tsx
-const matrix = table.getCellMatrix({ area: { top: 0, left: 0, bottom: 2, right: 2 } });
-console.log(matrix);
+const matrix = table.toValueMatrix();
+const evaluated = table.toValueMatrix({ refEvaluation: 'COMPLETE' });
 ```
 
-#### `getCellObject(args?: GetCellObject): CellsByAddressType`
-Retrieves cells as an object with addresses as keys. Supports `ignoreFields` to exclude specific cell properties.
+#### `toValueObject(args?: ToValueObjectProps): { [address: Address]: any }`
+Retrieves cell values as an object keyed by address.
 
 ```tsx
-const cells = table.getCellObject({ refEvaluation: 'COMPLETE' });
-console.log(cells);
+const values = table.toValueObject({ refEvaluation: 'COMPLETE' });
+console.log(values['A1']); // value of A1
 ```
 
-#### `getCellRows(args?: GetCellRows): CellsByAddressType[]`
-Retrieves cells organized by rows. Supports `ignoreFields` to exclude specific cell properties.
+#### `toValueRows(args?: ToValueRowsProps): { [address: Address]: any }[]`
+Retrieves cell values organized by rows (array of column→value maps).
 
 ```tsx
-const rows = table.getCellRows();
-console.log(rows[0]); // First row cells
+const rows = table.toValueRows();
+console.log(rows[0]); // { A: ..., B: ..., ... } for row 1
 ```
 
-#### `getCellCols(args?: GetCellCols): CellsByAddressType[]`
-Retrieves cells organized by columns. Supports `ignoreFields` to exclude specific cell properties.
+#### `toValueCols(args?: ToValueColsProps): { [address: Address]: any }[]`
+Retrieves cell values organized by columns.
 
 ```tsx
-const cols = table.getCellCols();
-console.log(cols[0]); // First column cells
+const cols = table.toValueCols();
+console.log(cols[0]); // values in column A
 ```
 
-### Field-Specific Access
-
-#### `getFieldMatrix(args?: GetFieldPropsWithArea): any[][]`
-Retrieves a specific field (e.g., 'value', 'style') as a matrix.
+#### `toCellMatrix(args?: ToCellMatrixProps): (CellType | null)[][]`
+Retrieves full cell objects as a 2D matrix.
 
 ```tsx
-const values = table.getFieldMatrix({ field: 'value' });
-const styles = table.getFieldMatrix({ field: 'style' });
+const matrix = table.toCellMatrix();
+console.log(matrix[0][0]?.value);
 ```
 
-#### `getFieldObject(args?: GetFieldProps): { [address: Address]: any }`
-Retrieves a specific field as an object.
+#### `toCellObject(args?: ToCellObjectProps): CellsByAddressType`
+Retrieves full cell objects keyed by address.
 
 ```tsx
-const values = table.getFieldObject({ field: 'value' });
+const cells = table.toCellObject();
+console.log(cells['A1']?.style);
 ```
 
-#### `getFieldRows(args?: GetFieldProps): { [address: Address]: any }[]`
-Retrieves a specific field organized by rows.
+#### `toCellRows(args?: ToCellRowsProps): CellsByAddressType[]`
+Retrieves full cell objects organized by rows.
 
 ```tsx
-const valueRows = table.getFieldRows({ field: 'value' });
+const rows = table.toCellRows();
+console.log(rows[0]); // cells in row 1
 ```
 
-#### `getFieldCols(args?: GetFieldProps): { [address: Address]: any }[]`
-Retrieves a specific field organized by columns.
+#### `toCellCols(args?: ToCellColsProps): CellsByAddressType[]`
+Retrieves full cell objects organized by columns.
 
 ```tsx
-const valueCols = table.getFieldCols({ field: 'value' });
+const cols = table.toCellCols();
+console.log(cols[0]); // cells in column A
 ```
 
 ## Data Manipulation Methods
@@ -397,11 +398,67 @@ if (table.isRowFiltered(3)) {
 }
 ```
 
-#### `hasActiveFilters(): boolean`
-Returns `true` if any column has an active filter.
+## Additional Methods
+
+#### `getRectSize(area: AreaType): RectType`
+Returns the pixel dimensions and position of a cell area. `RectType` is `{ y: number; x: number; height: number; width: number }`.
 
 ```tsx
-if (table.hasActiveFilters()) {
-  console.log('Some filters are active');
-}
+const rect = table.getRectSize({ top: 1, left: 1, bottom: 3, right: 3 });
+console.log(rect.width, rect.height, rect.x, rect.y);
 ```
+
+#### `getPolicyByPoint(point: PointType): PolicyType`
+Returns the `Policy` instance applied to a cell.
+
+```tsx
+const policy = table.getPolicyByPoint({ y: 1, x: 1 });
+```
+
+#### `stringify(props: { point: PointType; cell?: CellType; refEvaluation?: RefEvaluation }): string`
+Serializes a cell's value to a string using its policy.
+
+```tsx
+const str = table.stringify({ point: { y: 1, x: 1 } });
+```
+
+#### `getLastChangedAddresses(): Address[]`
+Returns addresses of cells changed in the last operation.
+
+```tsx
+const changed = table.getLastChangedAddresses();
+console.log(changed); // e.g. ['A1', 'B2']
+```
+
+#### `hasPendingCells(): boolean`
+Returns `true` if any cells with async formulas are still loading.
+
+#### `waitForPending(): Promise<void>`
+Resolves when all pending async formula cells have settled.
+
+```tsx
+await table.waitForPending();
+const values = table.toValueMatrix();
+```
+
+#### `get shape: { rows: number; cols: number }`
+Returns the number of data rows and columns (excluding headers).
+
+```tsx
+const { rows, cols } = table.shape;
+```
+
+#### `getNumRows(base?: number): number`
+Returns the number of rows.
+
+#### `getNumCols(base?: number): number`
+Returns the number of columns.
+
+#### `getHistories(): HistoryType[]`
+Returns all undo/redo history entries.
+
+#### `getHistoryIndex(): number`
+Returns the current position in the history stack.
+
+#### `getHistorySize(): number`
+Returns the total number of history entries.

@@ -1,40 +1,24 @@
-import { FormulaError } from '@gridsheet/react-core';
-import type { HelpArg, FunctionProps } from '@gridsheet/react-core';
+import { BaseFunction, FormulaError } from '@gridsheet/react-core';
+import type { FunctionArgumentDefinition, FunctionProps } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 import { Table } from '@gridsheet/react-core';
 
-export class IsnaFunction {
+const description = `Returns TRUE if the value is the #N/A error value.`;
+
+export class IsnaFunction extends BaseFunction {
   example = 'ISNA(A1)';
-  helpText = ['Returns TRUE if the value is the #N/A error value.'];
-  helpArgs: HelpArg[] = [
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
     {
       name: 'value',
       description: 'The value to check for the #N/A error.',
-      type: ['any'],
+      acceptedTypes: ['any'],
+      errorTolerant: true,
     },
   ];
   category: FunctionCategory = 'information';
 
-  private args: any[];
-  private table: Table;
-
-  constructor({ args, table }: FunctionProps) {
-    this.args = args;
-    this.table = table;
-  }
-
-  public call() {
-    if (this.args.length !== 1) {
-      throw new FormulaError('#N/A', 'Number of arguments for ISNA is incorrect.');
-    }
-    try {
-      const value = this.args[0].evaluate({ table: this.table });
-      return value instanceof FormulaError && value.code === '#N/A';
-    } catch (e) {
-      if (e instanceof FormulaError) {
-        return e.code === '#N/A';
-      }
-      return false;
-    }
+  protected main(value: any) {
+    return FormulaError.is(value) && value.code === '#N/A';
   }
 }

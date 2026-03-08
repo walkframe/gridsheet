@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, operations } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, operations, useHub } from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Restriction/Protection',
@@ -27,8 +28,10 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const PreventionComponent: React.FC = () => {
+  const hub = useHub({ additionalFunctions: allFunctions });
   return (
     <GridSheet
+      hub={hub}
       initialCells={buildInitialCells({
         cells: {
           4: {
@@ -47,7 +50,7 @@ const PreventionComponent: React.FC = () => {
             style: { backgroundColor: '#eeeeee' },
           },
           B: {
-            prevention: operations.SetLabeler,
+            prevention: operations.SetPolicy,
           },
           C: {
             style: { backgroundColor: '#ffffff' },

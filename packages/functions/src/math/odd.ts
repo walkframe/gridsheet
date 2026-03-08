@@ -1,22 +1,17 @@
 import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
 import { ensureNumber } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
+const description = `Rounds a number up to the nearest odd integer.`;
+
 export class OddFunction extends BaseFunction {
   example = 'ODD(2.3)';
-  helpText = ['Rounds a number up to the nearest odd integer.'];
-  helpArgs: HelpArg[] = [
-    { name: 'value', description: 'The value to round up to the nearest odd integer.', type: ['number'] },
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
+    { name: 'value', description: 'The value to round up to the nearest odd integer.', acceptedTypes: ['number'] },
   ];
   category: FunctionCategory = 'math';
-
-  protected validate() {
-    if (this.bareArgs.length !== 1) {
-      throw new FormulaError('#N/A', 'Number of arguments for ODD is incorrect.');
-    }
-    this.bareArgs[0] = ensureNumber(this.bareArgs[0]);
-  }
 
   protected main(value: number) {
     if (value === 0) {

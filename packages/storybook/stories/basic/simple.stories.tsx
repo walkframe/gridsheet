@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, TimeDelta, useHub } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, Time, useHub, Policy } from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Basic/Simple',
@@ -14,10 +15,12 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const SimpleSheet = () => {
+  const rawPolicy = new Policy({
+    mixins: [{ renderColHeaderLabel: (n) => String(n), renderRowHeaderLabel: (n) => String(n) }],
+  });
   const hub = useHub({
-    labelers: {
-      raw: (n) => String(n),
-    },
+    additionalFunctions: allFunctions,
+    policies: { raw: rawPolicy },
   });
   return (
     <GridSheet
@@ -27,7 +30,7 @@ const SimpleSheet = () => {
       }}
       initialCells={buildInitialCells({
         cells: {
-          default: { width: 150, labeler: 'raw' },
+          default: { width: 150, policy: 'raw' },
           A1: {
             value: 'A1',
           },
@@ -44,7 +47,7 @@ const SimpleSheet = () => {
             value: new Date('2022-03-05T12:34:56+09:00'),
           },
           B4: {
-            value: TimeDelta.create(11, 11, 11),
+            value: Time.create(11, 11, 11),
           },
           C4: {
             value: '=A4 + B4',

@@ -1,47 +1,49 @@
 import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
 import { Table, solveTable, stripTable, ensureBoolean, ensureNumber } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
+const description = `Searches vertically for the specified key in the first column of the range and returns the value of the specified cell in the same row.`;
+
 export class VlookupFunction extends BaseFunction {
   example = 'VLOOKUP(10003, A2:B26, 2, FALSE)';
-  helpText = [
-    'Searches vertically for the specified key in the first column of the range and returns the value of the specified cell in the same row.',
-  ];
-  helpArgs: HelpArg[] = [
-    { name: 'key', description: 'Search key.', type: ['any'] },
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
+    { name: 'key', description: 'Search key.', acceptedTypes: ['any'] },
     {
       name: 'range',
       description: 'A range for search',
-      type: ['range'],
+      takesMatrix: true,
+      acceptedTypes: ['matrix'],
     },
     {
       name: 'index',
       description: 'The index of the column in the range.',
-      type: ['number'],
+      acceptedTypes: ['number'],
     },
     {
       name: 'is_sorted',
       description:
         'FALSE: Exact match. This is recommended. TRUE: Approximate match. Before you use an approximate match, sort your search key in ascending order. Otherwise, you may likely get a wrong return value.',
-      type: ['boolean'],
+      acceptedTypes: ['boolean'],
       optional: true,
     },
   ];
   category: FunctionCategory = 'lookup';
 
-  protected validate() {
-    if (this.bareArgs.length !== 3 && this.bareArgs.length !== 4) {
+  protected validate(args: any[]): any[] {
+    if (args.length !== 3 && args.length !== 4) {
       throw new FormulaError('#N/A', 'Number of arguments for VLOOKUP is incorrect.');
     }
-    if (this.bareArgs[0] instanceof Table) {
-      this.bareArgs[0] = stripTable({ value: this.bareArgs[0] });
+    if (args[0] instanceof Table) {
+      args[0] = stripTable({ value: args[0] });
     }
-    if (!(this.bareArgs[1] instanceof Table)) {
+    if (!(args[1] instanceof Table)) {
       throw new FormulaError('#REF!', '2nd argument must be range');
     }
-    this.bareArgs[2] = ensureNumber(this.bareArgs[2]);
-    this.bareArgs[3] = ensureBoolean(this.bareArgs[3], { alternative: true });
+    args[2] = ensureNumber(args[2]);
+    args[3] = ensureBoolean(args[3], { alternative: true });
+    return args;
   }
 
   protected main(key: any, range: Table, index: number, isSorted: boolean) {

@@ -8,7 +8,9 @@ import {
   buildInitialCellsFromOrigin,
   operations,
   useHub,
+  type SelectProps,
 } from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Restriction/DynamicOptions',
@@ -42,14 +44,13 @@ const DynamicOptionsComponent: React.FC = () => {
       new Policy({
         mixins: [
           {
-            getFallback({ value }) {
-              return { value, style: { color: '#f88' } };
-            },
-            getOptions(): AutocompleteOption[] {
+            getSelectOptions(): AutocompleteOption[] {
               return optionMatrix.map(([value, label]) => ({ value, label }));
             },
-            validate({ next: patch, table, point }) {
-              const { value, style } = patch ?? {};
+            select({ next }: SelectProps) {
+              const { value } = next ?? {};
+              const isValid = optionMatrix.some(([v]) => v === value);
+              const style = isValid ? undefined : { color: '#f88' };
               return { value, style };
             },
           },
@@ -58,12 +59,13 @@ const DynamicOptionsComponent: React.FC = () => {
     [optionMatrix],
   );
   const hub = useHub({
+    additionalFunctions: allFunctions,
     policies: {
       fw: fwPolicy,
     },
     onChange: ({ table, points }) => {
       if (table.sheetName === 'options') {
-        const matrix = table.getFieldMatrix() as [string, string][];
+        const matrix = table.toValueMatrix() as [string, string][];
         setOptionMatrix(matrix);
       }
     },

@@ -1,47 +1,36 @@
-import { solveTable } from '../solver';
-import { Table } from '../../lib/table';
-import { BaseFunction, FunctionCategory, HelpArg } from './__base';
-import { ensureNumber } from './__utils';
-import { FormulaError } from '../evaluator';
+import { BaseFunction, FunctionCategory, FunctionArgumentDefinition } from './__base';
+import { ensureNumber, eachMatrix } from './__utils';
+
+const description = `Returns the sum of a series of numbers or cells.`;
 
 export class SumFunction extends BaseFunction {
   example = 'SUM(A2:A100, 101)';
-  helpText = ['Returns the sum of a series of numbers or cells.'];
-  helpArgs: HelpArg[] = [
-    { name: 'value1', description: 'First number or range.', type: ['number', 'range'] },
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
     {
-      name: 'value2',
-      description: 'Additional numbers or ranges',
-      type: ['number', 'range'],
-      optional: true,
-      iterable: true,
+      name: 'value',
+      description: 'Numbers or ranges to sum.',
+      takesMatrix: true,
+      acceptedTypes: ['number', 'matrix'],
+      variadic: true,
     },
   ];
   category: FunctionCategory = 'math';
 
-  protected validate() {
-    if (this.bareArgs.length === 0) {
-      throw new FormulaError('#N/A', 'One or more arguments are required.');
-    }
-    const spreaded: number[] = [];
-    this.bareArgs.forEach((arg) => {
-      if (arg instanceof Table) {
-        spreaded.push(
-          ...solveTable({ table: arg })
-            .reduce((a, b) => a.concat(b))
-            .map((v) => ensureNumber(v, { ignore: true })),
-        );
-        return;
-      }
-      spreaded.push(ensureNumber(arg, { ignore: true }));
-    });
-    this.bareArgs = spreaded;
-  }
-
-  protected main(...values: number[]) {
+  protected main(...values: any[]) {
     if (values.length === 0) {
       return 0;
     }
-    return values.reduce((a, b) => a + b);
+    let sum = 0;
+    values.forEach((val) => {
+      eachMatrix(
+        val,
+        (v) => {
+          sum += ensureNumber(v, { ignore: true });
+        },
+        this.at,
+      );
+    });
+    return sum;
   }
 }

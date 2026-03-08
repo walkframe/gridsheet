@@ -1,39 +1,46 @@
 import { test, expect } from '@playwright/test';
-import { jsonMinify, jsonQuery, ctrl } from './utils';
+import { jsonMinify, jsonQuery, ctrl, go } from './utils';
 
 test('show the tsv data', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=control-onchange--sheet-on-change&viewMode=story');
+  await go(page, 'control-tsv--sheet-tsv');
   const b2 = page.locator("[data-address='B2']");
   await b2.click();
   await page.keyboard.type('=sum(C1:E1)+10');
   await page.keyboard.press('Enter');
 
-  const tsvData = page.locator('#changes');
-  const tsvText = await tsvData.inputValue();
+  const getTsvText = async () => {
+    const lines = await page.locator('#changes .cm-line').allTextContents();
+    return lines.join('\n');
+  };
+
+  const tsvText = await getTsvText();
   expect(tsvText).toContain('22'); // Verify that calculation result is included
 
   const evaluates = page.locator('#evaluates');
   await evaluates.uncheck();
-  const tsvTextRaw = await tsvData.inputValue();
+  const tsvTextRaw = await getTsvText();
   expect(tsvTextRaw).toContain('=sum(C1:E1)+10'); // Verify that raw formula is included
 });
 
 test('formula evaluation with evaluates flag', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=control-onchange--sheet-on-change&viewMode=story');
+  await go(page, 'control-tsv--sheet-tsv');
 
   // Verify that formulas are evaluated in initial state
-  const tsvData = page.locator('#changes');
+  const getTsvText = async () => {
+    const lines = await page.locator('#changes .cm-line').allTextContents();
+    return lines.join('\n');
+  };
 
   // Wait for TSV data to be populated
   await page.waitForFunction(
     () => {
-      const element = document.querySelector('#changes') as HTMLInputElement;
-      return element && element.value && element.value.trim().length > 0;
+      const lines = document.querySelectorAll('#changes .cm-line');
+      return lines.length > 0 && Array.from(lines).some((l) => l.textContent && l.textContent.trim().length > 0);
     },
     { timeout: 5000 },
   );
 
-  let tsvText = await tsvData.inputValue();
+  let tsvText = await getTsvText();
 
   // Debug: Log TSV content for troubleshooting
   // console.log('TSV Text:', tsvText);
@@ -61,7 +68,7 @@ test('formula evaluation with evaluates flag', async ({ page }) => {
 
   // Wait for TSV data to update after unchecking evaluates
   await page.waitForTimeout(100);
-  tsvText = await tsvData.inputValue();
+  tsvText = await getTsvText();
 
   // Verify that raw formulas are included
   const lines2 = tsvText.split('\n');
@@ -85,7 +92,7 @@ test('formula evaluation with evaluates flag', async ({ page }) => {
 
   // Wait for TSV data to update after checking evaluates
   await page.waitForTimeout(100);
-  tsvText = await tsvData.inputValue();
+  tsvText = await getTsvText();
 
   // Verify that calculation results are included again
   const lines3 = tsvText.split('\n');
@@ -101,7 +108,7 @@ test('formula evaluation with evaluates flag', async ({ page }) => {
 });
 
 test('1 operation makes 1 diff history', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=control-onchange--sheet-on-change&viewMode=story');
+  await go(page, 'control-tsv--sheet-tsv');
   const histories = page.locator('.histories li');
 
   const b4 = page.locator("[data-address='B4']");
@@ -125,7 +132,7 @@ test('1 operation makes 1 diff history', async ({ page }) => {
 });
 
 test('escape key should cancel the editing', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=control-onchange--sheet-on-change&viewMode=story');
+  await go(page, 'control-tsv--sheet-tsv');
 
   const histories = page.locator('.histories li');
 
@@ -140,7 +147,7 @@ test('escape key should cancel the editing', async ({ page }) => {
 });
 
 test('edit on enter', async ({ page }) => {
-  await page.goto('http://localhost:5233/iframe.html?id=basic-simple--sheet&viewMode=story');
+  await go(page, 'basic-simple--sheet');
   const address = page.locator('.gs-selecting-address');
   const editor = page.locator('.gs-editor');
   const b2 = page.locator("[data-address='B2']");
@@ -168,7 +175,7 @@ test('onKeyUp', async ({ page }) => {
     }
   });
 
-  await page.goto('http://localhost:5233/iframe.html?id=control-write--write');
+  await go(page, 'control-write--write');
   const c2 = page.locator("[data-address='C2']");
   await c2.click();
 
@@ -181,7 +188,7 @@ test('onKeyUp', async ({ page }) => {
   ]);
 });
 
-test('onSelect single cell', async ({ page }) => {
+test('onSelect single cell and range selection', async ({ page }) => {
   const logs: any[][] = [];
   page.on('console', async (msg) => {
     if (msg.type() === 'log') {
@@ -190,79 +197,44 @@ test('onSelect single cell', async ({ page }) => {
     }
   });
 
-  await page.goto('http://localhost:5233/iframe.html?id=control-onselect--sheet-on-select');
+  await go(page, 'control-onselect--sheet-on-select');
 
-  // Click on B2 for single cell selection
   const b2 = page.locator("[data-address='B2']");
+
+  // ---- Single cell selection ----
   await b2.click();
-
-  // Wait for the onSelect event to fire
   await page.waitForTimeout(100);
-
-  // Check that onSelect was called with correct single cell selection
   expect(logs.length).toBeGreaterThan(0);
-  const lastLog = logs[logs.length - 1];
+  let lastLog = logs[logs.length - 1];
   expect(lastLog[0]).toBe('onSelect');
-
-  const selectionData = lastLog[1];
-
-  // Verify the structure of the selection data
+  let selectionData = lastLog[1];
   expect(selectionData).toHaveProperty('pointing');
   expect(selectionData).toHaveProperty('selectingFrom');
   expect(selectionData).toHaveProperty('selectingTo');
-
-  // For single cell selection, pointing and selectingFrom should be the same
-  // selectingTo might be {-1, -1} for single cell selection
   expect(selectionData.pointing).toEqual(selectionData.selectingFrom);
   expect(selectionData.selectingFrom).toEqual({ y: 2, x: 2 });
-});
 
-test('onSelect range selection', async ({ page }) => {
-  const logs: any[][] = [];
-  page.on('console', async (msg) => {
-    if (msg.type() === 'log') {
-      const values = await Promise.all(msg.args().map((arg) => arg.jsonValue()));
-      logs.push(values);
-    }
-  });
-
-  await page.goto('http://localhost:5233/iframe.html?id=control-onselect--sheet-on-select');
-
-  // Clear previous logs
+  // ---- Range selection ----
   logs.length = 0;
-
-  // Start selection at B2
-  const b2 = page.locator("[data-address='B2']");
   await b2.click();
-
-  // Drag to D4 for range selection
   const d4 = page.locator("[data-address='D4']");
   await page.mouse.down();
   await d4.hover();
   await page.mouse.up();
-
-  // Wait for the onSelect event to fire
   await page.waitForTimeout(100);
-
-  // Check that onSelect was called with correct range selection
   expect(logs.length).toBeGreaterThan(0);
-  const lastLog = logs[logs.length - 1];
+  lastLog = logs[logs.length - 1];
   expect(lastLog[0]).toBe('onSelect');
-
-  const selectionData = lastLog[1];
-
-  // Verify the structure of the selection data
+  selectionData = lastLog[1];
   expect(selectionData).toHaveProperty('pointing');
   expect(selectionData).toHaveProperty('selectingFrom');
   expect(selectionData).toHaveProperty('selectingTo');
-
-  // For range selection, coordinates should be different
   expect(selectionData.pointing).toEqual(selectionData.selectingFrom);
   expect(selectionData.selectingFrom).toEqual({ y: 2, x: 2 });
   expect(selectionData.selectingTo).toEqual({ y: 4, x: 4 });
 });
 
-test('onInsertRows', async ({ page }) => {
+test('onInsertRows, onInsertCols, onRemoveRows, onRemoveCols events', async ({ page }) => {
   const logs: any[][] = [];
   page.on('console', async (msg) => {
     if (msg.type() === 'log') {
@@ -271,129 +243,63 @@ test('onInsertRows', async ({ page }) => {
     }
   });
 
-  await page.goto('http://localhost:5233/iframe.html?id=control-insert--insert');
+  await go(page, 'control-insert--insert');
 
-  // Select a cell first to set the selection range
   const b2 = page.locator("[data-address='B2']");
+
+  // ---- onInsertRows ----
+  logs.length = 0;
   await b2.click();
-
-  // Click "Insert Row Above" button
-  const insertRowButton = page.locator('button:has-text("Insert Row Above")');
-  await insertRowButton.click();
-
-  // Wait for the onInsertRows event to fire
+  await page.locator('button:has-text("Insert Row Above")').click();
   await page.waitForTimeout(100);
-
-  // Check that onInsertRows was called
   expect(logs.length).toBeGreaterThan(1);
-  const eventLog = logs[logs.length - 2]; // First log is the event call
+  let eventLog = logs[logs.length - 2];
   expect(eventLog[0]).toBe('onInsertRows called with:');
-
-  const eventData = eventLog[1];
+  let eventData = eventLog[1];
   expect(eventData).toHaveProperty('table');
   expect(eventData).toHaveProperty('y');
   expect(eventData).toHaveProperty('numRows');
-  expect(eventData.y).toBeGreaterThanOrEqual(-1); // Insert position can be -1 if no selection
+  expect(eventData.y).toBeGreaterThanOrEqual(-1);
   expect(eventData.numRows).toBe(1);
-});
 
-test('onInsertCols', async ({ page }) => {
-  const logs: any[][] = [];
-  page.on('console', async (msg) => {
-    if (msg.type() === 'log') {
-      const values = await Promise.all(msg.args().map((arg) => arg.jsonValue()));
-      logs.push(values);
-    }
-  });
-
-  await page.goto('http://localhost:5233/iframe.html?id=control-insert--insert');
-
-  // Select a cell first to set the selection range
-  const b2 = page.locator("[data-address='B2']");
+  // ---- onInsertCols ----
+  logs.length = 0;
   await b2.click();
-
-  // Click "Insert Column Left" button
-  const insertColButton = page.locator('button:has-text("Insert Column Left")');
-  await insertColButton.click();
-
-  // Wait for the onInsertCols event to fire
+  await page.locator('button:has-text("Insert Column Left")').click();
   await page.waitForTimeout(100);
-
-  // Check that onInsertCols was called
   expect(logs.length).toBeGreaterThan(1);
-  const eventLog = logs[logs.length - 2]; // First log is the event call
+  eventLog = logs[logs.length - 2];
   expect(eventLog[0]).toBe('onInsertCols called with:');
-
-  const eventData = eventLog[1];
+  eventData = eventLog[1];
   expect(eventData).toHaveProperty('table');
   expect(eventData).toHaveProperty('x');
   expect(eventData).toHaveProperty('numCols');
-  expect(eventData.x).toBeGreaterThanOrEqual(-1); // Insert position can be -1 if no selection
+  expect(eventData.x).toBeGreaterThanOrEqual(-1);
   expect(eventData.numCols).toBe(1);
-});
 
-test('onRemoveRows', async ({ page }) => {
-  const logs: any[][] = [];
-  page.on('console', async (msg) => {
-    if (msg.type() === 'log') {
-      const values = await Promise.all(msg.args().map((arg) => arg.jsonValue()));
-      logs.push(values);
-    }
-  });
-
-  await page.goto('http://localhost:5233/iframe.html?id=control-insert--insert');
-
-  // Select a cell first to set the selection range
-  const b2 = page.locator("[data-address='B2']");
+  // ---- onRemoveRows ----
+  logs.length = 0;
   await b2.click();
-
-  // Click "Remove Row" button
-  const removeRowButton = page.locator('button:has-text("Remove Row")');
-  await removeRowButton.click();
-
-  // Wait for the onRemoveRows event to fire
+  await page.locator('button:has-text("Remove Row")').click();
   await page.waitForTimeout(100);
-
-  // Check that onRemoveRows was called
   expect(logs.length).toBeGreaterThan(1);
-  const eventLog = logs[logs.length - 2]; // First log is the event call
+  eventLog = logs[logs.length - 2];
   expect(eventLog[0]).toBe('onRemoveRows called with:');
-
-  const eventData = eventLog[1];
+  eventData = eventLog[1];
   expect(eventData).toHaveProperty('table');
   expect(eventData).toHaveProperty('ys');
   expect(Array.isArray(eventData.ys)).toBe(true);
   expect(eventData.ys.length).toBe(1);
-});
 
-test('onRemoveCols', async ({ page }) => {
-  const logs: any[][] = [];
-  page.on('console', async (msg) => {
-    if (msg.type() === 'log') {
-      const values = await Promise.all(msg.args().map((arg) => arg.jsonValue()));
-      logs.push(values);
-    }
-  });
-
-  await page.goto('http://localhost:5233/iframe.html?id=control-insert--insert');
-
-  // Select a cell first to set the selection range
-  const b2 = page.locator("[data-address='B2']");
+  // ---- onRemoveCols ----
+  logs.length = 0;
   await b2.click();
-
-  // Click "Remove Column" button
-  const removeColButton = page.locator('button:has-text("Remove Column")');
-  await removeColButton.click();
-
-  // Wait for the onRemoveCols event to fire
+  await page.locator('button:has-text("Remove Column")').click();
   await page.waitForTimeout(100);
-
-  // Check that onRemoveCols was called
   expect(logs.length).toBeGreaterThan(1);
-  const eventLog = logs[logs.length - 2]; // First log is the event call
+  eventLog = logs[logs.length - 2];
   expect(eventLog[0]).toBe('onRemoveCols called with:');
-
-  const eventData = eventLog[1];
+  eventData = eventLog[1];
   expect(eventData).toHaveProperty('table');
   expect(eventData).toHaveProperty('xs');
   expect(Array.isArray(eventData.xs)).toBe(true);
@@ -402,7 +308,7 @@ test('onRemoveCols', async ({ page }) => {
 
 test.describe('OnEdit Event Tests', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:5233/iframe.html?args=&id=control-onedit--on-edit&viewMode=story');
+    await go(page, 'control-onedit--on-edit');
     await page.waitForSelector('[data-sheet-name="Sheet1"]', { timeout: 10000 });
   });
 
@@ -478,16 +384,17 @@ test.describe('OnEdit Event Tests', () => {
       return historyElements.length >= 3;
     });
 
-    // Verify the history contents
-    const historyElements = await page.locator('[data-testid="history-item"]').all();
-    expect(historyElements.length).toBeGreaterThanOrEqual(3);
+    // Verify entries in each panel (Sheet1 gets 2, Sheet2 gets 1)
+    const sheet1Items = await page.locator('[data-testid="edit-history-sheet1"] [data-testid="history-item"]').all();
+    const sheet2Items = await page.locator('[data-testid="edit-history-sheet2"] [data-testid="history-item"]').all();
+    expect(sheet1Items.length).toBeGreaterThanOrEqual(2);
+    expect(sheet2Items.length).toBeGreaterThanOrEqual(1);
 
-    // Check the latest history entry
-    const latestHistory = await historyElements[0].textContent();
-    expect(latestHistory).toContain('Sheet:');
-
-    // Check the latest history data
-    const latestDataText = await page.locator('[data-testid="history-data"]').first().inputValue();
+    // Check the latest Sheet2 history data contains John Updated
+    const latestDataText = await page
+      .locator('[data-testid="edit-history-sheet2"] [data-testid="history-data"]')
+      .first()
+      .inputValue();
     expect(latestDataText).toContain('John Updated');
   });
 
@@ -503,10 +410,13 @@ test.describe('OnEdit Event Tests', () => {
       return historyElements.length > 0;
     });
 
-    const historyText = await page.locator('[data-testid="history-item"]').first().textContent();
-
-    // Verify the area information is displayed correctly (cell A2: top:2, left:1, bottom:2, right:1)
-    expect(historyText).toContain('Area:2,1 to 2,1');
+    // Verify the data in the Sheet1 panel contains the edited value
+    const latestDataText = await page
+      .locator('[data-testid="edit-history-sheet1"] [data-testid="history-data"]')
+      .first()
+      .inputValue();
+    const editData = JSON.parse(latestDataText);
+    expect(editData['A2']?.value).toBe('Test Value');
   });
 
   test('should handle edits on both sheets independently', async ({ page }) => {
@@ -530,8 +440,16 @@ test.describe('OnEdit Event Tests', () => {
     const historyElements = await page.locator('[data-testid="history-item"]').all();
     expect(historyElements.length).toBeGreaterThanOrEqual(2);
 
-    // Verify the latest edit belongs to Sheet2
-    const latestHistory = await historyElements[0].textContent();
-    expect(latestHistory).toContain('Sheet2 Edit');
+    // Verify each sheet's edit is recorded in its own panel
+    const sheet2DataText = await page
+      .locator('[data-testid="edit-history-sheet2"] [data-testid="history-data"]')
+      .first()
+      .inputValue();
+    expect(sheet2DataText).toContain('Sheet2 Edit');
+    const sheet1DataText = await page
+      .locator('[data-testid="edit-history-sheet1"] [data-testid="history-data"]')
+      .first()
+      .inputValue();
+    expect(sheet1DataText).toContain('Sheet1 Edit');
   });
 });

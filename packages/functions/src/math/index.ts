@@ -21,8 +21,9 @@ import { Atan2Function } from './atan2';
 import { RandFunction } from './rand';
 import { UnaryPercentFunction } from './unaryPercent';
 import { UplusFunction } from './uplus';
+import { SumifFunction } from './sumif';
 import { SumifsFunction } from './sumifs';
-import { AverageifsFunction } from './averageifs';
+import { CountifFunction } from './countif';
 import { CountifsFunction } from './countifs';
 import { FactFunction } from './fact';
 import { IntFunction } from './int';
@@ -35,6 +36,12 @@ import { SignFunction } from './sign';
 import { SumsqFunction } from './sumsq';
 import { TruncFunction } from './trunc';
 import { BaseConvFunction } from './base';
+import { SequenceFunction } from './sequence';
+import { MmultFunction } from './mmult';
+import { TransposeFunction } from './transpose';
+import { MinverseFunction } from './minverse';
+import { MdetermFunction } from './mdeterm';
+import { SumproductFunction } from './sumproduct';
 
 export const mathFunctions: FunctionMapping = {
   mod: ModFunction,
@@ -59,8 +66,9 @@ export const mathFunctions: FunctionMapping = {
   rand: RandFunction,
   unary_percent: UnaryPercentFunction,
   uplus: UplusFunction,
+  sumif: SumifFunction,
   sumifs: SumifsFunction,
-  averageifs: AverageifsFunction,
+  countif: CountifFunction,
   countifs: CountifsFunction,
   fact: FactFunction,
   int: IntFunction,
@@ -73,6 +81,12 @@ export const mathFunctions: FunctionMapping = {
   sumsq: SumsqFunction,
   trunc: TruncFunction,
   base: BaseConvFunction,
+  sequence: SequenceFunction,
+  mmult: MmultFunction,
+  transpose: TransposeFunction,
+  minverse: MinverseFunction,
+  mdeterm: MdetermFunction,
+  sumproduct: SumproductFunction,
 };
 
 export default mathFunctions;

@@ -1,8 +1,9 @@
-import { Pending, Sentinel } from '../../sentinels';
-import { FormulaError } from '../evaluator';
+import { Pending, Sentinel, Spilling } from '../../sentinels';
+import { FormulaError } from '../formula-error';
 import { ensureSys, setAsyncCache } from '../../lib/cell';
 import type { Wire } from '../../lib/hub';
-import type { CellType, PointType } from '../../types';
+import type { CellType, Id, PointType } from '../../types';
+import type { Table } from '../../lib/table';
 
 /**
  * Sentinel value to distinguish cache miss from user-returned undefined/null.
@@ -16,8 +17,37 @@ export const hasPendingArg = (args: any[]): boolean => {
   return args.some((v) => Pending.is(v));
 };
 
-/** Duck-type check for Table instances (avoids importing Table to prevent circular deps). */
-const isTable = (v: any): boolean => v != null && typeof v === 'object' && 'sheetId' in v && 'wire' in v;
+const isTable = (value: any): value is Table => {
+  return value?.__isTable === true;
+};
+
+/**
+ * Recursively check whether any value in the structure is a Pending sentinel.
+ * Handles flat values, nested arrays, and Table objects (via getFieldMatrix).
+ */
+export const hasDeepPending = (values: any[], at: Id): boolean => {
+  for (const v of values) {
+    if (Pending.is(v)) {
+      return true;
+    }
+    if (Array.isArray(v)) {
+      if (hasDeepPending(v, at)) {
+        return true;
+      }
+    }
+    if (Spilling.is(v)) {
+      if (hasDeepPending(v.matrix, at)) {
+        return true;
+      }
+    }
+    if (isTable(v)) {
+      if (hasDeepPending(v._toValueMatrix({ at }), at)) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
 
 /**
  * cyrb53 – a fast, high-quality 53-bit string hash.
@@ -49,10 +79,10 @@ const cyrb53 = (str: string, seed = 0): number => {
  * value matrix (`any[][]`) via `getFieldMatrix()` so the key reflects the
  * actual cell values the function will operate on.
  */
-export const buildAsyncCacheKey = (funcName: string, bareArgs: any[], hashPrecision: number = 1): string => {
-  const argsJson = JSON.stringify(bareArgs, (_key, value) => {
+export const buildAsyncCacheKey = (funcName: string, args: any[], hashPrecision: number = 1): string => {
+  const argsJson = JSON.stringify(args, (_key, value) => {
     if (isTable(value)) {
-      return value.getFieldMatrix();
+      return value.toValueMatrix();
     }
     if (Pending.is(value)) {
       return null;
@@ -73,13 +103,12 @@ export const buildAsyncCacheKey = (funcName: string, bareArgs: any[], hashPrecis
  */
 export const getAsyncCache = (
   table: { wire: Wire; getId: (p: PointType) => string },
-  origin: PointType,
+  id: Id,
   key: string,
   useInflight: boolean = false,
 ): any => {
-  const cellId = table.getId(origin);
   const wire = table.wire;
-  const cell: CellType | undefined = wire.data[cellId];
+  const cell: CellType | undefined = wire.data[id];
 
   if (cell == null) {
     return asyncCacheMiss;
@@ -100,7 +129,7 @@ export const getAsyncCache = (
     }
   }
 
-  const compositeKey = `${cellId}:${key}`;
+  const compositeKey = `${id}:${key}`;
 
   // Check if there is already a pending promise for this cell+key
   if (wire.asyncPending.has(compositeKey)) {
@@ -116,20 +145,18 @@ export const getAsyncCache = (
     // Chain to the shared promise to populate this cell's cache when it resolves
     inflight.pending.promise
       .then((result: any) => {
-        const c = wire.data[cellId];
+        const c = wire.data[id];
         if (c != null) {
           setAsyncCache(c, key, { value: result, expireTime: inflight.expireTime });
         }
       })
-      .catch((error: any) => {
-        const errValue = new FormulaError(
-          '#ASYNC!',
-          error?.message ?? String(error),
-          error instanceof Error ? error : undefined,
-        );
-        const c = wire.data[cellId];
+      .catch((e: any) => {
+        if (!FormulaError.is(e)) {
+          e = new FormulaError('#ASYNC!', e?.message ?? String(e), e instanceof Error ? e : undefined);
+        }
+        const c = wire.data[id];
         if (c != null) {
-          setAsyncCache(c, key, { value: errValue, expireTime: inflight.expireTime });
+          setAsyncCache(c, key, { value: e, expireTime: inflight.expireTime });
         }
       })
       .finally(() => {
@@ -162,18 +189,17 @@ export const getAsyncCache = (
 export const awaitAndSave = (
   promise: Promise<any>,
   table: { wire: Wire; getId: (p: PointType) => string },
-  origin: PointType,
+  id: Id,
   key: string,
   ttlMilliseconds?: number,
   useInflight: boolean = false,
 ): Pending => {
-  const cellId = table.getId(origin);
   const wire = table.wire;
 
   // Compute expireTime from ttl (ms)
   const expireTime = ttlMilliseconds != null ? Date.now() + ttlMilliseconds : undefined;
 
-  const compositeKey = `${cellId}:${key}`;
+  const compositeKey = `${id}:${key}`;
 
   // Start the async computation
   const pending = new Pending(promise);
@@ -189,20 +215,18 @@ export const awaitAndSave = (
 
   promise
     .then((result: any) => {
-      const c = wire.data[cellId];
+      const c = wire.data[id];
       if (c != null) {
         setAsyncCache(c, key, { value: result, expireTime });
       }
     })
-    .catch((error: any) => {
-      const errValue = new FormulaError(
-        '#ASYNC!',
-        error?.message ?? String(error),
-        error instanceof Error ? error : undefined,
-      );
-      const c = wire.data[cellId];
+    .catch((e: any) => {
+      if (!FormulaError.is(e)) {
+        e = new FormulaError('#ASYNC!', e?.message ?? String(e), e instanceof Error ? e : undefined);
+      }
+      const c = wire.data[id];
       if (c != null) {
-        setAsyncCache(c, key, { value: errValue, expireTime });
+        setAsyncCache(c, key, { value: e, expireTime });
       }
     })
     .finally(() => {

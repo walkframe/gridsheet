@@ -231,7 +231,7 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
             }}
             vertical={-1}
           />
-          {table.getLabel(col?.label, col?.labeler, x) ?? colId}
+          {table.getLabel(col?.label, { y: 0, x }, x) ?? colId}
           {!prevention.hasOperation(col?.prevention, prevention.ColumnMenu) && (
             <button
               className={`gs-menu-btn gs-column-menu-btn ${hasFilter ? 'gs-filtered' : ''} ${columnMenuState?.x === x ? 'gs-active' : ''}`}

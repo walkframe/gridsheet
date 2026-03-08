@@ -1,12 +1,12 @@
 import type { FilterCondition, FilterConditionMethod, FilterConfig } from '../types';
 import { parseDate } from './date';
-import { TimeDelta } from './time';
+import { Time } from './time';
 
 type FilterFunction = (condition: FilterCondition, cellValue: any) => boolean;
 
 const _str = (v: any): string => (v == null ? '' : String(v));
 
-type ValueType = 'number' | 'date' | 'timedelta' | 'boolean' | 'string';
+type ValueType = 'number' | 'date' | 'time' | 'boolean' | 'string';
 
 function detectType(cellValue: any): ValueType {
   if (typeof cellValue === 'number') {
@@ -15,8 +15,8 @@ function detectType(cellValue: any): ValueType {
   if (cellValue instanceof Date) {
     return 'date';
   }
-  if (TimeDelta.is(cellValue)) {
-    return 'timedelta';
+  if (Time.is(cellValue)) {
+    return 'time';
   }
   if (typeof cellValue === 'boolean') {
     return 'boolean';
@@ -43,8 +43,8 @@ function parseAsType(v: string, type: ValueType): { ok: boolean; num: number } {
       }
       return { ok: true, num: d.getTime() };
     }
-    case 'timedelta': {
-      const td = TimeDelta.parse(v);
+    case 'time': {
+      const td = Time.parse(v);
       return td ? { ok: true, num: td.toMilliseconds() } : { ok: false, num: NaN };
     }
     case 'boolean': {
@@ -68,8 +68,8 @@ function toNumeric(cellValue: any, type: ValueType): number {
       return cellValue as number;
     case 'date':
       return (cellValue as Date).getTime();
-    case 'timedelta':
-      return TimeDelta.ensure(cellValue).toMilliseconds();
+    case 'time':
+      return Time.ensure(cellValue).toMilliseconds();
     case 'boolean':
       return cellValue ? 1 : 0;
     default:

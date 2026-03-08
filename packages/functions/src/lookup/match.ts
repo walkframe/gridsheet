@@ -1,47 +1,48 @@
 import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
 import { Table, solveTable, stripTable, ensureNumber } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
+const description = `Searches for a value in a table and returns its position.
+Returns the position of the matched value (1-based index).`;
+
 export class MatchFunction extends BaseFunction {
   example = 'MATCH("apple", A1:A10, 0)';
-  helpText = [
-    'Searches for a value in a table and returns its position.',
-    'Returns the position of the matched value (1-based index).',
-  ];
-  helpArgs: HelpArg[] = [
-    { name: 'search_key', description: 'The value to search for.', type: ['any'] },
-    { name: 'range', description: 'The range to search in.', type: ['range'] },
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
+    { name: 'search_key', description: 'The value to search for.', acceptedTypes: ['any'] },
+    { name: 'range', description: 'The range to search in.', takesMatrix: true, acceptedTypes: ['matrix'] },
     {
       name: 'search_type',
       description: '0 for exact match, 1 for less than or equal, -1 for greater than or equal.',
-      type: ['number'],
+      acceptedTypes: ['number'],
       optional: true,
     },
   ];
   category: FunctionCategory = 'lookup';
 
-  protected validate() {
-    if (this.bareArgs.length < 2 || this.bareArgs.length > 3) {
+  protected validate(args: any[]): any[] {
+    if (args.length < 2 || args.length > 3) {
       throw new FormulaError('#N/A', 'Number of arguments for MATCH is incorrect.');
     }
 
-    if (this.bareArgs[0] instanceof Table) {
-      this.bareArgs[0] = stripTable({ value: this.bareArgs[0] });
+    if (args[0] instanceof Table) {
+      args[0] = stripTable({ value: args[0] });
     }
 
-    if (!(this.bareArgs[1] instanceof Table)) {
+    if (!(args[1] instanceof Table)) {
       throw new FormulaError('#VALUE!', 'Second argument must be a range.');
     }
 
-    if (this.bareArgs.length === 3) {
-      this.bareArgs[2] = ensureNumber(this.bareArgs[2]);
-      if (![-1, 0, 1].includes(this.bareArgs[2])) {
+    if (args.length === 3) {
+      args[2] = ensureNumber(args[2]);
+      if (![-1, 0, 1].includes(args[2])) {
         throw new FormulaError('#VALUE!', 'Match type must be -1, 0, or 1.');
       }
     } else {
-      this.bareArgs[2] = 1; // Default to 1 (less than or equal)
+      args[2] = 1; // Default to 1 (less than or equal)
     }
+    return args;
   }
 
   protected main(searchKey: any, range: Table, searchType: number = 1) {

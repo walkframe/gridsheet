@@ -1,33 +1,26 @@
 import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type HelpArg } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
 import { ensureNumber } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
+const description = `Returns the angle in radians between the x-axis and a line passing from the origin through a given coordinate point (x, y).`;
+
 export class Atan2Function extends BaseFunction {
   example = 'ATAN2(4,3)';
-  helpText = [
-    'Returns the angle in radians between the x-axis and a line passing from the origin through a given coordinate point (x, y).',
-  ];
-  helpArgs: HelpArg[] = [
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
     {
       name: 'x',
       description: 'x of the point.',
-      type: ['number'],
+      acceptedTypes: ['number'],
     },
     {
       name: 'y',
       description: 'y of the point.',
-      type: ['number'],
+      acceptedTypes: ['number'],
     },
   ];
   category: FunctionCategory = 'math';
-
-  protected validate() {
-    if (this.bareArgs.length !== 2) {
-      throw new FormulaError('#N/A', 'Number of arguments for ATAN2 is incorrect.');
-    }
-    this.bareArgs = this.bareArgs.map((arg) => ensureNumber(arg));
-  }
 
   protected main(x: number, y: number) {
     return Math.atan2(x, y);

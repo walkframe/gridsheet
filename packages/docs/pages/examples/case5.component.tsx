@@ -11,8 +11,8 @@ import {
   clip,
   areaToZone,
   Connector,
-  Renderer,
-  ThousandSeparatorRendererMixin,
+  Policy,
+  ThousandSeparatorPolicyMixin,
 } from '@gridsheet/react-core';
 
 // Menu item types
@@ -170,8 +170,8 @@ export default function AdvancedFeatures() {
   }, []);
 
   const hub = useHub({
-    renderers: {
-      thousand_separator: new Renderer({ mixins: [ThousandSeparatorRendererMixin] }),
+    policies: {
+      thousand_separator: new Policy({ mixins: [ThousandSeparatorPolicyMixin] }),
     },
     onSave: () => handleMenuAction('save'),
   });
@@ -258,27 +258,27 @@ export default function AdvancedFeatures() {
           A: { width: 150, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['A'] },
           B: {
             width: 100,
-            renderer: 'thousand_separator',
+            policy: 'thousand_separator',
             label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['B'],
           },
           C: {
             width: 100,
-            renderer: 'thousand_separator',
+            policy: 'thousand_separator',
             label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['C'],
           },
           D: {
             width: 100,
-            renderer: 'thousand_separator',
+            policy: 'thousand_separator',
             label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['D'],
           },
           E: {
             width: 100,
-            renderer: 'thousand_separator',
+            policy: 'thousand_separator',
             label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['E'],
           },
           F: {
             width: 100,
-            renderer: 'thousand_separator',
+            policy: 'thousand_separator',
             label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['F'],
             ...(currentSheet === 'Sales' && {
               style: {
@@ -361,7 +361,7 @@ export default function AdvancedFeatures() {
         if (connector) {
           const { tableManager } = connector;
           const { table } = tableManager;
-          const matrixData = table.getCellMatrix({ refEvaluation: 'RAW' });
+          const matrixData = table.toCellMatrix({ refEvaluation: 'RAW' });
           const cleanMatrixData = matrixData.map((row: any[]) =>
             row.map((cell: any) => {
               if (cell && typeof cell === 'object') {
