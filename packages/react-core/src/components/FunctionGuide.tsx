@@ -96,25 +96,50 @@ export const FunctionGuide: React.FC<FunctionGuideProps> = ({
         )}
         <div className="gs-fn-guide2-name">{activeFunctionGuide.example}</div>
         <div className="gs-fn-guide2-args-inline">
-          {activeFunctionGuide.helpArgs?.map((arg: any, j: number) => {
-            const isIterable = arg.iterable;
-            const isActive = activeArgIndex === j || (isIterable && activeArgIndex >= j);
-            return (
-              <React.Fragment key={j}>
-                {j > 0 ? ', ' : ''}
-                <span className={isActive ? 'gs-active-arg' : ''}>
-                  {arg.optional ? '[' : ''}
-                  {arg.name}
-                  {isIterable ? ', ...' : ''}
-                  {arg.optional ? ']' : ''}
-                </span>
-              </React.Fragment>
-            );
-          })}
+          {(() => {
+            const args = activeFunctionGuide.helpArgs ?? [];
+            const numIterable = args.filter((a: any) => a.iterable).length;
+            const iterableStart = args.length - numIterable;
+
+            return args.map((arg: any, j: number) => {
+              let isActive: boolean;
+              if (activeArgIndex < iterableStart) {
+                // Cursor is on a fixed (non-iterable) argument
+                isActive = activeArgIndex === j;
+              } else if (numIterable > 0 && j >= iterableStart) {
+                // Cursor is in the iterable zone; cycle through the iterable args
+                const offset = (activeArgIndex - iterableStart) % numIterable;
+                isActive = j === iterableStart + offset;
+              } else {
+                isActive = false;
+              }
+              return (
+                <React.Fragment key={j}>
+                  {j > 0 ? ', ' : ''}
+                  <span className={isActive ? 'gs-active-arg' : ''}>
+                    {arg.optional ? '[' : ''}
+                    {arg.name}
+                    {arg.iterable ? ', ...' : ''}
+                    {arg.optional ? ']' : ''}
+                  </span>
+                </React.Fragment>
+              );
+            });
+          })()}
         </div>
         {(() => {
-          const activeArg =
-            activeFunctionGuide.helpArgs?.[Math.min(activeArgIndex, activeFunctionGuide.helpArgs.length - 1)];
+          const args = activeFunctionGuide.helpArgs ?? [];
+          const numIterable = args.filter((a: any) => a.iterable).length;
+          const iterableStart = args.length - numIterable;
+
+          let resolvedIndex: number;
+          if (activeArgIndex < iterableStart || numIterable === 0) {
+            resolvedIndex = Math.min(activeArgIndex, args.length - 1);
+          } else {
+            const offset = (activeArgIndex - iterableStart) % numIterable;
+            resolvedIndex = iterableStart + offset;
+          }
+          const activeArg = args[resolvedIndex];
           if (!activeArg?.description) {
             return null;
           }
