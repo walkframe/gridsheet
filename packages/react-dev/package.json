@@ -1,6 +1,6 @@
 {
   "name": "@gridsheet/react-dev",
-  "version": "3.0.0-rc.1",
+  "version": "3.0.0-rc.2",
   "description": "Development tools for GridSheet",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -34,7 +34,7 @@
   "homepage": "https://gridsheet.walkframe.com/",
   "packageManager": "pnpm@10.6.5",
   "peerDependencies": {
-    "@gridsheet/react-core": ">=3.0.0-rc.1",
+    "@gridsheet/react-core": ">=3.0.0-rc.2",
     "react": ">=16.9.0",
     "react-dom": ">=16.9.0"
   },

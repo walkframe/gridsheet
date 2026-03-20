@@ -1,6 +1,6 @@
 {
   "name": "@gridsheet/functions",
-  "version": "3.0.0-rc.1",
+  "version": "3.0.0-rc.2",
   "description": "Extended formula functions for @gridsheet/react-core",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -77,7 +77,7 @@
     "@gridsheet/react-core": "workspace:*"
   },
   "peerDependencies": {
-    "@gridsheet/react-core": "^3.0.0",
+    "@gridsheet/react-core": "^3.0.0-rc.2",
     "dayjs": "^1.11.13"
   },
   "publishConfig": {

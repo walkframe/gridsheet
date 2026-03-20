@@ -4,7 +4,6 @@ on:
     branches:
       - master
       - fix/*
-      - feature/split-functions
 
 permissions:
   id-token: write # Required for npm trusted publishing (OIDC)
@@ -56,6 +55,15 @@ jobs:
           cd packages/preact-core
           pnpm install
           pnpm build
+          VERSION=$(node -p "require('./package.json').version")
+          TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
+          npm publish --access public --provenance $TAG || true
+
+      - name: upload functions
+        run: |
+          cd packages/functions
+          pnpm install
+          pnpm build --mode development
           VERSION=$(node -p "require('./package.json').version")
           TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
           npm publish --access public --provenance $TAG || true
