@@ -73,7 +73,6 @@ Some properties are only valid for columns or rows:
 | `width` | Columns only | Column width in pixels |
 | `height` | Rows only | Row height in pixels |
 | `label` | Columns only | Custom display text for the column header |
-| `labeler` | Both | Custom labeler for headers |
 
 **Note**: If you specify `width` or `height` on a cell address like `D3`, it will be ignored.
 
@@ -88,14 +87,11 @@ Each cell can be configured with the following properties:
 | `justifyContent` | `CSSProperties['justifyContent']` | Horizontal alignment within the cell |
 | `alignItems` | `CSSProperties['alignItems']` | Vertical alignment within the cell |
 | `label` | `string` | Fixed custom display text for column headers (columns only). Takes precedence over `labeler` if both are specified. |
-| `labeler` | `string` | Key of a labeler registered in the hub |
 | `width` | `Width` | Cell width in pixels |
 | `height` | `Height` | Cell height in pixels |
-| `renderer` | `string` | Key of a renderer registered in the hub |
-| `parser` | `string` | Key of a parser registered in the hub |
 | `policy` | `string` | Key of a policy registered in the hub |
 | `custom` | `Custom` | Custom data for the cell. You can store any arbitrary data here for your application's needs |
-| `disableFormula` | `boolean` | Disable formula evaluation for this cell |
+| `formulaEnabled` | `boolean` | Enable formula evaluation for this cell (default: `true`) |
 | `prevention` | `OperationType` | Operation restrictions for the cell |
 
 **Important Notes:**
@@ -123,14 +119,11 @@ import { operations } from '@gridsheet/react-core';
 | `Write` | 256 | Prevent editing cell values |
 | `Style` | 512 | Prevent changing cell styles |
 | `Resize` | 1024 | Prevent resizing rows/columns |
-| `SetRenderer` | 2048 | Prevent changing cell renderer |
-| `SetParser` | 4096 | Prevent changing cell parser |
 | `Copy` | 8192 | Prevent copying cells |
 | `SetPolicy` | 16384 | Prevent changing cell policy |
 | `Sort` | 32768 | Prevent sorting by this column |
 | `Filter` | 65536 | Prevent filtering by this column |
 | `SetLabel` | 131072 | Prevent editing the column header label |
-| `SetLabeler` | 262144 | Prevent changing the column header labeler |
 
 **Convenience aliases:**
 | Alias | Combines | Description |
@@ -175,16 +168,16 @@ const initialCells = {
   
   // Individual cell configuration
   'A1': { value: 'Hello World', style: { color: '#FF0000' } },
-  'B2': { value: 100, renderer: 'currency' },
+  'B2': { value: 100, policy: 'currency' },
   'C3': { value: 'Active', policy: 'status' },
   
   // Column configuration
-  'A': { width: 150, labeler: 'custom' },
+  'A': { width: 150 },
   'B': { width: 200 },
   
   // Row configuration
   '1': { height: 40 },
-  '2': { height: 50, labeler: 'custom' },
+  '2': { height: 50 },
 };
 
 <GridSheet initialCells={initialCells} />
@@ -192,26 +185,15 @@ const initialCells = {
 
 ### Hub-Registered Components
 
-The `labeler`, `renderer`, `parser`, and `policy` properties reference components that are registered in the hub by their string keys:
-
-- **Labeler**: References a labeler function registered in `hub.labelers`
-- **Renderer**: References a renderer instance registered in `hub.renderers`
-- **Parser**: References a parser instance registered in `hub.parsers`
-- **Policy**: References a policy instance registered in `hub.policies`
+The `policy` property references a `Policy` instance registered in the hub by its string key. A `Policy` unifies rendering, parsing, serialization, and header-label logic.
 
 ### Example Usage
 
 ```tsx
 const hub = useHub({
-  renderers: {
-    currency: new Renderer({ mixins: [CurrencyRendererMixin] }),
-    percentage: new Renderer({ mixins: [PercentageRendererMixin] }),
-  },
   policies: {
+    currency: new Policy({ mixins: [CurrencyPolicyMixin] }),
     status: new Policy({ mixins: [StatusPolicyMixin] }),
-  },
-  labelers: {
-    custom: (n: number) => `Row ${n}`,
   },
 });
 
@@ -219,15 +201,12 @@ const hub = useHub({
 {
   'A1': {
     value: 1000,
-    renderer: 'currency',  // References hub.renderers.currency
+    policy: 'currency',    // References hub.policies.currency
     style: { backgroundColor: '#f0f9ff' },
   },
   'B1': {
     value: 'Active',
     policy: 'status',      // References hub.policies.status
-  },
-  'C1': {
-    labeler: 'custom',     // References hub.labelers.custom
   },
 }
 ```
@@ -250,9 +229,6 @@ The `useHub` hook accepts configuration options that are shared across all sheet
 |--------|------|-------------|
 | `historyLimit` | `number` | Maximum number of history entries for undo/redo |
 | `additionalFunctions` | `FunctionMapping` | Custom formula functions |
-| `renderers` | `{ [rendererName: string]: RendererType }` | Custom cell renderers |
-| `parsers` | `{ [parserName: string]: ParserType }` | Custom cell parsers |
-| `labelers` | `{ [labelerName: string]: (n: number) => string }` | Custom header labelers |
 | `policies` | `{ [policyName: string]: PolicyType }` | Custom cell policies |
 | `onSave` | `FeedbackType` | Callback when cell data is saved |
 | `onChange` | `FeedbackType` | Callback when cell data changes |

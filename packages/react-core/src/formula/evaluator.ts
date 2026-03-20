@@ -1,6 +1,7 @@
 import { a2p, grantAddressAbsolute, p2a } from '../lib/coords';
 import { Table } from '../lib/table';
 import { Id, PointType } from '../types';
+import { FormulaError } from './formula-error';
 
 type EvaluateProps = {
   table: Table;
@@ -32,21 +33,6 @@ const getId = (idString: string, stripAbsolute = true) => {
   }
   return id.replace('#', '');
 };
-
-export class FormulaError {
-  public code: string;
-  public message: string;
-  public error?: Error;
-  __isFormulaError = true;
-  constructor(code: string, message: string, error?: Error) {
-    this.code = code;
-    this.message = message;
-    this.error = error;
-  }
-  static is(obj: any): boolean {
-    return obj instanceof FormulaError || obj?.__isFormulaError === true;
-  }
-}
 
 class Entity<T = any> {
   public value: T;
@@ -90,7 +76,8 @@ export class RefEntity extends Entity<string> {
       throw new FormulaError('#REF!', `Invalid address: ${this.value}`);
     }
     const { y, x } = a2p(parsed.addresses[0]);
-    return parsed.table.trim({ top: y, left: x, bottom: y, right: x });
+    const t = parsed.table.trim({ top: y, left: x, bottom: y, right: x });
+    return t;
   }
 
   public identify(props: IdentifyProps) {
@@ -130,7 +117,8 @@ export class RangeEntity extends Entity<string> {
       throw new FormulaError('#REF!', `Invalid address: ${this.value}`);
     }
     const area = parsed.table.rangeToArea(parsed.addresses.join(':'));
-    return parsed.table.trim(area);
+    const t = parsed.table.trim(area);
+    return t;
   }
   public identify(props: IdentifyProps) {
     const { table, dependency, slideY = 0, slideX = 0 } = props;
@@ -269,12 +257,12 @@ export class FunctionEntity {
   public args: Expression[];
   public name: string;
   public precedence: number;
-  private origin?: PointType;
-  constructor(name: string, precedence = 0, args: Expression[] = [], origin?: PointType) {
+  private at?: Id;
+  constructor(name: string, precedence = 0, args: Expression[] = [], at?: Id) {
     this.name = name;
     this.precedence = precedence;
     this.args = args;
-    this.origin = origin;
+    this.at = at;
   }
 
   public evaluate({ table }: EvaluateProps): any {
@@ -283,7 +271,7 @@ export class FunctionEntity {
     if (Func == null) {
       throw new FormulaError('#NAME?', `Unknown function: ${name}`);
     }
-    const func = new Func({ args: this.args, table, origin: this.origin });
+    const func = new Func({ args: this.args, table, at: this.at });
     return func.call();
   }
 }
@@ -343,18 +331,20 @@ export class Token {
   type: TokenType;
   entity: any;
   precedence: number;
-  private origin?: PointType;
+  closed: boolean;
+  private at?: Id;
 
-  constructor(type: TokenType, entity: any, precedence = 0, origin?: PointType) {
+  constructor(type: TokenType, entity: any, precedence = 0, at?: Id, closed = true) {
     this.type = type;
     this.entity = entity;
     this.precedence = precedence;
-    this.origin = origin;
+    this.at = at;
+    this.closed = closed;
   }
 
   public length() {
     if (this.type === 'VALUE' && typeof this.entity === 'string') {
-      return this.entity.length + 2;
+      return this.entity.length + (this.closed ? 2 : 1);
     }
     return new String(this.entity).length;
   }
@@ -362,7 +352,7 @@ export class Token {
   public stringify() {
     if (this.type === 'VALUE') {
       if (typeof this.entity === 'string') {
-        return `"${this.entity}"`;
+        return this.closed ? `"${this.entity}"` : `"${this.entity}`;
       }
       if (typeof this.entity === 'boolean') {
         return this.entity ? 'TRUE' : 'FALSE';
@@ -390,14 +380,14 @@ export class Token {
 
       case 'INFIX_OPERATOR': {
         const name = INFIX_FUNCTION_NAME_MAP[this.entity as keyof typeof INFIX_FUNCTION_NAME_MAP];
-        return new FunctionEntity(name, this.precedence);
+        return new FunctionEntity(name, this.precedence, undefined, this.at);
       }
       case 'PREFIX_OPERATOR': {
         const name = PREFIX_FUNCTION_NAME_MAP[this.entity as keyof typeof PREFIX_FUNCTION_NAME_MAP];
-        return new FunctionEntity(name, this.precedence);
+        return new FunctionEntity(name, this.precedence, undefined, this.at);
       }
       case 'FUNCTION':
-        return new FunctionEntity(this.entity as string, 0, [], this.origin);
+        return new FunctionEntity(this.entity as string, 0, [], this.at);
 
       case 'UNREFERENCED':
         return new UnreferencedEntity(this.entity);
@@ -412,27 +402,18 @@ const isWhiteSpace = (char: string) => {
   return WHITESPACE_CHARS.has(char);
 };
 
-const TOKEN_OPEN = new Token('OPEN', '('),
-  TOKEN_CLOSE = new Token('CLOSE', ')'),
-  TOKEN_COMMA = new Token('COMMA', ','),
-  TOKEN_ADD = new Token('INFIX_OPERATOR', '+', 3),
-  TOKEN_MINUS = new Token('INFIX_OPERATOR', '-', 3),
-  TOKEN_UMINUS = new Token('PREFIX_OPERATOR', '-', 6),
-  TOKEN_DIVIDE = new Token('INFIX_OPERATOR', '/', 4),
-  TOKEN_MULTIPLY = new Token('INFIX_OPERATOR', '*', 4),
-  TOKEN_POWER = new Token('INFIX_OPERATOR', '^', 5),
-  TOKEN_CONCAT = new Token('INFIX_OPERATOR', '&', 4),
-  TOKEN_GTE = new Token('INFIX_OPERATOR', '>=', 2),
-  TOKEN_GT = new Token('INFIX_OPERATOR', '>', 2),
-  TOKEN_LTE = new Token('INFIX_OPERATOR', '<=', 2),
-  TOKEN_LT = new Token('INFIX_OPERATOR', '<', 2),
-  TOKEN_NE = new Token('INFIX_OPERATOR', '<>', 1),
-  TOKEN_EQ = new Token('INFIX_OPERATOR', '=', 1);
-
 const BOOLS: { [s: string]: boolean } = { ['true']: true, ['false']: false };
 
+const TOKEN_OPEN = new Token('OPEN', '('),
+  TOKEN_CLOSE = new Token('CLOSE', ')'),
+  TOKEN_COMMA = new Token('COMMA', ',');
+
+const INFIX_OPERATOR = 'INFIX_OPERATOR';
+const PREFIX_OPERATOR = 'PREFIX_OPERATOR';
+const POSTFIX_OPERATOR = 'POSTFIX_OPERATOR';
+
 type LexerOption = {
-  origin?: PointType;
+  at?: Id;
   idMap?: { [id: Id]: Id };
 };
 
@@ -441,17 +422,14 @@ export class Lexer {
   private formula: string;
   public tokens: Token[] = [];
   public foreign: boolean = false;
-  private origin?: PointType;
+  private at?: Id;
   private idMap: { [id: Id]: Id };
 
   constructor(formula: string, options?: LexerOption) {
     this.formula = formula;
     this.index = 0;
     this.tokens = [];
-    if (options?.origin) {
-      this.origin = options.origin;
-    }
-
+    this.at = options?.at;
     this.idMap = options?.idMap ?? {};
   }
 
@@ -509,7 +487,7 @@ export class Lexer {
           if (typeof t.entity === 'number' || typeof t.entity === 'boolean') {
             return t.entity;
           }
-          return `"${t.entity}"`;
+          return t.closed ? `"${t.entity}"` : `"${t.entity}`;
 
         case 'ID':
           return new IdEntity(t.entity as string).identify(props);
@@ -536,7 +514,7 @@ export class Lexer {
             if (typeof t.entity === 'number' || typeof t.entity === 'boolean') {
               return t.entity;
             }
-            return `"${t.entity}"`;
+            return t.closed ? `"${t.entity}"` : `"${t.entity}`;
           case 'ID':
             return new IdEntity(t.entity as string).display({ table });
           case 'ID_RANGE':
@@ -565,61 +543,75 @@ export class Lexer {
           this.tokens.push(TOKEN_COMMA);
           continue;
         case '+':
-          this.tokens.push(TOKEN_ADD);
+          // TOKEN_PLUS(3)
+          this.tokens.push(new Token(INFIX_OPERATOR, '+', 3, this.at));
           continue;
         case '-': {
           const prev1 = this.getToken(-1)?.type;
           const prev2 = this.getToken(-2)?.type;
-          if (prev1 === 'INFIX_OPERATOR' || (prev1 === 'SPACE' && prev2 === 'INFIX_OPERATOR')) {
-            this.tokens.push(TOKEN_UMINUS);
+          if (prev1 === INFIX_OPERATOR || (prev1 === 'SPACE' && prev2 === INFIX_OPERATOR)) {
+            // TOKEN_UMINUS(6)
+            this.tokens.push(new Token(PREFIX_OPERATOR, '-', 6, this.at));
           } else {
-            this.tokens.push(TOKEN_MINUS);
+            // TOKEN_MINUS(3)
+            this.tokens.push(new Token(INFIX_OPERATOR, '-', 3, this.at));
           }
           continue;
         }
         case '/':
-          this.tokens.push(TOKEN_DIVIDE);
+          // TOKEN_DIVIDE(4)
+          this.tokens.push(new Token(INFIX_OPERATOR, '/', 4, this.at));
           continue;
         case '*':
-          this.tokens.push(TOKEN_MULTIPLY);
+          // TOKEN_MULTIPLY(4)
+          this.tokens.push(new Token(INFIX_OPERATOR, '*', 4, this.at));
           continue;
         case '^':
-          this.tokens.push(TOKEN_POWER);
+          // TOKEN_POWER(5)
+          this.tokens.push(new Token(INFIX_OPERATOR, '^', 5, this.at));
           continue;
         case '&':
-          this.tokens.push(TOKEN_CONCAT);
+          // TOKEN_CONCAT(4)
+          this.tokens.push(new Token(INFIX_OPERATOR, '&', 4, this.at));
           continue;
         case '=':
-          this.tokens.push(TOKEN_EQ);
+          // TOKEN_EQ(1)
+          this.tokens.push(new Token(INFIX_OPERATOR, '=', 1, this.at));
           continue;
         case '>':
           if (this.get() === '=') {
             this.next();
-            this.tokens.push(TOKEN_GTE);
+            // TOKEN_GTE(2)
+            this.tokens.push(new Token(INFIX_OPERATOR, '>=', 2, this.at));
             continue;
           }
-          this.tokens.push(TOKEN_GT);
+          // TOKEN_GT(2)
+          this.tokens.push(new Token(INFIX_OPERATOR, '>', 2, this.at));
           continue;
         case '<':
           if (this.get() === '=') {
             this.next();
-            this.tokens.push(TOKEN_LTE);
+            // TOKEN_LTE(2)
+            this.tokens.push(new Token(INFIX_OPERATOR, '<=', 2, this.at));
             continue;
           }
           if (this.get() === '>') {
             this.next();
-            this.tokens.push(TOKEN_NE);
+            // TOKEN_NE(1)
+            this.tokens.push(new Token(INFIX_OPERATOR, '<>', 1, this.at));
             continue;
           }
-          this.tokens.push(TOKEN_LT);
+          // TOKEN_LT(2)
+          this.tokens.push(new Token(INFIX_OPERATOR, '<', 2, this.at));
           continue;
         case '"': {
-          const buf = this.getString('"');
-          this.tokens.push(new Token('VALUE', buf));
+          const { buf, closed } = this.getString('"');
+          // TOKEN_VALUE(0)
+          this.tokens.push(new Token('VALUE', buf, 0, this.at, closed));
           continue;
         }
         case "'": {
-          const buf = this.getString("'");
+          const { buf } = this.getString("'");
           char = `'${buf}'`;
           break;
         }
@@ -629,7 +621,8 @@ export class Lexer {
           // not continue
         }
         case '%': {
-          this.tokens.push(new Token('POSTFIX_OPERATOR', '%', 4));
+          // TOKEN_PERCENT(4)
+          this.tokens.push(new Token(POSTFIX_OPERATOR, '%', 4, this.at));
           continue;
         }
       } // switch end
@@ -638,7 +631,8 @@ export class Lexer {
       while (true) {
         const c = this.get();
         if (c === '(') {
-          this.tokens.push(new Token('FUNCTION', buf, 0, this.origin), TOKEN_OPEN);
+          // TOKEN_FUNCTION(0)
+          this.tokens.push(new Token('FUNCTION', buf, 0, this.at), TOKEN_OPEN);
           this.next();
           break;
         }
@@ -647,26 +641,26 @@ export class Lexer {
             break;
           }
           if (buf.match(/^[+-]?(\d*[.])?\d+$/)) {
-            this.tokens.push(new Token('VALUE', parseFloat(buf)));
+            this.tokens.push(new Token('VALUE', parseFloat(buf), 0, this.at));
           } else {
             const bool = BOOLS[buf.toLowerCase()];
             if (bool != null) {
-              this.tokens.push(new Token('VALUE', bool));
+              this.tokens.push(new Token('VALUE', bool, 0, this.at));
             } else if (buf.startsWith('#')) {
               if (buf.indexOf('#REF!') !== -1) {
-                this.tokens.push(new Token('UNREFERENCED', buf));
+                this.tokens.push(new Token('UNREFERENCED', buf, 0, this.at));
               } else if (buf.indexOf(':') !== -1) {
-                this.tokens.push(new Token('ID_RANGE', this.resolveIdRange(buf)));
+                this.tokens.push(new Token('ID_RANGE', this.resolveIdRange(buf), 0, this.at));
               } else {
-                this.tokens.push(new Token('ID', buf));
+                this.tokens.push(new Token('ID', buf, 0, this.at));
               }
             } else if (buf.indexOf(':') !== -1) {
-              this.tokens.push(new Token('RANGE', buf));
+              this.tokens.push(new Token('RANGE', buf, 0, this.at));
             } else {
               if (isNaN(buf[buf.length - 1] as unknown as number)) {
-                this.tokens.push(new Token('INVALID_REF', buf));
+                this.tokens.push(new Token('INVALID_REF', buf, 0, this.at));
               } else {
-                this.tokens.push(new Token('REF', buf));
+                this.tokens.push(new Token('REF', buf, 0, this.at));
               }
             }
           }
@@ -683,18 +677,18 @@ export class Lexer {
       space += this.formula[this.index++];
     }
     if (space !== '') {
-      this.tokens.push(new Token('SPACE', space));
+      this.tokens.push(new Token('SPACE', space, 0, this.at));
     }
   }
 
-  private getString(quote = '"') {
+  private getString(quote = '"'): { buf: string; closed: boolean } {
     let buf = '';
 
     while (true) {
       const c = this.get();
       this.next();
       if (c == null) {
-        break;
+        return { buf, closed: false };
       }
       if (c === quote) {
         if (quote === '"' && this.get() === quote) {
@@ -707,13 +701,12 @@ export class Lexer {
           buf += c;
           continue;
         } else {
-          break;
+          return { buf, closed: true };
         }
       } else {
         buf += c;
       }
     }
-    return buf;
   }
 
   private resolveIdRange(range: string) {

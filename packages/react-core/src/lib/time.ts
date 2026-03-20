@@ -1,125 +1,111 @@
-import dayjs from 'dayjs';
+import { BASE_DATE } from '../constants';
 
-export const defaultTimeDeltaFormat = 'HH:mm:ss';
+const MS_PER_DAY = 86400000;
 
-export const BASE_DATE = new Date('2345-01-02T03:04:05Z');
-type DiffFunction = (date: Date | number, amount: number) => Date;
-const UNITS = ['year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond'] as const;
-const ADD_FNS = UNITS.map(
-  (unit) => (date: Date, amount: number) => dayjs(date).add(amount, unit).toDate(),
-) as DiffFunction[];
-const SUB_FNS = UNITS.map(
-  (unit) => (date: Date, amount: number) => dayjs(date).subtract(amount, unit).toDate(),
-) as DiffFunction[];
-
-type Diff = [number, number, number, number, number, number, number];
-
-export class TimeDelta {
-  public gsType = 'TimeDelta';
-  protected diff: Diff = [0, 0, 0, 0, 0, 0, 0];
-  private date1: Date;
-  private date2: Date;
+export class Time {
+  public readonly __gsType = 'Time' as const;
+  public readonly days: number;
   public format: string;
 
-  constructor(date1: Date, date2: Date, format = defaultTimeDeltaFormat) {
-    this.diff = [
-      date1.getFullYear() - date2.getFullYear(),
-      date1.getMonth() - date2.getMonth(),
-      date1.getDate() - date2.getDate(),
-      date1.getHours() - date2.getHours(),
-      date1.getMinutes() - date2.getMinutes(),
-      date1.getSeconds() - date2.getSeconds(),
-      date1.getMilliseconds() - date2.getMilliseconds(),
-    ];
-    this.date1 = date1;
-    this.date2 = date2;
+  constructor(days: number, format = 'HH:mm:ss') {
+    this.days = days;
     this.format = format;
   }
-  public add(date: Date) {
-    this.diff.forEach((n, i) => {
-      date = ADD_FNS[i](date, n);
-    });
-    return date;
-  }
-  public sub(date: Date) {
-    this.diff.forEach((n, i) => {
-      date = SUB_FNS[i](date, n);
-    });
-    return date;
+
+  public add(date: Date): Date {
+    return new Date(date.getTime() + this.days * MS_PER_DAY);
   }
 
-  public stringify(format?: string) {
-    if (format == null) {
-      format = this.format;
-    }
-    const tokens = [];
-    const msecs = this.date1.getMilliseconds() - this.date2.getMilliseconds();
-    let secs = (this.date1.getTime() - this.date2.getTime()) / 1000;
-    for (const divider of [3600, 60]) {
-      tokens.push(Math.floor(secs / divider));
-      secs %= divider;
-    }
-    tokens.push(secs, msecs);
-    let result = format;
-    result = result.replace('HH', String(tokens[0]).padStart(2, '0'));
-    result = result.replace('H', String(tokens[0]));
-    result = result.replace('mm', String(tokens[1]).padStart(2, '0'));
-    result = result.replace('ss', String(tokens[2]).padStart(2, '0'));
-    result = result.replace('SSS', String(tokens[3]).padStart(3, '0'));
-    result = result.replace('SS', String(tokens[3]).padStart(2, '0').substring(0, 2));
-    result = result.replace('S', String(tokens[3]).padStart(1, '0').substring(0, 1));
+  public sub(date: Date): Date {
+    return new Date(date.getTime() - this.days * MS_PER_DAY);
+  }
+
+  public stringify(format?: string): string {
+    const totalMs = this.toMilliseconds();
+    const absMs = Math.abs(totalMs);
+    const sign = totalMs < 0 ? '-' : '';
+
+    const millis = absMs % 1000;
+    let remaining = Math.floor(absMs / 1000);
+    const seconds = remaining % 60;
+    remaining = Math.floor(remaining / 60);
+    const minutes = remaining % 60;
+    const hours = Math.floor(remaining / 60);
+
+    const resolvedFormat = format ?? (millis === 0 ? 'HH:mm:ss' : 'HH:mm:ss.SSS');
+
+    let result = resolvedFormat;
+    result = result.replace('HH', sign + String(hours).padStart(2, '0'));
+    result = result.replace('H', sign + String(hours));
+    result = result.replace('mm', String(minutes).padStart(2, '0'));
+    result = result.replace('ss', String(seconds).padStart(2, '0'));
+    result = result.replace('SSS', String(millis).padStart(3, '0'));
+    result = result.replace('SS', String(millis).padStart(3, '0').substring(0, 2));
+    result = result.replace('S', String(millis).padStart(3, '0').substring(0, 1));
     return result;
   }
 
   public toMilliseconds(): number {
-    return this.date1.getTime() - this.date2.getTime();
+    return this.days * MS_PER_DAY;
   }
 
-  public toJSON() {
+  public toDate(): Date {
+    return new Date(BASE_DATE.getTime() + this.days * MS_PER_DAY);
+  }
+
+  public toJSON(): { __gsType: 'Time'; days: number; format: string } {
+    return { __gsType: 'Time', days: this.days, format: this.format };
+  }
+
+  public toString(): string {
     return this.stringify();
   }
 
-  public toString() {
-    return this.stringify();
+  static create(hours = 0, minutes = 0, seconds = 0, milliseconds = 0): Time {
+    const ms = hours * 3600000 + minutes * 60000 + seconds * 1000 + milliseconds;
+    return new Time(ms / MS_PER_DAY);
   }
 
-  static create(hours = 0, minutes = 0, seconds = 0, milliseconds = 0) {
-    const diff: Diff = [0, 0, 0, hours, minutes, seconds, milliseconds];
-    let date = BASE_DATE;
-    diff.forEach((n, i) => {
-      date = ADD_FNS[i](date, n);
-    });
-    return new TimeDelta(date, BASE_DATE);
+  static fromDate(date: Date): Time {
+    const timeMs =
+      date.getHours() * 3600000 + date.getMinutes() * 60000 + date.getSeconds() * 1000 + date.getMilliseconds();
+    return new Time(timeMs / MS_PER_DAY);
+  }
+
+  static fromDates(date1: Date, date2: Date): Time {
+    return new Time((date1.getTime() - date2.getTime()) / MS_PER_DAY);
+  }
+
+  static fromObject(obj: { days: number; format?: string }): Time {
+    return new Time(obj.days, obj.format);
   }
 
   static is(obj: any): boolean {
-    if (obj instanceof TimeDelta) {
+    if (obj instanceof Time) {
       return true;
     }
-    if (obj?.gsType === 'TimeDelta') {
+    if (obj?.__gsType === 'Time') {
       return true;
     }
     return false;
   }
 
-  static ensure(obj: any) {
-    if (obj instanceof TimeDelta) {
+  static ensure(obj: any): Time {
+    if (obj instanceof Time) {
       return obj;
     }
-    if (obj?.gsType === 'TimeDelta') {
-      return TimeDelta.fromObject(obj);
+    if (obj?.__gsType === 'Time') {
+      return Time.fromObject(obj);
     }
-    return TimeDelta.create();
+    return Time.create();
   }
-  static fromObject(obj: any) {
-    return new TimeDelta(new Date(obj.date1), new Date(obj.date2));
-  }
-  static parse(value: string, format = defaultTimeDeltaFormat, strict = false): TimeDelta | undefined {
-    {
+
+  static parse(value: string, format?: string, strict = false): Time | undefined {
+    if (format != null) {
       const formattedMatcher = dayjsFormatToNamedRegex(format);
       const match = value.match(formattedMatcher);
       if (match?.groups) {
-        return TimeDelta.create(
+        return Time.create(
           Number(match.groups.HH || match.groups.H || 0),
           Number(match.groups.mm || match.groups.m || 0),
           Number(match.groups.ss || match.groups.s || 0),
@@ -135,7 +121,7 @@ export class TimeDelta {
       if (match) {
         const [, _sign, hours, minutes] = match;
         const sign = _sign === '-' ? -1 : 1;
-        return TimeDelta.create(sign * Number(hours), sign * Number(minutes));
+        return Time.create(sign * Number(hours), sign * Number(minutes));
       }
     }
     {
@@ -143,7 +129,7 @@ export class TimeDelta {
       if (match) {
         const [, _sign, hours, minutes, seconds] = match;
         const sign = _sign === '-' ? -1 : 1;
-        return TimeDelta.create(sign * Number(hours), sign * Number(minutes), sign * Number(seconds));
+        return Time.create(sign * Number(hours), sign * Number(minutes), sign * Number(seconds));
       }
     }
     {
@@ -151,12 +137,7 @@ export class TimeDelta {
       if (match) {
         const [, _sign, hours, minutes, seconds, msecs] = match;
         const sign = _sign === '-' ? -1 : 1;
-        return TimeDelta.create(
-          sign * Number(hours),
-          sign * Number(minutes),
-          sign * Number(seconds),
-          sign * Number(msecs),
-        );
+        return Time.create(sign * Number(hours), sign * Number(minutes), sign * Number(seconds), sign * Number(msecs));
       }
     }
   }

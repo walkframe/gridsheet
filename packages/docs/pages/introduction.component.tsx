@@ -6,16 +6,14 @@ import {
   useHub,
   makeBorder,
   buildInitialCellsFromOrigin,
-  Renderer,
-  RendererMixinType,
   Policy,
   PolicyMixinType,
   AutocompleteOption,
 } from '@gridsheet/react-core';
 
-// Star rating renderer
-const StarRatingRendererMixin: RendererMixinType = {
-  number({ value, sync, table, point }) {
+// Star rating policy mixin
+const StarRatingPolicyMixin: PolicyMixinType = {
+  renderNumber({ value, sync, table, point }) {
     const stars = Math.round(value);
 
     const handleStarClick = (clickedStar: number) => {
@@ -60,13 +58,13 @@ const StarRatingRendererMixin: RendererMixinType = {
 
 // Status Policy with dynamic styling
 const StatusPolicy: PolicyMixinType = {
-  getOptions: (): AutocompleteOption[] => [
+  getSelectOptions: (): AutocompleteOption[] => [
     { value: 'Not Started', label: '⏸️ Not Started' },
     { value: 'In Progress', label: '🔄 In Progress' },
     { value: 'Pending', label: '⏳ Pending' },
     { value: 'Complete', label: '✅ Complete' },
   ],
-  getDefault: (props: any) => {
+  getSelectFallback: (_props: any) => {
     return { value: 'Not Started' };
   },
   validate: (props: any) => {
@@ -75,7 +73,7 @@ const StatusPolicy: PolicyMixinType = {
       return patch;
     }
 
-    const options = StatusPolicy.getOptions!();
+    const options = StatusPolicy.getSelectOptions!();
     const validOption = options.find((option) => option.value === patch?.value);
     if (!validOption) {
       return { ...patch, value: 'Not Started' };
@@ -141,10 +139,8 @@ const StatusPolicy: PolicyMixinType = {
 
 export default function IntroductionExample() {
   const hub = useHub({
-    renderers: {
-      starRating: new Renderer({ mixins: [StarRatingRendererMixin] }),
-    },
     policies: {
+      starRating: new Policy({ mixins: [StarRatingPolicyMixin] }),
       status: new Policy({ mixins: [StatusPolicy] }),
     },
   });
@@ -236,7 +232,7 @@ export default function IntroductionExample() {
             },
             'E2:E5': {
               width: 80,
-              renderer: 'starRating',
+              policy: 'starRating',
               style: { backgroundColor: '#fef7ff' },
             },
             F: {

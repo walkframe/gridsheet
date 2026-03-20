@@ -108,19 +108,19 @@ class CustomFunction extends BaseFunction {
   // Required properties for documentation
   example = 'CUSTOM_FUNCTION("value", 123)';
   helpText = ['Performs a custom operation on the input values'];
-  helpArgs = [
+  defs = [
     { name: 'value', description: 'The input value to process' },
     { name: 'number', description: 'A numeric parameter' }
   ];
 
   // Required validation method
   protected validate() {
-    if (this.bareArgs.length !== 2) {
+    if (this.args.length !== 2) {
       throw new Error('CUSTOM_FUNCTION requires exactly 2 arguments');
     }
     // Ensure proper types
-    this.bareArgs[0] = ensureString(this.bareArgs[0]);
-    this.bareArgs[1] = Number(this.bareArgs[1]);
+    this.args[0] = ensureString(this.args[0]);
+    this.args[1] = Number(this.args[1]);
   }
 
   // Required main implementation
@@ -137,7 +137,7 @@ Every formula function must include these properties for future help system inte
 
 - **`example`**: Shows how to use the function in a formula
 - **`helpText`**: Array of description strings explaining what the function does
-- **`helpArgs`**: Array of argument descriptions with name and description
+- **`defs`**: Array of argument descriptions with name and description
 
 #### Function Registration
 

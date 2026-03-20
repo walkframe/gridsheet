@@ -2,6 +2,7 @@ import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { GridSheet, buildInitialCells, useConnector, useHub } from '@gridsheet/react-core';
 import type { FeedbackType } from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Control/OnSelect',
@@ -42,6 +43,7 @@ const SheetOnSelectComponent: React.FC = () => {
   }, []);
 
   const hub = useHub({
+    additionalFunctions: allFunctions,
     onSelect: handleSelect,
   });
 

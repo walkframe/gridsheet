@@ -7,12 +7,7 @@ export default function LargeDatasetDemo() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [progress, setProgress] = React.useState(0);
 
-  const hub = useHub({
-    labelers: {
-      value: (n: number) => 'Value',
-      label: (n: number) => 'Label',
-    },
-  });
+  const hub = useHub();
 
   // Generate large dataset efficiently
   const generateLargeDataset = React.useCallback(() => {

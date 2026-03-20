@@ -16,23 +16,23 @@ The formula system in GridSheet is built on a flexible architecture that allows 
 All custom formulas extend the `BaseFunction` class. Here's the basic structure:
 
 ```tsx
-import { BaseFunction } from '@gridsheet/react-core';
+import { BaseFunction, FunctionArgumentDefinition } from '@gridsheet/react-core';
 
 class MyCustomFunction extends BaseFunction {
   // Display name and example usage
   example = 'MY_FUNC(arg1, arg2)';
   
-  // Help texts for users
-  helpTexts = ['Description of what this function does'];
+  // Optional: description of what this function does
+  description = 'Description of what this function does';
   
-  // Argument documentation
-  helpArgs = [
-    { name: 'arg1', description: 'Description of first argument' },
-    { name: 'arg2', description: 'Description of second argument' }
+  // Argument documentation (also drives arg-count validation)
+  defs: FunctionArgumentDefinition[] = [
+    { name: 'arg1', description: 'Description of first argument', acceptedTypes: ['string'] },
+    { name: 'arg2', description: 'Description of second argument', acceptedTypes: ['number'] }
   ];
 
   // The main function logic
-  main(arg1: any, arg2: any) {
+  protected main(stringArg: string, numberArg: number) {
     // Your logic here
     return result;
   }
@@ -48,13 +48,13 @@ Synchronous formulas execute immediately and return a result synchronously.
 ```tsx
 class Add extends BaseFunction {
   example = 'ADD(a, b)';
-  helpTexts = ['Adds two numbers'];
-  helpArgs = [
-    { name: 'a', description: 'First number' },
-    { name: 'b', description: 'Second number' }
+  description = 'Adds two numbers';
+  defs = [
+    { name: 'a', description: 'First number', acceptedTypes: ['number'] },
+    { name: 'b', description: 'Second number', acceptedTypes: ['number'] }
   ];
 
-  main(a: number, b: number) {
+  protected main(a: number, b: number) {
     return a + b;
   }
 }
@@ -65,13 +65,13 @@ class Add extends BaseFunction {
 ```tsx
 class Concatenate extends BaseFunction {
   example = 'CONCAT(str1, str2)';
-  helpTexts = ['Concatenates two strings'];
-  helpArgs = [
-    { name: 'str1', description: 'First string' },
-    { name: 'str2', description: 'Second string' }
+  description = 'Concatenates two strings';
+  defs: FunctionArgumentDefinition[] = [
+    { name: 'str1', description: 'First string', acceptedTypes: ['string'] },
+    { name: 'str2', description: 'Second string', acceptedTypes: ['string'] }
   ];
 
-  main(str1: string, str2: string) {
+  protected main(str1: string, str2: string) {
     return `${str1}${str2}`;
   }
 }
@@ -88,8 +88,8 @@ Extend `BaseFunctionAsync` and make the `main()` method `async`:
 ```tsx
 class FetchWeather extends BaseFunctionAsync {
   example = 'FETCH_WEATHER("Tokyo")';
-  helpTexts = ['Fetches current weather data for a city'];
-  helpArgs = [
+  description = 'Fetches current weather data for a city';
+  defs: FunctionArgumentDefinition[] = [
     { name: 'city', description: 'City name to fetch weather for' }
   ];
 
@@ -106,9 +106,9 @@ class FetchWeather extends BaseFunctionAsync {
 ```tsx
 class GetUserData extends BaseFunctionAsync {
   example = 'GET_USER("user123")';
-  helpTexts = ['Fetches user information from API'];
-  helpArgs = [
-    { name: 'userId', description: 'The user ID to fetch' }
+  description = 'Fetches user information from API';
+  defs: FunctionArgumentDefinition[] = [
+    { name: 'userId', description: 'The user ID to fetch', acceptedTypes: ['string'] }
   ];
 
   async main(userId: string) {
@@ -154,9 +154,9 @@ Proper error handling is important for both sync and async formulas:
 ```tsx
 class SafeAsyncFunction extends BaseFunctionAsync {
   example = 'SAFE_FUNC(url)';
-  helpTexts = ['Safely fetches data with error handling'];
-  helpArgs = [
-    { name: 'url', description: 'URL to fetch' }
+  description = 'Safely fetches data with error handling';
+  defs = [
+    { name: 'url', description: 'URL to fetch', acceptedTypes: ['string'] }
   ];
 
   async main(url: string) {
@@ -177,22 +177,25 @@ class SafeAsyncFunction extends BaseFunctionAsync {
 
 ## Registering Custom Formulas
 
-Custom formulas are registered through the Hub system. Here's how to register your formulas:
+Custom formulas are registered through the `useHub` hook via the `additionalFunctions` option. Keys are the formula names (case-insensitive in formulas):
 
 ```tsx
-import { createHub } from '@gridsheet/react-core';
+import { useHub } from '@gridsheet/react-core';
 import MyCustomFunction from './MyCustomFunction';
 import FetchWeather from './FetchWeather';
 
-const hub = createHub({
-  functions: [MyCustomFunction, FetchWeather]
+const hub = useHub({
+  additionalFunctions: {
+    my_func: MyCustomFunction,
+    fetch_weather: FetchWeather,
+  },
 });
 ```
 
 ## Best Practices
 
 1. **Always Provide Help Documentation**
-   - Use `helpTexts` and `helpArgs` to clearly describe your function
+   - Use `helpTexts` and `defs` to clearly describe your function
    - This helps users understand when and how to use your formulas
 
 2. **Handle Errors Gracefully**
@@ -223,30 +226,42 @@ const hub = createHub({
 ### BaseFunction
 
 ```tsx
-abstract class BaseFunction {
-  // Display in help/autocomplete
-  abstract example: string;
-  
-  // Help text shown to users
-  abstract helpTexts: string[];
-  
-  // Documentation for arguments
-  abstract helpArgs: Array<{
-    name: string;
-    description: string;
-  }>;
+class BaseFunction {
+  // Formula example shown in autocomplete
+  example?: string;
 
-  // Main function implementation (sync or async)
-  abstract main(...args: any[]): any | Promise<any>;
+  // Short description of the function
+  description?: string;
 
-  // ── The following properties are only used when main() is async ──
+  // Argument definitions (drives arg-count and type validation)
+  defs: FunctionArgumentDefinition[] = [];
 
-  // Cache TTL in milliseconds. undefined = never expires.
+  // Cache TTL in milliseconds (async only). undefined = never expires.
   protected ttlMilliseconds?: number;
 
-  // Number of hash segments in the cache key. Higher = lower collision risk. Default: 1
+  // Hash segments in cache key. Higher = lower collision risk. Default: 1
   protected hashPrecision: number;
+
+  // Main function implementation
+  protected main(...args: any[]): any;
+
+  // Optional: override to customise argument coercion before main() is called
+  protected validate(args: any[]): any[];
 }
+
+type FunctionArgumentDefinition = {
+  name: string;
+  description: string;
+  optional?: boolean;   // allows fewer args than defs.length
+  variadic?: boolean;   // last matching def receives all remaining args
+  nullable?: boolean;   // blank treated as 0 / "" etc. (default: true)
+  acceptedTypes?: FunctionArgumentType[]; // runtime type check
+  takesMatrix?: boolean; // suppresses broadcasting for this arg
+};
+
+type FunctionArgumentType =
+  | 'number' | 'string' | 'boolean'
+  | 'date' | 'time' | 'matrix' | 'reference' | 'any';
 ```
 
 ### `ttlMilliseconds`

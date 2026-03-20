@@ -7,8 +7,8 @@ import {
   BaseFunction,
   operations,
   useHub,
-  Renderer,
-  RendererMixinType,
+  Policy,
+  PolicyMixinType,
   RenderProps,
   Table,
 } from '@gridsheet/react-core';
@@ -26,9 +26,9 @@ import { Line } from 'react-chartjs-2';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-// Bar chart renderer
-const BarChartRendererMixin: RendererMixinType = {
-  number({ value }) {
+// Bar chart policy
+const BarChartPolicyMixin: PolicyMixinType = {
+  renderNumber({ value }) {
     const maxValue = 100;
     const percentage = Math.min((value / maxValue) * 100, 100);
 
@@ -65,12 +65,12 @@ const BarChartRendererMixin: RendererMixinType = {
   },
 };
 
-// Line chart renderer
-const LineChartRendererMixin: RendererMixinType = {
-  table({ value: table }: RenderProps<Table>) {
+// Line chart policy
+const LineChartPolicyMixin: PolicyMixinType = {
+  renderTable({ value: table }: RenderProps<Table>) {
     try {
-      // Extract values from the table using getFieldMatrix
-      const matrix = table.getFieldMatrix();
+      // Extract values from the table using toValueMatrix
+      const matrix = table.toValueMatrix();
 
       // Flatten the matrix to get all values
       const values: number[] = [];
@@ -165,9 +165,9 @@ const LineChartRendererMixin: RendererMixinType = {
 
 export default function SalesDashboard() {
   const hub = useHub({
-    renderers: {
-      barChart: new Renderer({ mixins: [BarChartRendererMixin] }),
-      lineChart: new Renderer({ mixins: [LineChartRendererMixin] }),
+    policies: {
+      barChart: new Policy({ mixins: [BarChartPolicyMixin] }),
+      lineChart: new Policy({ mixins: [LineChartPolicyMixin] }),
     },
   });
 
@@ -268,7 +268,7 @@ export default function SalesDashboard() {
               B: {
                 width: 200,
                 label: 'Chart',
-                renderer: 'lineChart',
+                policy: 'lineChart',
                 style: { backgroundColor: '#f8f9fa' },
               },
               C: { label: 'Q1 Sales' },
@@ -277,7 +277,7 @@ export default function SalesDashboard() {
               F: { label: 'Q4 Sales' },
               'C:F': {
                 style: { backgroundColor: '#ecf0f1' },
-                renderer: 'barChart',
+                policy: 'barChart',
               },
               G: {
                 width: 60,

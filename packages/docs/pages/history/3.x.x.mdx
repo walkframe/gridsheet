@@ -45,7 +45,7 @@ Creating async formulas is straightforward. Extend `BaseFunctionAsync` instead o
 class MyAsyncFunction extends BaseFunctionAsync {
   example = 'MY_FUNC("arg1")';
   helpTexts = ['Fetches data asynchronously.'];
-  helpArgs = [{ name: 'key', description: 'The key to fetch.' }];
+  defs = [{ name: 'key', description: 'The key to fetch.' }];
 
   // Make main() async — the framework handles the rest
   async main(key: string) {

@@ -1,90 +1,68 @@
 import { test, expect } from '@playwright/test';
+import { go } from './utils';
 
 test.describe('Async Formula', () => {
-  test('should render async formula result after delay (inflight=off, inflight=on)', async ({ page }) => {
-    await page.goto('http://localhost:5233/iframe.html?id=formula-asyncchain--async-chain&viewMode=story');
+  test('should render, cache, propagate pending, and show #ASYNC! for async formulas', async ({ page }) => {
+    await go(page, 'formula-asyncchain--async-chain');
 
     // =================== inflight = off ===================
-    {
-      const sheet1 = page.locator('[data-sheet-name="AsyncChain"]');
-      const a1 = sheet1.locator("[data-address='A1']");
-      const a2 = sheet1.locator("[data-address='A2']");
-      const a3 = sheet1.locator("[data-address='A3']");
-      const a4 = sheet1.locator("[data-address='A4']");
-      const a5 = sheet1.locator("[data-address='A5']");
-      const a6 = sheet1.locator("[data-address='A6']");
-      const a7 = sheet1.locator("[data-address='A7']");
+    const sheet1 = page.locator('[data-sheet-name="AsyncChain"]');
+    const a1 = sheet1.locator("[data-address='A1']");
+    const a2 = sheet1.locator("[data-address='A2']");
+    const a3 = sheet1.locator("[data-address='A3']");
+    const a4 = sheet1.locator("[data-address='A4']");
+    const a5 = sheet1.locator("[data-address='A5']");
+    const a6 = sheet1.locator("[data-address='A6']");
+    const a7 = sheet1.locator("[data-address='A7']");
+    const a8 = sheet1.locator("[data-address='A8']");
+    const a9 = sheet1.locator("[data-address='A9']");
+    const b1 = sheet1.locator("[data-address='B1']");
 
-      // Before waiting, cells should be empty or show pending state
-      expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('');
+    // Before waiting: cells should be pending / empty
+    expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('');
+    expect(await a4.locator('.gs-cell-rendered').textContent()).toBe('');
 
-      // Wait for the slowest cell in the chain (A4) to resolve
-      // Chain: A1 → A2 → A3 → A4
-      await expect(a4.locator('.gs-cell-rendered')).toHaveText('360', { timeout: 8000 });
+    // Wait for the slowest cell in the chain (A4) to resolve
+    await expect(a4.locator('.gs-cell-rendered')).toHaveText('360', { timeout: 8000 });
 
-      // A1: SUM_DELAY(10, 20) = 30
-      expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('30');
+    expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('30');
+    expect(await a2.locator('.gs-cell-rendered').textContent()).toBe('130');
+    expect(await a3.locator('.gs-cell-rendered').textContent()).toBe('330');
+    expect(await a4.locator('.gs-cell-rendered').textContent()).toBe('360');
+    expect(await a5.locator('.gs-cell-rendered').textContent()).toBe('60');
+    expect(await a6.locator('.gs-cell-rendered').textContent()).toBe('100');
+    expect(await a7.locator('.gs-cell-rendered').textContent()).toBe('100');
+    expect(await a9.locator('.gs-cell-rendered').textContent()).toBe('160');
 
-      // A2: SUM_DELAY(30, 100) = 130
-      expect(await a2.locator('.gs-cell-rendered').textContent()).toBe('130');
+    // A8 has no args → should produce #ASYNC! error
+    await expect(a8.locator('.gs-cell-rendered')).not.toHaveText('', { timeout: 3000 });
+    expect((await a8.locator('.gs-cell-rendered').textContent())?.trim()).toBe('#ASYNC!');
 
-      // A3: SUM_DELAY(130, 200) = 330
-      expect(await a3.locator('.gs-cell-rendered').textContent()).toBe('330');
-
-      // A4: SUM_DELAY(330, 30) = 360
-      expect(await a4.locator('.gs-cell-rendered').textContent()).toBe('360');
-
-      // A5: SUM_DELAY(10,20) + SUM_DELAY(10,20) = 30 + 30 = 60 (same args ×2 in one cell)
-      expect(await a5.locator('.gs-cell-rendered').textContent()).toBe('60');
-
-      // A6: SUM_DELAY(10,20) + SUM_DELAY(30,40) = 30 + 70 = 100 (diff args ×2 in one cell)
-      expect(await a6.locator('.gs-cell-rendered').textContent()).toBe('100');
-
-      // A7: SUM(SUM_DELAY(10,20), SUM_DELAY(30,40)) = SUM(30, 70) = 100 (sync wrapping async)
-      expect(await a7.locator('.gs-cell-rendered').textContent()).toBe('100');
-    }
+    // Cache hit: clicking another cell must not invalidate A1
+    await b1.click();
+    expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('30');
 
     // =================== inflight = on ===================
     const sheet2 = page.locator('[data-sheet-name="AsyncChainInflight"]');
     {
-      const a1 = sheet2.locator("[data-address='A1']");
-      const a4 = sheet2.locator("[data-address='A4']");
-      const a5 = sheet2.locator("[data-address='A5']");
-      const a6 = sheet2.locator("[data-address='A6']");
-      const a7 = sheet2.locator("[data-address='A7']");
+      const ia1 = sheet2.locator("[data-address='A1']");
+      const ia4 = sheet2.locator("[data-address='A4']");
+      const ia5 = sheet2.locator("[data-address='A5']");
+      const ia6 = sheet2.locator("[data-address='A6']");
+      const ia7 = sheet2.locator("[data-address='A7']");
+      const ia9 = sheet2.locator("[data-address='A9']");
 
-      expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('30');
-      expect(await a4.locator('.gs-cell-rendered').textContent()).toBe('360');
-
-      // Same patterns as inflight=off — results should be identical
-      expect(await a5.locator('.gs-cell-rendered').textContent()).toBe('60');
-      expect(await a6.locator('.gs-cell-rendered').textContent()).toBe('100');
-      expect(await a7.locator('.gs-cell-rendered').textContent()).toBe('100');
+      expect(await ia1.locator('.gs-cell-rendered').textContent()).toBe('30');
+      expect(await ia4.locator('.gs-cell-rendered').textContent()).toBe('360');
+      expect(await ia5.locator('.gs-cell-rendered').textContent()).toBe('60');
+      expect(await ia6.locator('.gs-cell-rendered').textContent()).toBe('100');
+      expect(await ia7.locator('.gs-cell-rendered').textContent()).toBe('100');
+      expect(await ia9.locator('.gs-cell-rendered').textContent()).toBe('160');
     }
   });
 
-  test('should cache async formula result within TTL', async ({ page }) => {
-    await page.goto('http://localhost:5233/iframe.html?id=formula-asyncchain--async-chain&viewMode=story');
-
-    const sheet = page.locator('[data-sheet-name="AsyncChain"]');
-    const a1 = sheet.locator("[data-address='A1']");
-    const b1 = sheet.locator("[data-address='B1']");
-
-    // Initially, A1 should be empty
-    expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('');
-
-    // Wait for first async computation (A1 takes ~750ms)
-    await expect(a1.locator('.gs-cell-rendered')).toHaveText('30', { timeout: 3000 });
-
-    // Click on another cell to trigger re-render without changing A1
-    await b1.click();
-
-    // A1 should still show the cached result (no additional wait needed)
-    expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('30');
-  });
-
   test('should invalidate async cache when inputs change', async ({ page }) => {
-    await page.goto('http://localhost:5233/iframe.html?id=formula-asyncchain--async-chain&viewMode=story');
+    await go(page, 'formula-asyncchain--async-chain');
 
     const sheet = page.locator('[data-sheet-name="AsyncChain"]');
     const a1 = sheet.locator("[data-address='A1']");
@@ -110,35 +88,10 @@ test.describe('Async Formula', () => {
     await expect(a2.locator('.gs-cell-rendered')).toHaveText('190', { timeout: 5000 });
   });
 
-  test('should propagate pending through async dependency chain', async ({ page }) => {
-    await page.goto('http://localhost:5233/iframe.html?id=formula-asyncchain--async-chain&viewMode=story');
+  test('IFNA with delayed #N/A should show caught value in B2', async ({ page }) => {
+    await go(page, 'formula-conditional--ifna-delay-na');
 
-    const sheet = page.locator('[data-sheet-name="AsyncChain"]');
-    const a1 = sheet.locator("[data-address='A1']");
-    const a4 = sheet.locator("[data-address='A4']");
-
-    // Before waiting, cells should be empty
-    const a1InitialContent = await a1.locator('.gs-cell-rendered').textContent();
-    expect(a1InitialContent).toBe('');
-
-    const a4InitialContent = await a4.locator('.gs-cell-rendered').textContent();
-    expect(a4InitialContent).toBe('');
-
-    // Wait for async dependency chain to resolve: A1 → A2 → A3 → A4
-    await expect(a1.locator('.gs-cell-rendered')).toHaveText('30', { timeout: 8000 });
-    await expect(a4.locator('.gs-cell-rendered')).toHaveText('360', { timeout: 8000 });
-  });
-
-  test('should display async error code #ASYNC! when async function throws', async ({ page }) => {
-    await page.goto('http://localhost:5233/iframe.html?id=formula-asyncchain--async-chain&viewMode=story');
-
-    const sheet = page.locator('[data-sheet-name="AsyncChain"]');
-    const a8 = sheet.locator("[data-address='A8']");
-
-    // A8 contains =SUM_DELAY() with no arguments, which should throw an error
-    const a8Rendered = a8.locator('.gs-cell-rendered');
-    await expect(a8Rendered).not.toHaveText('', { timeout: 3000 });
-    const a8Content = await a8Rendered.textContent();
-    expect(a8Content?.trim()).toBe('#ASYNC!');
+    const b2 = page.locator("[data-address='B2']");
+    await expect(b2.locator('.gs-cell-rendered')).toHaveText('caught #N/A (inline)', { timeout: 8000 });
   });
 });

@@ -1,9 +1,10 @@
-import { stripTable } from '../solver';
+import { stripTable, solveTable } from '../solver';
 import { Table } from '../../lib/table';
-import { FormulaError } from '../evaluator';
+import { FormulaError } from '../formula-error';
 import dayjs from 'dayjs';
 import { FULLDATE_FORMAT_UTC } from '../../constants';
-import { Pending } from '../../sentinels';
+import { Pending, Spilling } from '../../sentinels';
+import type { Id, PointType } from '../../types';
 
 export const gt = (left: any, right: any): boolean => {
   if (typeof left === 'string' || typeof right === 'string') {
@@ -36,7 +37,7 @@ export const lte = (left: any, right: any): boolean => {
 };
 
 export const eq = (left: any, right: any): boolean => {
-  return ensureString(left) === ensureString(right);
+  return ensureString(left).toLowerCase() === ensureString(right).toLowerCase();
 };
 
 export const ne = (left: any, right: any): boolean => {
@@ -181,4 +182,54 @@ export const check = (value: any, condition: string): boolean => {
     return regex.test(value as string) === equals;
   }
   return eq(value, comparison) === equals;
+};
+
+export const eachMatrix = (value: any, callback: (v: any, relativePoint: PointType) => void, at: Id) => {
+  if (value instanceof Table) {
+    const matrix = solveTable({ table: value, at });
+    for (let y = 0; y < matrix.length; y++) {
+      for (let x = 0; x < matrix[y].length; x++) {
+        callback(matrix[y][x], { y, x });
+      }
+    }
+  } else if (Spilling.is(value)) {
+    const matrix = value.matrix;
+    for (let y = 0; y < matrix.length; y++) {
+      for (let x = 0; x < matrix[y].length; x++) {
+        callback(matrix[y][x], { y, x });
+      }
+    }
+  } else if (Array.isArray(value) && Array.isArray(value[0])) {
+    for (let y = 0; y < value.length; y++) {
+      for (let x = 0; x < value[y].length; x++) {
+        callback(value[y][x], { y, x });
+      }
+    }
+  } else {
+    callback(value, { y: 0, x: 0 });
+  }
+};
+
+export const createBooleanMask = (tables: Table[], conditions: string[], at: Id): boolean[][] => {
+  if (tables.length === 0) {
+    return [];
+  }
+  const refRange = tables[0];
+  const numRows = refRange.getNumRows();
+  const numCols = refRange.getNumCols();
+
+  const mask: boolean[][] = Array.from({ length: numRows }, () => Array(numCols).fill(true));
+
+  for (let p = 0; p < tables.length; p++) {
+    const condRange = tables[p];
+    const condition = conditions[p];
+    eachMatrix(
+      condRange,
+      (v: any, pt: PointType) => {
+        mask[pt.y][pt.x] &&= check(v, condition);
+      },
+      at,
+    );
+  }
+  return mask;
 };

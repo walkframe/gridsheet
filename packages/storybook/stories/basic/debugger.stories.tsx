@@ -9,8 +9,10 @@ import {
   p2a,
   solveTable,
   Table,
+  FunctionArgumentDefinition,
 } from '@gridsheet/react-core';
 import { Debugger } from '@gridsheet/react-dev';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Basic/Debugger (Dev tool)',
@@ -25,6 +27,7 @@ const DESCRIPTION = [
 const DebuggerSheet = () => {
   const hub = useHub({
     additionalFunctions: {
+      ...allFunctions,
       sum_delay_inflight: SumDelayInflightFunction,
     },
   });
@@ -93,18 +96,20 @@ const DebuggerSheet = () => {
  */
 class SumDelayInflightFunction extends BaseFunctionAsync {
   example = 'SUM_DELAY_INFLIGHT(1, 2, 3)';
-  helpTexts = ['Returns the sum of values after a 2-second delay.'];
-  helpArgs = [{ name: 'value1', description: 'Numbers to sum.' }];
+  description = 'Returns the sum of values after a 2-second delay.';
+  defs: FunctionArgumentDefinition[] = [
+    { name: 'value1', description: 'Numbers to sum.', acceptedTypes: ['number', 'matrix'] },
+  ];
   useInflight = true;
 
   ttlMilliseconds = 60000;
 
-  protected validate() {
+  protected validate(args: any[]): any[] {
     const spreaded: number[] = [];
-    this.bareArgs.forEach((arg) => {
+    args.forEach((arg) => {
       if (arg instanceof Table) {
         spreaded.push(
-          ...solveTable({ table: arg })
+          ...solveTable({ table: arg, at: this.at })
             .reduce((a: any[], b: any[]) => a.concat(b))
             .map((v: any) => ensureNumber(v, { ignore: true })),
         );
@@ -112,11 +117,12 @@ class SumDelayInflightFunction extends BaseFunctionAsync {
       }
       spreaded.push(ensureNumber(arg, { ignore: true }));
     });
-    this.bareArgs = spreaded;
+    return spreaded;
   }
 
   async main(...values: number[]) {
-    const msg = `SUM_DELAY_INFLIGHT called with [${values.join(', ')}] at ${p2a(this.origin!)}`;
+    const origin = this.table.getPointById(this.at);
+    const msg = `SUM_DELAY_INFLIGHT called with [${values.join(', ')}] at ${p2a(origin)}`;
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('SUM_DELAY_INFLIGHT_LOG', { detail: msg }));
     }

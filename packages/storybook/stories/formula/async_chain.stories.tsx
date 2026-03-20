@@ -9,8 +9,10 @@ import {
   solveTable,
   Table,
   p2a,
+  FunctionArgumentDefinition,
 } from '@gridsheet/react-core';
 import { Debugger } from '@gridsheet/react-dev';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Formula/AsyncChain',
@@ -22,18 +24,18 @@ export default meta;
  */
 class SumDelayFunction extends BaseFunctionAsync {
   example = 'SUM_DELAY(1, 2, 3)';
-  helpTexts = ['Returns the sum of values after a 2-second delay.'];
-  helpArgs = [{ name: 'value1', description: 'Numbers to sum.' }];
+  description = 'Returns the sum of values after a 2-second delay.';
+  defs: FunctionArgumentDefinition[] = [{ name: 'value1', description: 'Numbers to sum.' }];
   useInflight = false;
 
   ttlMilliseconds = 5000;
 
-  protected validate() {
+  protected validate(args: any[]): any[] {
     const spreaded: number[] = [];
-    this.bareArgs.forEach((arg) => {
+    args.forEach((arg) => {
       if (arg instanceof Table) {
         spreaded.push(
-          ...solveTable({ table: arg })
+          ...solveTable({ table: arg, at: this.at })
             .reduce((a: any[], b: any[]) => a.concat(b))
             .map((v: any) => ensureNumber(v, { ignore: true })),
         );
@@ -41,11 +43,12 @@ class SumDelayFunction extends BaseFunctionAsync {
       }
       spreaded.push(ensureNumber(arg, { ignore: true }));
     });
-    this.bareArgs = spreaded;
+    return spreaded;
   }
 
   async main(...values: number[]) {
-    const msg = `SUM_DELAY called with [${values.join(', ')}] at ${p2a(this.origin!)}`;
+    const origin = this.table.getPointById(this.at);
+    const msg = `SUM_DELAY called with [${values.join(', ')}] at ${p2a(origin!)}`;
     //console.log(msg);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('SUM_DELAY_LOG', { detail: msg }));
@@ -60,17 +63,26 @@ class SumDelayFunction extends BaseFunctionAsync {
 
 class SumDelayFunctionInflight extends BaseFunctionAsync {
   example = 'SUM_DELAY(1, 2, 3)';
-  helpTexts = ['Returns the sum of values after a 2-second delay.'];
-  helpArgs = [{ name: 'value1', description: 'Numbers to sum.' }];
+  description = 'Returns the sum of values after a 2-second delay.';
+  defs: FunctionArgumentDefinition[] = [
+    { name: 'value1', description: 'Numbers to sum.', acceptedTypes: ['any'] },
+    {
+      name: 'value2',
+      description: 'Additional numbers to sum.',
+      acceptedTypes: ['any'],
+      optional: true,
+      variadic: true,
+    },
+  ];
 
   ttlMilliseconds = 5000;
 
-  protected validate() {
+  protected validate(args: any[]): any[] {
     const spreaded: number[] = [];
-    this.bareArgs.forEach((arg) => {
+    args.forEach((arg) => {
       if (arg instanceof Table) {
         spreaded.push(
-          ...solveTable({ table: arg })
+          ...solveTable({ table: arg, at: this.at })
             .reduce((a: any[], b: any[]) => a.concat(b))
             .map((v: any) => ensureNumber(v, { ignore: true })),
         );
@@ -78,11 +90,12 @@ class SumDelayFunctionInflight extends BaseFunctionAsync {
       }
       spreaded.push(ensureNumber(arg, { ignore: true }));
     });
-    this.bareArgs = spreaded;
+    return spreaded;
   }
 
   async main(...values: number[]) {
-    const msg = `SUM_DELAY_INFLIGHT called with [${values.join(', ')}] at ${p2a(this.origin!)}`;
+    const origin = this.table.getPointById(this.at);
+    const msg = `SUM_DELAY_INFLIGHT called with [${values.join(', ')}] at ${p2a(origin!)}`;
     //console.log(msg);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('SUM_DELAY_INFLIGHT_LOG', { detail: msg }));
@@ -106,6 +119,7 @@ const ASYNC_CHAIN_DESCRIPTION = [
   '- **A6**: `=SUM_DELAY(10, 20) + SUM_DELAY(30, 40)` → 100 — different async calls in one cell (diff args)',
   '- **A7**: `=SUM(SUM_DELAY(10, 20), SUM_DELAY(30, 40))` → 100 — sync wrapper around multiple async calls',
   '- **A8**: `=SUM_DELAY()` → #ASYNC! — async error case',
+  '- **A9**: `=SUM(A1:A2)` → 160 — sync SUM over range containing async results',
   '',
   'All cells should show a pending animation until SUM_DELAY resolves, then cascade to their computed values.',
 ].join('\n\n');
@@ -113,6 +127,7 @@ const ASYNC_CHAIN_DESCRIPTION = [
 const AsyncChainSheet = () => {
   const hub = useHub({
     additionalFunctions: {
+      ...allFunctions,
       sum_delay: SumDelayFunction,
       sum_delay_inflight: SumDelayFunctionInflight,
     },
@@ -155,6 +170,7 @@ const AsyncChainSheet = () => {
                 A6: { value: '=SUM_DELAY(10, 20) + SUM_DELAY(30, 40)' },
                 A7: { value: '=SUM(SUM_DELAY(10, 20), SUM_DELAY(30, 40))' },
                 A8: { value: '=SUM_DELAY()' },
+                A9: { value: '=SUM(A1:A2)' },
                 B1: { value: 'SUM_DELAY(10,20) → 30' },
                 B2: { value: 'SUM_DELAY(A1,100) → 130' },
                 B3: { value: 'SUM_DELAY(A2,200) → 330' },
@@ -163,8 +179,9 @@ const AsyncChainSheet = () => {
                 B6: { value: 'diff async ×2 in cell → 100' },
                 B7: { value: 'SUM(async, async) → 100' },
                 B8: { value: 'SUM_DELAY() → #ASYNC!' },
+                B9: { value: 'SUM(A1:A2) → 160' },
               },
-              ensured: { numRows: 8, numCols: 2 },
+              ensured: { numRows: 9, numCols: 2 },
             })}
           />
           <textarea
@@ -194,6 +211,7 @@ const AsyncChainSheet = () => {
                 A6: { value: '=SUM_DELAY_INFLIGHT(10, 20) + SUM_DELAY_INFLIGHT(30, 40)' },
                 A7: { value: '=SUM(SUM_DELAY_INFLIGHT(10, 20), SUM_DELAY_INFLIGHT(30, 40))' },
                 A8: { value: '=SUM_DELAY_INFLIGHT()' },
+                A9: { value: '=SUM(A1:A2)' },
                 B1: { value: 'SUM_DELAY_INFLIGHT(10,20) → 30' },
                 B2: { value: 'SUM_DELAY_INFLIGHT(A1,100) → 130' },
                 B3: { value: 'SUM_DELAY_INFLIGHT(A2,200) → 330' },
@@ -202,8 +220,9 @@ const AsyncChainSheet = () => {
                 B6: { value: 'diff async ×2 in cell → 100' },
                 B7: { value: 'SUM(async, async) → 100' },
                 B8: { value: 'SUM_DELAY_INFLIGHT() → #ASYNC!' },
+                B9: { value: 'SUM(A1:A2) → 160' },
               },
-              ensured: { numRows: 8, numCols: 2 },
+              ensured: { numRows: 9, numCols: 2 },
             })}
           />
           <textarea

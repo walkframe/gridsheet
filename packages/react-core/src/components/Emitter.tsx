@@ -8,7 +8,7 @@ export const Emitter: FC = () => {
   const table = tableReactive.current;
 
   useEffect(() => {
-    if (table?.isInitialized && table.wire.onChange) {
+    if (table?.isInitialized && table.currentVersion > 0 && table.wire.onChange) {
       table.wire.onChange({
         table,
         points: {

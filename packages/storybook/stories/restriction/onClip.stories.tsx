@@ -1,9 +1,10 @@
 import React, { type CSSProperties } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, Policy, buildInitialCells, Renderer, useHub } from '@gridsheet/react-core';
+import { GridSheet, Policy, buildInitialCells, useHub } from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
-  title: 'Restriction/OnClip',
+  title: 'Restriction/SerializeForClipboard',
 };
 export default meta;
 
@@ -21,35 +22,27 @@ const DESCRIPTION = [
   '4. The masking is applied both during display and clipboard operations.',
 ].join('\n\n');
 
-const OnClipComponent: React.FC = () => {
+const SerializeForClipboardComponent: React.FC = () => {
   const maskPolicy = new Policy({
     mixins: [
       {
-        onClip({ point, table }) {
+        renderString({ value }) {
+          if (value == null) {
+            return '';
+          }
+          return `${value.substring(0, 1)}${'*'.repeat(value.substring(1).length)}`;
+        },
+        serializeForClipboard({ point, table }) {
           const s = table.stringify({ point }) ?? '';
           return '*'.repeat(s.length);
         },
       },
     ],
   });
-  const maskRenderer = new Renderer({
-    mixins: [
-      {
-        string({ value }) {
-          if (value == null) {
-            return '';
-          }
-          return `${value.substring(0, 1)}${'*'.repeat(value.substring(1).length)}`;
-        },
-      },
-    ],
-  });
   const hub = useHub({
+    additionalFunctions: allFunctions,
     policies: {
       mask: maskPolicy,
-    },
-    renderers: {
-      mask: maskRenderer,
     },
   });
 
@@ -63,7 +56,6 @@ const OnClipComponent: React.FC = () => {
         cells: {
           default: {
             policy: 'mask',
-            renderer: 'mask',
             width: 150,
           },
           A1: { value: 'Hello' },
@@ -75,8 +67,8 @@ const OnClipComponent: React.FC = () => {
   );
 };
 
-export const OnClip: StoryObj = {
-  render: () => <OnClipComponent />,
+export const SerializeForClipboard: StoryObj = {
+  render: () => <SerializeForClipboardComponent />,
   parameters: {
     docs: {
       description: {

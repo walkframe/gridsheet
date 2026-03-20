@@ -1,12 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { ctrl, drag, paste, cut } from './utils';
+import { ctrl, drag, go, paste, cut } from './utils';
 
 test.describe('Control Operations', () => {
   test.describe('Insert Operations', () => {
-    test('should insert row above 2nd row', async ({ page }) => {
-      await page.goto('http://localhost:5233/iframe.html?id=control-insert--insert');
+    test('should insert row above and below 2nd row', async ({ page }) => {
+      await go(page, 'control-insert--insert');
 
-      // Define cell locators using data-address
       const a1 = page.locator("[data-address='A1']");
       const b1 = page.locator("[data-address='B1']");
       const c1 = page.locator("[data-address='C1']");
@@ -28,42 +27,28 @@ test.describe('Control Operations', () => {
       await expect(b3.locator('.gs-cell-rendered')).toHaveText('7');
       await expect(c3.locator('.gs-cell-rendered')).toHaveText('12');
 
-      // Select 2nd row
+      // ---- Insert Row Above ----
       await page.locator("th[data-y='2']").click();
-
-      // Click "Insert Row Above" button
       await page.click('button:has-text("Insert Row Above")');
-
-      // Wait for the grid to update
       await page.waitForTimeout(100);
 
-      // Check that a new row was inserted above 2nd row (now 4x3 grid)
-      // First row should remain the same
       await expect(a1.locator('.gs-cell-rendered')).toHaveText('1');
       await expect(b1.locator('.gs-cell-rendered')).toHaveText('2');
       await expect(c1.locator('.gs-cell-rendered')).toHaveText('3');
-
-      // Second row should be empty (new row)
       await expect(a2.locator('.gs-cell-rendered')).toHaveText('');
       await expect(b2.locator('.gs-cell-rendered')).toHaveText('');
       await expect(c2.locator('.gs-cell-rendered')).toHaveText('');
-
-      // Third row should have the original second row values
       await expect(a3.locator('.gs-cell-rendered')).toHaveText('4');
       await expect(b3.locator('.gs-cell-rendered')).toHaveText('5');
       await expect(c3.locator('.gs-cell-rendered')).toHaveText('9');
-
-      // Fourth row should have the original third row values
       await expect(page.locator("[data-address='A4']").locator('.gs-cell-rendered')).toHaveText('5');
       await expect(page.locator("[data-address='B4']").locator('.gs-cell-rendered')).toHaveText('7');
       await expect(page.locator("[data-address='C4']").locator('.gs-cell-rendered')).toHaveText('12');
 
-      // Test Undo - should restore original state
       await a1.click();
       await ctrl(page, 'z');
       await page.waitForTimeout(100);
 
-      // Check that the grid is back to original state
       await expect(a1.locator('.gs-cell-rendered')).toHaveText('1');
       await expect(b1.locator('.gs-cell-rendered')).toHaveText('2');
       await expect(c1.locator('.gs-cell-rendered')).toHaveText('3');
@@ -74,12 +59,10 @@ test.describe('Control Operations', () => {
       await expect(b3.locator('.gs-cell-rendered')).toHaveText('7');
       await expect(c3.locator('.gs-cell-rendered')).toHaveText('12');
 
-      // Test Redo - should reapply the insert operation
       await a1.click();
       await ctrl(page, 'z', true);
       await page.waitForTimeout(100);
 
-      // Check that the insert operation is reapplied
       await expect(a1.locator('.gs-cell-rendered')).toHaveText('1');
       await expect(b1.locator('.gs-cell-rendered')).toHaveText('2');
       await expect(c1.locator('.gs-cell-rendered')).toHaveText('3');
@@ -92,58 +75,34 @@ test.describe('Control Operations', () => {
       await expect(page.locator("[data-address='A4']").locator('.gs-cell-rendered')).toHaveText('5');
       await expect(page.locator("[data-address='B4']").locator('.gs-cell-rendered')).toHaveText('7');
       await expect(page.locator("[data-address='C4']").locator('.gs-cell-rendered')).toHaveText('12');
-    });
 
-    test('should insert row below 2nd row', async ({ page }) => {
-      await page.goto('http://localhost:5233/iframe.html?id=control-insert--insert');
+      // Reset to clean state for next section
+      await a1.click();
+      await ctrl(page, 'z');
+      await page.waitForTimeout(100);
 
-      // Define cell locators using data-address
-      const a1 = page.locator("[data-address='A1']");
-      const b1 = page.locator("[data-address='B1']");
-      const c1 = page.locator("[data-address='C1']");
-      const a2 = page.locator("[data-address='A2']");
-      const b2 = page.locator("[data-address='B2']");
-      const c2 = page.locator("[data-address='C2']");
-      const a3 = page.locator("[data-address='A3']");
-      const b3 = page.locator("[data-address='B3']");
-      const c3 = page.locator("[data-address='C3']");
-
-      // Select 2nd row
+      // ---- Insert Row Below ----
       await page.locator("th[data-y='2']").click();
-
-      // Click "Insert Row Below" button
       await page.click('button:has-text("Insert Row Below")');
-
-      // Wait for the grid to update
       await page.waitForTimeout(100);
 
-      // Check that a new row was inserted below 2nd row (now 4x3 grid)
-      // First row should remain the same
       await expect(a1.locator('.gs-cell-rendered')).toHaveText('1');
       await expect(b1.locator('.gs-cell-rendered')).toHaveText('2');
       await expect(c1.locator('.gs-cell-rendered')).toHaveText('3');
-
-      // Second row should remain the same
       await expect(a2.locator('.gs-cell-rendered')).toHaveText('4');
       await expect(b2.locator('.gs-cell-rendered')).toHaveText('5');
       await expect(c2.locator('.gs-cell-rendered')).toHaveText('9');
-
-      // Third row should be empty (new row)
       await expect(a3.locator('.gs-cell-rendered')).toHaveText('');
       await expect(b3.locator('.gs-cell-rendered')).toHaveText('');
       await expect(c3.locator('.gs-cell-rendered')).toHaveText('');
-
-      // Fourth row should have the original third row values
       await expect(page.locator("[data-address='A4']").locator('.gs-cell-rendered')).toHaveText('5');
       await expect(page.locator("[data-address='B4']").locator('.gs-cell-rendered')).toHaveText('7');
       await expect(page.locator("[data-address='C4']").locator('.gs-cell-rendered')).toHaveText('12');
 
-      // Test Undo - should restore original state
       await a1.click();
       await ctrl(page, 'z');
       await page.waitForTimeout(100);
 
-      // Check that the grid is back to original state
       await expect(a1.locator('.gs-cell-rendered')).toHaveText('1');
       await expect(b1.locator('.gs-cell-rendered')).toHaveText('2');
       await expect(c1.locator('.gs-cell-rendered')).toHaveText('3');
@@ -154,12 +113,10 @@ test.describe('Control Operations', () => {
       await expect(b3.locator('.gs-cell-rendered')).toHaveText('7');
       await expect(c3.locator('.gs-cell-rendered')).toHaveText('12');
 
-      // Test Redo - should reapply the insert operation
       await a1.click();
       await ctrl(page, 'z', true);
       await page.waitForTimeout(100);
 
-      // Check that the insert operation is reapplied
       await expect(a1.locator('.gs-cell-rendered')).toHaveText('1');
       await expect(b1.locator('.gs-cell-rendered')).toHaveText('2');
       await expect(c1.locator('.gs-cell-rendered')).toHaveText('3');
@@ -174,10 +131,9 @@ test.describe('Control Operations', () => {
       await expect(page.locator("[data-address='C4']").locator('.gs-cell-rendered')).toHaveText('12');
     });
 
-    test('should insert column left of 2nd column', async ({ page }) => {
-      await page.goto('http://localhost:5233/iframe.html?id=control-insert--insert');
+    test('should insert column left and right of 2nd column', async ({ page }) => {
+      await go(page, 'control-insert--insert');
 
-      // Define cell locators using data-address
       const a1 = page.locator("[data-address='A1']");
       const b1 = page.locator("[data-address='B1']");
       const c1 = page.locator("[data-address='C1']");
@@ -188,42 +144,28 @@ test.describe('Control Operations', () => {
       const b3 = page.locator("[data-address='B3']");
       const c3 = page.locator("[data-address='C3']");
 
-      // Select 2nd column
+      // ---- Insert Column Left ----
       await page.locator("th[data-x='2']").click();
-
-      // Click "Insert Column Left" button
       await page.click('button:has-text("Insert Column Left")');
-
-      // Wait for the grid to update
       await page.waitForTimeout(100);
 
-      // Check that a new column was inserted left of 2nd column (now 3x4 grid)
-      // First column should remain the same
       await expect(a1.locator('.gs-cell-rendered')).toHaveText('1');
       await expect(a2.locator('.gs-cell-rendered')).toHaveText('4');
       await expect(a3.locator('.gs-cell-rendered')).toHaveText('5');
-
-      // Second column should be empty (new column)
       await expect(b1.locator('.gs-cell-rendered')).toHaveText('');
       await expect(b2.locator('.gs-cell-rendered')).toHaveText('');
       await expect(b3.locator('.gs-cell-rendered')).toHaveText('');
-
-      // Third column should have the original second column values
       await expect(c1.locator('.gs-cell-rendered')).toHaveText('2');
       await expect(c2.locator('.gs-cell-rendered')).toHaveText('5');
       await expect(c3.locator('.gs-cell-rendered')).toHaveText('7');
-
-      // Fourth column should have the original third column values
       await expect(page.locator("[data-address='D1']").locator('.gs-cell-rendered')).toHaveText('3');
       await expect(page.locator("[data-address='D2']").locator('.gs-cell-rendered')).toHaveText('9');
       await expect(page.locator("[data-address='D3']").locator('.gs-cell-rendered')).toHaveText('12');
 
-      // Test Undo - should restore original state
       await a1.click();
       await ctrl(page, 'z');
       await page.waitForTimeout(100);
 
-      // Check that the grid is back to original state
       await expect(a1.locator('.gs-cell-rendered')).toHaveText('1');
       await expect(b1.locator('.gs-cell-rendered')).toHaveText('2');
       await expect(c1.locator('.gs-cell-rendered')).toHaveText('3');
@@ -234,12 +176,10 @@ test.describe('Control Operations', () => {
       await expect(b3.locator('.gs-cell-rendered')).toHaveText('7');
       await expect(c3.locator('.gs-cell-rendered')).toHaveText('12');
 
-      // Test Redo - should reapply the insert operation
       await a1.click();
       await ctrl(page, 'z', true);
       await page.waitForTimeout(100);
 
-      // Check that the insert operation is reapplied
       await expect(a1.locator('.gs-cell-rendered')).toHaveText('1');
       await expect(a2.locator('.gs-cell-rendered')).toHaveText('4');
       await expect(a3.locator('.gs-cell-rendered')).toHaveText('5');
@@ -252,58 +192,34 @@ test.describe('Control Operations', () => {
       await expect(page.locator("[data-address='D1']").locator('.gs-cell-rendered')).toHaveText('3');
       await expect(page.locator("[data-address='D2']").locator('.gs-cell-rendered')).toHaveText('9');
       await expect(page.locator("[data-address='D3']").locator('.gs-cell-rendered')).toHaveText('12');
-    });
 
-    test('should insert column right of 2nd column', async ({ page }) => {
-      await page.goto('http://localhost:5233/iframe.html?id=control-insert--insert');
-
-      // Define cell locators using data-address
-      const a1 = page.locator("[data-address='A1']");
-      const b1 = page.locator("[data-address='B1']");
-      const c1 = page.locator("[data-address='C1']");
-      const a2 = page.locator("[data-address='A2']");
-      const b2 = page.locator("[data-address='B2']");
-      const c2 = page.locator("[data-address='C2']");
-      const a3 = page.locator("[data-address='A3']");
-      const b3 = page.locator("[data-address='B3']");
-      const c3 = page.locator("[data-address='C3']");
-
-      // Select 2nd column
-      await page.locator("th[data-x='2']").click();
-
-      // Click "Insert Column Right" button
-      await page.click('button:has-text("Insert Column Right")');
-
-      // Wait for the grid to update
+      // Reset to clean state for next section
+      await a1.click();
+      await ctrl(page, 'z');
       await page.waitForTimeout(100);
 
-      // Check that a new column was inserted right of 2nd column (now 3x4 grid)
-      // First column should remain the same
+      // ---- Insert Column Right ----
+      await page.locator("th[data-x='2']").click();
+      await page.click('button:has-text("Insert Column Right")');
+      await page.waitForTimeout(100);
+
       await expect(a1.locator('.gs-cell-rendered')).toHaveText('1');
       await expect(a2.locator('.gs-cell-rendered')).toHaveText('4');
       await expect(a3.locator('.gs-cell-rendered')).toHaveText('5');
-
-      // Second column should remain the same
       await expect(b1.locator('.gs-cell-rendered')).toHaveText('2');
       await expect(b2.locator('.gs-cell-rendered')).toHaveText('5');
       await expect(b3.locator('.gs-cell-rendered')).toHaveText('7');
-
-      // Third column should be empty (new column)
       await expect(c1.locator('.gs-cell-rendered')).toHaveText('');
       await expect(c2.locator('.gs-cell-rendered')).toHaveText('');
       await expect(c3.locator('.gs-cell-rendered')).toHaveText('');
-
-      // Fourth column should have the original third column values
       await expect(page.locator("[data-address='D1']").locator('.gs-cell-rendered')).toHaveText('3');
       await expect(page.locator("[data-address='D2']").locator('.gs-cell-rendered')).toHaveText('9');
       await expect(page.locator("[data-address='D3']").locator('.gs-cell-rendered')).toHaveText('12');
 
-      // Test Undo - should restore original state
       await a1.click();
       await ctrl(page, 'z');
       await page.waitForTimeout(100);
 
-      // Check that the grid is back to original state
       await expect(a1.locator('.gs-cell-rendered')).toHaveText('1');
       await expect(b1.locator('.gs-cell-rendered')).toHaveText('2');
       await expect(c1.locator('.gs-cell-rendered')).toHaveText('3');
@@ -314,12 +230,10 @@ test.describe('Control Operations', () => {
       await expect(b3.locator('.gs-cell-rendered')).toHaveText('7');
       await expect(c3.locator('.gs-cell-rendered')).toHaveText('12');
 
-      // Test Redo - should reapply the insert operation
       await a1.click();
       await ctrl(page, 'z', true);
       await page.waitForTimeout(100);
 
-      // Check that the insert operation is reapplied
       await expect(a1.locator('.gs-cell-rendered')).toHaveText('1');
       await expect(a2.locator('.gs-cell-rendered')).toHaveText('4');
       await expect(a3.locator('.gs-cell-rendered')).toHaveText('5');
@@ -336,10 +250,9 @@ test.describe('Control Operations', () => {
   });
 
   test.describe('Remove Operations', () => {
-    test('should remove 2nd row', async ({ page }) => {
-      await page.goto('http://localhost:5233/iframe.html?id=control-insert--insert');
+    test('should remove 2nd row and 2nd column', async ({ page }) => {
+      await go(page, 'control-insert--insert');
 
-      // Define cell locators using data-address
       const a1 = page.locator("[data-address='A1']");
       const b1 = page.locator("[data-address='B1']");
       const c1 = page.locator("[data-address='C1']");
@@ -350,32 +263,23 @@ test.describe('Control Operations', () => {
       const b3 = page.locator("[data-address='B3']");
       const c3 = page.locator("[data-address='C3']");
 
-      // Select 2nd row
+      // ---- Remove Row ----
       await page.locator("th[data-y='2']").click();
-
-      // Click "Remove Row" button
       await page.click('button:has-text("Remove Row")');
-
-      // Wait for the grid to update
       await page.waitForTimeout(100);
 
       // Check that the 2nd row was removed (now 2x3 grid)
-      // First row should remain the same
       await expect(a1.locator('.gs-cell-rendered')).toHaveText('1');
       await expect(b1.locator('.gs-cell-rendered')).toHaveText('2');
       await expect(c1.locator('.gs-cell-rendered')).toHaveText('3');
-
-      // Second row should have the original third row values
       await expect(a2.locator('.gs-cell-rendered')).toHaveText('1');
       await expect(b2.locator('.gs-cell-rendered')).toHaveText('2');
       await expect(c2.locator('.gs-cell-rendered')).toHaveText('3');
 
-      // Test Undo - should restore original state
       await a1.click();
       await ctrl(page, 'z');
       await page.waitForTimeout(100);
 
-      // Check that the grid is back to original state
       await expect(a1.locator('.gs-cell-rendered')).toHaveText('1');
       await expect(b1.locator('.gs-cell-rendered')).toHaveText('2');
       await expect(c1.locator('.gs-cell-rendered')).toHaveText('3');
@@ -386,60 +290,39 @@ test.describe('Control Operations', () => {
       await expect(b3.locator('.gs-cell-rendered')).toHaveText('7');
       await expect(c3.locator('.gs-cell-rendered')).toHaveText('12');
 
-      // Test Redo - should reapply the remove operation
       await a1.click();
       await ctrl(page, 'z', true);
       await page.waitForTimeout(100);
 
-      // Check that the remove operation is reapplied
       await expect(a1.locator('.gs-cell-rendered')).toHaveText('1');
       await expect(b1.locator('.gs-cell-rendered')).toHaveText('2');
       await expect(c1.locator('.gs-cell-rendered')).toHaveText('3');
       await expect(a2.locator('.gs-cell-rendered')).toHaveText('1');
       await expect(b2.locator('.gs-cell-rendered')).toHaveText('2');
       await expect(c2.locator('.gs-cell-rendered')).toHaveText('3');
-    });
 
-    test('should remove 2nd column', async ({ page }) => {
-      await page.goto('http://localhost:5233/iframe.html?id=control-insert--insert');
+      // Reset to clean state for next section
+      await a1.click();
+      await ctrl(page, 'z');
+      await page.waitForTimeout(100);
 
-      // Define cell locators using data-address
-      const a1 = page.locator("[data-address='A1']");
-      const b1 = page.locator("[data-address='B1']");
-      const c1 = page.locator("[data-address='C1']");
-      const a2 = page.locator("[data-address='A2']");
-      const b2 = page.locator("[data-address='B2']");
-      const c2 = page.locator("[data-address='C2']");
-      const a3 = page.locator("[data-address='A3']");
-      const b3 = page.locator("[data-address='B3']");
-      const c3 = page.locator("[data-address='C3']");
-
-      // Select 2nd column
+      // ---- Remove Column ----
       await page.locator("th[data-x='2']").click();
-
-      // Click "Remove Column" button
       await page.click('button:has-text("Remove Column")');
-
-      // Wait for the grid to update
       await page.waitForTimeout(100);
 
       // Check that the 2nd column was removed (now 3x2 grid)
-      // First column should remain the same
       await expect(a1.locator('.gs-cell-rendered')).toHaveText('1');
       await expect(a2.locator('.gs-cell-rendered')).toHaveText('4');
       await expect(a3.locator('.gs-cell-rendered')).toHaveText('5');
-
-      // Second column should have the original third column values
       await expect(b1.locator('.gs-cell-rendered')).toHaveText('1');
       await expect(b2.locator('.gs-cell-rendered')).toHaveText('4');
       await expect(b3.locator('.gs-cell-rendered')).toHaveText('5');
 
-      // Test Undo - should restore original state
       await a1.click();
       await ctrl(page, 'z');
       await page.waitForTimeout(100);
 
-      // Check that the grid is back to original state
       await expect(a1.locator('.gs-cell-rendered')).toHaveText('1');
       await expect(b1.locator('.gs-cell-rendered')).toHaveText('2');
       await expect(c1.locator('.gs-cell-rendered')).toHaveText('3');
@@ -450,12 +333,10 @@ test.describe('Control Operations', () => {
       await expect(b3.locator('.gs-cell-rendered')).toHaveText('7');
       await expect(c3.locator('.gs-cell-rendered')).toHaveText('12');
 
-      // Test Redo - should reapply the remove operation
       await a1.click();
       await ctrl(page, 'z', true);
       await page.waitForTimeout(100);
 
-      // Check that the remove operation is reapplied
       await expect(a1.locator('.gs-cell-rendered')).toHaveText('1');
       await expect(a2.locator('.gs-cell-rendered')).toHaveText('4');
       await expect(a3.locator('.gs-cell-rendered')).toHaveText('5');
@@ -467,7 +348,7 @@ test.describe('Control Operations', () => {
 
   test.describe('Move Operations', () => {
     test('should move cells between sheets', async ({ page }) => {
-      await page.goto('http://localhost:5233/iframe.html?id=multiple-sheets--sheets&viewMode=story');
+      await go(page, 'multiple-sheets--sheets');
 
       // Define sheet locators
       const sheet1 = page.locator('[data-sheet-name="Sheet1"]');
@@ -527,7 +408,7 @@ test.describe('Control Operations', () => {
     });
 
     test('move operation with overlapping src and dst', async ({ page }) => {
-      await page.goto('http://localhost:5233/iframe.html?id=multiple-sheets--sheets&viewMode=story');
+      await go(page, 'multiple-sheets--sheets');
 
       // Wait for the page to load and locate Sheet2
       await page.waitForSelector('[data-address="A1"]');

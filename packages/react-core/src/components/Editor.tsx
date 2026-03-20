@@ -39,7 +39,14 @@ import {
 import { Context } from '../store';
 import { areaToZone, zoneToArea } from '../lib/spatial';
 import * as prevention from '../lib/operation';
-import { expandInput, insertTextAtCursor, isFocus, isRefInsertable, resetInput } from '../lib/input';
+import {
+  expandInput,
+  handleFormulaQuoteAutoClose,
+  insertTextAtCursor,
+  isFocus,
+  isRefInsertable,
+  resetInput,
+} from '../lib/input';
 import { focus } from '../lib/dom';
 import { Lexer } from '../formula/evaluator';
 import { COLOR_PALETTE } from '../lib/palette';
@@ -123,7 +130,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
   }
 
   const policy = table.getPolicyByPoint(choosing);
-  const optionsAll = policy.getOptions();
+  const optionsAll = policy.getSelectOptions();
 
   const handleSelect = useCallback((e: React.SyntheticEvent<HTMLTextAreaElement>) => {
     setSelectionStart(e.currentTarget.selectionStart);
@@ -180,8 +187,8 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
   const editing = editingAddress === address;
 
   const cell = table.getCellByPoint({ y, x }, 'SYSTEM');
-  const valueString = table.stringify({ point: choosing, cell, refEvaluation: 'RAW' });
-  const [before, setBefore] = useState<string>(valueString);
+  const currentString = table.stringify({ point: choosing, cell, refEvaluation: 'RAW' });
+  const [before, setBefore] = useState<string>(currentString);
 
   const writeCell = useCallback(
     (value: string) => {
@@ -223,14 +230,14 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
   );
 
   useEffect(() => {
-    setBefore(valueString);
-    dispatch(setInputting(valueString));
+    setBefore(currentString);
+    dispatch(setInputting(currentString));
     resetInput(editorRef.current, table, choosing);
-  }, [choosing, valueString, dispatch, editorRef, table]);
+  }, [choosing, currentString, dispatch, editorRef, table]);
 
   const { y: top, x: left, height, width } = editorRect;
 
-  const numLines = valueString.split('\n').length;
+  const numLines = currentString.split('\n').length;
   const [isKeyDown, setIsKeyDown] = useState(false);
   const handleKeyDown = useCallback(
     (e: EditorEventWithNativeEvent) => {
@@ -245,6 +252,12 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
         });
       }
       const input = e.currentTarget;
+
+      // Auto-close double quotes in formula mode
+      if (handleFormulaQuoteAutoClose(e, inputting)) {
+        dispatch(setInputting(input.value));
+        return false;
+      }
 
       const shiftKey = e.shiftKey;
       switch (e.key) {
@@ -558,6 +571,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
       address,
       writeCell,
       searchQuery,
+      inputting,
     ],
   );
 
@@ -577,17 +591,17 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
       }
       const input = e.currentTarget;
       if (!editing) {
-        dispatch(setInputting(valueString));
+        dispatch(setInputting(currentString));
         dispatch(setEditingAddress(address));
         requestAnimationFrame(() => {
           input.style.width = `${input.scrollWidth}px`;
           input.style.height = `${input.scrollHeight}px`;
-          const length = new String(valueString).length;
+          const length = new String(currentString).length;
           input.setSelectionRange(length, length);
         });
       }
     },
-    [cell, editing, valueString, address],
+    [cell, editing, currentString, address],
   );
 
   const handleBlur = useCallback(
@@ -686,7 +700,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
             width: (editorRef.current?.scrollWidth ?? 0) - 4,
           }}
         >
-          {cell?.disableFormula ? inputting : editorStyle(inputting)}
+          {(cell?.formulaEnabled ?? true) ? editorStyle(inputting) : inputting}
         </pre>
         <textarea
           data-sheet-id={sheetId}

@@ -108,7 +108,7 @@ export function GridSheet({
       searchCaseSensitive: false,
       searchRegex: false,
       editingOnEnter: true,
-      showAddress: true,
+      showAddress: false,
       contextMenuPosition: { y: -1, x: -1 },
       contextMenuItems: contextMenuItems ?? defaultContextMenuItems,
       resizingPositionY: [-1, -1, -1],
@@ -164,6 +164,8 @@ export function GridSheet({
         ref={rootRef}
         data-sheet-name={sheetName}
         data-mode={mode}
+        data-rows={store.tableReactive.current?.getNumRows() ?? 0}
+        data-cols={store.tableReactive.current?.getNumCols() ?? 0}
       >
         <div className="gs-flash-overlay" ref={flashRef} />
         <ScrollHandle style={{ position: 'fixed', top: 0, left: 0 }} />

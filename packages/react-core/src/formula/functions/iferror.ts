@@ -1,54 +1,40 @@
 // DO NOT COPY THIS CODE FOR THE OTHER.
+import { FormulaError } from '../formula-error';
+import {
+  FunctionArgumentDefinition,
+  BaseFunction,
+  FunctionCategory,
+  isMatrix,
+  isMultiCell,
+  stripMatrix,
+} from './__base';
 
-import { Table } from '../../lib/table';
-import { Expression, FormulaError } from '../evaluator';
-import { FunctionProps, HelpArg } from './__base';
-import { stripTable } from '../../formula/solver';
+const description = `Returns the first argument if it is not an error value, otherwise returns the second argument if present, or a blank if the second argument is absent.`;
 
-export class IfErrorFunction {
+export class IfErrorFunction extends BaseFunction {
   example = 'IFERROR(A1, "Error in cell A1")';
-  helpText = [
-    'Returns the first argument if it is not an error value, otherwise returns the second argument if present, or a blank if the second argument is absent.',
-  ];
-  helpArgs: HelpArg[] = [
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
     {
       name: 'value',
       description: 'The value to return if value itself is not an error.',
-      type: ['any'],
+      acceptedTypes: ['any'],
+      errorTolerant: true,
     },
     {
       name: 'value_if_error',
       description: 'The value the function returns if value is an error.',
       optional: true,
-      type: ['any'],
+      acceptedTypes: ['any'],
     },
   ];
-  private args: Expression[];
-  private table: Table;
+  category: FunctionCategory = 'logical';
+  protected broadcastDisabled = true;
 
-  constructor({ args, table }: FunctionProps) {
-    this.args = args;
-    this.table = table;
-  }
-
-  protected validate() {
-    if (this.args.length === 1 || this.args.length === 2) {
-      return;
+  protected main(value: any, valueIfError?: any) {
+    if (FormulaError.is(value) || value instanceof Error) {
+      return valueIfError;
     }
-    throw new FormulaError(
-      '#N/A',
-      'Number of arguments for IFERROR is incorrect. 1 or 2 argument(s) must be specified.',
-    );
-  }
-
-  public call() {
-    this.validate();
-    const [value, valueIfError] = this.args;
-
-    try {
-      return stripTable({ value: value.evaluate({ table: this.table }) });
-    } catch (e) {
-      return stripTable({ value: valueIfError?.evaluate({ table: this.table }) });
-    }
+    return value;
   }
 }

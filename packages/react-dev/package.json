@@ -34,9 +34,9 @@
   "homepage": "https://gridsheet.walkframe.com/",
   "packageManager": "pnpm@10.6.5",
   "peerDependencies": {
+    "@gridsheet/react-core": ">=3.0.0-rc.1",
     "react": ">=16.9.0",
-    "react-dom": ">=16.9.0",
-    "@gridsheet/react-core": ">=3.0.0-rc.1"
+    "react-dom": ">=16.9.0"
   },
   "devDependencies": {
     "@types/react": "^16.9.24",
@@ -45,5 +45,9 @@
     "typescript": "^5.8.2",
     "vite": "^6.2.2",
     "vite-plugin-dts": "^4.5.3"
+  },
+  "dependencies": {
+    "@types/react-syntax-highlighter": "^15.5.13",
+    "react-syntax-highlighter": "^16.1.1"
   }
 }

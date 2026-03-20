@@ -1,23 +1,28 @@
-import { FormulaError } from '../evaluator';
-import { BaseFunction, HelpArg } from './__base';
+import { FormulaError } from '../formula-error';
+import { BaseFunction, FunctionCategory, FunctionArgumentDefinition } from './__base';
 import { ensureString } from './__utils';
+
+const description = `Returns the concatenation of two values.
+This is the same as the '&' operator.`;
 
 export class ConcatFunction extends BaseFunction {
   example = 'CONCAT("Hello", "World")';
-  helpText = ['Returns the concatenation of two values.', "This is the same as the '&' operator."];
-  helpArgs: HelpArg[] = [
-    { name: 'value1', description: 'A value to be concatenated with value2.', type: ['string'] },
-    { name: 'value2', description: 'A value to be concatenated with value1', type: ['string'] },
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
+    {
+      name: 'value1',
+      description: 'A value to be concatenated with value2.',
+      acceptedTypes: ['string', 'number', 'boolean'],
+    },
+    {
+      name: 'value2',
+      description: 'A value to be concatenated with value1',
+      acceptedTypes: ['string', 'number', 'boolean'],
+    },
   ];
+  category: FunctionCategory = 'text';
 
-  protected validate() {
-    if (this.bareArgs.length !== 2) {
-      throw new FormulaError('#N/A', 'Number of arguments for CONCAT is incorrect.');
-    }
-    this.bareArgs = this.bareArgs.map((arg) => ensureString(arg));
-  }
-
-  protected main(v1: string, v2: string) {
-    return v1 + v2;
+  protected main(v1: any, v2: any) {
+    return ensureString(v1) + ensureString(v2);
   }
 }

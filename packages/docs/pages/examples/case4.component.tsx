@@ -10,59 +10,54 @@ import {
   Policy,
   PolicyMixinType,
   AutocompleteOption,
-  Renderer,
-  ThousandSeparatorRendererMixin,
-  CheckboxRendererMixin,
+  ThousandSeparatorPolicyMixin,
+  CheckboxPolicyMixin,
   makeBorder,
   FeedbackType,
+  SelectProps,
 } from '@gridsheet/react-core';
+
+const DEPARTMENT_OPTIONS: AutocompleteOption[] = [
+  { value: 'Engineering', label: '🔧 Engineering', keywords: ['Engineering', 'dev', 'development'] },
+  { value: 'Marketing', label: '📢 Marketing', keywords: ['Marketing', 'promotion', 'advertising'] },
+  { value: 'Sales', label: '💰 Sales', keywords: ['Sales', 'revenue', 'selling'] },
+  { value: 'HR', label: '👥 HR', keywords: ['HR', 'Human Resources', 'personnel'] },
+  { value: 'Finance', label: '💼 Finance', keywords: ['Finance', 'accounting', 'financial'] },
+  { value: 'Operations', label: '⚙️ Operations', keywords: ['Operations', 'operational', 'management'] },
+  { value: 'Product', label: '🚀 Product', keywords: ['Product', 'product management', 'goods'] },
+  { value: 'Support', label: '🛠️ Support', keywords: ['Support', 'help', 'assistance'] },
+];
 
 // Department selection policy
 const DepartmentPolicy: PolicyMixinType = {
-  getOptions: (): AutocompleteOption[] => [
-    { value: 'Engineering', label: '🔧 Engineering', keywords: ['Engineering', 'dev', 'development'] } as any,
-    { value: 'Marketing', label: '📢 Marketing', keywords: ['Marketing', 'promotion', 'advertising'] } as any,
-    { value: 'Sales', label: '💰 Sales', keywords: ['Sales', 'revenue', 'selling'] } as any,
-    { value: 'HR', label: '👥 HR', keywords: ['HR', 'Human Resources', 'personnel'] } as any,
-    { value: 'Finance', label: '💼 Finance', keywords: ['Finance', 'accounting', 'financial'] } as any,
-    { value: 'Operations', label: '⚙️ Operations', keywords: ['Operations', 'operational', 'management'] } as any,
-    { value: 'Product', label: '🚀 Product', keywords: ['Product', 'product management', 'goods'] } as any,
-    { value: 'Support', label: '🛠️ Support', keywords: ['Support', 'help', 'assistance'] } as any,
-  ],
-  getDefault: (props: any) => {
-    return { value: 'Engineering' };
-  },
-  validate: (props: any) => {
-    const { patch } = props;
-    if (patch?.value == null) {
-      return patch;
+  getSelectOptions: (): AutocompleteOption[] => DEPARTMENT_OPTIONS,
+  select: ({ next }: SelectProps) => {
+    const value = next?.value;
+    if (value == null) {
+      return next;
     }
-
-    const options = DepartmentPolicy.getOptions!();
-    const validOption = options.find((option) => option.value === patch?.value);
+    const validOption = DEPARTMENT_OPTIONS.find((option) => option.value === value);
     if (!validOption) {
-      return { ...patch, value: 'Engineering' };
+      return { ...next, value: 'Engineering' };
     }
-    return patch;
+    return next;
   },
 };
 
 // Budget validation policy
 const BudgetPolicy: PolicyMixinType = {
-  validate: (props: any) => {
-    const { patch } = props;
-    if (patch?.value == null) {
-      return patch;
+  select: ({ next }: SelectProps) => {
+    if (next?.value == null) {
+      return next;
     }
-
-    const value = Number(patch.value);
+    const value = Number(next.value);
     if (isNaN(value) || value < 0) {
-      return { ...patch, value: 0 };
+      return { ...next, value: 0 };
     }
     if (value > 1000000) {
-      return { ...patch, value: 1000000 };
+      return { ...next, value: 1000000 };
     }
-    return patch;
+    return next;
   },
 };
 
@@ -111,42 +106,31 @@ export default function BudgetManagement() {
   // Dynamic status policy using ref for real-time updates
   const StatusPolicy = React.useMemo(
     () => ({
-      getOptions: (): AutocompleteOption[] => {
+      getSelectOptions: (): AutocompleteOption[] => {
         return statusOptionsRef.current.map(([value, label]) => ({ value, label }));
       },
-      getDefault: (props: any) => {
-        return { value: 'Pending' };
-      },
-      validate: (props: any) => {
-        const { patch } = props;
-        if (patch?.value == null) {
-          return patch;
+      select: ({ next }: SelectProps) => {
+        if (next?.value == null) {
+          return next;
         }
-
         const options = statusOptionsRef.current.map(([value]) => value);
-        const validOption = options.includes(patch?.value);
+        const validOption = options.includes(next.value);
         if (!validOption) {
-          return { ...patch, value: 'Pending' };
+          return { ...next, value: 'Pending' };
         }
-        return patch;
+        return next;
       },
     }),
-    [tags], // Add tags as dependency
+    [tags],
   );
 
   const hub = useHub({
-    renderers: {
-      thousand_separator: new Renderer({ mixins: [ThousandSeparatorRendererMixin] }),
-      checkbox: new Renderer({ mixins: [CheckboxRendererMixin] }),
-    },
     policies: {
       department: new Policy({ mixins: [DepartmentPolicy] }),
       status: new Policy({ mixins: [StatusPolicy] }),
-      budget: new Policy({ mixins: [BudgetPolicy] }),
-    },
-    labelers: {
-      value: (n: number) => 'Value',
-      label: (n: number) => 'Label',
+      budget: new Policy({ mixins: [BudgetPolicy, ThousandSeparatorPolicyMixin] }),
+      thousand_separator: new Policy({ mixins: [ThousandSeparatorPolicyMixin] }),
+      checkbox: new Policy({ mixins: [CheckboxPolicyMixin] }),
     },
     // Event handlers for budget monitoring
     onSave: ({ table, points }) => {
@@ -256,7 +240,6 @@ export default function BudgetManagement() {
                   backgroundColor: '#e8f5e8',
                 },
                 policy: 'budget',
-                renderer: 'thousand_separator',
               },
               C: {
                 label: 'Actual Spent',
@@ -265,7 +248,6 @@ export default function BudgetManagement() {
                   backgroundColor: '#fff3cd',
                 },
                 policy: 'budget',
-                renderer: 'thousand_separator',
               },
               D: {
                 label: 'Remaining',
@@ -275,7 +257,7 @@ export default function BudgetManagement() {
                   fontWeight: 'bold',
                 },
                 prevention: operations.Write,
-                renderer: 'thousand_separator',
+                policy: 'thousand_separator',
               },
               E: {
                 label: 'Status',
@@ -285,7 +267,7 @@ export default function BudgetManagement() {
               F: {
                 label: 'Done',
                 width: 50,
-                renderer: 'checkbox',
+                policy: 'checkbox',
                 style: {
                   backgroundColor: '#f8f9fa',
                 },

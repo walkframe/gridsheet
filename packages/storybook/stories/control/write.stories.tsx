@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { GridSheet, buildInitialCells, useConnector, HistoryType, useHub } from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
 
 type Props = {
   x: number;
@@ -36,6 +37,7 @@ const WriteComponent: React.FC<Props> = ({ x, y, value }: Props) => {
   const connector = useConnector();
 
   const hub = useHub({
+    additionalFunctions: allFunctions,
     onKeyUp: ({ e, points }) => {
       console.log('onKeyUp', e.currentTarget.value, points.pointing);
     },

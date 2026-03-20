@@ -1,7 +1,7 @@
 import type { StoreType, AreaType, PointType } from '../types';
 
 import { zoneToArea } from './spatial';
-import type { Table } from './table';
+import type { Table, UserTable } from './table';
 import { focus } from './dom';
 
 export const clip = (store: StoreType) => {
@@ -20,8 +20,18 @@ export const clip = (store: StoreType) => {
   }
   const input = editorRef.current;
   const trimmed = table.trim(area);
-  const tsv = table2tsv(trimmed);
-  const html = table2html(trimmed);
+  const tsv = table2csv(trimmed, {
+    getter: (table, point) => {
+      const policy = table.getPolicyByPoint(point);
+      return policy.serializeForClipboard({ point, table });
+    },
+  });
+  const html = table2html(trimmed, {
+    getter: (table, point) => {
+      const policy = table.getPolicyByPoint(point);
+      return policy.serializeForClipboard({ point, table });
+    },
+  });
 
   if (navigator.clipboard) {
     const tsvBlob = new Blob([tsv], { type: 'text/plain' });
@@ -44,39 +54,84 @@ export const clip = (store: StoreType) => {
   return area;
 };
 
-const table2tsv = (table: Table): string => {
-  const lines: string[] = [];
+export type TableCSVProps = {
+  getter?: (table: UserTable, point: PointType) => string;
+  filteredRowsIncluded?: boolean;
+  trailingEmptyRowsOmitted?: boolean;
+  separator?: string;
+  newline?: string;
+};
+
+export const table2csv = (
+  table: UserTable,
+  {
+    getter = (table, point) => {
+      return String(table.getCellByPoint(point)?.value ?? '');
+    },
+    filteredRowsIncluded = false,
+    trailingEmptyRowsOmitted = false,
+    separator = '\t',
+    newline = '\n',
+  }: TableCSVProps = {},
+): string => {
+  const rows: { isEmpty: boolean; line: string }[] = [];
   for (let y = table.top; y <= table.bottom; y++) {
-    if (table.isRowFiltered(y)) {
+    if (table.isRowFiltered(y) && !filteredRowsIncluded) {
       continue;
     }
     const cols: string[] = [];
+    let rowIsEmpty = true;
     for (let x = table.left; x <= table.right; x++) {
       const point: PointType = { y, x };
-      const policy = table.getPolicyByPoint(point);
-      const value = policy.onClip({ point, table });
+      const value = getter(table, point);
+      if (value !== '') {
+        rowIsEmpty = false;
+      }
       if (value.indexOf('\n') !== -1) {
         cols.push(`"${value.replace(/"/g, '""')}"`);
       } else {
         cols.push(value);
       }
     }
-    lines.push(cols.join('\t'));
+    rows.push({ isEmpty: rowIsEmpty, line: cols.join(separator) });
   }
-  return lines.join('\n');
+  if (trailingEmptyRowsOmitted) {
+    while (rows.length > 0 && rows[rows.length - 1].isEmpty) {
+      rows.pop();
+    }
+  }
+  return rows.map((r) => r.line).join(newline);
 };
 
-const table2html = (table: Table): string => {
-  const lines: string[] = [];
+export type TableHTMLProps = {
+  getter?: (table: UserTable, point: PointType) => string;
+  filteredRowsIncluded?: boolean;
+  trailingEmptyRowsOmitted?: boolean;
+};
+
+export const table2html = (
+  table: UserTable,
+  {
+    getter = (table, point) => {
+      return String(table.getCellByPoint(point)?.value ?? '');
+    },
+    filteredRowsIncluded = false,
+    trailingEmptyRowsOmitted = false,
+  }: TableHTMLProps = {},
+): string => {
+  const rows: { isEmpty: boolean; html: string }[] = [];
   for (let y = table.top; y <= table.bottom; y++) {
-    if (table.isRowFiltered(y)) {
+    if (table.isRowFiltered(y) && !filteredRowsIncluded) {
       continue;
     }
     const cols: string[] = [];
+    let rowIsEmpty = true;
     for (let x = table.left; x <= table.right; x++) {
       const point: PointType = { y, x };
-      const policy = table.getPolicyByPoint(point);
-      const value = policy.onClip({ point, table });
+      const value = getter(table, point);
+      if (value !== '') {
+        rowIsEmpty = false;
+      }
       const valueEscaped = value
         .replace(/&/g, '&amp;')
         .replace(/"/g, '&quot;')
@@ -85,7 +140,12 @@ const table2html = (table: Table): string => {
         .replace(/>/g, '&gt;');
       cols.push(`<td>${valueEscaped}</td>`);
     }
-    lines.push(`<tr>${cols.join('')}</tr>`);
+    rows.push({ isEmpty: rowIsEmpty, html: `<tr>${cols.join('')}</tr>` });
   }
-  return `<table>${lines.join('')}</table>`;
+  if (trailingEmptyRowsOmitted) {
+    while (rows.length > 0 && rows[rows.length - 1].isEmpty) {
+      rows.pop();
+    }
+  }
+  return `<table>${rows.map((r) => r.html).join('')}</table>`;
 };

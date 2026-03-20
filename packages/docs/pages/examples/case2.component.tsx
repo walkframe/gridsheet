@@ -5,16 +5,17 @@ import { request } from '@octokit/request';
 import {
   GridSheet,
   oa2aa,
-  Renderer,
-  RendererMixinType,
+  Policy,
+  PolicyMixinType,
   MatrixType,
   buildInitialCellsFromOrigin,
-  ThousandSeparatorRendererMixin,
+  ThousandSeparatorPolicyMixin,
   useHub,
+  type RenderProps,
 } from '@gridsheet/react-core';
 
-const ImageRendererMixin: RendererMixinType = {
-  string({ value }: { value: string }) {
+const ImagePolicyMixin: PolicyMixinType = {
+  renderString({ value }: RenderProps<string>) {
     return (
       <div
         className="backface"
@@ -38,8 +39,8 @@ const ImageRendererMixin: RendererMixinType = {
   },
 };
 
-const LinkRendererMixin: RendererMixinType = {
-  string({ value }: { value: string }) {
+const LinkPolicyMixin: PolicyMixinType = {
+  renderString({ value }: RenderProps<string>) {
     if (value == null || value === '') {
       return <span style={{ color: '#999', fontStyle: 'italic' }}>No URL</span>;
     }
@@ -97,17 +98,17 @@ export default function GitHubContributors() {
   }, []);
 
   const hub = useHub({
-    renderers: {
-      thousand_separator: new Renderer({ mixins: [ThousandSeparatorRendererMixin] }),
-      image: new Renderer({ mixins: [ImageRendererMixin] }),
-      link: new Renderer({ mixins: [LinkRendererMixin] }),
-    },
-    labelers: {
-      id: (n) => 'ID',
-      avatar: (n) => 'Avatar',
-      user: (n) => 'user',
-      url: (n) => 'URL',
-      contributions: (n) => 'Contributions',
+    policies: {
+      thousand_separator: new Policy({ mixins: [ThousandSeparatorPolicyMixin] }),
+      image: new Policy({ mixins: [ImagePolicyMixin] }),
+      link: new Policy({ mixins: [LinkPolicyMixin] }),
+      id: new Policy({ mixins: [{ renderColHeaderLabel: () => 'ID' }] }),
+      avatar: new Policy({ mixins: [ImagePolicyMixin, { renderColHeaderLabel: () => 'Avatar' }] }),
+      user: new Policy({ mixins: [{ renderColHeaderLabel: () => 'user' }] }),
+      url: new Policy({ mixins: [LinkPolicyMixin, { renderColHeaderLabel: () => 'URL' }] }),
+      contributions: new Policy({
+        mixins: [ThousandSeparatorPolicyMixin, { renderColHeaderLabel: () => 'Contributions' }],
+      }),
     },
   });
 
@@ -165,9 +166,8 @@ export default function GitHubContributors() {
                 height: 80,
               },
               A: {
-                labeler: 'id',
+                policy: 'id',
                 width: 80,
-                renderer: 'id',
                 justifyContent: 'right',
                 alignItems: 'center',
                 style: {
@@ -177,15 +177,14 @@ export default function GitHubContributors() {
                 },
               },
               B: {
-                labeler: 'avatar',
-                renderer: 'image',
+                policy: 'avatar',
                 alignItems: 'center',
                 style: {
                   backgroundColor: 'rgba(52, 152, 219, 0.05)',
                 },
               },
               C: {
-                labeler: 'user',
+                policy: 'user',
                 width: 150,
                 alignItems: 'center',
                 style: {
@@ -195,19 +194,17 @@ export default function GitHubContributors() {
                 },
               },
               D: {
-                labeler: 'url',
+                policy: 'url',
                 width: 230,
-                renderer: 'link',
                 alignItems: 'center',
                 style: {
                   backgroundColor: 'rgba(52, 152, 219, 0.05)',
                 },
               },
               E: {
-                labeler: 'contributions',
+                policy: 'contributions',
                 alignItems: 'center',
                 justifyContent: 'right',
-                renderer: 'thousand_separator',
                 style: {
                   backgroundColor: 'rgba(46, 204, 113, 0.15)',
                   fontWeight: '600',

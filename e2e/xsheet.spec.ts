@@ -29,7 +29,7 @@ const clickRowMenuItem = async (page: any, sheetName: string, y: number, menuTex
 };
 
 test.describe('Cross-sheet undo/redo', () => {
-  test('insert row in Sheet2, undo from Sheet1 restores references correctly', async ({ page }) => {
+  test('insert row in Sheet2, undo/redo from Sheet1 restores references and row count', async ({ page }) => {
     await page.goto(STORY_URL);
     await page.waitForTimeout(500);
 
@@ -37,82 +37,32 @@ test.describe('Cross-sheet undo/redo', () => {
     const s2 = sheet(page, 'Sheet2');
 
     // ---- Check initial state of Sheet1 ----
-    // A1 = =Sheet2!A1+100 = 50+100 = 150
     await expect(s1.locator("[data-address='A1']").locator('.gs-cell-rendered')).toHaveText('150');
-    // A2 = =SUM(Sheet2!B2:B4) = 1200+30+0 = 1230
     await expect(s1.locator("[data-address='A2']").locator('.gs-cell-rendered')).toHaveText('1230');
-    // C1 = 333
     await expect(s1.locator("[data-address='C1']").locator('.gs-cell-rendered')).toHaveText('333');
-    // C2 = $C$1+100 = 433
     await expect(s1.locator("[data-address='C2']").locator('.gs-cell-rendered')).toHaveText('433');
-    // C3 = C2+200 = 633
     await expect(s1.locator("[data-address='C3']").locator('.gs-cell-rendered')).toHaveText('633');
 
     // ---- Check initial state of Sheet2 ----
-    // A1 = 50
     await expect(s2.locator("[data-address='A1']").locator('.gs-cell-rendered')).toHaveText('50');
-    // A2 = =Sheet1!C3 = 633
     await expect(s2.locator("[data-address='A2']").locator('.gs-cell-rendered')).toHaveText('633');
-    // B1 = 999
     await expect(s2.locator("[data-address='B1']").locator('.gs-cell-rendered')).toHaveText('999');
-    // B2 = 1200
     await expect(s2.locator("[data-address='B2']").locator('.gs-cell-rendered')).toHaveText('1200');
-    // B3 = 30
     await expect(s2.locator("[data-address='B3']").locator('.gs-cell-rendered')).toHaveText('30');
+
+    const initialRowCount = parseInt((await s2.getAttribute('data-rows')) ?? '0');
 
     // ---- Insert a row above row 2 in Sheet2 ----
     await clickRowMenuItem(page, 'Sheet2', 2, 'Insert 1 row above');
 
-    // After inserting a row above row 2 in Sheet2:
     // Sheet2 row 2 is now empty, original row 2 shifted to row 3
-    await expect(s2.locator("[data-address='A1']").locator('.gs-cell-rendered')).toHaveText('50');
     await expect(s2.locator("[data-address='A2']").locator('.gs-cell-rendered')).toHaveText('');
-    // A3 should now be the old A2 (=Sheet1!C3 = 633)
     await expect(s2.locator("[data-address='A3']").locator('.gs-cell-rendered')).toHaveText('633');
-    // B2 should be empty (new row)
     await expect(s2.locator("[data-address='B2']").locator('.gs-cell-rendered')).toHaveText('');
-    // B3 should be the old B2 = 1200
     await expect(s2.locator("[data-address='B3']").locator('.gs-cell-rendered')).toHaveText('1200');
-    // B4 should be the old B3 = 30
     await expect(s2.locator("[data-address='B4']").locator('.gs-cell-rendered')).toHaveText('30');
-
-    // Sheet1 references should still be correct after insert (SUM range shifted)
-    // A1 = =Sheet2!A1+100 = 150 (unchanged, row 1 not affected)
     await expect(s1.locator("[data-address='A1']").locator('.gs-cell-rendered')).toHaveText('150');
-
-    // ---- Now undo from Sheet1 ----
-    await s1.locator("[data-address='A1']").click();
-    await ctrl(page, 'z');
-    await page.waitForTimeout(300);
-
-    // ---- Verify Sheet2 is restored (row removed, back to original) ----
-    await expect(s2.locator("[data-address='A1']").locator('.gs-cell-rendered')).toHaveText('50');
-    await expect(s2.locator("[data-address='A2']").locator('.gs-cell-rendered')).toHaveText('633');
-    await expect(s2.locator("[data-address='B1']").locator('.gs-cell-rendered')).toHaveText('999');
-    await expect(s2.locator("[data-address='B2']").locator('.gs-cell-rendered')).toHaveText('1200');
-    await expect(s2.locator("[data-address='B3']").locator('.gs-cell-rendered')).toHaveText('30');
-
-    // ---- Verify Sheet1 references are restored ----
-    await expect(s1.locator("[data-address='A1']").locator('.gs-cell-rendered')).toHaveText('150');
-    await expect(s1.locator("[data-address='A2']").locator('.gs-cell-rendered')).toHaveText('1230');
-    await expect(s1.locator("[data-address='C3']").locator('.gs-cell-rendered')).toHaveText('633');
-  });
-
-  test('insert row in Sheet2, undo from Sheet1 removes inserted row visually', async ({ page }) => {
-    await page.goto(STORY_URL);
-    await page.waitForTimeout(500);
-
-    const s2 = sheet(page, 'Sheet2');
-    const s1 = sheet(page, 'Sheet1');
-
-    // Sheet2 initially has 5 rows
-    const initialRowCount = await s2.locator('.gs-th-left[data-y]').count();
-
-    // ---- Insert a row above row 2 in Sheet2 ----
-    await clickRowMenuItem(page, 'Sheet2', 2, 'Insert 1 row above');
-
-    // Sheet2 should now have one more row
-    const afterInsertRowCount = await s2.locator('.gs-th-left[data-y]').count();
+    const afterInsertRowCount = parseInt((await s2.getAttribute('data-rows')) ?? '0');
     expect(afterInsertRowCount).toBe(initialRowCount + 1);
 
     // ---- Undo from Sheet1 ----
@@ -120,45 +70,25 @@ test.describe('Cross-sheet undo/redo', () => {
     await ctrl(page, 'z');
     await page.waitForTimeout(300);
 
-    // Sheet2 should be back to original row count (without needing to scroll)
-    const afterUndoRowCount = await s2.locator('.gs-th-left[data-y]').count();
-    expect(afterUndoRowCount).toBe(initialRowCount);
-  });
-
-  test('redo from Sheet1 re-applies insert row in Sheet2', async ({ page }) => {
-    await page.goto(STORY_URL);
-    await page.waitForTimeout(500);
-
-    const s1 = sheet(page, 'Sheet1');
-    const s2 = sheet(page, 'Sheet2');
-
-    const initialRowCount = await s2.locator('.gs-th-left[data-y]').count();
-
-    // ---- Insert a row above row 2 in Sheet2 ----
-    await clickRowMenuItem(page, 'Sheet2', 2, 'Insert 1 row above');
-    await page.waitForTimeout(100);
-
-    // ---- Undo from Sheet1 ----
-    await s1.locator("[data-address='A1']").click();
-    await ctrl(page, 'z');
-    await page.waitForTimeout(300);
-
-    // Verify undo worked
+    // Sheet2 restored (row removed, back to original)
+    await expect(s2.locator("[data-address='A1']").locator('.gs-cell-rendered')).toHaveText('50');
     await expect(s2.locator("[data-address='A2']").locator('.gs-cell-rendered')).toHaveText('633');
-    const afterUndoRowCount = await s2.locator('.gs-th-left[data-y]').count();
+    await expect(s2.locator("[data-address='B2']").locator('.gs-cell-rendered')).toHaveText('1200');
+    await expect(s2.locator("[data-address='B3']").locator('.gs-cell-rendered')).toHaveText('30');
+    // Sheet1 references restored
+    await expect(s1.locator("[data-address='A1']").locator('.gs-cell-rendered')).toHaveText('150');
+    await expect(s1.locator("[data-address='A2']").locator('.gs-cell-rendered')).toHaveText('1230');
+    await expect(s1.locator("[data-address='C3']").locator('.gs-cell-rendered')).toHaveText('633');
+    const afterUndoRowCount = parseInt((await s2.getAttribute('data-rows')) ?? '0');
     expect(afterUndoRowCount).toBe(initialRowCount);
 
-    // ---- Redo from Sheet1 ----
+    // ---- Redo from Sheet1 re-applies insert row ----
     await ctrl(page, 'z', true);
     await page.waitForTimeout(300);
 
-    // Sheet2 should have the row re-inserted
-    const afterRedoRowCount = await s2.locator('.gs-th-left[data-y]').count();
+    const afterRedoRowCount = parseInt((await s2.getAttribute('data-rows')) ?? '0');
     expect(afterRedoRowCount).toBe(initialRowCount + 1);
-
-    // Verify row 2 is empty again (inserted row)
     await expect(s2.locator("[data-address='A2']").locator('.gs-cell-rendered')).toHaveText('');
-    // Original A2 shifted back to A3
     await expect(s2.locator("[data-address='A3']").locator('.gs-cell-rendered')).toHaveText('633');
   });
 });

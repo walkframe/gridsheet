@@ -1,7 +1,8 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import ReactMarkdown from 'react-markdown';
-import { buildInitialCells, GridSheet, useHub } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, useHub, Policy } from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Basic/Large',
@@ -35,10 +36,12 @@ const generateLargeData = () => {
 };
 
 const LargeSheet = () => {
+  const rawPolicy = new Policy({
+    mixins: [{ renderColHeaderLabel: (n) => String(n), renderRowHeaderLabel: (n) => String(n) }],
+  });
   const hub = useHub({
-    labelers: {
-      raw: (n) => String(n),
-    },
+    additionalFunctions: allFunctions,
+    policies: { raw: rawPolicy },
   });
 
   const largeData = generateLargeData();
@@ -61,7 +64,7 @@ const LargeSheet = () => {
             default: {
               width: 120,
               height: 24,
-              labeler: 'raw',
+              policy: 'raw',
             },
             A: { width: 60, label: 'ID' },
             B: { width: 150, label: 'Name' },

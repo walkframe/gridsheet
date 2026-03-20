@@ -91,6 +91,26 @@
     text-align: center;
   }
 
+  &[data-spill="true"] {
+    background-color: rgba(0, 119, 255, 0.04);
+
+    .gs-selecting-address {
+      color: rgba(80, 160, 255, 0.9);
+      font-style: italic;
+
+      &::after {
+        content: "\2196";
+        margin-left: 2px;
+        font-style: normal;
+        font-size: 9px;
+      }
+    }
+
+    .gs-editor-hl .gs-spill-origin-formula {
+      opacity: 0.5;
+    }
+  }
+
   .gs-fx {
     display: table-cell;
     vertical-align: middle;
@@ -109,6 +129,10 @@
     box-sizing: border-box;
     white-space: pre-wrap;
     word-break: break-all;
+
+    .gs-spill-origin-formula {
+      opacity: 0.5;
+    }
   }
 
   textarea {
@@ -244,6 +268,10 @@
     padding: 6px 8px;
     border-radius: 4px;
     border: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
   }
 
   &-desc {
@@ -299,6 +327,34 @@
       color: #666;
     }
   }
+}
+
+.gs-fn-guide-category {
+  position: absolute;
+  top: -11px;
+  right: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: #e8eaf6;
+  color: #3949ab;
+  border: 1px solid #c5cae9;
+  white-space: nowrap;
+
+  &.gs-fn-guide-category-math        { background: #e3f2fd; color: #1565c0; border-color: #bbdefb; }
+  &.gs-fn-guide-category-statistics  { background: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; }
+  &.gs-fn-guide-category-text        { background: #fff8e1; color: #f57f17; border-color: #ffecb3; }
+  &.gs-fn-guide-category-time        { background: #fce4ec; color: #880e4f; border-color: #f8bbd0; }
+  &.gs-fn-guide-category-lookup      { background: #f3e5f5; color: #6a1b9a; border-color: #e1bee7; }
+  &.gs-fn-guide-category-logical     { background: #e0f2f1; color: #00695c; border-color: #b2dfdb; }
+  &.gs-fn-guide-category-information { background: #e0f7fa; color: #006064; border-color: #b2ebf2; }
+  &.gs-fn-guide-category-finance     { background: #fff3e0; color: #e65100; border-color: #ffe0b2; }
+  &.gs-fn-guide-category-engineering { background: #efebe9; color: #4e342e; border-color: #d7ccc8; }
+  &.gs-fn-guide-category-other       { background: #f5f5f5; color: #616161; border-color: #e0e0e0; }
 }
 
 .gs-editor[data-mode="dark"] {
@@ -372,6 +428,23 @@
     }
   }
 
+  .gs-fn-guide-category {
+    background: #2a2d3e;
+    color: #7986cb;
+    border-color: #3d4166;
+
+    &.gs-fn-guide-category-math        { background: #0d2137; color: #64b5f6; border-color: #1a3a5c; }
+    &.gs-fn-guide-category-statistics  { background: #0d2218; color: #66bb6a; border-color: #1a3d2a; }
+    &.gs-fn-guide-category-text        { background: #2e2200; color: #ffd54f; border-color: #4d3900; }
+    &.gs-fn-guide-category-time        { background: #2d0d1e; color: #f48fb1; border-color: #4d1a33; }
+    &.gs-fn-guide-category-lookup      { background: #260d33; color: #ce93d8; border-color: #3d1a54; }
+    &.gs-fn-guide-category-logical     { background: #0d2421; color: #4db6ac; border-color: #1a3d39; }
+    &.gs-fn-guide-category-information { background: #0d2426; color: #4dd0e1; border-color: #1a3d40; }
+    &.gs-fn-guide-category-finance     { background: #2e1500; color: #ffb74d; border-color: #4d2800; }
+    &.gs-fn-guide-category-engineering { background: #1e1714; color: #bcaaa4; border-color: #332c28; }
+    &.gs-fn-guide-category-other       { background: #1e1e1e; color: #9e9e9e; border-color: #333; }
+  }
+
   .gs-fn-guide2 {
     background: #252526;
     border-color: #454545;
@@ -431,7 +504,10 @@
     padding: 6px 8px;
     border-radius: 4px;
     border: 1px solid #eee;
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
     width: 100%;
     box-sizing: border-box;
     margin-bottom: 8px;

@@ -251,7 +251,7 @@ export default function DataManagement() {
       if (connector.current) {
         const { tableManager } = connector.current;
         const { table: table } = tableManager;
-        const cells = table.getCellObject();
+        const cells = table.toCellObject();
 
         // Extract only cells with colors
         const coloredCells: { [key: string]: string } = {};

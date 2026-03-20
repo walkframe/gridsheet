@@ -1,5 +1,3 @@
-import type { RendererType } from './renderers/core';
-import type { ParserType } from './parsers/core';
 import type { UserTable, Table } from './lib/table';
 import type { FC, RefObject } from 'react';
 import type { HubType, TransmitProps } from './lib/hub';
@@ -15,17 +13,12 @@ export type X = number;
 export type Height = number;
 export type Width = number;
 
-export type ShapeType = { height: Height; width: Width };
+export type ShapeType = { rows: number; cols: number };
 
 export type RectType = { y: Y; x: X; height: Height; width: Width };
 
 export type MatrixType<T = any> = T[][];
 
-export type Labeler = (n: number) => string;
-
-export type Renderers = { [s: string]: RendererType };
-export type Parsers = { [s: string]: ParserType };
-export type Labelers = { [s: string]: Labeler };
 export type Policies = { [s: string]: PolicyType };
 
 export type CursorStateType = {
@@ -50,12 +43,13 @@ export type System = {
   id?: string;
   sheetId?: number;
   changedTime?: number;
-  dependents?: Set<string>;
   /** Cumulative top offset (px) from table origin. Set on row-header cells (x=0). */
   offsetTop?: number;
   /** Cumulative left offset (px) from table origin. Set on col-header cells (y=0). */
   offsetLeft?: number;
   tmpAsyncCaches?: Record<string, AsyncCache>;
+  /** Address of the origin cell whose array formula spilled its value into this cell. */
+  spilledFrom?: Address;
 };
 
 export type FilterConditionMethod =
@@ -86,14 +80,11 @@ export type CellType<T = any, Custom = any> = {
   justifyContent?: CSSProperties['justifyContent'];
   alignItems?: CSSProperties['alignItems'];
   label?: string;
-  labeler?: string;
   width?: Width;
   height?: Height;
-  renderer?: string;
-  parser?: string;
   policy?: string;
   custom?: Custom;
-  disableFormula?: boolean;
+  formulaEnabled?: boolean;
   prevention?: OperationType;
   _sys?: System;
   /** Cached result from an async formula. Stored directly on the cell for serializability. */
@@ -110,7 +101,7 @@ export type RawCellType = {
   skip?: boolean;
 };
 
-export type CellPatchType = CellType;
+export type CellPatchType<T = any> = Partial<CellType> & { value: T };
 export type CellFilter = (cell: CellType) => boolean;
 
 export type CellsByAddressType = { [address: string]: CellType };

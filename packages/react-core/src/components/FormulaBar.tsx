@@ -4,10 +4,10 @@ import { createPortal } from 'react-dom';
 import { FunctionGuide } from './FunctionGuide';
 import { EditorOptions } from './EditorOptions';
 import { Context } from '../store';
-import { p2a } from '../lib/coords';
+import { p2a, a2p } from '../lib/coords';
 import { setEditingAddress, setInputting, setEditorHovering, walk, write, updateTable } from '../store/actions';
 import * as prevention from '../lib/operation';
-import { insertTextAtCursor, isFocus } from '../lib/input';
+import { handleFormulaQuoteAutoClose, insertTextAtCursor, isFocus } from '../lib/input';
 import { focus } from '../lib/dom';
 import { editorStyle } from './Editor';
 import { ScrollHandle } from './ScrollHandle';
@@ -37,6 +37,11 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
 
   const address = choosing.x === -1 ? '' : p2a(choosing);
   const cell = table?.getCellByPoint(choosing, 'SYSTEM');
+  const spilledFromAddress = cell?._sys?.spilledFrom;
+  const originPoint = spilledFromAddress ? a2p(spilledFromAddress) : undefined;
+  const originFormula =
+    originPoint != null ? table!.stringify({ point: originPoint, refEvaluation: 'RAW' }) : undefined;
+  const originAddress = originPoint != null ? p2a(originPoint) : undefined;
   useEffect(() => {
     if (!table) {
       return;
@@ -72,7 +77,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
   }, []);
 
   const policy = table?.getPolicyByPoint(choosing);
-  const optionsAll = policy?.getOptions() || [];
+  const optionsAll = policy?.getSelectOptions() || [];
 
   const {
     filteredOptions,
@@ -142,6 +147,12 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
         return true;
       }
       const input = e.currentTarget;
+
+      // Auto-close double quotes in formula mode
+      if (handleFormulaQuoteAutoClose(e, inputting)) {
+        dispatch(setInputting(input.value));
+        return false;
+      }
 
       switch (e.key) {
         case 'Tab': // TAB
@@ -259,6 +270,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
       replaceWithOption,
       handleArrowUp,
       handleArrowDown,
+      inputting,
     ],
   );
 
@@ -337,9 +349,14 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
   };
 
   return (
-    <div className="gs-formula-bar" data-sheet-id={store.sheetId} style={style}>
+    <div
+      className="gs-formula-bar"
+      data-sheet-id={store.sheetId}
+      data-spill={originAddress != null ? 'true' : undefined}
+      style={style}
+    >
       <ScrollHandle style={{ position: 'absolute', left: 0, top: 0, zIndex: 2 }} vertical={-1} />
-      <div className="gs-selecting-address">{address}</div>
+      <div className="gs-selecting-address">{originAddress != null ? originAddress : address}</div>
       <div className="gs-fx">Fx</div>
       <div className="gs-formula-bar-editor-inner">
         <div
@@ -350,7 +367,13 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
             width: '100%',
           }}
         >
-          {cell?.disableFormula ? inputting : editorStyle(inputting)}
+          {originFormula != null && !inputting ? (
+            <span className="gs-spill-origin-formula">{editorStyle(originFormula)}</span>
+          ) : (cell?.formulaEnabled ?? true) ? (
+            editorStyle(inputting)
+          ) : (
+            inputting
+          )}
         </div>
         <textarea
           name="gs-formula-bar-editor"

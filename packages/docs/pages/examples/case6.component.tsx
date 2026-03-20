@@ -1,15 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import {
-  GridSheet,
-  buildInitialCells,
-  Renderer,
-  RendererMixinType,
-  RenderProps,
-  useHub,
-  Parser,
-} from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells, Policy, PolicyMixinType, RenderProps, useHub } from '@gridsheet/react-core';
 
 type EventType = {
   time: string;
@@ -48,19 +40,6 @@ const parseEvents = (input: string): EventType[] => {
   return events;
 };
 
-// Calendar parser
-const CalendarParser = new Parser({
-  mixins: [
-    {
-      any(value: string, cell?: any): any {
-        const events = parseEvents(value);
-        console.log('Parsed events:', events);
-        return events;
-      },
-    },
-  ],
-});
-
 // Date calculation function
 const getDateFromPosition = (row: number, col: number): { date: string; weekday: number; isWeekend: boolean } => {
   const startDate = new Date('2024-07-01'); // July 1, 2024 is Monday
@@ -76,9 +55,9 @@ const getDateFromPosition = (row: number, col: number): { date: string; weekday:
   };
 };
 
-// Calendar renderer
-const CalendarCellRenderer: RendererMixinType = {
-  array({ value, point }: RenderProps<ValueType>) {
+// Calendar policy mixin (combines render + parse)
+const CalendarCellPolicyMixin: PolicyMixinType = {
+  renderArray({ value, point }: RenderProps<ValueType>) {
     if (!value) {
       return null;
     }
@@ -177,11 +156,15 @@ const CalendarCellRenderer: RendererMixinType = {
       </div>
     );
   },
-  stringify({ value }: RenderProps<ValueType>): string {
+  serialize({ value }: RenderProps<ValueType>): string {
     if (!value || value.length === 0) {
       return '';
     }
     return value.map((ev: EventType) => `${ev.time} ${ev.task}`).join('\n');
+  },
+  deserializeFirst: (value: string) => {
+    const events = parseEvents(value);
+    return { value: events };
   },
 };
 
@@ -215,20 +198,15 @@ for (let w = 0; w < 4; w++) {
 
 export default function CustomRendering() {
   const hub = useHub({
-    renderers: {
-      calendar: new Renderer({ mixins: [CalendarCellRenderer] }),
-    },
-    parsers: {
-      calendar: CalendarParser,
-    },
-    labelers: {
-      sun: () => 'Sun',
-      mon: () => 'Mon',
-      tue: () => 'Tue',
-      wed: () => 'Wed',
-      thu: () => 'Thu',
-      fri: () => 'Fri',
-      sat: () => 'Sat',
+    policies: {
+      calendar: new Policy({ mixins: [CalendarCellPolicyMixin] }),
+      sun: new Policy({ mixins: [{ renderColHeaderLabel: () => 'Sun' }] }),
+      mon: new Policy({ mixins: [{ renderColHeaderLabel: () => 'Mon' }] }),
+      tue: new Policy({ mixins: [{ renderColHeaderLabel: () => 'Tue' }] }),
+      wed: new Policy({ mixins: [{ renderColHeaderLabel: () => 'Wed' }] }),
+      thu: new Policy({ mixins: [{ renderColHeaderLabel: () => 'Thu' }] }),
+      fri: new Policy({ mixins: [{ renderColHeaderLabel: () => 'Fri' }] }),
+      sat: new Policy({ mixins: [{ renderColHeaderLabel: () => 'Sat' }] }),
     },
   });
 
@@ -249,18 +227,17 @@ export default function CustomRendering() {
           },
           cells: {
             default: {
-              renderer: 'calendar',
-              parser: 'calendar',
+              policy: 'calendar',
               width: 120,
               height: 100,
             },
-            A: { labeler: 'mon' },
-            B: { labeler: 'tue' },
-            C: { labeler: 'wed' },
-            D: { labeler: 'thu' },
-            E: { labeler: 'fri' },
-            F: { labeler: 'sat' },
-            G: { labeler: 'sun' },
+            A: { policy: 'mon' },
+            B: { policy: 'tue' },
+            C: { policy: 'wed' },
+            D: { policy: 'thu' },
+            E: { policy: 'fri' },
+            F: { policy: 'sat' },
+            G: { policy: 'sun' },
           },
         })}
         options={{

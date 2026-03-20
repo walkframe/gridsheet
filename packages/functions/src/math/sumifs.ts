@@ -1,0 +1,70 @@
+import { FormulaError } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition, conditionArg } from '@gridsheet/react-core';
+import { Table, eachMatrix, stripTable, createBooleanMask, ensureString } from '@gridsheet/react-core';
+import type { AreaType, PointType } from '@gridsheet/react-core';
+import type { FunctionCategory } from '@gridsheet/react-core';
+
+const description = `Returns the sum of a range depending on multiple criteria.`;
+
+export class SumifsFunction extends BaseFunction {
+  example = 'SUMIFS(A1:A10, B1:B10, ">20")';
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
+    { name: 'sum_range', description: 'The range to be summed.', takesMatrix: true, acceptedTypes: ['matrix'] },
+    {
+      name: 'range',
+      description: 'First condition range.',
+      takesMatrix: true,
+      acceptedTypes: ['matrix'],
+      variadic: true,
+    },
+    { ...conditionArg, name: 'condition', variadic: true },
+  ];
+  category: FunctionCategory = 'math';
+
+  protected validate(args: any[]): any[] {
+    const validatedArgs = super.validate(args);
+    if ((validatedArgs.length - 1) % 2 !== 0) {
+      throw new FormulaError('#N/A', 'SUMIFS requires sum_range and at least one range/condition pair.');
+    }
+    if (!(validatedArgs[0] instanceof Table)) {
+      throw new FormulaError('#VALUE!', 'First argument of SUMIFS must be a range.');
+    }
+    const expectedRows = validatedArgs[0].getNumRows();
+    const expectedCols = validatedArgs[0].getNumCols();
+
+    const tables: Table[] = [];
+    const conditions: string[] = [];
+    for (let i = 1; i < validatedArgs.length; i += 2) {
+      if (!(validatedArgs[i] instanceof Table)) {
+        throw new FormulaError('#VALUE!', `Argument ${i + 1} of SUMIFS must be a range.`);
+      }
+      if (validatedArgs[i].getNumRows() !== expectedRows || validatedArgs[i].getNumCols() !== expectedCols) {
+        throw new FormulaError('#VALUE!', 'Array arguments to SUMIFS are of different size.');
+      }
+      tables.push(validatedArgs[i] as Table);
+      conditions.push(ensureString(validatedArgs[i + 1]));
+    }
+    const sumRange = validatedArgs[0];
+    const mask = createBooleanMask(tables, conditions, this.at);
+    return [sumRange, mask];
+  }
+
+  protected main(sumRange: Table, mask: boolean[][]) {
+    let total = 0;
+    eachMatrix(
+      sumRange,
+      (v: any, pt: PointType) => {
+        if (pt && mask[pt.y][pt.x]) {
+          const num = stripTable({ value: v ?? 0 });
+          if (typeof num === 'number') {
+            total += num;
+          }
+        }
+      },
+      this.at,
+    );
+
+    return total;
+  }
+}

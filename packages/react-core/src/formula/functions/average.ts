@@ -1,43 +1,48 @@
-import { FormulaError } from '../evaluator';
-import { solveTable } from '../solver';
-import { Table } from '../../lib/table';
-import { BaseFunction, HelpArg } from './__base';
-import { ensureNumber } from './__utils';
+import { FormulaError } from '../formula-error';
+import { BaseFunction, FunctionCategory, FunctionArgumentDefinition, isMatrix } from './__base';
+import { ensureNumber, eachMatrix } from './__utils';
+
+const description = `Returns the average of a series of numbers or cells.`;
 
 export class AverageFunction extends BaseFunction {
   example = 'AVERAGE(A2:A100, 101)';
-  helpText = ['Returns the average of a series of numbers or cells.'];
-  helpArgs: HelpArg[] = [
-    { name: 'value1', description: 'First number or range.', type: ['number', 'range'] },
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
     {
-      name: 'value2',
-      description: 'Additional numbers or ranges',
-      optional: true,
-      iterable: true,
-      type: ['number', 'range'],
+      name: 'value',
+      description: 'Numbers or ranges to average.',
+      takesMatrix: true,
+      acceptedTypes: ['number', 'matrix'],
+      variadic: true,
     },
   ];
+  category: FunctionCategory = 'statistics';
 
-  protected validate() {
-    const spreaded: number[] = [];
-    this.bareArgs.map((arg) => {
-      if (arg instanceof Table) {
-        spreaded.push(
-          ...solveTable({ table: arg })
-            .reduce((a, b) => a.concat(b))
-            .filter((v: any) => typeof v === 'number'),
+  protected main(...values: any[]) {
+    let sum = 0;
+    let count = 0;
+    values.forEach((val) => {
+      if (isMatrix(val)) {
+        eachMatrix(
+          val,
+          (v) => {
+            if (typeof v === 'number') {
+              sum += v;
+              count++;
+            }
+          },
+          this.at,
         );
-        return;
+      } else {
+        const num = ensureNumber(val);
+        sum += num;
+        count++;
       }
-      spreaded.push(ensureNumber(arg));
     });
-    if (spreaded.length === 0) {
-      throw new FormulaError('#N/A', 'Number of arguments must be greater than 0.');
-    }
-    this.bareArgs = spreaded;
-  }
 
-  protected main(...values: number[]) {
-    return values.reduce((a, b) => a + b) / values.length;
+    if (count === 0) {
+      throw new FormulaError('#DIV/0!', 'Evaluation of function AVERAGE caused a divide by zero error.');
+    }
+    return sum / count;
   }
 }

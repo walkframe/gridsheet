@@ -262,7 +262,7 @@ export const ColumnMenu: FC = () => {
   const sortDisabled = prevention.hasOperation(colCell?.prevention, prevention.Sort);
   const filterDisabled = prevention.hasOperation(colCell?.prevention, prevention.Filter);
   const labelDisabled = prevention.hasOperation(colCell?.prevention, prevention.SetLabel);
-  const labelPlaceholder = table.getLabel(undefined, colCell?.labeler, x) ?? x2c(x);
+  const labelPlaceholder = table.getLabel(colCell?.label, { y: 0, x }, x) ?? x2c(x);
 
   // Calculate the number of selected columns that include the current column
   const selColStart = Math.min(selectingZone.startX, selectingZone.endX);

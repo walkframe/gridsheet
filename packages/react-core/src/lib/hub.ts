@@ -20,16 +20,10 @@ import { updateTable } from '../store/actions';
 import type { FunctionMapping } from '../formula/functions/__base';
 import { functions as functionsDefault } from '../formula/mapping';
 import { PolicyType } from '../policy/core';
-import { RendererType } from '../renderers/core';
-import { ParserType } from '../parsers/core';
-import { Table } from './table';
 
 export type WireProps = {
   historyLimit?: number;
   additionalFunctions?: FunctionMapping;
-  renderers?: { [rendererName: string]: RendererType | null };
-  parsers?: { [parserName: string]: ParserType | null };
-  labelers?: { [labelerName: string]: ((n: number) => string) | null };
   policies?: { [policyName: string]: PolicyType | null };
   onSave?: FeedbackType;
   onChange?: FeedbackType;
@@ -57,6 +51,10 @@ export class Wire {
   paletteBySheetName: { [sheetName: string]: RefPaletteType } = {};
   lastFocused: HTMLTextAreaElement | null = null;
   solvedCaches: Map<Id, any> = new Map();
+  /** Maps each cell id to the set of cell ids whose formula depends on it. */
+  dependents: Map<Id, Set<Id>> = new Map();
+  /** IDs of non-origin cells that received spilled values (populated in spill(), cleared in clearSolvedCaches()). */
+  lastSpilledTargetIds: Set<Id> = new Set();
   /** Currently in-flight async formula Pending sentinels (keyed by cell ID). */
   asyncPending: Map<string, Pending> = new Map();
   /** In-flight async formulas shared by cache key (for useInflight). */
@@ -71,9 +69,6 @@ export class Wire {
   currentHistory?: HistoryType;
   ready = false;
   functions: FunctionMapping = {};
-  renderers: { [rendererName: string]: RendererType | null } = {};
-  parsers: { [parserName: string]: ParserType | null } = {};
-  labelers: { [labelerName: string]: ((n: number) => string) | null } = {};
   policies: { [policyName: string]: PolicyType | null } = {};
   onSave?: FeedbackType;
   onChange?: FeedbackType;
@@ -119,9 +114,6 @@ export class Wire {
   constructor({
     historyLimit,
     additionalFunctions,
-    renderers = {},
-    parsers = {},
-    labelers = {},
     policies = {},
     onSave,
     onChange,
@@ -140,9 +132,10 @@ export class Wire {
       ...functionsDefault,
       ...additionalFunctions,
     };
-    this.renderers = renderers;
-    this.parsers = parsers;
-    this.labelers = labelers;
+    for (const fnName in this.functions) {
+      const fn = this.functions[fnName];
+      fn.__name = fnName;
+    }
     this.policies = policies;
     this.onSave = onSave;
     this.onChange = onChange;

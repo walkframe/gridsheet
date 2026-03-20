@@ -4,21 +4,7 @@ import * as React from 'react';
 import { GridSheet, buildInitialCells, useConnector, useHub, Policy, PolicyMixinType } from '@gridsheet/react-core';
 
 // Policy for Priority column
-const PriorityPolicy: PolicyMixinType = {
-  validate: (props: any) => {
-    const { patch } = props;
-    if (patch?.style) {
-      return {
-        ...patch,
-        style: {
-          ...patch.style,
-          fontWeight: 'bold',
-        },
-      };
-    }
-    return patch;
-  },
-};
+const PriorityPolicy: PolicyMixinType = {};
 
 // Virtual user data
 const virtualUsers = [
@@ -46,10 +32,6 @@ export default function RealTimeCollaboration() {
   });
 
   const hub = useHub({
-    labelers: {
-      value: (n: number) => 'Value',
-      label: (n: number) => 'Label',
-    },
     policies: {
       priority: new Policy({ mixins: [PriorityPolicy] }),
     },

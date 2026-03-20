@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, createConnector, GridSheet, updateTable, useConnector } from '@gridsheet/react-core';
+import {
+  buildInitialCells,
+  createConnector,
+  GridSheet,
+  updateTable,
+  useConnector,
+  useHub,
+} from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Basic/Header',
@@ -17,6 +25,7 @@ const connector = createConnector();
 const HeaderSheet = () => {
   const [headerHeight, setHeaderHeight] = useState(40);
   const [headerWidth, setHeaderWidth] = useState(60);
+  const hub = useHub({ additionalFunctions: allFunctions });
 
   useEffect(() => {
     if (connector.current) {
@@ -85,6 +94,7 @@ const HeaderSheet = () => {
       </div>
 
       <GridSheet
+        hub={hub}
         connector={connector}
         initialCells={buildInitialCells({
           matrices: {

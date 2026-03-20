@@ -16,16 +16,15 @@ pnpm add -D @gridsheet/react-dev
 
 ## Usage
 
-Pass a `hub` object (created via `createConnector` from `@gridsheet/react-core`) to the `Debugger` component.
+Pass a `hub` object (created via `useHub` from `@gridsheet/react-core`) to the `Debugger` component.
 
 ```tsx
 import React from 'react';
-import { GridSheet, createConnector } from '@gridsheet/react-core';
+import { GridSheet, useHub } from '@gridsheet/react-core';
 import { Debugger } from '@gridsheet/react-dev';
 
-const hub = createConnector();
-
 export default function App() {
+  const hub = useHub();
   return (
     <>
       <GridSheet hub={hub} />

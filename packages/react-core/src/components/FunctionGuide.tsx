@@ -6,8 +6,9 @@ import { Context } from '../store';
 type OptionWithGuide = AutocompleteOption & {
   isFunction?: boolean;
   example?: string;
-  helpTexts?: string[];
-  helpArgs?: any[];
+  category?: string;
+  description?: string;
+  defs?: any[];
 };
 
 export interface FunctionGuideProps {
@@ -42,6 +43,9 @@ export const FunctionGuide: React.FC<FunctionGuideProps> = ({
           e.stopPropagation();
         }}
       >
+        {option.category && option.isFunction && (
+          <span className={`gs-fn-guide-category gs-fn-guide-category-${option.category}`}>{option.category}</span>
+        )}
         {option.tooltip && (
           <div className="gs-fn-guide1-tooltip">
             {typeof option.tooltip === 'function'
@@ -52,21 +56,19 @@ export const FunctionGuide: React.FC<FunctionGuideProps> = ({
         {option.isFunction && (
           <>
             <div className="gs-fn-guide1-example">{option.example}</div>
-            {option.helpTexts && option.helpTexts.length > 0 && (
-              <div className="gs-fn-guide1-desc">
-                {option.helpTexts.map((text, j) => (
-                  <p key={j}>{text}</p>
-                ))}
+            {option.description && (
+              <div className="gs-fn-guide1-desc" style={{ whiteSpace: 'pre-line' }}>
+                {option.description}
               </div>
             )}
-            {option.helpArgs && option.helpArgs.length > 0 && (
+            {option.defs && option.defs.length > 0 && (
               <div className="gs-fn-guide1-args">
-                {option.helpArgs.map((arg: any, j: number) => (
+                {option.defs.map((arg: any, j: number) => (
                   <div key={j} className="gs-fn-guide1-arg">
                     <span className="gs-fn-guide1-arg-name">{arg.name}</span>
                     {arg.optional && <span className="gs-fn-guide1-arg-opt"> (optional)</span>}
-                    {arg.iterable && <span className="gs-fn-guide1-arg-iter">...</span>}
-                    <code className="gs-fn-guide1-arg-type">{arg.type?.join(' | ') || 'any'}</code>
+                    {arg.variadic && <span className="gs-fn-guide1-arg-iter">...</span>}
+                    <code className="gs-fn-guide1-arg-type">{arg.acceptedTypes?.join(' | ') || 'any'}</code>
                     <span className="gs-fn-guide1-arg-desc"> — {arg.description}</span>
                   </div>
                 ))}
@@ -85,27 +87,57 @@ export const FunctionGuide: React.FC<FunctionGuideProps> = ({
         className={`gs-fn-guide2 ${isHidden ? 'gs-fn-guide2-hidden' : ''}`}
         style={top !== undefined && left !== undefined ? { top: top + 4, left } : undefined}
       >
+        {activeFunctionGuide.category && (
+          <span className={`gs-fn-guide-category gs-fn-guide-category-${activeFunctionGuide.category}`}>
+            {activeFunctionGuide.category}
+          </span>
+        )}
         <div className="gs-fn-guide2-name">{activeFunctionGuide.example}</div>
         <div className="gs-fn-guide2-args-inline">
-          {activeFunctionGuide.helpArgs?.map((arg: any, j: number) => {
-            const isIterable = arg.iterable;
-            const isActive = activeArgIndex === j || (isIterable && activeArgIndex >= j);
-            return (
-              <React.Fragment key={j}>
-                {j > 0 ? ', ' : ''}
-                <span className={isActive ? 'gs-active-arg' : ''}>
-                  {arg.optional ? '[' : ''}
-                  {arg.name}
-                  {isIterable ? ', ...' : ''}
-                  {arg.optional ? ']' : ''}
-                </span>
-              </React.Fragment>
-            );
-          })}
+          {(() => {
+            const args = activeFunctionGuide.defs ?? [];
+            const numIterable = args.filter((a: any) => a.variadic).length;
+            const variadicStart = args.length - numIterable;
+
+            return args.map((arg: any, j: number) => {
+              let isActive: boolean;
+              if (activeArgIndex < variadicStart) {
+                // Cursor is on a fixed (non-variadic) argument
+                isActive = activeArgIndex === j;
+              } else if (numIterable > 0 && j >= variadicStart) {
+                // Cursor is in the variadic zone; cycle through the variadic args
+                const offset = (activeArgIndex - variadicStart) % numIterable;
+                isActive = j === variadicStart + offset;
+              } else {
+                isActive = false;
+              }
+              return (
+                <React.Fragment key={j}>
+                  {j > 0 ? ', ' : ''}
+                  <span className={isActive ? 'gs-active-arg' : ''}>
+                    {arg.optional ? '[' : ''}
+                    {arg.name}
+                    {arg.variadic ? ', ...' : ''}
+                    {arg.optional ? ']' : ''}
+                  </span>
+                </React.Fragment>
+              );
+            });
+          })()}
         </div>
         {(() => {
-          const activeArg =
-            activeFunctionGuide.helpArgs?.[Math.min(activeArgIndex, activeFunctionGuide.helpArgs.length - 1)];
+          const args = activeFunctionGuide.defs ?? [];
+          const numIterable = args.filter((a: any) => a.variadic).length;
+          const variadicStart = args.length - numIterable;
+
+          let resolvedIndex: number;
+          if (activeArgIndex < variadicStart || numIterable === 0) {
+            resolvedIndex = Math.min(activeArgIndex, args.length - 1);
+          } else {
+            const offset = (activeArgIndex - variadicStart) % numIterable;
+            resolvedIndex = variadicStart + offset;
+          }
+          const activeArg = args[resolvedIndex];
           if (!activeArg?.description) {
             return null;
           }
@@ -113,18 +145,16 @@ export const FunctionGuide: React.FC<FunctionGuideProps> = ({
             <div className="gs-fn-guide2-desc" style={{ marginTop: 8, fontSize: 12, color: '#888' }}>
               <p>
                 <strong>{activeArg.name}:</strong>{' '}
-                <code className="gs-fn-guide2-arg-type">{activeArg.type?.join(' | ') || 'any'}</code>
+                <code className="gs-fn-guide2-arg-type">{activeArg.acceptedTypes?.join(' | ') || 'any'}</code>
                 {activeArg.description}
               </p>
             </div>
           );
         })()}
 
-        {activeFunctionGuide.helpTexts?.length > 0 && (
-          <div className="gs-fn-guide2-desc">
-            {activeFunctionGuide.helpTexts.map((text, j) => (
-              <p key={j}>{text}</p>
-            ))}
+        {activeFunctionGuide.description && (
+          <div className="gs-fn-guide2-desc" style={{ whiteSpace: 'pre-line' }}>
+            {activeFunctionGuide.description}
           </div>
         )}
       </div>

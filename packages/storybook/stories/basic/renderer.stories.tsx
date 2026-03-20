@@ -1,15 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import {
-  buildInitialCells,
-  GridSheet,
-  Renderer,
-  RendererMixinType,
-  CheckboxRendererMixin,
-  RenderProps,
-  p2a,
-  useHub,
-} from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, Policy, PolicyMixinType, RenderProps, p2a, useHub } from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Basic/Renderer',
@@ -38,14 +30,15 @@ const kanjiMap: { [s: string]: string } = {
 
 const RenderToKanjiSheet = () => {
   const hub = useHub({
-    renderers: {
-      kanji: new Renderer({
+    additionalFunctions: allFunctions,
+    policies: {
+      kanji: new Policy({
         mixins: [
           {
-            string({ value }: RenderProps<string>): string {
+            renderString({ value }: RenderProps<string>): string {
               return value!;
             },
-            number({ value }: RenderProps<number>) {
+            renderNumber({ value }: RenderProps<number>) {
               const minus = value! < 0;
 
               let kanji = '';
@@ -68,7 +61,7 @@ const RenderToKanjiSheet = () => {
             },
           },
           {
-            null({ cell, point }: RenderProps<null>) {
+            renderNull({ cell, point }: RenderProps<null | undefined>) {
               return <span style={{ opacity: 0.3 }}>{p2a(point!)}</span>;
             },
           },
@@ -87,7 +80,7 @@ const RenderToKanjiSheet = () => {
         },
         cells: {
           default: {
-            renderer: 'kanji',
+            policy: 'kanji',
           },
           B10: {
             value: '=B6+10000',

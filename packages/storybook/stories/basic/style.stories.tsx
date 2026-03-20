@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, useHub } from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Basic/Style',
@@ -13,9 +14,11 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const StyleSheet = () => {
+  const hub = useHub({ additionalFunctions: allFunctions });
   return (
     <div style={{ transform: 'translate(30px, 30px)' }}>
       <GridSheet
+        hub={hub}
         initialCells={buildInitialCells({
           matrices: {
             A1: [

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, useHub } from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Formula/NoFormulaBar',
@@ -14,8 +15,12 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const NoFormulaBarSheet = () => {
+  const hub = useHub({
+    additionalFunctions: allFunctions,
+  });
   return (
     <GridSheet
+      hub={hub}
       initialCells={buildInitialCells({
         matrices: {},
         cells: {

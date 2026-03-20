@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { buildInitialCells, GridSheet, operations, useHub } from '@gridsheet/react-core';
+import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Formula/Lookup',
@@ -14,11 +15,12 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const LookUpSheet = () => {
-  const hub = useHub({ historyLimit: 10 });
+  const hub = useHub({ historyLimit: 10, additionalFunctions: allFunctions });
   return (
     <>
       <h1>HLOOKUP</h1>
       <GridSheet
+        hub={hub}
         initialCells={buildInitialCells({
           cells: {
             1: { style: { backgroundColor: '#ddd' } },

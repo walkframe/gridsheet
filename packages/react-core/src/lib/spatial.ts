@@ -20,13 +20,13 @@ export const slideArea = (area: AreaType, y: Y, x: X): AreaType => {
 };
 
 export const superposeArea = (srcArea: AreaType, dstArea: AreaType): ShapeType => {
-  const { height: srcHeight, width: srcWidth } = areaShape(srcArea);
-  const { height: dstHeight, width: dstWidth } = areaShape(dstArea);
+  const { rows: srcRows, cols: srcCols } = areaShape(srcArea);
+  const { rows: dstRows, cols: dstCols } = areaShape(dstArea);
 
-  // biggerHeight, biggerWidth
+  // biggerRows, biggerCols
   return {
-    height: srcHeight > dstHeight ? srcHeight : dstHeight,
-    width: srcWidth > dstWidth ? srcWidth : dstWidth,
+    rows: srcRows > dstRows ? srcRows : dstRows,
+    cols: srcCols > dstCols ? srcCols : dstCols,
   };
 };
 
@@ -95,27 +95,27 @@ type ShapeExtension = { base?: number };
 
 export const zoneShape = ({ base = 0, ...zone }: ZoneType & ShapeExtension): ShapeType => {
   if (zone.endY === -1 || zone.endX === -1) {
-    return { height: 1, width: 1 };
+    return { rows: 1, cols: 1 };
   }
   return {
-    height: base + Math.abs(zone.startY - zone.endY),
-    width: base + Math.abs(zone.startX - zone.endX),
+    rows: base + Math.abs(zone.startY - zone.endY),
+    cols: base + Math.abs(zone.startX - zone.endX),
   };
 };
 
 export const areaShape = ({ base = 0, ...area }: AreaType & ShapeExtension): ShapeType => {
   return {
-    height: base + Math.abs(area.top - area.bottom),
-    width: base + Math.abs(area.left - area.right),
+    rows: base + Math.abs(area.top - area.bottom),
+    cols: base + Math.abs(area.left - area.right),
   };
 };
 
 export const matrixShape = ({ base = 0, matrix }: { matrix: MatrixType } & ShapeExtension): ShapeType => {
   const h = matrix.length;
   if (h === 0) {
-    return { height: 0, width: 0 };
+    return { rows: 0, cols: 0 };
   }
-  return { height: base + h, width: base + matrix[0].length };
+  return { rows: base + h, cols: base + matrix[0].length };
 };
 
 export const makeSequence = (start: number, stop: number, step: number = 1) => {
@@ -165,7 +165,7 @@ export const putMatrix = <T = any>(
 ) => {
   const lostRows: MatricesByAddress<T> = {};
   const { top, left, bottom, right } = dstArea;
-  const { height: dstNumRows, width: dstNumCols } = matrixShape({
+  const { rows: dstNumRows, cols: dstNumCols } = matrixShape({
     matrix: dst,
     base: 1,
   });
@@ -370,7 +370,7 @@ export const expandRange = (range: string): Address[] => {
 // restrictZone resets a zone if the zone consists of a single cell.
 export const restrictZone = (zone: ZoneType): ZoneType => {
   const s = zoneShape(zone);
-  if (s.height + s.width === 0) {
+  if (s.rows + s.cols === 0) {
     return { startY: -1, startX: -1, endY: -1, endX: -1 };
   }
   return { ...zone };

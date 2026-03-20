@@ -1,23 +1,20 @@
-import { FormulaError } from '../evaluator';
-import { BaseFunction, HelpArg } from './__base';
+import { FormulaError } from '../formula-error';
+import { BaseFunction, FunctionCategory, FunctionArgumentDefinition } from './__base';
 import { ensureNumber } from './__utils';
+
+const description = `Returns the product of two numbers.
+This is the same as the '*' operator.`;
 
 export class MultiplyFunction extends BaseFunction {
   example = 'MULTIPLY(6, 7)';
-  helpText = ['Returns the product of two numbers.', "This is the same as the '*' operator."];
-  helpArgs: HelpArg[] = [
-    { name: 'factor1', description: 'First factor.', type: ['number'] },
-    { name: 'factor2', description: 'Second factor.', type: ['number'] },
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
+    { name: 'factor1', description: 'First factor.', acceptedTypes: ['number'] },
+    { name: 'factor2', description: 'Second factor.', acceptedTypes: ['number'] },
   ];
+  category: FunctionCategory = 'math';
 
-  protected validate() {
-    if (this.bareArgs.length !== 2) {
-      throw new FormulaError('#N/A', 'Number of arguments for MULTIPLY is incorrect.');
-    }
-    this.bareArgs = this.bareArgs.map((arg) => ensureNumber(arg));
-  }
-
-  protected main(v1: number, v2: number) {
-    return v1 * v2;
+  protected main(v1: any, v2: any) {
+    return ensureNumber(v1) * ensureNumber(v2);
   }
 }

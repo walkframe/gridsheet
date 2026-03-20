@@ -1,25 +1,19 @@
-import { FormulaError } from '../evaluator';
-import { BaseFunction, HelpArg } from './__base';
+import { BaseFunction, FunctionCategory, FunctionArgumentDefinition } from './__base';
 import { lt } from './__utils';
+
+const description = `Returns TRUE if the first argument is truely less than the second argument, FALSE otherwise.
+This is the same as the '<' operator.`;
 
 export class LtFunction extends BaseFunction {
   example = 'LT(3, 6)';
-  helpText = [
-    'Returns TRUE if the first argument is truely less than the second argument, FALSE otherwise.',
-    "This is the same as the '<' operator.",
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
+    { name: 'value1', description: 'First value.', acceptedTypes: ['any'] },
+    { name: 'value2', description: 'A value to be compared with value1.', acceptedTypes: ['any'] },
   ];
-  helpArgs: HelpArg[] = [
-    { name: 'value1', description: 'First value.', type: ['number'] },
-    { name: 'value2', description: 'A value to be compared with value1.', type: ['number'] },
-  ];
+  category: FunctionCategory = 'logical';
 
-  protected validate() {
-    if (this.bareArgs.length !== 2) {
-      throw new FormulaError('#N/A', 'Number of arguments for LT is incorrect.');
-    }
-  }
-
-  protected main(v1: number, v2: number) {
+  protected main(v1: any, v2: any) {
     return lt(v1, v2);
   }
 }

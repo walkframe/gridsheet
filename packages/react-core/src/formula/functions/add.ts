@@ -1,42 +1,32 @@
 import dayjs from 'dayjs';
 
-import { FormulaError } from '../evaluator';
-import { BaseFunction, HelpArg } from './__base';
+import { FormulaError } from '../formula-error';
+import { BaseFunction, isTable, type FunctionCategory, type FunctionArgumentDefinition } from './__base';
 import { ensureNumber } from './__utils';
-import { stripTable } from '../../formula/solver';
-import { Table } from '../../lib/table';
-import { TimeDelta } from '../../lib/time';
+import { Time } from '../../lib/time';
 import { SECONDS_IN_DAY } from '../../constants';
+
+const description = `Returns the sum of two numbers.
+This is the same as the '+' operator.`;
 
 export class AddFunction extends BaseFunction {
   example = 'ADD(2, 3)';
-  helpText = ['Returns the sum of two numbers.', "This is the same as the '+' operator."];
-  helpArgs: HelpArg[] = [
-    { name: 'value1', description: 'First additive.', type: ['number', 'date', 'time'] },
-    { name: 'value2', description: 'Second additive.', type: ['number', 'date', 'time'] },
+  description = description;
+  defs: FunctionArgumentDefinition[] = [
+    { name: 'value1', description: 'First additive.', acceptedTypes: ['number', 'date', 'time'] },
+    { name: 'value2', description: 'Second additive.', acceptedTypes: ['number', 'date', 'time'] },
   ];
+  category: FunctionCategory = 'math';
 
-  protected validate() {
-    if (this.bareArgs.length !== 2) {
-      throw new FormulaError('#N/A', 'Number of arguments for ADD is incorrect.');
-    }
-    this.bareArgs = this.bareArgs.map((arg) => {
-      if (arg instanceof Table) {
-        arg = stripTable({ value: arg });
-      }
-      return typeof arg === 'object' ? arg : ensureNumber(arg);
-    });
-  }
-
-  protected main(v1: number | Date | TimeDelta, v2: number | Date | TimeDelta) {
+  protected main(v1: number | Date | Time, v2: number | Date | Time) {
     if (typeof v1 === 'number' && typeof v2 === 'number') {
       return v1 + v2;
     }
-    if (v1 instanceof Date && TimeDelta.is(v2)) {
-      return TimeDelta.ensure(v2).add(v1);
+    if (v1 instanceof Date && Time.is(v2)) {
+      return Time.ensure(v2).add(v1);
     }
-    if (TimeDelta.is(v1) && v2 instanceof Date) {
-      return TimeDelta.ensure(v1).add(v2);
+    if (Time.is(v1) && v2 instanceof Date) {
+      return Time.ensure(v1).add(v2);
     }
     if (v1 instanceof Date && typeof v2 === 'number') {
       return dayjs(v1)
