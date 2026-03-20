@@ -4,9 +4,9 @@ import {
   buildInitialCells,
   createConnector,
   GridSheet,
-  updateTable,
+  updateSheet,
   useConnector,
-  useHub,
+  useBook,
 } from '@gridsheet/react-core';
 import { allFunctions } from '@gridsheet/functions';
 
@@ -25,37 +25,37 @@ const connector = createConnector();
 const HeaderSheet = () => {
   const [headerHeight, setHeaderHeight] = useState(40);
   const [headerWidth, setHeaderWidth] = useState(60);
-  const hub = useHub({ additionalFunctions: allFunctions });
+  const book = useBook({ additionalFunctions: allFunctions });
 
   useEffect(() => {
     if (connector.current) {
-      const { tableManager } = connector.current;
-      const { table, sync } = tableManager;
-      sync(table.setHeaderHeight(headerHeight));
+      const { sheetManager } = connector.current;
+      const { sheet, sync } = sheetManager;
+      sync(sheet.setHeaderHeight(headerHeight));
     }
   }, [headerHeight]);
 
   useEffect(() => {
     if (connector.current) {
-      const { tableManager } = connector.current;
-      const { table, sync } = tableManager;
-      sync(table.setHeaderWidth(headerWidth));
+      const { sheetManager } = connector.current;
+      const { sheet, sync } = sheetManager;
+      sync(sheet.setHeaderWidth(headerWidth));
     }
   }, [headerWidth]);
 
   const handleSetHeaderHeight = () => {
     if (connector.current) {
-      const { tableManager } = connector.current;
-      const { table, sync } = tableManager;
-      sync(table.setHeaderHeight(60));
+      const { sheetManager } = connector.current;
+      const { sheet, sync } = sheetManager;
+      sync(sheet.setHeaderHeight(60));
     }
   };
 
   const handleSetHeaderWidth = () => {
     if (connector.current) {
-      const { tableManager } = connector.current;
-      const { table, sync } = tableManager;
-      sync(table.setHeaderWidth(80));
+      const { sheetManager } = connector.current;
+      const { sheet, sync } = sheetManager;
+      sync(sheet.setHeaderWidth(80));
     }
   };
 
@@ -94,7 +94,7 @@ const HeaderSheet = () => {
       </div>
 
       <GridSheet
-        hub={hub}
+        book={book}
         connector={connector}
         initialCells={buildInitialCells({
           matrices: {

@@ -2,13 +2,13 @@ import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import {
   GridSheet,
-  useHub,
+  useBook,
   BaseFunctionAsync,
   buildInitialCells,
   ensureNumber,
   p2a,
-  solveTable,
-  Table,
+  solveSheet,
+  Sheet,
   FunctionArgumentDefinition,
 } from '@gridsheet/react-core';
 import { Debugger } from '@gridsheet/react-dev';
@@ -21,11 +21,11 @@ export default meta;
 
 const DESCRIPTION = [
   '## Debugger Component',
-  'Shows internal `wire` state of the grid. Click around to see selection/data changes.',
+  'Shows internal `binding` state of the grid. Click around to see selection/data changes.',
 ].join('\n\n');
 
 const DebuggerSheet = () => {
-  const hub = useHub({
+  const book = useBook({
     additionalFunctions: {
       ...allFunctions,
       sum_delay_inflight: SumDelayInflightFunction,
@@ -41,7 +41,7 @@ const DebuggerSheet = () => {
             <input type="text" value={sheetName1} onChange={(e) => setSheetName1(e.target.value)} />
           </div>
           <GridSheet
-            hub={hub}
+            book={book}
             sheetName={sheetName1}
             options={{
               sheetResize: 'both',
@@ -66,7 +66,7 @@ const DebuggerSheet = () => {
             <input type="text" value={sheetName2} onChange={(e) => setSheetName2(e.target.value)} />
           </div>
           <GridSheet
-            hub={hub}
+            book={book}
             sheetName={sheetName2}
             options={{
               sheetResize: 'both',
@@ -84,7 +84,7 @@ const DebuggerSheet = () => {
         </div>
       </div>
       <div>
-        <Debugger hub={hub} />
+        <Debugger book={book} />
       </div>
     </div>
   );
@@ -107,9 +107,9 @@ class SumDelayInflightFunction extends BaseFunctionAsync {
   protected validate(args: any[]): any[] {
     const spreaded: number[] = [];
     args.forEach((arg) => {
-      if (arg instanceof Table) {
+      if (arg instanceof Sheet) {
         spreaded.push(
-          ...solveTable({ table: arg, at: this.at })
+          ...solveSheet({ sheet: arg, at: this.at })
             .reduce((a: any[], b: any[]) => a.concat(b))
             .map((v: any) => ensureNumber(v, { ignore: true })),
         );
@@ -121,7 +121,7 @@ class SumDelayInflightFunction extends BaseFunctionAsync {
   }
 
   async main(...values: number[]) {
-    const origin = this.table.getPointById(this.at);
+    const origin = this.sheet.getPointById(this.at);
     const msg = `SUM_DELAY_INFLIGHT called with [${values.join(', ')}] at ${p2a(origin)}`;
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('SUM_DELAY_INFLIGHT_LOG', { detail: msg }));

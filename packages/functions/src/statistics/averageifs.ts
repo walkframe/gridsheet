@@ -1,6 +1,6 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type FunctionArgumentDefinition, conditionArg } from '@gridsheet/react-core';
-import { Table, eachMatrix, stripTable, createBooleanMask, ensureString } from '@gridsheet/react-core';
+import { Sheet, eachMatrix, stripSheet, createBooleanMask, ensureString } from '@gridsheet/react-core';
 import type { FunctionCategory, PointType } from '@gridsheet/react-core';
 
 const description = `Returns the average of a range depending on multiple criteria.`;
@@ -29,22 +29,22 @@ export class AverageifsFunction extends BaseFunction {
     if ((validatedArgs.length - 1) % 2 !== 0) {
       throw new FormulaError('#N/A', 'AVERAGEIFS requires average_range and at least one range/condition pair.');
     }
-    if (!(validatedArgs[0] instanceof Table)) {
+    if (!(validatedArgs[0] instanceof Sheet)) {
       throw new FormulaError('#VALUE!', 'First argument of AVERAGEIFS must be a range.');
     }
     const expectedRows = validatedArgs[0].getNumRows();
     const expectedCols = validatedArgs[0].getNumCols();
 
-    const tables: Table[] = [];
+    const tables: Sheet[] = [];
     const conditions: string[] = [];
     for (let i = 1; i < validatedArgs.length; i += 2) {
-      if (!(validatedArgs[i] instanceof Table)) {
+      if (!(validatedArgs[i] instanceof Sheet)) {
         throw new FormulaError('#VALUE!', `Argument ${i + 1} of AVERAGEIFS must be a range.`);
       }
       if (validatedArgs[i].getNumRows() !== expectedRows || validatedArgs[i].getNumCols() !== expectedCols) {
         throw new FormulaError('#VALUE!', 'Array arguments to AVERAGEIFS are of different size.');
       }
-      tables.push(validatedArgs[i] as Table);
+      tables.push(validatedArgs[i] as Sheet);
       conditions.push(ensureString(validatedArgs[i + 1]));
     }
     const avgRange = validatedArgs[0];
@@ -52,14 +52,14 @@ export class AverageifsFunction extends BaseFunction {
     return [avgRange, mask];
   }
 
-  protected main(avgRange: Table, mask: boolean[][]) {
+  protected main(avgRange: Sheet, mask: boolean[][]) {
     let total = 0;
     let count = 0;
     eachMatrix(
       avgRange,
       (v: any, pt: PointType) => {
         if (pt && mask[pt.y][pt.x]) {
-          const num = stripTable({ value: v ?? 0 });
+          const num = stripSheet({ value: v ?? 0 });
           if (typeof num === 'number') {
             total += num;
             count++;

@@ -1,9 +1,9 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { Table, solveTable, stripTable, ensureNumber } from '@gridsheet/react-core';
+import { Sheet, solveSheet, stripSheet, ensureNumber } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
-const description = `Searches for a value in a table and returns its position.
+const description = `Searches for a value in a sheet and returns its position.
 Returns the position of the matched value (1-based index).`;
 
 export class MatchFunction extends BaseFunction {
@@ -26,11 +26,11 @@ export class MatchFunction extends BaseFunction {
       throw new FormulaError('#N/A', 'Number of arguments for MATCH is incorrect.');
     }
 
-    if (args[0] instanceof Table) {
-      args[0] = stripTable({ value: args[0] });
+    if (args[0] instanceof Sheet) {
+      args[0] = stripSheet({ value: args[0] });
     }
 
-    if (!(args[1] instanceof Table)) {
+    if (!(args[1] instanceof Sheet)) {
       throw new FormulaError('#VALUE!', 'Second argument must be a range.');
     }
 
@@ -45,8 +45,8 @@ export class MatchFunction extends BaseFunction {
     return args;
   }
 
-  protected main(searchKey: any, range: Table, searchType: number = 1) {
-    const matrix = solveTable({ table: range });
+  protected main(searchKey: any, range: Sheet, searchType: number = 1) {
+    const matrix = solveSheet({ sheet: range });
     // Check if matrix is 1-dimensional (either 1 row or 1 column)
     const numRows = matrix.length;
     const numCols = matrix[0]?.length || 0;

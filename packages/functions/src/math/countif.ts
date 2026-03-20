@@ -1,5 +1,5 @@
 import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { Table, eachMatrix, ensureString, check, conditionArg } from '@gridsheet/react-core';
+import { Sheet, eachMatrix, ensureString, check, conditionArg } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
 const description = `Returns the count of a series of cells.`;
@@ -13,11 +13,11 @@ export class CountifFunction extends BaseFunction {
   ];
   category: FunctionCategory = 'math';
 
-  protected main(table: Table, condition: any) {
+  protected main(sheet: Sheet, condition: any) {
     const conditionStr = ensureString(condition);
     let count = 0;
     eachMatrix(
-      table,
+      sheet,
       (v: any) => {
         if (check(v, conditionStr)) {
           count++;

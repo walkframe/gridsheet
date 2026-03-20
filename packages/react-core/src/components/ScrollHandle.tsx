@@ -30,19 +30,19 @@ export function ScrollHandle({ style, horizontal = 0, vertical = 0, className = 
     dragging,
     selectingZone,
     editorRef,
-    tableReactive: tableRef,
+    sheetReactive: sheetRef,
     searchInputRef,
     editingAddress,
   } = store;
-  const table = tableRef.current;
+  const sheet = sheetRef.current;
 
   let isScrolling = false;
   const xSheetFocused = isXSheetFocused(store);
-  const editingAnywhere = !!(table?.wire.editingAddress || editingAddress);
+  const editingAnywhere = !!(sheet?.binding.editingAddress || editingAddress);
 
   const getDestEdge = useCallback(
     (e: React.MouseEvent) => {
-      if (!table) {
+      if (!sheet) {
         return { x: -1, y: -1 };
       }
       if (horizontal == 0 && vertical == 0) {
@@ -62,12 +62,12 @@ export function ScrollHandle({ style, horizontal = 0, vertical = 0, className = 
       }
       return { x, y };
     },
-    [table, horizontal, vertical, selectingZone],
+    [sheet, horizontal, vertical, selectingZone],
   );
 
   const scrollStep = useCallback(
     (e: React.MouseEvent) => {
-      if (!isScrolling || tabularRef.current === null || !table) {
+      if (!isScrolling || tabularRef.current === null || !sheet) {
         return;
       }
       const now = new Date().getTime();
@@ -89,7 +89,7 @@ export function ScrollHandle({ style, horizontal = 0, vertical = 0, className = 
       } else {
         if (editingAnywhere) {
           const newArea = zoneToArea({ ...selectingZone, endY: y, endX: x });
-          const sheetPrefix = table.sheetPrefix(!xSheetFocused);
+          const sheetPrefix = sheet.sheetPrefix(!xSheetFocused);
           const sheetRange = areaToRange(newArea);
           const fullRange = `${sheetPrefix}${sheetRange}`;
           insertRef({ input: editorRef.current, ref: fullRange });
@@ -101,7 +101,7 @@ export function ScrollHandle({ style, horizontal = 0, vertical = 0, className = 
     },
     [
       isScrolling,
-      table,
+      sheet,
       horizontal,
       vertical,
       autofillDraggingTo,

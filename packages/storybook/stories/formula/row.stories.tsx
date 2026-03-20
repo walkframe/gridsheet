@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, useHub } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, useBook } from '@gridsheet/react-core';
 import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
@@ -17,12 +17,12 @@ const DESCRIPTION = [
 // ROW() examples are placed in columns A-C
 // COLUMN() examples are placed in columns E-H
 const ColRowSheet = () => {
-  const hub = useHub({
+  const book = useBook({
     additionalFunctions: allFunctions,
   });
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       initialCells={buildInitialCells({
         cells: {
           // ROW()

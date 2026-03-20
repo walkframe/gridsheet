@@ -10,8 +10,8 @@ import { focus } from '../lib/dom';
 
 export const RowMenu: FC = () => {
   const { store, dispatch } = useContext(Context);
-  const { rowMenuState, tableReactive: tableRef, editorRef, selectingZone } = store;
-  const table = tableRef.current;
+  const { rowMenuState, sheetReactive: sheetRef, editorRef, selectingZone } = store;
+  const sheet = sheetRef.current;
 
   const y = rowMenuState?.y;
   const position = rowMenuState?.position;
@@ -21,28 +21,28 @@ export const RowMenu: FC = () => {
     focus(editorRef.current);
   };
 
-  if (!rowMenuState || !table || y == null || !position) {
+  if (!rowMenuState || !sheet || y == null || !position) {
     return null;
   }
 
-  const rowCell = table.getCellByPoint({ y, x: 0 }, 'SYSTEM');
+  const rowCell = sheet.getCellByPoint({ y, x: 0 }, 'SYSTEM');
 
   // Calculate the number of selected rows that include the current row
   const selRowStart = Math.min(selectingZone.startY, selectingZone.endY);
   const selRowEnd = Math.max(selectingZone.startY, selectingZone.endY);
-  const isFullRowSelection = selectingZone.startX === 1 && selectingZone.endX === table.getNumCols();
+  const isFullRowSelection = selectingZone.startX === 1 && selectingZone.endX === sheet.getNumCols();
   const numSelectedRows =
     isFullRowSelection && between({ start: selectingZone.startY, end: selectingZone.endY }, y)
       ? selRowEnd - selRowStart + 1
       : 1;
 
-  const insertDisabled = table.maxNumRows !== -1 && table.getNumRows() + numSelectedRows > table.maxNumRows;
+  const insertDisabled = sheet.maxNumRows !== -1 && sheet.getNumRows() + numSelectedRows > sheet.maxNumRows;
   const insertAboveDisabled =
     insertDisabled || prevention.hasOperation(rowCell?.prevention, prevention.InsertRowsAbove);
   const insertBelowDisabled =
     insertDisabled || prevention.hasOperation(rowCell?.prevention, prevention.InsertRowsBelow);
   const removeDisabled =
-    (table.minNumRows !== -1 && table.getNumRows() - numSelectedRows < table.minNumRows) ||
+    (sheet.minNumRows !== -1 && sheet.getNumRows() - numSelectedRows < sheet.minNumRows) ||
     prevention.hasOperation(rowCell?.prevention, prevention.RemoveRows);
 
   return (

@@ -197,8 +197,8 @@ importers:
   packages/react-dev:
     dependencies:
       '@gridsheet/react-core':
-        specifier: '>=3.0.0-rc.1'
-        version: 3.0.0-rc.1(dayjs@1.11.13)(react-dom@19.1.0(react@18.2.0))(react@18.2.0)
+        specifier: '>=3.0.0-rc.2'
+        version: 3.0.0-rc.2(dayjs@1.11.13)(react-dom@19.1.0(react@18.2.0))(react@18.2.0)
       '@types/react-syntax-highlighter':
         specifier: ^15.5.13
         version: 15.5.13
@@ -920,8 +920,8 @@ packages:
       dayjs: ^1.11.13
       preact: ^10.26.6
 
-  '@gridsheet/react-core@3.0.0-rc.1':
-    resolution: {integrity: sha512-HeSTTnxAqD7IZ+ehcilHxe678JwUwwS9uQXALZGXO0rQsu54J0XhfIqryfE4+2RN3FmTcmYmRf7hn0d4Of+tQA==}
+  '@gridsheet/react-core@3.0.0-rc.2':
+    resolution: {integrity: sha512-vnxNtI3ifUJKD9vBwBtfMO1Ws5eRg3gjK2Kf9HTxB5QQnm8FyeJfGJvfuhehLlE9ghdwUUu+Bro3xjLe7zXfKQ==}
     peerDependencies:
       dayjs: ^1.11.13
       react: 18.2.0
@@ -6377,7 +6377,7 @@ snapshots:
       dayjs: 1.11.13
       preact: 10.26.6
 
-  '@gridsheet/react-core@3.0.0-rc.1(dayjs@1.11.13)(react-dom@19.1.0(react@18.2.0))(react@18.2.0)':
+  '@gridsheet/react-core@3.0.0-rc.2(dayjs@1.11.13)(react-dom@19.1.0(react@18.2.0))(react@18.2.0)':
     dependencies:
       dayjs: 1.11.13
       react: 18.2.0

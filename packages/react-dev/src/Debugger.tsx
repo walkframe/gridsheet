@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import type { HubType } from '@gridsheet/react-core';
-import { a2p, x2c, Lexer, FormulaParser, Table } from '@gridsheet/react-core';
+import type { BookType } from '@gridsheet/react-core';
+import { a2p, x2c, Lexer, FormulaParser, Sheet } from '@gridsheet/react-core';
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import type { SyntaxHighlighterProps } from 'react-syntax-highlighter';
 import jsonLang from 'react-syntax-highlighter/dist/esm/languages/hljs/json';
@@ -35,12 +35,12 @@ const JsonCode: React.FC<{ data: any; replacer?: (k: string, v: any) => any; the
 };
 
 export type DebuggerProps = {
-  hub: HubType;
+  book: BookType;
   intervalMs?: number;
 };
 
-export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => {
-  const { wire } = hub;
+export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) => {
+  const { binding } = book;
   const [snapshot, setSnapshot] = useState<any>({});
   const [activeTabId, setActiveTabId] = useState<number | null>(null);
   const [topHeight, setTopHeight] = useState<number>(() => {
@@ -54,7 +54,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
 
   useEffect(() => {
     const updateSnapshot = () => {
-      if (!wire) {
+      if (!binding) {
         return;
       }
 
@@ -78,7 +78,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
         asyncPending,
         asyncInflight,
         dependents,
-      } = wire;
+      } = binding;
 
       setSnapshot({
         asyncPending,
@@ -107,7 +107,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
 
     const intervalId = setInterval(updateSnapshot, intervalMs);
     return () => clearInterval(intervalId);
-  }, [wire, intervalMs]);
+  }, [binding, intervalMs]);
 
   const sheets = snapshot.sheetIdsByName
     ? Object.entries(snapshot.sheetIdsByName)
@@ -124,45 +124,45 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
   let activeStoreData = null;
   let activeTableData = null;
 
-  // Cell data for the currently selected cell (wire.choosingSheetId / choosingAddress)
+  // Cell data for the currently selected cell (binding.choosingSheetId / choosingAddress)
   let wireCellData = null;
-  let wireCellAddress = wire?.choosingAddress || '';
+  let wireCellAddress = binding?.choosingAddress || '';
   let wireCellSheetName = '';
   let wireFormulaExpr = null;
   let wireFormulaTokens = null;
 
-  if (wire && activeTabId !== null) {
-    const { contextsBySheetId } = wire;
+  if (binding && activeTabId !== null) {
+    const { contextsBySheetId } = binding;
     const context = contextsBySheetId[activeTabId];
 
     if (context) {
       activeStoreData = context.store;
 
-      const table = context.store.tableReactive.current;
-      if (table) {
-        activeTableData = table;
+      const sheet = context.store.sheetReactive.current;
+      if (sheet) {
+        activeTableData = sheet;
       }
     }
   }
 
-  // Resolve cell data for the currently selected cell (wire.choosingSheetId / choosingAddress)
-  if (wire && wire.choosingSheetId != null) {
-    const { contextsBySheetId } = wire;
-    const choosingContext = contextsBySheetId[wire.choosingSheetId];
+  // Resolve cell data for the currently selected cell (binding.choosingSheetId / choosingAddress)
+  if (binding && binding.choosingSheetId != null) {
+    const { contextsBySheetId } = binding;
+    const choosingContext = contextsBySheetId[binding.choosingSheetId];
 
     // Resolve sheet name
-    if (wire.sheetIdsByName) {
-      const entry = Object.entries(wire.sheetIdsByName).find(([, id]) => id === wire.choosingSheetId);
+    if (binding.sheetIdsByName) {
+      const entry = Object.entries(binding.sheetIdsByName).find(([, id]) => id === binding.choosingSheetId);
       if (entry) {
         wireCellSheetName = entry[0];
       }
     }
 
     if (choosingContext) {
-      const table = choosingContext.store.tableReactive.current;
+      const sheet = choosingContext.store.sheetReactive.current;
       const store = choosingContext.store;
-      if (table) {
-        const rawTable = (table as any).__raw__ || table;
+      if (sheet) {
+        const rawTable = (sheet as any).__raw__ || sheet;
         const idMatrix = rawTable.idMatrix;
 
         // When a header cell is selected, use y=0 (top header) or x=0 (left header)
@@ -172,7 +172,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
           ? { y: 0, x: store.choosing.x }
           : isLeftHeaderSelecting
             ? { y: store.choosing.y, x: 0 }
-            : a2p(wire.choosingAddress);
+            : a2p(binding.choosingAddress);
 
         if (isTopHeaderSelecting) {
           wireCellAddress = `header:${x2c(store.choosing.x)}`;
@@ -183,7 +183,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
         if (pos && idMatrix[pos.y]) {
           const id = idMatrix[pos.y][pos.x];
           if (id) {
-            wireCellData = wire.data[id];
+            wireCellData = binding.data[id];
 
             // Parse formula
             const text = wireCellData?.value;
@@ -207,7 +207,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
   const baseReplacer = (key: string, value: any) => {
     // Avoid circular refs, noisy internals, and React RefObjects
     if (
-      key === 'wire' ||
+      key === 'binding' ||
       key === '__raw__' ||
       (value && typeof value === 'object' && 'current' in value && Object.keys(value).length === 1) // heuristic to skip React ref objects
     ) {
@@ -222,9 +222,9 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
     return value;
   };
 
-  // Replace nested Table instances with their string representation (for Wire State / Store Data panels)
+  // Replace nested Sheet instances with their string representation (for Binding State / Store Data panels)
   const jsonReplacer = (key: string, value: any) => {
-    if (value instanceof Table) {
+    if (value instanceof Sheet) {
       return value.toString();
     }
     return baseReplacer(key, value);
@@ -277,7 +277,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
         overflow: 'hidden',
       }}
     >
-      {/* Top pane: Wire State | Wire Cell | Formula Expressions | Formula Tokens */}
+      {/* Top pane: Binding State | Binding Cell | Formula Expressions | Formula Tokens */}
       <div
         style={{
           display: 'flex',
@@ -286,7 +286,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
           overflow: 'hidden',
         }}
       >
-        {/* Wire State panel */}
+        {/* Binding State panel */}
         <div
           style={{
             flex: 1,
@@ -307,12 +307,12 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
               borderBottom: '2px solid #ccc',
             }}
           >
-            Wire State
+            Binding State
           </div>
           <JsonCode data={snapshot} replacer={jsonReplacer} theme={atomOneLight} />
         </div>
 
-        {/* Wire Cell Value: cell data for wire.choosingSheetId / choosingAddress */}
+        {/* Binding Cell Value: cell data for binding.choosingSheetId / choosingAddress */}
         <div
           style={{
             flex: 1,
@@ -334,7 +334,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
             }}
           >
             Cell: {wireCellSheetName && `${wireCellSheetName}!`}
-            {wireCellAddress} {wire?.choosingSheetId != null && `(SheetID: ${wire.choosingSheetId})`}
+            {wireCellAddress} {binding?.choosingSheetId != null && `(SheetID: ${binding.choosingSheetId})`}
           </div>
           {wireCellData ? (
             <JsonCode data={wireCellData} theme={atelierSeasideLight} />
@@ -441,7 +441,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
         {sheets.length === 0 && <div style={{ padding: '8px 16px', color: '#6c757d' }}>No sheets detected</div>}
       </div>
 
-      {/* Bottom pane: Table Data | Store Data */}
+      {/* Bottom pane: Sheet Data | Store Data */}
       <div
         style={{
           display: 'flex',
@@ -472,12 +472,12 @@ export const Debugger: React.FC<DebuggerProps> = ({ hub, intervalMs = 500 }) => 
               color: '#abb2bf',
             }}
           >
-            Table Data
+            Sheet Data
           </div>
           {activeTableData ? (
             <JsonCode data={activeTableData} replacer={baseReplacer} theme={tomorrowNight} />
           ) : (
-            <div style={{ fontStyle: 'italic', color: '#6c757d', padding: '12px' }}>Table instance not found</div>
+            <div style={{ fontStyle: 'italic', color: '#6c757d', padding: '12px' }}>Sheet instance not found</div>
           )}
         </div>
 

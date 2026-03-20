@@ -14,7 +14,7 @@ export {
 
 export { Time } from './lib/time';
 export { x2c, c2x, y2r, r2y, p2a, a2p } from './lib/coords';
-export { updateTable } from './store/actions';
+export { updateSheet } from './store/actions';
 export { PluginBase, useInitialPluginContext, usePluginContext } from './components/PluginBase';
 export type {
   MatrixType,
@@ -43,8 +43,8 @@ export type {
   CursorStateType,
 } from './types';
 
-export type { HubType, HubProps, WireProps, TransmitProps } from './lib/hub';
-export { Wire, useHub, createHub } from './lib/hub';
+export type { BookType, BookProps, BindingProps, TransmitProps } from './lib/hub';
+export { Binding, useBook, createBook } from './lib/hub';
 export type { Dispatcher } from './store';
 export { ThousandSeparatorPolicyMixin } from './policy/thousand_separator';
 export { CheckboxPolicyMixin } from './policy/checkbox';
@@ -57,7 +57,7 @@ export type {
 } from './formula/functions/__base';
 export { Lexer, FormulaParser, RefEntity, ValueEntity, RangeEntity } from './formula/evaluator';
 export { FormulaError } from './formula/formula-error';
-export { Table, type UserTable } from './lib/table';
+export { Sheet, type UserSheet } from './lib/sheet';
 export { Policy } from './policy/core';
 export type {
   PolicyType,
@@ -75,7 +75,7 @@ export { DEFAULT_HISTORY_LIMIT } from './constants';
 export { Pending, Spilling } from './sentinels';
 
 export { userActions } from './store/actions';
-export { clip, table2csv } from './lib/clipboard';
+export { clip, sheet2csv } from './lib/clipboard';
 
 export { makeBorder } from './styles/utils';
 export { syncers } from './store/dispatchers';
@@ -90,4 +90,4 @@ export {
 } from './formula/functions/__utils';
 export type { EnsureNumberOptions, EnsureBooleanOptions } from './formula/functions/__utils';
 export { conditionArg } from './formula/functions/__base';
-export { solveTable, stripTable } from './formula/solver';
+export { solveSheet, stripSheet } from './formula/solver';

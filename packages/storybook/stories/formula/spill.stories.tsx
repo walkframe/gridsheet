@@ -4,7 +4,7 @@ import {
   BaseFunctionAsync,
   buildInitialCells,
   GridSheet,
-  useHub,
+  useBook,
   Spilling,
   FunctionArgumentDefinition,
 } from '@gridsheet/react-core';
@@ -88,12 +88,12 @@ function makeInitialCells(prefix: 'SEQUENCE' | 'DELAY_SEQUENCE') {
 }
 
 // ---------------------------------------------------------------------------
-// Side-by-side view (Sync left / Async right) — single hub
+// Side-by-side view (Sync left / Async right) — single book
 // ---------------------------------------------------------------------------
 const SpillSideBySide: React.FC = () => {
-  const hub = useHub({
+  const book = useBook({
     onChange: (change) => {
-      console.log('Hub change:', change);
+      console.log('Book change:', change);
     },
     additionalFunctions: {
       ...allFunctions,
@@ -105,7 +105,7 @@ const SpillSideBySide: React.FC = () => {
       <div>
         <h3 style={{ margin: '0 0 0.5rem' }}>Sync: SEQUENCE</h3>
         <GridSheet
-          hub={hub}
+          book={book}
           sheetName="SpillSync"
           initialCells={makeInitialCells('SEQUENCE')}
           options={{ sheetHeight: 300 }}
@@ -114,7 +114,7 @@ const SpillSideBySide: React.FC = () => {
       <div>
         <h3 style={{ margin: '0 0 0.5rem' }}>Async: DELAY_SEQUENCE (0.5 s)</h3>
         <GridSheet
-          hub={hub}
+          book={book}
           sheetName="SpillAsync"
           initialCells={makeInitialCells('DELAY_SEQUENCE')}
           options={{ sheetHeight: 300 }}
@@ -130,16 +130,16 @@ const SpillSideBySide: React.FC = () => {
 // D1: SEQUENCE(3,2) and D2: SEQUENCE(3,2) — spill ranges overlap → D2 origin → #REF!
 // ---------------------------------------------------------------------------
 const SpillBlockedSheet: React.FC = () => {
-  const hub = useHub({
+  const book = useBook({
     onChange: (change) => {
-      console.log('Hub change:', change);
+      console.log('Book change:', change);
     },
     additionalFunctions: allFunctions,
   });
   return (
     <>
       <GridSheet
-        hub={hub}
+        book={book}
         sheetName="SpillBlocked"
         initialCells={buildInitialCells({
           cells: {
@@ -160,7 +160,7 @@ const SpillBlockedSheet: React.FC = () => {
         })}
         options={{ sheetHeight: 300 }}
       />
-      <Debugger hub={hub} />
+      <Debugger book={book} />
     </>
   );
 };

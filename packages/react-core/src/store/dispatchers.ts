@@ -122,27 +122,27 @@ export const colsRemover = async ({ store, dispatch }: ContextMenuProps) => {
 };
 
 export const rowsSorterAsc = async ({ store, dispatch }: ContextMenuProps, x: number) => {
-  const table = store.tableReactive.current;
-  if (table && (table.hasPendingCells() || table.wire.asyncPending.size > 0)) {
-    await table.waitForPending();
+  const sheet = store.sheetReactive.current;
+  if (sheet && (sheet.hasPendingCells() || sheet.binding.asyncPending.size > 0)) {
+    await sheet.waitForPending();
   }
   dispatch(sortRows({ x, direction: 'asc' }));
   focus(store.editorRef.current);
 };
 
 export const rowsSorterDesc = async ({ store, dispatch }: ContextMenuProps, x: number) => {
-  const table = store.tableReactive.current;
-  if (table && (table.hasPendingCells() || table.wire.asyncPending.size > 0)) {
-    await table.waitForPending();
+  const sheet = store.sheetReactive.current;
+  if (sheet && (sheet.hasPendingCells() || sheet.binding.asyncPending.size > 0)) {
+    await sheet.waitForPending();
   }
   dispatch(sortRows({ x, direction: 'desc' }));
   focus(store.editorRef.current);
 };
 
 export const rowsFilterer = async ({ store, dispatch }: ContextMenuProps, x: number, filter: FilterConfig) => {
-  const table = store.tableReactive.current;
-  if (table && (table.hasPendingCells() || table.wire.asyncPending.size > 0)) {
-    await table.waitForPending();
+  const sheet = store.sheetReactive.current;
+  if (sheet && (sheet.hasPendingCells() || sheet.binding.asyncPending.size > 0)) {
+    await sheet.waitForPending();
   }
   dispatch(filterRows({ x, filter }));
   focus(store.editorRef.current);

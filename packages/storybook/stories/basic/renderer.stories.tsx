@@ -1,6 +1,14 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, Policy, PolicyMixinType, RenderProps, p2a, useHub } from '@gridsheet/react-core';
+import {
+  buildInitialCells,
+  GridSheet,
+  Policy,
+  PolicyMixinType,
+  RenderProps,
+  p2a,
+  useBook,
+} from '@gridsheet/react-core';
 import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
@@ -29,7 +37,7 @@ const kanjiMap: { [s: string]: string } = {
 };
 
 const RenderToKanjiSheet = () => {
-  const hub = useHub({
+  const book = useBook({
     additionalFunctions: allFunctions,
     policies: {
       kanji: new Policy({
@@ -72,7 +80,7 @@ const RenderToKanjiSheet = () => {
 
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       initialCells={buildInitialCells({
         matrices: {
           A1: [[true, false, 64]],

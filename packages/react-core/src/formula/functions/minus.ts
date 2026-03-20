@@ -4,8 +4,8 @@ import { FormulaError } from '../formula-error';
 import { Time } from '../../lib/time';
 import { BaseFunction, FunctionCategory, FunctionArgumentDefinition } from './__base';
 import { ensureNumber } from './__utils';
-import { stripTable } from '../../formula/solver';
-import { Table } from '../../lib/table';
+import { stripSheet } from '../../formula/solver';
+import { Sheet } from '../../lib/sheet';
 import { SECONDS_IN_DAY } from '../../constants';
 
 const description = `Returns the difference of two numbers.
@@ -26,8 +26,8 @@ export class MinusFunction extends BaseFunction {
 
   protected validate(args: any[]): any[] {
     return super.validate(args).map((arg) => {
-      if (arg instanceof Table) {
-        arg = stripTable({ value: arg });
+      if (arg instanceof Sheet) {
+        arg = stripSheet({ value: arg });
       }
       return typeof arg === 'object' ? arg : ensureNumber(arg);
     });

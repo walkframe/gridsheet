@@ -1,6 +1,6 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { Table, eachMatrix, stripTable, check, conditionArg, ensureString } from '@gridsheet/react-core';
+import { Sheet, eachMatrix, stripSheet, check, conditionArg, ensureString } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
 const description = `Returns the average of a series of cells that meet a condition.`;
@@ -21,7 +21,7 @@ export class AverageifFunction extends BaseFunction {
   ];
   category: FunctionCategory = 'statistics';
 
-  protected main(range: Table, condition: any, avgRange?: Table) {
+  protected main(range: Sheet, condition: any, avgRange?: Sheet) {
     const conditionStr = ensureString(condition);
     const condArr: any[] = [];
     const avgArr: any[] = [];
@@ -46,7 +46,7 @@ export class AverageifFunction extends BaseFunction {
     let total = 0;
     let count = 0;
     condArr.forEach((c, i) => {
-      const s = stripTable({ value: (avgRange ? avgArr[i] : c) ?? 0 });
+      const s = stripSheet({ value: (avgRange ? avgArr[i] : c) ?? 0 });
       if (typeof s === 'number' && check(c, conditionStr)) {
         total += s;
         count++;

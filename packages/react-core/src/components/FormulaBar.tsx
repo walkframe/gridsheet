@@ -5,7 +5,7 @@ import { FunctionGuide } from './FunctionGuide';
 import { EditorOptions } from './EditorOptions';
 import { Context } from '../store';
 import { p2a, a2p } from '../lib/coords';
-import { setEditingAddress, setInputting, setEditorHovering, walk, write, updateTable } from '../store/actions';
+import { setEditingAddress, setInputting, setEditorHovering, walk, write, updateSheet } from '../store/actions';
 import * as prevention from '../lib/operation';
 import { handleFormulaQuoteAutoClose, insertTextAtCursor, isFocus } from '../lib/input';
 import { focus } from '../lib/dom';
@@ -27,31 +27,31 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
     selectingZone,
     editorRef,
     largeEditorRef,
-    tableReactive: tableRef,
+    sheetReactive: sheetRef,
     inputting,
     editingAddress: editingCell,
     dragging,
   } = store;
-  const table = tableRef.current;
+  const sheet = sheetRef.current;
   const hlRef = useRef<HTMLDivElement | null>(null);
 
   const address = choosing.x === -1 ? '' : p2a(choosing);
-  const cell = table?.getCellByPoint(choosing, 'SYSTEM');
+  const cell = sheet?.getCellByPoint(choosing, 'SYSTEM');
   const spilledFromAddress = cell?._sys?.spilledFrom;
   const originPoint = spilledFromAddress ? a2p(spilledFromAddress) : undefined;
   const originFormula =
-    originPoint != null ? table!.stringify({ point: originPoint, refEvaluation: 'RAW' }) : undefined;
+    originPoint != null ? sheet!.stringify({ point: originPoint, refEvaluation: 'RAW' }) : undefined;
   const originAddress = originPoint != null ? p2a(originPoint) : undefined;
   useEffect(() => {
-    if (!table) {
+    if (!sheet) {
       return;
     }
-    let value = table.getCellByPoint(choosing, 'SYSTEM')?.value ?? '';
+    let value = sheet.getCellByPoint(choosing, 'SYSTEM')?.value ?? '';
     // debug to remove this line
-    value = table.stringify({ point: choosing, cell: { ...cell, value }, refEvaluation: 'RAW' });
+    value = sheet.stringify({ point: choosing, cell: { ...cell, value }, refEvaluation: 'RAW' });
     largeEditorRef.current!.value = value;
     setBefore(value as string);
-  }, [address, table]);
+  }, [address, sheet]);
 
   const writeCell = useCallback(
     (value: string) => {
@@ -76,7 +76,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
     };
   }, []);
 
-  const policy = table?.getPolicyByPoint(choosing);
+  const policy = sheet?.getPolicyByPoint(choosing);
   const optionsAll = policy?.getSelectOptions() || [];
 
   const {
@@ -93,7 +93,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
     inputting,
     selectionStart,
     optionsAll,
-    functions: table?.wire.functions,
+    functions: sheet?.binding.functions,
   });
 
   const largeInput = largeEditorRef.current;
@@ -117,14 +117,14 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
 
   const handleFocus = useCallback(
     (e: React.FocusEvent<HTMLTextAreaElement>) => {
-      if (!largeInput || !table) {
+      if (!largeInput || !sheet) {
         return;
       }
       setIsFocused(true);
       dispatch(setEditingAddress(address));
-      table.wire.lastFocused = e.currentTarget;
+      sheet.binding.lastFocused = e.currentTarget;
     },
-    [largeInput, address, table],
+    [largeInput, address, sheet],
   );
 
   const handleBlur = useCallback(
@@ -143,7 +143,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.ctrlKey || !table) {
+      if (e.ctrlKey || !sheet) {
         return true;
       }
       const input = e.currentTarget;
@@ -173,8 +173,8 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
               return false;
             } else {
               // ... regular completion ...
-              const t = table.update({ diff: { [address]: { value: option.value } }, partial: true });
-              dispatch(updateTable(t.clone()));
+              const t = sheet.update({ diff: { [address]: { value: option.value } }, partial: true });
+              dispatch(updateSheet(t.clone()));
               dispatch(setEditingAddress(''));
               dispatch(setInputting(''));
             }
@@ -214,8 +214,8 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
             dispatch(setInputting(''));
             dispatch(
               walk({
-                numRows: table.getNumRows(),
-                numCols: table.getNumCols(),
+                numRows: sheet.getNumRows(),
+                numCols: sheet.getNumCols(),
                 deltaY: 1,
                 deltaX: 0,
               }),
@@ -250,7 +250,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
           break;
       }
 
-      const cell = table.getCellByPoint(choosing, 'SYSTEM');
+      const cell = sheet.getCellByPoint(choosing, 'SYSTEM');
       if (prevention.hasOperation(cell?.prevention, prevention.Write)) {
         console.warn('This cell is protected from writing.');
         e.preventDefault();
@@ -259,7 +259,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
       return false;
     },
     [
-      table,
+      sheet,
       choosing,
       address,
       before,
@@ -295,7 +295,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
   );
 
   const style: React.CSSProperties = ready ? {} : { visibility: 'hidden' };
-  if (!table) {
+  if (!sheet) {
     return (
       <label className="gs-formula-bar gs-hidden" style={style}>
         <div className="gs-selecting-address"></div>

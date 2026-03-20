@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, useHub } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, useBook } from '@gridsheet/react-core';
 import { allFunctions } from '@gridsheet/functions';
 import { Debugger } from '@gridsheet/react-dev';
 
@@ -10,7 +10,7 @@ const meta: Meta = {
 export default meta;
 
 const MatrixFunctions: React.FC = () => {
-  const hub = useHub({ additionalFunctions: allFunctions });
+  const book = useBook({ additionalFunctions: allFunctions });
 
   // ---- MMULT: A(2×2) × B(2×2) → 2×2 result spills from E2 ----
   const mmultCells = buildInitialCells({
@@ -114,25 +114,25 @@ const MatrixFunctions: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       <div style={sheetStyle}>
         <h3 style={labelStyle}>MMULT — Matrix product</h3>
-        <GridSheet hub={hub} sheetName="MMULT" initialCells={mmultCells} options={{ sheetHeight: 180 }} />
+        <GridSheet book={book} sheetName="MMULT" initialCells={mmultCells} options={{ sheetHeight: 180 }} />
       </div>
       <div style={sheetStyle}>
         <h3 style={labelStyle}>TRANSPOSE — Matrix transpose</h3>
-        <GridSheet hub={hub} sheetName="TRANSPOSE" initialCells={transposeCells} options={{ sheetHeight: 210 }} />
+        <GridSheet book={book} sheetName="TRANSPOSE" initialCells={transposeCells} options={{ sheetHeight: 210 }} />
       </div>
       <div style={sheetStyle}>
         <h3 style={labelStyle}>MINVERSE — Matrix inverse</h3>
-        <GridSheet hub={hub} sheetName="MINVERSE" initialCells={minverseCells} options={{ sheetHeight: 210 }} />
+        <GridSheet book={book} sheetName="MINVERSE" initialCells={minverseCells} options={{ sheetHeight: 210 }} />
       </div>
       <div style={sheetStyle}>
         <h3 style={labelStyle}>MDETERM — Matrix determinant</h3>
-        <GridSheet hub={hub} sheetName="MDETERM" initialCells={mdetermCells} options={{ sheetHeight: 210 }} />
+        <GridSheet book={book} sheetName="MDETERM" initialCells={mdetermCells} options={{ sheetHeight: 210 }} />
       </div>
       <div style={sheetStyle}>
         <h3 style={labelStyle}>SUMPRODUCT — Sum of element-wise products</h3>
-        <GridSheet hub={hub} sheetName="SUMPRODUCT" initialCells={sumproductCells} options={{ sheetHeight: 210 }} />
+        <GridSheet book={book} sheetName="SUMPRODUCT" initialCells={sumproductCells} options={{ sheetHeight: 210 }} />
       </div>
-      <Debugger hub={hub} />
+      <Debugger book={book} />
     </div>
   );
 };

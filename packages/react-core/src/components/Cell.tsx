@@ -23,7 +23,7 @@ import { focus } from '../lib/dom';
 import { isXSheetFocused } from '../store/helpers';
 import type { FC, RefObject } from 'react';
 import { isTouching, safePreventDefault } from '../lib/events';
-import type { UserTable } from '../lib/table';
+import type { UserSheet } from '../lib/sheet';
 
 type Props = {
   y: number;
@@ -39,7 +39,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
 
   const cellRef = useRef<HTMLTableCellElement>(null);
   const {
-    tableReactive,
+    sheetReactive,
     editingAddress,
     choosing,
     selectingZone,
@@ -50,12 +50,12 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
     autofillDraggingTo,
     contextMenuItems,
   } = store;
-  const table = tableReactive.current;
+  const sheet = sheetReactive.current;
 
   // Whether the focus is on another sheet
   const xSheetFocused = isXSheetFocused(store);
 
-  const lastFocused = table?.wire.lastFocused;
+  const lastFocused = sheet?.binding.lastFocused;
 
   const selectingArea = zoneToArea(selectingZone); // (top, left) -> (bottom, right)
 
@@ -85,23 +85,23 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
     isFirstPointed.current = false;
   }, [pointed, editing]);
 
-  if (!table) {
+  if (!sheet) {
     return null;
   }
 
-  const cell = table.getCellByPoint({ y, x }, 'SYSTEM');
+  const cell = sheet.getCellByPoint({ y, x }, 'SYSTEM');
   const writeCell = useCallback((value: string) => {
     dispatch(write({ value }));
   }, []);
 
-  const sync = useCallback((table: UserTable) => {
-    dispatch(setStore({ tableReactive: { current: table.__raw__ } }));
+  const sync = useCallback((sheet: UserSheet) => {
+    dispatch(setStore({ sheetReactive: { current: sheet.__raw__ } }));
   }, []);
 
   let errorMessage = '';
   let rendered: any;
   try {
-    rendered = table.render({ table, point: { y, x }, sync });
+    rendered = sheet.render({ sheet, point: { y, x }, sync });
   } catch (e: any) {
     if (FormulaError.is(e)) {
       errorMessage = e.message;
@@ -111,11 +111,11 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
       rendered = '#UNKNOWN';
     }
   }
-  const [, v] = table.getSolvedCache({ y, x });
+  const [, v] = sheet.getSolvedCache({ y, x });
   const isPendingCell = Pending.is(v);
   const input = editorRef.current;
 
-  const editingAnywhere = !!(table.wire.editingAddress || editingAddress);
+  const editingAnywhere = !!(sheet.binding.editingAddress || editingAddress);
 
   const handleDragStart = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
@@ -148,7 +148,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
       }
 
       dispatch(setDragging(true));
-      const fullAddress = `${table.sheetPrefix(!xSheetFocused)}${address}`;
+      const fullAddress = `${sheet.sheetPrefix(!xSheetFocused)}${address}`;
       if (editingAnywhere) {
         const inserted = insertRef({ input: lastFocused || null, ref: fullAddress });
         if (inserted) {
@@ -156,7 +156,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
         }
       }
 
-      table.wire.lastFocused = input;
+      sheet.binding.lastFocused = input;
       focus(input);
       dispatch(setEditingAddress(''));
 
@@ -215,11 +215,11 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
         return false;
       }
       if (leftHeaderSelecting) {
-        dispatch(drag({ y, x: table.getNumCols() }));
+        dispatch(drag({ y, x: sheet.getNumCols() }));
         return false;
       }
       if (topHeaderSelecting) {
-        dispatch(drag({ y: table.getNumRows(), x }));
+        dispatch(drag({ y: sheet.getNumRows(), x }));
         return false;
       }
       if (editingAnywhere && !isRefInsertable(lastFocused || null)) {
@@ -229,17 +229,17 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
 
       if (editingAnywhere) {
         const newArea = zoneToArea({ ...selectingZone, endY: y, endX: x });
-        const fullRange = `${table.sheetPrefix(!xSheetFocused)}${areaToRange(newArea)}`;
+        const fullRange = `${sheet.sheetPrefix(!xSheetFocused)}${areaToRange(newArea)}`;
         insertRef({ input: lastFocused || null, ref: fullRange });
       }
-      //table.wire.transmit(); // Force drawing because the formula is not reflected in largeInput
+      //sheet.binding.transmit(); // Force drawing because the formula is not reflected in largeInput
       return true;
     },
     [
       autofillDraggingTo,
       leftHeaderSelecting,
       topHeaderSelecting,
-      table,
+      sheet,
       editingAnywhere,
       lastFocused,
       selectingZone,

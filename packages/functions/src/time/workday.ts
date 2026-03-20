@@ -1,6 +1,6 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { ensureNumber, Table, solveTable } from '@gridsheet/react-core';
+import { ensureNumber, Sheet, solveSheet } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 import { ensureDate } from './__utils';
 
@@ -11,8 +11,8 @@ function buildHolidaySet(value: any): Set<string> {
   }
 
   let items: any[];
-  if (value instanceof Table) {
-    items = solveTable({ table: value }).flat();
+  if (value instanceof Sheet) {
+    items = solveSheet({ sheet: value }).flat();
   } else {
     items = [value];
   }

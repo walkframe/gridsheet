@@ -1,6 +1,6 @@
 import type { FC, ReactNode } from 'react';
 import type { CellPatchType, CellType, OperationType, PointType } from '../types';
-import type { Table, UserTable } from '../lib/table';
+import type { Sheet, UserSheet } from '../lib/sheet';
 import dayjs from 'dayjs';
 import { FormulaError } from '../formula/formula-error';
 import { Pending } from '../sentinels';
@@ -15,7 +15,7 @@ export type AutocompleteOption = {
 };
 
 export type SelectProps = {
-  table: UserTable;
+  sheet: UserSheet;
   point: PointType;
   current?: CellType;
   next?: CellType;
@@ -23,12 +23,12 @@ export type SelectProps = {
 };
 
 export type SerializeForClipboardProps = {
-  table: UserTable;
+  sheet: UserSheet;
   point: PointType;
 };
 
 export type SelectFallbackProps = {
-  table: UserTable;
+  sheet: UserSheet;
   point: PointType;
   value: any;
 };
@@ -38,22 +38,22 @@ export type Scalar = string | number | boolean | null | undefined;
 export type ScalarProps<T = any> = {
   value?: T;
   cell?: CellType<T>;
-  table: Table;
+  sheet: Sheet;
   point: PointType;
 };
 
 export type RenderProps<T = any> = {
   value?: T;
   cell?: CellType<T>;
-  table: Table;
+  sheet: Sheet;
   point: PointType;
-  sync?: (table: UserTable) => void;
+  sync?: (sheet: UserSheet) => void;
 };
 
 export type SerializeProps<T = any> = {
   value: T;
   cell?: CellType<T>;
-  table: Table;
+  sheet: Sheet;
   point: PointType;
 };
 
@@ -75,7 +75,7 @@ export type PolicyMixinType = {
   renderArray?: (props: RenderProps<any[]>) => any;
   renderObject?: (props: RenderProps<any>) => any;
   renderNull?: (props: RenderProps<null | undefined>) => any;
-  renderTable?: (props: RenderProps<Table>) => any;
+  renderSheet?: (props: RenderProps<Sheet>) => any;
   renderRowHeaderLabel?: (n: number) => string | null;
   renderColHeaderLabel?: (n: number) => string | null;
 
@@ -180,11 +180,11 @@ export class Policy implements PolicyMixinType {
 
   public render(props: RenderProps): any {
     let { value, cell } = props;
-    const { table, point } = props;
+    const { sheet, point } = props;
 
-    // Cell lookup: if cell not provided, resolve from table (entry-point usage)
+    // Cell lookup: if cell not provided, resolve from sheet (entry-point usage)
     if (cell == null) {
-      cell = table.getCellByPoint(point, 'COMPLETE', true) ?? {};
+      cell = sheet.getCellByPoint(point, 'COMPLETE', true) ?? {};
       value = cell.value;
     }
 
@@ -200,7 +200,7 @@ export class Policy implements PolicyMixinType {
           if (value instanceof Date) {
             rendered = this.renderDate({ ...props, value, cell });
           } else if (Time.is(value)) {
-            rendered = this.renderTime({ value: Time.ensure(value), cell, table, point });
+            rendered = this.renderTime({ value: Time.ensure(value), cell, sheet, point });
           } else if (Array.isArray(value)) {
             rendered = this.renderArray({ ...props, value, cell });
           } else if (FormulaError.is(value)) {
@@ -272,7 +272,7 @@ export class Policy implements PolicyMixinType {
     return '';
   }
 
-  public renderTable({ value }: RenderProps<Table>): any {
+  public renderSheet({ value }: RenderProps<Sheet>): any {
     return JSON.stringify(value);
   }
 
@@ -287,27 +287,27 @@ export class Policy implements PolicyMixinType {
   // --- TO SCALAR ---
 
   public toScalar(props: ScalarProps): Scalar {
-    const { value, cell, table, point } = props;
+    const { value, cell, sheet, point } = props;
     if (Pending.is(value)) {
       return undefined;
     }
     if (value == null) {
-      return this.toScalarNull({ value: value as null | undefined, cell, table, point });
+      return this.toScalarNull({ value: value as null | undefined, cell, sheet, point });
     }
     switch (typeof value) {
       case 'string':
-        return this.toScalarString({ value, cell, table, point });
+        return this.toScalarString({ value, cell, sheet, point });
       case 'number':
-        return this.toScalarNumber({ value, cell, table, point });
+        return this.toScalarNumber({ value, cell, sheet, point });
       case 'boolean':
-        return this.toScalarBool({ value, cell, table, point });
+        return this.toScalarBool({ value, cell, sheet, point });
       case 'object':
         if (value instanceof Date) {
-          return this.toScalarDate({ value, cell, table, point });
+          return this.toScalarDate({ value, cell, sheet, point });
         } else if (Time.is(value)) {
-          return this.toScalarTime({ value: Time.ensure(value), cell, table, point });
+          return this.toScalarTime({ value: Time.ensure(value), cell, sheet, point });
         } else if (Array.isArray(value)) {
-          return this.toScalarArray({ value, cell, table, point });
+          return this.toScalarArray({ value, cell, sheet, point });
         } else if (FormulaError.is(value)) {
           throw value;
         }
@@ -340,12 +340,12 @@ export class Policy implements PolicyMixinType {
     return value!.stringify(this.timeFormat);
   }
 
-  public toScalarArray({ value, cell, table, point }: ScalarProps<any[]>): Scalar {
+  public toScalarArray({ value, cell, sheet, point }: ScalarProps<any[]>): Scalar {
     let v = value?.[0];
     if (Array.isArray(v)) {
       v = v[0];
     }
-    return this.toScalar({ value: v, cell, table, point });
+    return this.toScalar({ value: v, cell, sheet, point });
   }
 
   public toScalarNull(_props: ScalarProps<null | undefined>): Scalar {
@@ -354,7 +354,7 @@ export class Policy implements PolicyMixinType {
 
   // --- SERIALIZE ---
 
-  public serialize({ value, cell, table, point }: SerializeProps): string {
+  public serialize({ value, cell, sheet, point }: SerializeProps): string {
     if (value === undefined) {
       value = cell?.value;
     }
@@ -362,22 +362,22 @@ export class Policy implements PolicyMixinType {
       return '';
     }
     if (value instanceof Date) {
-      return this.serializeDate({ value, cell, table, point } as SerializeProps<Date>);
+      return this.serializeDate({ value, cell, sheet, point } as SerializeProps<Date>);
     }
     if (Time.is(value)) {
-      return this.serializeTime({ value: Time.ensure(value), cell, table, point } as SerializeProps<Time>);
+      return this.serializeTime({ value: Time.ensure(value), cell, sheet, point } as SerializeProps<Time>);
     }
     if (value == null) {
-      return this.serializeNull({ cell, table, point } as SerializeProps<null | undefined>);
+      return this.serializeNull({ cell, sheet, point } as SerializeProps<null | undefined>);
     }
     if (Array.isArray(value)) {
-      return this.serializeArray({ value, cell, table, point } as SerializeProps<any[]>);
+      return this.serializeArray({ value, cell, sheet, point } as SerializeProps<any[]>);
     }
     if (value instanceof FormulaError) {
-      return this.serializeFormulaError({ value, cell, table, point } as SerializeProps<FormulaError>);
+      return this.serializeFormulaError({ value, cell, sheet, point } as SerializeProps<FormulaError>);
     }
     if (value instanceof Error) {
-      return this.serializeError({ value, cell, table, point } as SerializeProps<Error>);
+      return this.serializeError({ value, cell, sheet, point } as SerializeProps<Error>);
     }
     return value.toString();
   }
@@ -427,8 +427,8 @@ export class Policy implements PolicyMixinType {
   }
 
   public serializeForClipboard(props: SerializeForClipboardProps): string {
-    const { point, table } = props;
-    return table.stringify({ point }) ?? '';
+    const { point, sheet } = props;
+    return sheet.stringify({ point }) ?? '';
   }
 
   // --- DESERIALIZE ---
@@ -508,14 +508,14 @@ export class Policy implements PolicyMixinType {
   }
 
   public select(props: SelectProps): CellType | undefined {
-    const { next, table, point } = props;
+    const { next, sheet, point } = props;
     const options = this.getSelectOptions();
     if (options.length === 0) {
       return next;
     }
     const ok = options.some((o) => o.value === next?.value);
     if (!ok) {
-      return { ...next, ...this.getSelectFallback({ table, point, value: next?.value }) };
+      return { ...next, ...this.getSelectFallback({ sheet, point, value: next?.value }) };
     }
     return next;
   }

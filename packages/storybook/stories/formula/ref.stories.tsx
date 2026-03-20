@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, useHub } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, useBook } from '@gridsheet/react-core';
 import { Debugger } from '@gridsheet/react-dev';
 import { allFunctions } from '@gridsheet/functions';
 
@@ -12,13 +12,13 @@ export default meta;
 const DESCRIPTION = ['## Example'].join('\n\n');
 
 const RefsSheet = () => {
-  const hub = useHub({
+  const book = useBook({
     additionalFunctions: allFunctions,
   });
   return (
     <>
       <GridSheet
-        hub={hub}
+        book={book}
         initialCells={buildInitialCells({
           cells: {
             A: { width: 150 },
@@ -84,7 +84,7 @@ const RefsSheet = () => {
         })}
         options={{}}
       />
-      <Debugger hub={hub} />
+      <Debugger book={book} />
     </>
   );
 };

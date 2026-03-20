@@ -33,7 +33,7 @@ import {
   setEntering,
   setInputting,
   setEditorHovering,
-  updateTable,
+  updateSheet,
 } from '../store/actions';
 
 import { Context } from '../store';
@@ -79,11 +79,11 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
     largeEditorRef,
     searchInputRef,
     editingOnEnter,
-    tableReactive: tableRef,
+    sheetReactive: sheetRef,
     sheetId,
     dragging,
   } = store;
-  const table = tableRef.current;
+  const sheet = sheetRef.current;
 
   const renderOverlays = () => {
     if (!isFocused || !editing || typeof document === 'undefined') {
@@ -125,11 +125,11 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
     );
   };
 
-  if (!table) {
+  if (!sheet) {
     return null;
   }
 
-  const policy = table.getPolicyByPoint(choosing);
+  const policy = sheet.getPolicyByPoint(choosing);
   const optionsAll = policy.getSelectOptions();
 
   const handleSelect = useCallback((e: React.SyntheticEvent<HTMLTextAreaElement>) => {
@@ -150,7 +150,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
     inputting,
     selectionStart,
     optionsAll,
-    functions: table.wire.functions,
+    functions: sheet.binding.functions,
   });
 
   useEffect(() => {
@@ -158,25 +158,25 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
   }, [editorRef]);
 
   useEffect(() => {
-    if (table.wire.lastFocused == null) {
+    if (sheet.binding.lastFocused == null) {
       return;
     }
-    if (table.wire.lastFocused !== editorRef.current) {
+    if (sheet.binding.lastFocused !== editorRef.current) {
       return;
     }
-    if (table.wire.lastFocused !== largeEditorRef.current) {
+    if (sheet.binding.lastFocused !== largeEditorRef.current) {
       return;
     }
 
     dispatch(setEditingAddress(''));
-  }, [table.wire.lastFocused, editorRef, largeEditorRef, dispatch]);
+  }, [sheet.binding.lastFocused, editorRef, largeEditorRef, dispatch]);
   useEffect(() => {
-    table.wire.editingSheetId = sheetId;
-    table.wire.editingAddress = editingAddress;
-  }, [editingAddress, table, sheetId]);
+    sheet.binding.editingSheetId = sheetId;
+    sheet.binding.editingAddress = editingAddress;
+  }, [editingAddress, sheet, sheetId]);
 
   useEffect(() => {
-    //table.wire.transmit();
+    //sheet.binding.transmit();
     expandInput(editorRef.current);
   }, [inputting, editingAddress, editorRef]);
 
@@ -186,8 +186,8 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
   const address = `${colId}${rowId}`;
   const editing = editingAddress === address;
 
-  const cell = table.getCellByPoint({ y, x }, 'SYSTEM');
-  const currentString = table.stringify({ point: choosing, cell, refEvaluation: 'RAW' });
+  const cell = sheet.getCellByPoint({ y, x }, 'SYSTEM');
+  const currentString = sheet.stringify({ point: choosing, cell, refEvaluation: 'RAW' });
   const [before, setBefore] = useState<string>(currentString);
 
   const writeCell = useCallback(
@@ -215,25 +215,25 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
             }
           }, 0);
         } else {
-          const t = table.update({
+          const t = sheet.update({
             diff: { [address]: { value: option.value } },
             partial: true,
           });
-          dispatch(updateTable(t.clone()));
+          dispatch(updateSheet(t.clone()));
           dispatch(setEditingAddress(''));
           dispatch(setInputting(''));
         }
         setSelected(0);
       }
     },
-    [filteredOptions, table, address, inputting, writeCell, dispatch, editorRef],
+    [filteredOptions, sheet, address, inputting, writeCell, dispatch, editorRef],
   );
 
   useEffect(() => {
     setBefore(currentString);
     dispatch(setInputting(currentString));
-    resetInput(editorRef.current, table, choosing);
-  }, [choosing, currentString, dispatch, editorRef, table]);
+    resetInput(editorRef.current, sheet, choosing);
+  }, [choosing, currentString, dispatch, editorRef, sheet]);
 
   const { y: top, x: left, height, width } = editorRect;
 
@@ -278,8 +278,8 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
           }
           dispatch(
             walk({
-              numRows: table.getNumRows(),
-              numCols: table.getNumCols(),
+              numRows: sheet.getNumRows(),
+              numCols: sheet.getNumCols(),
               deltaY: 0,
               deltaX: shiftKey ? -1 : 1,
             }),
@@ -318,8 +318,8 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
           }
           dispatch(
             walk({
-              numRows: table.getNumRows(),
-              numCols: table.getNumCols(),
+              numRows: sheet.getNumRows(),
+              numCols: sheet.getNumCols(),
               deltaY: shiftKey ? -1 : 1,
               deltaX: 0,
             }),
@@ -369,8 +369,8 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
             dispatch(
               arrow({
                 shiftKey,
-                numRows: table.getNumRows(),
-                numCols: table.getNumCols(),
+                numRows: sheet.getNumRows(),
+                numCols: sheet.getNumCols(),
                 deltaY: 0,
                 deltaX: -1,
               }),
@@ -383,8 +383,8 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
             dispatch(
               arrow({
                 shiftKey,
-                numRows: table.getNumRows(),
-                numCols: table.getNumCols(),
+                numRows: sheet.getNumRows(),
+                numCols: sheet.getNumCols(),
                 deltaY: -1,
                 deltaX: 0,
               }),
@@ -400,8 +400,8 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
             dispatch(
               arrow({
                 shiftKey,
-                numRows: table.getNumRows(),
-                numCols: table.getNumCols(),
+                numRows: sheet.getNumRows(),
+                numCols: sheet.getNumCols(),
                 deltaY: 0,
                 deltaX: 1,
               }),
@@ -414,8 +414,8 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
             dispatch(
               arrow({
                 shiftKey,
-                numRows: table.getNumRows(),
-                numCols: table.getNumCols(),
+                numRows: sheet.getNumRows(),
+                numCols: sheet.getNumCols(),
                 deltaY: 1,
                 deltaX: 0,
               }),
@@ -434,8 +434,8 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
                 select({
                   startY: 1,
                   startX: 1,
-                  endY: table.getNumRows(),
-                  endX: table.getNumCols(),
+                  endY: sheet.getNumRows(),
+                  endX: sheet.getNumCols(),
                 }),
               );
               return false;
@@ -481,8 +481,8 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
           if (e.ctrlKey || e.metaKey) {
             if (!editing) {
               e.preventDefault();
-              table.wire.onSave?.({
-                table,
+              sheet.binding.onSave?.({
+                sheet,
                 points: {
                   pointing: choosing,
                   selectingFrom: {
@@ -564,7 +564,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
       editingOnEnter,
       selectingZone,
       before,
-      table,
+      sheet,
       choosing,
       store,
       cell,
@@ -578,9 +578,9 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
   const handleFocus = useCallback(
     (e: React.FocusEvent<HTMLTextAreaElement>) => {
       setIsFocused(true);
-      table.wire.lastFocused = e.currentTarget;
+      sheet.binding.lastFocused = e.currentTarget;
     },
-    [table],
+    [sheet],
   );
 
   const handleDoubleClick = useCallback(
@@ -659,7 +659,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       setShiftKey(false);
       const selectingArea = zoneToArea(store.selectingZone);
-      table.wire.onKeyUp?.({
+      sheet.binding.onKeyUp?.({
         e,
         points: {
           pointing: choosing,

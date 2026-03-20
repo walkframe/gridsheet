@@ -1,9 +1,9 @@
 import { Pending, Sentinel, Spilling } from '../../sentinels';
 import { FormulaError } from '../formula-error';
 import { ensureSys, setAsyncCache } from '../../lib/cell';
-import type { Wire } from '../../lib/hub';
+import type { Binding } from '../../lib/hub';
 import type { CellType, Id, PointType } from '../../types';
-import type { Table } from '../../lib/table';
+import type { Sheet } from '../../lib/sheet';
 
 /**
  * Sentinel value to distinguish cache miss from user-returned undefined/null.
@@ -17,13 +17,13 @@ export const hasPendingArg = (args: any[]): boolean => {
   return args.some((v) => Pending.is(v));
 };
 
-const isTable = (value: any): value is Table => {
-  return value?.__isTable === true;
+const isSheet = (value: any): value is Sheet => {
+  return value?.__isSheet === true;
 };
 
 /**
  * Recursively check whether any value in the structure is a Pending sentinel.
- * Handles flat values, nested arrays, and Table objects (via getFieldMatrix).
+ * Handles flat values, nested arrays, and Sheet objects (via getFieldMatrix).
  */
 export const hasDeepPending = (values: any[], at: Id): boolean => {
   for (const v of values) {
@@ -40,7 +40,7 @@ export const hasDeepPending = (values: any[], at: Id): boolean => {
         return true;
       }
     }
-    if (isTable(v)) {
+    if (isSheet(v)) {
       if (hasDeepPending(v._toValueMatrix({ at }), at)) {
         return true;
       }
@@ -75,13 +75,13 @@ const cyrb53 = (str: string, seed = 0): number => {
  *   - length: byte length of the JSON-serialised args
  *   - hash:   cyrb53 hash of the JSON string, repeated hashPrecision times with different seeds
  *
- * When a Table appears as an argument its trimmed area is converted to a
+ * When a Sheet appears as an argument its trimmed area is converted to a
  * value matrix (`any[][]`) via `getFieldMatrix()` so the key reflects the
  * actual cell values the function will operate on.
  */
 export const buildAsyncCacheKey = (funcName: string, args: any[], hashPrecision: number = 1): string => {
   const argsJson = JSON.stringify(args, (_key, value) => {
-    if (isTable(value)) {
+    if (isSheet(value)) {
       return value.toValueMatrix();
     }
     if (Pending.is(value)) {
@@ -102,13 +102,13 @@ export const buildAsyncCacheKey = (funcName: string, args: any[], hashPrecision:
  * - asyncCacheMiss if no cache/pending exists (distinguishes from user-returned undefined/null)
  */
 export const getAsyncCache = (
-  table: { wire: Wire; getId: (p: PointType) => string },
+  sheet: { binding: Binding; getId: (p: PointType) => string },
   id: Id,
   key: string,
   useInflight: boolean = false,
 ): any => {
-  const wire = table.wire;
-  const cell: CellType | undefined = wire.data[id];
+  const binding = sheet.binding;
+  const cell: CellType | undefined = binding.data[id];
 
   if (cell == null) {
     return asyncCacheMiss;
@@ -132,20 +132,20 @@ export const getAsyncCache = (
   const compositeKey = `${id}:${key}`;
 
   // Check if there is already a pending promise for this cell+key
-  if (wire.asyncPending.has(compositeKey)) {
-    return wire.asyncPending.get(compositeKey)!;
+  if (binding.asyncPending.has(compositeKey)) {
+    return binding.asyncPending.get(compositeKey)!;
   }
 
   // If useInflight is enabled, check for an in-flight promise with the same cache key
-  if (useInflight && wire.asyncInflight?.has(key)) {
-    const inflight = wire.asyncInflight.get(key)!;
+  if (useInflight && binding.asyncInflight?.has(key)) {
+    const inflight = binding.asyncInflight.get(key)!;
     // Track for this cell+key to prevent duplicate `.then` attachment and correctly yield the pending sentinel
-    wire.asyncPending.set(compositeKey, inflight.pending);
+    binding.asyncPending.set(compositeKey, inflight.pending);
 
     // Chain to the shared promise to populate this cell's cache when it resolves
     inflight.pending.promise
       .then((result: any) => {
-        const c = wire.data[id];
+        const c = binding.data[id];
         if (c != null) {
           setAsyncCache(c, key, { value: result, expireTime: inflight.expireTime });
         }
@@ -154,13 +154,13 @@ export const getAsyncCache = (
         if (!FormulaError.is(e)) {
           e = new FormulaError('#ASYNC!', e?.message ?? String(e), e instanceof Error ? e : undefined);
         }
-        const c = wire.data[id];
+        const c = binding.data[id];
         if (c != null) {
           setAsyncCache(c, key, { value: e, expireTime: inflight.expireTime });
         }
       })
       .finally(() => {
-        wire.asyncPending.delete(compositeKey);
+        binding.asyncPending.delete(compositeKey);
       });
 
     return inflight.pending;
@@ -173,8 +173,8 @@ export const getAsyncCache = (
  * Handle an async (Promise) result returned by BaseFunction.main().
  *
  * Cache is stored per-cell in cell.asyncCache.
- * In-flight tracking uses Wire.asyncPending (keyed by cell ID).
- * If useInflight is true, also tracks by cache key in Wire.asyncInflight.
+ * In-flight tracking uses Binding.asyncPending (keyed by cell ID).
+ * If useInflight is true, also tracks by cache key in Binding.asyncInflight.
  *
  * Flow:
  * 1. If cell has asyncCache and the key matches (inputs unchanged) and not expired → return cached value
@@ -188,13 +188,13 @@ export const getAsyncCache = (
  */
 export const awaitAndSave = (
   promise: Promise<any>,
-  table: { wire: Wire; getId: (p: PointType) => string },
+  sheet: { binding: Binding; getId: (p: PointType) => string },
   id: Id,
   key: string,
   ttlMilliseconds?: number,
   useInflight: boolean = false,
 ): Pending => {
-  const wire = table.wire;
+  const binding = sheet.binding;
 
   // Compute expireTime from ttl (ms)
   const expireTime = ttlMilliseconds != null ? Date.now() + ttlMilliseconds : undefined;
@@ -203,19 +203,19 @@ export const awaitAndSave = (
 
   // Start the async computation
   const pending = new Pending(promise);
-  wire.asyncPending.set(compositeKey, pending);
+  binding.asyncPending.set(compositeKey, pending);
 
   // If useInflight is enabled, also track by cache key
   if (useInflight) {
-    if (!wire.asyncInflight) {
-      wire.asyncInflight = new Map();
+    if (!binding.asyncInflight) {
+      binding.asyncInflight = new Map();
     }
-    wire.asyncInflight.set(key, { pending, expireTime });
+    binding.asyncInflight.set(key, { pending, expireTime });
   }
 
   promise
     .then((result: any) => {
-      const c = wire.data[id];
+      const c = binding.data[id];
       if (c != null) {
         setAsyncCache(c, key, { value: result, expireTime });
       }
@@ -224,23 +224,23 @@ export const awaitAndSave = (
       if (!FormulaError.is(e)) {
         e = new FormulaError('#ASYNC!', e?.message ?? String(e), e instanceof Error ? e : undefined);
       }
-      const c = wire.data[id];
+      const c = binding.data[id];
       if (c != null) {
         setAsyncCache(c, key, { value: e, expireTime });
       }
     })
     .finally(() => {
-      wire.asyncPending.delete(compositeKey);
+      binding.asyncPending.delete(compositeKey);
       // If useInflight was enabled, also remove from asyncInflight
       if (useInflight) {
-        if (wire.asyncInflight) {
-          wire.asyncInflight.delete(key);
+        if (binding.asyncInflight) {
+          binding.asyncInflight.delete(key);
         }
       }
       // Clear solvedCaches so dependent formulas re-evaluate
-      wire.solvedCaches.clear();
+      binding.solvedCaches.clear();
       // Trigger re-render of all sheets
-      wire.transmit();
+      binding.transmit();
     });
 
   return pending;

@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, buildInitialCells, Policy, CheckboxPolicyMixin, useHub } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells, Policy, CheckboxPolicyMixin, useBook } from '@gridsheet/react-core';
 import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
@@ -17,7 +17,7 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const SortFilterSheet = () => {
-  const hub = useHub({
+  const book = useBook({
     additionalFunctions: allFunctions,
     policies: {
       checkbox: new Policy({ mixins: [CheckboxPolicyMixin] }),
@@ -25,7 +25,7 @@ const SortFilterSheet = () => {
   });
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       options={{
         sheetResize: 'both',
       }}

@@ -1,5 +1,5 @@
 import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { Table, solveTable } from '@gridsheet/react-core';
+import { Sheet, solveSheet } from '@gridsheet/react-core';
 import { ensureNumber } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
@@ -22,9 +22,9 @@ export class ProductFunction extends BaseFunction {
   protected validate(args: any[]): any[] {
     const spreaded: number[] = [];
     args.forEach((arg) => {
-      if (arg instanceof Table) {
+      if (arg instanceof Sheet) {
         spreaded.push(
-          ...solveTable({ table: arg })
+          ...solveSheet({ sheet: arg })
             .reduce((a, b) => a.concat(b))
             .filter((v: any) => typeof v === 'number'),
         );

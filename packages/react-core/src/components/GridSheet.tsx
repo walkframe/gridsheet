@@ -10,14 +10,14 @@ import { Emitter } from './Emitter';
 import { ContextMenu, defaultContextMenuItems } from './ContextMenu';
 import { ColumnMenu } from './ColumnMenu';
 import { RowMenu } from './RowMenu';
-import { Table } from '../lib/table';
+import { Sheet } from '../lib/sheet';
 import { Tabular } from './Tabular';
 import { getMaxSizesFromCells } from '../lib/spatial';
 import { x2c, y2r } from '../lib/coords';
 import { embedStyle } from '../styles/embedder';
 import { FormulaBar } from './FormulaBar';
 import { SearchBar } from './SearchBar';
-import { useHub } from '../lib/hub';
+import { useBook } from '../lib/hub';
 import { ScrollHandle } from './ScrollHandle';
 
 export const createConnector = () => createRef<Connector | null>();
@@ -30,7 +30,7 @@ export function GridSheet({
   options = {},
   className,
   style,
-  hub: initialHub,
+  book: initialHub,
 }: Props) {
   const { sheetResize, showFormulaBar = true, mode = 'light' } = options;
   const rootRef = useRef<HTMLDivElement>(null);
@@ -44,19 +44,19 @@ export function GridSheet({
   const internalConnector = useConnector();
   const connector = initialConnector ?? internalConnector;
 
-  const internalHub = useHub({});
-  const hub = initialHub ?? internalHub;
-  const { wire } = hub;
+  const internalHub = useBook({});
+  const book = initialHub ?? internalHub;
+  const { binding } = book;
 
   // useRef to manage sheetId and avoid Strict Mode issues
   const sheetIdRef = useRef<number | null>(null);
   if (sheetIdRef.current === null) {
-    sheetIdRef.current = ++wire.sheetHead;
+    sheetIdRef.current = ++binding.sheetHead;
   }
   const sheetId = sheetIdRef.current;
 
-  // Initialize tableReactive
-  const tableReactive = useRef<Table | null>(null);
+  // Initialize sheetReactive
+  const sheetReactive = useRef<Sheet | null>(null);
 
   const [initialState] = useState<StoreType>(() => {
     if (!sheetName) {
@@ -64,26 +64,26 @@ export function GridSheet({
       console.debug('GridSheet: sheetName is not provided, using default name:', sheetName);
     }
     const { minNumRows, maxNumRows, minNumCols, maxNumCols, contextMenuItems } = options;
-    const table = new Table({
+    const sheet = new Sheet({
       minNumRows,
       maxNumRows,
       minNumCols,
       maxNumCols,
       sheetName,
-      hub: wire,
+      book: binding,
     });
-    table.sheetId = sheetId;
-    wire.sheetIdsByName[sheetName] = sheetId;
+    sheet.sheetId = sheetId;
+    binding.sheetIdsByName[sheetName] = sheetId;
 
-    table.initialize(initialCells);
-    wire.onInit?.({ table });
+    sheet.initialize(initialCells);
+    binding.onInit?.({ sheet });
 
-    table.setTotalSize();
-    tableReactive.current = table;
+    sheet.setTotalSize();
+    sheetReactive.current = sheet;
 
     const store: StoreType = {
       sheetId,
-      tableReactive,
+      sheetReactive,
       rootRef,
       flashRef,
       mainRef,
@@ -160,26 +160,30 @@ export function GridSheet({
   return (
     <Context.Provider value={{ store, dispatch }}>
       <div
-        className={`gs-root1 ${wire.ready ? 'gs-initialized' : ''}`}
+        className={`gs-root1 ${binding.ready ? 'gs-initialized' : ''}`}
         ref={rootRef}
         data-sheet-name={sheetName}
         data-mode={mode}
-        data-rows={store.tableReactive.current?.getNumRows() ?? 0}
-        data-cols={store.tableReactive.current?.getNumCols() ?? 0}
+        data-rows={store.sheetReactive.current?.getNumRows() ?? 0}
+        data-cols={store.sheetReactive.current?.getNumCols() ?? 0}
       >
         <div className="gs-flash-overlay" ref={flashRef} />
         <ScrollHandle style={{ position: 'fixed', top: 0, left: 0 }} />
         <ScrollHandle style={{ position: 'absolute', zIndex: 4, right: 0, top: 0, width: 5 }} horizontal={1} />
         <ScrollHandle style={{ position: 'absolute', zIndex: 4, left: 0, bottom: 0, height: 5 }} vertical={1} />
 
-        {typeof store.searchQuery === 'undefined' ? showFormulaBar && <FormulaBar ready={wire.ready} /> : <SearchBar />}
+        {typeof store.searchQuery === 'undefined' ? (
+          showFormulaBar && <FormulaBar ready={binding.ready} />
+        ) : (
+          <SearchBar />
+        )}
         <div
           className={`gs-main ${className || ''}`}
           ref={mainRef}
           style={{
             //width: '100%',
-            maxWidth: (store.tableReactive.current?.totalWidth || 0) + 2,
-            maxHeight: (store.tableReactive.current?.fullHeight || 0) + 2,
+            maxWidth: (store.sheetReactive.current?.totalWidth || 0) + 2,
+            maxHeight: (store.sheetReactive.current?.fullHeight || 0) + 2,
             overflow: 'auto',
             resize: sheetResize,
             ...style,

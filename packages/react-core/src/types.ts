@@ -1,6 +1,6 @@
-import type { UserTable, Table } from './lib/table';
+import type { UserSheet, Sheet } from './lib/sheet';
 import type { FC, RefObject } from 'react';
-import type { HubType, TransmitProps } from './lib/hub';
+import type { BookType, TransmitProps } from './lib/hub';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import type { PolicyType } from './policy/core';
 import type { Dispatcher } from './store';
@@ -27,7 +27,7 @@ export type CursorStateType = {
   selectingTo: PointType;
 };
 
-export type FeedbackType = (args: { table: UserTable; points?: CursorStateType }) => void;
+export type FeedbackType = (args: { sheet: UserSheet; points?: CursorStateType }) => void;
 
 export type ModeType = 'light' | 'dark';
 export type HeadersType = 'both' | 'vertical' | 'horizontal' | 'none';
@@ -43,9 +43,9 @@ export type System = {
   id?: string;
   sheetId?: number;
   changedTime?: number;
-  /** Cumulative top offset (px) from table origin. Set on row-header cells (x=0). */
+  /** Cumulative top offset (px) from sheet origin. Set on row-header cells (x=0). */
   offsetTop?: number;
-  /** Cumulative left offset (px) from table origin. Set on col-header cells (y=0). */
+  /** Cumulative left offset (px) from sheet origin. Set on col-header cells (y=0). */
   offsetLeft?: number;
   tmpAsyncCaches?: Record<string, AsyncCache>;
   /** Address of the origin cell whose array formula spilled its value into this cell. */
@@ -124,7 +124,7 @@ export type OptionsType = {
 
 export type RangeType = { start: number; end: number }; // [start, end]
 export type PointType = { y: Y; x: X }; // {y, x}
-export type ExtraPointType = { y: Y; x: X; absY?: boolean; absX?: boolean; table?: Table };
+export type ExtraPointType = { y: Y; x: X; absY?: boolean; absX?: boolean; sheet?: Sheet };
 export type PositionType = { y: Y; x: X }; // {y, x}
 export type ZoneType = { startY: Y; startX: X; endY: Y; endX: X };
 export type AreaType = { top: Y; left: X; bottom: Y; right: X };
@@ -133,7 +133,7 @@ export type WriterType = (value: string) => void;
 
 export type StoreType = {
   sheetId: number;
-  tableReactive: RefObject<Table>;
+  sheetReactive: RefObject<Sheet>;
   rootRef: RefObject<HTMLDivElement>;
   flashRef: RefObject<HTMLDivElement>;
   mainRef: RefObject<HTMLDivElement>;
@@ -181,9 +181,9 @@ export type Manager<T> = {
 };
 
 export type Connector = {
-  tableManager: {
-    table: UserTable;
-    sync: (table: UserTable) => void;
+  sheetManager: {
+    sheet: UserSheet;
+    sync: (sheet: UserSheet) => void;
   };
   storeManager: {
     store: StoreType;
@@ -195,7 +195,7 @@ export type Connector = {
 export type Props = {
   initialCells: CellsByAddressType;
   sheetName?: string;
-  hub?: HubType;
+  book?: BookType;
   connector?: RefObject<Connector | null>;
   options?: OptionsType;
   className?: string;

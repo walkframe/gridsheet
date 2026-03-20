@@ -1,5 +1,5 @@
-import { stripTable, solveTable } from '../solver';
-import { Table } from '../../lib/table';
+import { stripSheet, solveSheet } from '../solver';
+import { Sheet } from '../../lib/sheet';
 import { FormulaError } from '../formula-error';
 import dayjs from 'dayjs';
 import { FULLDATE_FORMAT_UTC } from '../../constants';
@@ -66,8 +66,8 @@ export const ensureNumber = (value: any, options?: EnsureNumberOptions): number 
     // falsy is 0
     return 0;
   }
-  if (value instanceof Table) {
-    const v = stripTable({ value });
+  if (value instanceof Sheet) {
+    const v = stripSheet({ value });
     return ensureNumber(v, { alternative });
   }
   if (value instanceof Date) {
@@ -101,8 +101,8 @@ export const ensureString = (value: any): string => {
   if (!value) {
     return '';
   }
-  if (value instanceof Table) {
-    const v = stripTable({ value });
+  if (value instanceof Sheet) {
+    const v = stripSheet({ value });
     return ensureString(v);
   }
   switch (value.constructor.name) {
@@ -126,8 +126,8 @@ export const ensureBoolean = (value: any, options?: EnsureBooleanOptions): boole
   if (value === null) {
     return false;
   }
-  if (value instanceof Table) {
-    const v = stripTable({ value });
+  if (value instanceof Sheet) {
+    const v = stripSheet({ value });
     return ensureBoolean(v, options);
   }
   if (typeof value === 'string' || value instanceof String) {
@@ -185,8 +185,8 @@ export const check = (value: any, condition: string): boolean => {
 };
 
 export const eachMatrix = (value: any, callback: (v: any, relativePoint: PointType) => void, at: Id) => {
-  if (value instanceof Table) {
-    const matrix = solveTable({ table: value, at });
+  if (value instanceof Sheet) {
+    const matrix = solveSheet({ sheet: value, at });
     for (let y = 0; y < matrix.length; y++) {
       for (let x = 0; x < matrix[y].length; x++) {
         callback(matrix[y][x], { y, x });
@@ -210,18 +210,18 @@ export const eachMatrix = (value: any, callback: (v: any, relativePoint: PointTy
   }
 };
 
-export const createBooleanMask = (tables: Table[], conditions: string[], at: Id): boolean[][] => {
-  if (tables.length === 0) {
+export const createBooleanMask = (sheets: Sheet[], conditions: string[], at: Id): boolean[][] => {
+  if (sheets.length === 0) {
     return [];
   }
-  const refRange = tables[0];
+  const refRange = sheets[0];
   const numRows = refRange.getNumRows();
   const numCols = refRange.getNumCols();
 
   const mask: boolean[][] = Array.from({ length: numRows }, () => Array(numCols).fill(true));
 
-  for (let p = 0; p < tables.length; p++) {
-    const condRange = tables[p];
+  for (let p = 0; p < sheets.length; p++) {
+    const condRange = sheets[p];
     const condition = conditions[p];
     eachMatrix(
       condRange,

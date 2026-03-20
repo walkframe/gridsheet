@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, buildInitialCells, useConnector, useHub, addressesToAreas } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells, useConnector, useBook, addressesToAreas } from '@gridsheet/react-core';
 import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
@@ -78,24 +78,24 @@ const SheetOnEditComponent: React.FC = () => {
   const [sheet1History, setSheet1History] = React.useState<HistoryEntry[]>([]);
   const [sheet2History, setSheet2History] = React.useState<HistoryEntry[]>([]);
 
-  const hub = useHub({
+  const book = useBook({
     additionalFunctions: allFunctions,
-    onChange: ({ table }) => {
-      const addresses = table.getLastChangedAddresses();
+    onChange: ({ sheet }) => {
+      const addresses = sheet.getLastChangedAddresses();
       if (addresses.length === 0) {
         return;
       }
-      const data = table.toCellObject({ addresses, ignoreFields: ['_sys', 'style', 'prevention'] });
+      const data = sheet.toCellObject({ addresses, ignoreFields: ['_sys', 'style', 'prevention'] });
       const areas = addressesToAreas(addresses);
       const area = areas[0] ?? { top: 0, left: 0, bottom: 0, right: 0 };
       const info: HistoryEntry = {
         operation: 'EDIT',
         area,
-        sheetName: table.sheetName,
+        sheetName: sheet.sheetName,
         timestamp: new Date().toLocaleTimeString(),
         data,
       };
-      if (table.sheetName === 'Sheet1') {
+      if (sheet.sheetName === 'Sheet1') {
         setSheet1History((prev) => [info, ...prev.slice(0, 9)]);
       } else {
         setSheet2History((prev) => [info, ...prev.slice(0, 9)]);
@@ -111,7 +111,7 @@ const SheetOnEditComponent: React.FC = () => {
             <h4 style={{ textAlign: 'center', marginBottom: '10px' }}>Sheet 1</h4>
             <GridSheet
               sheetName="Sheet1"
-              hub={hub}
+              book={book}
               initialCells={buildInitialCells({
                 matrices: {
                   A1: [
@@ -145,7 +145,7 @@ const SheetOnEditComponent: React.FC = () => {
             <h4 style={{ textAlign: 'center', marginBottom: '10px' }}>Sheet 2</h4>
             <GridSheet
               sheetName="Sheet2"
-              hub={hub}
+              book={book}
               initialCells={buildInitialCells({
                 matrices: {
                   A1: [

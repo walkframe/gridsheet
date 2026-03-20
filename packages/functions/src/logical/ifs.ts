@@ -1,6 +1,6 @@
 import { BaseFunction, FormulaError } from '@gridsheet/react-core';
 import { type FunctionProps, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { stripTable } from '@gridsheet/react-core';
+import { stripSheet } from '@gridsheet/react-core';
 import { ensureBoolean } from '@gridsheet/react-core';
 
 const description = `Evaluates multiple conditions and returns the value corresponding to the first TRUE condition.
@@ -49,11 +49,11 @@ export class IfsFunction extends BaseFunction {
       const condExpr = this.lazyArgs[i];
       const valExpr = this.lazyArgs[i + 1];
 
-      const condRaw = condExpr.evaluate({ table: this.table });
-      const cond = ensureBoolean(stripTable({ value: condRaw }));
+      const condRaw = condExpr.evaluate({ sheet: this.sheet });
+      const cond = ensureBoolean(stripSheet({ value: condRaw }));
 
       if (cond) {
-        return stripTable({ value: valExpr.evaluate({ table: this.table }) });
+        return stripSheet({ value: valExpr.evaluate({ sheet: this.sheet }) });
       }
     }
 

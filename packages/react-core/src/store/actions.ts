@@ -14,7 +14,7 @@ import {
   FilterConfig,
 } from '../types';
 import { zoneToArea, superposeArea, matrixShape, areaShape, areaToZone, zoneShape, restrictZone } from '../lib/spatial';
-import { Table } from '../lib/table';
+import { Sheet } from '../lib/sheet';
 
 import { p2a, a2p } from '../lib/coords';
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '../constants';
@@ -65,13 +65,13 @@ export class CoreAction<T> {
 class SetSearchQueryAction<T extends string | undefined> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const searchQuery = payload;
-    const { tableReactive: tableRef } = store;
-    if (tableRef.current == null) {
+    const { sheetReactive: sheetRef } = store;
+    if (sheetRef.current == null) {
       return store;
     }
     return {
       ...store,
-      ...initSearchStatement(tableRef.current, { ...store, searchQuery }),
+      ...initSearchStatement(sheetRef.current, { ...store, searchQuery }),
       searchQuery,
     };
   }
@@ -81,13 +81,13 @@ export const setSearchQuery = new SetSearchQueryAction().bind();
 class SetSearchCaseSensitiveAction<T extends boolean> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const searchCaseSensitive = payload;
-    const { tableReactive: tableRef } = store;
-    if (tableRef.current == null) {
+    const { sheetReactive: sheetRef } = store;
+    if (sheetRef.current == null) {
       return store;
     }
     return {
       ...store,
-      ...initSearchStatement(tableRef.current, { ...store, searchCaseSensitive }),
+      ...initSearchStatement(sheetRef.current, { ...store, searchCaseSensitive }),
       searchCaseSensitive,
     };
   }
@@ -97,13 +97,13 @@ export const setSearchCaseSensitive = new SetSearchCaseSensitiveAction().bind();
 class SetSearchRegexAction<T extends boolean> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const searchRegex = payload;
-    const { tableReactive: tableRef } = store;
-    if (tableRef.current == null) {
+    const { sheetReactive: sheetRef } = store;
+    if (sheetRef.current == null) {
       return store;
     }
     return {
       ...store,
-      ...initSearchStatement(tableRef.current, { ...store, searchRegex }),
+      ...initSearchStatement(sheetRef.current, { ...store, searchRegex }),
       searchRegex,
     };
   }
@@ -113,13 +113,13 @@ export const setSearchRegex = new SetSearchRegexAction().bind();
 class SetSearchRangeAction<T extends ZoneType | undefined> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const searchRange = payload;
-    const { tableReactive: tableRef } = store;
-    if (tableRef.current == null) {
+    const { sheetReactive: sheetRef } = store;
+    if (sheetRef.current == null) {
       return store;
     }
     return {
       ...store,
-      ...initSearchStatement(tableRef.current, { ...store, searchRange }),
+      ...initSearchStatement(sheetRef.current, { ...store, searchRange }),
       searchRange,
     };
   }
@@ -149,14 +149,14 @@ export const setAutofillDraggingTo = new SetAutofillDraggingToAction().bind();
 class SubmitAutofillAction<T extends PointType> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const autofill = new Autofill(store, payload);
-    const table = autofill.applied;
+    const sheet = autofill.applied;
     const selectingZone = areaToZone(autofill.wholeArea);
 
     return {
       ...store,
-      tableReactive: { current: table },
-      ...initSearchStatement(table, store),
-      ...restrictPoints(store, table),
+      sheetReactive: { current: sheet },
+      ...initSearchStatement(sheet, store),
+      ...restrictPoints(store, sheet),
       selectingZone,
       leftHeaderSelecting: false,
       topHeaderSelecting: false,
@@ -206,17 +206,17 @@ class SetEnteringAction<T extends boolean> extends CoreAction<T> {
 }
 export const setEntering = new SetEnteringAction().bind();
 
-class UpdateTableAction<T extends Table> extends CoreAction<T> {
+class UpdateSheetAction<T extends Sheet> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     return {
       ...store,
-      tableReactive: { current: payload },
+      sheetReactive: { current: payload },
       ...initSearchStatement(payload, store),
       ...restrictPoints(store, payload),
     };
   }
 }
-export const updateTable = new UpdateTableAction().bind();
+export const updateSheet = new UpdateSheetAction().bind();
 
 class SetEditorRectAction<T extends RectType> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
@@ -250,16 +250,16 @@ export const blur = new BlurAction().bind();
 
 class CopyAction<T extends ZoneType> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
-    const { tableReactive: tableRef } = store;
-    const table = tableRef.current;
-    if (!table) {
+    const { sheetReactive: sheetRef } = store;
+    const sheet = sheetRef.current;
+    if (!sheet) {
       return store;
     }
     return {
       ...store,
-      callback: ({ tableReactive: tableRef }) => {
-        table.wire.transmit({
-          copyingSheetId: table.sheetId,
+      callback: ({ sheetReactive: sheetRef }) => {
+        sheet.binding.transmit({
+          copyingSheetId: sheet.sheetId,
           copyingZone: payload,
           cutting: false,
         });
@@ -271,16 +271,16 @@ export const copy = new CopyAction().bind();
 
 class CutAction<T extends ZoneType> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
-    const { tableReactive: tableRef } = store;
-    const table = tableRef.current;
-    if (!table) {
+    const { sheetReactive: sheetRef } = store;
+    const sheet = sheetRef.current;
+    if (!sheet) {
       return store;
     }
     return {
       ...store,
-      callback: ({ tableReactive: tableRef }) => {
-        table.wire.transmit({
-          copyingSheetId: table.sheetId,
+      callback: ({ sheetReactive: sheetRef }) => {
+        sheet.binding.transmit({
+          copyingSheetId: sheet.sheetId,
           copyingZone: payload,
           cutting: true,
         });
@@ -292,21 +292,21 @@ export const cut = new CutAction().bind();
 
 class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
-    const { choosing, selectingZone, tableReactive: dstTableRef } = store;
-    const dstTable = dstTableRef.current;
-    if (!dstTable) {
+    const { choosing, selectingZone, sheetReactive: dstSheetRef } = store;
+    const dstSheet = dstSheetRef.current;
+    if (!dstSheet) {
       return store;
     }
-    const { wire } = dstTable;
-    const { copyingSheetId, copyingZone, cutting } = wire;
-    const srcTable = dstTable.getTableBySheetId(copyingSheetId);
+    const { binding } = dstSheet;
+    const { copyingSheetId, copyingZone, cutting } = binding;
+    const srcSheet = dstSheet.getSheetBySheetId(copyingSheetId);
 
     let selectingArea = zoneToArea(selectingZone);
     const copyingArea = zoneToArea(copyingZone);
     const { matrix, onlyValue } = payload;
 
     if (cutting) {
-      if (!srcTable) {
+      if (!srcSheet) {
         return store;
       }
       const src = copyingArea;
@@ -327,32 +327,32 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
             };
 
       const nextSelectingZone = restrictZone(areaToZone(dst));
-      const newTable = dstTable.move({
-        srcTable,
+      const newSheet = dstSheet.move({
+        srcSheet,
         src,
         dst,
         operator: 'USER',
         undoReflection: {
-          sheetId: srcTable.sheetId,
+          sheetId: srcSheet.sheetId,
           selectingZone: nextSelectingZone,
           choosing,
-          transmit: { copyingSheetId: srcTable.sheetId, copyingZone, cutting: true },
+          transmit: { copyingSheetId: srcSheet.sheetId, copyingZone, cutting: true },
         },
         redoReflection: {
-          sheetId: srcTable.sheetId,
+          sheetId: srcSheet.sheetId,
           choosing,
-          transmit: { copyingSheetId: srcTable.sheetId, copyingZone: resetZone },
+          transmit: { copyingSheetId: srcSheet.sheetId, copyingZone: resetZone },
         },
       });
 
       return {
         ...store,
-        ...initSearchStatement(newTable, store),
-        tableReactive: { current: newTable },
+        ...initSearchStatement(newSheet, store),
+        sheetReactive: { current: newSheet },
         selectingZone: nextSelectingZone,
-        inputting: newTable.stringify({ point: choosing, refEvaluation: 'RAW' }),
-        callback: ({ tableReactive: tableRef }) => {
-          wire.transmit({
+        inputting: newSheet.stringify({ point: choosing, refEvaluation: 'RAW' }),
+        callback: ({ sheetReactive: sheetRef }) => {
+          binding.transmit({
             cutting: false,
             copyingZone: resetZone,
           });
@@ -360,7 +360,7 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
       };
     }
 
-    let newTable: Table;
+    let newSheet: Sheet;
     let { y, x } = choosing;
 
     if (copyingArea.top === -1) {
@@ -372,23 +372,23 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
         right: x + width,
       };
       const nextSelectingZone = restrictZone(areaToZone(selectingArea));
-      newTable = dstTable.writeRawCellMatrix({
+      newSheet = dstSheet.writeRawCellMatrix({
         point: { y, x },
         matrix,
         onlyValue,
         undoReflection: {
-          sheetId: dstTable.sheetId,
+          sheetId: dstSheet.sheetId,
           selectingZone: nextSelectingZone,
           choosing,
         },
         redoReflection: {
-          sheetId: dstTable.sheetId,
+          sheetId: dstSheet.sheetId,
           selectingZone: nextSelectingZone,
           choosing,
         },
       });
     } else {
-      if (srcTable == null) {
+      if (srcSheet == null) {
         return store;
       }
       let { rows: height, cols: width } = areaShape(copyingArea);
@@ -400,21 +400,21 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
         width = superposed.cols;
       }
       selectingArea = { top: y, left: x, bottom: y + height, right: x + width };
-      newTable = dstTable.copy({
-        srcTable,
+      newSheet = dstSheet.copy({
+        srcSheet,
         src: copyingArea,
         dst: selectingArea,
         onlyValue,
         operator: 'USER',
         undoReflection: {
-          sheetId: srcTable.sheetId,
+          sheetId: srcSheet.sheetId,
           transmit: { copyingZone },
           choosing,
           selectingZone,
         },
         redoReflection: {
-          sheetId: srcTable.sheetId,
-          transmit: { copyingSheetId: srcTable.sheetId, copyingZone: resetZone },
+          sheetId: srcSheet.sheetId,
+          transmit: { copyingSheetId: srcSheet.sheetId, copyingZone: resetZone },
           choosing,
           selectingZone: areaToZone(selectingArea),
         },
@@ -422,16 +422,16 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
     }
 
     const nextSelectingZone = restrictZone(areaToZone(selectingArea));
-    nextSelectingZone.endX = Math.min(nextSelectingZone.endX, newTable.getNumCols());
-    nextSelectingZone.endY = Math.min(nextSelectingZone.endY, newTable.getNumRows());
+    nextSelectingZone.endX = Math.min(nextSelectingZone.endX, newSheet.getNumCols());
+    nextSelectingZone.endY = Math.min(nextSelectingZone.endY, newSheet.getNumRows());
     return {
       ...store,
-      tableReactive: { current: newTable },
+      sheetReactive: { current: newSheet },
       selectingZone: nextSelectingZone,
-      inputting: newTable.stringify({ point: choosing, refEvaluation: 'RAW' }),
-      ...initSearchStatement(newTable, store),
-      callback: ({ tableReactive: tableRef }) => {
-        wire.transmit({
+      inputting: newSheet.stringify({ point: choosing, refEvaluation: 'RAW' }),
+      ...initSearchStatement(newSheet, store),
+      callback: ({ sheetReactive: sheetRef }) => {
+        binding.transmit({
           copyingZone: resetZone,
         });
       },
@@ -442,14 +442,14 @@ export const paste = new PasteAction().bind();
 
 class EscapeAction<T extends null> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
-    const { tableReactive: tableRef } = store;
+    const { sheetReactive: sheetRef } = store;
     return {
       ...store,
       editingAddress: '',
       leftHeaderSelecting: false,
       topHeaderSelecting: false,
-      callback: ({ tableReactive: tableRef }) => {
-        tableRef.current!.wire.transmit({
+      callback: ({ sheetReactive: sheetRef }) => {
+        sheetRef.current!.binding.transmit({
           copyingZone: resetZone,
           cutting: false,
         });
@@ -486,7 +486,7 @@ class SelectRowsAction<T extends { range: RangeType; numCols: number }> extends 
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { range, numCols } = payload;
     const { start, end } = range;
-    const table = store.tableReactive.current;
+    const sheet = store.sheetReactive.current;
     const selectingZone = {
       startY: start,
       startX: 1,
@@ -495,9 +495,9 @@ class SelectRowsAction<T extends { range: RangeType; numCols: number }> extends 
     };
     // Find the first non-filtered row in the selection for choosing
     let choosingY = start;
-    if (table) {
+    if (sheet) {
       for (let y = start; y <= end; y++) {
-        if (!table.isRowFiltered(y)) {
+        if (!sheet.isRowFiltered(y)) {
           choosingY = y;
           break;
         }
@@ -518,7 +518,7 @@ class SelectColsAction<T extends { range: RangeType; numRows: number }> extends 
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { range, numRows } = payload;
     const { start, end } = range;
-    const table = store.tableReactive.current;
+    const sheet = store.sheetReactive.current;
     const selectingZone = {
       startY: 1,
       startX: start,
@@ -528,9 +528,9 @@ class SelectColsAction<T extends { range: RangeType; numRows: number }> extends 
     // Find the first non-filtered row (y=1 is always visible for columns, use y=1)
     // For columns there is no column-level filter, so choosing y=1 (first data row visible)
     let choosingY = 1;
-    if (table) {
+    if (sheet) {
       for (let y = 1; y <= numRows; y++) {
-        if (!table.isRowFiltered(y)) {
+        if (!sheet.isRowFiltered(y)) {
           choosingY = y;
           break;
         }
@@ -588,35 +588,35 @@ export const search = new SearchAction().bind();
 class WriteAction<T extends { value: string; point?: PointType }> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     let { value, point } = payload;
-    const { choosing, selectingZone, tableReactive: tableRef } = store;
+    const { choosing, selectingZone, sheetReactive: sheetRef } = store;
     if (point == null) {
       point = choosing;
     }
-    const table = tableRef.current;
-    if (!table) {
+    const sheet = sheetRef.current;
+    if (!sheet) {
       return store;
     }
-    const newTable = table.write({
+    const newSheet = sheet.write({
       point: point,
       value,
       operator: 'USER',
       undoReflection: {
-        sheetId: table.sheetId,
+        sheetId: sheet.sheetId,
         selectingZone,
         choosing: point,
       },
       redoReflection: {
-        sheetId: table.sheetId,
+        sheetId: sheet.sheetId,
         selectingZone,
         choosing: point,
       },
     });
     return {
       ...store,
-      ...initSearchStatement(newTable, store),
-      tableReactive: { current: newTable },
-      callback: ({ tableReactive: tableRef }) => {
-        table.wire.transmit({
+      ...initSearchStatement(newSheet, store),
+      sheetReactive: { current: newSheet },
+      callback: ({ sheetReactive: sheetRef }) => {
+        sheet.binding.transmit({
           copyingZone: resetZone,
         });
       },
@@ -627,9 +627,9 @@ export const write = new WriteAction().bind();
 
 class ClearAction<T extends null> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
-    const { choosing, selectingZone, tableReactive: tableRef } = store;
-    const table = tableRef.current;
-    if (!table) {
+    const { choosing, selectingZone, sheetReactive: sheetRef } = store;
+    const sheet = sheetRef.current;
+    if (!sheet) {
       return store;
     }
 
@@ -642,11 +642,11 @@ class ClearAction<T extends null> extends CoreAction<T> {
     const diff: CellsByAddressType = {};
     let diffCount = 0;
     for (let y = top; y <= bottom; y++) {
-      if (table.isRowFiltered(y)) {
+      if (sheet.isRowFiltered(y)) {
         continue;
       }
       for (let x = left; x <= right; x++) {
-        const cell = table.getCellByPoint({ y, x }, 'SYSTEM');
+        const cell = sheet.getCellByPoint({ y, x }, 'SYSTEM');
         const address = p2a({ y, x });
         if (prevention.hasOperation(cell?.prevention, prevention.Write)) {
           continue;
@@ -660,25 +660,25 @@ class ClearAction<T extends null> extends CoreAction<T> {
     if (diffCount === 0) {
       return store;
     }
-    table.update({
+    sheet.update({
       diff,
       partial: true,
       operator: 'USER',
       undoReflection: {
-        sheetId: table.sheetId,
+        sheetId: sheet.sheetId,
         selectingZone,
         choosing,
       },
       redoReflection: {
-        sheetId: table.sheetId,
+        sheetId: sheet.sheetId,
         selectingZone,
         choosing,
       },
     });
     return {
       ...store,
-      ...initSearchStatement(table, store),
-      tableReactive: { current: table },
+      ...initSearchStatement(sheet, store),
+      sheetReactive: { current: sheet },
     };
   }
 }
@@ -686,38 +686,38 @@ export const clear = new ClearAction().bind();
 
 class UndoAction<T extends null> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
-    const { tableReactive: tableRef } = store;
-    const table = tableRef.current;
-    if (!table) {
+    const { sheetReactive: sheetRef } = store;
+    const sheet = sheetRef.current;
+    if (!sheet) {
       return store;
     }
-    const { history, callback } = table.undo();
+    const { history, callback } = sheet.undo();
     if (history == null) {
       return store;
     }
-    if (history.dstSheetId !== table.sheetId) {
-      const { dispatch, store: dstStore } = table.wire.contextsBySheetId[history.dstSheetId];
+    if (history.dstSheetId !== sheet.sheetId) {
+      const { dispatch, store: dstStore } = sheet.binding.contextsBySheetId[history.dstSheetId];
       dispatch(
         setStore({
           ...dstStore,
           ...history.undoReflection,
-          tableReactive: { current: dstStore.tableReactive.current },
+          sheetReactive: { current: dstStore.sheetReactive.current },
         }),
       );
       flashSheet(dstStore.flashRef.current);
-      // For cross-sheet MOVE: the src (current) table's lastChangedAddresses was also updated.
-      // Return updated tableReactive so this sheet's Emitter fires onChange.
-      if (history.srcSheetId === table.sheetId) {
-        return flashWithCallback(store, table, callback);
+      // For cross-sheet MOVE: the src (current) sheet's lastChangedAddresses was also updated.
+      // Return updated sheetReactive so this sheet's Emitter fires onChange.
+      if (history.srcSheetId === sheet.sheetId) {
+        return flashWithCallback(store, sheet, callback);
       }
       return store;
     }
     return {
       ...store,
-      ...restrictPoints(store, table),
+      ...restrictPoints(store, sheet),
       ...history.undoReflection,
-      ...initSearchStatement(table, store),
-      tableReactive: { current: table },
+      ...initSearchStatement(sheet, store),
+      sheetReactive: { current: sheet },
       callback: (s: StoreType) => {
         callback?.(s);
         flashSheet(store.flashRef.current);
@@ -729,38 +729,38 @@ export const undo = new UndoAction().bind();
 
 class RedoAction<T extends null> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
-    const { tableReactive: tableRef } = store;
-    const table = tableRef.current;
-    if (table == null) {
+    const { sheetReactive: sheetRef } = store;
+    const sheet = sheetRef.current;
+    if (sheet == null) {
       return store;
     }
-    const { history, newTable, callback } = table.redo();
+    const { history, newSheet, callback } = sheet.redo();
     if (history == null) {
       return store;
     }
-    if (history.dstSheetId !== table.sheetId) {
-      const { dispatch, store: dstStore } = table.wire.contextsBySheetId[history.dstSheetId];
+    if (history.dstSheetId !== sheet.sheetId) {
+      const { dispatch, store: dstStore } = sheet.binding.contextsBySheetId[history.dstSheetId];
       dispatch(
         setStore({
           ...dstStore,
           ...history.redoReflection,
-          tableReactive: { current: dstStore.tableReactive.current },
+          sheetReactive: { current: dstStore.sheetReactive.current },
         }),
       );
       flashSheet(dstStore.flashRef.current);
-      // For cross-sheet MOVE: the src (current) table's lastChangedAddresses was also updated.
-      // Return updated tableReactive so this sheet's Emitter fires onChange.
-      if (history.srcSheetId === table.sheetId) {
-        return flashWithCallback(store, table, callback);
+      // For cross-sheet MOVE: the src (current) sheet's lastChangedAddresses was also updated.
+      // Return updated sheetReactive so this sheet's Emitter fires onChange.
+      if (history.srcSheetId === sheet.sheetId) {
+        return flashWithCallback(store, sheet, callback);
       }
       return store;
     }
     return {
       ...store,
-      ...restrictPoints(store, table),
+      ...restrictPoints(store, sheet),
       ...history.redoReflection,
-      ...initSearchStatement(table, store),
-      tableReactive: { current: table },
+      ...initSearchStatement(sheet, store),
+      sheetReactive: { current: sheet },
       callback: (s: StoreType) => {
         callback?.(s);
         flashSheet(store.flashRef.current);
@@ -781,9 +781,9 @@ class ArrowAction<
 > extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { shiftKey, deltaY, deltaX, numRows, numCols } = payload;
-    const { choosing, tableReactive: tableRef, tabularRef } = store;
-    const table = tableRef.current;
-    if (table == null) {
+    const { choosing, sheetReactive: sheetRef, tabularRef } = store;
+    const sheet = sheetRef.current;
+    if (sheet == null) {
       return store;
     }
     let { selectingZone } = store;
@@ -812,9 +812,9 @@ class ArrowAction<
     }
     // Skip hidden rows
     let resolvedY = nextY;
-    if (table.isRowFiltered(resolvedY)) {
+    if (sheet.isRowFiltered(resolvedY)) {
       const dir = deltaY >= 0 ? 1 : -1;
-      while (resolvedY >= 1 && resolvedY <= numRows && table.isRowFiltered(resolvedY)) {
+      while (resolvedY >= 1 && resolvedY <= numRows && sheet.isRowFiltered(resolvedY)) {
         resolvedY += dir;
       }
       if (resolvedY < 1 || resolvedY > numRows) {
@@ -824,28 +824,28 @@ class ArrowAction<
     let { y: editorTop, x: editorLeft, height, width } = store.editorRect;
     if (deltaY > 0) {
       for (let i = y; i < resolvedY; i++) {
-        editorTop += table.getCellByPoint({ y: i, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
+        editorTop += sheet.getCellByPoint({ y: i, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
       }
     } else if (deltaY < 0) {
       for (let i = y - 1; i >= resolvedY; i--) {
-        editorTop -= table.getCellByPoint({ y: i, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
+        editorTop -= sheet.getCellByPoint({ y: i, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
       }
     }
     if (deltaX > 0) {
       for (let i = x; i < nextX; i++) {
-        editorLeft += table.getCellByPoint({ y: 0, x: i }, 'SYSTEM')?.width || DEFAULT_WIDTH;
+        editorLeft += sheet.getCellByPoint({ y: 0, x: i }, 'SYSTEM')?.width || DEFAULT_WIDTH;
       }
     } else if (deltaX < 0) {
       for (let i = x - 1; i >= nextX; i--) {
-        editorLeft -= table.getCellByPoint({ y: 0, x: i }, 'SYSTEM')?.width || DEFAULT_WIDTH;
+        editorLeft -= sheet.getCellByPoint({ y: 0, x: i }, 'SYSTEM')?.width || DEFAULT_WIDTH;
       }
     }
 
-    const cell = table.getCellByPoint({ y: resolvedY, x: nextX }, 'SYSTEM');
+    const cell = sheet.getCellByPoint({ y: resolvedY, x: nextX }, 'SYSTEM');
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
 
-    smartScroll(table, tabularRef.current, { y: resolvedY, x: nextX });
+    smartScroll(sheet, tabularRef.current, { y: resolvedY, x: nextX });
     return {
       ...store,
       selectingZone: { startY: -1, startX: -1, endY: -1, endX: -1 },
@@ -867,9 +867,9 @@ class WalkAction<
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { numRows, numCols } = payload;
     let { deltaY, deltaX } = payload;
-    const { choosing, selectingZone, tableReactive: tableRef, tabularRef: gridOuterRef } = store;
-    const table = tableRef.current;
-    if (table == null) {
+    const { choosing, selectingZone, sheetReactive: sheetRef, tabularRef: gridOuterRef } = store;
+    const sheet = sheetRef.current;
+    if (sheet == null) {
       return store;
     }
 
@@ -928,40 +928,40 @@ class WalkAction<
     }
 
     // Skip hidden rows
-    if (table.isRowFiltered(nextY)) {
+    if (sheet.isRowFiltered(nextY)) {
       const dir = deltaY >= 0 ? 1 : -1;
       const lo = top !== -1 ? top : 1;
       const hi = bottom !== -1 ? bottom : numRows;
-      while (nextY >= lo && nextY <= hi && table.isRowFiltered(nextY)) {
+      while (nextY >= lo && nextY <= hi && sheet.isRowFiltered(nextY)) {
         nextY += dir;
       }
-      if (nextY < lo || nextY > hi || table.isRowFiltered(nextY)) {
+      if (nextY < lo || nextY > hi || sheet.isRowFiltered(nextY)) {
         return store; // no visible row in range
       }
     }
 
     if (deltaY > 0) {
       for (let i = y; i < nextY; i++) {
-        editorTop += table.getCellByPoint({ y: i, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
+        editorTop += sheet.getCellByPoint({ y: i, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
       }
     } else if (deltaY < 0) {
       for (let i = y - 1; i >= nextY; i--) {
-        editorTop -= table.getCellByPoint({ y: i, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
+        editorTop -= sheet.getCellByPoint({ y: i, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
       }
     }
     if (deltaX > 0) {
       for (let i = x; i < nextX; i++) {
-        editorLeft += table.getCellByPoint({ y: 0, x: i }, 'SYSTEM')?.width || DEFAULT_WIDTH;
+        editorLeft += sheet.getCellByPoint({ y: 0, x: i }, 'SYSTEM')?.width || DEFAULT_WIDTH;
       }
     } else if (deltaX < 0) {
       for (let i = x - 1; i >= nextX; i--) {
-        editorLeft -= table.getCellByPoint({ y: 0, x: i }, 'SYSTEM')?.width || DEFAULT_WIDTH;
+        editorLeft -= sheet.getCellByPoint({ y: 0, x: i }, 'SYSTEM')?.width || DEFAULT_WIDTH;
       }
     }
-    const cell = table.getCellByPoint({ y: nextY, x: nextX }, 'SYSTEM');
+    const cell = sheet.getCellByPoint({ y: nextY, x: nextX }, 'SYSTEM');
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
-    smartScroll(table, gridOuterRef.current, { y: nextY, x: nextX });
+    smartScroll(sheet, gridOuterRef.current, { y: nextY, x: nextX });
     return {
       ...store,
       choosing: { y: nextY, x: nextX } as PointType,
@@ -985,30 +985,30 @@ export const setInputting = new SetInputtingAction().bind();
 class InsertRowsAboveAction<T extends { numRows: number; y: number; operator?: OperatorType }> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { numRows, y, operator } = payload;
-    const { tableReactive: tableRef, selectingZone, choosing } = store;
-    const table = tableRef.current;
-    if (table == null) {
+    const { sheetReactive: sheetRef, selectingZone, choosing } = store;
+    const sheet = sheetRef.current;
+    if (sheet == null) {
       return store;
     }
-    table.insertRows({
+    sheet.insertRows({
       y,
       numRows,
       baseY: y,
       operator,
       undoReflection: {
-        sheetId: table.sheetId,
+        sheetId: sheet.sheetId,
         selectingZone,
         choosing,
       },
       redoReflection: {
-        sheetId: table.sheetId,
+        sheetId: sheet.sheetId,
         selectingZone,
         choosing,
       },
     });
     return {
       ...store,
-      tableReactive: { current: table },
+      sheetReactive: { current: sheet },
     };
   }
 }
@@ -1017,9 +1017,9 @@ export const insertRowsAbove = new InsertRowsAboveAction().bind();
 class InsertRowsBelowAction<T extends { numRows: number; y: number; operator?: OperatorType }> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { numRows, y, operator } = payload;
-    const { tableReactive: tableRef, selectingZone, choosing, editorRef } = store;
-    const table = tableRef.current;
-    if (table == null) {
+    const { sheetReactive: sheetRef, selectingZone, choosing, editorRef } = store;
+    const sheet = sheetRef.current;
+    if (sheet == null) {
       return store;
     }
     const nextSelectingZone = {
@@ -1029,18 +1029,18 @@ class InsertRowsBelowAction<T extends { numRows: number; y: number; operator?: O
     };
     const nextChoosing = { ...choosing, y: choosing.y + numRows };
 
-    table.insertRows({
+    sheet.insertRows({
       y: y + 1,
       numRows,
       baseY: y,
       operator,
       undoReflection: {
-        sheetId: table.sheetId,
+        sheetId: sheet.sheetId,
         selectingZone,
         choosing,
       },
       redoReflection: {
-        sheetId: table.sheetId,
+        sheetId: sheet.sheetId,
         selectingZone: nextSelectingZone,
         choosing: nextChoosing,
       },
@@ -1049,7 +1049,7 @@ class InsertRowsBelowAction<T extends { numRows: number; y: number; operator?: O
       ...store,
       selectingZone: nextSelectingZone,
       choosing: nextChoosing,
-      tableReactive: { current: table },
+      sheetReactive: { current: sheet },
     };
   }
 }
@@ -1058,31 +1058,31 @@ export const insertRowsBelow = new InsertRowsBelowAction().bind();
 class InsertColsLeftAction<T extends { numCols: number; x: number; operator?: OperatorType }> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { numCols, x, operator } = payload;
-    const { tableReactive: tableRef, selectingZone, choosing, editorRef } = store;
-    const table = tableRef.current;
-    if (table == null) {
+    const { sheetReactive: sheetRef, selectingZone, choosing, editorRef } = store;
+    const sheet = sheetRef.current;
+    if (sheet == null) {
       return store;
     }
 
-    table.insertCols({
+    sheet.insertCols({
       x,
       numCols,
       baseX: x,
       operator,
       undoReflection: {
-        sheetId: table.sheetId,
+        sheetId: sheet.sheetId,
         selectingZone,
         choosing,
       },
       redoReflection: {
-        sheetId: table.sheetId,
+        sheetId: sheet.sheetId,
         selectingZone,
         choosing,
       },
     });
     return {
       ...store,
-      tableReactive: { current: table },
+      sheetReactive: { current: sheet },
     };
   }
 }
@@ -1091,9 +1091,9 @@ export const insertColsLeft = new InsertColsLeftAction().bind();
 class InsertColsRightAction<T extends { numCols: number; x: number; operator?: OperatorType }> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { numCols, x, operator } = payload;
-    const { tableReactive: tableRef, selectingZone, choosing } = store;
-    const table = tableRef.current;
-    if (table == null) {
+    const { sheetReactive: sheetRef, selectingZone, choosing } = store;
+    const sheet = sheetRef.current;
+    if (sheet == null) {
       return store;
     }
     const nextSelectingZone = {
@@ -1106,18 +1106,18 @@ class InsertColsRightAction<T extends { numCols: number; x: number; operator?: O
     selectingZone.startX += numCols;
     selectingZone.endX += numCols;
 
-    table.insertCols({
+    sheet.insertCols({
       x: x + 1,
       numCols,
       baseX: x,
       operator,
       undoReflection: {
-        sheetId: table.sheetId,
+        sheetId: sheet.sheetId,
         selectingZone,
         choosing,
       },
       redoReflection: {
-        sheetId: table.sheetId,
+        sheetId: sheet.sheetId,
         selectingZone: nextSelectingZone,
         choosing: nextChoosing,
       },
@@ -1126,7 +1126,7 @@ class InsertColsRightAction<T extends { numCols: number; x: number; operator?: O
       ...store,
       selectingZone: nextSelectingZone,
       choosing: nextChoosing,
-      tableReactive: { current: table },
+      sheetReactive: { current: sheet },
     };
   }
 }
@@ -1135,24 +1135,24 @@ export const insertColsRight = new InsertColsRightAction().bind();
 class RemoveRowsAction<T extends { numRows: number; y: number; operator?: OperatorType }> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { numRows, y, operator } = payload;
-    const { tableReactive: tableRef, selectingZone, choosing, editorRef } = store;
-    const table = tableRef.current;
-    if (table == null) {
+    const { sheetReactive: sheetRef, selectingZone, choosing, editorRef } = store;
+    const sheet = sheetRef.current;
+    if (sheet == null) {
       return store;
     }
 
-    table.removeRows({
+    sheet.removeRows({
       y,
       numRows,
       operator,
       undoReflection: {
-        sheetId: table.sheetId,
+        sheetId: sheet.sheetId,
         selectingZone,
         choosing,
         sheetHeight: store.sheetHeight,
       },
       redoReflection: {
-        sheetId: table.sheetId,
+        sheetId: sheet.sheetId,
         selectingZone,
         choosing,
       },
@@ -1160,7 +1160,7 @@ class RemoveRowsAction<T extends { numRows: number; y: number; operator?: Operat
 
     return {
       ...store,
-      tableReactive: { current: table },
+      sheetReactive: { current: sheet },
     };
   }
 }
@@ -1169,24 +1169,24 @@ export const removeRows = new RemoveRowsAction().bind();
 class RemoveColsAction<T extends { numCols: number; x: number; operator?: OperatorType }> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { numCols, x, operator } = payload;
-    const { tableReactive: tableRef, selectingZone, choosing, editorRef } = store;
-    const table = tableRef.current;
-    if (table == null) {
+    const { sheetReactive: sheetRef, selectingZone, choosing, editorRef } = store;
+    const sheet = sheetRef.current;
+    if (sheet == null) {
       return store;
     }
 
-    table.removeCols({
+    sheet.removeCols({
       x,
       numCols,
       operator,
       undoReflection: {
-        sheetId: table.sheetId,
+        sheetId: sheet.sheetId,
         selectingZone,
         choosing,
         sheetWidth: store.sheetWidth,
       },
       redoReflection: {
-        sheetId: table.sheetId,
+        sheetId: sheet.sheetId,
         selectingZone,
         choosing,
       },
@@ -1194,7 +1194,7 @@ class RemoveColsAction<T extends { numCols: number; x: number; operator?: Operat
 
     return {
       ...store,
-      tableReactive: { current: table },
+      sheetReactive: { current: sheet },
     };
   }
 }
@@ -1203,20 +1203,20 @@ export const removeCols = new RemoveColsAction().bind();
 class SortRowsAction<T extends { x: number; direction: 'asc' | 'desc' }> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { x, direction } = payload;
-    const { tableReactive: tableRef, selectingZone, choosing } = store;
-    const table = tableRef.current;
-    if (table == null) {
+    const { sheetReactive: sheetRef, selectingZone, choosing } = store;
+    const sheet = sheetRef.current;
+    if (sheet == null) {
       return store;
     }
-    table.sortRows({ x, direction });
-    const reflection = { sheetId: table.sheetId, selectingZone, choosing };
-    if (table.wire.lastHistory) {
-      table.wire.lastHistory.undoReflection = reflection;
-      table.wire.lastHistory.redoReflection = reflection;
+    sheet.sortRows({ x, direction });
+    const reflection = { sheetId: sheet.sheetId, selectingZone, choosing };
+    if (sheet.binding.lastHistory) {
+      sheet.binding.lastHistory.undoReflection = reflection;
+      sheet.binding.lastHistory.redoReflection = reflection;
     }
     return {
       ...store,
-      tableReactive: { current: table },
+      sheetReactive: { current: sheet },
     };
   }
 }
@@ -1225,21 +1225,21 @@ export const sortRows = new SortRowsAction().bind();
 class FilterRowsAction<T extends { x?: number; filter?: FilterConfig }> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { x, filter } = payload;
-    const { tableReactive: tableRef, selectingZone, choosing } = store;
-    const table = tableRef.current;
-    if (table == null) {
+    const { sheetReactive: sheetRef, selectingZone, choosing } = store;
+    const sheet = sheetRef.current;
+    if (sheet == null) {
       return store;
     }
-    table.filterRows({ x, filter });
-    const reflection = { sheetId: table.sheetId, selectingZone, choosing };
-    if (table.wire.lastHistory) {
-      table.wire.lastHistory.undoReflection = reflection;
-      table.wire.lastHistory.redoReflection = reflection;
+    sheet.filterRows({ x, filter });
+    const reflection = { sheetId: sheet.sheetId, selectingZone, choosing };
+    if (sheet.binding.lastHistory) {
+      sheet.binding.lastHistory.undoReflection = reflection;
+      sheet.binding.lastHistory.redoReflection = reflection;
     }
     let newChoosing = choosing;
-    if (table.isRowFiltered(choosing.y)) {
-      for (let y = 1; y <= table.getNumRows(); y++) {
-        if (!table.isRowFiltered(y)) {
+    if (sheet.isRowFiltered(choosing.y)) {
+      for (let y = 1; y <= sheet.getNumRows(); y++) {
+        if (!sheet.isRowFiltered(y)) {
           newChoosing = { y, x: choosing.x };
           break;
         }
@@ -1249,11 +1249,11 @@ class FilterRowsAction<T extends { x?: number; filter?: FilterConfig }> extends 
       ...store,
       choosing: newChoosing,
       selectingZone: newChoosing !== choosing ? resetZone : selectingZone,
-      tableReactive: { current: table },
-      callback: ({ tableReactive: tableRef }) => {
-        const t = tableRef.current;
+      sheetReactive: { current: sheet },
+      callback: ({ sheetReactive: sheetRef }) => {
+        const t = sheetRef.current;
         if (t) {
-          t.wire.transmit({
+          t.binding.transmit({
             cutting: false,
             copyingZone: resetZone,
           });

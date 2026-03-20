@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, buildInitialCells, useConnector, useHub, syncers } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells, useConnector, useBook, syncers } from '@gridsheet/react-core';
 import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
@@ -16,23 +16,23 @@ const DESCRIPTION = [
 
   '## How it works',
   'Remove operations trigger onRemoveRows and onRemoveCols events with the removed data.',
-  '1. Use hub to set up onRemoveRows and onRemoveCols event handlers.',
-  '2. The event handlers receive a cloned table with the removed data and the indices of removed rows/columns.',
-  '3. The removed data can be accessed through the cloned table.',
+  '1. Use book to set up onRemoveRows and onRemoveCols event handlers.',
+  '2. The event handlers receive a cloned sheet with the removed data and the indices of removed rows/columns.',
+  '3. The removed data can be accessed through the cloned sheet.',
   '4. Console logs show the removed data and indices.',
 ].join('\n\n');
 
 const RemoveComponent: React.FC = () => {
   const connector = useConnector();
 
-  const hub = useHub({
+  const book = useBook({
     additionalFunctions: allFunctions,
-    onRemoveRows: ({ table, ys }) => {
-      console.log('onRemoveRows called with:', { table, ys });
-      console.log('matrix', table.toValueObject());
+    onRemoveRows: ({ sheet, ys }) => {
+      console.log('onRemoveRows called with:', { sheet, ys });
+      console.log('matrix', sheet.toValueObject());
     },
-    onRemoveCols: ({ table, xs }) => {
-      console.log('onRemoveCols called with:', { table, xs });
+    onRemoveCols: ({ sheet, xs }) => {
+      console.log('onRemoveCols called with:', { sheet, xs });
     },
   });
 
@@ -93,7 +93,7 @@ const RemoveComponent: React.FC = () => {
 
       <GridSheet
         connector={connector}
-        hub={hub}
+        book={book}
         initialCells={buildInitialCells({
           matrices: {
             A1: [

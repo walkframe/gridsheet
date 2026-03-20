@@ -40,21 +40,21 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
     selectingZone,
     leftHeaderSelecting,
     editorRef,
-    tableReactive: tableRef,
+    sheetReactive: sheetRef,
     autofillDraggingTo,
     dragging,
     contextMenuItems,
     rowMenuState,
   } = store;
-  const table = tableRef.current;
+  const sheet = sheetRef.current;
 
-  const row = table?.getCellByPoint({ y, x: 0 }, 'SYSTEM');
+  const row = sheet?.getCellByPoint({ y, x: 0 }, 'SYSTEM');
   const height = row?.height || DEFAULT_HEIGHT;
 
   const xSheetFocused = isXSheetFocused(store);
-  const lastFocused = table?.wire.lastFocused;
+  const lastFocused = sheet?.binding.lastFocused;
 
-  const editingAnywhere = !!(table?.wire.editingAddress || editingAddress);
+  const editingAnywhere = !!(sheet?.binding.editingAddress || editingAddress);
 
   const writeCell = useCallback(
     (value: string) => {
@@ -74,7 +74,7 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
       e.stopPropagation();
       safePreventDefault(e);
 
-      if (!isTouching(e) || !table) {
+      if (!isTouching(e) || !sheet) {
         return false;
       }
       if (dragging) {
@@ -88,17 +88,17 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
           editorRef.current.blur();
         }
         dispatch(choose({ y, x: 1 }));
-        dispatch(select({ startY: y, startX: 1, endY: y, endX: table.getNumCols() }));
+        dispatch(select({ startY: y, startX: 1, endY: y, endX: sheet.getNumCols() }));
         return true;
       }
 
       // Normal drag operation for mouse events
       dispatch(select({ startY: y, startX: 1, endY: y, endX: -1 }));
-      const fullAddress = `${table.sheetPrefix(!xSheetFocused)}${rowId}:${rowId}`;
+      const fullAddress = `${sheet.sheetPrefix(!xSheetFocused)}${rowId}:${rowId}`;
       if (editingAnywhere) {
         const inserted = insertRef({ input: lastFocused || null, ref: fullAddress });
         if (inserted) {
-          dispatch(select({ startY: y, startX: table.getNumCols(), endY: y, endX: 0 }));
+          dispatch(select({ startY: y, startX: sheet.getNumCols(), endY: y, endX: 0 }));
           return false;
         }
       }
@@ -111,7 +111,7 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
       dispatch(
         selectRows({
           range: { start: startY, end: y },
-          numCols: table.getNumCols(),
+          numCols: sheet.getNumCols(),
         }),
       );
 
@@ -147,7 +147,7 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
   );
 
   const handleDragging = useDebounceCallback((e: React.MouseEvent | React.TouchEvent) => {
-    if (!isTouching(e) || !table) {
+    if (!isTouching(e) || !sheet) {
       return false;
     }
 
@@ -167,14 +167,14 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
     if (editingAnywhere) {
       const newArea = zoneToArea({ ...selectingZone, endY: y, endX: 1 });
       const [top, bottom] = [y2r(newArea.top), y2r(newArea.bottom)];
-      const fullRange = `${table.sheetPrefix(!xSheetFocused)}${top}:${bottom}`;
+      const fullRange = `${sheet.sheetPrefix(!xSheetFocused)}${top}:${bottom}`;
       insertRef({ input: lastFocused || null, ref: fullRange });
     }
 
     if (autofillDraggingTo == null) {
       const { startX } = selectingZone;
       if (startX === 1) {
-        dispatch(drag({ y, x: table.getNumCols() }));
+        dispatch(drag({ y, x: sheet.getNumCols() }));
       } else {
         dispatch(drag({ y, x: 1 }));
       }
@@ -195,7 +195,7 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
     [contextMenuItems.length],
   );
 
-  if (!table) {
+  if (!sheet) {
     return null;
   }
 
@@ -219,7 +219,7 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
         onMouseEnter={handleDragging}
         onMouseUp={handleDragEnd}
       >
-        <div className="gs-th-inner" style={{ width: table.headerWidth, position: 'relative' }}>
+        <div className="gs-th-inner" style={{ width: sheet.headerWidth, position: 'relative' }}>
           <ScrollHandle
             style={{
               position: 'absolute',
@@ -227,7 +227,7 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
             }}
             horizontal={-1}
           />
-          {table.getLabel(row?.label, { y, x: 0 }, y) ?? rowId}
+          {sheet.getLabel(row?.label, { y, x: 0 }, y) ?? rowId}
           {!prevention.hasOperation(row?.prevention, prevention.RowMenu) && (
             <button
               className={`gs-menu-btn gs-row-menu-btn ${rowMenuState?.y === y ? 'gs-active' : ''}`}
@@ -253,9 +253,9 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
                   const alreadySelected =
                     between({ start: selectingZone.startY, end: selectingZone.endY }, y) &&
                     selectingZone.startX === 1 &&
-                    selectingZone.endX === table.getNumCols();
+                    selectingZone.endX === sheet.getNumCols();
                   if (!alreadySelected) {
-                    dispatch(selectRows({ range: { start: y, end: y }, numCols: table.getNumCols() }));
+                    dispatch(selectRows({ range: { start: y, end: y }, numCols: sheet.getNumCols() }));
                   }
                   dispatch(setRowMenu({ y, position: { y: rect.bottom, x: rect.right } }));
                 }
@@ -270,7 +270,7 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
               gs-resizer
               ${prevention.hasOperation(row?.prevention, prevention.Resize) ? 'gs-protected' : ''}
               ${dragging ? 'gs-hidden' : ''}`}
-            style={{ width: table.headerWidth }}
+            style={{ width: sheet.headerWidth }}
             onMouseDown={handleResizeMouseDown}
           ></div>
         </div>

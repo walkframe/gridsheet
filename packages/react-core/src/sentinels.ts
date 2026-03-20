@@ -49,7 +49,7 @@ export class Pending<T = unknown> {
  *   return new Spilling([[1, 2], [3, 4]]);
  *
  * The solver detects Spilling via `Spilling.is()` and calls
- * `table.spill(origin, result.matrix)` to perform obstruction checks
+ * `sheet.spill(origin, result.matrix)` to perform obstruction checks
  * and write values into the solvedCaches.
  */
 export class Spilling {

@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'preact/hooks';
-import { GridSheet, useHub } from '@gridsheet/preact-core';
+import { GridSheet, useBook } from '@gridsheet/preact-core';
 
 function App() {
   const [enableDecimalLabeler, setEnableDecimalLabeler] = useState(false);
 
   const hubProps = {};
-  const hub = useHub(hubProps);
+  const book = useBook(hubProps);
 
   useEffect(() => {
-    // Update hub props when enableDecimalLabeler changes
+    // Update book props when enableDecimalLabeler changes
     if (enableDecimalLabeler) {
       hubProps.labelers = {
         decimal: (n) => String(n)
@@ -18,7 +18,7 @@ function App() {
         decimal: undefined,
       };
     }
-    hub.wire.transmit(hubProps);
+    book.binding.transmit(hubProps);
   }, [enableDecimalLabeler]);
 
   return (
@@ -27,7 +27,7 @@ function App() {
       
       <div class="grid-container">
         <GridSheet
-          hub={hub}
+          book={book}
           initialCells={{
             A1: { value: 'Hello' },
             B1: { value: 'Preact', style: { backgroundColor: '#448888'} },
@@ -43,7 +43,7 @@ function App() {
         />
 
         <GridSheet
-          hub={hub}
+          book={book}
           initialCells={{
             C3: { value: '=SUM(Sheet1!A2:B3)' },
             default: { labeler: 'decimal' },

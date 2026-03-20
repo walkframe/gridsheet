@@ -86,7 +86,7 @@ export const getFunctionHelps = (customFunctions: FunctionMapping = functions): 
   if (!helps) {
     helps = Object.keys(customFunctions).map((name) => {
       const FnClass = customFunctions[name];
-      const instance = new FnClass({ args: [], table: {} as any });
+      const instance = new FnClass({ args: [], sheet: {} as any });
       return {
         name: name.toUpperCase(),
         category: instance.category,

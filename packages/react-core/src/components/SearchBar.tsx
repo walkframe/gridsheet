@@ -24,21 +24,21 @@ export const SearchBar = () => {
     selectingZone,
     matchingCellIndex,
     matchingCells,
-    tableReactive: tableRef,
+    sheetReactive: sheetRef,
   } = store;
-  const table = tableRef.current;
+  const sheet = sheetRef.current;
 
   const matchingCell = matchingCells[matchingCellIndex];
   useEffect(() => {
-    if (!matchingCell || !table) {
+    if (!matchingCell || !sheet) {
       return;
     }
     const point = a2p(matchingCell);
     if (typeof point === 'undefined') {
       return;
     }
-    smartScroll(table, tabularRef.current, point);
-  }, [searchQuery, matchingCellIndex, searchCaseSensitive, searchRegex, table, tabularRef]);
+    smartScroll(sheet, tabularRef.current, point);
+  }, [searchQuery, matchingCellIndex, searchCaseSensitive, searchRegex, sheet, tabularRef]);
 
   const handleProgressClick = useCallback((e: React.MouseEvent) => {
     const input = e.currentTarget.previousSibling as HTMLInputElement;

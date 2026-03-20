@@ -1,13 +1,13 @@
-import { type Table } from '../../lib/table';
+import { type Sheet } from '../../lib/sheet';
 
-/** Duck-type check for Table instances (avoids runtime import cycle). */
-export const isTable = (v: any): v is Table => v?.__isTable === true;
+/** Duck-type check for Sheet instances (avoids runtime import cycle). */
+export const isSheet = (v: any): v is Sheet => v?.__isSheet === true;
 /** Duck-type check for Time instances (avoids runtime import cycle). */
 const isTime = (v: any): boolean => v != null && v.__gsType === 'Time';
 import { Spilling } from '../../sentinels';
 import type { Id } from '../../types';
 import { FormulaError } from '../formula-error';
-import { stripTable } from '../../formula/solver';
+import { stripSheet } from '../../formula/solver';
 import type { Expression } from '../evaluator';
 import {
   hasPendingArg,
@@ -34,7 +34,7 @@ export type FunctionCategory =
 
 export type FunctionProps = {
   args: Expression[];
-  table: Table;
+  sheet: Sheet;
   at?: Id;
 };
 
@@ -117,7 +117,7 @@ const matchesType = (
         }
         break;
       case 'reference':
-        if (isTable(value)) {
+        if (isSheet(value)) {
           return true;
         }
         break;
@@ -127,22 +127,22 @@ const matchesType = (
 };
 
 /**
- * Check if a value is a "matrix" (Table, Spilling, or 2D array).
+ * Check if a value is a "matrix" (Sheet, Spilling, or 2D array).
  */
 export const isMatrix = (value: any): boolean => {
-  return isTable(value) || Spilling.is(value) || (Array.isArray(value) && Array.isArray(value[0]));
+  return isSheet(value) || Spilling.is(value) || (Array.isArray(value) && Array.isArray(value[0]));
 };
 
 /**
- * Extract the scalar from a 1×1 matrix (Table, Spilling, or plain 2D array).
+ * Extract the scalar from a 1×1 matrix (Sheet, Spilling, or plain 2D array).
  * Returns the value unchanged if it is not a matrix.
  */
 export const stripMatrix = (value: any, at: Id): any => {
   if (!isMatrix(value)) {
     return value;
   }
-  if (isTable(value)) {
-    return stripTable({ value, raise: false });
+  if (isSheet(value)) {
+    return stripSheet({ value, raise: false });
   }
   const m: any[][] = Spilling.is(value) ? value.matrix : value;
   let val = m?.[0]?.[0];
@@ -153,7 +153,7 @@ export const stripMatrix = (value: any, at: Id): any => {
  * Check if a value is a matrix that is larger than 1×1.
  */
 export const isMultiCell = (value: any): boolean => {
-  if (isTable(value)) {
+  if (isSheet(value)) {
     return !value.hasSingleCell;
   }
   if (Spilling.is(value)) {
@@ -220,19 +220,19 @@ export class BaseFunction {
   protected broadcastDisabled: boolean = false;
   protected args: any[];
   protected autoSpilling: boolean = false;
-  public table: Table;
+  public sheet: Sheet;
   public at: Id;
   static __name = '';
 
-  constructor({ args, table, at }: FunctionProps) {
+  constructor({ args, sheet, at }: FunctionProps) {
     this.args = args.map((a) => {
       try {
-        return a.evaluate({ table });
+        return a.evaluate({ sheet });
       } catch (e) {
         return e;
       }
     });
-    this.table = table;
+    this.sheet = sheet;
     this.at = at ?? '?';
   }
 
@@ -309,7 +309,7 @@ export class BaseFunction {
           continue;
         }
       } else if (isMatrix(value)) {
-        // For 1x1 Table, Spilling, or plain 2D array, extract the single value for validation.
+        // For 1x1 Sheet, Spilling, or plain 2D array, extract the single value for validation.
         // UNLESS the definition explicitly takes a matrix (e.g. SUM(A1) — let it pass through).
         if (!def.takesMatrix) {
           value = stripMatrix(value, this.at);
@@ -327,7 +327,7 @@ export class BaseFunction {
   }
 
   eachMatrix = (value: any, callback: (v: any) => void) => {
-    if (isTable(value)) {
+    if (isSheet(value)) {
       const matrix = value.solve({ at: this.at, raise: true });
       for (let r = 0; r < matrix.length; r++) {
         for (let c = 0; c < matrix[r].length; c++) {
@@ -353,15 +353,15 @@ export class BaseFunction {
   };
 
   /**
-   * Extract a 2D array from a matrix value (Spilling, Table, or nested array).
-   * Default behavior for Table is value.solve(). Functions like COL can override
-   * this to preserve Table metadata per cell.
+   * Extract a 2D array from a matrix value (Spilling, Sheet, or nested array).
+   * Default behavior for Sheet is value.solve(). Functions like COL can override
+   * this to preserve Sheet metadata per cell.
    */
   protected toMatrix(value: any): any[][] {
     if (Spilling.is(value)) {
       return value.matrix;
     }
-    if (isTable(value)) {
+    if (isSheet(value)) {
       return value.solve({ at: this.at });
     }
     if (Array.isArray(value) && Array.isArray(value[0])) {
@@ -371,15 +371,15 @@ export class BaseFunction {
   }
 
   /**
-   * Collapse a 1×1 matrix value (Table, Spilling, or 2D array) to a scalar.
+   * Collapse a 1×1 matrix value (Sheet, Spilling, or 2D array) to a scalar.
    * Non-matrix values pass through unchanged.
    *
-   * Override in sub-classes that need the original Table / reference
+   * Override in sub-classes that need the original Sheet / reference
    * metadata (e.g. COL, ROW) — for instance, to extract position
    * information before collapsing.
    */
   protected toScalar(value: any): any {
-    if (isTable(value)) {
+    if (isSheet(value)) {
       const { rows, cols } = value.shape;
       if (rows === 1 && cols === 1) {
         return value.strip();
@@ -418,13 +418,13 @@ export class BaseFunction {
     // For async functions, build cache key and check cache before execution
     if (this.isAsync) {
       const key = buildAsyncCacheKey(this.constructor.name, this.args, this.hashPrecision);
-      const cached = getAsyncCache(this.table, this.at, key, this.useInflight);
+      const cached = getAsyncCache(this.sheet, this.at, key, this.useInflight);
       if (cached !== asyncCacheMiss) {
         return cached;
       }
 
       const promise = this._main(...this.args);
-      return awaitAndSave(promise, this.table, this.at, key, this.ttlMilliseconds, this.useInflight);
+      return awaitAndSave(promise, this.sheet, this.at, key, this.ttlMilliseconds, this.useInflight);
     }
 
     // For sync functions, just call and return
@@ -439,7 +439,7 @@ export class BaseFunction {
    * Rules:
    * - broadcastDisabled = true → never broadcast
    * - An arg is broadcastable when its corresponding args[].takesMatrix is not true
-   * - A Table/Spilling/2D-array whose size is (1,1) is treated as a scalar
+   * - A Sheet/Spilling/2D-array whose size is (1,1) is treated as a scalar
    *   (not broadcast); only multi-cell matrices trigger broadcast
    * - For variadic args, extra args are assigned round-robin
    *   across the variadic helpArg positions

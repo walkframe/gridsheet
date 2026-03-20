@@ -1,21 +1,21 @@
 import { shallowRef, watch } from 'vue';
-import { createHub, WireProps, type TransmitProps } from '@gridsheet/preact-core';
+import { createBook, BindingProps, type TransmitProps } from '@gridsheet/preact-core';
 
-export function useHub(wireProps: WireProps = {}) {
-  const hub = createHub(wireProps);
-  const ref = shallowRef(hub);
-  const { wire } = ref.value;
+export function useBook(wireProps: BindingProps = {}) {
+  const book = createBook(wireProps);
+  const ref = shallowRef(book);
+  const { binding } = ref.value;
 
   function transmit(patch?: TransmitProps) {
-    Object.assign(wire, patch);
-    if (!wire.ready) {
+    Object.assign(binding, patch);
+    if (!binding.ready) {
       return;
     }
     requestAnimationFrame(() => (ref.value = { ...ref.value }));
   }
-  wire.transmit = transmit;
+  binding.transmit = transmit;
 
-  // Watch for hubProps changes and apply them to hub
+  // Watch for hubProps changes and apply them to book
   watch(
     () => wireProps,
     (newProps) => transmit(newProps),

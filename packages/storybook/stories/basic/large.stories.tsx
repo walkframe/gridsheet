@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import ReactMarkdown from 'react-markdown';
-import { buildInitialCells, GridSheet, useHub, Policy } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, useBook, Policy } from '@gridsheet/react-core';
 import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
@@ -39,7 +39,7 @@ const LargeSheet = () => {
   const rawPolicy = new Policy({
     mixins: [{ renderColHeaderLabel: (n) => String(n), renderRowHeaderLabel: (n) => String(n) }],
   });
-  const hub = useHub({
+  const book = useBook({
     additionalFunctions: allFunctions,
     policies: { raw: rawPolicy },
   });
@@ -55,7 +55,7 @@ const LargeSheet = () => {
       </div>
 
       <GridSheet
-        hub={hub}
+        book={book}
         initialCells={buildInitialCells({
           matrices: {
             A1: largeData,

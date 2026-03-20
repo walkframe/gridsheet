@@ -4,10 +4,10 @@ import {
   BaseFunctionAsync,
   buildInitialCells,
   GridSheet,
-  useHub,
+  useBook,
   ensureNumber,
-  solveTable,
-  Table,
+  solveSheet,
+  Sheet,
   p2a,
   FunctionArgumentDefinition,
 } from '@gridsheet/react-core';
@@ -33,9 +33,9 @@ class SumDelayFunction extends BaseFunctionAsync {
   protected validate(args: any[]): any[] {
     const spreaded: number[] = [];
     args.forEach((arg) => {
-      if (arg instanceof Table) {
+      if (arg instanceof Sheet) {
         spreaded.push(
-          ...solveTable({ table: arg, at: this.at })
+          ...solveSheet({ sheet: arg, at: this.at })
             .reduce((a: any[], b: any[]) => a.concat(b))
             .map((v: any) => ensureNumber(v, { ignore: true })),
         );
@@ -47,7 +47,7 @@ class SumDelayFunction extends BaseFunctionAsync {
   }
 
   async main(...values: number[]) {
-    const origin = this.table.getPointById(this.at);
+    const origin = this.sheet.getPointById(this.at);
     const msg = `SUM_DELAY called with [${values.join(', ')}] at ${p2a(origin!)}`;
     //console.log(msg);
     if (typeof window !== 'undefined') {
@@ -80,9 +80,9 @@ class SumDelayFunctionInflight extends BaseFunctionAsync {
   protected validate(args: any[]): any[] {
     const spreaded: number[] = [];
     args.forEach((arg) => {
-      if (arg instanceof Table) {
+      if (arg instanceof Sheet) {
         spreaded.push(
-          ...solveTable({ table: arg, at: this.at })
+          ...solveSheet({ sheet: arg, at: this.at })
             .reduce((a: any[], b: any[]) => a.concat(b))
             .map((v: any) => ensureNumber(v, { ignore: true })),
         );
@@ -94,7 +94,7 @@ class SumDelayFunctionInflight extends BaseFunctionAsync {
   }
 
   async main(...values: number[]) {
-    const origin = this.table.getPointById(this.at);
+    const origin = this.sheet.getPointById(this.at);
     const msg = `SUM_DELAY_INFLIGHT called with [${values.join(', ')}] at ${p2a(origin!)}`;
     //console.log(msg);
     if (typeof window !== 'undefined') {
@@ -125,7 +125,7 @@ const ASYNC_CHAIN_DESCRIPTION = [
 ].join('\n\n');
 
 const AsyncChainSheet = () => {
-  const hub = useHub({
+  const book = useBook({
     additionalFunctions: {
       ...allFunctions,
       sum_delay: SumDelayFunction,
@@ -154,7 +154,7 @@ const AsyncChainSheet = () => {
         <div className="async-inflight-false">
           <h3>inflight = false</h3>
           <GridSheet
-            hub={hub}
+            book={book}
             sheetName="AsyncChain"
             initialCells={buildInitialCells({
               cells: {
@@ -195,7 +195,7 @@ const AsyncChainSheet = () => {
         <div className="async-inflight-true">
           <h3>inflight = true</h3>
           <GridSheet
-            hub={hub}
+            book={book}
             sheetName="AsyncChainInflight"
             initialCells={buildInitialCells({
               cells: {
@@ -234,7 +234,7 @@ const AsyncChainSheet = () => {
           ></textarea>
         </div>
       </div>
-      <Debugger hub={hub} />
+      <Debugger book={book} />
     </>
   );
 };

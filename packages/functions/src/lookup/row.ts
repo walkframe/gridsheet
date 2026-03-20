@@ -1,6 +1,6 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { Table } from '@gridsheet/react-core';
+import { Sheet } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
 const description = `Returns the row number of a specified cell.`;
@@ -19,7 +19,7 @@ export class RowFunction extends BaseFunction {
   category: FunctionCategory = 'lookup';
 
   protected toMatrix(value: any): any[][] {
-    if (value instanceof Table) {
+    if (value instanceof Sheet) {
       const area = value.getArea();
       const result: any[][] = [];
       for (let r = area.top; r <= area.bottom; r++) {
@@ -35,7 +35,7 @@ export class RowFunction extends BaseFunction {
   }
 
   protected toScalar(value: any): any {
-    if (value instanceof Table) {
+    if (value instanceof Sheet) {
       const area = value.getArea();
       return value.trim({ ...area, bottom: area.top });
     }
@@ -44,11 +44,11 @@ export class RowFunction extends BaseFunction {
 
   protected validate(args: any[]): any[] {
     if (args.length === 0) {
-      const point = this.table.getPointById(this.at);
+      const point = this.sheet.getPointById(this.at);
       return [point?.y ?? 1];
     } else if (args.length === 1) {
-      const table = args[0] as Table;
-      return [table.top];
+      const sheet = args[0] as Sheet;
+      return [sheet.top];
     } else {
       throw new FormulaError('#N/A', 'Number of arguments for ROW is incorrect.');
     }
