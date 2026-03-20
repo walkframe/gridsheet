@@ -5,12 +5,12 @@ import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import type { SyntaxHighlighterProps } from 'react-syntax-highlighter';
 import jsonLang from 'react-syntax-highlighter/dist/esm/languages/hljs/json';
 import atomOneLight from 'react-syntax-highlighter/dist/esm/styles/hljs/atom-one-light';
-import atomOneDark from 'react-syntax-highlighter/dist/esm/styles/hljs/atom-one-dark';
 import tomorrowNight from 'react-syntax-highlighter/dist/esm/styles/hljs/tomorrow-night';
 import solarizedDark from 'react-syntax-highlighter/dist/esm/styles/hljs/solarized-dark';
 import solarizedLight from 'react-syntax-highlighter/dist/esm/styles/hljs/solarized-light';
 import docco from 'react-syntax-highlighter/dist/esm/styles/hljs/docco';
 import atelierSeasideLight from 'react-syntax-highlighter/dist/esm/styles/hljs/atelier-seaside-light';
+import atelierHeathLight from 'react-syntax-highlighter/dist/esm/styles/hljs/atelier-heath-light';
 
 SyntaxHighlighter.registerLanguage('json', jsonLang);
 
@@ -40,7 +40,7 @@ export type DebuggerProps = {
 };
 
 export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) => {
-  const { binding } = book;
+  const { registry } = book;
   const [snapshot, setSnapshot] = useState<any>({});
   const [activeTabId, setActiveTabId] = useState<number | null>(null);
   const [topHeight, setTopHeight] = useState<number>(() => {
@@ -51,10 +51,13 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
     const saved = sessionStorage.getItem('debugger_bottom_height');
     return saved ? Number(saved) : 200;
   });
+  const [formulaView, setFormulaView] = useState<'expressions' | 'tokens'>(() => {
+    return (sessionStorage.getItem('debugger_formula_view') as 'expressions' | 'tokens') ?? 'expressions';
+  });
 
   useEffect(() => {
     const updateSnapshot = () => {
-      if (!binding) {
+      if (!registry) {
         return;
       }
 
@@ -77,8 +80,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
         histories,
         asyncPending,
         asyncInflight,
-        dependents,
-      } = binding;
+      } = registry;
 
       setSnapshot({
         asyncPending,
@@ -99,7 +101,6 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
         historyIndex,
         historyLimit,
         histories,
-        dependents,
       });
     };
 
@@ -107,7 +108,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
 
     const intervalId = setInterval(updateSnapshot, intervalMs);
     return () => clearInterval(intervalId);
-  }, [binding, intervalMs]);
+  }, [registry, intervalMs]);
 
   const sheets = snapshot.sheetIdsByName
     ? Object.entries(snapshot.sheetIdsByName)
@@ -124,15 +125,16 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
   let activeStoreData = null;
   let activeTableData = null;
 
-  // Cell data for the currently selected cell (binding.choosingSheetId / choosingAddress)
-  let wireCellData = null;
-  let wireCellAddress = binding?.choosingAddress || '';
-  let wireCellSheetName = '';
-  let wireFormulaExpr = null;
-  let wireFormulaTokens = null;
+  // Cell data for the currently selected cell (registry.choosingSheetId / choosingAddress)
+  let registryCellData = null;
+  let registrySystemData = null;
+  let registryCellAddress = registry?.choosingAddress || '';
+  let registryCellSheetName = '';
+  let registryFormulaExpr = null;
+  let registryFormulaTokens = null;
 
-  if (binding && activeTabId !== null) {
-    const { contextsBySheetId } = binding;
+  if (registry && activeTabId !== null) {
+    const { contextsBySheetId } = registry;
     const context = contextsBySheetId[activeTabId];
 
     if (context) {
@@ -146,15 +148,15 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
   }
 
   // Resolve cell data for the currently selected cell (binding.choosingSheetId / choosingAddress)
-  if (binding && binding.choosingSheetId != null) {
-    const { contextsBySheetId } = binding;
-    const choosingContext = contextsBySheetId[binding.choosingSheetId];
+  if (registry && registry.choosingSheetId != null) {
+    const { contextsBySheetId } = registry;
+    const choosingContext = contextsBySheetId[registry.choosingSheetId];
 
     // Resolve sheet name
-    if (binding.sheetIdsByName) {
-      const entry = Object.entries(binding.sheetIdsByName).find(([, id]) => id === binding.choosingSheetId);
+    if (registry.sheetIdsByName) {
+      const entry = Object.entries(registry.sheetIdsByName).find(([, id]) => id === registry.choosingSheetId);
       if (entry) {
-        wireCellSheetName = entry[0];
+        registryCellSheetName = entry[0];
       }
     }
 
@@ -172,30 +174,31 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
           ? { y: 0, x: store.choosing.x }
           : isLeftHeaderSelecting
             ? { y: store.choosing.y, x: 0 }
-            : a2p(binding.choosingAddress);
+            : a2p(registry.choosingAddress);
 
         if (isTopHeaderSelecting) {
-          wireCellAddress = `header:${x2c(store.choosing.x)}`;
+          registryCellAddress = `header:${x2c(store.choosing.x)}`;
         } else if (isLeftHeaderSelecting) {
-          wireCellAddress = `header:${store.choosing.y}`;
+          registryCellAddress = `header:${store.choosing.y}`;
         }
 
         if (pos && idMatrix[pos.y]) {
           const id = idMatrix[pos.y][pos.x];
           if (id) {
-            wireCellData = binding.data[id];
+            registryCellData = registry.data[id];
+            registrySystemData = registry.systems[id] ?? null;
 
             // Parse formula
-            const text = wireCellData?.value;
+            const text = registryCellData?.value;
             if (typeof text === 'string' && text.startsWith('=')) {
               try {
                 const lexer = new Lexer(text.substring(1));
                 lexer.tokenize();
-                wireFormulaTokens = lexer.tokens;
+                registryFormulaTokens = lexer.tokens;
                 const parser = new FormulaParser(lexer.tokens);
-                wireFormulaExpr = parser.build();
+                registryFormulaExpr = parser.build();
               } catch (e) {
-                wireFormulaExpr = { error: String(e) };
+                registryFormulaExpr = { error: String(e) };
               }
             }
           }
@@ -207,7 +210,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
   const baseReplacer = (key: string, value: any) => {
     // Avoid circular refs, noisy internals, and React RefObjects
     if (
-      key === 'binding' ||
+      key === 'registry' ||
       key === '__raw__' ||
       (value && typeof value === 'object' && 'current' in value && Object.keys(value).length === 1) // heuristic to skip React ref objects
     ) {
@@ -222,7 +225,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
     return value;
   };
 
-  // Replace nested Sheet instances with their string representation (for Binding State / Store Data panels)
+  // Replace nested Sheet instances with their string representation (for Registry State / Store Data panels)
   const jsonReplacer = (key: string, value: any) => {
     if (value instanceof Sheet) {
       return value.toString();
@@ -277,7 +280,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
         overflow: 'hidden',
       }}
     >
-      {/* Top pane: Binding State | Binding Cell | Formula Expressions | Formula Tokens */}
+      {/* Top pane: Registry State | Cell | System | Formula */}
       <div
         style={{
           display: 'flex',
@@ -286,7 +289,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
           overflow: 'hidden',
         }}
       >
-        {/* Binding State panel */}
+        {/* Registry State panel */}
         <div
           style={{
             flex: 1,
@@ -307,12 +310,12 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
               borderBottom: '2px solid #ccc',
             }}
           >
-            Binding State
+            Registry State
           </div>
           <JsonCode data={snapshot} replacer={jsonReplacer} theme={atomOneLight} />
         </div>
 
-        {/* Binding Cell Value: cell data for binding.choosingSheetId / choosingAddress */}
+        {/* Registry Cell Value: cell data for registry.choosingSheetId / choosingAddress */}
         <div
           style={{
             flex: 1,
@@ -333,23 +336,22 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
               borderBottom: '2px solid #ccc',
             }}
           >
-            Cell: {wireCellSheetName && `${wireCellSheetName}!`}
-            {wireCellAddress} {binding?.choosingSheetId != null && `(SheetID: ${binding.choosingSheetId})`}
+            Cell: {registryCellSheetName && `'${registryCellSheetName}'!`}{registryCellAddress}
           </div>
-          {wireCellData ? (
-            <JsonCode data={wireCellData} theme={atelierSeasideLight} />
+          {registryCellData ? (
+            <JsonCode data={registryCellData} replacer={baseReplacer} theme={atelierSeasideLight} />
           ) : (
             <div style={{ fontStyle: 'italic', color: '#6c757d', padding: '12px' }}>No cell data</div>
           )}
         </div>
 
-        {/* Formula Expressions */}
+        {/* System: systems[id] for the choosing cell */}
         <div
           style={{
             flex: 1,
             borderRight: '1px solid #dee2e6',
             overflow: 'auto',
-            backgroundColor: '#fffbf0',
+            backgroundColor: '#fdf0f2',
             position: 'relative',
           }}
         >
@@ -357,39 +359,64 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
             style={{
               position: 'sticky',
               top: 0,
-              background: '#fffbf0',
+              background: '#fdf0f2',
               zIndex: 1,
               padding: '8px 12px',
               fontWeight: 'bold',
               borderBottom: '2px solid #ccc',
             }}
           >
-            Formula Expressions
+            System: {registryCellSheetName && `'${registryCellSheetName}'!`}{registryCellAddress}
           </div>
-          {wireCellData ? (
-            <JsonCode data={wireFormulaExpr} theme={solarizedLight} />
+          {registrySystemData ? (
+            <JsonCode data={registrySystemData} replacer={baseReplacer} theme={atelierHeathLight} />
           ) : (
-            <div style={{ fontStyle: 'italic', color: '#6c757d', padding: '12px' }}>No cell selected</div>
+            <div style={{ fontStyle: 'italic', color: '#6c757d', padding: '12px' }}>No system data</div>
           )}
         </div>
 
-        {/* Formula Tokens: raw lexer token list */}
-        <div style={{ flex: 1, overflow: 'auto', backgroundColor: '#f5f0ff', position: 'relative' }}>
+        {/* Formula: toggling between Expressions and Tokens */}
+        <div style={{ flex: 1, overflow: 'auto', backgroundColor: formulaView === 'expressions' ? '#fffbf0' : '#f5f0ff', position: 'relative' }}>
           <div
             style={{
               position: 'sticky',
               top: 0,
-              background: '#f5f0ff',
+              background: formulaView === 'expressions' ? '#fffbf0' : '#f5f0ff',
               zIndex: 1,
-              padding: '8px 12px',
+              padding: '6px 12px',
               fontWeight: 'bold',
               borderBottom: '2px solid #ccc',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
             }}
           >
-            Formula Tokens
+            <span>{formulaView === 'expressions' ? 'Formula Expressions' : 'Formula Tokens'}</span>
+            <button
+              onClick={() => {
+                const next = formulaView === 'expressions' ? 'tokens' : 'expressions';
+                setFormulaView(next);
+                sessionStorage.setItem('debugger_formula_view', next);
+              }}
+              style={{
+                marginLeft: 'auto',
+                fontSize: '11px',
+                padding: '2px 8px',
+                cursor: 'pointer',
+                border: '1px solid #aaa',
+                borderRadius: '4px',
+                background: '#fff',
+              }}
+            >
+              {formulaView === 'expressions' ? '→ Tokens' : '→ Expressions'}
+            </button>
           </div>
-          {wireCellData ? (
-            <JsonCode data={wireFormulaTokens} theme={docco} />
+          {registryCellData ? (
+            <JsonCode
+              data={formulaView === 'expressions' ? registryFormulaExpr : registryFormulaTokens}
+              replacer={baseReplacer}
+              theme={formulaView === 'expressions' ? solarizedLight : docco}
+            />
           ) : (
             <div style={{ fontStyle: 'italic', color: '#6c757d', padding: '12px' }}>No cell selected</div>
           )}

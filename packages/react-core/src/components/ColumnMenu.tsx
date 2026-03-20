@@ -94,7 +94,7 @@ export const ColumnMenu: FC = () => {
       focus(editorRef.current);
     };
     const currentSheet = sheetRef.current;
-    if (currentSheet && (currentSheet.hasPendingCells() || currentSheet.binding.asyncPending.size > 0)) {
+    if (currentSheet && (currentSheet.hasPendingCells() || currentSheet.registry.asyncPending.size > 0)) {
       currentSheet.waitForPending().then(execute);
     } else {
       execute();
@@ -135,12 +135,12 @@ export const ColumnMenu: FC = () => {
       partial: true,
       ignoreFields: [],
       undoReflection: {
-        sheetId: sheet.sheetId,
+        sheetId: sheet.id,
         selectingZone: store.selectingZone,
         choosing: store.choosing,
       },
       redoReflection: {
-        sheetId: sheet.sheetId,
+        sheetId: sheet.id,
         selectingZone: store.selectingZone,
         choosing: store.choosing,
       },

@@ -139,8 +139,8 @@ export const isXSheetFocused = (store: StoreType) => {
   if (!sheet) {
     return false;
   }
-  if (sheetId === sheet.binding.editingSheetId) {
+  if (sheetId === sheet.registry.editingSheetId) {
     return false;
   }
-  return !!sheet.binding.editingAddress;
+  return !!sheet.registry.editingAddress;
 };

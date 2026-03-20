@@ -1,7 +1,7 @@
 import { type Sheet } from '../../lib/sheet';
 
 /** Duck-type check for Sheet instances (avoids runtime import cycle). */
-export const isSheet = (v: any): v is Sheet => v?.__isSheet === true;
+export const isSheet = (v: any): v is Sheet => v?.__gsType === "Sheet";
 /** Duck-type check for Time instances (avoids runtime import cycle). */
 const isTime = (v: any): boolean => v != null && v.__gsType === 'Time';
 import { Spilling } from '../../sentinels';
@@ -382,7 +382,7 @@ export class BaseFunction {
     if (isSheet(value)) {
       const { rows, cols } = value.shape;
       if (rows === 1 && cols === 1) {
-        return value.strip();
+        return value.strip({});
       }
       return value;
     }

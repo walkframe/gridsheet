@@ -22,11 +22,11 @@ export class SheetFunction extends BaseFunction {
 
   protected main(ref?: Sheet | any) {
     if (ref == null) {
-      return this.sheet.sheetId;
+      return this.sheet.id;
     }
 
     if (ref instanceof Sheet) {
-      return ref.sheetId;
+      return ref.id;
     }
 
     throw new FormulaError('#VALUE!', 'Invalid argument for SHEET.');

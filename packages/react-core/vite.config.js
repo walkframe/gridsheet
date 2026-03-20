@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => ({
     },
     outDir: 'dist',
     rollupOptions: {
-      external: [/^react/, /^@?react-dom/, "@gridsheet/react-core"],
+      external: [/^react/, /^@?react-dom/, "@gridsheet/react-core", /^dayjs/],
       output: {
         preserveModules: false,
         //preserveModulesRoot: process.cwd(),

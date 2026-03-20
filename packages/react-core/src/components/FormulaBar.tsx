@@ -37,10 +37,8 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
 
   const address = choosing.x === -1 ? '' : p2a(choosing);
   const cell = sheet?.getCellByPoint(choosing, 'SYSTEM');
-  const spilledFromAddress = cell?._sys?.spilledFrom;
+  const spilledFromAddress = sheet?.getSystemByPoint(choosing)?.spilledFrom;
   const originPoint = spilledFromAddress ? a2p(spilledFromAddress) : undefined;
-  const originFormula =
-    originPoint != null ? sheet!.stringify({ point: originPoint, refEvaluation: 'RAW' }) : undefined;
   const originAddress = originPoint != null ? p2a(originPoint) : undefined;
   useEffect(() => {
     if (!sheet) {
@@ -93,7 +91,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
     inputting,
     selectionStart,
     optionsAll,
-    functions: sheet?.binding.functions,
+    functions: sheet?.registry.functions,
   });
 
   const largeInput = largeEditorRef.current;
@@ -122,7 +120,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
       }
       setIsFocused(true);
       dispatch(setEditingAddress(address));
-      sheet.binding.lastFocused = e.currentTarget;
+      sheet.registry.lastFocused = e.currentTarget;
     },
     [largeInput, address, sheet],
   );
@@ -367,9 +365,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
             width: '100%',
           }}
         >
-          {originFormula != null && !inputting ? (
-            <span className="gs-spill-origin-formula">{editorStyle(originFormula)}</span>
-          ) : (cell?.formulaEnabled ?? true) ? (
+          {(cell?.formulaEnabled ?? true) ? (
             editorStyle(inputting)
           ) : (
             inputting
@@ -383,6 +379,10 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
           spellCheck={false}
           ref={largeEditorRef}
           value={inputting}
+          // Spilled cells must not be edited from the FormulaBar — input here
+          // would modify `inputting` one character at a time (via onInput) even
+          // though the underlying cell cannot be written to.
+          readOnly={originAddress != null}
           onInput={handleInput}
           onFocus={handleFocus}
           onSelect={handleSelect}

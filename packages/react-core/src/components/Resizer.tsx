@@ -66,7 +66,7 @@ export const Resizer = () => {
       diff,
       partial: true,
       operator: 'USER',
-      undoReflection: { selectingZone, sheetId: sheet.sheetId },
+      undoReflection: { selectingZone, sheetId: sheet.id },
     });
     dispatch(
       setStore({

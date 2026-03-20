@@ -258,8 +258,8 @@ class CopyAction<T extends ZoneType> extends CoreAction<T> {
     return {
       ...store,
       callback: ({ sheetReactive: sheetRef }) => {
-        sheet.binding.transmit({
-          copyingSheetId: sheet.sheetId,
+        sheet.registry.transmit({
+          copyingSheetId: sheet.id,
           copyingZone: payload,
           cutting: false,
         });
@@ -279,8 +279,8 @@ class CutAction<T extends ZoneType> extends CoreAction<T> {
     return {
       ...store,
       callback: ({ sheetReactive: sheetRef }) => {
-        sheet.binding.transmit({
-          copyingSheetId: sheet.sheetId,
+        sheet.registry.transmit({
+          copyingSheetId: sheet.id,
           copyingZone: payload,
           cutting: true,
         });
@@ -297,7 +297,7 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
     if (!dstSheet) {
       return store;
     }
-    const { binding } = dstSheet;
+    const { registry: binding } = dstSheet;
     const { copyingSheetId, copyingZone, cutting } = binding;
     const srcSheet = dstSheet.getSheetBySheetId(copyingSheetId);
 
@@ -333,15 +333,15 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
         dst,
         operator: 'USER',
         undoReflection: {
-          sheetId: srcSheet.sheetId,
+          sheetId: srcSheet.id,
           selectingZone: nextSelectingZone,
           choosing,
-          transmit: { copyingSheetId: srcSheet.sheetId, copyingZone, cutting: true },
+          transmit: { copyingSheetId: srcSheet.id, copyingZone, cutting: true },
         },
         redoReflection: {
-          sheetId: srcSheet.sheetId,
+          sheetId: srcSheet.id,
           choosing,
-          transmit: { copyingSheetId: srcSheet.sheetId, copyingZone: resetZone },
+          transmit: { copyingSheetId: srcSheet.id, copyingZone: resetZone },
         },
       });
 
@@ -377,12 +377,12 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
         matrix,
         onlyValue,
         undoReflection: {
-          sheetId: dstSheet.sheetId,
+          sheetId: dstSheet.id,
           selectingZone: nextSelectingZone,
           choosing,
         },
         redoReflection: {
-          sheetId: dstSheet.sheetId,
+          sheetId: dstSheet.id,
           selectingZone: nextSelectingZone,
           choosing,
         },
@@ -407,14 +407,14 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
         onlyValue,
         operator: 'USER',
         undoReflection: {
-          sheetId: srcSheet.sheetId,
+          sheetId: srcSheet.id,
           transmit: { copyingZone },
           choosing,
           selectingZone,
         },
         redoReflection: {
-          sheetId: srcSheet.sheetId,
-          transmit: { copyingSheetId: srcSheet.sheetId, copyingZone: resetZone },
+          sheetId: srcSheet.id,
+          transmit: { copyingSheetId: srcSheet.id, copyingZone: resetZone },
           choosing,
           selectingZone: areaToZone(selectingArea),
         },
@@ -449,7 +449,7 @@ class EscapeAction<T extends null> extends CoreAction<T> {
       leftHeaderSelecting: false,
       topHeaderSelecting: false,
       callback: ({ sheetReactive: sheetRef }) => {
-        sheetRef.current!.binding.transmit({
+        sheetRef.current!.registry.transmit({
           copyingZone: resetZone,
           cutting: false,
         });
@@ -601,12 +601,12 @@ class WriteAction<T extends { value: string; point?: PointType }> extends CoreAc
       value,
       operator: 'USER',
       undoReflection: {
-        sheetId: sheet.sheetId,
+        sheetId: sheet.id,
         selectingZone,
         choosing: point,
       },
       redoReflection: {
-        sheetId: sheet.sheetId,
+        sheetId: sheet.id,
         selectingZone,
         choosing: point,
       },
@@ -616,7 +616,7 @@ class WriteAction<T extends { value: string; point?: PointType }> extends CoreAc
       ...initSearchStatement(newSheet, store),
       sheetReactive: { current: newSheet },
       callback: ({ sheetReactive: sheetRef }) => {
-        sheet.binding.transmit({
+        sheet.registry.transmit({
           copyingZone: resetZone,
         });
       },
@@ -651,8 +651,14 @@ class ClearAction<T extends null> extends CoreAction<T> {
         if (prevention.hasOperation(cell?.prevention, prevention.Write)) {
           continue;
         }
+        // Spilled cells are derived from the origin cell's formula and should
+        // not be cleared independently — doing so would blank the FormulaBar
+        // while the spill re-populates the value on next evaluation.
+        if (sheet.getSystemByPoint({ y, x })?.spilledFrom != null) {
+          continue;
+        }
         if (cell?.value != null) {
-          diff[address] = { value: null };
+          diff[address] = { value: undefined };
           diffCount++;
         }
       }
@@ -665,12 +671,12 @@ class ClearAction<T extends null> extends CoreAction<T> {
       partial: true,
       operator: 'USER',
       undoReflection: {
-        sheetId: sheet.sheetId,
+        sheetId: sheet.id,
         selectingZone,
         choosing,
       },
       redoReflection: {
-        sheetId: sheet.sheetId,
+        sheetId: sheet.id,
         selectingZone,
         choosing,
       },
@@ -695,8 +701,8 @@ class UndoAction<T extends null> extends CoreAction<T> {
     if (history == null) {
       return store;
     }
-    if (history.dstSheetId !== sheet.sheetId) {
-      const { dispatch, store: dstStore } = sheet.binding.contextsBySheetId[history.dstSheetId];
+    if (history.dstSheetId !== sheet.id) {
+      const { dispatch, store: dstStore } = sheet.registry.contextsBySheetId[history.dstSheetId];
       dispatch(
         setStore({
           ...dstStore,
@@ -707,7 +713,7 @@ class UndoAction<T extends null> extends CoreAction<T> {
       flashSheet(dstStore.flashRef.current);
       // For cross-sheet MOVE: the src (current) sheet's lastChangedAddresses was also updated.
       // Return updated sheetReactive so this sheet's Emitter fires onChange.
-      if (history.srcSheetId === sheet.sheetId) {
+      if (history.srcSheetId === sheet.id) {
         return flashWithCallback(store, sheet, callback);
       }
       return store;
@@ -738,8 +744,8 @@ class RedoAction<T extends null> extends CoreAction<T> {
     if (history == null) {
       return store;
     }
-    if (history.dstSheetId !== sheet.sheetId) {
-      const { dispatch, store: dstStore } = sheet.binding.contextsBySheetId[history.dstSheetId];
+    if (history.dstSheetId !== sheet.id) {
+      const { dispatch, store: dstStore } = sheet.registry.contextsBySheetId[history.dstSheetId];
       dispatch(
         setStore({
           ...dstStore,
@@ -750,7 +756,7 @@ class RedoAction<T extends null> extends CoreAction<T> {
       flashSheet(dstStore.flashRef.current);
       // For cross-sheet MOVE: the src (current) sheet's lastChangedAddresses was also updated.
       // Return updated sheetReactive so this sheet's Emitter fires onChange.
-      if (history.srcSheetId === sheet.sheetId) {
+      if (history.srcSheetId === sheet.id) {
         return flashWithCallback(store, sheet, callback);
       }
       return store;
@@ -996,12 +1002,12 @@ class InsertRowsAboveAction<T extends { numRows: number; y: number; operator?: O
       baseY: y,
       operator,
       undoReflection: {
-        sheetId: sheet.sheetId,
+        sheetId: sheet.id,
         selectingZone,
         choosing,
       },
       redoReflection: {
-        sheetId: sheet.sheetId,
+        sheetId: sheet.id,
         selectingZone,
         choosing,
       },
@@ -1035,12 +1041,12 @@ class InsertRowsBelowAction<T extends { numRows: number; y: number; operator?: O
       baseY: y,
       operator,
       undoReflection: {
-        sheetId: sheet.sheetId,
+        sheetId: sheet.id,
         selectingZone,
         choosing,
       },
       redoReflection: {
-        sheetId: sheet.sheetId,
+        sheetId: sheet.id,
         selectingZone: nextSelectingZone,
         choosing: nextChoosing,
       },
@@ -1070,12 +1076,12 @@ class InsertColsLeftAction<T extends { numCols: number; x: number; operator?: Op
       baseX: x,
       operator,
       undoReflection: {
-        sheetId: sheet.sheetId,
+        sheetId: sheet.id,
         selectingZone,
         choosing,
       },
       redoReflection: {
-        sheetId: sheet.sheetId,
+        sheetId: sheet.id,
         selectingZone,
         choosing,
       },
@@ -1112,12 +1118,12 @@ class InsertColsRightAction<T extends { numCols: number; x: number; operator?: O
       baseX: x,
       operator,
       undoReflection: {
-        sheetId: sheet.sheetId,
+        sheetId: sheet.id,
         selectingZone,
         choosing,
       },
       redoReflection: {
-        sheetId: sheet.sheetId,
+        sheetId: sheet.id,
         selectingZone: nextSelectingZone,
         choosing: nextChoosing,
       },
@@ -1146,13 +1152,13 @@ class RemoveRowsAction<T extends { numRows: number; y: number; operator?: Operat
       numRows,
       operator,
       undoReflection: {
-        sheetId: sheet.sheetId,
+        sheetId: sheet.id,
         selectingZone,
         choosing,
         sheetHeight: store.sheetHeight,
       },
       redoReflection: {
-        sheetId: sheet.sheetId,
+        sheetId: sheet.id,
         selectingZone,
         choosing,
       },
@@ -1180,13 +1186,13 @@ class RemoveColsAction<T extends { numCols: number; x: number; operator?: Operat
       numCols,
       operator,
       undoReflection: {
-        sheetId: sheet.sheetId,
+        sheetId: sheet.id,
         selectingZone,
         choosing,
         sheetWidth: store.sheetWidth,
       },
       redoReflection: {
-        sheetId: sheet.sheetId,
+        sheetId: sheet.id,
         selectingZone,
         choosing,
       },
@@ -1209,10 +1215,10 @@ class SortRowsAction<T extends { x: number; direction: 'asc' | 'desc' }> extends
       return store;
     }
     sheet.sortRows({ x, direction });
-    const reflection = { sheetId: sheet.sheetId, selectingZone, choosing };
-    if (sheet.binding.lastHistory) {
-      sheet.binding.lastHistory.undoReflection = reflection;
-      sheet.binding.lastHistory.redoReflection = reflection;
+    const reflection = { sheetId: sheet.id, selectingZone, choosing };
+    if (sheet.registry.lastHistory) {
+      sheet.registry.lastHistory.undoReflection = reflection;
+      sheet.registry.lastHistory.redoReflection = reflection;
     }
     return {
       ...store,
@@ -1231,10 +1237,10 @@ class FilterRowsAction<T extends { x?: number; filter?: FilterConfig }> extends 
       return store;
     }
     sheet.filterRows({ x, filter });
-    const reflection = { sheetId: sheet.sheetId, selectingZone, choosing };
-    if (sheet.binding.lastHistory) {
-      sheet.binding.lastHistory.undoReflection = reflection;
-      sheet.binding.lastHistory.redoReflection = reflection;
+    const reflection = { sheetId: sheet.id, selectingZone, choosing };
+    if (sheet.registry.lastHistory) {
+      sheet.registry.lastHistory.undoReflection = reflection;
+      sheet.registry.lastHistory.redoReflection = reflection;
     }
     let newChoosing = choosing;
     if (sheet.isRowFiltered(choosing.y)) {
@@ -1253,7 +1259,7 @@ class FilterRowsAction<T extends { x?: number; filter?: FilterConfig }> extends 
       callback: ({ sheetReactive: sheetRef }) => {
         const t = sheetRef.current;
         if (t) {
-          t.binding.transmit({
+          t.registry.transmit({
             cutting: false,
             copyingZone: resetZone,
           });

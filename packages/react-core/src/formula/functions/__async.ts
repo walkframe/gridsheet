@@ -1,7 +1,7 @@
 import { Pending, Sentinel, Spilling } from '../../sentinels';
 import { FormulaError } from '../formula-error';
 import { ensureSys, setAsyncCache } from '../../lib/cell';
-import type { Binding } from '../../lib/hub';
+import type { Registry } from '../../lib/hub';
 import type { CellType, Id, PointType } from '../../types';
 import type { Sheet } from '../../lib/sheet';
 
@@ -18,7 +18,7 @@ export const hasPendingArg = (args: any[]): boolean => {
 };
 
 const isSheet = (value: any): value is Sheet => {
-  return value?.__isSheet === true;
+  return value?.__gsType === "Sheet";
 };
 
 /**
@@ -102,19 +102,19 @@ export const buildAsyncCacheKey = (funcName: string, args: any[], hashPrecision:
  * - asyncCacheMiss if no cache/pending exists (distinguishes from user-returned undefined/null)
  */
 export const getAsyncCache = (
-  sheet: { binding: Binding; getId: (p: PointType) => string },
+  sheet: { registry: Registry; getId: (p: PointType) => string },
   id: Id,
   key: string,
   useInflight: boolean = false,
 ): any => {
-  const binding = sheet.binding;
-  const cell: CellType | undefined = binding.data[id];
+  const registry = sheet.registry;
+  const cell: CellType | undefined = registry.data[id];
 
   if (cell == null) {
     return asyncCacheMiss;
   }
 
-  const sys = ensureSys(cell, { tmpAsyncCaches: {} });
+  const sys = ensureSys(registry, id, { tmpAsyncCaches: {} });
 
   // Check for a cached result from a previous async run
   if (cell.asyncCaches != null) {
@@ -132,20 +132,20 @@ export const getAsyncCache = (
   const compositeKey = `${id}:${key}`;
 
   // Check if there is already a pending promise for this cell+key
-  if (binding.asyncPending.has(compositeKey)) {
-    return binding.asyncPending.get(compositeKey)!;
+  if (registry.asyncPending.has(compositeKey)) {
+    return registry.asyncPending.get(compositeKey)!;
   }
 
   // If useInflight is enabled, check for an in-flight promise with the same cache key
-  if (useInflight && binding.asyncInflight?.has(key)) {
-    const inflight = binding.asyncInflight.get(key)!;
+  if (useInflight && registry.asyncInflight?.has(key)) {
+    const inflight = registry.asyncInflight.get(key)!;
     // Track for this cell+key to prevent duplicate `.then` attachment and correctly yield the pending sentinel
-    binding.asyncPending.set(compositeKey, inflight.pending);
+    registry.asyncPending.set(compositeKey, inflight.pending);
 
     // Chain to the shared promise to populate this cell's cache when it resolves
     inflight.pending.promise
       .then((result: any) => {
-        const c = binding.data[id];
+        const c = registry.data[id];
         if (c != null) {
           setAsyncCache(c, key, { value: result, expireTime: inflight.expireTime });
         }
@@ -154,13 +154,13 @@ export const getAsyncCache = (
         if (!FormulaError.is(e)) {
           e = new FormulaError('#ASYNC!', e?.message ?? String(e), e instanceof Error ? e : undefined);
         }
-        const c = binding.data[id];
+        const c = registry.data[id];
         if (c != null) {
           setAsyncCache(c, key, { value: e, expireTime: inflight.expireTime });
         }
       })
       .finally(() => {
-        binding.asyncPending.delete(compositeKey);
+        registry.asyncPending.delete(compositeKey);
       });
 
     return inflight.pending;
@@ -188,13 +188,13 @@ export const getAsyncCache = (
  */
 export const awaitAndSave = (
   promise: Promise<any>,
-  sheet: { binding: Binding; getId: (p: PointType) => string },
+  sheet: { registry: Registry; getId: (p: PointType) => string },
   id: Id,
   key: string,
   ttlMilliseconds?: number,
   useInflight: boolean = false,
 ): Pending => {
-  const binding = sheet.binding;
+  const registry = sheet.registry;
 
   // Compute expireTime from ttl (ms)
   const expireTime = ttlMilliseconds != null ? Date.now() + ttlMilliseconds : undefined;
@@ -203,19 +203,19 @@ export const awaitAndSave = (
 
   // Start the async computation
   const pending = new Pending(promise);
-  binding.asyncPending.set(compositeKey, pending);
+  registry.asyncPending.set(compositeKey, pending);
 
   // If useInflight is enabled, also track by cache key
   if (useInflight) {
-    if (!binding.asyncInflight) {
-      binding.asyncInflight = new Map();
+    if (!registry.asyncInflight) {
+      registry.asyncInflight = new Map();
     }
-    binding.asyncInflight.set(key, { pending, expireTime });
+    registry.asyncInflight.set(key, { pending, expireTime });
   }
 
   promise
     .then((result: any) => {
-      const c = binding.data[id];
+      const c = registry.data[id];
       if (c != null) {
         setAsyncCache(c, key, { value: result, expireTime });
       }
@@ -224,23 +224,23 @@ export const awaitAndSave = (
       if (!FormulaError.is(e)) {
         e = new FormulaError('#ASYNC!', e?.message ?? String(e), e instanceof Error ? e : undefined);
       }
-      const c = binding.data[id];
+      const c = registry.data[id];
       if (c != null) {
         setAsyncCache(c, key, { value: e, expireTime });
       }
     })
     .finally(() => {
-      binding.asyncPending.delete(compositeKey);
+      registry.asyncPending.delete(compositeKey);
       // If useInflight was enabled, also remove from asyncInflight
       if (useInflight) {
-        if (binding.asyncInflight) {
-          binding.asyncInflight.delete(key);
+        if (registry.asyncInflight) {
+          registry.asyncInflight.delete(key);
         }
       }
       // Clear solvedCaches so dependent formulas re-evaluate
-      binding.solvedCaches.clear();
+      registry.solvedCaches.clear();
       // Trigger re-render of all sheets
-      binding.transmit();
+      registry.transmit();
     });
 
   return pending;

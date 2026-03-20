@@ -46,12 +46,12 @@ export function GridSheet({
 
   const internalHub = useBook({});
   const book = initialHub ?? internalHub;
-  const { binding } = book;
+  const { registry } = book;
 
   // useRef to manage sheetId and avoid Strict Mode issues
   const sheetIdRef = useRef<number | null>(null);
   if (sheetIdRef.current === null) {
-    sheetIdRef.current = ++binding.sheetHead;
+    sheetIdRef.current = ++registry.sheetHead;
   }
   const sheetId = sheetIdRef.current;
 
@@ -63,20 +63,17 @@ export function GridSheet({
       sheetName = `Sheet${sheetId}`;
       console.debug('GridSheet: sheetName is not provided, using default name:', sheetName);
     }
-    const { minNumRows, maxNumRows, minNumCols, maxNumCols, contextMenuItems } = options;
+    const { limits, contextMenuItems } = options;
     const sheet = new Sheet({
-      minNumRows,
-      maxNumRows,
-      minNumCols,
-      maxNumCols,
-      sheetName,
-      book: binding,
+      limits,
+      name: sheetName,
+      book: registry,
     });
-    sheet.sheetId = sheetId;
-    binding.sheetIdsByName[sheetName] = sheetId;
+    sheet.id = sheetId;
+    registry.sheetIdsByName[sheetName] = sheetId;
 
     sheet.initialize(initialCells);
-    binding.onInit?.({ sheet });
+    registry.onInit?.({ sheet });
 
     sheet.setTotalSize();
     sheetReactive.current = sheet;
@@ -116,10 +113,6 @@ export function GridSheet({
       columnMenuState: null,
       rowMenuState: null,
       editorHovering: true,
-      minNumRows: 1,
-      maxNumRows: -1,
-      minNumCols: 1,
-      maxNumCols: -1,
       mode: 'light',
     };
     return store;
@@ -160,7 +153,7 @@ export function GridSheet({
   return (
     <Context.Provider value={{ store, dispatch }}>
       <div
-        className={`gs-root1 ${binding.ready ? 'gs-initialized' : ''}`}
+        className={`gs-root1 ${registry.ready ? 'gs-initialized' : ''}`}
         ref={rootRef}
         data-sheet-name={sheetName}
         data-mode={mode}
@@ -173,7 +166,7 @@ export function GridSheet({
         <ScrollHandle style={{ position: 'absolute', zIndex: 4, left: 0, bottom: 0, height: 5 }} vertical={1} />
 
         {typeof store.searchQuery === 'undefined' ? (
-          showFormulaBar && <FormulaBar ready={binding.ready} />
+          showFormulaBar && <FormulaBar ready={registry.ready} />
         ) : (
           <SearchBar />
         )}

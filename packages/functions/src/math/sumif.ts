@@ -1,5 +1,5 @@
 import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { Sheet, eachMatrix, stripSheet, check, conditionArg, ensureString } from '@gridsheet/react-core';
+import { Sheet, eachMatrix, stripMatrix, check, conditionArg, ensureString } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
 const description = `Returns the sum of a series of cells.`;
@@ -44,7 +44,7 @@ export class SumifFunction extends BaseFunction {
 
     let total = 0;
     condArr.forEach((c, i) => {
-      const s = stripSheet({ value: (sumRange ? sumArr[i] : c) ?? 0 });
+      const s = stripMatrix((sumRange ? sumArr[i] : c) ?? 0, this.at);
       if (typeof s === 'number' && check(c, conditionStr)) {
         total += s;
       }

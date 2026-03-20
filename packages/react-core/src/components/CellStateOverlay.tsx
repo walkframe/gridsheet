@@ -148,7 +148,7 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
 
-    const { binding } = sheet;
+    const { registry: binding } = sheet;
     const scrollTop = container.scrollTop;
     const scrollLeft = container.scrollLeft;
     const headerW = sheet.headerWidth;
@@ -183,7 +183,7 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
 
     // 4. Copying/Cutting zone
     const { copyingSheetId, copyingZone, cutting } = binding;
-    if (sheet.sheetId === copyingSheetId) {
+    if (sheet.id === copyingSheetId) {
       const copyingArea = zoneToArea(copyingZone);
       const color = cutting ? COLOR_CUTTING : COLOR_COPYING;
       const dashPattern = cutting ? [4, 4] : [6, 4];

@@ -73,7 +73,7 @@ export const Tabular = () => {
     const formulaEditing = editingAddress && inputting.startsWith('=');
     if (!formulaEditing) {
       setPalette({});
-      sheet.binding.paletteBySheetName = {};
+      sheet.registry.paletteBySheetName = {};
       return;
     }
     const palette: RefPaletteType = {};
@@ -106,15 +106,15 @@ export const Tabular = () => {
       }
     }
     setPalette(palette);
-    sheet.binding.paletteBySheetName = paletteBySheetName;
+    sheet.registry.paletteBySheetName = paletteBySheetName;
   }, [store.inputting, store.editingAddress, sheetReactive]);
 
   useEffect(() => {
     if (!sheet) {
       return;
     }
-    sheet.binding.choosingAddress = p2a(choosing);
-    sheet.binding.choosingSheetId = sheet.sheetId;
+    sheet.registry.choosingAddress = p2a(choosing);
+    sheet.registry.choosingSheetId = sheet.id;
   }, [choosing]);
 
   useEffect(() => {
@@ -126,10 +126,10 @@ export const Tabular = () => {
 
   const mergedRefs: RefPaletteType = {
     ...palette,
-    ...(sheet ? sheet.binding.paletteBySheetName[sheet.sheetName] : {}),
+    ...(sheet ? sheet.registry.paletteBySheetName[sheet.name] : {}),
   };
 
-  if (!sheet || !sheet.binding.ready) {
+  if (!sheet || !sheet.registry.ready) {
     return null;
   }
 

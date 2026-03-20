@@ -5,11 +5,6 @@ import {
   useState,
   useCallback,
   memo,
-  CSSProperties,
-  FocusEvent,
-  KeyboardEvent,
-  SyntheticEvent,
-  useRef,
 } from 'react';
 import { createPortal } from 'react-dom';
 import { FunctionGuide } from './FunctionGuide';
@@ -51,7 +46,7 @@ import { focus } from '../lib/dom';
 import { Lexer } from '../formula/evaluator';
 import { COLOR_PALETTE } from '../lib/palette';
 import { useAutocomplete } from './useAutocomplete';
-import { CursorStateType, EditorEventWithNativeEvent, FeedbackType, ModeType } from '../types';
+import { EditorEventWithNativeEvent, FeedbackType, ModeType } from '../types';
 import { Fixed } from './Fixed';
 import { parseHTML, parseText } from '../lib/paste';
 import React from 'react';
@@ -150,7 +145,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
     inputting,
     selectionStart,
     optionsAll,
-    functions: sheet.binding.functions,
+    functions: sheet.registry.functions,
   });
 
   useEffect(() => {
@@ -158,25 +153,25 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
   }, [editorRef]);
 
   useEffect(() => {
-    if (sheet.binding.lastFocused == null) {
+    if (sheet.registry.lastFocused == null) {
       return;
     }
-    if (sheet.binding.lastFocused !== editorRef.current) {
+    if (sheet.registry.lastFocused !== editorRef.current) {
       return;
     }
-    if (sheet.binding.lastFocused !== largeEditorRef.current) {
+    if (sheet.registry.lastFocused !== largeEditorRef.current) {
       return;
     }
 
     dispatch(setEditingAddress(''));
-  }, [sheet.binding.lastFocused, editorRef, largeEditorRef, dispatch]);
+  }, [sheet.registry.lastFocused, editorRef, largeEditorRef, dispatch]);
   useEffect(() => {
-    sheet.binding.editingSheetId = sheetId;
-    sheet.binding.editingAddress = editingAddress;
+    sheet.registry.editingSheetId = sheetId;
+    sheet.registry.editingAddress = editingAddress;
   }, [editingAddress, sheet, sheetId]);
 
   useEffect(() => {
-    //sheet.binding.transmit();
+    //sheet.registry.transmit();
     expandInput(editorRef.current);
   }, [inputting, editingAddress, editorRef]);
 
@@ -186,7 +181,9 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
   const address = `${colId}${rowId}`;
   const editing = editingAddress === address;
 
-  const cell = sheet.getCellByPoint({ y, x }, 'SYSTEM');
+  // Use 'RAW' so that spilled values (stored in solvedCaches) are already
+  // reflected in cell.value without re-evaluating the formula.
+  const cell = sheet.getCellByPoint({ y, x }, 'RAW');
   const currentString = sheet.stringify({ point: choosing, cell, refEvaluation: 'RAW' });
   const [before, setBefore] = useState<string>(currentString);
 
@@ -329,6 +326,18 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
 
         case 'Backspace': // BACKSPACE
           if (!editing) {
+            // Spilled cells are read-only — clearing them would only erase the
+            // cached spill value while the origin formula remains intact, causing
+            // a confusing state where the FormulaBar goes blank but the cell
+            // visually still shows the spilled value after re-evaluation.
+            // e.preventDefault() is required here: without it the browser still
+            // fires the default textarea behavior (deletes one char), which
+            // triggers onInput → setInputting, making the value shrink character
+            // by character on each Backspace press.
+            if (sheet.getSystemByPoint({ y, x })?.spilledFrom != null) {
+              e.preventDefault();
+              return false;
+            }
             dispatch(clear(null));
             dispatch(setInputting(''));
             return false;
@@ -336,6 +345,11 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
           break;
         case 'Delete': // DELETE
           if (!editing) {
+            // Same guard as Backspace — spilled cells must not be cleared directly.
+            if (sheet.getSystemByPoint({ y, x })?.spilledFrom != null) {
+              e.preventDefault();
+              return false;
+            }
             dispatch(clear(null));
             dispatch(setInputting(''));
             return false;
@@ -481,7 +495,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
           if (e.ctrlKey || e.metaKey) {
             if (!editing) {
               e.preventDefault();
-              sheet.binding.onSave?.({
+              sheet.registry.onSave?.({
                 sheet,
                 points: {
                   pointing: choosing,
@@ -578,7 +592,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
   const handleFocus = useCallback(
     (e: React.FocusEvent<HTMLTextAreaElement>) => {
       setIsFocused(true);
-      sheet.binding.lastFocused = e.currentTarget;
+      sheet.registry.lastFocused = e.currentTarget;
     },
     [sheet],
   );
@@ -659,7 +673,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       setShiftKey(false);
       const selectingArea = zoneToArea(store.selectingZone);
-      sheet.binding.onKeyUp?.({
+      sheet.registry.onKeyUp?.({
         e,
         points: {
           pointing: choosing,

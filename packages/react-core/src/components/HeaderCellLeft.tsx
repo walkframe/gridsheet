@@ -52,9 +52,9 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
   const height = row?.height || DEFAULT_HEIGHT;
 
   const xSheetFocused = isXSheetFocused(store);
-  const lastFocused = sheet?.binding.lastFocused;
+  const lastFocused = sheet?.registry.lastFocused;
 
-  const editingAnywhere = !!(sheet?.binding.editingAddress || editingAddress);
+  const editingAnywhere = !!(sheet?.registry.editingAddress || editingAddress);
 
   const writeCell = useCallback(
     (value: string) => {

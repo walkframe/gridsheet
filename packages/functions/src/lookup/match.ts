@@ -1,6 +1,6 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { Sheet, solveSheet, stripSheet, ensureNumber } from '@gridsheet/react-core';
+import { Sheet, solveSheet, stripMatrix, ensureNumber } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
 const description = `Searches for a value in a sheet and returns its position.
@@ -27,7 +27,7 @@ export class MatchFunction extends BaseFunction {
     }
 
     if (args[0] instanceof Sheet) {
-      args[0] = stripSheet({ value: args[0] });
+      args[0] = stripMatrix(args[0], this.at);
     }
 
     if (!(args[1] instanceof Sheet)) {

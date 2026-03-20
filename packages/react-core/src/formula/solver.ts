@@ -119,26 +119,17 @@ export type StripSheetProps = {
   y?: number;
   x?: number;
   raise?: boolean;
-  history?: Set<Id>;
 };
 
-export const stripSheet = ({ value, y = 0, x = 0, raise = true, history = new Set() }: StripSheetProps): any => {
+export const stripSheet = ({ value, y = 0, x = 0, raise = true }: StripSheetProps): any => {
   if (Pending.is(value)) {
     return value;
   }
   if (value instanceof Sheet) {
     const id = value.getId({ x, y });
-    if (history.has(id)) {
-      const e = new FormulaError('#REF!', 'References are circulating.');
-      if (raise) {
-        throw e;
-      }
-      return e;
-    }
-    history.add(id);
     value = solveSheet({ sheet: value, raise, at: id })[y][x];
     if (value instanceof Sheet) {
-      return stripSheet({ value, y, x, raise, history });
+      return stripSheet({ value, y, x, raise });
     }
   }
   return value;

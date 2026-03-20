@@ -19,6 +19,7 @@ export { PluginBase, useInitialPluginContext, usePluginContext } from './compone
 export type {
   MatrixType,
   CellType,
+  System,
   Address,
   AsyncCache,
   FilterCondition,
@@ -29,6 +30,7 @@ export type {
   WriterType,
   CellsByAddressType,
   CellsByIdType,
+  SystemsByIdType,
   ModeType,
   HeadersType,
   HistoryType,
@@ -43,8 +45,8 @@ export type {
   CursorStateType,
 } from './types';
 
-export type { BookType, BookProps, BindingProps, TransmitProps } from './lib/hub';
-export { Binding, useBook, createBook } from './lib/hub';
+export type { BookType, BookProps, RegistryProps as BindingProps, TransmitProps } from './lib/hub';
+export { Registry as Binding, useBook, createBook } from './lib/hub';
 export type { Dispatcher } from './store';
 export { ThousandSeparatorPolicyMixin } from './policy/thousand_separator';
 export { CheckboxPolicyMixin } from './policy/checkbox';
@@ -57,7 +59,7 @@ export type {
 } from './formula/functions/__base';
 export { Lexer, FormulaParser, RefEntity, ValueEntity, RangeEntity } from './formula/evaluator';
 export { FormulaError } from './formula/formula-error';
-export { Sheet, type UserSheet } from './lib/sheet';
+export { Sheet, type UserSheet, type SheetLimits } from './lib/sheet';
 export { Policy } from './policy/core';
 export type {
   PolicyType,
@@ -89,5 +91,5 @@ export {
   createBooleanMask,
 } from './formula/functions/__utils';
 export type { EnsureNumberOptions, EnsureBooleanOptions } from './formula/functions/__utils';
-export { conditionArg } from './formula/functions/__base';
-export { solveSheet, stripSheet } from './formula/solver';
+export { conditionArg, stripMatrix } from './formula/functions/__base';
+export { solveSheet } from './formula/solver';

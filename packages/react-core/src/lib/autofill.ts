@@ -89,11 +89,11 @@ export class Autofill {
       diff,
       operator: 'USER',
       undoReflection: {
-        sheetId: this.sheet.sheetId,
+        sheetId: this.sheet.id,
         selectingZone: areaToZone(this.src),
       },
       redoReflection: {
-        sheetId: this.sheet.sheetId,
+        sheetId: this.sheet.id,
         selectingZone: areaToZone(this.dst),
       },
     });

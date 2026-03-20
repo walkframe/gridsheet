@@ -38,7 +38,7 @@ export function ScrollHandle({ style, horizontal = 0, vertical = 0, className = 
 
   let isScrolling = false;
   const xSheetFocused = isXSheetFocused(store);
-  const editingAnywhere = !!(sheet?.binding.editingAddress || editingAddress);
+  const editingAnywhere = !!(sheet?.registry.editingAddress || editingAddress);
 
   const getDestEdge = useCallback(
     (e: React.MouseEvent) => {

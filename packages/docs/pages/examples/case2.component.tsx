@@ -217,8 +217,7 @@ export default function GitHubContributors() {
             mode: 'dark',
             sheetHeight: 500,
             sheetWidth: 1000,
-            minNumCols: 5,
-            maxNumCols: 5,
+            limits: { minCols: 5, maxCols: 5 },
           }}
         />
       )}

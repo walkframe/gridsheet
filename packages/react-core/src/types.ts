@@ -1,4 +1,4 @@
-import type { UserSheet, Sheet } from './lib/sheet';
+import type { UserSheet, Sheet, SheetLimits } from './lib/sheet';
 import type { FC, RefObject } from 'react';
 import type { BookType, TransmitProps } from './lib/hub';
 import type { CSSProperties, KeyboardEvent } from 'react';
@@ -50,6 +50,10 @@ export type System = {
   tmpAsyncCaches?: Record<string, AsyncCache>;
   /** Address of the origin cell whose array formula spilled its value into this cell. */
   spilledFrom?: Address;
+  /** IDs of cells whose formula depends on this cell. */
+  dependents?: Set<Id>;
+  /** IDs of cells that this cell's formula depends on. */
+  dependencies?: Set<Id>;
 };
 
 export type FilterConditionMethod =
@@ -86,7 +90,6 @@ export type CellType<T = any, Custom = any> = {
   custom?: Custom;
   formulaEnabled?: boolean;
   prevention?: OperationType;
-  _sys?: System;
   /** Cached result from an async formula. Stored directly on the cell for serializability. */
   asyncCaches?: Record<string, AsyncCache>;
   /** Filter configuration. Set on col-header cells (y=0). */
@@ -106,6 +109,7 @@ export type CellFilter = (cell: CellType) => boolean;
 
 export type CellsByAddressType = { [address: string]: CellType };
 export type CellsByIdType = { [id: Id]: CellType | undefined };
+export type SystemsByIdType = { [id: Id]: System };
 
 export type OptionsType = {
   sheetHeight?: number;
@@ -114,10 +118,7 @@ export type OptionsType = {
   editingOnEnter?: boolean;
   showAddress?: boolean;
   showFormulaBar?: boolean;
-  minNumRows?: number;
-  maxNumRows?: number;
-  minNumCols?: number;
-  maxNumCols?: number;
+  limits?: SheetLimits;
   mode?: ModeType;
   contextMenuItems?: FC<ContextMenuProps>[];
 };
@@ -153,10 +154,6 @@ export type StoreType = {
   dragging: boolean;
   sheetHeight: number;
   sheetWidth: number;
-  minNumRows: number;
-  maxNumRows: number;
-  minNumCols: number;
-  maxNumCols: number;
   mode: ModeType;
   searchQuery?: string;
   searchCaseSensitive: boolean;

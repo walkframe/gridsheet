@@ -11,7 +11,7 @@ export class SheetsFunction extends BaseFunction {
   category: FunctionCategory = 'information';
 
   protected main() {
-    const sheetIdsByName = this.sheet.binding.sheetIdsByName;
+    const sheetIdsByName = this.sheet.registry.sheetIdsByName;
     const count = Object.keys(sheetIdsByName).length;
     // If wire has no registered sheets (e.g. standalone sheet), return 1
     return count === 0 ? 1 : count;

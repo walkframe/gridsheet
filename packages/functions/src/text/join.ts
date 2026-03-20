@@ -1,6 +1,6 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { Sheet, solveSheet, stripSheet, ensureString } from '@gridsheet/react-core';
+import { Sheet, solveSheet, stripMatrix, ensureString } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
 const description = `Joins the elements of one or more 1D arrays or values using a delimiter.
@@ -39,7 +39,7 @@ export class JoinFunction extends BaseFunction {
         const matrix = solveSheet({ sheet: arg });
         for (const row of matrix) {
           for (const cell of row) {
-            parts.push(ensureString(stripSheet({ value: cell })));
+            parts.push(ensureString(stripMatrix(cell, this.at)));
           }
         }
       } else {

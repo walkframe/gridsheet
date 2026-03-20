@@ -13,7 +13,7 @@ export class ReferencePreserver {
 
   addTheDependents(...ids: Id[]) {
     ids.forEach((id) => {
-      this.sheet.binding.dependents.get(id)?.forEach((did) => {
+      this.sheet.registry.systems[id]?.dependents?.forEach((did) => {
         this.dependentIds.add(did);
       });
     });
@@ -23,7 +23,7 @@ export class ReferencePreserver {
     this.sheet.clearAddressCaches();
     const diffBefore: CellsByIdType = {};
     this.dependentIds.forEach((id) => {
-      const dep = this.sheet.binding.data[id];
+      const dep = this.sheet.registry.data[id];
       if (dep == null) {
         return;
       }

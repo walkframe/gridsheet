@@ -20,8 +20,8 @@ The `UserTable` interface provides access to:
 | `lastChangedTime` | `number` | Timestamp (ms since epoch) of the previous change |
 | `changedTime` (cell) | `number` | Timestamp (ms since epoch) of when the cell was last modified (in `CellType._sys`) |
 | `top`, `left`, `bottom`, `right` | `number` | Current table boundaries |
-| `minNumRows`, `maxNumRows` | `number` | Row count limits |
-| `minNumCols`, `maxNumCols` | `number` | Column count limits |
+| `minNumRows`, `maxNumRows` | `number` | Row count limits (accessible via `sheet.minNumRows` / `sheet.maxNumRows`) |
+| `minNumCols`, `maxNumCols` | `number` | Column count limits (accessible via `sheet.minNumCols` / `sheet.maxNumCols`) |
 | `headerWidth`, `headerHeight` | `number` | Header dimensions |
 
 ## Data Access Methods

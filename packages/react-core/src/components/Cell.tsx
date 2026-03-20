@@ -55,7 +55,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
   // Whether the focus is on another sheet
   const xSheetFocused = isXSheetFocused(store);
 
-  const lastFocused = sheet?.binding.lastFocused;
+  const lastFocused = sheet?.registry.lastFocused;
 
   const selectingArea = zoneToArea(selectingZone); // (top, left) -> (bottom, right)
 
@@ -115,7 +115,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
   const isPendingCell = Pending.is(v);
   const input = editorRef.current;
 
-  const editingAnywhere = !!(sheet.binding.editingAddress || editingAddress);
+  const editingAnywhere = !!(sheet.registry.editingAddress || editingAddress);
 
   const handleDragStart = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
@@ -156,7 +156,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
         }
       }
 
-      sheet.binding.lastFocused = input;
+      sheet.registry.lastFocused = input;
       focus(input);
       dispatch(setEditingAddress(''));
 
@@ -232,7 +232,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
         const fullRange = `${sheet.sheetPrefix(!xSheetFocused)}${areaToRange(newArea)}`;
         insertRef({ input: lastFocused || null, ref: fullRange });
       }
-      //sheet.binding.transmit(); // Force drawing because the formula is not reflected in largeInput
+      //sheet.registry.transmit(); // Force drawing because the formula is not reflected in largeInput
       return true;
     },
     [

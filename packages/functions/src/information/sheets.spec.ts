@@ -14,9 +14,7 @@ describe('sheets', () => {
     it('returns count from wire when multiple sheets exist', () => {
       const t = new Sheet({});
       t.initialize({});
-      if (t.wire) {
-        t.wire.sheetIdsByName = { Sheet1: 1, Sheet2: 2 };
-      }
+      t.registry.sheetIdsByName = { Sheet1: 1, Sheet2: 2 };
       const f = new SheetsFunction({ sheet: t, args: [] });
       expect(f.call()).toBe(2);
     });

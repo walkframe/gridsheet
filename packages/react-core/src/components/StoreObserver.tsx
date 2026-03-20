@@ -33,11 +33,11 @@ export const StoreObserver: FC<StoreObserverProps> = ({
     if (!sheet) {
       return;
     }
-    if (sheetName && sheetName !== sheet.sheetName) {
-      sheet.sheetName = sheetName;
-      sheet.binding.sheetIdsByName[sheetName] = sheet.sheetId;
-      delete sheet.binding.sheetIdsByName[sheet.prevSheetName];
-      sheet.prevSheetName = sheetName;
+    if (sheetName && sheetName !== sheet.name) {
+      sheet.name = sheetName;
+      sheet.registry.sheetIdsByName[sheetName] = sheet.id;
+      delete sheet.registry.sheetIdsByName[sheet.prevName];
+      sheet.prevName = sheetName;
       //book.transmit();
     }
   }, [sheetName]);
@@ -46,9 +46,9 @@ export const StoreObserver: FC<StoreObserverProps> = ({
     if (!sheet) {
       return;
     }
-    const { binding } = sheet;
+    const { registry: binding } = sheet;
     requestAnimationFrame(() => binding.identifyFormula());
-    binding.contextsBySheetId[sheet.sheetId] = { store, dispatch };
+    binding.contextsBySheetId[sheet.id] = { store, dispatch };
     binding.transmit();
 
     if (connector) {

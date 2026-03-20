@@ -8,8 +8,8 @@ export const Emitter: FC = () => {
   const sheet = sheetReactive.current;
 
   useEffect(() => {
-    if (sheet?.isInitialized && sheet.currentVersion > 0 && sheet.binding.onChange) {
-      sheet.binding.onChange({
+    if (sheet?.isInitialized && sheet.currentVersion > 0 && sheet.registry.onChange) {
+      sheet.registry.onChange({
         sheet,
         points: {
           pointing,
@@ -21,8 +21,8 @@ export const Emitter: FC = () => {
   }, [sheetReactive]);
 
   useEffect(() => {
-    if (sheet && sheet.binding.onSelect) {
-      sheet.binding.onSelect({
+    if (sheet && sheet.registry.onSelect) {
+      sheet.registry.onSelect({
         sheet,
         points: {
           pointing,

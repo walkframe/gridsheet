@@ -99,7 +99,7 @@ export class RefEntity extends Entity<string> {
       return this.value;
     }
     sheet.addDependents(id, dependency);
-    return `#${parsed.sheet.sheetId}!${formula}`;
+    return `#${parsed.sheet.id}!${formula}`;
   }
 }
 
@@ -143,7 +143,7 @@ export class RangeEntity extends Entity<string> {
       sheet.addDependents(id, dependency);
       formulas.push(formula!);
     }
-    return `#${parsed.sheet.sheetId}!${formulas.join(':')}`;
+    return `#${parsed.sheet.id}!${formulas.join(':')}`;
   }
 }
 
@@ -176,7 +176,7 @@ export class IdEntity extends Entity<string> {
     if (!address) {
       return '#REF!';
     }
-    if (parsed.sheet.sheetId === sheet.sheetId) {
+    if (parsed.sheet.id === sheet.id) {
       return address;
     }
     return `${parsed.sheet.sheetPrefix()}${address}`;
@@ -235,7 +235,7 @@ export class IdRangeEntity extends Entity<string> {
       .map((id) => getId(id, false))
       .map((id) => parsed.sheet.getAddressById(id, slideY, slideX) || '#REF!')
       .join(':');
-    if (parsed.sheet.sheetId === sheet.sheetId) {
+    if (parsed.sheet.id === sheet.id) {
       return range;
     }
     return `${parsed.sheet.sheetPrefix()}${range}`;
@@ -971,7 +971,7 @@ export const parseRef = (
     ids.push(id);
     refs.push(`${absX ? '$' : ''}#${id}${absY ? '$' : ''}`);
   }
-  let formula = `#${sheet.sheetId}!${refs.join(':')}`;
+  let formula = `#${sheet.id}!${refs.join(':')}`;
   return {
     sheet,
     sheetName,

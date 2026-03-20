@@ -119,6 +119,19 @@ test.describe('Spill — UI behavior (address bar, formula bar, double-click, De
     await a3.click();
     await page.keyboard.press('Delete');
     await expect(a3.locator('.gs-cell-rendered')).toHaveText('2');
+
+    // ---- 5. Pressing Backspace on a spilled cell leaves the displayed value unchanged ----
+    await a3.click();
+    await page.keyboard.press('Backspace');
+    await expect(a3.locator('.gs-cell-rendered')).toHaveText('2');
+
+    // ---- 6. Formula bar value does not disappear after Delete/Backspace on a spilled cell ----
+    // The formula bar must continue to show the spilled value (not go blank).
+    await a3.click();
+    await page.keyboard.press('Delete');
+    await expect(formulaBarTextarea).toHaveValue('2');
+    await page.keyboard.press('Backspace');
+    await expect(formulaBarTextarea).toHaveValue('2');
   });
 });
 

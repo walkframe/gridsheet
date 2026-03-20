@@ -128,7 +128,7 @@ test('1 operation makes 1 diff history', async ({ page }) => {
   expect(jsonQuery(firstJSON!, ['B4', 'value'])).toBe(4444);
 
   const secondJSON = await histories.nth(1).locator('pre').textContent();
-  expect(jsonQuery(secondJSON!, ['C1', 'value'])).toBe(null);
+  expect(jsonQuery(secondJSON!, ['C1', 'value'])).toBe(undefined);
 });
 
 test('escape key should cancel the editing', async ({ page }) => {

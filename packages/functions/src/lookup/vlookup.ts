@@ -1,6 +1,6 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { Sheet, solveSheet, stripSheet, ensureBoolean, ensureNumber } from '@gridsheet/react-core';
+import { Sheet, solveSheet } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
 const description = `Searches vertically for the specified key in the first column of the range and returns the value of the specified cell in the same row.`;
@@ -31,23 +31,8 @@ export class VlookupFunction extends BaseFunction {
   ];
   category: FunctionCategory = 'lookup';
 
-  protected validate(args: any[]): any[] {
-    if (args.length !== 3 && args.length !== 4) {
-      throw new FormulaError('#N/A', 'Number of arguments for VLOOKUP is incorrect.');
-    }
-    if (args[0] instanceof Sheet) {
-      args[0] = stripSheet({ value: args[0] });
-    }
-    if (!(args[1] instanceof Sheet)) {
-      throw new FormulaError('#REF!', '2nd argument must be range');
-    }
-    args[2] = ensureNumber(args[2]);
-    args[3] = ensureBoolean(args[3], { alternative: true });
-    return args;
-  }
-
   protected main(key: any, range: Sheet, index: number, isSorted: boolean) {
-    const matrix = solveSheet({ sheet: range });
+    const matrix = this.toMatrix(range);
     if (isSorted) {
       let last = -1;
       for (let y = 0; y <= range.getNumRows(); y++) {

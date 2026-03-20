@@ -4,21 +4,21 @@ import { GridSheet, useBook } from '@gridsheet/preact-core';
 function App() {
   const [enableDecimalLabeler, setEnableDecimalLabeler] = useState(false);
 
-  const hubProps = {};
-  const book = useBook(hubProps);
+  const bookProps = {};
+  const book = useBook(bookProps);
 
   useEffect(() => {
     // Update book props when enableDecimalLabeler changes
     if (enableDecimalLabeler) {
-      hubProps.labelers = {
+      bookProps.labelers = {
         decimal: (n) => String(n)
       };
     } else {
-      hubProps.labelers = {
+      bookProps.labelers = {
         decimal: undefined,
       };
     }
-    book.binding.transmit(hubProps);
+    book.registry.transmit(bookProps);
   }, [enableDecimalLabeler]);
 
   return (

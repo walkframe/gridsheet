@@ -1,6 +1,6 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type FunctionArgumentDefinition, conditionArg } from '@gridsheet/react-core';
-import { Sheet, eachMatrix, stripSheet, createBooleanMask, ensureString } from '@gridsheet/react-core';
+import { Sheet, eachMatrix, stripMatrix, createBooleanMask, ensureString } from '@gridsheet/react-core';
 import type { AreaType, PointType } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
@@ -56,7 +56,7 @@ export class SumifsFunction extends BaseFunction {
       sumRange,
       (v: any, pt: PointType) => {
         if (pt && mask[pt.y][pt.x]) {
-          const num = stripSheet({ value: v ?? 0 });
+          const num = stripMatrix(v ?? 0, this.at);
           if (typeof num === 'number') {
             total += num;
           }

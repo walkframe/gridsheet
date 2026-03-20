@@ -53,9 +53,9 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
   const hasFilter = !!(col?.filter && col.filter.conditions.length > 0);
 
   const xSheetFocused = isXSheetFocused(store);
-  const lastFocused = sheet?.binding.lastFocused;
+  const lastFocused = sheet?.registry.lastFocused;
 
-  const editingAnywhere = !!(sheet?.binding.editingAddress || editingAddress);
+  const editingAnywhere = !!(sheet?.registry.editingAddress || editingAddress);
 
   const writeCell = useCallback(
     (value: string) => {
@@ -231,7 +231,18 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
             }}
             vertical={-1}
           />
-          {sheet.getLabel(col?.label, { y: 0, x }, x) ?? colId}
+          {(() => {
+            const displayedLabel = sheet.getLabel(col?.label, { y: 0, x }, x) ?? colId;
+            if (displayedLabel !== colId) {
+              return (
+                <>
+                  <span className="gs-col-addr">{colId}</span>
+                  {displayedLabel}
+                </>
+              );
+            }
+            return displayedLabel;
+          })()}
           {!prevention.hasOperation(col?.prevention, prevention.ColumnMenu) && (
             <button
               className={`gs-menu-btn gs-column-menu-btn ${hasFilter ? 'gs-filtered' : ''} ${columnMenuState?.x === x ? 'gs-active' : ''}`}

@@ -64,7 +64,7 @@ const DynamicOptionsComponent: React.FC = () => {
       fw: fwPolicy,
     },
     onChange: ({ sheet, points }) => {
-      if (sheet.sheetName === 'options') {
+      if (sheet.name === 'options') {
         const matrix = sheet.toValueMatrix() as [string, string][];
         setOptionMatrix(matrix);
       }

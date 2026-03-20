@@ -8,6 +8,8 @@ import type {
   ContextsBySheetId,
   ZoneType,
   CellsByIdType,
+  SystemsByIdType,
+  System,
   Id,
   StoreDispatchType,
   FeedbackType,
@@ -21,7 +23,7 @@ import type { FunctionMapping } from '../formula/functions/__base';
 import { functions as functionsDefault } from '../formula/mapping';
 import { PolicyType } from '../policy/core';
 
-export type BindingProps = {
+export type RegistryProps = {
   historyLimit?: number;
   additionalFunctions?: FunctionMapping;
   policies?: { [policyName: string]: PolicyType | null };
@@ -36,12 +38,13 @@ export type BindingProps = {
   onInit?: (args: { sheet: UserSheet }) => void;
 };
 
-export type BookProps = BindingProps;
+export type BookProps = RegistryProps;
 
-export class Binding {
+export class Registry {
   sheetHead: number = 0;
   cellHead: number = 0;
   data: CellsByIdType = {};
+  systems: SystemsByIdType = {};
   sheetIdsByName: SheetIdsByName = {};
   contextsBySheetId: ContextsBySheetId = {};
   choosingSheetId: number = 0;
@@ -51,8 +54,6 @@ export class Binding {
   paletteBySheetName: { [sheetName: string]: RefPaletteType } = {};
   lastFocused: HTMLTextAreaElement | null = null;
   solvedCaches: Map<Id, any> = new Map();
-  /** Maps each cell id to the set of cell ids whose formula depends on it. */
-  dependents: Map<Id, Set<Id>> = new Map();
   /** IDs of non-origin cells that received spilled values (populated in spill(), cleared in clearSolvedCaches()). */
   lastSpilledTargetIds: Set<Id> = new Set();
   /** Currently in-flight async formula Pending sentinels (keyed by cell ID). */
@@ -124,7 +125,7 @@ export class Binding {
     onSelect,
     onKeyUp,
     onInit,
-  }: BindingProps = {}) {
+  }: RegistryProps = {}) {
     if (historyLimit != null) {
       this.historyLimit = historyLimit;
     }
@@ -149,32 +150,35 @@ export class Binding {
   }
 }
 
-export type TransmitProps = Partial<Binding>;
+export type TransmitProps = Partial<Registry>;
 
-export const createBinding = (props: BindingProps = {}) => {
-  return new Binding(props);
+export const createRegistry = (props: RegistryProps = {}) => {
+  return new Registry(props);
 };
+
+/** @deprecated use createRegistry */
+export const createBinding = createRegistry;
 
 export type BookType = {
-  binding: Binding;
+  registry: Registry;
 };
 
-export const createBook = (props: BindingProps = {}): BookType => {
-  return { binding: createBinding(props) };
+export const createBook = (props: RegistryProps = {}): BookType => {
+  return { registry: createRegistry(props) };
 };
 
-export const useBook = (props: BindingProps = {}) => {
+export const useBook = (props: RegistryProps = {}) => {
   const [book, setHub] = useState<BookType>(() => createBook(props));
-  const { binding } = book;
-  binding.transmit = (patch?: TransmitProps) => {
-    Object.assign(binding, patch);
-    if (!binding.ready) {
+  const { registry } = book;
+  registry.transmit = (patch?: TransmitProps) => {
+    Object.assign(registry, patch);
+    if (!registry.ready) {
       return;
     }
-    requestAnimationFrame(() => setHub({ binding }));
+    requestAnimationFrame(() => setHub({ registry }));
   };
   useEffect(() => {
-    Object.assign(binding, props);
+    Object.assign(registry, props);
   }, [props]);
   return book;
 };

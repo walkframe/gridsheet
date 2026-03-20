@@ -91,11 +91,11 @@ const SheetOnEditComponent: React.FC = () => {
       const info: HistoryEntry = {
         operation: 'EDIT',
         area,
-        sheetName: sheet.sheetName,
+        sheetName: sheet.name,
         timestamp: new Date().toLocaleTimeString(),
         data,
       };
-      if (sheet.sheetName === 'Sheet1') {
+      if (sheet.name === 'Sheet1') {
         setSheet1History((prev) => [info, ...prev.slice(0, 9)]);
       } else {
         setSheet2History((prev) => [info, ...prev.slice(0, 9)]);

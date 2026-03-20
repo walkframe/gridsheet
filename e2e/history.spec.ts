@@ -123,3 +123,44 @@ test('multiple undo redo operations', async ({ page }) => {
   await ctrl(page, 'z', true); // Redo Third
   expect(await a3.locator('.gs-cell-rendered').textContent()).toBe('Third');
 });
+
+test('undo redo for column width resize', async ({ page }) => {
+  await go(page, 'basic-simple--sheet');
+
+  // Column A header (<th data-x="1">)
+  const colAHeader = page.locator('th.gs-th-top[data-x="1"]');
+  const resizer = colAHeader.locator('.gs-resizer');
+
+  // Get initial width
+  const initialBox = await colAHeader.boundingBox();
+  const initialWidth = initialBox!.width;
+
+  // Drag the resizer 60px to the right
+  const resizerBox = await resizer.boundingBox();
+  const resizerX = resizerBox!.x + resizerBox!.width / 2;
+  const resizerY = resizerBox!.y + resizerBox!.height / 2;
+
+  await page.mouse.move(resizerX, resizerY);
+  await page.mouse.down();
+  await page.mouse.move(resizerX + 60, resizerY, { steps: 5 });
+  await page.mouse.up();
+  await page.waitForTimeout(200);
+
+  // Verify the width increased
+  const resizedBox = await colAHeader.boundingBox();
+  const resizedWidth = resizedBox!.width;
+  expect(resizedWidth).toBeGreaterThan(initialWidth);
+
+  // Undo — width should return to original
+  await ctrl(page, 'z');
+  await page.waitForTimeout(100);
+  const afterUndoBox = await colAHeader.boundingBox();
+  expect(afterUndoBox!.width).toBeCloseTo(initialWidth, 0);
+
+  // Redo — width should increase again
+  await ctrl(page, 'z', true);
+  await page.waitForTimeout(300);
+
+  const afterRedoBox = await colAHeader.boundingBox();
+  expect(afterRedoBox!.width).toBeGreaterThan(initialWidth);
+});

@@ -3,15 +3,13 @@ import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
 
 describe('sheet', () => {
   const sheet = new Sheet({});
-  sheet.sheetId = 2;
+  sheet.id = 2;
   sheet.initialize({});
-  sheet.wire = {
-    sheetIdsByName: {
-      Sheet1: 1,
-      Sheet2: 2,
-      Sheet3: 3,
-    },
-  } as any;
+  Object.assign(sheet.registry.sheetIdsByName, {
+    Sheet1: 1,
+    Sheet2: 2,
+    Sheet3: 3,
+  });
 
   describe('normal', () => {
     it('returns current sheet index when omitted', () => {
@@ -21,9 +19,9 @@ describe('sheet', () => {
 
     it('returns index of referenced sheet', () => {
       const refTable = new Sheet({});
-      refTable.sheetId = 3;
+      refTable.id = 3;
       refTable.initialize({});
-      refTable.wire = sheet.wire;
+      Object.assign(refTable.registry.sheetIdsByName, sheet.registry.sheetIdsByName);
 
       const mockArg = { evaluate: () => refTable } as any;
       const f = new SheetFunction({ sheet, args: [mockArg] });
@@ -32,9 +30,9 @@ describe('sheet', () => {
 
     it('returns 99 if sheet not found in wire', () => {
       const refTable = new Sheet({});
-      refTable.sheetId = 99;
+      refTable.id = 99;
       refTable.initialize({});
-      refTable.wire = sheet.wire;
+      Object.assign(refTable.registry.sheetIdsByName, sheet.registry.sheetIdsByName);
 
       const mockArg = { evaluate: () => refTable } as any;
       const f = new SheetFunction({ sheet, args: [mockArg] });
@@ -43,9 +41,8 @@ describe('sheet', () => {
 
     it('returns 88 if current sheet not found in wire', () => {
       const isolatedTable = new Sheet({});
-      isolatedTable.sheetId = 88;
+      isolatedTable.id = 88;
       isolatedTable.initialize({});
-      isolatedTable.wire = { sheetIdsByName: {} } as any;
 
       const f = new SheetFunction({ sheet: isolatedTable, args: [] });
       expect(f.call()).toBe(88);

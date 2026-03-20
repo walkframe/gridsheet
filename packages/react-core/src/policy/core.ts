@@ -398,6 +398,9 @@ export class Policy implements PolicyMixinType {
   }
 
   public serializeDate({ value }: SerializeProps<Date>): string {
+    if (value!.getHours() + value!.getMinutes() + value!.getSeconds() === 0) {
+      return dayjs(value).format(this.dateFormat);
+    }
     return dayjs(value).format(this.datetimeFormat);
   }
 
