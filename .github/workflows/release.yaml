@@ -4,6 +4,7 @@ on:
     branches:
       - master
       - fix/*
+      - feature/split-functions
 
 permissions:
   id-token: write # Required for npm trusted publishing (OIDC)
