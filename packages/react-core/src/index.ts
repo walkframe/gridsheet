@@ -7,6 +7,7 @@ export {
   zoneToArea,
   areaToZone,
   areaToRange,
+  matrixShape,
   addressesToAreas,
   addressesToCols,
   addressesToRows,
@@ -45,8 +46,8 @@ export type {
   CursorStateType,
 } from './types';
 
-export type { BookType, BookProps, RegistryProps as BindingProps, TransmitProps } from './lib/hub';
-export { Registry as Binding, useBook, createBook } from './lib/hub';
+export type { BookType, BookProps, RegistryProps, TransmitProps } from './lib/book';
+export { Registry, useBook, createBook } from './lib/book';
 export type { Dispatcher } from './store';
 export { ThousandSeparatorPolicyMixin } from './policy/thousand_separator';
 export { CheckboxPolicyMixin } from './policy/checkbox';

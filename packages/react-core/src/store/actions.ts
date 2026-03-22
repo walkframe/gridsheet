@@ -297,8 +297,8 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
     if (!dstSheet) {
       return store;
     }
-    const { registry: binding } = dstSheet;
-    const { copyingSheetId, copyingZone, cutting } = binding;
+    const { registry } = dstSheet;
+    const { copyingSheetId, copyingZone, cutting } = registry;
     const srcSheet = dstSheet.getSheetBySheetId(copyingSheetId);
 
     let selectingArea = zoneToArea(selectingZone);
@@ -352,7 +352,7 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
         selectingZone: nextSelectingZone,
         inputting: newSheet.stringify({ point: choosing, refEvaluation: 'RAW' }),
         callback: ({ sheetReactive: sheetRef }) => {
-          binding.transmit({
+          registry.transmit({
             cutting: false,
             copyingZone: resetZone,
           });
@@ -431,7 +431,7 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
       inputting: newSheet.stringify({ point: choosing, refEvaluation: 'RAW' }),
       ...initSearchStatement(newSheet, store),
       callback: ({ sheetReactive: sheetRef }) => {
-        binding.transmit({
+        registry.transmit({
           copyingZone: resetZone,
         });
       },

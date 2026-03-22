@@ -1,5 +1,4 @@
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { Sheet, solveSheet } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/react-core';
 import { ensureNumber } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
@@ -19,23 +18,20 @@ export class ProductFunction extends BaseFunction {
   ];
   category: FunctionCategory = 'math';
 
-  protected validate(args: any[]): any[] {
-    const spreaded: number[] = [];
-    args.forEach((arg) => {
-      if (arg instanceof Sheet) {
-        spreaded.push(
-          ...solveSheet({ sheet: arg })
-            .reduce((a, b) => a.concat(b))
-            .filter((v: any) => typeof v === 'number'),
-        );
-        return;
-      }
-      spreaded.push(ensureNumber(arg));
-    });
-    return spreaded;
-  }
-
-  protected main(...values: number[]) {
-    return values.reduce((a, b) => a * b);
+  protected main(...values: any[]) {
+    let product = 1;
+    for (const val of values) {
+      eachMatrix(
+        val,
+        (v: any) => {
+          if (v == null || typeof v === 'string') {
+            return;
+          }
+          product *= ensureNumber(v);
+        },
+        this.at,
+      );
+    }
+    return product;
   }
 }

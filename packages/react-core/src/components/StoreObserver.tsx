@@ -46,10 +46,10 @@ export const StoreObserver: FC<StoreObserverProps> = ({
     if (!sheet) {
       return;
     }
-    const { registry: binding } = sheet;
-    requestAnimationFrame(() => binding.identifyFormula());
-    binding.contextsBySheetId[sheet.id] = { store, dispatch };
-    binding.transmit();
+    const { registry } = sheet;
+    requestAnimationFrame(() => registry.boot());
+    registry.contextsBySheetId[sheet.id] = { store, dispatch };
+    registry.transmit();
 
     if (connector) {
       connector.current = {

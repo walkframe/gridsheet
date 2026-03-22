@@ -1,4 +1,3 @@
-import { identifyFormula } from '../formula/evaluator';
 import { CellsByIdType, Id } from '../types';
 import { Sheet } from './sheet';
 
@@ -28,9 +27,9 @@ export class ReferencePreserver {
         return;
       }
       diffBefore[id] = { ...dep };
-      dep.value = identifyFormula(dep.value, {
+      this.sheet.clearDependencies(id);
+      dep.value = this.sheet.processFormula(dep.value, {
         dependency: id,
-        sheet: this.sheet,
         idMap: this.map,
         operation,
       });

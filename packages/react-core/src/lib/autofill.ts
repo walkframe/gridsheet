@@ -3,7 +3,7 @@ import type { AreaType, CellsByAddressType, CellType, PointType, StoreType } fro
 import { Sheet } from './sheet';
 import { areaShape, areaToZone, complementSelectingArea, concatAreas, zoneToArea } from './spatial';
 import { p2a } from './coords';
-import { identifyFormula } from '../formula/evaluator';
+
 import { Time } from './time';
 import { CSSProperties } from 'react';
 
@@ -58,9 +58,8 @@ export class Autofill {
           const value = patterns[px].next().value;
           const nextValue =
             (baseCell?.formulaEnabled ?? true)
-              ? identifyFormula(value, {
+              ? this.sheet.processFormula(value, {
                   dependency: id,
-                  sheet: this.sheet,
                 })
               : value;
           diff[p2a(point)] = {
@@ -237,8 +236,7 @@ export class Autofill {
             const skip = cells.length * sign;
             while (true) {
               slide += skip;
-              yield identifyFormula(value, {
-                sheet,
+              yield sheet.processFormula(value, {
                 dependency: id,
                 slideY: orientation === 'vertical' ? slide : 0,
                 slideX: orientation === 'horizontal' ? slide : 0,

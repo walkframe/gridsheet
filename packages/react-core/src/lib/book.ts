@@ -85,7 +85,7 @@ export class Registry {
     // This method will be overridden by useBook
   };
 
-  public identifyFormula() {
+  public boot() {
     if (this.ready || Object.keys(this.contextsBySheetId).length === 0) {
       return;
     }
@@ -106,7 +106,7 @@ export class Registry {
       if (!sheet) {
         continue;
       }
-      sheet.identifyFormula();
+      sheet.resolveFormulas();
       dispatch(updateSheet(sheet));
     }
     this.ready = true;

@@ -38,17 +38,24 @@ import {
 } from './spatial';
 import { a2p, x2c, c2x, p2a, y2r, grantAddressAbsolute } from './coords';
 import type { FunctionMapping } from '../formula/functions/__base';
-import { identifyFormula, Lexer, splitRef, stripSheetName } from '../formula/evaluator';
+import { Lexer, ProcessFormulaProps } from '../formula/evaluator';
 import { FormulaError } from '../formula/formula-error';
 import { solveFormula, solveSheet, stripSheet } from '../formula/solver';
 import { ensureSys, filterCellFields } from './cell';
 
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH, HEADER_HEIGHT, HEADER_WIDTH, DEFAULT_HISTORY_LIMIT, DEFAULT_KEY } from '../constants';
+import {
+  DEFAULT_HEIGHT,
+  DEFAULT_WIDTH,
+  HEADER_HEIGHT,
+  HEADER_WIDTH,
+  DEFAULT_HISTORY_LIMIT,
+  DEFAULT_KEY,
+} from '../constants';
 import { Pending, SOLVING, Spilling } from '../sentinels';
 import { shouldTracking } from '../store/helpers';
 import { updateSheet } from '../store/actions';
 import * as operation from './operation';
-import { Registry, createRegistry } from './hub';
+import { Registry, createRegistry } from './book';
 import { nonePolicy, PolicyType, DEFAULT_POLICY_NAME, RenderProps, ScalarProps } from '../policy/core';
 import { evaluateFilterConfig } from './filter';
 import { ReferencePreserver } from './reference';
@@ -241,14 +248,22 @@ export interface UserSheet {
 }
 
 export class Sheet implements UserSheet {
-  public __gsType = "Sheet";
+  public __gsType = 'Sheet';
   public changedTime: number;
   public lastChangedTime?: number;
   private _limits: Required<SheetLimits>;
-  get minNumRows() { return this._limits.minRows; }
-  get maxNumRows() { return this._limits.maxRows; }
-  get minNumCols() { return this._limits.minCols; }
-  get maxNumCols() { return this._limits.maxCols; }
+  get minNumRows() {
+    return this._limits.minRows;
+  }
+  get maxNumRows() {
+    return this._limits.maxRows;
+  }
+  get minNumCols() {
+    return this._limits.minCols;
+  }
+  get maxNumCols() {
+    return this._limits.maxCols;
+  }
   public id: number = 0;
   public name: string = '';
   public prevName: string = '';
@@ -265,11 +280,7 @@ export class Sheet implements UserSheet {
   private addressCaches: Map<Id, Address> = new Map();
   private lastChangedAddresses: Address[] = [];
 
-  constructor({
-    limits = {},
-    name,
-    book = createRegistry({}),
-  }: Props) {
+  constructor({ limits = {}, name, book = createRegistry({}) }: Props) {
     this.idMatrix = [];
     this.changedTime = Date.now();
     this._limits = {
@@ -284,7 +295,7 @@ export class Sheet implements UserSheet {
   }
 
   static is(obj: any): obj is Sheet {
-    return obj?.__gsType === "Sheet";
+    return obj?.__gsType === 'Sheet';
   }
 
   toString() {
@@ -315,7 +326,7 @@ export class Sheet implements UserSheet {
     });
   }
 
-  /** Get the raw (mutable) cell data for a point. Unlike getCellByPoint, this returns the actual binding.data reference. */
+  /** Get the raw (mutable) cell data for a point. Unlike getCellByPoint, this returns the actual registry.data reference. */
   private _getRawCellByPoint({ y, x }: PointType): CellType | undefined {
     const id = this.idMatrix[y]?.[x];
     if (id == null) {
@@ -644,11 +655,26 @@ export class Sheet implements UserSheet {
 
   public getSystemByPoint(point: PointType): System | undefined {
     const id = this.getId(point);
-    if (id == null) return undefined;
+    if (id == null) {
+      return undefined;
+    }
     return this.registry.systems[id];
   }
 
-  public identifyFormula() {
+  public processFormula(value: any, { idMap, ...props }: ProcessFormulaProps): any {
+    if (typeof value === 'string' || value instanceof String) {
+      if (value.charAt(0) === '=') {
+        const lexer = new Lexer(value.substring(1));
+        lexer.tokenize(idMap);
+        lexer.identify({ ...props, sheet: this });
+        lexer.dependencyIds.forEach((id) => this.addDependents(id, props.dependency));
+        return '=' + lexer.identifiedFormula;
+      }
+    }
+    return value;
+  }
+
+  public resolveFormulas() {
     this.idsToBeIdentified.forEach((id) => {
       const cell = this.registry.data[id];
       if (this.registry.systems[id]?.sheetId == null) {
@@ -657,10 +683,8 @@ export class Sheet implements UserSheet {
       if (cell == null) {
         return;
       }
-      cell.value = identifyFormula(cell?.value, {
-        sheet: this,
-        dependency: id,
-      });
+      this.clearDependencies(id);
+      cell.value = this.processFormula(cell?.value, { dependency: id });
     });
     this.idsToBeIdentified = [];
     this.status = 2;
@@ -1305,7 +1329,7 @@ export class Sheet implements UserSheet {
     }
   }
 
-  /** Remove an id from binding.data and binding.dependents entirely. */
+  /** Remove an id from registry.data and registry.dependents entirely. */
   private deleteOrphanedId(id: Id) {
     const sys = this.registry.systems[id];
     sys?.dependencies?.forEach((depId) => {
@@ -1590,7 +1614,9 @@ export class Sheet implements UserSheet {
           }
           if (srcCell != null) {
             const srcSys = this.registry.systems[srcId];
-            if (srcSys) srcSys.changedTime = Date.now();
+            if (srcSys) {
+              srcSys.changedTime = Date.now();
+            }
           }
 
           idWritesDst.push({ y: dstPoint.y, x: dstPoint.x, id: srcId });
@@ -1602,7 +1628,7 @@ export class Sheet implements UserSheet {
         }
       }
     } else {
-      // Reverse pass: collect id buffer writes (no binding.data modification)
+      // Reverse pass: collect id buffer writes (no registry.data modification)
       for (const {
         before: beforePolicy,
         after: afterPolicy,
@@ -1636,7 +1662,7 @@ export class Sheet implements UserSheet {
       }
     }
 
-    // Flush binding.data writes first
+    // Flush registry.data writes first
     Object.assign(this.registry.data, wireWrites);
     // Then flush idMatrix writes
     for (const { y, x, id } of idWritesSrc) {
@@ -1724,18 +1750,21 @@ export class Sheet implements UserSheet {
 
         const isSrcWinner = srcPolicy.priority > dstPolicy.priority;
         cell.policy = isSrcWinner ? srcCell?.policy : dstCell?.policy;
+        const dstIdForClear = this.getId(dstPoint);
+        this.clearDependencies(dstIdForClear);
         const value =
           (cell?.formulaEnabled ?? true)
-            ? identifyFormula(cell?.value, {
-                sheet: this,
-                dependency: this.getId(dstPoint),
+            ? this.processFormula(cell?.value, {
+                dependency: dstIdForClear,
                 slideY,
                 slideX,
               })
             : cell?.value;
         const dstId = this.getId(dstPoint);
         const dstSys = this.registry.systems[dstId];
-        if (dstSys != null) dstSys.changedTime = changedTime;
+        if (dstSys != null) {
+          dstSys.changedTime = changedTime;
+        }
         const address = p2a(dstPoint);
         if (onlyValue) {
           const dstCell = this.getCellByPoint(dstPoint, 'SYSTEM');
@@ -1800,10 +1829,8 @@ export class Sheet implements UserSheet {
       if (formulaIdentify) {
         const formulaEnabled = next.formulaEnabled ?? current?.formulaEnabled ?? true;
         if (formulaEnabled) {
-          next.value = identifyFormula(next.value, {
-            sheet: this,
-            dependency: id,
-          });
+          this.clearDependencies(id);
+          next.value = this.processFormula(next.value, { dependency: id });
         }
       }
       ignoreFields.forEach((key) => {
@@ -1836,7 +1863,9 @@ export class Sheet implements UserSheet {
       next = { ...p };
       if (updateChangedTime) {
         const sys = this.registry.systems[id];
-        if (sys != null) sys.changedTime = changedTime;
+        if (sys != null) {
+          sys.changedTime = changedTime;
+        }
       }
       if (partial) {
         const merged = { ...current, ...next };
@@ -2348,7 +2377,7 @@ export class Sheet implements UserSheet {
     refEvaluation?: RefEvaluation;
   }) {
     if (cell == null) {
-      // Use raw cell from binding so cell.value is the original formula string.
+      // Use raw cell from registry so cell.value is the original formula string.
       // getCellByPoint(raise=false) would replace cell.value with undefined, losing the formula.
       const id = this.idMatrix[point.y]?.[point.x];
       cell = id != null ? this.registry.data[id] : undefined;
@@ -2401,7 +2430,7 @@ export class Sheet implements UserSheet {
   /**
    * Collapse this sheet to a scalar (top-left cell value).
    */
-  public strip({ raise = false}: { raise?: boolean }): any {
+  public strip({ raise = false }: { raise?: boolean }): any {
     return stripSheet({ value: this, raise });
   }
 
@@ -2411,8 +2440,12 @@ export class Sheet implements UserSheet {
       const cell = diff[id] ?? {};
       const merged = partial ? { ...this.getById(id), ...cell } : { ...cell };
       const sys = this.registry.systems[id];
-      if (sys != null) sys.changedTime = Date.now();
+      if (sys != null) {
+        sys.changedTime = Date.now();
+      }
       this.registry.data[id] = merged;
+      this.clearDependencies(id);
+      this.processFormula(merged.value, { dependency: id });
     });
     const addresses: Address[] = [];
     for (const id of ids) {
@@ -2613,6 +2646,16 @@ export class Sheet implements UserSheet {
   }
   public getBase() {
     return this;
+  }
+
+  public clearDependencies(id: Id): void {
+    const sys = this.registry.systems[id];
+    sys?.dependencies?.forEach((depId) => {
+      this.registry.systems[depId]?.dependents?.delete(id);
+    });
+    if (sys != null) {
+      sys.dependencies = new Set();
+    }
   }
 
   public addDependents(id: Id, dependency: string): void {

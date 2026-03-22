@@ -1,6 +1,7 @@
 import type { FC, ReactNode } from 'react';
 import type { CellPatchType, CellType, OperationType, PointType } from '../types';
 import type { Sheet, UserSheet } from '../lib/sheet';
+import { isSheet } from '../formula/functions/__base';
 import dayjs from 'dayjs';
 import { FormulaError } from '../formula/formula-error';
 import { Pending } from '../sentinels';
@@ -205,6 +206,8 @@ export class Policy implements PolicyMixinType {
             rendered = this.renderArray({ ...props, value, cell });
           } else if (FormulaError.is(value)) {
             throw value;
+          } else if (isSheet(value)) {
+            rendered = this.renderSheet({ ...props, value, cell });
           } else {
             rendered = this.renderObject({ ...props, value, cell });
           }
@@ -272,8 +275,9 @@ export class Policy implements PolicyMixinType {
     return '';
   }
 
-  public renderSheet({ value }: RenderProps<Sheet>): any {
-    return JSON.stringify(value);
+  public renderSheet({ value, ...rest }: RenderProps<Sheet>): any {
+    const stripped = value!.strip({ raise: false });
+    return this.render({ ...rest, value: stripped });
   }
 
   public renderRowHeaderLabel(_n: number): string | null {

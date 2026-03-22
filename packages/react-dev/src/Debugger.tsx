@@ -147,7 +147,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
     }
   }
 
-  // Resolve cell data for the currently selected cell (binding.choosingSheetId / choosingAddress)
+  // Resolve cell data for the currently selected cell (registry.choosingSheetId / choosingAddress)
   if (registry && registry.choosingSheetId != null) {
     const { contextsBySheetId } = registry;
     const choosingContext = contextsBySheetId[registry.choosingSheetId];
@@ -336,7 +336,8 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
               borderBottom: '2px solid #ccc',
             }}
           >
-            Cell: {registryCellSheetName && `'${registryCellSheetName}'!`}{registryCellAddress}
+            Cell: {registryCellSheetName && `'${registryCellSheetName}'!`}
+            {registryCellAddress}
           </div>
           {registryCellData ? (
             <JsonCode data={registryCellData} replacer={baseReplacer} theme={atelierSeasideLight} />
@@ -366,7 +367,8 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
               borderBottom: '2px solid #ccc',
             }}
           >
-            System: {registryCellSheetName && `'${registryCellSheetName}'!`}{registryCellAddress}
+            System: {registryCellSheetName && `'${registryCellSheetName}'!`}
+            {registryCellAddress}
           </div>
           {registrySystemData ? (
             <JsonCode data={registrySystemData} replacer={baseReplacer} theme={atelierHeathLight} />
@@ -376,7 +378,14 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
         </div>
 
         {/* Formula: toggling between Expressions and Tokens */}
-        <div style={{ flex: 1, overflow: 'auto', backgroundColor: formulaView === 'expressions' ? '#fffbf0' : '#f5f0ff', position: 'relative' }}>
+        <div
+          style={{
+            flex: 1,
+            overflow: 'auto',
+            backgroundColor: formulaView === 'expressions' ? '#fffbf0' : '#f5f0ff',
+            position: 'relative',
+          }}
+        >
           <div
             style={{
               position: 'sticky',

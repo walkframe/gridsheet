@@ -1,7 +1,7 @@
 import { Pending, Sentinel, Spilling } from '../../sentinels';
 import { FormulaError } from '../formula-error';
 import { ensureSys, setAsyncCache } from '../../lib/cell';
-import type { Registry } from '../../lib/hub';
+import type { Registry } from '../../lib/book';
 import type { CellType, Id, PointType } from '../../types';
 import type { Sheet } from '../../lib/sheet';
 
@@ -18,7 +18,7 @@ export const hasPendingArg = (args: any[]): boolean => {
 };
 
 const isSheet = (value: any): value is Sheet => {
-  return value?.__gsType === "Sheet";
+  return value?.__gsType === 'Sheet';
 };
 
 /**

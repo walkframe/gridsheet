@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import { FULLDATE_FORMAT_UTC } from '../../constants';
 import { Pending, Spilling } from '../../sentinels';
 import type { Id, PointType } from '../../types';
+import { Time } from '../../lib/time';
 
 export const gt = (left: any, right: any): boolean => {
   if (typeof left === 'string' || typeof right === 'string') {
@@ -73,6 +74,9 @@ export const ensureNumber = (value: any, options?: EnsureNumberOptions): number 
   if (value instanceof Date) {
     return value.getTime();
   }
+  if (Time.is(value)) {
+    return value.days;
+  }
 
   if (typeof value === 'string' && value.endsWith('%')) {
     const num = parseFloat(value.slice(0, -1));
@@ -84,7 +88,7 @@ export const ensureNumber = (value: any, options?: EnsureNumberOptions): number 
   const num = parseFloat(value as string);
   if (isNaN(num)) {
     if (ignore) {
-      return 0;
+      return alternative ?? 0;
     }
     throw new FormulaError('#VALUE!', `${value} cannot be converted to a number`);
   }

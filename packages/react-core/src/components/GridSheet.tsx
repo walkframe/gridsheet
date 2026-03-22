@@ -17,7 +17,7 @@ import { x2c, y2r } from '../lib/coords';
 import { embedStyle } from '../styles/embedder';
 import { FormulaBar } from './FormulaBar';
 import { SearchBar } from './SearchBar';
-import { useBook } from '../lib/hub';
+import { useBook } from '../lib/book';
 import { ScrollHandle } from './ScrollHandle';
 
 export const createConnector = () => createRef<Connector | null>();

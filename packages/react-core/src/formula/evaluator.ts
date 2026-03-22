@@ -7,13 +7,19 @@ type EvaluateProps = {
   sheet: Sheet;
 };
 
-export type IdentifyProps = {
-  sheet: Sheet;
+type IdentityBaseProps = {
   slideY?: number;
   slideX?: number;
   operation?: 'move' | 'removeRows' | 'removeCols';
   dependency: string;
+};
+
+export type ProcessFormulaProps = IdentityBaseProps & {
   idMap?: { [id: string]: string };
+};
+
+export type IdentifyProps = IdentityBaseProps & {
+  sheet: Sheet;
 };
 
 export type DisplayProps = {
@@ -36,6 +42,7 @@ const getId = (idString: string, stripAbsolute = true) => {
 
 class Entity<T = any> {
   public value: T;
+  public ids: string[] = [];
   constructor(value: T) {
     this.value = value;
   }
@@ -80,8 +87,8 @@ export class RefEntity extends Entity<string> {
     return t;
   }
 
-  public identify(props: IdentifyProps) {
-    const { sheet, dependency, slideY = 0, slideX = 0 } = props;
+  public identify(props: IdentifyProps): string {
+    const { slideY = 0, slideX = 0 } = props;
     const parsed = parseRef(this.value, props);
     if (parsed.sheet == null) {
       return this.value;
@@ -98,7 +105,7 @@ export class RefEntity extends Entity<string> {
     if (id == null) {
       return this.value;
     }
-    sheet.addDependents(id, dependency);
+    this.ids = [id];
     return `#${parsed.sheet.id}!${formula}`;
   }
 }
@@ -120,8 +127,8 @@ export class RangeEntity extends Entity<string> {
     const t = parsed.sheet.trim(area);
     return t;
   }
-  public identify(props: IdentifyProps) {
-    const { sheet, dependency, slideY = 0, slideX = 0 } = props;
+  public identify(props: IdentifyProps): string {
+    const { slideY = 0, slideX = 0 } = props;
     const parsed = parseRef(this.value, props);
     if (parsed.sheet == null) {
       return this.value;
@@ -140,7 +147,7 @@ export class RangeEntity extends Entity<string> {
       if (id == null) {
         return this.value;
       }
-      sheet.addDependents(id, dependency);
+      this.ids.push(id);
       formulas.push(formula!);
     }
     return `#${parsed.sheet.id}!${formulas.join(':')}`;
@@ -181,18 +188,14 @@ export class IdEntity extends Entity<string> {
     }
     return `${parsed.sheet.sheetPrefix()}${address}`;
   }
-  public identify(props: IdentifyProps) {
-    const { sheet, dependency, slideY = 0, slideX = 0 } = props;
+  public identify(props: IdentifyProps): string {
+    const { sheet, slideY = 0, slideX = 0 } = props;
     const address = this.display({ sheet, slideY, slideX });
     if (address == null || address.length < 2) {
       return '#?';
     }
     const { formula, ids } = parseRef(address, props);
-    if (dependency) {
-      ids.forEach((id) => {
-        sheet.addDependents(id, dependency);
-      });
-    }
+    this.ids = ids;
     return formula || '#?';
   }
 }
@@ -240,16 +243,12 @@ export class IdRangeEntity extends Entity<string> {
     }
     return `${parsed.sheet.sheetPrefix()}${range}`;
   }
-  public identify(props: IdentifyProps) {
-    const { sheet, dependency, slideY = 0, slideX = 0 } = props;
+  public identify(props: IdentifyProps): string {
+    const { sheet, slideY = 0, slideX = 0 } = props;
     const range = this.display({ sheet, slideY, slideX });
     const { formula, ids } = parseRef(range, props);
-    if (dependency) {
-      ids.forEach((id) => {
-        sheet.addDependents(id, dependency);
-      });
-    }
-    return formula;
+    this.ids = ids;
+    return formula ?? '';
   }
 }
 
@@ -414,7 +413,6 @@ const POSTFIX_OPERATOR = 'POSTFIX_OPERATOR';
 
 type LexerOption = {
   at?: Id;
-  idMap?: { [id: Id]: Id };
 };
 
 export class Lexer {
@@ -422,15 +420,15 @@ export class Lexer {
   private formula: string;
   public tokens: Token[] = [];
   public foreign: boolean = false;
+  public identifiedFormula: string = '';
+  public dependencyIds: string[] = [];
   private at?: Id;
-  private idMap: { [id: Id]: Id };
 
   constructor(formula: string, options?: LexerOption) {
     this.formula = formula;
     this.index = 0;
     this.tokens = [];
     this.at = options?.at;
-    this.idMap = options?.idMap ?? {};
   }
 
   private isWhiteSpace() {
@@ -480,30 +478,49 @@ export class Lexer {
     return this.tokens.map((t) => t.stringify()).join('');
   }
 
-  public identify(props: IdentifyProps): string {
-    const converted = this.tokens.map((t) => {
+  public identify(props: IdentifyProps): void {
+    const parts: string[] = [];
+    const ids: string[] = [];
+    for (const t of this.tokens) {
       switch (t.type) {
         case 'VALUE':
           if (typeof t.entity === 'number' || typeof t.entity === 'boolean') {
-            return t.entity;
+            parts.push(String(t.entity));
+          } else {
+            parts.push(t.closed ? `"${t.entity}"` : `"${t.entity}`);
           }
-          return t.closed ? `"${t.entity}"` : `"${t.entity}`;
-
-        case 'ID':
-          return new IdEntity(t.entity as string).identify(props);
-
-        case 'ID_RANGE':
-          return new IdRangeEntity(t.entity as string).identify(props);
-
-        case 'REF':
-          return new RefEntity(t.entity as string).identify(props);
-
-        case 'RANGE':
-          return new RangeEntity(t.entity as string).identify(props);
+          break;
+        case 'ID': {
+          const entity = new IdEntity(t.entity as string);
+          parts.push(entity.identify(props));
+          ids.push(...entity.ids);
+          break;
+        }
+        case 'ID_RANGE': {
+          const entity = new IdRangeEntity(t.entity as string);
+          parts.push(entity.identify(props));
+          ids.push(...entity.ids);
+          break;
+        }
+        case 'REF': {
+          const entity = new RefEntity(t.entity as string);
+          parts.push(entity.identify(props));
+          ids.push(...entity.ids);
+          break;
+        }
+        case 'RANGE': {
+          const entity = new RangeEntity(t.entity as string);
+          parts.push(entity.identify(props));
+          ids.push(...entity.ids);
+          break;
+        }
+        default:
+          parts.push(t.entity);
+          break;
       }
-      return t.entity;
-    });
-    return converted.join('');
+    }
+    this.identifiedFormula = parts.join('');
+    this.dependencyIds = ids;
   }
 
   public display({ sheet }: DisplayProps) {
@@ -525,7 +542,7 @@ export class Lexer {
       .join('');
   }
 
-  public tokenize() {
+  public tokenize(idMap: { [id: Id]: Id } = {}) {
     while (this.index <= this.formula.length) {
       this.skipSpaces();
       let char = this.get();
@@ -650,7 +667,7 @@ export class Lexer {
               if (buf.indexOf('#REF!') !== -1) {
                 this.tokens.push(new Token('UNREFERENCED', buf, 0, this.at));
               } else if (buf.indexOf(':') !== -1) {
-                this.tokens.push(new Token('ID_RANGE', this.resolveIdRange(buf), 0, this.at));
+                this.tokens.push(new Token('ID_RANGE', resolveIdRange(buf, idMap), 0, this.at));
               } else {
                 this.tokens.push(new Token('ID', buf, 0, this.at));
               }
@@ -708,38 +725,33 @@ export class Lexer {
       }
     }
   }
-
-  private resolveIdRange(range: string) {
-    const [sheetId, refString] = range.split('!');
-    const refs = refString.split(':');
-    const done = new Set<number>();
-
-    Object.keys(this.idMap).forEach((before) => {
-      const after = this.idMap[before];
-
-      // #x -> #y, #$x -> #$y, #x$ -> #y$, #$x$ -> #$y$
-      const regex = new RegExp(`(\\$)?#${before}(\\$)?`);
-
-      for (let i = 0; i < refs.length; i++) {
-        if (done.has(i)) {
-          continue;
-        }
-
-        const ref = refs[i];
-        const replaced = ref.replace(regex, (_, prefix, suffix) => {
-          return `${prefix || ''}#${after}${suffix || ''}`;
-        });
-        if (replaced === ref) {
-          continue;
-        }
-
-        refs[i] = replaced;
-        done.add(i);
-      }
-    });
-    return `${sheetId}!${refs.join(':')}`;
-  }
 }
+
+const resolveIdRange = (range: string, idMap: { [id: Id]: Id }) => {
+  const [sheetId, refString] = range.split('!');
+  const refs = refString.split(':');
+  const done = new Set<number>();
+  Object.keys(idMap).forEach((before) => {
+    const after = idMap[before];
+    // #x -> #y, #$x -> #$y, #x$ -> #y$, #$x$ -> #$y$
+    const regex = new RegExp(`(\\$)?#${before}\\b(\\$)?`);
+    for (let i = 0; i < refs.length; i++) {
+      if (done.has(i)) {
+        continue;
+      }
+      const ref = refs[i];
+      const replaced = ref.replace(regex, (_: string, prefix: string, suffix: string) => {
+        return `${prefix || ''}#${after}${suffix || ''}`;
+      });
+      if (replaced === ref) {
+        continue;
+      }
+      refs[i] = replaced;
+      done.add(i);
+    }
+  });
+  return `${sheetId}!${refs.join(':')}`;
+};
 
 export class Parser {
   public index = 0;
@@ -858,20 +870,6 @@ export class Parser {
 
 /** Alias for Parser, exported for external tooling (e.g. Debugger). */
 export const FormulaParser = Parser;
-
-// identifyFormula takes a formula string and returns a new formula string with all references identified and updated based on the operation and dependency.
-// when the row slides, the references in the formula should be updated accordingly. For example, if a row is inserted above row 3, all references to row 3 and below should be updated to row 4 and below.
-export const identifyFormula = (value: any, { idMap, ...props }: IdentifyProps) => {
-  if (typeof value === 'string' || value instanceof String) {
-    if (value.charAt(0) === '=') {
-      const lexer = new Lexer(value.substring(1), { idMap });
-      lexer.tokenize();
-      const identified = lexer.identify(props);
-      return '=' + identified;
-    }
-  }
-  return value;
-};
 
 export const stripSheetName = (sheetName: string) => {
   if (sheetName.charAt(0) === "'") {

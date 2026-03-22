@@ -365,11 +365,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
             width: '100%',
           }}
         >
-          {(cell?.formulaEnabled ?? true) ? (
-            editorStyle(inputting)
-          ) : (
-            inputting
-          )}
+          {(cell?.formulaEnabled ?? true) ? editorStyle(inputting) : inputting}
         </div>
         <textarea
           name="gs-formula-bar-editor"

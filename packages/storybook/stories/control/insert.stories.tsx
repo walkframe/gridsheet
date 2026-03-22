@@ -9,6 +9,7 @@ import {
 } from '@gridsheet/react-core';
 import { syncers } from '@gridsheet/react-core';
 import { allFunctions } from '@gridsheet/functions';
+import { Debugger } from '@gridsheet/react-dev';
 
 const meta: Meta = {
   title: 'Control/Insert',
@@ -221,6 +222,7 @@ const InsertComponent: React.FC = () => {
           sheetResize: 'both',
         }}
       />
+      <Debugger book={book} />
     </div>
   );
 };

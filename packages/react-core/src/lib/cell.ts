@@ -10,20 +10,20 @@ export const filterCellFields = (cell: CellType, ignoreFields: (keyof CellType)[
 };
 
 /**
- * Ensure that `binding.systems[id]` exists, initialising it with sensible
+ * Ensure that `registry.systems[id]` exists, initialising it with sensible
  * defaults when missing.  Any keys present in `defaults` that are absent on
  * the existing System object are filled in.
  * Returns the (possibly freshly-created) `System` object.
  */
 export const ensureSys = (
-  binding: { systems: Record<string, System> },
+  registry: { systems: Record<string, System> },
   id: string,
   defaults: Partial<System> = {},
 ): System => {
-  if (binding.systems[id] == null) {
-    binding.systems[id] = {};
+  if (registry.systems[id] == null) {
+    registry.systems[id] = {};
   }
-  const sys = binding.systems[id];
+  const sys = registry.systems[id];
   for (const key of Object.keys(defaults) as (keyof System)[]) {
     (sys as any)[key] ??= defaults[key];
   }

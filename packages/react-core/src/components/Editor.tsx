@@ -1,11 +1,5 @@
 import type { FC } from 'react';
-import {
-  useContext,
-  useEffect,
-  useState,
-  useCallback,
-  memo,
-} from 'react';
+import { useContext, useEffect, useState, useCallback, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { FunctionGuide } from './FunctionGuide';
 import { EditorOptions } from './EditorOptions';

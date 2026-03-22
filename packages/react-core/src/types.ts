@@ -1,6 +1,6 @@
 import type { UserSheet, Sheet, SheetLimits } from './lib/sheet';
 import type { FC, RefObject } from 'react';
-import type { BookType, TransmitProps } from './lib/hub';
+import type { BookType, TransmitProps } from './lib/book';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import type { PolicyType } from './policy/core';
 import type { Dispatcher } from './store';

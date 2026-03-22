@@ -1,7 +1,7 @@
 import { type Sheet } from '../../lib/sheet';
 
 /** Duck-type check for Sheet instances (avoids runtime import cycle). */
-export const isSheet = (v: any): v is Sheet => v?.__gsType === "Sheet";
+export const isSheet = (v: any): v is Sheet => v?.__gsType === 'Sheet';
 /** Duck-type check for Time instances (avoids runtime import cycle). */
 const isTime = (v: any): boolean => v != null && v.__gsType === 'Time';
 import { Spilling } from '../../sentinels';

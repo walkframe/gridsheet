@@ -21,7 +21,7 @@ export default meta;
 
 const DESCRIPTION = [
   '## Debugger Component',
-  'Shows internal `binding` state of the grid. Click around to see selection/data changes.',
+  'Shows internal `registry` state of the grid. Click around to see selection/data changes.',
 ].join('\n\n');
 
 const DebuggerSheet = () => {
