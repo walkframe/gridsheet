@@ -1,3 +1,4 @@
+import { DEFAULT_KEY } from '../constants';
 import type {
   MatrixType,
   AreaType,
@@ -277,7 +278,7 @@ export const buildCells = <T>({
 export const getMaxSizesFromCells = (cells: CellsByAddressType = {}) => {
   let [lastY, lastX] = [0, 0];
   Object.keys(cells).forEach((address) => {
-    if (address === 'default') {
+    if (address === DEFAULT_KEY) {
       return;
     }
     const { y, x } = a2p(address);

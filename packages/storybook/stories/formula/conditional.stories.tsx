@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import {
   buildInitialCells,
   GridSheet,
-  useHub,
+  useBook,
   BaseFunctionAsync,
   FormulaError,
   type FunctionArgumentDefinition,
@@ -33,10 +33,10 @@ export default meta;
 
 /** Basic IF demo */
 const IfSheet: React.FC = () => {
-  const hub = useHub({ additionalFunctions: allFunctions });
+  const book = useBook({ additionalFunctions: allFunctions });
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       sheetName="IfDemo"
       initialCells={buildInitialCells({
         cells: {
@@ -72,10 +72,10 @@ const IfSheet: React.FC = () => {
 
 /** IFS demo */
 const IfsSheet: React.FC = () => {
-  const hub = useHub({ additionalFunctions: allFunctions });
+  const book = useBook({ additionalFunctions: allFunctions });
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       sheetName="IfsDemo"
       initialCells={buildInitialCells({
         cells: {
@@ -100,10 +100,10 @@ const IfsSheet: React.FC = () => {
 
 /** IFNA demo */
 const IfnaSheet: React.FC = () => {
-  const hub = useHub({ additionalFunctions: allFunctions });
+  const book = useBook({ additionalFunctions: allFunctions });
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       sheetName="IfnaDemo"
       initialCells={buildInitialCells({
         cells: {
@@ -145,7 +145,7 @@ const IfnaSheet: React.FC = () => {
 
 /** IFNA with async DELAY_NA demo */
 const IfnaDelayNaSheet: React.FC = () => {
-  const hub = useHub({
+  const book = useBook({
     additionalFunctions: {
       ...allFunctions,
       delay_na: DelayNaFunction,
@@ -153,7 +153,7 @@ const IfnaDelayNaSheet: React.FC = () => {
   });
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       sheetName="IfnaDelayNaDemo"
       initialCells={buildInitialCells({
         cells: {
@@ -180,10 +180,10 @@ const IfnaDelayNaSheet: React.FC = () => {
 
 /** IFERROR vs IFNA side-by-side demo */
 const IferrorIfnaSheet: React.FC = () => {
-  const hub = useHub({ additionalFunctions: allFunctions });
+  const book = useBook({ additionalFunctions: allFunctions });
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       sheetName="IferrorIfnaDemo"
       initialCells={buildInitialCells({
         cells: {

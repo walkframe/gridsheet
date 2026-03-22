@@ -7,7 +7,7 @@ import {
   buildInitialCells,
   buildInitialCellsFromOrigin,
   operations,
-  useHub,
+  useBook,
   type SelectProps,
 } from '@gridsheet/react-core';
 import { allFunctions } from '@gridsheet/functions';
@@ -58,14 +58,14 @@ const DynamicOptionsComponent: React.FC = () => {
       }),
     [optionMatrix],
   );
-  const hub = useHub({
+  const book = useBook({
     additionalFunctions: allFunctions,
     policies: {
       fw: fwPolicy,
     },
-    onChange: ({ table, points }) => {
-      if (table.sheetName === 'options') {
-        const matrix = table.toValueMatrix() as [string, string][];
+    onChange: ({ sheet, points }) => {
+      if (sheet.name === 'options') {
+        const matrix = sheet.toValueMatrix() as [string, string][];
         setOptionMatrix(matrix);
       }
     },
@@ -74,7 +74,7 @@ const DynamicOptionsComponent: React.FC = () => {
   return (
     <>
       <GridSheet
-        hub={hub}
+        book={book}
         initialCells={buildInitialCells({
           cells: {
             default: { policy: 'fw', width: 150 },
@@ -87,7 +87,7 @@ const DynamicOptionsComponent: React.FC = () => {
 
       <GridSheet
         sheetName="options"
-        hub={hub}
+        book={book}
         initialCells={buildInitialCellsFromOrigin({
           matrix: optionMatrix,
           cells: {

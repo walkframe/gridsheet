@@ -1,9 +1,9 @@
 import dayjs from 'dayjs';
 import type { AreaType, CellsByAddressType, CellType, PointType, StoreType } from '../types';
-import { Table } from './table';
+import { Sheet } from './sheet';
 import { areaShape, areaToZone, complementSelectingArea, concatAreas, zoneToArea } from './spatial';
 import { p2a } from './coords';
-import { identifyFormula } from '../formula/evaluator';
+
 import { Time } from './time';
 import { CSSProperties } from 'react';
 
@@ -25,22 +25,22 @@ export class Autofill {
   private readonly src: AreaType;
   private readonly dst: AreaType;
   private readonly direction: Direction;
-  private readonly table: Table;
+  private readonly sheet: Sheet;
   constructor(store: StoreType, draggingTo: PointType) {
-    const { tableReactive: tableRef, choosing, selectingZone } = store;
-    const table = tableRef.current;
-    if (!table) {
-      throw new Error('Table is not available');
+    const { sheetReactive: sheetRef, choosing, selectingZone } = store;
+    const sheet = sheetRef.current;
+    if (!sheet) {
+      throw new Error('Sheet is not available');
     }
     this.src = complementSelectingArea(zoneToArea(selectingZone), choosing);
     this.direction = this.suggestDirection(draggingTo);
     this.dst = this.getDestinationArea(draggingTo);
-    this.table = table;
+    this.sheet = sheet;
   }
 
-  public get applied(): Table {
+  public get applied(): Sheet {
     const [orientation, sign] = DirectionMapping[this.direction];
-    const matrix = this.table.toCellMatrix({ area: this.src, refEvaluation: 'SYSTEM' });
+    const matrix = this.sheet.toCellMatrix({ area: this.src, refEvaluation: 'SYSTEM' });
     const srcShape = areaShape({ ...this.src, base: 1 });
     const dstShape = areaShape({ ...this.dst, base: 1 });
 
@@ -54,13 +54,12 @@ export class Autofill {
           const x = sign > 0 ? this.dst.left + j : this.dst.right - j;
           const px = sign > 0 ? j % srcShape.cols : (srcShape.cols - 1 - (j % srcShape.cols)) % srcShape.cols;
           const point = { y: this.dst.top + i, x };
-          const id = this.table.getId(point);
+          const id = this.sheet.getId(point);
           const value = patterns[px].next().value;
           const nextValue =
             (baseCell?.formulaEnabled ?? true)
-              ? identifyFormula(value, {
+              ? this.sheet.processFormula(value, {
                   dependency: id,
-                  table: this.table,
                 })
               : value;
           diff[p2a(point)] = {
@@ -85,19 +84,19 @@ export class Autofill {
         }
       }
     }
-    const table = this.table.update({
+    const sheet = this.sheet.update({
       diff,
       operator: 'USER',
       undoReflection: {
-        sheetId: this.table.sheetId,
+        sheetId: this.sheet.id,
         selectingZone: areaToZone(this.src),
       },
       redoReflection: {
-        sheetId: this.table.sheetId,
+        sheetId: this.sheet.id,
         selectingZone: areaToZone(this.dst),
       },
     });
-    return table;
+    return sheet;
   }
 
   public get wholeArea() {
@@ -230,15 +229,14 @@ export class Autofill {
         }
         case 'formula': {
           const value = group.first;
-          const table = this.table;
+          const sheet = this.sheet;
 
           function* generateFormula() {
             let slide = 0;
             const skip = cells.length * sign;
             while (true) {
               slide += skip;
-              yield identifyFormula(value, {
-                table,
+              yield sheet.processFormula(value, {
                 dependency: id,
                 slideY: orientation === 'vertical' ? slide : 0,
                 slideX: orientation === 'horizontal' ? slide : 0,

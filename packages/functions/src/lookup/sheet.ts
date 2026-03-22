@@ -1,6 +1,6 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { Table } from '@gridsheet/react-core';
+import { Sheet } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
 const description = `Returns the sheet number of the specified sheet or reference.`;
@@ -20,13 +20,13 @@ export class SheetFunction extends BaseFunction {
   ];
   category: FunctionCategory = 'lookup';
 
-  protected main(ref?: Table | any) {
+  protected main(ref?: Sheet | any) {
     if (ref == null) {
-      return this.table.sheetId;
+      return this.sheet.id;
     }
 
-    if (ref instanceof Table) {
-      return ref.sheetId;
+    if (ref instanceof Sheet) {
+      return ref.id;
     }
 
     throw new FormulaError('#VALUE!', 'Invalid argument for SHEET.');

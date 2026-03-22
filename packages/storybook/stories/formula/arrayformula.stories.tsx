@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, useHub } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, useBook } from '@gridsheet/react-core';
 import { allFunctions } from '@gridsheet/functions';
 import { Debugger } from '@gridsheet/react-dev';
 
@@ -15,11 +15,11 @@ export default meta;
 
 /** Basic element-wise arithmetic over a range */
 const ArrayformulaBasicSheet: React.FC = () => {
-  const hub = useHub({ additionalFunctions: allFunctions });
+  const book = useBook({ additionalFunctions: allFunctions });
   return (
     <>
       <GridSheet
-        hub={hub}
+        book={book}
         sheetName="AFBasic"
         initialCells={buildInitialCells({
           cells: {
@@ -48,17 +48,17 @@ const ArrayformulaBasicSheet: React.FC = () => {
         })}
         options={{ sheetHeight: 320 }}
       />
-      <Debugger hub={hub} />
+      <Debugger book={book} />
     </>
   );
 };
 
 /** ARRAYFORMULA wrapping a range passthrough */
 const ArrayformulaRangeSheet: React.FC = () => {
-  const hub = useHub({ additionalFunctions: allFunctions });
+  const book = useBook({ additionalFunctions: allFunctions });
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       sheetName="AFRange"
       initialCells={buildInitialCells({
         cells: {
@@ -81,10 +81,10 @@ const ArrayformulaRangeSheet: React.FC = () => {
 
 /** ARRAYFORMULA combined with IF for conditional element-wise output */
 const ArrayformulaIfSheet: React.FC = () => {
-  const hub = useHub({ additionalFunctions: allFunctions });
+  const book = useBook({ additionalFunctions: allFunctions });
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       sheetName="AFWithIf"
       initialCells={buildInitialCells({
         cells: {

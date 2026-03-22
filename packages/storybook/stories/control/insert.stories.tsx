@@ -1,8 +1,15 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, buildInitialCells, buildInitialCellsFromOrigin, useConnector, useHub } from '@gridsheet/react-core';
+import {
+  GridSheet,
+  buildInitialCells,
+  buildInitialCellsFromOrigin,
+  useConnector,
+  useBook,
+} from '@gridsheet/react-core';
 import { syncers } from '@gridsheet/react-core';
 import { allFunctions } from '@gridsheet/functions';
+import { Debugger } from '@gridsheet/react-dev';
 
 const meta: Meta = {
   title: 'Control/Insert',
@@ -28,23 +35,23 @@ const DESCRIPTION = [
 const InsertComponent: React.FC = () => {
   const connector = useConnector();
 
-  const hub = useHub({
+  const book = useBook({
     additionalFunctions: allFunctions,
-    onInsertRows: ({ table, y, numRows }) => {
-      console.log('onInsertRows called with:', { table, y, numRows });
-      console.log('Inserted data:', table.toValueObject());
+    onInsertRows: ({ sheet, y, numRows }) => {
+      console.log('onInsertRows called with:', { sheet, y, numRows });
+      console.log('Inserted data:', sheet.toValueObject());
     },
-    onInsertCols: ({ table, x, numCols }) => {
-      console.log('onInsertCols called with:', { table, x, numCols });
-      console.log('Inserted data:', table.toValueObject());
+    onInsertCols: ({ sheet, x, numCols }) => {
+      console.log('onInsertCols called with:', { sheet, x, numCols });
+      console.log('Inserted data:', sheet.toValueObject());
     },
-    onRemoveRows: ({ table, ys }) => {
-      console.log('onRemoveRows called with:', { table, ys });
-      console.log('Removed data:', table.toValueObject());
+    onRemoveRows: ({ sheet, ys }) => {
+      console.log('onRemoveRows called with:', { sheet, ys });
+      console.log('Removed data:', sheet.toValueObject());
     },
-    onRemoveCols: ({ table, xs }) => {
-      console.log('onRemoveCols called with:', { table, xs });
-      console.log('Removed data:', table.toValueObject());
+    onRemoveCols: ({ sheet, xs }) => {
+      console.log('onRemoveCols called with:', { sheet, xs });
+      console.log('Removed data:', sheet.toValueObject());
     },
   });
 
@@ -201,7 +208,7 @@ const InsertComponent: React.FC = () => {
 
       <GridSheet
         connector={connector}
-        hub={hub}
+        book={book}
         initialCells={buildInitialCellsFromOrigin({
           matrix: [
             [1, 2, '=SUM(A1:B1)'],
@@ -215,6 +222,7 @@ const InsertComponent: React.FC = () => {
           sheetResize: 'both',
         }}
       />
+      <Debugger book={book} />
     </div>
   );
 };

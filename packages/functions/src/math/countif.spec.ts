@@ -1,9 +1,9 @@
 import { CountifFunction } from './countif';
-import { Table, FormulaError, RangeEntity, RefEntity, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, RangeEntity, RefEntity, ValueEntity } from '@gridsheet/react-core';
 
 describe('countif', () => {
-  const table = new Table({});
-  table.initialize({
+  const sheet = new Sheet({});
+  sheet.initialize({
     A1: { value: 1 },
     B1: { value: 10 },
     C1: { value: 3 },
@@ -28,56 +28,56 @@ describe('countif', () => {
     it('eq', () => {
       {
         const f = new CountifFunction({
-          table,
+          sheet,
           args: [new RangeEntity('A1:E1'), new ValueEntity('3')],
         });
         expect(f.call()).toBe(2);
       }
       {
         const f = new CountifFunction({
-          table,
+          sheet,
           args: [new RangeEntity('A1:E1'), new ValueEntity('=3')],
         });
         expect(f.call()).toBe(2);
       }
       {
         const f = new CountifFunction({
-          table,
+          sheet,
           args: [new RangeEntity('A1:E1'), new RefEntity('E1')],
         });
         expect(f.call()).toBe(2);
       }
       {
         const f = new CountifFunction({
-          table,
+          sheet,
           args: [new RangeEntity('A2:E2'), new ValueEntity('a*')],
         });
         expect(f.call()).toBe(4);
       }
       {
         const f = new CountifFunction({
-          table,
+          sheet,
           args: [new RangeEntity('A2:E2'), new ValueEntity('a?')],
         });
         expect(f.call()).toBe(2);
       }
       {
         const f = new CountifFunction({
-          table,
+          sheet,
           args: [new RangeEntity('A2:E2'), new ValueEntity('?b*')],
         });
         expect(f.call()).toBe(2);
       }
       {
         const f = new CountifFunction({
-          table,
+          sheet,
           args: [new RangeEntity('A3:E3'), new ValueEntity(new Date('2022-01-04T00:00:00.000Z'))],
         });
         expect(f.call()).toBe(1);
       }
       {
         const f = new CountifFunction({
-          table,
+          sheet,
           args: [new RangeEntity('A4:E4'), new ValueEntity('')],
         });
         expect(f.call()).toBe(2);
@@ -86,21 +86,21 @@ describe('countif', () => {
     it('ne', () => {
       {
         const f = new CountifFunction({
-          table,
+          sheet,
           args: [new RangeEntity('A1:E1'), new ValueEntity('<>3')],
         });
         expect(f.call()).toBe(3);
       }
       {
         const f = new CountifFunction({
-          table,
+          sheet,
           args: [new RangeEntity('A2:E2'), new ValueEntity('<>a*')],
         });
         expect(f.call()).toBe(1);
       }
       {
         const f = new CountifFunction({
-          table,
+          sheet,
           args: [new RangeEntity('A4:E4'), new ValueEntity('<>')],
         });
         expect(f.call()).toBe(3);
@@ -109,14 +109,14 @@ describe('countif', () => {
     it('gt', () => {
       {
         const f = new CountifFunction({
-          table,
+          sheet,
           args: [new RangeEntity('A1:E1'), new ValueEntity('>3')],
         });
         expect(f.call()).toBe(1);
       }
       {
         const f = new CountifFunction({
-          table,
+          sheet,
           args: [new RangeEntity('A2:E2'), new ValueEntity('>aa')],
         });
         expect(f.call()).toBe(3);
@@ -125,14 +125,14 @@ describe('countif', () => {
     it('gte', () => {
       {
         const f = new CountifFunction({
-          table,
+          sheet,
           args: [new RangeEntity('A1:E1'), new ValueEntity('>=3')],
         });
         expect(f.call()).toBe(3);
       }
       {
         const f = new CountifFunction({
-          table,
+          sheet,
           args: [new RangeEntity('A2:E2'), new ValueEntity('>=aa')],
         });
         expect(f.call()).toBe(4);
@@ -141,14 +141,14 @@ describe('countif', () => {
     it('lt', () => {
       {
         const f = new CountifFunction({
-          table,
+          sheet,
           args: [new RangeEntity('A1:E1'), new ValueEntity('<3')],
         });
         expect(f.call()).toBe(2);
       }
       {
         const f = new CountifFunction({
-          table,
+          sheet,
           args: [new RangeEntity('A2:E2'), new ValueEntity('<aa')],
         });
         expect(f.call()).toBe(1);
@@ -157,14 +157,14 @@ describe('countif', () => {
     it('lte', () => {
       {
         const f = new CountifFunction({
-          table,
+          sheet,
           args: [new RangeEntity('A1:E1'), new ValueEntity('<=3')],
         });
         expect(f.call()).toBe(4);
       }
       {
         const f = new CountifFunction({
-          table,
+          sheet,
           args: [new RangeEntity('A2:E2'), new ValueEntity('<=aa')],
         });
         expect(f.call()).toBe(2);
@@ -174,7 +174,7 @@ describe('countif', () => {
   describe('validation error', () => {
     it('missing argument', () => {
       {
-        const f = new CountifFunction({ table, args: [new RangeEntity('A1:A3')] });
+        const f = new CountifFunction({ sheet, args: [new RangeEntity('A1:A3')] });
         expect(f.call.bind(f)).toThrow(FormulaError);
       }
     });

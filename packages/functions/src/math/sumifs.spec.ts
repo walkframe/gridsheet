@@ -1,9 +1,9 @@
 import { SumifsFunction } from './sumifs';
-import { Table, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/react-core';
 
 describe('sumifs', () => {
-  const table = new Table({});
-  table.initialize({
+  const sheet = new Sheet({});
+  sheet.initialize({
     A1: { value: 10 },
     A2: { value: 20 },
     A3: { value: 30 },
@@ -15,7 +15,7 @@ describe('sumifs', () => {
   describe('normal', () => {
     it('calculates sum with single condition', () => {
       const f = new SumifsFunction({
-        table,
+        sheet,
         args: [new RangeEntity('A1:A3'), new RangeEntity('B1:B3'), new ValueEntity('Apple')],
       });
       // 10 + 30
@@ -24,7 +24,7 @@ describe('sumifs', () => {
 
     it('calculates sum with multiple conditions', () => {
       const f = new SumifsFunction({
-        table,
+        sheet,
         args: [
           new RangeEntity('A1:A3'),
           new RangeEntity('B1:B3'),
@@ -41,7 +41,7 @@ describe('sumifs', () => {
   describe('validation error', () => {
     it('throws error when args are not enough', () => {
       const f = new SumifsFunction({
-        table,
+        sheet,
         args: [new RangeEntity('A1:A3'), new RangeEntity('B1:B3')],
       });
       expect(f.call.bind(f)).toThrow(FormulaError);
@@ -49,7 +49,7 @@ describe('sumifs', () => {
 
     it('throws error when first arg is not a range', () => {
       const f = new SumifsFunction({
-        table,
+        sheet,
         args: [new ValueEntity('sum_range'), new RangeEntity('B1:B3'), new ValueEntity('Apple')],
       });
       expect(f.call.bind(f)).toThrow(FormulaError);

@@ -1,9 +1,9 @@
 import { ModeSnglFunction } from './mode_sngl';
-import { Table, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/react-core';
 
 describe('mode.sngl', () => {
-  const table = new Table({});
-  table.initialize({
+  const sheet = new Sheet({});
+  sheet.initialize({
     A1: { value: 1 },
     A2: { value: 2 },
     A3: { value: 2 },
@@ -17,31 +17,31 @@ describe('mode.sngl', () => {
 
   describe('normal', () => {
     it('returns the most frequent value', () => {
-      const f = new ModeSnglFunction({ table, args: [new RangeEntity('A1:A6')] });
+      const f = new ModeSnglFunction({ sheet, args: [new RangeEntity('A1:A6')] });
       // 3 appears 3 times
       expect(f.call()).toBe(3);
     });
 
     it('returns smallest when multiple modes tie', () => {
-      const f = new ModeSnglFunction({ table, args: [new RangeEntity('A1:A5')] });
+      const f = new ModeSnglFunction({ sheet, args: [new RangeEntity('A1:A5')] });
       // 2 appears 2 times, 3 appears 2 times → smallest = 2
       expect(f.call()).toBe(2);
     });
 
     it('accepts individual values', () => {
-      const f = new ModeSnglFunction({ table, args: [new ValueEntity(5), new ValueEntity(5), new ValueEntity(3)] });
+      const f = new ModeSnglFunction({ sheet, args: [new ValueEntity(5), new ValueEntity(5), new ValueEntity(3)] });
       expect(f.call()).toBe(5);
     });
   });
 
   describe('validation error', () => {
     it('throws when all values are unique', () => {
-      const f = new ModeSnglFunction({ table, args: [new RangeEntity('B1:B3')] });
+      const f = new ModeSnglFunction({ sheet, args: [new RangeEntity('B1:B3')] });
       expect(f.call.bind(f)).toThrow(FormulaError);
     });
 
     it('throws on zero args', () => {
-      const f = new ModeSnglFunction({ table, args: [] });
+      const f = new ModeSnglFunction({ sheet, args: [] });
       expect(f.call.bind(f)).toThrow(FormulaError);
     });
   });

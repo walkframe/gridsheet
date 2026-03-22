@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { BaseFunction, FunctionArgumentDefinition, useHub } from '@gridsheet/react-core';
+import { BaseFunction, FunctionArgumentDefinition, useBook } from '@gridsheet/react-core';
 import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
 import { allFunctions } from '@gridsheet/functions';
 
@@ -16,7 +16,7 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const CustomFunctionSheet = () => {
-  const hub = useHub({
+  const book = useBook({
     additionalFunctions: {
       ...allFunctions,
       hope: class HopeFunction extends BaseFunction {
@@ -39,7 +39,7 @@ const CustomFunctionSheet = () => {
   });
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       initialCells={buildInitialCells({
         cells: {
           default: { width: 200 },

@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, useHub } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, useBook } from '@gridsheet/react-core';
 import { Debugger } from '@gridsheet/react-dev';
 import { allFunctions } from '@gridsheet/functions';
 
@@ -21,7 +21,7 @@ const SheetsSheet = () => {
   const [sheet2, setSheet2] = React.useState('Sheet2');
   const [sheet3, setSheet3] = React.useState('Sheet 3');
   const [sheet4, setSheet4] = React.useState('Sheet4');
-  const hub = useHub({ additionalFunctions: allFunctions });
+  const book = useBook({ additionalFunctions: allFunctions });
   return (
     <div>
       <table style={{ borderCollapse: 'collapse' }}>
@@ -29,7 +29,7 @@ const SheetsSheet = () => {
           <tr>
             <td style={{ border: '3px solid #aaa', padding: '5px' }}>
               <GridSheet
-                hub={hub}
+                book={book}
                 sheetName={sheet1}
                 initialCells={buildInitialCells({
                   cells: {
@@ -72,7 +72,7 @@ const SheetsSheet = () => {
             </td>
             <td style={{ border: '3px solid #aaa', padding: '5px' }}>
               <GridSheet
-                hub={hub}
+                book={book}
                 sheetName={sheet2}
                 initialCells={buildInitialCells({
                   cells: {
@@ -96,7 +96,7 @@ const SheetsSheet = () => {
           <tr>
             <td style={{ border: '3px solid #aaa', padding: '5px' }}>
               <GridSheet
-                hub={hub}
+                book={book}
                 sheetName={sheet3}
                 initialCells={buildInitialCells({
                   cells: {
@@ -134,7 +134,7 @@ const SheetsSheet = () => {
 
       <div style={{ marginTop: '20px', height: '400px' }}>
         <h3 style={{ fontFamily: 'sans-serif' }}>Internal State Debugger</h3>
-        <Debugger hub={hub} />
+        <Debugger book={book} />
       </div>
     </div>
   );

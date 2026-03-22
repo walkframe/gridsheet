@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, Time, useHub, Policy } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, Time, useBook, Policy } from '@gridsheet/react-core';
 import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
@@ -18,13 +18,13 @@ const SimpleSheet = () => {
   const rawPolicy = new Policy({
     mixins: [{ renderColHeaderLabel: (n) => String(n), renderRowHeaderLabel: (n) => String(n) }],
   });
-  const hub = useHub({
+  const book = useBook({
     additionalFunctions: allFunctions,
     policies: { raw: rawPolicy },
   });
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       options={{
         sheetResize: 'both',
       }}

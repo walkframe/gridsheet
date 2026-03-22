@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 
 import { FormulaError } from '../formula-error';
-import { BaseFunction, isTable, type FunctionCategory, type FunctionArgumentDefinition } from './__base';
+import { BaseFunction, isSheet, type FunctionCategory, type FunctionArgumentDefinition } from './__base';
 import { ensureNumber } from './__utils';
 import { Time } from '../../lib/time';
 import { SECONDS_IN_DAY } from '../../constants';

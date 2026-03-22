@@ -1,9 +1,9 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { Table, solveTable, stripTable, ensureNumber } from '@gridsheet/react-core';
+import { stripMatrix, matrixShape } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
-const description = `Searches for a value in a table and returns its position.
+const description = `Searches for a value in a sheet and returns its position.
 Returns the position of the matched value (1-based index).`;
 
 export class MatchFunction extends BaseFunction {
@@ -22,38 +22,28 @@ export class MatchFunction extends BaseFunction {
   category: FunctionCategory = 'lookup';
 
   protected validate(args: any[]): any[] {
-    if (args.length < 2 || args.length > 3) {
-      throw new FormulaError('#N/A', 'Number of arguments for MATCH is incorrect.');
-    }
+    const validated = super.validate(args);
 
-    if (args[0] instanceof Table) {
-      args[0] = stripTable({ value: args[0] });
-    }
+    validated[0] = stripMatrix(validated[0], this.at);
 
-    if (!(args[1] instanceof Table)) {
-      throw new FormulaError('#VALUE!', 'Second argument must be a range.');
-    }
-
-    if (args.length === 3) {
-      args[2] = ensureNumber(args[2]);
-      if (![-1, 0, 1].includes(args[2])) {
-        throw new FormulaError('#VALUE!', 'Match type must be -1, 0, or 1.');
-      }
-    } else {
-      args[2] = 1; // Default to 1 (less than or equal)
-    }
-    return args;
-  }
-
-  protected main(searchKey: any, range: Table, searchType: number = 1) {
-    const matrix = solveTable({ table: range });
-    // Check if matrix is 1-dimensional (either 1 row or 1 column)
-    const numRows = matrix.length;
-    const numCols = matrix[0]?.length || 0;
-    if (!((numRows === 1 && numCols >= 1) || (numCols === 1 && numRows >= 1))) {
+    const matrix = this.toMatrix(validated[1]);
+    const { rows, cols } = matrixShape({ matrix });
+    if (!((rows === 1 && cols >= 1) || (cols === 1 && rows >= 1))) {
       throw new FormulaError('#N/A', 'Range must be a single row or single column.');
     }
-    const array = matrix.reduce((acc, row) => acc.concat(row), []);
+    validated[1] = matrix;
+
+    if (validated.length < 3) {
+      validated[2] = 1;
+    } else if (![-1, 0, 1].includes(validated[2])) {
+      throw new FormulaError('#VALUE!', 'Match type must be -1, 0, or 1.');
+    }
+
+    return validated;
+  }
+
+  protected main(searchKey: any, range: any[][], searchType: number = 1) {
+    const array = range.reduce((acc: any[], row: any[]) => acc.concat(row), []);
 
     if (array.length === 0) {
       throw new FormulaError('#N/A', 'range is empty.');

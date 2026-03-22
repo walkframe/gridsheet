@@ -36,8 +36,8 @@ const DEFAULT_CONDITION: FilterCondition = { method: 'eq', value: [''] };
 
 export const ColumnMenu: FC = () => {
   const { store, dispatch } = useContext(Context);
-  const { columnMenuState, tableReactive: tableRef, editorRef, selectingZone } = store;
-  const table = tableRef.current;
+  const { columnMenuState, sheetReactive: sheetRef, editorRef, selectingZone } = store;
+  const sheet = sheetRef.current;
   const [conditions, setConditions] = useState<FilterCondition[]>([{ ...DEFAULT_CONDITION }]);
   const [mode, setMode] = useState<'and' | 'or'>('or');
   const [label, setLabel] = useState('');
@@ -73,8 +73,8 @@ export const ColumnMenu: FC = () => {
       if (cancelled) {
         return;
       }
-      const currentTable = tableRef.current;
-      if (!currentTable) {
+      const currentSheet = sheetRef.current;
+      if (!currentSheet) {
         return;
       }
       const { type, x: actionX, filter } = pendingAction;
@@ -93,21 +93,21 @@ export const ColumnMenu: FC = () => {
       dispatch(setColumnMenu(null));
       focus(editorRef.current);
     };
-    const currentTable = tableRef.current;
-    if (currentTable && (currentTable.hasPendingCells() || currentTable.wire.asyncPending.size > 0)) {
-      currentTable.waitForPending().then(execute);
+    const currentSheet = sheetRef.current;
+    if (currentSheet && (currentSheet.hasPendingCells() || currentSheet.registry.asyncPending.size > 0)) {
+      currentSheet.waitForPending().then(execute);
     } else {
       execute();
     }
     return () => {
       cancelled = true;
     };
-  }, [pendingAction, dispatch, editorRef, tableRef]);
+  }, [pendingAction, dispatch, editorRef, sheetRef]);
 
   // Restore conditions and label from existing state when menu opens
   useEffect(() => {
-    if (x != null && table) {
-      const colCell = table.getCellByPoint({ y: 0, x }, 'SYSTEM');
+    if (x != null && sheet) {
+      const colCell = sheet.getCellByPoint({ y: 0, x }, 'SYSTEM');
       const existing = colCell?.filter;
       if (existing && existing.conditions.length > 0) {
         setConditions(existing.conditions.map((c) => ({ ...c, value: [...c.value] })));
@@ -126,21 +126,21 @@ export const ColumnMenu: FC = () => {
   }, [dispatch, editorRef]);
 
   const handleApplyLabel = useCallback(() => {
-    if (x == null || table == null) {
+    if (x == null || sheet == null) {
       return;
     }
     const address = p2a({ y: 0, x });
-    table.update({
+    sheet.update({
       diff: { [address]: { label: label || undefined } },
       partial: true,
       ignoreFields: [],
       undoReflection: {
-        sheetId: table.sheetId,
+        sheetId: sheet.id,
         selectingZone: store.selectingZone,
         choosing: store.choosing,
       },
       redoReflection: {
-        sheetId: table.sheetId,
+        sheetId: sheet.id,
         selectingZone: store.selectingZone,
         choosing: store.choosing,
       },
@@ -148,11 +148,11 @@ export const ColumnMenu: FC = () => {
     dispatch(setColumnMenu(null));
     dispatch(
       setStore({
-        tableReactive: { current: table },
+        sheetReactive: { current: sheet },
       }),
     );
     focus(editorRef.current);
-  }, [dispatch, x, label, editorRef, table, store.selectingZone, store.choosing]);
+  }, [dispatch, x, label, editorRef, sheet, store.selectingZone, store.choosing]);
 
   const handleSortAsc = useCallback(() => {
     if (x == null) {
@@ -252,33 +252,33 @@ export const ColumnMenu: FC = () => {
     });
   }, []);
 
-  if (!columnMenuState || !table || x == null || !position) {
+  if (!columnMenuState || !sheet || x == null || !position) {
     return null;
   }
 
-  const hasAnyFilter = table.hasActiveFilters();
+  const hasAnyFilter = sheet.hasActiveFilters();
 
-  const colCell = table.getCellByPoint({ y: 0, x }, 'SYSTEM');
+  const colCell = sheet.getCellByPoint({ y: 0, x }, 'SYSTEM');
   const sortDisabled = prevention.hasOperation(colCell?.prevention, prevention.Sort);
   const filterDisabled = prevention.hasOperation(colCell?.prevention, prevention.Filter);
   const labelDisabled = prevention.hasOperation(colCell?.prevention, prevention.SetLabel);
-  const labelPlaceholder = table.getLabel(colCell?.label, { y: 0, x }, x) ?? x2c(x);
+  const labelPlaceholder = sheet.getLabel(colCell?.label, { y: 0, x }, x) ?? x2c(x);
 
   // Calculate the number of selected columns that include the current column
   const selColStart = Math.min(selectingZone.startX, selectingZone.endX);
   const selColEnd = Math.max(selectingZone.startX, selectingZone.endX);
-  const isFullColSelection = selectingZone.startY === 1 && selectingZone.endY === table.getNumRows();
+  const isFullColSelection = selectingZone.startY === 1 && selectingZone.endY === sheet.getNumRows();
   const numSelectedCols =
     isFullColSelection && between({ start: selectingZone.startX, end: selectingZone.endX }, x)
       ? selColEnd - selColStart + 1
       : 1;
 
-  const insertDisabled = table.maxNumCols !== -1 && table.getNumCols() + numSelectedCols > table.maxNumCols;
+  const insertDisabled = sheet.maxNumCols !== -1 && sheet.getNumCols() + numSelectedCols > sheet.maxNumCols;
   const insertLeftDisabled = insertDisabled || prevention.hasOperation(colCell?.prevention, prevention.InsertColsLeft);
   const insertRightDisabled =
     insertDisabled || prevention.hasOperation(colCell?.prevention, prevention.InsertColsRight);
   const removeDisabled =
-    (table.minNumCols !== -1 && table.getNumCols() - numSelectedCols < table.minNumCols) ||
+    (sheet.minNumCols !== -1 && sheet.getNumCols() - numSelectedCols < sheet.minNumCols) ||
     prevention.hasOperation(colCell?.prevention, prevention.RemoveCols);
 
   const waitingMessage =

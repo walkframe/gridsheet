@@ -4,10 +4,10 @@ import { createRef, useContext, useEffect, useRef, useState } from 'react';
 import type { OptionsType, Props, Connector } from '../types';
 import { Context } from '../store';
 
-import { setStore, updateTable } from '../store/actions';
+import { setStore, updateSheet } from '../store/actions';
 
 import { usePluginContext } from './PluginBase';
-import { Table } from '../lib/table';
+import { Sheet } from '../lib/sheet';
 
 type StoreObserverProps = OptionsType & {
   sheetName?: string;
@@ -26,37 +26,37 @@ export const StoreObserver: FC<StoreObserverProps> = ({
   mode,
 }) => {
   const { store, dispatch } = useContext(Context);
-  const { tableReactive: tableRef } = store;
-  const table = tableRef.current;
+  const { sheetReactive: sheetRef } = store;
+  const sheet = sheetRef.current;
 
   useEffect(() => {
-    if (!table) {
+    if (!sheet) {
       return;
     }
-    if (sheetName && sheetName !== table.sheetName) {
-      table.sheetName = sheetName;
-      table.wire.sheetIdsByName[sheetName] = table.sheetId;
-      delete table.wire.sheetIdsByName[table.prevSheetName];
-      table.prevSheetName = sheetName;
-      //hub.transmit();
+    if (sheetName && sheetName !== sheet.name) {
+      sheet.name = sheetName;
+      sheet.registry.sheetIdsByName[sheetName] = sheet.id;
+      delete sheet.registry.sheetIdsByName[sheet.prevName];
+      sheet.prevName = sheetName;
+      //book.transmit();
     }
   }, [sheetName]);
 
   useEffect(() => {
-    if (!table) {
+    if (!sheet) {
       return;
     }
-    const { wire } = table;
-    requestAnimationFrame(() => wire.identifyFormula());
-    wire.contextsBySheetId[table.sheetId] = { store, dispatch };
-    wire.transmit();
+    const { registry } = sheet;
+    requestAnimationFrame(() => registry.boot());
+    registry.contextsBySheetId[sheet.id] = { store, dispatch };
+    registry.transmit();
 
     if (connector) {
       connector.current = {
-        tableManager: {
-          table,
-          sync: (table) => {
-            dispatch(updateTable(table as Table));
+        sheetManager: {
+          sheet,
+          sync: (sheet) => {
+            dispatch(updateSheet(sheet as Sheet));
           },
         },
         storeManager: {
@@ -68,7 +68,7 @@ export const StoreObserver: FC<StoreObserverProps> = ({
         },
       };
     }
-  }, [store, table, connector]);
+  }, [store, sheet, connector]);
 
   useEffect(() => {
     if (sheetHeight) {

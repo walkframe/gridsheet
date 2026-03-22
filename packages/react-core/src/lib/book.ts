@@ -8,40 +8,43 @@ import type {
   ContextsBySheetId,
   ZoneType,
   CellsByIdType,
+  SystemsByIdType,
+  System,
   Id,
   StoreDispatchType,
   FeedbackType,
   EditorEvent,
   CursorStateType,
 } from '../types';
-import type { UserTable } from './table';
+import type { UserSheet } from './sheet';
 import { useEffect, useState } from 'react';
-import { updateTable } from '../store/actions';
+import { updateSheet } from '../store/actions';
 import type { FunctionMapping } from '../formula/functions/__base';
 import { functions as functionsDefault } from '../formula/mapping';
 import { PolicyType } from '../policy/core';
 
-export type WireProps = {
+export type RegistryProps = {
   historyLimit?: number;
   additionalFunctions?: FunctionMapping;
   policies?: { [policyName: string]: PolicyType | null };
   onSave?: FeedbackType;
   onChange?: FeedbackType;
-  onRemoveRows?: (args: { table: UserTable; ys: number[] }) => void;
-  onRemoveCols?: (args: { table: UserTable; xs: number[] }) => void;
-  onInsertRows?: (args: { table: UserTable; y: number; numRows: number }) => void;
-  onInsertCols?: (args: { table: UserTable; x: number; numCols: number }) => void;
+  onRemoveRows?: (args: { sheet: UserSheet; ys: number[] }) => void;
+  onRemoveCols?: (args: { sheet: UserSheet; xs: number[] }) => void;
+  onInsertRows?: (args: { sheet: UserSheet; y: number; numRows: number }) => void;
+  onInsertCols?: (args: { sheet: UserSheet; x: number; numCols: number }) => void;
   onSelect?: FeedbackType;
   onKeyUp?: (args: { e: EditorEvent; points: CursorStateType }) => void;
-  onInit?: (args: { table: UserTable }) => void;
+  onInit?: (args: { sheet: UserSheet }) => void;
 };
 
-export type HubProps = WireProps;
+export type BookProps = RegistryProps;
 
-export class Wire {
+export class Registry {
   sheetHead: number = 0;
   cellHead: number = 0;
   data: CellsByIdType = {};
+  systems: SystemsByIdType = {};
   sheetIdsByName: SheetIdsByName = {};
   contextsBySheetId: ContextsBySheetId = {};
   choosingSheetId: number = 0;
@@ -51,8 +54,6 @@ export class Wire {
   paletteBySheetName: { [sheetName: string]: RefPaletteType } = {};
   lastFocused: HTMLTextAreaElement | null = null;
   solvedCaches: Map<Id, any> = new Map();
-  /** Maps each cell id to the set of cell ids whose formula depends on it. */
-  dependents: Map<Id, Set<Id>> = new Map();
   /** IDs of non-origin cells that received spilled values (populated in spill(), cleared in clearSolvedCaches()). */
   lastSpilledTargetIds: Set<Id> = new Set();
   /** Currently in-flight async formula Pending sentinels (keyed by cell ID). */
@@ -72,19 +73,19 @@ export class Wire {
   policies: { [policyName: string]: PolicyType | null } = {};
   onSave?: FeedbackType;
   onChange?: FeedbackType;
-  onRemoveRows?: (args: { table: UserTable; ys: number[] }) => void;
-  onRemoveCols?: (args: { table: UserTable; xs: number[] }) => void;
-  onInsertRows?: (args: { table: UserTable; y: number; numRows: number }) => void;
-  onInsertCols?: (args: { table: UserTable; x: number; numCols: number }) => void;
+  onRemoveRows?: (args: { sheet: UserSheet; ys: number[] }) => void;
+  onRemoveCols?: (args: { sheet: UserSheet; xs: number[] }) => void;
+  onInsertRows?: (args: { sheet: UserSheet; y: number; numRows: number }) => void;
+  onInsertCols?: (args: { sheet: UserSheet; x: number; numCols: number }) => void;
   onSelect?: FeedbackType;
   onKeyUp?: (args: { e: EditorEvent; points: CursorStateType }) => void;
-  onInit?: (args: { table: UserTable }) => void;
+  onInit?: (args: { sheet: UserSheet }) => void;
 
   transmit: (newHub?: TransmitProps) => void = (newHub?: TransmitProps) => {
-    // This method will be overridden by useHub
+    // This method will be overridden by useBook
   };
 
-  public identifyFormula() {
+  public boot() {
     if (this.ready || Object.keys(this.contextsBySheetId).length === 0) {
       return;
     }
@@ -93,20 +94,20 @@ export class Wire {
     for (let i = 0; i < keys.length; i++) {
       const sheetId = keys[i];
       const storeDispatch = this.contextsBySheetId[sheetId];
-      const table = storeDispatch.store.tableReactive.current;
-      if (!table || table.status === 0) {
+      const sheet = storeDispatch.store.sheetReactive.current;
+      if (!sheet || sheet.status === 0) {
         return;
       }
       tobe.push(storeDispatch);
     }
     for (let i = 0; i < tobe.length; i++) {
       const { store, dispatch } = tobe[i];
-      const table = store.tableReactive.current;
-      if (!table) {
+      const sheet = store.sheetReactive.current;
+      if (!sheet) {
         continue;
       }
-      table.identifyFormula();
-      dispatch(updateTable(table));
+      sheet.resolveFormulas();
+      dispatch(updateSheet(sheet));
     }
     this.ready = true;
   }
@@ -124,7 +125,7 @@ export class Wire {
     onSelect,
     onKeyUp,
     onInit,
-  }: WireProps = {}) {
+  }: RegistryProps = {}) {
     if (historyLimit != null) {
       this.historyLimit = historyLimit;
     }
@@ -149,32 +150,35 @@ export class Wire {
   }
 }
 
-export type TransmitProps = Partial<Wire>;
+export type TransmitProps = Partial<Registry>;
 
-export const createWire = (props: WireProps = {}) => {
-  return new Wire(props);
+export const createRegistry = (props: RegistryProps = {}) => {
+  return new Registry(props);
 };
 
-export type HubType = {
-  wire: Wire;
+/** @deprecated use createRegistry */
+export const createBinding = createRegistry;
+
+export type BookType = {
+  registry: Registry;
 };
 
-export const createHub = (props: WireProps = {}): HubType => {
-  return { wire: createWire(props) };
+export const createBook = (props: RegistryProps = {}): BookType => {
+  return { registry: createRegistry(props) };
 };
 
-export const useHub = (props: WireProps = {}) => {
-  const [hub, setHub] = useState<HubType>(() => createHub(props));
-  const { wire } = hub;
-  wire.transmit = (patch?: TransmitProps) => {
-    Object.assign(wire, patch);
-    if (!wire.ready) {
+export const useBook = (props: RegistryProps = {}) => {
+  const [book, setHub] = useState<BookType>(() => createBook(props));
+  const { registry } = book;
+  registry.transmit = (patch?: TransmitProps) => {
+    Object.assign(registry, patch);
+    if (!registry.ready) {
       return;
     }
-    requestAnimationFrame(() => setHub({ wire }));
+    requestAnimationFrame(() => setHub({ registry }));
   };
   useEffect(() => {
-    Object.assign(wire, props);
+    Object.assign(registry, props);
   }, [props]);
-  return hub;
+  return book;
 };

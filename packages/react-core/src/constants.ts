@@ -31,3 +31,5 @@ export const RESET_ZONE: ZoneType = {
 
 // 1900-01-01 is the base date for date serialization in Excel, and is represented as 0 in Excel's date system. However, JavaScript's Date object uses the Unix epoch (1970-01-01) as its base date. Therefore, we need to account for the difference between these two epochs when converting between Excel dates and JavaScript dates.
 export const BASE_DATE = new Date(1900, 0, 1);
+
+export const DEFAULT_KEY = 'default';

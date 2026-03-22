@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { CellType, buildInitialCells, GridSheet, Policy, RenderProps, useHub } from '@gridsheet/react-core';
+import { CellType, buildInitialCells, GridSheet, Policy, RenderProps, useBook } from '@gridsheet/react-core';
 import { allFunctions } from '@gridsheet/functions';
 import { Debugger } from '@gridsheet/react-dev';
 
@@ -16,7 +16,7 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const ParseAsListSheet = () => {
-  const hub = useHub({
+  const book = useBook({
     additionalFunctions: allFunctions,
     policies: {
       list: new Policy({
@@ -46,7 +46,7 @@ const ParseAsListSheet = () => {
   return (
     <>
       <GridSheet
-        hub={hub}
+        book={book}
         initialCells={buildInitialCells({
           matrices: {
             A1: [
@@ -76,7 +76,7 @@ const ParseAsListSheet = () => {
           ensured: { numRows: 30, numCols: 20 },
         })}
       />
-      <Debugger hub={hub} />
+      <Debugger book={book} />
     </>
   );
 };

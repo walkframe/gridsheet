@@ -6,7 +6,7 @@ import { a2p } from '../lib/coords';
 import { COLOR_PALETTE } from '../lib/palette';
 import { Autofill } from '../lib/autofill';
 import { getCellRectPositions } from '../lib/virtualization';
-import type { Table } from '../lib/table';
+import type { Sheet } from '../lib/sheet';
 import type { FC } from 'react';
 import type { RefPaletteType, AreaType, ModeType } from '../types';
 
@@ -69,7 +69,7 @@ const drawRect = (
 // Draw an area rect in viewport coordinates (absolute coords - scroll offset, clamped to viewport)
 const drawAreaRectViewport = (
   ctx: Ctx2D,
-  table: Table,
+  sheet: Sheet,
   scrollTop: number,
   scrollLeft: number,
   viewW: number,
@@ -85,8 +85,8 @@ const drawAreaRectViewport = (
     return;
   }
 
-  const topLeft = getCellRectPositions(table, { y: top, x: left });
-  const bottomRight = getCellRectPositions(table, { y: bottom, x: right });
+  const topLeft = getCellRectPositions(sheet, { y: top, x: left });
+  const bottomRight = getCellRectPositions(sheet, { y: bottom, x: right });
 
   const x1 = topLeft.left - scrollLeft;
   const y1 = topLeft.top - scrollTop;
@@ -104,7 +104,7 @@ const drawAreaRectViewport = (
 export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
   const { store } = useContext(Context);
   const {
-    tableReactive,
+    sheetReactive,
     tabularRef,
     choosing,
     selectingZone,
@@ -116,14 +116,14 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
     mode,
     dragging,
   } = store;
-  const table = tableReactive.current;
+  const sheet = sheetReactive.current;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafIdRef = useRef<number>(0);
   const storeRef = useRef(store);
   storeRef.current = store;
 
   const drawCanvas = useCallback(() => {
-    if (!table || !tabularRef.current || !canvasRef.current) {
+    if (!sheet || !tabularRef.current || !canvasRef.current) {
       return;
     }
 
@@ -148,11 +148,11 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
 
-    const { wire } = table;
+    const { registry } = sheet;
     const scrollTop = container.scrollTop;
     const scrollLeft = container.scrollLeft;
-    const headerW = table.headerWidth;
-    const headerH = table.headerHeight;
+    const headerW = sheet.headerWidth;
+    const headerH = sheet.headerHeight;
 
     // Clip cell-area drawing to exclude header region
     ctx.save();
@@ -162,19 +162,19 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
 
     // 1. Selecting zone (border + fill)
     const selectingArea = zoneToArea(selectingZone);
-    drawAreaRectViewport(ctx, table, scrollTop, scrollLeft, w, h, selectingArea, COLOR_SELECTED, 1, [], SELECTING_FILL);
+    drawAreaRectViewport(ctx, sheet, scrollTop, scrollLeft, w, h, selectingArea, COLOR_SELECTED, 1, [], SELECTING_FILL);
 
     // 2. Autofill dragging
     if (autofillDraggingTo) {
       const autofill = new Autofill(storeRef.current, autofillDraggingTo);
-      drawAreaRectViewport(ctx, table, scrollTop, scrollLeft, w, h, autofill.wholeArea, COLOR_AUTOFILL, 1, [5, 5]);
+      drawAreaRectViewport(ctx, sheet, scrollTop, scrollLeft, w, h, autofill.wholeArea, COLOR_AUTOFILL, 1, [5, 5]);
     }
 
     // 3. Choosing (pointed cell)
     {
       const { y, x } = choosing;
       if (y !== -1 && x !== -1) {
-        const pos = getCellRectPositions(table, { y, x });
+        const pos = getCellRectPositions(sheet, { y, x });
         const vx = pos.left - scrollLeft;
         const vy = pos.top - scrollTop;
         drawRect(ctx, vx, vy, pos.width, pos.height, COLOR_POINTED, 2, []);
@@ -182,20 +182,20 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
     }
 
     // 4. Copying/Cutting zone
-    const { copyingSheetId, copyingZone, cutting } = wire;
-    if (table.sheetId === copyingSheetId) {
+    const { copyingSheetId, copyingZone, cutting } = registry;
+    if (sheet.id === copyingSheetId) {
       const copyingArea = zoneToArea(copyingZone);
       const color = cutting ? COLOR_CUTTING : COLOR_COPYING;
       const dashPattern = cutting ? [4, 4] : [6, 4];
-      drawAreaRectViewport(ctx, table, scrollTop, scrollLeft, w, h, copyingArea, color, 2.5, dashPattern);
+      drawAreaRectViewport(ctx, sheet, scrollTop, scrollLeft, w, h, copyingArea, color, 2.5, dashPattern);
     }
 
     // 5. Formula references (from palette)
     Object.entries(refs).forEach(([ref, i]) => {
       const palette = COLOR_PALETTE[i % COLOR_PALETTE.length];
       try {
-        const refArea = table.rangeToArea(ref);
-        drawAreaRectViewport(ctx, table, scrollTop, scrollLeft, w, h, refArea, palette, 2, [5, 5]);
+        const refArea = sheet.rangeToArea(ref);
+        drawAreaRectViewport(ctx, sheet, scrollTop, scrollLeft, w, h, refArea, palette, 2, [5, 5]);
       } catch (e) {
         // Invalid reference, skip
       }
@@ -204,7 +204,7 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
     // 6. Search matching cells
     matchingCells.forEach((address, index) => {
       const { y, x } = a2p(address);
-      const pos = getCellRectPositions(table, { y, x });
+      const pos = getCellRectPositions(sheet, { y, x });
       const vx = pos.left - scrollLeft;
       const vy = pos.top - scrollTop;
 
@@ -231,8 +231,8 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
     ctx.restore();
 
     // 7. Header highlights (top and left) — draw bottom border for top headers, right border for left headers
-    const numCols = table.getNumCols();
-    const numRows = table.getNumRows();
+    const numCols = sheet.getNumCols();
+    const numRows = sheet.getNumRows();
 
     // Top headers - draw bottom border and background
     for (let x = 1; x <= numCols; x++) {
@@ -250,7 +250,7 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
         continue;
       }
 
-      const pos = getCellRectPositions(table, { y: 1, x });
+      const pos = getCellRectPositions(sheet, { y: 1, x });
       const left = pos.left - scrollLeft;
       if (left + pos.width < headerW || left > w) {
         continue;
@@ -273,7 +273,7 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
 
     // Left headers - draw right border and background
     for (let y = 1; y <= numRows; y++) {
-      if (table.isRowFiltered(y)) {
+      if (sheet.isRowFiltered(y)) {
         continue;
       }
       let color: string | null = null;
@@ -290,7 +290,7 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
         continue;
       }
 
-      const pos = getCellRectPositions(table, { y, x: 1 });
+      const pos = getCellRectPositions(sheet, { y, x: 1 });
       const top = pos.top - scrollTop;
       if (top + pos.height < headerH || top > h) {
         continue;
@@ -311,7 +311,7 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
       }
     }
   }, [
-    table,
+    sheet,
     tabularRef,
     choosing,
     selectingZone,

@@ -5,7 +5,7 @@ import {
   Policy,
   AutocompleteOption,
   buildInitialCells,
-  useHub,
+  useBook,
   type SelectProps,
 } from '@gridsheet/react-core';
 import { Debugger } from '@gridsheet/react-dev';
@@ -119,7 +119,7 @@ const OptionsComponent: React.FC = () => {
       },
     ],
   });
-  const hub = useHub({
+  const book = useBook({
     additionalFunctions: allFunctions,
     policies: {
       color: colorPolicy,
@@ -130,7 +130,7 @@ const OptionsComponent: React.FC = () => {
   return (
     <div>
       <GridSheet
-        hub={hub}
+        book={book}
         initialCells={buildInitialCells({
           cells: {
             A: {
@@ -158,7 +158,7 @@ const OptionsComponent: React.FC = () => {
           ensured: { numRows: 10, numCols: 10 },
         })}
       />
-      <Debugger hub={hub} />
+      <Debugger book={book} />
     </div>
   );
 };

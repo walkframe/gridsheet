@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, useHub } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet, useBook } from '@gridsheet/react-core';
 import { allFunctions } from '@gridsheet/functions';
 
 const meta: Meta = {
@@ -19,7 +19,7 @@ type Props = {
 
 const ShowAddressSheet = () => {
   const [showAddress, setShowAddress] = useState(true);
-  const hub = useHub({ additionalFunctions: allFunctions });
+  const book = useBook({ additionalFunctions: allFunctions });
   return (
     <>
       <label>
@@ -27,7 +27,7 @@ const ShowAddressSheet = () => {
         Show Address
       </label>
       <GridSheet
-        hub={hub}
+        book={book}
         initialCells={buildInitialCells({
           ensured: { numRows: 100, numCols: 100 },
         })}

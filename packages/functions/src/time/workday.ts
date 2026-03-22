@@ -1,35 +1,7 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { ensureNumber, Table, solveTable } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 import { ensureDate } from './__utils';
-
-function buildHolidaySet(value: any): Set<string> {
-  const set = new Set<string>();
-  if (!value) {
-    return set;
-  }
-
-  let items: any[];
-  if (value instanceof Table) {
-    items = solveTable({ table: value }).flat();
-  } else {
-    items = [value];
-  }
-
-  for (const item of items) {
-    if (!item) {
-      continue;
-    }
-    try {
-      const d = ensureDate(item);
-      set.add(dateKey(d));
-    } catch {
-      // ignore non-date values
-    }
-  }
-  return set;
-}
 
 function dateKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -65,7 +37,19 @@ export class WorkdayFunction extends BaseFunction {
 
   protected main(startDate: any, days: number, holidays?: any) {
     const start = ensureDate(startDate);
-    const holidaySet = buildHolidaySet(holidays);
+    const holidaySet = new Set<string>();
+    if (holidays != null) {
+      this.eachMatrix(holidays, (v: any) => {
+        if (!v) {
+          return;
+        }
+        try {
+          holidaySet.add(dateKey(ensureDate(v)));
+        } catch {
+          // ignore non-date values
+        }
+      });
+    }
     const step = days >= 0 ? 1 : -1;
     let remaining = Math.abs(Math.trunc(days));
     const current = new Date(start.getTime());

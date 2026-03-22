@@ -128,7 +128,7 @@ test('1 operation makes 1 diff history', async ({ page }) => {
   expect(jsonQuery(firstJSON!, ['B4', 'value'])).toBe(4444);
 
   const secondJSON = await histories.nth(1).locator('pre').textContent();
-  expect(jsonQuery(secondJSON!, ['C1', 'value'])).toBe(null);
+  expect(jsonQuery(secondJSON!, ['C1', 'value'])).toBe(undefined);
 });
 
 test('escape key should cancel the editing', async ({ page }) => {
@@ -256,7 +256,7 @@ test('onInsertRows, onInsertCols, onRemoveRows, onRemoveCols events', async ({ p
   let eventLog = logs[logs.length - 2];
   expect(eventLog[0]).toBe('onInsertRows called with:');
   let eventData = eventLog[1];
-  expect(eventData).toHaveProperty('table');
+  expect(eventData).toHaveProperty('sheet');
   expect(eventData).toHaveProperty('y');
   expect(eventData).toHaveProperty('numRows');
   expect(eventData.y).toBeGreaterThanOrEqual(-1);
@@ -271,7 +271,7 @@ test('onInsertRows, onInsertCols, onRemoveRows, onRemoveCols events', async ({ p
   eventLog = logs[logs.length - 2];
   expect(eventLog[0]).toBe('onInsertCols called with:');
   eventData = eventLog[1];
-  expect(eventData).toHaveProperty('table');
+  expect(eventData).toHaveProperty('sheet');
   expect(eventData).toHaveProperty('x');
   expect(eventData).toHaveProperty('numCols');
   expect(eventData.x).toBeGreaterThanOrEqual(-1);
@@ -286,7 +286,7 @@ test('onInsertRows, onInsertCols, onRemoveRows, onRemoveCols events', async ({ p
   eventLog = logs[logs.length - 2];
   expect(eventLog[0]).toBe('onRemoveRows called with:');
   eventData = eventLog[1];
-  expect(eventData).toHaveProperty('table');
+  expect(eventData).toHaveProperty('sheet');
   expect(eventData).toHaveProperty('ys');
   expect(Array.isArray(eventData.ys)).toBe(true);
   expect(eventData.ys.length).toBe(1);
@@ -300,7 +300,7 @@ test('onInsertRows, onInsertCols, onRemoveRows, onRemoveCols events', async ({ p
   eventLog = logs[logs.length - 2];
   expect(eventLog[0]).toBe('onRemoveCols called with:');
   eventData = eventLog[1];
-  expect(eventData).toHaveProperty('table');
+  expect(eventData).toHaveProperty('sheet');
   expect(eventData).toHaveProperty('xs');
   expect(Array.isArray(eventData.xs)).toBe(true);
   expect(eventData.xs.length).toBe(1);

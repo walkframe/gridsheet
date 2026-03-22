@@ -5,10 +5,10 @@ import {
   buildInitialCells,
   useConnector,
   HistoryType,
-  useHub,
-  table2csv,
+  useBook,
+  sheet2csv,
   FormulaError,
-  UserTable,
+  UserSheet,
   PointType,
 } from '@gridsheet/react-core';
 import { allFunctions } from '@gridsheet/functions';
@@ -41,33 +41,33 @@ const SheetTSVComponent: React.FC = () => {
   const [trailingEmptyRowsOmitted, setTrailingEmptyRowsOmitted] = React.useState<boolean>(true);
   const [histories, setHistories] = React.useState<HistoryType[]>([]);
   const connector = useConnector();
-  const table = connector.current?.tableManager.table;
+  const sheet = connector.current?.sheetManager.sheet;
 
-  const getter = (table: UserTable, point: PointType) => {
-    const value = table.getCellByPoint(point, evaluates ? 'COMPLETE' : 'RAW')?.value ?? '';
+  const getter = (sheet: UserSheet, point: PointType) => {
+    const value = sheet.getCellByPoint(point, evaluates ? 'COMPLETE' : 'RAW')?.value ?? '';
     if (FormulaError.is(value)) {
       return ignoreError ? '' : value.code;
     }
     return String(value);
   };
 
-  const hub = useHub({
+  const book = useBook({
     additionalFunctions: allFunctions,
-    onChange: ({ table, points }) => {
-      const tsv = table2csv(table, { getter, trailingEmptyRowsOmitted });
+    onChange: ({ sheet, points }) => {
+      const tsv = sheet2csv(sheet, { getter, trailingEmptyRowsOmitted });
       setCsvData(tsv);
-      setHistories(table.getHistories());
-      const changed = table.toCellObject({ addresses: table.getLastChangedAddresses() });
+      setHistories(sheet.getHistories());
+      const changed = sheet.toCellObject({ addresses: sheet.getLastChangedAddresses() });
       console.log('changed', changed);
     },
   });
   React.useEffect(() => {
-    if (table == null) {
+    if (sheet == null) {
       return;
     }
-    const tsv = table2csv(table, { getter, trailingEmptyRowsOmitted });
+    const tsv = sheet2csv(sheet, { getter, trailingEmptyRowsOmitted });
     setCsvData(tsv);
-  }, [table, evaluates, ignoreError, trailingEmptyRowsOmitted]);
+  }, [sheet, evaluates, ignoreError, trailingEmptyRowsOmitted]);
 
   return (
     <>
@@ -75,7 +75,7 @@ const SheetTSVComponent: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'stretch' }}>
           <GridSheet
             connector={connector}
-            hub={hub}
+            book={book}
             initialCells={buildInitialCells({
               matrices: {
                 A1: [
@@ -161,14 +161,14 @@ const SheetTSVComponent: React.FC = () => {
                 lineHeight: '20px',
                 borderBottom: 'solid 1px #777',
                 marginBottom: '10px',
-                backgroundColor: table?.getHistoryIndex() === i ? '#fdd' : 'transparent',
+                backgroundColor: sheet?.getHistoryIndex() === i ? '#fdd' : 'transparent',
               }}
             >
               <div style={{ color: '#09a' }}>[{history.operation}]</div>
               <pre style={{ margin: 0 }}>
                 {(() => {
                   if (history.operation === 'UPDATE') {
-                    return JSON.stringify(table?.__raw__.getAddressesByIds(history.diffAfter));
+                    return JSON.stringify(sheet?.__raw__.getAddressesByIds(history.diffAfter));
                   }
                 })()}
               </pre>

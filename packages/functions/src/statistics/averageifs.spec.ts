@@ -1,9 +1,9 @@
 import { AverageifsFunction } from './averageifs';
-import { Table, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/react-core';
 
 describe('averageifs', () => {
-  const table = new Table({});
-  table.initialize({
+  const sheet = new Sheet({});
+  sheet.initialize({
     A1: { value: 10 },
     A2: { value: 20 },
     A3: { value: 30 },
@@ -15,7 +15,7 @@ describe('averageifs', () => {
   describe('normal', () => {
     it('calculates average with single condition', () => {
       const f = new AverageifsFunction({
-        table,
+        sheet,
         args: [new RangeEntity('A1:A3'), new RangeEntity('B1:B3'), new ValueEntity('Apple')],
       });
       // (10 + 30) / 2 = 20
@@ -24,7 +24,7 @@ describe('averageifs', () => {
 
     it('calculates average with multiple conditions', () => {
       const f = new AverageifsFunction({
-        table,
+        sheet,
         args: [
           new RangeEntity('A1:A3'),
           new RangeEntity('B1:B3'),
@@ -41,7 +41,7 @@ describe('averageifs', () => {
   describe('validation error', () => {
     it('returns error with no matching cells', () => {
       const f = new AverageifsFunction({
-        table,
+        sheet,
         args: [new RangeEntity('A1:A3'), new RangeEntity('B1:B3'), new ValueEntity('Orange')],
       });
       const result = f.call();
@@ -50,7 +50,7 @@ describe('averageifs', () => {
 
     it('throws error when args are insufficient', () => {
       const f = new AverageifsFunction({
-        table,
+        sheet,
         args: [new RangeEntity('A1:A3'), new RangeEntity('B1:B3')],
       });
       expect(f.call.bind(f)).toThrow(FormulaError);

@@ -5,9 +5,9 @@ import {
   buildInitialCells,
   useConnector,
   HistoryType,
-  Table,
-  createHub,
-  UserTable,
+  Sheet,
+  createBook,
+  UserSheet,
 } from '@gridsheet/react-core';
 import { allFunctions } from '@gridsheet/functions';
 
@@ -16,15 +16,15 @@ const meta: Meta = {
 };
 export default meta;
 
-const hub = createHub({
+const book = createBook({
   additionalFunctions: allFunctions,
-  onInsertRows: ({ table, y, numRows }) => {
-    console.log('onInsertRows called with:', { table, y, numRows });
-    console.log('Inserted data:', table.toValueObject());
+  onInsertRows: ({ sheet, y, numRows }) => {
+    console.log('onInsertRows called with:', { sheet, y, numRows });
+    console.log('Inserted data:', sheet.toValueObject());
   },
-  onInsertCols: ({ table, x, numCols }) => {
-    console.log('onInsertCols called with:', { table, x, numCols });
-    console.log('Inserted data:', table.toValueObject());
+  onInsertCols: ({ sheet, x, numCols }) => {
+    console.log('onInsertCols called with:', { sheet, x, numCols });
+    console.log('Inserted data:', sheet.toValueObject());
   },
 });
 
@@ -37,11 +37,11 @@ const UpdateComponent: React.FC = () => {
 
   const update = () => {
     if (connector.current) {
-      const { tableManager } = connector.current;
-      const { table, sync } = tableManager;
+      const { sheetManager } = connector.current;
+      const { sheet, sync } = sheetManager;
       const diff = JSON.parse(json);
       console.log(diff);
-      sync(table.update({ diff }));
+      sync(sheet.update({ diff }));
     }
   };
 
@@ -86,10 +86,10 @@ const InsertRowsAndUpdateComponent: React.FC = () => {
 
   const add = () => {
     if (connector.current) {
-      const { tableManager } = connector.current;
-      const { table, sync } = tableManager;
+      const { sheetManager } = connector.current;
+      const { sheet, sync } = sheetManager;
       sync(
-        table.insertRows({
+        sheet.insertRows({
           y: 5,
           numRows: 1,
           baseY: 5,
@@ -106,7 +106,7 @@ const InsertRowsAndUpdateComponent: React.FC = () => {
       <br />
       <button onClick={add}>Insert Rows and Update!</button>
       <GridSheet
-        hub={hub}
+        book={book}
         connector={connector}
         initialCells={buildInitialCells({
           cells: {
@@ -141,10 +141,10 @@ const InsertColsAndUpdateComponent: React.FC = () => {
 
   const add = () => {
     if (connector.current) {
-      const { tableManager } = connector.current;
-      const { table, sync } = tableManager;
+      const { sheetManager } = connector.current;
+      const { sheet, sync } = sheetManager;
       sync(
-        table.insertCols({
+        sheet.insertCols({
           x: 4,
           numCols: 1,
           baseX: 4,
@@ -161,7 +161,7 @@ const InsertColsAndUpdateComponent: React.FC = () => {
       <br />
       <button onClick={add}>Insert Columns and Update!</button>
       <GridSheet
-        hub={hub}
+        book={book}
         connector={connector}
         initialCells={buildInitialCells({
           cells: {
