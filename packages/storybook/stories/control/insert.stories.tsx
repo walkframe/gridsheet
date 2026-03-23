@@ -5,10 +5,10 @@ import {
   buildInitialCells,
   buildInitialCellsFromOrigin,
   useConnector,
-  useBook,
+  toValueObject,
 } from '@gridsheet/react-core';
 import { syncers } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/functions';
 import { Debugger } from '@gridsheet/react-dev';
 
 const meta: Meta = {
@@ -35,23 +35,22 @@ const DESCRIPTION = [
 const InsertComponent: React.FC = () => {
   const connector = useConnector();
 
-  const book = useBook({
-    additionalFunctions: allFunctions,
+  const book = useSpellbook({
     onInsertRows: ({ sheet, y, numRows }) => {
       console.log('onInsertRows called with:', { sheet, y, numRows });
-      console.log('Inserted data:', sheet.toValueObject());
+      console.log('Inserted data:', toValueObject(sheet));
     },
     onInsertCols: ({ sheet, x, numCols }) => {
       console.log('onInsertCols called with:', { sheet, x, numCols });
-      console.log('Inserted data:', sheet.toValueObject());
+      console.log('Inserted data:', toValueObject(sheet));
     },
     onRemoveRows: ({ sheet, ys }) => {
       console.log('onRemoveRows called with:', { sheet, ys });
-      console.log('Removed data:', sheet.toValueObject());
+      console.log('Removed data:', toValueObject(sheet));
     },
     onRemoveCols: ({ sheet, xs }) => {
       console.log('onRemoveCols called with:', { sheet, xs });
-      console.log('Removed data:', sheet.toValueObject());
+      console.log('Removed data:', toValueObject(sheet));
     },
   });
 

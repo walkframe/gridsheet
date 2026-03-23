@@ -59,8 +59,8 @@ export const Tabular = () => {
         select({
           startY: 1,
           startX: 1,
-          endY: sheet.getNumRows(),
-          endX: sheet.getNumCols(),
+          endY: sheet.numRows,
+          endX: sheet.numCols,
         }),
       );
     });

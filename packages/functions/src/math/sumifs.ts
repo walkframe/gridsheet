@@ -1,7 +1,7 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type FunctionArgumentDefinition, conditionArg } from '@gridsheet/react-core';
 import { Sheet, eachMatrix, stripMatrix, createBooleanMask, ensureString } from '@gridsheet/react-core';
-import type { AreaType, PointType } from '@gridsheet/react-core';
+import type { PointType } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
 const description = `Returns the sum of a range depending on multiple criteria.`;
@@ -30,8 +30,8 @@ export class SumifsFunction extends BaseFunction {
     if (!(validatedArgs[0] instanceof Sheet)) {
       throw new FormulaError('#VALUE!', 'First argument of SUMIFS must be a range.');
     }
-    const expectedRows = validatedArgs[0].getNumRows();
-    const expectedCols = validatedArgs[0].getNumCols();
+    const expectedRows = validatedArgs[0].numRows;
+    const expectedCols = validatedArgs[0].numCols;
 
     const tables: Sheet[] = [];
     const conditions: string[] = [];
@@ -39,7 +39,7 @@ export class SumifsFunction extends BaseFunction {
       if (!(validatedArgs[i] instanceof Sheet)) {
         throw new FormulaError('#VALUE!', `Argument ${i + 1} of SUMIFS must be a range.`);
       }
-      if (validatedArgs[i].getNumRows() !== expectedRows || validatedArgs[i].getNumCols() !== expectedCols) {
+      if (validatedArgs[i].numRows !== expectedRows || validatedArgs[i].numCols !== expectedCols) {
         throw new FormulaError('#VALUE!', 'Array arguments to SUMIFS are of different size.');
       }
       tables.push(validatedArgs[i] as Sheet);

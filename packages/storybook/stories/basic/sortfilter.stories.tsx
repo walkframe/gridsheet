@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, buildInitialCells, Policy, CheckboxPolicyMixin, useBook } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { GridSheet, buildInitialCells, Policy, CheckboxPolicyMixin } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Basic/SortFilter',
@@ -17,8 +17,7 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const SortFilterSheet = () => {
-  const book = useBook({
-    additionalFunctions: allFunctions,
+  const book = useSpellbook({
     policies: {
       checkbox: new Policy({ mixins: [CheckboxPolicyMixin] }),
     },

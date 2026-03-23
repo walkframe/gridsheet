@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, useBook } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 import { Debugger } from '@gridsheet/react-dev';
 
 const meta: Meta = {
@@ -10,7 +10,7 @@ const meta: Meta = {
 export default meta;
 
 const MatrixFunctions: React.FC = () => {
-  const book = useBook({ additionalFunctions: allFunctions });
+  const book = useSpellbook();
 
   // ---- MMULT: A(2×2) × B(2×2) → 2×2 result spills from E2 ----
   const mmultCells = buildInitialCells({

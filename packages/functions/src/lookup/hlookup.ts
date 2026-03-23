@@ -35,7 +35,7 @@ export class HlookupFunction extends BaseFunction {
     const matrix = this.toMatrix(range);
     if (isSorted) {
       let last = -1;
-      for (let x = 0; x <= range.getNumCols(); x++) {
+      for (let x = 0; x <= range.numCols; x++) {
         const v = matrix[0]?.[x];
         if (v == null) {
           continue;
@@ -50,7 +50,7 @@ export class HlookupFunction extends BaseFunction {
         return matrix[index - 1]?.[last];
       }
     } else {
-      for (let x = 0; x <= range.getNumCols(); x++) {
+      for (let x = 0; x <= range.numCols; x++) {
         if (matrix[0]?.[x] === key) {
           return matrix[index - 1]?.[x];
         }

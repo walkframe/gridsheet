@@ -12,7 +12,7 @@ v3.0.0 introduces async/await support for formulas and several breaking changes.
 
 **From v2:**
 ```tsx
-const cell = table.getCellByPoint({ x: 0, y: 0 });
+const cell = table.getCell({ x: 0, y: 0 });
 if (cell?.system?.changedAt) {
   console.log('Last changed at:', cell.system.changedAt);
 }
@@ -20,7 +20,7 @@ if (cell?.system?.changedAt) {
 
 **To v3:**
 ```tsx
-const cell = table.getCellByPoint({ x: 0, y: 0 });
+const cell = table.getCell({ x: 0, y: 0 });
 if (cell?._sys?.changedTime) {
   console.log('Last changed at:', cell._sys.changedTime);
 }

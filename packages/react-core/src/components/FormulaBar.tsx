@@ -36,17 +36,17 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
   const hlRef = useRef<HTMLDivElement | null>(null);
 
   const address = choosing.x === -1 ? '' : p2a(choosing);
-  const cell = sheet?.getCellByPoint(choosing, 'SYSTEM');
-  const spilledFromAddress = sheet?.getSystemByPoint(choosing)?.spilledFrom;
+  const cell = sheet?.getCell(choosing, { resolution: 'SYSTEM' });
+  const spilledFromAddress = sheet?.getSystem(choosing)?.spilledFrom;
   const originPoint = spilledFromAddress ? a2p(spilledFromAddress) : undefined;
   const originAddress = originPoint != null ? p2a(originPoint) : undefined;
   useEffect(() => {
     if (!sheet) {
       return;
     }
-    let value = sheet.getCellByPoint(choosing, 'SYSTEM')?.value ?? '';
+    let value = sheet.getCell(choosing, { resolution: 'SYSTEM' })?.value ?? '';
     // debug to remove this line
-    value = sheet.stringify({ point: choosing, cell: { ...cell, value }, refEvaluation: 'RAW' });
+    value = sheet.getSerializedValue({ point: choosing, cell: { ...cell, value }, resolution: 'RAW' });
     largeEditorRef.current!.value = value;
     setBefore(value as string);
   }, [address, sheet]);
@@ -74,7 +74,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
     };
   }, []);
 
-  const policy = sheet?.getPolicyByPoint(choosing);
+  const policy = sheet?.getPolicy(choosing);
   const optionsAll = policy?.getSelectOptions() || [];
 
   const {
@@ -212,8 +212,8 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
             dispatch(setInputting(''));
             dispatch(
               walk({
-                numRows: sheet.getNumRows(),
-                numCols: sheet.getNumCols(),
+                numRows: sheet.numRows,
+                numCols: sheet.numCols,
                 deltaY: 1,
                 deltaX: 0,
               }),
@@ -248,7 +248,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
           break;
       }
 
-      const cell = sheet.getCellByPoint(choosing, 'SYSTEM');
+      const cell = sheet.getCell(choosing, { resolution: 'SYSTEM' });
       if (prevention.hasOperation(cell?.prevention, prevention.Write)) {
         console.warn('This cell is protected from writing.');
         e.preventDefault();

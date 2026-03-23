@@ -7,10 +7,10 @@ import {
   buildInitialCells,
   buildInitialCellsFromOrigin,
   operations,
-  useBook,
+  toValueMatrix,
   type SelectProps,
 } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Restriction/DynamicOptions',
@@ -58,14 +58,13 @@ const DynamicOptionsComponent: React.FC = () => {
       }),
     [optionMatrix],
   );
-  const book = useBook({
-    additionalFunctions: allFunctions,
+  const book = useSpellbook({
     policies: {
       fw: fwPolicy,
     },
     onChange: ({ sheet, points }) => {
       if (sheet.name === 'options') {
-        const matrix = sheet.toValueMatrix() as [string, string][];
+        const matrix = toValueMatrix(sheet) as [string, string][];
         setOptionMatrix(matrix);
       }
     },

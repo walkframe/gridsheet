@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { ctrl } from './utils';
+import { ctrl, paste } from './utils';
 
 const STORY_URL = 'http://localhost:5233/iframe.html?id=multiple-sheets--sheets&viewMode=story';
 
@@ -90,5 +90,34 @@ test.describe('Cross-sheet undo/redo', () => {
     expect(afterRedoRowCount).toBe(initialRowCount + 1);
     await expect(s2.locator("[data-address='A2']").locator('.gs-cell-rendered')).toHaveText('');
     await expect(s2.locator("[data-address='A3']").locator('.gs-cell-rendered')).toHaveText('633');
+  });
+});
+
+test.describe('Header selection copy across sheets', () => {
+  test('clicking column header in Sheet1 then Ctrl+C copies from Sheet1, not from a previously focused sheet', async ({
+    page,
+  }) => {
+    await page.goto(STORY_URL);
+    await page.waitForTimeout(200);
+
+    const s1 = sheet(page, 'Sheet1');
+    const s2 = sheet(page, 'Sheet2');
+
+    // Step 2: Click Sheet1's B column header (x=2) — without the fix this leaves
+    // focus on Sheet4; with the fix it moves focus to Sheet1's editor.
+    await s1.locator("th[data-x='3']").click();
+
+    // Step 3: Ctrl+C — should copy Sheet1's full B column (B1:B5) into the
+    // shared book registry, NOT Sheet4's A1.
+    await ctrl(page, 'c');
+
+    // Step 4: Click Sheet2's A1 to position the paste target
+    await s2.locator("th[data-x='1']").click();
+
+    // Step 5: paste
+    await paste(page);
+
+    await expect(s2.locator("[data-address='A1']").locator('.gs-cell-rendered')).toHaveText('333');
+    await expect(s2.locator("[data-address='A5']").locator('.gs-cell-rendered')).toHaveText('500');
   });
 });

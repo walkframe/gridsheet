@@ -1,15 +1,8 @@
 import React, { type CSSProperties } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import {
-  GridSheet,
-  Policy,
-  AutocompleteOption,
-  buildInitialCells,
-  useBook,
-  type SelectProps,
-} from '@gridsheet/react-core';
+import { GridSheet, Policy, AutocompleteOption, buildInitialCells, type SelectProps } from '@gridsheet/react-core';
 import { Debugger } from '@gridsheet/react-dev';
-import { allFunctions } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Restriction/Options',
@@ -119,8 +112,7 @@ const OptionsComponent: React.FC = () => {
       },
     ],
   });
-  const book = useBook({
-    additionalFunctions: allFunctions,
+  const book = useSpellbook({
     policies: {
       color: colorPolicy,
       animal: animalPolicy,

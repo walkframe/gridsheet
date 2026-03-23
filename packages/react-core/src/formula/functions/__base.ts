@@ -142,7 +142,7 @@ export const stripMatrix = (value: any, at: Id): any => {
     return value;
   }
   if (isSheet(value)) {
-    return stripSheet({ value, raise: false });
+    return stripSheet({ value, raise: false, at });
   }
   const m: any[][] = Spilling.is(value) ? value.matrix : value;
   let val = m?.[0]?.[0];

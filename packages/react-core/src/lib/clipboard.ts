@@ -22,13 +22,13 @@ export const clip = (store: StoreType) => {
   const trimmed = sheet.trim(area);
   const tsv = sheet2csv(trimmed, {
     getter: (sheet, point) => {
-      const policy = sheet.getPolicyByPoint(point);
+      const policy = sheet.getPolicy(point);
       return policy.serializeForClipboard({ point, sheet });
     },
   });
   const html = sheet2html(trimmed, {
     getter: (sheet, point) => {
-      const policy = sheet.getPolicyByPoint(point);
+      const policy = sheet.getPolicy(point);
       return policy.serializeForClipboard({ point, sheet });
     },
   });
@@ -66,7 +66,7 @@ export const sheet2csv = (
   sheet: UserSheet,
   {
     getter = (sheet, point) => {
-      return String(sheet.getCellByPoint(point)?.value ?? '');
+      return String(sheet.getCell(point)?.value ?? '');
     },
     filteredRowsIncluded = false,
     trailingEmptyRowsOmitted = false,
@@ -113,7 +113,7 @@ export const sheet2html = (
   sheet: UserSheet,
   {
     getter = (sheet, point) => {
-      return String(sheet.getCellByPoint(point)?.value ?? '');
+      return String(sheet.getCell(point)?.value ?? '');
     },
     filteredRowsIncluded = false,
     trailingEmptyRowsOmitted = false,

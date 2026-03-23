@@ -6,25 +6,24 @@ import {
   useConnector,
   HistoryType,
   Sheet,
-  createBook,
   UserSheet,
+  toValueObject,
 } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { createSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Control/Update',
 };
 export default meta;
 
-const book = createBook({
-  additionalFunctions: allFunctions,
+const book = createSpellbook({
   onInsertRows: ({ sheet, y, numRows }) => {
     console.log('onInsertRows called with:', { sheet, y, numRows });
-    console.log('Inserted data:', sheet.toValueObject());
+    console.log('Inserted data:', toValueObject(sheet));
   },
   onInsertCols: ({ sheet, x, numCols }) => {
     console.log('onInsertCols called with:', { sheet, x, numCols });
-    console.log('Inserted data:', sheet.toValueObject());
+    console.log('Inserted data:', toValueObject(sheet));
   },
 });
 

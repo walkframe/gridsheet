@@ -231,8 +231,8 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
     ctx.restore();
 
     // 7. Header highlights (top and left) — draw bottom border for top headers, right border for left headers
-    const numCols = sheet.getNumCols();
-    const numRows = sheet.getNumRows();
+    const numCols = sheet.numCols;
+    const numRows = sheet.numRows;
 
     // Top headers - draw bottom border and background
     for (let x = 1; x <= numCols; x++) {

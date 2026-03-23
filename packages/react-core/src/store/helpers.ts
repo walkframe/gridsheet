@@ -6,7 +6,7 @@ export const restrictPoints = (store: StoreType, sheet: Sheet) => {
   const { choosing, selectingZone } = store;
   let { y, x } = choosing;
   let { startY: y1, startX: x1, endY: y2, endX: x2 } = selectingZone;
-  const [numRows, numCols] = [sheet.getNumRows(), sheet.getNumCols()];
+  const [numRows, numCols] = [sheet.numRows, sheet.numCols];
   if (y > numRows) {
     y = numRows;
   }
@@ -119,7 +119,7 @@ export const initSearchStatement = (sheet: Sheet, store: StoreType) => {
 
   for (let y = startY; y <= endY; y++) {
     for (let x = startX; x <= endX; x++) {
-      const v = sheet.stringify({ point: { y, x } });
+      const v = sheet.getSerializedValue({ point: { y, x } });
       if (matcher(v)) {
         matchingCells.push(`${x2c(x)}${y2r(y)}`);
       }

@@ -57,8 +57,21 @@ export class Spilling {
   /** The 2D matrix of resolved values. matrix[row][col] */
   public readonly matrix: any[][];
 
-  constructor(matrix: any[][]) {
-    this.matrix = matrix;
+  constructor(matrix: any[] | any[][]) {
+    this.matrix = this.ensure2D(matrix);
+  }
+
+  private ensure2D(matrix: any[] | any[][]): any[][] {
+    if (matrix.length === 0) {
+      return [];
+    }
+    if (Array.isArray(matrix[0])) {
+      return matrix as any[][];
+    }
+    // 1D array is treated as a single row (horizontal expansion).
+    // e.g. [1, 2, 3] → [[1, 2, 3]]
+    // To expand vertically instead, use: matrix.map(v => [v])
+    return [matrix as any[]];
   }
 
   static is(obj: any): obj is Spilling {

@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, buildInitialCells, useConnector, useBook, syncers } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { GridSheet, buildInitialCells, useConnector, syncers, toValueObject } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Control/Remove',
@@ -25,14 +25,14 @@ const DESCRIPTION = [
 const RemoveComponent: React.FC = () => {
   const connector = useConnector();
 
-  const book = useBook({
-    additionalFunctions: allFunctions,
+  const book = useSpellbook({
     onRemoveRows: ({ sheet, ys }) => {
       console.log('onRemoveRows called with:', { sheet, ys });
-      console.log('matrix', sheet.toValueObject());
+      console.log('matrix', toValueObject(sheet));
     },
     onRemoveCols: ({ sheet, xs }) => {
       console.log('onRemoveCols called with:', { sheet, xs });
+      console.log('matrix', toValueObject(sheet));
     },
   });
 

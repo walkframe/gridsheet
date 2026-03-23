@@ -59,28 +59,28 @@ describe('IndexFunction', () => {
     it('should return full area for INDEX(sheet)', () => {
       const sheet = createTestTable();
       const result = indexFunction([sheet]).call();
-      expect(result.getArea()).toEqual({ top: 1, left: 2, bottom: 5, right: 3 });
+      expect(result.area).toEqual({ top: 1, left: 2, bottom: 5, right: 3 });
     });
     it('should return full area for INDEX(sheet, 0, 0)', () => {
       const sheet = createTestTable();
       const result = indexFunction([sheet, 0, 0]).call();
-      expect(result.getArea()).toEqual({ top: 1, left: 2, bottom: 5, right: 3 });
+      expect(result.area).toEqual({ top: 1, left: 2, bottom: 5, right: 3 });
     });
     it('should return correct area for INDEX(sheet, 2)', () => {
       const sheet = createTestTable();
       const result = indexFunction([sheet, 2]).call();
-      expect(result.getArea()).toEqual({ top: 2, left: 2, bottom: 2, right: 3 });
+      expect(result.area).toEqual({ top: 2, left: 2, bottom: 2, right: 3 });
     });
     it('should return correct area for INDEX(sheet, 0, 2)', () => {
       const sheet = createTestTable();
       const result = indexFunction([sheet, 0, 2]).call();
-      expect(result.getArea()).toEqual({ top: 1, left: 3, bottom: 5, right: 3 });
+      expect(result.area).toEqual({ top: 1, left: 3, bottom: 5, right: 3 });
     });
     it('should return correct area for INDEX(sheet, 2, 2)', () => {
       const sheet = createTestTable();
       const result = indexFunction([sheet, 2, 2]).call();
       // top=bottom=1+2-1, left=right=2+2-1
-      expect(result.getArea()).toEqual({ top: 2, left: 3, bottom: 2, right: 3 });
+      expect(result.area).toEqual({ top: 2, left: 3, bottom: 2, right: 3 });
     });
   });
 

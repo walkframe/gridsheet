@@ -4,17 +4,31 @@ import {
   BaseFunctionAsync,
   buildInitialCells,
   GridSheet,
-  useBook,
   Spilling,
   FunctionArgumentDefinition,
 } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/functions';
 import { Debugger } from '@gridsheet/react-dev';
 
 const meta: Meta = {
   title: 'Formula/Spill',
 };
 export default meta;
+
+class Range1DFunction extends BaseFunctionAsync {
+  example = 'RANGE.1D(5)';
+  description = 'Returns a 1D array that spills downward.';
+  defs: FunctionArgumentDefinition[] = [{ name: 'length', description: 'The length of the array.' }];
+
+  async main(length: number) {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const result = [];
+    for (let i = 0; i < length; i++) {
+      result.push(i + 1);
+    }
+    return new Spilling(result);
+  }
+}
 
 // ---------------------------------------------------------------------------
 // DelaySequence: async version of SEQUENCE that spills after 0.5 seconds
@@ -82,6 +96,7 @@ function makeInitialCells(prefix: 'SEQUENCE' | 'DELAY_SEQUENCE') {
       J2: { value: `=${prefix}(1, 4)` },
 
       C10: { value: '=SUM(C2:D4)' },
+      E10: { value: '=RANGE.1D(5)' },
     },
     ensured: { numRows: 10, numCols: 10 },
   });
@@ -91,12 +106,12 @@ function makeInitialCells(prefix: 'SEQUENCE' | 'DELAY_SEQUENCE') {
 // Side-by-side view (Sync left / Async right) — single book
 // ---------------------------------------------------------------------------
 const SpillSideBySide: React.FC = () => {
-  const book = useBook({
+  const book = useSpellbook({
     onChange: (change) => {
       console.log('Book change:', change);
     },
     additionalFunctions: {
-      ...allFunctions,
+      'range.1d': Range1DFunction,
       delay_sequence: DelaySequenceFunction,
     },
   });
@@ -120,6 +135,7 @@ const SpillSideBySide: React.FC = () => {
           options={{ sheetHeight: 300 }}
         />
       </div>
+      <Debugger book={book} />
     </div>
   );
 };
@@ -130,11 +146,10 @@ const SpillSideBySide: React.FC = () => {
 // D1: SEQUENCE(3,2) and D2: SEQUENCE(3,2) — spill ranges overlap → D2 origin → #REF!
 // ---------------------------------------------------------------------------
 const SpillBlockedSheet: React.FC = () => {
-  const book = useBook({
+  const book = useSpellbook({
     onChange: (change) => {
       console.log('Book change:', change);
     },
-    additionalFunctions: allFunctions,
   });
   return (
     <>

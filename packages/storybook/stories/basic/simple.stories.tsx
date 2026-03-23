@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, Time, useBook, Policy } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { buildInitialCells, GridSheet, Time, Policy } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Basic/Simple',
@@ -18,8 +18,7 @@ const SimpleSheet = () => {
   const rawPolicy = new Policy({
     mixins: [{ renderColHeaderLabel: (n) => String(n), renderRowHeaderLabel: (n) => String(n) }],
   });
-  const book = useBook({
-    additionalFunctions: allFunctions,
+  const book = useSpellbook({
     policies: { raw: rawPolicy },
   });
   return (

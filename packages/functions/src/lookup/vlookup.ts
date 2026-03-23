@@ -35,7 +35,7 @@ export class VlookupFunction extends BaseFunction {
     const matrix = this.toMatrix(range);
     if (isSorted) {
       let last = -1;
-      for (let y = 0; y <= range.getNumRows(); y++) {
+      for (let y = 0; y <= range.numRows; y++) {
         const v = matrix[y]?.[0];
         if (v == null) {
           continue;
@@ -50,7 +50,7 @@ export class VlookupFunction extends BaseFunction {
         return matrix[last]?.[index - 1];
       }
     } else {
-      for (let y = 0; y <= range.getNumRows(); y++) {
+      for (let y = 0; y <= range.numRows; y++) {
         if (matrix[y]?.[0] === key) {
           return matrix[y]?.[index - 1];
         }

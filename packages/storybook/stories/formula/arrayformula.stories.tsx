@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, useBook } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 import { Debugger } from '@gridsheet/react-dev';
 
 const meta: Meta = {
@@ -15,7 +15,7 @@ export default meta;
 
 /** Basic element-wise arithmetic over a range */
 const ArrayformulaBasicSheet: React.FC = () => {
-  const book = useBook({ additionalFunctions: allFunctions });
+  const book = useSpellbook();
   return (
     <>
       <GridSheet
@@ -55,7 +55,7 @@ const ArrayformulaBasicSheet: React.FC = () => {
 
 /** ARRAYFORMULA wrapping a range passthrough */
 const ArrayformulaRangeSheet: React.FC = () => {
-  const book = useBook({ additionalFunctions: allFunctions });
+  const book = useSpellbook();
   return (
     <GridSheet
       book={book}
@@ -81,7 +81,7 @@ const ArrayformulaRangeSheet: React.FC = () => {
 
 /** ARRAYFORMULA combined with IF for conditional element-wise output */
 const ArrayformulaIfSheet: React.FC = () => {
-  const book = useBook({ additionalFunctions: allFunctions });
+  const book = useSpellbook();
   return (
     <GridSheet
       book={book}

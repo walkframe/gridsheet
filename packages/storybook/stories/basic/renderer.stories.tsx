@@ -1,15 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import {
-  buildInitialCells,
-  GridSheet,
-  Policy,
-  PolicyMixinType,
-  RenderProps,
-  p2a,
-  useBook,
-} from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { buildInitialCells, GridSheet, Policy, PolicyMixinType, RenderProps, p2a } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Basic/Renderer',
@@ -37,8 +29,7 @@ const kanjiMap: { [s: string]: string } = {
 };
 
 const RenderToKanjiSheet = () => {
-  const book = useBook({
-    additionalFunctions: allFunctions,
+  const book = useSpellbook({
     policies: {
       kanji: new Policy({
         mixins: [

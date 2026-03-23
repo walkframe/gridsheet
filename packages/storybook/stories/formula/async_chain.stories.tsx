@@ -4,15 +4,13 @@ import {
   BaseFunctionAsync,
   buildInitialCells,
   GridSheet,
-  useBook,
   ensureNumber,
-  solveSheet,
   Sheet,
   p2a,
   FunctionArgumentDefinition,
 } from '@gridsheet/react-core';
 import { Debugger } from '@gridsheet/react-dev';
-import { allFunctions } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Formula/AsyncChain',
@@ -35,7 +33,8 @@ class SumDelayFunction extends BaseFunctionAsync {
     args.forEach((arg) => {
       if (arg instanceof Sheet) {
         spreaded.push(
-          ...solveSheet({ sheet: arg, at: this.at })
+          ...arg
+            .solve({ at: this.at })
             .reduce((a: any[], b: any[]) => a.concat(b))
             .map((v: any) => ensureNumber(v, { ignore: true })),
         );
@@ -82,7 +81,8 @@ class SumDelayFunctionInflight extends BaseFunctionAsync {
     args.forEach((arg) => {
       if (arg instanceof Sheet) {
         spreaded.push(
-          ...solveSheet({ sheet: arg, at: this.at })
+          ...arg
+            .solve({ at: this.at })
             .reduce((a: any[], b: any[]) => a.concat(b))
             .map((v: any) => ensureNumber(v, { ignore: true })),
         );
@@ -125,9 +125,8 @@ const ASYNC_CHAIN_DESCRIPTION = [
 ].join('\n\n');
 
 const AsyncChainSheet = () => {
-  const book = useBook({
+  const book = useSpellbook({
     additionalFunctions: {
-      ...allFunctions,
       sum_delay: SumDelayFunction,
       sum_delay_inflight: SumDelayFunctionInflight,
     },

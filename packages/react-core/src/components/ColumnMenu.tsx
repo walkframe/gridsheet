@@ -13,6 +13,7 @@ import { Fixed } from './Fixed';
 import type { FilterCondition, FilterConditionMethod } from '../types';
 import * as prevention from '../lib/operation';
 import { x2c, p2a } from '../lib/coords';
+import { getLabel } from '../lib/label';
 import { between } from '../lib/spatial';
 import { copier, cutter, paster, searcher } from '../store/dispatchers';
 import { focus } from '../lib/dom';
@@ -107,7 +108,7 @@ export const ColumnMenu: FC = () => {
   // Restore conditions and label from existing state when menu opens
   useEffect(() => {
     if (x != null && sheet) {
-      const colCell = sheet.getCellByPoint({ y: 0, x }, 'SYSTEM');
+      const colCell = sheet.getCell({ y: 0, x }, { resolution: 'SYSTEM' });
       const existing = colCell?.filter;
       if (existing && existing.conditions.length > 0) {
         setConditions(existing.conditions.map((c) => ({ ...c, value: [...c.value] })));
@@ -258,27 +259,27 @@ export const ColumnMenu: FC = () => {
 
   const hasAnyFilter = sheet.hasActiveFilters();
 
-  const colCell = sheet.getCellByPoint({ y: 0, x }, 'SYSTEM');
+  const colCell = sheet.getCell({ y: 0, x }, { resolution: 'SYSTEM' });
   const sortDisabled = prevention.hasOperation(colCell?.prevention, prevention.Sort);
   const filterDisabled = prevention.hasOperation(colCell?.prevention, prevention.Filter);
   const labelDisabled = prevention.hasOperation(colCell?.prevention, prevention.SetLabel);
-  const labelPlaceholder = sheet.getLabel(colCell?.label, { y: 0, x }, x) ?? x2c(x);
+  const labelPlaceholder = getLabel(sheet, colCell?.label, { y: 0, x }, x) ?? x2c(x);
 
   // Calculate the number of selected columns that include the current column
   const selColStart = Math.min(selectingZone.startX, selectingZone.endX);
   const selColEnd = Math.max(selectingZone.startX, selectingZone.endX);
-  const isFullColSelection = selectingZone.startY === 1 && selectingZone.endY === sheet.getNumRows();
+  const isFullColSelection = selectingZone.startY === 1 && selectingZone.endY === sheet.numRows;
   const numSelectedCols =
     isFullColSelection && between({ start: selectingZone.startX, end: selectingZone.endX }, x)
       ? selColEnd - selColStart + 1
       : 1;
 
-  const insertDisabled = sheet.maxNumCols !== -1 && sheet.getNumCols() + numSelectedCols > sheet.maxNumCols;
+  const insertDisabled = sheet.maxNumCols !== -1 && sheet.numCols + numSelectedCols > sheet.maxNumCols;
   const insertLeftDisabled = insertDisabled || prevention.hasOperation(colCell?.prevention, prevention.InsertColsLeft);
   const insertRightDisabled =
     insertDisabled || prevention.hasOperation(colCell?.prevention, prevention.InsertColsRight);
   const removeDisabled =
-    (sheet.minNumCols !== -1 && sheet.getNumCols() - numSelectedCols < sheet.minNumCols) ||
+    (sheet.minNumCols !== -1 && sheet.numCols - numSelectedCols < sheet.minNumCols) ||
     prevention.hasOperation(colCell?.prevention, prevention.RemoveCols);
 
   const waitingMessage =

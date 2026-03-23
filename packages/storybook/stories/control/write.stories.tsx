@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, buildInitialCells, useConnector, HistoryType, useBook } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { GridSheet, buildInitialCells, useConnector, HistoryType } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 type Props = {
   x: number;
@@ -36,8 +36,7 @@ const DESCRIPTION = [
 const WriteComponent: React.FC<Props> = ({ x, y, value }: Props) => {
   const connector = useConnector();
 
-  const book = useBook({
-    additionalFunctions: allFunctions,
+  const book = useSpellbook({
     onKeyUp: ({ e, points }) => {
       console.log('onKeyUp', e.currentTarget.value, points.pointing);
     },

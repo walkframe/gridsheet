@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import type { AreaType, CellsByAddressType, CellType, PointType, StoreType } from '../types';
 import { Sheet } from './sheet';
-import { areaShape, areaToZone, complementSelectingArea, concatAreas, zoneToArea } from './spatial';
+import { areaShape, areaToZone, complementSelectingArea, concatAreas, zoneToArea, createMatrix } from './spatial';
 import { p2a } from './coords';
 
 import { Time } from './time';
@@ -40,9 +40,15 @@ export class Autofill {
 
   public get applied(): Sheet {
     const [orientation, sign] = DirectionMapping[this.direction];
-    const matrix = this.sheet.toCellMatrix({ area: this.src, refEvaluation: 'SYSTEM' });
-    const srcShape = areaShape({ ...this.src, base: 1 });
-    const dstShape = areaShape({ ...this.dst, base: 1 });
+    const { top: sTop, left: sLeft, bottom: sBottom, right: sRight } = this.src;
+    const matrix = createMatrix(sBottom - sTop + 1, sRight - sLeft + 1) as (CellType | null)[][];
+    for (let y = sTop; y <= sBottom; y++) {
+      for (let x = sLeft; x <= sRight; x++) {
+        matrix[y - sTop][x - sLeft] = this.sheet.getCell({ y, x }, { resolution: 'SYSTEM' }) ?? null;
+      }
+    }
+    const srcShape = areaShape(this.src);
+    const dstShape = areaShape(this.dst);
 
     const diff: CellsByAddressType = {};
     if (orientation === 'horizontal') {

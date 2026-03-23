@@ -1,8 +1,9 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import ReactMarkdown from 'react-markdown';
-import { buildInitialCells, GridSheet, useBook, Policy } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { buildInitialCells, GridSheet, Policy } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
+import { Debugger } from '@gridsheet/react-dev';
 
 const meta: Meta = {
   title: 'Basic/Large',
@@ -39,8 +40,7 @@ const LargeSheet = () => {
   const rawPolicy = new Policy({
     mixins: [{ renderColHeaderLabel: (n) => String(n), renderRowHeaderLabel: (n) => String(n) }],
   });
-  const book = useBook({
-    additionalFunctions: allFunctions,
+  const book = useSpellbook({
     policies: { raw: rawPolicy },
   });
 

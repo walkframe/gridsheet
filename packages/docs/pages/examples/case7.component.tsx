@@ -245,8 +245,8 @@ export default function RealTimeCollaboration() {
                 });
 
                 // Get current cell width and height
-                const currentColWidth = table.getCellByPoint({ y: 0, x: position.col })?.width || 120;
-                const currentRowHeight = table.getCellByPoint({ y: position.row, x: 0 })?.height || 40;
+                const currentColWidth = table.getCell({ y: 0, x: position.col })?.width || 120;
+                const currentRowHeight = table.getCell({ y: position.row, x: 0 })?.height || 40;
 
                 // Get header width and height
                 const headerWidth = table.headerWidth;

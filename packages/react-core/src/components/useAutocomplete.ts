@@ -68,8 +68,8 @@ export const useAutocomplete = ({ inputting, selectionStart, optionsAll, functio
       }
     }
 
-    const wordBefore = textBeforeCursor.match(/[a-zA-Z0-9_]+$/)?.[0] || '';
-    const wordAfter = textAfterCursor.match(/^[a-zA-Z0-9_]+/)?.[0] || '';
+    const wordBefore = textBeforeCursor.match(/[a-zA-Z0-9_.]+$/)?.[0] || '';
+    const wordAfter = textAfterCursor.match(/^[a-zA-Z0-9_.]+/)?.[0] || '';
 
     // For regular cells, we use the whole word as the search target.
     // For formulas, we extract the word under the cursor.

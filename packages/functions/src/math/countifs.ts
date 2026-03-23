@@ -32,8 +32,8 @@ export class CountifsFunction extends BaseFunction {
     let expectedRows = 0;
     let expectedCols = 0;
     if (refRange) {
-      expectedRows = refRange.getNumRows();
-      expectedCols = refRange.getNumCols();
+      expectedRows = refRange.numRows;
+      expectedCols = refRange.numCols;
     }
 
     const tables: Sheet[] = [];
@@ -42,7 +42,7 @@ export class CountifsFunction extends BaseFunction {
       if (!(validatedArgs[i] instanceof Sheet)) {
         throw new FormulaError('#VALUE!', `Argument ${i + 1} of COUNTIFS must be a range.`);
       }
-      if (validatedArgs[i].getNumRows() !== expectedRows || validatedArgs[i].getNumCols() !== expectedCols) {
+      if (validatedArgs[i].numRows !== expectedRows || validatedArgs[i].numCols !== expectedCols) {
         throw new FormulaError('#VALUE!', 'Array arguments to COUNTIFS are of different size.');
       }
       tables.push(validatedArgs[i] as Sheet);

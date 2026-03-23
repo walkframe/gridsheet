@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, buildInitialCells, useConnector, useBook, addressesToAreas } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { GridSheet, buildInitialCells, useConnector, addressesToAreas, toCellObject } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Control/OnEdit',
@@ -78,14 +78,13 @@ const SheetOnEditComponent: React.FC = () => {
   const [sheet1History, setSheet1History] = React.useState<HistoryEntry[]>([]);
   const [sheet2History, setSheet2History] = React.useState<HistoryEntry[]>([]);
 
-  const book = useBook({
-    additionalFunctions: allFunctions,
+  const book = useSpellbook({
     onChange: ({ sheet }) => {
       const addresses = sheet.getLastChangedAddresses();
       if (addresses.length === 0) {
         return;
       }
-      const data = sheet.toCellObject({ addresses, ignoreFields: ['_sys', 'style', 'prevention'] });
+      const data = toCellObject(sheet, { addresses });
       const areas = addressesToAreas(addresses);
       const area = areas[0] ?? { top: 0, left: 0, bottom: 0, right: 0 };
       const info: HistoryEntry = {

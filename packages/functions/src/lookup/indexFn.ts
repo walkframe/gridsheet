@@ -52,15 +52,15 @@ export class IndexFunction extends BaseFunction {
   }
 
   protected main(sheet: Sheet, y?: number, x?: number) {
-    const area = sheet.getArea();
+    const area = sheet.area;
     if (y) {
-      if (y < 0 || y > sheet.getNumRows(1)) {
+      if (y < 0 || y > sheet.numRows) {
         throw new FormulaError('#NUM!', `Row number ${y} is out of range.`);
       }
       area.top = area.bottom = area.top + y - 1;
     }
     if (x) {
-      if (x < 0 || x > sheet.getNumCols(1)) {
+      if (x < 0 || x > sheet.numCols) {
         throw new FormulaError('#NUM!', `Column number ${x} is out of range.`);
       }
       area.left = area.right = area.left + x - 1;

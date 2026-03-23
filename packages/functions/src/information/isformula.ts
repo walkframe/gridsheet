@@ -19,7 +19,7 @@ export class IsformulaFunction extends BaseFunction {
   category: FunctionCategory = 'information';
 
   protected main(ref: Sheet) {
-    const cell = ref.getCellByPoint({ y: ref.top, x: ref.left }, 'SYSTEM');
+    const cell = ref.getCell({ y: ref.top, x: ref.left }, { resolution: 'SYSTEM' });
     const raw = cell?.value;
     return typeof raw === 'string' && raw.startsWith('=');
   }

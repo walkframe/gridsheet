@@ -5,13 +5,13 @@ import {
   buildInitialCells,
   useConnector,
   HistoryType,
-  useBook,
   sheet2csv,
   FormulaError,
   UserSheet,
   PointType,
+  toCellObject,
 } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/functions';
 import CodeMirror from '@uiw/react-codemirror';
 import { lineNumbers } from '@codemirror/view';
 import { oneDark } from '@codemirror/theme-one-dark';
@@ -44,21 +44,19 @@ const SheetTSVComponent: React.FC = () => {
   const sheet = connector.current?.sheetManager.sheet;
 
   const getter = (sheet: UserSheet, point: PointType) => {
-    const value = sheet.getCellByPoint(point, evaluates ? 'COMPLETE' : 'RAW')?.value ?? '';
+    const value = sheet.getCell(point, { resolution: evaluates ? 'RESOLVED' : 'RAW' })?.value ?? '';
     if (FormulaError.is(value)) {
       return ignoreError ? '' : value.code;
     }
     return String(value);
   };
 
-  const book = useBook({
-    additionalFunctions: allFunctions,
+  const book = useSpellbook({
     onChange: ({ sheet, points }) => {
       const tsv = sheet2csv(sheet, { getter, trailingEmptyRowsOmitted });
       setCsvData(tsv);
-      setHistories(sheet.getHistories());
-      const changed = sheet.toCellObject({ addresses: sheet.getLastChangedAddresses() });
-      console.log('changed', changed);
+      setHistories(sheet.__raw__.histories());
+      const changed = toCellObject(sheet, { addresses: sheet.getLastChangedAddresses() });
     },
   });
   React.useEffect(() => {
@@ -161,14 +159,21 @@ const SheetTSVComponent: React.FC = () => {
                 lineHeight: '20px',
                 borderBottom: 'solid 1px #777',
                 marginBottom: '10px',
-                backgroundColor: sheet?.getHistoryIndex() === i ? '#fdd' : 'transparent',
+                backgroundColor: sheet?.historyIndex() === i ? '#fdd' : 'transparent',
               }}
             >
               <div style={{ color: '#09a' }}>[{history.operation}]</div>
               <pre style={{ margin: 0 }}>
                 {(() => {
                   if (history.operation === 'UPDATE') {
-                    return JSON.stringify(sheet?.__raw__.getAddressesByIds(history.diffAfter));
+                    const raw = sheet?.__raw__;
+                    if (raw == null) return null;
+                    const addresses: Record<string, unknown> = {};
+                    Object.keys(history.diffAfter).forEach((id) => {
+                      const address = raw.getAddressById(id);
+                      if (address) addresses[address] = history.diffAfter[id];
+                    });
+                    return JSON.stringify(addresses);
                   }
                 })()}
               </pre>

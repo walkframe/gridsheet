@@ -31,7 +31,7 @@ export const Resizer = () => {
     return <div className="gs-resizing gs-hidden" />;
   }
 
-  const cell = sheet.getCellByPoint({ y: y === -1 ? 0 : y, x: x === -1 ? 0 : x }, 'SYSTEM');
+  const cell = sheet.getCell({ y: y === -1 ? 0 : y, x: x === -1 ? 0 : x }, { resolution: 'SYSTEM' });
   const { y: offsetY, x: offsetX } = mainRef.current.getBoundingClientRect();
 
   const baseWidth = cell?.width || DEFAULT_WIDTH;

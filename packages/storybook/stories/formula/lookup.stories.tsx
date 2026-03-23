@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, operations, useBook } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { buildInitialCells, GridSheet, operations } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Formula/Lookup',
@@ -15,7 +15,7 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const LookUpSheet = () => {
-  const book = useBook({ historyLimit: 10, additionalFunctions: allFunctions });
+  const book = useSpellbook({ historyLimit: 10 });
   return (
     <>
       <h1>HLOOKUP</h1>

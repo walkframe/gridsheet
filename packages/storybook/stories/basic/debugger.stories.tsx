@@ -2,17 +2,15 @@ import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import {
   GridSheet,
-  useBook,
   BaseFunctionAsync,
   buildInitialCells,
   ensureNumber,
   p2a,
-  solveSheet,
   Sheet,
   FunctionArgumentDefinition,
 } from '@gridsheet/react-core';
 import { Debugger } from '@gridsheet/react-dev';
-import { allFunctions } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Basic/Debugger (Dev tool)',
@@ -25,9 +23,8 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const DebuggerSheet = () => {
-  const book = useBook({
+  const book = useSpellbook({
     additionalFunctions: {
-      ...allFunctions,
       sum_delay_inflight: SumDelayInflightFunction,
     },
   });
@@ -109,7 +106,8 @@ class SumDelayInflightFunction extends BaseFunctionAsync {
     args.forEach((arg) => {
       if (arg instanceof Sheet) {
         spreaded.push(
-          ...solveSheet({ sheet: arg, at: this.at })
+          ...arg
+            .solve({ at: this.at })
             .reduce((a: any[], b: any[]) => a.concat(b))
             .map((v: any) => ensureNumber(v, { ignore: true })),
         );

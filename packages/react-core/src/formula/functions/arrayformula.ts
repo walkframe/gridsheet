@@ -25,7 +25,7 @@ export class ArrayformulaFunction extends BaseFunction {
       return value;
     }
     if (value instanceof Sheet) {
-      return value.toValueMatrix();
+      return value._toValueMatrix();
     }
     if (Array.isArray(value)) {
       return value;

@@ -1,14 +1,14 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, ModeType, useBook } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { buildInitialCells, GridSheet, ModeType } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 type Props = {
   mode: ModeType;
 };
 
 const Sheet = ({ mode }: Props) => {
-  const book = useBook({ additionalFunctions: allFunctions });
+  const book = useSpellbook();
   return (
     <GridSheet
       book={book}

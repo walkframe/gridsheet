@@ -1,8 +1,8 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, useBook } from '@gridsheet/react-core';
+import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
 import { Debugger } from '@gridsheet/react-dev';
-import { allFunctions } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Formula/Ref',
@@ -12,9 +12,7 @@ export default meta;
 const DESCRIPTION = ['## Example'].join('\n\n');
 
 const RefsSheet = () => {
-  const book = useBook({
-    additionalFunctions: allFunctions,
-  });
+  const book = useSpellbook();
   return (
     <>
       <GridSheet

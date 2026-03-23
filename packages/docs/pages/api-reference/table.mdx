@@ -28,15 +28,15 @@ The `UserTable` interface provides access to:
 
 ### Cell Retrieval
 
-#### `getCellByPoint(point: PointType, refEvaluation?: RefEvaluation, raise?: boolean): CellType | undefined`
+#### `getCell(point: PointType, resolution?: Resolution, raise?: boolean): CellType | undefined`
 Retrieves a cell by its coordinates.
 
 ```tsx
-const cell = table.getCellByPoint({ x: 1, y: 1 });
+const cell = table.getCell({ x: 1, y: 1 });
 console.log(cell?.value, cell?.style);
 ```
 
-#### `getCellByAddress(address: Address, refEvaluation?: RefEvaluation, raise?: boolean): CellType | undefined`
+#### `getCellByAddress(address: Address, resolution?: Resolution, raise?: boolean): CellType | undefined`
 Retrieves a cell by its address.
 
 ```tsx
@@ -51,14 +51,14 @@ Retrieves cell values as a 2D matrix.
 
 ```tsx
 const matrix = table.toValueMatrix();
-const evaluated = table.toValueMatrix({ refEvaluation: 'COMPLETE' });
+const evaluated = table.toValueMatrix({ resolution: 'RESOLVED' });
 ```
 
 #### `toValueObject(args?: ToValueObjectProps): { [address: Address]: any }`
 Retrieves cell values as an object keyed by address.
 
 ```tsx
-const values = table.toValueObject({ refEvaluation: 'COMPLETE' });
+const values = table.toValueObject({ resolution: 'RESOLVED' });
 console.log(values['A1']); // value of A1
 ```
 
@@ -408,14 +408,14 @@ const rect = table.getRectSize({ top: 1, left: 1, bottom: 3, right: 3 });
 console.log(rect.width, rect.height, rect.x, rect.y);
 ```
 
-#### `getPolicyByPoint(point: PointType): PolicyType`
+#### `getPolicy(point: PointType): PolicyType`
 Returns the `Policy` instance applied to a cell.
 
 ```tsx
-const policy = table.getPolicyByPoint({ y: 1, x: 1 });
+const policy = table.getPolicy({ y: 1, x: 1 });
 ```
 
-#### `stringify(props: { point: PointType; cell?: CellType; refEvaluation?: RefEvaluation }): string`
+#### `stringify(props: { point: PointType; cell?: CellType; resolution?: Resolution }): string`
 Serializes a cell's value to a string using its policy.
 
 ```tsx

@@ -231,14 +231,14 @@ type GetProps = {
 **Usage Examples:**
 ```tsx
 // Before (1.x)
-table.getCellByPoint({ y: 1, x: 1 }, { evaluates: true });
-table.getCellByPoint({ y: 1, x: 1 }, { evaluates: false });
-table.getCellByPoint({ y: 1, x: 1 }, { evaluates: null });
+table.getCell({ y: 1, x: 1 }, { evaluates: true });
+table.getCell({ y: 1, x: 1 }, { evaluates: false });
+table.getCell({ y: 1, x: 1 }, { evaluates: null });
 
 // After (2.x)
-table.getCellByPoint({ y: 1, x: 1 }, { refEvaluation: 'COMPLETE' });
-table.getCellByPoint({ y: 1, x: 1 }, { refEvaluation: 'RAW' });
-table.getCellByPoint({ y: 1, x: 1 }, { refEvaluation: 'SYSTEM' });
+table.getCell({ y: 1, x: 1 }, { refEvaluation: 'COMPLETE' });
+table.getCell({ y: 1, x: 1 }, { refEvaluation: 'RAW' });
+table.getCell({ y: 1, x: 1 }, { refEvaluation: 'SYSTEM' });
 ```
 
 **RefEvaluation Values:**
@@ -757,12 +757,12 @@ Update any usage of the `GetProps` type to use the new `refEvaluation` property:
 
 ```tsx
 // Before (1.x)
-table.getCellByPoint({ y: 1, x: 1 }, { evaluates: true });
-table.getCellByPoint({ y: 1, x: 1 }, { evaluates: false });
+table.getCell({ y: 1, x: 1 }, { evaluates: true });
+table.getCell({ y: 1, x: 1 }, { evaluates: false });
 
 // After (2.x)
-table.getCellByPoint({ y: 1, x: 1 }, { refEvaluation: 'COMPLETE' });
-table.getCellByPoint({ y: 1, x: 1 }, { refEvaluation: 'RAW' });
+table.getCell({ y: 1, x: 1 }, { refEvaluation: 'COMPLETE' });
+table.getCell({ y: 1, x: 1 }, { refEvaluation: 'RAW' });
 ```
 
 ### Step 10: Update Connector Function Calls

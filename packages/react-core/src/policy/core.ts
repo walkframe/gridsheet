@@ -185,7 +185,7 @@ export class Policy implements PolicyMixinType {
 
     // Cell lookup: if cell not provided, resolve from sheet (entry-point usage)
     if (cell == null) {
-      cell = sheet.getCellByPoint(point, 'COMPLETE', true) ?? {};
+      cell = sheet.getCell(point, { resolution: 'RESOLVED', raise: true }) ?? {};
       value = cell.value;
     }
 
@@ -435,7 +435,7 @@ export class Policy implements PolicyMixinType {
 
   public serializeForClipboard(props: SerializeForClipboardProps): string {
     const { point, sheet } = props;
-    return sheet.stringify({ point }) ?? '';
+    return sheet.getSerializedValue({ point }) ?? '';
   }
 
   // --- DESERIALIZE ---

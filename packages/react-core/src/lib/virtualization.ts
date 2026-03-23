@@ -5,10 +5,10 @@ import type { AreaType, PointType, Virtualization } from '../types';
 
 export const getCellRectPositions = (sheet: Sheet, { y, x }: PointType) => {
   // Use System.offsetLeft / offsetTop stored on header cells for O(1) lookup
-  const colCell = sheet.getCellByPoint({ y: 0, x }, 'SYSTEM');
-  const rowCell = sheet.getCellByPoint({ y, x: 0 }, 'SYSTEM');
-  const left = sheet.getSystemByPoint({ y: 0, x })?.offsetLeft ?? 0;
-  const top = sheet.getSystemByPoint({ y, x: 0 })?.offsetTop ?? 0;
+  const colCell = sheet.getCell({ y: 0, x }, { resolution: 'SYSTEM' });
+  const rowCell = sheet.getCell({ y, x: 0 }, { resolution: 'SYSTEM' });
+  const left = sheet.getSystem({ y: 0, x })?.offsetLeft ?? 0;
+  const top = sheet.getSystem({ y, x: 0 })?.offsetTop ?? 0;
   const w = colCell?.width || DEFAULT_WIDTH;
   const h = rowCell?.filtered ? 0 : rowCell?.height || DEFAULT_HEIGHT;
   return {
@@ -37,34 +37,34 @@ export const virtualize = (sheet: Sheet, e: HTMLDivElement | null): Virtualizati
   }
   let boundaryTop = 0,
     boundaryLeft = 0,
-    boundaryBottom = sheet.getNumRows(),
-    boundaryRight = sheet.getNumCols();
+    boundaryBottom = sheet.numRows,
+    boundaryRight = sheet.numCols;
 
   const { top, left, bottom, right } = getScreenRect(e);
   let width = 0,
     height = 0;
-  for (let x = 1; x <= sheet.getNumCols(); x++) {
-    const w = sheet.getCellByPoint({ y: 0, x }, 'SYSTEM')?.width || DEFAULT_WIDTH;
+  for (let x = 1; x <= sheet.numCols; x++) {
+    const w = sheet.getCell({ y: 0, x }, { resolution: 'SYSTEM' })?.width || DEFAULT_WIDTH;
     width += w;
     if (boundaryLeft === 0 && width > left) {
       boundaryLeft = Math.max(x - OVERSCAN_X, 1);
     }
     if (width > right) {
-      boundaryRight = Math.min(x + OVERSCAN_X, sheet.getNumCols());
+      boundaryRight = Math.min(x + OVERSCAN_X, sheet.numCols);
       break;
     }
   }
-  for (let y = 1; y <= sheet.getNumRows(); y++) {
+  for (let y = 1; y <= sheet.numRows; y++) {
     if (sheet.isRowFiltered(y)) {
       continue;
     }
-    const h = sheet.getCellByPoint({ y, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
+    const h = sheet.getCell({ y, x: 0 }, { resolution: 'SYSTEM' })?.height || DEFAULT_HEIGHT;
     height += h;
     if (boundaryTop === 0 && height > top) {
       boundaryTop = Math.max(y - OVERSCAN_Y, 1);
     }
     if (height > bottom) {
-      boundaryBottom = Math.min(y + OVERSCAN_Y, sheet.getNumRows());
+      boundaryBottom = Math.min(y + OVERSCAN_Y, sheet.numRows);
       break;
     }
   }
@@ -79,8 +79,8 @@ export const virtualize = (sheet: Sheet, e: HTMLDivElement | null): Virtualizati
   const after = sheet.getRectSize({
     top: boundaryBottom,
     left: boundaryRight,
-    bottom: sheet.getNumRows(),
-    right: sheet.getNumCols(),
+    bottom: sheet.numRows,
+    right: sheet.numCols,
   });
   return {
     ys,

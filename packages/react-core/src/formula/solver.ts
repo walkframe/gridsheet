@@ -1,19 +1,29 @@
 import { Pending, SOLVING, Spilling } from '../sentinels';
 import { Sheet } from '../lib/sheet';
-import type { Id, MatrixType, PointType, RefEvaluation } from '../types';
+import type { Id, MatrixType, PointType, Resolution } from '../types';
 import { Lexer, Parser } from './evaluator';
 import { FormulaError } from './formula-error';
+
+export type SolveOptions = {
+  raise?: boolean;
+  resolution?: Resolution;
+};
 
 type SolveFormulaProps = {
   value: any;
   sheet: Sheet;
   point: PointType;
   raise?: boolean;
-  refEvaluation?: RefEvaluation;
+  resolution?: Resolution;
   at?: Id;
 };
 
-export const solveFormula = ({ value, sheet, point, raise = true, refEvaluation = 'TABLE', at }: SolveFormulaProps) => {
+/**
+ * Evaluates a single cell value (formula or literal) within the context of a sheet.
+ * Handles caching, circular reference detection, spilling, and async pending states.
+ * Returns the resolved scalar value (or error) for the given cell.
+ */
+export const solveFormula = ({ value, sheet, point, raise = true, resolution = 'RESOLVED', at }: SolveFormulaProps) => {
   const [hit, cache] = sheet.getSolvedCache(point);
   if (hit && value == null && !SOLVING.is(cache)) {
     // spilled value
@@ -23,16 +33,16 @@ export const solveFormula = ({ value, sheet, point, raise = true, refEvaluation 
   if (typeof value !== 'string') {
     return value;
   }
-  if (refEvaluation === 'SYSTEM') {
+  if (resolution === 'SYSTEM') {
     return value;
   }
   if (value.charAt(0) === "'") {
-    return refEvaluation === 'RAW' ? value : value.substring(1);
+    return resolution === 'RAW' ? value : value.substring(1);
   }
   if (value.charAt(0) !== '=') {
     return value;
   }
-  if (refEvaluation === 'RAW') {
+  if (resolution === 'RAW') {
     const lexer = new Lexer(value.substring(1), { at });
     lexer.tokenize();
     return '=' + lexer.display({ sheet });
@@ -57,8 +67,12 @@ export const solveFormula = ({ value, sheet, point, raise = true, refEvaluation 
     }
   }
 
-  if (refEvaluation === 'COMPLETE' && solved instanceof Sheet) {
-    // Legacy Sheet result: unwrap to scalar (top-left cell)
+  if (resolution === 'RESOLVED' && solved instanceof Sheet) {
+    // Unwrap to scalar (top-left cell of the sheet's area).
+    // NOTE: We intentionally call solveSheet directly here instead of stripSheet,
+    // to avoid a three-way cycle: solveFormula → stripSheet → solveSheet → solveFormula.
+    // The mutual recursion between solveFormula and solveSheet is unavoidable by design,
+    // but routing through stripSheet would make the call graph harder to follow and reason about.
     solved = solveSheet({ sheet: solved, raise, at })[0]?.[0];
   }
 
@@ -77,12 +91,16 @@ export type SolveSheetProps = {
   sheet: Sheet;
   raise?: boolean;
   at?: Id;
-  refEvaluation?: RefEvaluation;
 };
 
-export const solveSheet = ({ sheet, raise = true, at, refEvaluation = 'SYSTEM' }: SolveSheetProps): MatrixType => {
-  const area = sheet.getArea();
-  const matrix = sheet._toValueMatrix({ area, at, refEvaluation });
+/**
+ * Evaluates all cells in a Sheet and returns the results as a 2D array (MatrixType).
+ * Each cell formula is resolved in order, with caching to avoid redundant computation.
+ * Use this when you need the full evaluated contents of a range.
+ */
+export const solveSheet = ({ sheet, raise = true, at }: SolveSheetProps): MatrixType => {
+  const area = sheet.area;
+  const matrix = sheet._toValueMatrix({ area, at, resolution: 'SYSTEM' });
   return matrix.map((row, i) => {
     const y = area.top + i;
     return row.map((value, j) => {
@@ -100,7 +118,7 @@ export const solveSheet = ({ sheet, raise = true, at, refEvaluation = 'SYSTEM' }
           return cache;
         }
         sheet.setSolvingCache(point);
-        const solved = solveFormula({ value, sheet, point, raise, at, refEvaluation: 'COMPLETE' });
+        const solved = solveFormula({ value, sheet, point, raise, at, resolution: 'RESOLVED' });
         sheet.finishSolvedCache(point, solved);
         return solved;
       } catch (e) {
@@ -116,21 +134,13 @@ export const solveSheet = ({ sheet, raise = true, at, refEvaluation = 'SYSTEM' }
 
 export type StripSheetProps = {
   value: any;
-  y?: number;
-  x?: number;
+  at?: Id;
   raise?: boolean;
 };
 
-export const stripSheet = ({ value, y = 0, x = 0, raise = true }: StripSheetProps): any => {
-  if (Pending.is(value)) {
-    return value;
-  }
-  if (value instanceof Sheet) {
-    const id = value.getId({ x, y });
-    value = solveSheet({ sheet: value, raise, at: id })[y][x];
-    if (value instanceof Sheet) {
-      return stripSheet({ value, y, x, raise });
-    }
+export const stripSheet = ({ value, at, raise = true }: StripSheetProps): any => {
+  while (value instanceof Sheet) {
+    value = solveSheet({ sheet: value, raise, at })[0]?.[0];
   }
   return value;
 };

@@ -1,7 +1,7 @@
 import React, { type CSSProperties } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, Policy, buildInitialCells, useBook } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { GridSheet, Policy, buildInitialCells } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Restriction/SerializeForClipboard',
@@ -33,14 +33,13 @@ const SerializeForClipboardComponent: React.FC = () => {
           return `${value.substring(0, 1)}${'*'.repeat(value.substring(1).length)}`;
         },
         serializeForClipboard({ point, sheet }) {
-          const s = sheet.stringify({ point }) ?? '';
+          const s = sheet.getSerializedValue({ point }) ?? '';
           return '*'.repeat(s.length);
         },
       },
     ],
   });
-  const book = useBook({
-    additionalFunctions: allFunctions,
+  const book = useSpellbook({
     policies: {
       mask: maskPolicy,
     },

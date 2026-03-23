@@ -118,7 +118,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
     return null;
   }
 
-  const policy = sheet.getPolicyByPoint(choosing);
+  const policy = sheet.getPolicy(choosing);
   const optionsAll = policy.getSelectOptions();
 
   const handleSelect = useCallback((e: React.SyntheticEvent<HTMLTextAreaElement>) => {
@@ -177,8 +177,8 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
 
   // Use 'RAW' so that spilled values (stored in solvedCaches) are already
   // reflected in cell.value without re-evaluating the formula.
-  const cell = sheet.getCellByPoint({ y, x }, 'RAW');
-  const currentString = sheet.stringify({ point: choosing, cell, refEvaluation: 'RAW' });
+  const cell = sheet.getCell({ y, x }, { resolution: 'RAW' });
+  const currentString = sheet.getSerializedValue({ point: choosing, cell, resolution: 'RAW' });
   const [before, setBefore] = useState<string>(currentString);
 
   const writeCell = useCallback(
@@ -269,8 +269,8 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
           }
           dispatch(
             walk({
-              numRows: sheet.getNumRows(),
-              numCols: sheet.getNumCols(),
+              numRows: sheet.numRows,
+              numCols: sheet.numCols,
               deltaY: 0,
               deltaX: shiftKey ? -1 : 1,
             }),
@@ -309,8 +309,8 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
           }
           dispatch(
             walk({
-              numRows: sheet.getNumRows(),
-              numCols: sheet.getNumCols(),
+              numRows: sheet.numRows,
+              numCols: sheet.numCols,
               deltaY: shiftKey ? -1 : 1,
               deltaX: 0,
             }),
@@ -328,7 +328,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
             // fires the default textarea behavior (deletes one char), which
             // triggers onInput → setInputting, making the value shrink character
             // by character on each Backspace press.
-            if (sheet.getSystemByPoint({ y, x })?.spilledFrom != null) {
+            if (sheet.getSystem({ y, x })?.spilledFrom != null) {
               e.preventDefault();
               return false;
             }
@@ -340,7 +340,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
         case 'Delete': // DELETE
           if (!editing) {
             // Same guard as Backspace — spilled cells must not be cleared directly.
-            if (sheet.getSystemByPoint({ y, x })?.spilledFrom != null) {
+            if (sheet.getSystem({ y, x })?.spilledFrom != null) {
               e.preventDefault();
               return false;
             }
@@ -377,8 +377,8 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
             dispatch(
               arrow({
                 shiftKey,
-                numRows: sheet.getNumRows(),
-                numCols: sheet.getNumCols(),
+                numRows: sheet.numRows,
+                numCols: sheet.numCols,
                 deltaY: 0,
                 deltaX: -1,
               }),
@@ -391,8 +391,8 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
             dispatch(
               arrow({
                 shiftKey,
-                numRows: sheet.getNumRows(),
-                numCols: sheet.getNumCols(),
+                numRows: sheet.numRows,
+                numCols: sheet.numCols,
                 deltaY: -1,
                 deltaX: 0,
               }),
@@ -408,8 +408,8 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
             dispatch(
               arrow({
                 shiftKey,
-                numRows: sheet.getNumRows(),
-                numCols: sheet.getNumCols(),
+                numRows: sheet.numRows,
+                numCols: sheet.numCols,
                 deltaY: 0,
                 deltaX: 1,
               }),
@@ -422,8 +422,8 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
             dispatch(
               arrow({
                 shiftKey,
-                numRows: sheet.getNumRows(),
-                numCols: sheet.getNumCols(),
+                numRows: sheet.numRows,
+                numCols: sheet.numCols,
                 deltaY: 1,
                 deltaX: 0,
               }),
@@ -442,8 +442,8 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
                 select({
                   startY: 1,
                   startX: 1,
-                  endY: sheet.getNumRows(),
-                  endX: sheet.getNumCols(),
+                  endY: sheet.numRows,
+                  endX: sheet.numCols,
                 }),
               );
               return false;

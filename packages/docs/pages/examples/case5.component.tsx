@@ -361,7 +361,7 @@ export default function AdvancedFeatures() {
         if (connector) {
           const { tableManager } = connector;
           const { table } = tableManager;
-          const matrixData = table.toCellMatrix({ refEvaluation: 'RAW' });
+          const matrixData = table.toCellMatrix({ resolution: 'RAW' });
           const cleanMatrixData = matrixData.map((row: any[]) =>
             row.map((cell: any) => {
               if (cell && typeof cell === 'object') {

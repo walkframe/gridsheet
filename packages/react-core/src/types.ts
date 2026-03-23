@@ -5,7 +5,7 @@ import type { CSSProperties, KeyboardEvent } from 'react';
 import type { PolicyType } from './policy/core';
 import type { Dispatcher } from './store';
 
-export type RefEvaluation = 'COMPLETE' | 'TABLE' | 'RAW' | 'SYSTEM';
+export type Resolution = 'RESOLVED' | 'RAW' | 'SYSTEM';
 
 export type Y = number;
 export type X = number;
@@ -116,7 +116,6 @@ export type OptionsType = {
   sheetWidth?: number;
   sheetResize?: CSSProperties['resize'];
   editingOnEnter?: boolean;
-  showAddress?: boolean;
   showFormulaBar?: boolean;
   limits?: SheetLimits;
   mode?: ModeType;
@@ -162,7 +161,6 @@ export type StoreType = {
   matchingCells: string[];
   matchingCellIndex: number;
   editingOnEnter: boolean;
-  showAddress: boolean;
   contextMenuPosition: PositionType;
   contextMenuItems: FC<ContextMenuProps>[];
   resizingPositionY: [Y, Y, Y]; // indexY, startY, endY

@@ -116,3 +116,7 @@ export const grantAddressAbsolute = (address: Address, absCol: boolean, absRow: 
 export const stripAddressAbsolute = (address: Address) => {
   return address.replace(/\$/g, '');
 };
+
+export const buildIdentifiedRef = (id: string, absX = false, absY = false): string => {
+  return `${absX ? '$' : ''}#${id}${absY ? '$' : ''}`;
+};

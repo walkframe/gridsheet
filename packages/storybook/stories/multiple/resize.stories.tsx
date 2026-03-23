@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, useBook } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Multiple/CompareResizers',
@@ -21,7 +21,7 @@ const tdStyle: React.CSSProperties = {
 };
 
 const CompareResizersSheet = () => {
-  const book = useBook({ additionalFunctions: allFunctions });
+  const book = useSpellbook();
   return (
     <>
       <table style={{ tableLayout: 'fixed' }}>

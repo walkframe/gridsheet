@@ -13,7 +13,7 @@ import {
   OperatorType,
   FilterConfig,
 } from '../types';
-import { zoneToArea, superposeArea, matrixShape, areaShape, areaToZone, zoneShape, restrictZone } from '../lib/spatial';
+import { zoneToArea, superposeArea, matrixShape, areaShape, areaDiff, areaToZone, restrictZone } from '../lib/spatial';
 import { Sheet } from '../lib/sheet';
 
 import { p2a, a2p } from '../lib/coords';
@@ -310,20 +310,20 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
         return store;
       }
       const src = copyingArea;
-      const { rows: h, cols: w } = areaShape(copyingArea);
+      const { rows: dy, cols: dx } = areaDiff(copyingArea);
       const dst: AreaType =
         selectingArea.top !== -1
           ? {
               top: selectingArea.top,
               left: selectingArea.left,
-              bottom: selectingArea.top + h,
-              right: selectingArea.left + w,
+              bottom: selectingArea.top + dy,
+              right: selectingArea.left + dx,
             }
           : {
               top: choosing.y,
               left: choosing.x,
-              bottom: choosing.y + h,
-              right: choosing.x + w,
+              bottom: choosing.y + dy,
+              right: choosing.x + dx,
             };
 
       const nextSelectingZone = restrictZone(areaToZone(dst));
@@ -350,7 +350,7 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
         ...initSearchStatement(newSheet, store),
         sheetReactive: { current: newSheet },
         selectingZone: nextSelectingZone,
-        inputting: newSheet.stringify({ point: choosing, refEvaluation: 'RAW' }),
+        inputting: newSheet.getSerializedValue({ point: choosing, resolution: 'RAW' }),
         callback: ({ sheetReactive: sheetRef }) => {
           registry.transmit({
             cutting: false,
@@ -391,15 +391,15 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
       if (srcSheet == null) {
         return store;
       }
-      let { rows: height, cols: width } = areaShape(copyingArea);
+      let { rows: dy, cols: dx } = areaDiff(copyingArea);
       if (selectingArea.top !== -1) {
         y = selectingArea.top;
         x = selectingArea.left;
         const superposed = superposeArea(selectingArea, copyingArea);
-        height = superposed.rows;
-        width = superposed.cols;
+        dy = superposed.rows;
+        dx = superposed.cols;
       }
-      selectingArea = { top: y, left: x, bottom: y + height, right: x + width };
+      selectingArea = { top: y, left: x, bottom: y + dy, right: x + dx };
       newSheet = dstSheet.copy({
         srcSheet,
         src: copyingArea,
@@ -422,13 +422,13 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
     }
 
     const nextSelectingZone = restrictZone(areaToZone(selectingArea));
-    nextSelectingZone.endX = Math.min(nextSelectingZone.endX, newSheet.getNumCols());
-    nextSelectingZone.endY = Math.min(nextSelectingZone.endY, newSheet.getNumRows());
+    nextSelectingZone.endX = Math.min(nextSelectingZone.endX, newSheet.numCols);
+    nextSelectingZone.endY = Math.min(nextSelectingZone.endY, newSheet.numRows);
     return {
       ...store,
       sheetReactive: { current: newSheet },
       selectingZone: nextSelectingZone,
-      inputting: newSheet.stringify({ point: choosing, refEvaluation: 'RAW' }),
+      inputting: newSheet.getSerializedValue({ point: choosing, resolution: 'RAW' }),
       ...initSearchStatement(newSheet, store),
       callback: ({ sheetReactive: sheetRef }) => {
         registry.transmit({
@@ -646,7 +646,7 @@ class ClearAction<T extends null> extends CoreAction<T> {
         continue;
       }
       for (let x = left; x <= right; x++) {
-        const cell = sheet.getCellByPoint({ y, x }, 'SYSTEM');
+        const cell = sheet.getCell({ y, x }, { resolution: 'SYSTEM' });
         const address = p2a({ y, x });
         if (prevention.hasOperation(cell?.prevention, prevention.Write)) {
           continue;
@@ -654,7 +654,7 @@ class ClearAction<T extends null> extends CoreAction<T> {
         // Spilled cells are derived from the origin cell's formula and should
         // not be cleared independently — doing so would blank the FormulaBar
         // while the spill re-populates the value on next evaluation.
-        if (sheet.getSystemByPoint({ y, x })?.spilledFrom != null) {
+        if (sheet.getSystem({ y, x })?.spilledFrom != null) {
           continue;
         }
         if (cell?.value != null) {
@@ -830,24 +830,24 @@ class ArrowAction<
     let { y: editorTop, x: editorLeft, height, width } = store.editorRect;
     if (deltaY > 0) {
       for (let i = y; i < resolvedY; i++) {
-        editorTop += sheet.getCellByPoint({ y: i, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
+        editorTop += sheet.getCell({ y: i, x: 0 }, { resolution: 'SYSTEM' })?.height || DEFAULT_HEIGHT;
       }
     } else if (deltaY < 0) {
       for (let i = y - 1; i >= resolvedY; i--) {
-        editorTop -= sheet.getCellByPoint({ y: i, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
+        editorTop -= sheet.getCell({ y: i, x: 0 }, { resolution: 'SYSTEM' })?.height || DEFAULT_HEIGHT;
       }
     }
     if (deltaX > 0) {
       for (let i = x; i < nextX; i++) {
-        editorLeft += sheet.getCellByPoint({ y: 0, x: i }, 'SYSTEM')?.width || DEFAULT_WIDTH;
+        editorLeft += sheet.getCell({ y: 0, x: i }, { resolution: 'SYSTEM' })?.width || DEFAULT_WIDTH;
       }
     } else if (deltaX < 0) {
       for (let i = x - 1; i >= nextX; i--) {
-        editorLeft -= sheet.getCellByPoint({ y: 0, x: i }, 'SYSTEM')?.width || DEFAULT_WIDTH;
+        editorLeft -= sheet.getCell({ y: 0, x: i }, { resolution: 'SYSTEM' })?.width || DEFAULT_WIDTH;
       }
     }
 
-    const cell = sheet.getCellByPoint({ y: resolvedY, x: nextX }, 'SYSTEM');
+    const cell = sheet.getCell({ y: resolvedY, x: nextX }, { resolution: 'SYSTEM' });
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
 
@@ -948,23 +948,23 @@ class WalkAction<
 
     if (deltaY > 0) {
       for (let i = y; i < nextY; i++) {
-        editorTop += sheet.getCellByPoint({ y: i, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
+        editorTop += sheet.getCell({ y: i, x: 0 }, { resolution: 'SYSTEM' })?.height || DEFAULT_HEIGHT;
       }
     } else if (deltaY < 0) {
       for (let i = y - 1; i >= nextY; i--) {
-        editorTop -= sheet.getCellByPoint({ y: i, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
+        editorTop -= sheet.getCell({ y: i, x: 0 }, { resolution: 'SYSTEM' })?.height || DEFAULT_HEIGHT;
       }
     }
     if (deltaX > 0) {
       for (let i = x; i < nextX; i++) {
-        editorLeft += sheet.getCellByPoint({ y: 0, x: i }, 'SYSTEM')?.width || DEFAULT_WIDTH;
+        editorLeft += sheet.getCell({ y: 0, x: i }, { resolution: 'SYSTEM' })?.width || DEFAULT_WIDTH;
       }
     } else if (deltaX < 0) {
       for (let i = x - 1; i >= nextX; i--) {
-        editorLeft -= sheet.getCellByPoint({ y: 0, x: i }, 'SYSTEM')?.width || DEFAULT_WIDTH;
+        editorLeft -= sheet.getCell({ y: 0, x: i }, { resolution: 'SYSTEM' })?.width || DEFAULT_WIDTH;
       }
     }
-    const cell = sheet.getCellByPoint({ y: nextY, x: nextX }, 'SYSTEM');
+    const cell = sheet.getCell({ y: nextY, x: nextX }, { resolution: 'SYSTEM' });
     height = cell?.height || DEFAULT_HEIGHT;
     width = cell?.width || DEFAULT_WIDTH;
     smartScroll(sheet, gridOuterRef.current, { y: nextY, x: nextX });
@@ -1244,7 +1244,7 @@ class FilterRowsAction<T extends { x?: number; filter?: FilterConfig }> extends 
     }
     let newChoosing = choosing;
     if (sheet.isRowFiltered(choosing.y)) {
-      for (let y = 1; y <= sheet.getNumRows(); y++) {
+      for (let y = 1; y <= sheet.numRows; y++) {
         if (!sheet.isRowFiltered(y)) {
           newChoosing = { y, x: choosing.x };
           break;

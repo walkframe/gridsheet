@@ -1,6 +1,5 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { ensureNumber } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
 const description = `Returns the logarithm of a number whose base is the specified number.`;
@@ -18,13 +17,18 @@ export class LogFunction extends BaseFunction {
   ];
   category: FunctionCategory = 'math';
 
-  protected main(value: number, base: number) {
+  validate(args: any[]) {
+    const [value, base] = super.validate(args);
     if (value <= 0) {
       throw new FormulaError('NUM!', 'value must be greater than 0');
     }
     if (base <= 1) {
       throw new FormulaError('NUM!', 'base must be greater than 1');
     }
+    return [value, base];
+  }
+
+  protected main(value: number, base: number) {
     return Math.log2(value) / Math.log2(base);
   }
 }

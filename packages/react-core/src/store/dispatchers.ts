@@ -76,7 +76,7 @@ export const redoer = async ({ store, dispatch }: ContextMenuProps) => {
 export const rowsInserterAbove = async ({ store, dispatch }: ContextMenuProps) => {
   const { selectingZone, editorRef } = store;
   const { top } = zoneToArea(selectingZone);
-  const numRows = zoneShape({ ...selectingZone, base: 1 }).rows;
+  const numRows = zoneShape(selectingZone).rows;
   dispatch(insertRowsAbove({ numRows, y: top, operator: 'USER' }));
   focus(editorRef.current);
 };
@@ -84,7 +84,7 @@ export const rowsInserterAbove = async ({ store, dispatch }: ContextMenuProps) =
 export const rowsInserterBelow = async ({ store, dispatch }: ContextMenuProps) => {
   const { selectingZone, editorRef } = store;
   const { bottom } = zoneToArea(selectingZone);
-  const numRows = zoneShape({ ...selectingZone, base: 1 }).rows;
+  const numRows = zoneShape(selectingZone).rows;
   dispatch(insertRowsBelow({ numRows, y: bottom, operator: 'USER' }));
   focus(editorRef.current);
 };
@@ -92,7 +92,7 @@ export const rowsInserterBelow = async ({ store, dispatch }: ContextMenuProps) =
 export const colsInserterLeft = async ({ store, dispatch }: ContextMenuProps) => {
   const { selectingZone, editorRef } = store;
   const { left } = zoneToArea(selectingZone);
-  const numCols = zoneShape({ ...selectingZone, base: 1 }).cols;
+  const numCols = zoneShape(selectingZone).cols;
   dispatch(insertColsLeft({ numCols, x: left, operator: 'USER' }));
   focus(editorRef.current);
 };
@@ -100,7 +100,7 @@ export const colsInserterLeft = async ({ store, dispatch }: ContextMenuProps) =>
 export const colsInserterRight = async ({ store, dispatch }: ContextMenuProps) => {
   const { selectingZone, editorRef } = store;
   const { right } = zoneToArea(selectingZone);
-  const numCols = zoneShape({ ...selectingZone, base: 1 }).cols;
+  const numCols = zoneShape(selectingZone).cols;
   dispatch(insertColsRight({ numCols, x: right, operator: 'USER' }));
   focus(editorRef.current);
 };
@@ -108,7 +108,7 @@ export const colsInserterRight = async ({ store, dispatch }: ContextMenuProps) =
 export const rowsRemover = async ({ store, dispatch }: ContextMenuProps) => {
   const { selectingZone, editorRef } = store;
   const { top } = zoneToArea(selectingZone);
-  const numRows = zoneShape({ ...selectingZone, base: 1 }).rows;
+  const numRows = zoneShape(selectingZone).rows;
   dispatch(removeRows({ numRows, y: top, operator: 'USER' }));
   focus(editorRef.current);
 };
@@ -116,7 +116,7 @@ export const rowsRemover = async ({ store, dispatch }: ContextMenuProps) => {
 export const colsRemover = async ({ store, dispatch }: ContextMenuProps) => {
   const { selectingZone, editorRef } = store;
   const { left } = zoneToArea(selectingZone);
-  const numCols = zoneShape({ ...selectingZone, base: 1 }).cols;
+  const numCols = zoneShape(selectingZone).cols;
   dispatch(removeCols({ numCols, x: left, operator: 'USER' }));
   focus(editorRef.current);
 };

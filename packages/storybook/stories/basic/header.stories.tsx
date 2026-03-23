@@ -1,14 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import {
-  buildInitialCells,
-  createConnector,
-  GridSheet,
-  updateSheet,
-  useConnector,
-  useBook,
-} from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { buildInitialCells, createConnector, GridSheet, updateSheet, useConnector } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Basic/Header',
@@ -25,7 +18,7 @@ const connector = createConnector();
 const HeaderSheet = () => {
   const [headerHeight, setHeaderHeight] = useState(40);
   const [headerWidth, setHeaderWidth] = useState(60);
-  const book = useBook({ additionalFunctions: allFunctions });
+  const book = useSpellbook();
 
   useEffect(() => {
     if (connector.current) {

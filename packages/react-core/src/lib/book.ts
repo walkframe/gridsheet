@@ -81,7 +81,7 @@ export class Registry {
   onKeyUp?: (args: { e: EditorEvent; points: CursorStateType }) => void;
   onInit?: (args: { sheet: UserSheet }) => void;
 
-  transmit: (newHub?: TransmitProps) => void = (newHub?: TransmitProps) => {
+  transmit: (newBook?: TransmitProps) => void = (newBook?: TransmitProps) => {
     // This method will be overridden by useBook
   };
 
@@ -168,14 +168,14 @@ export const createBook = (props: RegistryProps = {}): BookType => {
 };
 
 export const useBook = (props: RegistryProps = {}) => {
-  const [book, setHub] = useState<BookType>(() => createBook(props));
+  const [book, setBook] = useState<BookType>(() => createBook(props));
   const { registry } = book;
   registry.transmit = (patch?: TransmitProps) => {
     Object.assign(registry, patch);
     if (!registry.ready) {
       return;
     }
-    requestAnimationFrame(() => setHub({ registry }));
+    requestAnimationFrame(() => setBook({ registry }));
   };
   useEffect(() => {
     Object.assign(registry, props);

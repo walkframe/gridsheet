@@ -67,7 +67,7 @@ export function GridSheet({
     const sheet = new Sheet({
       limits,
       name: sheetName,
-      book: registry,
+      registry,
     });
     sheet.id = sheetId;
     registry.sheetIdsByName[sheetName] = sheetId;
@@ -105,7 +105,6 @@ export function GridSheet({
       searchCaseSensitive: false,
       searchRegex: false,
       editingOnEnter: true,
-      showAddress: false,
       contextMenuPosition: { y: -1, x: -1 },
       contextMenuItems: contextMenuItems ?? defaultContextMenuItems,
       resizingPositionY: [-1, -1, -1],
@@ -157,8 +156,8 @@ export function GridSheet({
         ref={rootRef}
         data-sheet-name={sheetName}
         data-mode={mode}
-        data-rows={store.sheetReactive.current?.getNumRows() ?? 0}
-        data-cols={store.sheetReactive.current?.getNumCols() ?? 0}
+        data-rows={store.sheetReactive.current?.numRows ?? 0}
+        data-cols={store.sheetReactive.current?.numCols ?? 0}
       >
         <div className="gs-flash-overlay" ref={flashRef} />
         <ScrollHandle style={{ position: 'fixed', top: 0, left: 0 }} />

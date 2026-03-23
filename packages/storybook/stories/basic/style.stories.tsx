@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, useBook } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Basic/Style',
@@ -14,7 +14,7 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const StyleSheet = () => {
-  const book = useBook({ additionalFunctions: allFunctions });
+  const book = useSpellbook();
   return (
     <div style={{ transform: 'translate(30px, 30px)' }}>
       <GridSheet

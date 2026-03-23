@@ -61,6 +61,24 @@ export type {
 export { Lexer, FormulaParser, RefEntity, ValueEntity, RangeEntity } from './formula/evaluator';
 export { FormulaError } from './formula/formula-error';
 export { Sheet, type UserSheet, type SheetLimits } from './lib/sheet';
+export {
+  toValueMatrix,
+  toValueObject,
+  toValueRows,
+  toValueCols,
+  toCellMatrix,
+  toCellObject,
+  toCellRows,
+  toCellCols,
+  type ToValueMatrixProps,
+  type ToValueObjectProps,
+  type ToValueRowsProps,
+  type ToValueColsProps,
+  type ToCellMatrixProps,
+  type ToCellObjectProps,
+  type ToCellRowsProps,
+  type ToCellColsProps,
+} from './lib/sheet_utils';
 export { Policy } from './policy/core';
 export type {
   PolicyType,
@@ -93,4 +111,3 @@ export {
 } from './formula/functions/__utils';
 export type { EnsureNumberOptions, EnsureBooleanOptions } from './formula/functions/__utils';
 export { conditionArg, stripMatrix } from './formula/functions/__base';
-export { solveSheet } from './formula/solver';

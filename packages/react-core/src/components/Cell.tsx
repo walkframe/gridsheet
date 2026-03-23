@@ -46,7 +46,6 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
     leftHeaderSelecting,
     topHeaderSelecting,
     editorRef,
-    showAddress,
     autofillDraggingTo,
     contextMenuItems,
   } = store;
@@ -89,7 +88,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
     return null;
   }
 
-  const cell = sheet.getCellByPoint({ y, x }, 'SYSTEM');
+  const cell = sheet.getCell({ y, x }, { resolution: 'SYSTEM' });
   const writeCell = useCallback((value: string) => {
     dispatch(write({ value }));
   }, []);
@@ -215,11 +214,11 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
         return false;
       }
       if (leftHeaderSelecting) {
-        dispatch(drag({ y, x: sheet.getNumCols() }));
+        dispatch(drag({ y, x: sheet.numCols }));
         return false;
       }
       if (topHeaderSelecting) {
-        dispatch(drag({ y: sheet.getNumRows(), x }));
+        dispatch(drag({ y: sheet.numRows, x }));
         return false;
       }
       if (editingAnywhere && !isRefInsertable(lastFocused || null)) {
@@ -336,7 +335,6 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
           }}
         >
           {errorMessage && <div className="gs-formula-error-triangle" title={errorMessage} />}
-          {showAddress && <div className="gs-cell-label">{address}</div>}
           <div className="gs-cell-rendered">{rendered}</div>
         </div>
         <div className={autofillDragClass} onMouseDown={handleAutofillMouseDown}></div>

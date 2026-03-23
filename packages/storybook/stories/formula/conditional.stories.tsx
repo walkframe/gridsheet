@@ -3,12 +3,11 @@ import type { Meta, StoryObj } from '@storybook/react';
 import {
   buildInitialCells,
   GridSheet,
-  useBook,
   BaseFunctionAsync,
   FormulaError,
   type FunctionArgumentDefinition,
 } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/functions';
 
 class DelayNaFunction extends BaseFunctionAsync {
   example = 'DELAY_NA()';
@@ -33,7 +32,7 @@ export default meta;
 
 /** Basic IF demo */
 const IfSheet: React.FC = () => {
-  const book = useBook({ additionalFunctions: allFunctions });
+  const book = useSpellbook();
   return (
     <GridSheet
       book={book}
@@ -72,7 +71,7 @@ const IfSheet: React.FC = () => {
 
 /** IFS demo */
 const IfsSheet: React.FC = () => {
-  const book = useBook({ additionalFunctions: allFunctions });
+  const book = useSpellbook();
   return (
     <GridSheet
       book={book}
@@ -100,7 +99,7 @@ const IfsSheet: React.FC = () => {
 
 /** IFNA demo */
 const IfnaSheet: React.FC = () => {
-  const book = useBook({ additionalFunctions: allFunctions });
+  const book = useSpellbook();
   return (
     <GridSheet
       book={book}
@@ -145,9 +144,8 @@ const IfnaSheet: React.FC = () => {
 
 /** IFNA with async DELAY_NA demo */
 const IfnaDelayNaSheet: React.FC = () => {
-  const book = useBook({
+  const book = useSpellbook({
     additionalFunctions: {
-      ...allFunctions,
       delay_na: DelayNaFunction,
     },
   });
@@ -180,7 +178,7 @@ const IfnaDelayNaSheet: React.FC = () => {
 
 /** IFERROR vs IFNA side-by-side demo */
 const IferrorIfnaSheet: React.FC = () => {
-  const book = useBook({ additionalFunctions: allFunctions });
+  const book = useSpellbook();
   return (
     <GridSheet
       book={book}

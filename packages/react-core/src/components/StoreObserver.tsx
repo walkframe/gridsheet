@@ -22,7 +22,6 @@ export const StoreObserver: FC<StoreObserverProps> = ({
   sheetWidth,
   connector,
   editingOnEnter,
-  showAddress,
   mode,
 }) => {
   const { store, dispatch } = useContext(Context);
@@ -85,12 +84,6 @@ export const StoreObserver: FC<StoreObserverProps> = ({
       dispatch(setStore({ editingOnEnter }));
     }
   }, [editingOnEnter]);
-  useEffect(() => {
-    if (typeof showAddress !== 'undefined') {
-      dispatch(setStore({ showAddress }));
-    }
-  }, [showAddress]);
-
   useEffect(() => {
     if (mode) {
       dispatch(setStore({ mode }));

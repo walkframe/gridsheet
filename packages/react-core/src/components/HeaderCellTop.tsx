@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 import { useContext, useCallback, memo, useRef } from 'react';
 import { x2c } from '../lib/coords';
+import { getLabel } from '../lib/label';
 import { between, zoneToArea } from '../lib/spatial';
 import { Context } from '../store';
 import {
@@ -48,7 +49,7 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
   } = store;
   const sheet = sheetRef.current;
 
-  const col = sheet?.getCellByPoint({ y: 0, x }, 'SYSTEM');
+  const col = sheet?.getCell({ y: 0, x }, { resolution: 'SYSTEM' });
   const width = col?.width || DEFAULT_WIDTH;
   const hasFilter = !!(col?.filter && col.filter.conditions.length > 0);
 
@@ -90,7 +91,7 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
           editorRef.current.blur();
         }
         dispatch(choose({ y: 1, x }));
-        dispatch(select({ startY: 1, startX: x, endY: sheet.getNumRows(), endX: x }));
+        dispatch(select({ startY: 1, startX: x, endY: sheet.numRows, endX: x }));
         return true;
       }
 
@@ -99,7 +100,7 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
       if (editingAnywhere) {
         const inserted = insertRef({ input: lastFocused || null, ref: fullAddress });
         if (inserted) {
-          dispatch(select({ startY: sheet.getNumRows(), startX: x, endY: 0, endX: x }));
+          dispatch(select({ startY: sheet.numRows, startX: x, endY: 0, endX: x }));
           return false;
         }
       }
@@ -112,7 +113,7 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
       dispatch(
         selectCols({
           range: { start: startX, end: x },
-          numRows: sheet.getNumRows(),
+          numRows: sheet.numRows,
         }),
       );
 
@@ -121,13 +122,24 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
       }
       dispatch(setEditingAddress(''));
       dispatch(setDragging(true));
+      focus(editorRef.current);
 
       if (autofillDraggingTo) {
         return false;
       }
       return true;
     },
-    [dragging, editingAnywhere, xSheetFocused, colId, lastFocused, selectingZone, choosing, autofillDraggingTo],
+    [
+      dragging,
+      editingAnywhere,
+      xSheetFocused,
+      colId,
+      lastFocused,
+      selectingZone,
+      choosing,
+      autofillDraggingTo,
+      editorRef,
+    ],
   );
 
   const handleDragEnd = useCallback(
@@ -174,7 +186,7 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
     if (autofillDraggingTo == null) {
       const { startY } = selectingZone;
       if (startY === 1) {
-        dispatch(drag({ y: sheet.getNumRows(), x }));
+        dispatch(drag({ y: sheet.numRows, x }));
       } else {
         dispatch(drag({ y: 1, x }));
       }
@@ -232,7 +244,7 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
             vertical={-1}
           />
           {(() => {
-            const displayedLabel = sheet.getLabel(col?.label, { y: 0, x }, x) ?? colId;
+            const displayedLabel = getLabel(sheet, col?.label, { y: 0, x }, x) ?? colId;
             if (displayedLabel !== colId) {
               return (
                 <>
@@ -268,9 +280,9 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
                   const alreadySelected =
                     between({ start: selectingZone.startX, end: selectingZone.endX }, x) &&
                     selectingZone.startY === 1 &&
-                    selectingZone.endY === sheet.getNumRows();
+                    selectingZone.endY === sheet.numRows;
                   if (!alreadySelected) {
-                    dispatch(selectCols({ range: { start: x, end: x }, numRows: sheet.getNumRows() }));
+                    dispatch(selectCols({ range: { start: x, end: x }, numRows: sheet.numRows }));
                   }
                   dispatch(setColumnMenu({ x, position: { y: rect.bottom, x: rect.left } }));
                 }

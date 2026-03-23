@@ -1,4 +1,4 @@
-import { stripSheet, solveSheet } from '../solver';
+import { stripSheet } from '../solver';
 import { Sheet } from '../../lib/sheet';
 import { FormulaError } from '../formula-error';
 import dayjs from 'dayjs';
@@ -190,7 +190,7 @@ export const check = (value: any, condition: string): boolean => {
 
 export const eachMatrix = (value: any, callback: (v: any, relativePoint: PointType) => void, at: Id) => {
   if (value instanceof Sheet) {
-    const matrix = solveSheet({ sheet: value, at });
+    const matrix = value.solve({ at });
     for (let y = 0; y < matrix.length; y++) {
       for (let x = 0; x < matrix[y].length; x++) {
         callback(matrix[y][x], { y, x });
@@ -219,8 +219,8 @@ export const createBooleanMask = (sheets: Sheet[], conditions: string[], at: Id)
     return [];
   }
   const refRange = sheets[0];
-  const numRows = refRange.getNumRows();
-  const numCols = refRange.getNumCols();
+  const numRows = refRange.numRows;
+  const numCols = refRange.numCols;
 
   const mask: boolean[][] = Array.from({ length: numRows }, () => Array(numCols).fill(true));
 

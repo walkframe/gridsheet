@@ -1,4 +1,4 @@
-import { a2p, grantAddressAbsolute, p2a } from '../lib/coords';
+import { a2p, buildIdentifiedRef, grantAddressAbsolute, p2a } from '../lib/coords';
 import { Sheet } from '../lib/sheet';
 import { Id, PointType } from '../types';
 import { FormulaError } from './formula-error';
@@ -11,7 +11,7 @@ type IdentityBaseProps = {
   slideY?: number;
   slideX?: number;
   operation?: 'move' | 'removeRows' | 'removeCols';
-  dependency: string;
+  dependency: Id;
 };
 
 export type ProcessFormulaProps = IdentityBaseProps & {
@@ -29,7 +29,7 @@ export type DisplayProps = {
 };
 
 // strip sharp and dollars
-const getId = (idString: string, stripAbsolute = true) => {
+const stripId = (idString: string, stripAbsolute = true) => {
   let id = idString;
   if (stripAbsolute && id.startsWith('$')) {
     id = id.slice(1);
@@ -101,12 +101,12 @@ export class RefEntity extends Entity<string> {
       absX,
       absY,
     };
-    const { id, formula } = parsed.sheet.getIdFormula(newPoint);
+    const id = parsed.sheet.getId(newPoint);
     if (id == null) {
       return this.value;
     }
     this.ids = [id];
-    return `#${parsed.sheet.id}!${formula}`;
+    return `#${parsed.sheet.id}!${buildIdentifiedRef(id, absX, absY)}`;
   }
 }
 
@@ -143,12 +143,12 @@ export class RangeEntity extends Entity<string> {
         absX,
         absY,
       };
-      const { id, formula } = parsed.sheet.getIdFormula(newPoint);
+      const id = parsed.sheet.getId(newPoint);
       if (id == null) {
         return this.value;
       }
       this.ids.push(id);
-      formulas.push(formula!);
+      formulas.push(buildIdentifiedRef(id, absX, absY));
     }
     return `#${parsed.sheet.id}!${formulas.join(':')}`;
   }
@@ -159,9 +159,9 @@ export class IdEntity extends Entity<string> {
     if (this.value.indexOf('!') !== -1) {
       const [sheetIdStr, id] = this.value.split('!'); // #id
       const sheetId = Number(sheetIdStr.slice(1));
-      return { sheet: sheet.getSheetBySheetId(sheetId)!, id: getId(id, false) };
+      return { sheet: sheet.getSheetBySheetId(sheetId)!, id: stripId(id, false) };
     }
-    return { sheet, id: getId(this.value, false) };
+    return { sheet, id: stripId(this.value, false) };
   }
   public evaluate({ sheet }: EvaluateProps) {
     const parsed = this.parse(sheet);
@@ -213,7 +213,7 @@ export class IdRangeEntity extends Entity<string> {
 
   public evaluate({ sheet }: EvaluateProps): Sheet {
     const parsed = this.parse(sheet);
-    const ids = parsed.ids.map((id) => getId(id));
+    const ids = parsed.ids.map((id) => stripId(id));
     const ps: PointType[] = [];
     for (let i = 0; i < ids.length; i++) {
       const id = ids[i];
@@ -224,18 +224,13 @@ export class IdRangeEntity extends Entity<string> {
       ps.push(p);
     }
     const [p1, p2] = ps;
-    const [top, left, bottom, right] = [
-      p1.y,
-      p1.x,
-      p2.y || parsed.sheet.getNumRows(),
-      p2.x || parsed.sheet.getNumCols(),
-    ];
+    const [top, left, bottom, right] = [p1.y, p1.x, p2.y || parsed.sheet.numRows, p2.x || parsed.sheet.numCols];
     return parsed.sheet.trim({ top, left, bottom, right });
   }
   public display({ sheet, slideY = 0, slideX = 0 }: DisplayProps) {
     const parsed = this.parse(sheet);
     const range = parsed.ids
-      .map((id) => getId(id, false))
+      .map((id) => stripId(id, false))
       .map((id) => parsed.sheet.getAddressById(id, slideY, slideX) || '#REF!')
       .join(':');
     if (parsed.sheet.id === sheet.id) {
@@ -266,7 +261,7 @@ export class FunctionEntity {
 
   public evaluate({ sheet }: EvaluateProps): any {
     const name = this.name.toLowerCase();
-    const Func = sheet.getFunction(name);
+    const Func = sheet.getFunctionByName(name);
     if (Func == null) {
       throw new FormulaError('#NAME?', `Unknown function: ${name}`);
     }
@@ -674,7 +669,10 @@ export class Lexer {
             } else if (buf.indexOf(':') !== -1) {
               this.tokens.push(new Token('RANGE', buf, 0, this.at));
             } else {
-              if (isNaN(buf[buf.length - 1] as unknown as number)) {
+              // A token containing '.' alongside letters is a partial function name
+              // (e.g. "RANGE.1" before the opening paren), not a cell reference.
+              const looksLikeFunctionName = buf.includes('.') && /[a-zA-Z]/.test(buf);
+              if (looksLikeFunctionName || isNaN(buf[buf.length - 1] as unknown as number)) {
                 this.tokens.push(new Token('INVALID_REF', buf, 0, this.at));
               } else {
                 this.tokens.push(new Token('REF', buf, 0, this.at));

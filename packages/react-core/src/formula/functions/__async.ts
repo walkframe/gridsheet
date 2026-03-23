@@ -4,6 +4,7 @@ import { ensureSys, setAsyncCache } from '../../lib/cell';
 import type { Registry } from '../../lib/book';
 import type { CellType, Id, PointType } from '../../types';
 import type { Sheet } from '../../lib/sheet';
+import { toValueMatrix } from '../../lib/sheet_utils';
 
 /**
  * Sentinel value to distinguish cache miss from user-returned undefined/null.
@@ -82,7 +83,7 @@ const cyrb53 = (str: string, seed = 0): number => {
 export const buildAsyncCacheKey = (funcName: string, args: any[], hashPrecision: number = 1): string => {
   const argsJson = JSON.stringify(args, (_key, value) => {
     if (isSheet(value)) {
-      return value.toValueMatrix();
+      return toValueMatrix(value);
     }
     if (Pending.is(value)) {
       return null;

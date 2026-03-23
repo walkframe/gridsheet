@@ -20,7 +20,7 @@ export class ColumnFunction extends BaseFunction {
 
   protected toMatrix(value: any): any[][] {
     if (value instanceof Sheet) {
-      const area = value.getArea();
+      const area = value.area;
       const result: any[][] = [];
       for (let r = area.top; r <= area.bottom; r++) {
         const row: any[] = [];
@@ -36,7 +36,7 @@ export class ColumnFunction extends BaseFunction {
 
   protected toScalar(value: any): any {
     if (value instanceof Sheet) {
-      const area = value.getArea();
+      const area = value.area;
       return value.trim({ ...area, right: area.left });
     }
     return super.toScalar(value);

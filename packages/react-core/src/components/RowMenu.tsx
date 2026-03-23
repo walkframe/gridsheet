@@ -25,24 +25,24 @@ export const RowMenu: FC = () => {
     return null;
   }
 
-  const rowCell = sheet.getCellByPoint({ y, x: 0 }, 'SYSTEM');
+  const rowCell = sheet.getCell({ y, x: 0 }, { resolution: 'SYSTEM' });
 
   // Calculate the number of selected rows that include the current row
   const selRowStart = Math.min(selectingZone.startY, selectingZone.endY);
   const selRowEnd = Math.max(selectingZone.startY, selectingZone.endY);
-  const isFullRowSelection = selectingZone.startX === 1 && selectingZone.endX === sheet.getNumCols();
+  const isFullRowSelection = selectingZone.startX === 1 && selectingZone.endX === sheet.numCols;
   const numSelectedRows =
     isFullRowSelection && between({ start: selectingZone.startY, end: selectingZone.endY }, y)
       ? selRowEnd - selRowStart + 1
       : 1;
 
-  const insertDisabled = sheet.maxNumRows !== -1 && sheet.getNumRows() + numSelectedRows > sheet.maxNumRows;
+  const insertDisabled = sheet.maxNumRows !== -1 && sheet.numRows + numSelectedRows > sheet.maxNumRows;
   const insertAboveDisabled =
     insertDisabled || prevention.hasOperation(rowCell?.prevention, prevention.InsertRowsAbove);
   const insertBelowDisabled =
     insertDisabled || prevention.hasOperation(rowCell?.prevention, prevention.InsertRowsBelow);
   const removeDisabled =
-    (sheet.minNumRows !== -1 && sheet.getNumRows() - numSelectedRows < sheet.minNumRows) ||
+    (sheet.minNumRows !== -1 && sheet.numRows - numSelectedRows < sheet.minNumRows) ||
     prevention.hasOperation(rowCell?.prevention, prevention.RemoveRows);
 
   return (

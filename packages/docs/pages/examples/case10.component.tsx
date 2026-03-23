@@ -74,7 +74,7 @@ const DeleteButtonPolicyMixin: PolicyMixinType = {
     // Get product name for tooltip
     let productName = 'Unknown';
     try {
-      const productCell = table.getCellByPoint({ y: point.y, x: 2 }, 'COMPLETE');
+      const productCell = table.getCell({ y: point.y, x: 2 }, 'RESOLVED');
       if (productCell?.value != null) {
         productName = String(productCell.value);
       }
@@ -128,7 +128,7 @@ const convertToTSV = (table: UserTable, evaluates: boolean = true): string => {
   if (!table) {
     return '';
   }
-  const matrix = table.toValueMatrix({ refEvaluation: evaluates ? 'COMPLETE' : 'RAW' });
+  const matrix = table.toValueMatrix({ resolution: evaluates ? 'RESOLVED' : 'RAW' });
   if (!matrix || matrix.length === 0) {
     return '';
   }

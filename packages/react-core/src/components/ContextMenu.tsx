@@ -128,10 +128,10 @@ export const InsertRowsAboveItem = (props: ContextMenuProps) => {
     return null;
   }
   const { y } = choosing;
-  const { rows } = zoneShape({ ...selectingZone, base: 1 });
-  const selectingTopCell = sheet.getCellByPoint({ y, x: 0 }, 'SYSTEM');
+  const { rows } = zoneShape(selectingZone);
+  const selectingTopCell = sheet.getCell({ y, x: 0 }, { resolution: 'SYSTEM' });
   const disabled =
-    (sheet.maxNumRows !== -1 && sheet.getNumRows() + rows > sheet.maxNumRows) ||
+    (sheet.maxNumRows !== -1 && sheet.numRows + rows > sheet.maxNumRows) ||
     prevention.hasOperation(selectingTopCell?.prevention, prevention.InsertRowsAbove);
   return (
     <li
@@ -158,10 +158,10 @@ export const InsertRowsBelowItem = (props: ContextMenuProps) => {
     return null;
   }
   const { y } = choosing;
-  const { rows } = zoneShape({ ...selectingZone, base: 1 });
-  const selectingBottomCell = sheet.getCellByPoint({ y, x: 0 }, 'SYSTEM');
+  const { rows } = zoneShape(selectingZone);
+  const selectingBottomCell = sheet.getCell({ y, x: 0 }, { resolution: 'SYSTEM' });
   const disabled =
-    (sheet.maxNumRows !== -1 && sheet.getNumRows() + rows > sheet.maxNumRows) ||
+    (sheet.maxNumRows !== -1 && sheet.numRows + rows > sheet.maxNumRows) ||
     prevention.hasOperation(selectingBottomCell?.prevention, prevention.InsertRowsBelow);
   return (
     <li
@@ -188,10 +188,10 @@ export const InsertColsLeftItem = (props: ContextMenuProps) => {
     return null;
   }
   const { x } = choosing;
-  const { cols } = zoneShape({ ...selectingZone, base: 1 });
-  const selectingLeftCell = sheet.getCellByPoint({ y: 0, x }, 'SYSTEM');
+  const { cols } = zoneShape(selectingZone);
+  const selectingLeftCell = sheet.getCell({ y: 0, x }, { resolution: 'SYSTEM' });
   const disabled =
-    (sheet.maxNumCols !== -1 && sheet.getNumCols() + cols > sheet.maxNumCols) ||
+    (sheet.maxNumCols !== -1 && sheet.numCols + cols > sheet.maxNumCols) ||
     prevention.hasOperation(selectingLeftCell?.prevention, prevention.InsertColsLeft);
   return (
     <li
@@ -218,10 +218,10 @@ export const InsertColsRightItem = (props: ContextMenuProps) => {
     return null;
   }
   const { x } = choosing;
-  const { cols } = zoneShape({ ...selectingZone, base: 1 });
-  const selectingRightCell = sheet.getCellByPoint({ y: 0, x }, 'SYSTEM');
+  const { cols } = zoneShape(selectingZone);
+  const selectingRightCell = sheet.getCell({ y: 0, x }, { resolution: 'SYSTEM' });
   const disabled =
-    (sheet.maxNumCols !== -1 && sheet.getNumCols() + cols > sheet.maxNumCols) ||
+    (sheet.maxNumCols !== -1 && sheet.numCols + cols > sheet.maxNumCols) ||
     prevention.hasOperation(selectingRightCell?.prevention, prevention.InsertColsRight);
   return (
     <li
@@ -248,10 +248,10 @@ export const RemoveRowsItem = (props: ContextMenuProps) => {
     return null;
   }
   const { y } = choosing;
-  const { rows } = zoneShape({ ...selectingZone, base: 1 });
-  const selectingTopCell = sheet.getCellByPoint({ y, x: 0 }, 'SYSTEM');
+  const { rows } = zoneShape(selectingZone);
+  const selectingTopCell = sheet.getCell({ y, x: 0 }, { resolution: 'SYSTEM' });
   const disabled =
-    (sheet.minNumRows !== -1 && sheet.getNumRows() - rows < sheet.minNumRows) ||
+    (sheet.minNumRows !== -1 && sheet.numRows - rows < sheet.minNumRows) ||
     prevention.hasOperation(selectingTopCell?.prevention, prevention.RemoveRows);
   return (
     <li
@@ -278,10 +278,10 @@ export const RemoveColsItem = (props: ContextMenuProps) => {
     return null;
   }
   const { x } = choosing;
-  const { cols } = zoneShape({ ...selectingZone, base: 1 });
-  const selectingRightCell = sheet.getCellByPoint({ y: 0, x }, 'SYSTEM');
+  const { cols } = zoneShape(selectingZone);
+  const selectingRightCell = sheet.getCell({ y: 0, x }, { resolution: 'SYSTEM' });
   const disabled =
-    (sheet.minNumCols !== -1 && sheet.getNumCols() - cols < sheet.minNumCols) ||
+    (sheet.minNumCols !== -1 && sheet.numCols - cols < sheet.minNumCols) ||
     prevention.hasOperation(selectingRightCell?.prevention, prevention.RemoveCols);
   return (
     <li
@@ -308,8 +308,8 @@ export const HistoryDeviderItem = (props: ContextMenuProps) => {
     return null;
   }
 
-  const historyIndex = sheet.getHistoryIndex();
-  if (historyIndex > -1 || historyIndex < sheet.getHistorySize() - 1) {
+  const historyIndex = sheet.historyIndex();
+  if (historyIndex > -1 || historyIndex < sheet.historySize() - 1) {
     return <li className="gs-menu-divider" />;
   }
   return null;
@@ -323,7 +323,7 @@ export const UndoItem = (props: ContextMenuProps) => {
     return null;
   }
 
-  const historyIndex = sheet.getHistoryIndex();
+  const historyIndex = sheet.historyIndex();
   if (historyIndex <= -1) {
     return null;
   }
@@ -345,8 +345,8 @@ export const RedoItem = (props: ContextMenuProps) => {
     return null;
   }
 
-  const historyIndex = sheet.getHistoryIndex();
-  if (historyIndex >= sheet.getHistorySize() - 1) {
+  const historyIndex = sheet.historyIndex();
+  if (historyIndex >= sheet.historySize() - 1) {
     return null;
   }
   return (

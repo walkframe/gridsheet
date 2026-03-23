@@ -10,7 +10,7 @@ export class ReferencePreserver {
     this.sheet = sheet;
   }
 
-  addTheDependents(...ids: Id[]) {
+  collectDependents(...ids: Id[]) {
     ids.forEach((id) => {
       this.sheet.registry.systems[id]?.dependents?.forEach((did) => {
         this.dependentIds.add(did);

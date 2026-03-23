@@ -21,27 +21,20 @@ import {
   RawCellType,
   ExtraPointType,
   StoreType,
-  RefEvaluation,
+  Resolution,
   MoveRelations,
   Y,
   X,
   System,
 } from '../types';
-import {
-  among,
-  areaShape,
-  createMatrix,
-  expandRange,
-  getMaxSizesFromCells,
-  invertObject,
-  matrixShape,
-} from './spatial';
+import { among, areaShape, createMatrix, expandRange, getMaxSizesFromCells, matrixShape } from './spatial';
 import { a2p, x2c, c2x, p2a, y2r, grantAddressAbsolute } from './coords';
 import type { FunctionMapping } from '../formula/functions/__base';
 import { Lexer, ProcessFormulaProps } from '../formula/evaluator';
 import { FormulaError } from '../formula/formula-error';
-import { solveFormula, solveSheet, stripSheet } from '../formula/solver';
+import { solveFormula, SolveOptions, solveSheet, stripSheet } from '../formula/solver';
 import { ensureSys, filterCellFields } from './cell';
+import { escapeSheetName, toSheetPrefix } from './sheet_utils';
 
 import {
   DEFAULT_HEIGHT,
@@ -60,6 +53,8 @@ import { nonePolicy, PolicyType, DEFAULT_POLICY_NAME, RenderProps, ScalarProps }
 import { evaluateFilterConfig } from './filter';
 import { ReferencePreserver } from './reference';
 
+type CellField = keyof CellType;
+
 export type SheetLimits = {
   minRows?: number;
   maxRows?: number;
@@ -71,18 +66,10 @@ type Props = {
   limits?: SheetLimits;
   functions?: FunctionMapping;
   name?: string;
-  book?: Registry;
+  registry?: Registry;
 };
 
 const noFilter: CellFilter = () => true;
-
-type GetProps = {
-  // do not use 'SYSTEM', it is reserved for internal use.
-  refEvaluation?: RefEvaluation;
-  raise?: boolean;
-  filter?: CellFilter;
-  asScalar?: boolean;
-};
 
 type MoveProps = {
   srcSheet?: UserSheet;
@@ -94,63 +81,10 @@ type MoveProps = {
   historicize?: boolean;
 };
 
-type CellField = keyof CellType;
-
-type GetCellProps = GetProps & {
-  ignoreFields?: CellField[];
-};
-
-type ToCellMatrixProps = GetCellProps & {
-  area?: AreaType;
-};
-
-type GetPropsWithArea = GetProps & {
-  area?: AreaType;
-};
-
-type ToValueMatrixProps = GetProps & {
-  area?: AreaType;
-};
-
-type ToCellObjectProps = GetCellProps & {
-  addresses?: Address[];
-};
-
-type GetPropsWithAddresses = GetProps & {
-  addresses?: Address[];
-};
-
-type ToValueObjectProps = GetProps & {
-  addresses?: Address[];
-};
-
-type ToCellRowsProps = GetCellProps & {
-  rows?: number[];
-};
-
-type GetPropsWithRows = GetProps & {
-  rows?: number[];
-};
-
-type ToValueRowsProps = GetProps & {
-  rows?: number[];
-};
-
-type ToCellColsProps = GetCellProps & {
-  cols?: (number | string)[];
-};
-
-type GetPropsWithCols = GetProps & {
-  cols?: (number | string)[];
-};
-
-type ToValueColsProps = GetProps & {
-  cols?: (number | string)[];
-};
-
 export interface UserSheet {
   changedTime: number;
   lastChangedTime?: number;
+  area: AreaType;
   top: number;
   left: number;
   bottom: number;
@@ -170,21 +104,11 @@ export interface UserSheet {
   __raw__: Sheet;
 
   getRectSize(area: AreaType): RectType;
-  getSystemByPoint(point: PointType): System | undefined;
-  getCellByPoint(point: PointType, refEvaluation?: RefEvaluation, raise?: boolean): CellType | undefined;
-  getCellByAddress(address: Address, refEvaluation?: RefEvaluation, raise?: boolean): CellType | undefined;
-  getPolicyByPoint(point: PointType): PolicyType;
-  getNumRows(base?: number): number;
-  getNumCols(base?: number): number;
-  toValueMatrix(args?: ToValueMatrixProps): any[][];
-  toValueObject(args?: ToValueObjectProps): { [address: Address]: any };
-  toValueRows(args?: ToValueRowsProps): { [address: Address]: any }[];
-  toValueCols(args?: ToValueColsProps): { [address: Address]: any }[];
-  toCellMatrix(args?: ToCellMatrixProps): (CellType | null)[][];
-  toCellObject(args?: ToCellObjectProps): CellsByAddressType;
-  toCellRows(args?: ToCellRowsProps): CellsByAddressType[];
-  toCellCols(args?: ToCellColsProps): CellsByAddressType[];
-  getHistories(): HistoryType[];
+  getCell(point: PointType, options?: { resolution?: Resolution; raise?: boolean }): CellType | undefined;
+  getPolicy(point: PointType): PolicyType;
+  get numRows(): number;
+  get numCols(): number;
+  get shape(): ShapeType;
   move(args: MoveProps): UserSheet;
   copy(args: MoveProps & { onlyValue?: boolean }): UserSheet;
   update(args: {
@@ -227,9 +151,9 @@ export interface UserSheet {
   redo(): {
     history: HistoryType | null;
   };
-  getHistories(): HistoryType[];
-  getHistoryIndex(): number;
-  getHistorySize(): number;
+  histories(): HistoryType[];
+  historyIndex(): number;
+  historySize(): number;
   setHeaderHeight(height: number, historicize?: boolean): UserSheet;
   setHeaderWidth(width: number, historicize?: boolean): UserSheet;
 
@@ -241,16 +165,26 @@ export interface UserSheet {
   hasPendingCells(): boolean;
   waitForPending(): Promise<void>;
   getLastChangedAddresses(): Address[];
-
-  stringify(props: { point: PointType; cell?: CellType; refEvaluation?: RefEvaluation }): string;
-
-  get shape(): { rows: number; cols: number };
+  getSerializedValue(props: { point: PointType; cell?: CellType; resolution?: Resolution }): string;
 }
 
+type InternalToValueMatrixProps = {
+  area?: AreaType;
+  resolution?: Resolution;
+  raise?: boolean;
+  filter?: CellFilter;
+  asScalar?: boolean;
+  at?: Id;
+};
+
 export class Sheet implements UserSheet {
+  /** @internal */
   public __gsType = 'Sheet';
   public changedTime: number;
   public lastChangedTime?: number;
+  public area: AreaType = { top: 0, left: 0, bottom: 0, right: 0 };
+
+  /** @internal */
   private _limits: Required<SheetLimits>;
   get minNumRows() {
     return this._limits.minRows;
@@ -264,23 +198,34 @@ export class Sheet implements UserSheet {
   get maxNumCols() {
     return this._limits.maxCols;
   }
+  /** @internal */
   public id: number = 0;
   public name: string = '';
+  /** @internal */
   public prevName: string = '';
+  /** @internal */
   public status: 0 | 1 | 2 = 0; // 0: not initialized, 1: initialized, 2: formula absoluted
+  /** @internal */
   public registry: Registry;
+  /** @internal */
   public idsToBeIdentified: Id[] = [];
+  /** @internal */
   public totalWidth = 0;
+  /** @internal */
   public totalHeight = 0;
+  /** @internal */
   public fullHeight = 0;
 
+  /** @internal */
   private version = 0;
+  /** @internal */
   private idMatrix: IdMatrix;
-  private area: AreaType = { top: 0, left: 0, bottom: 0, right: 0 };
+  /** @internal */
   private addressCaches: Map<Id, Address> = new Map();
+  /** @internal */
   private lastChangedAddresses: Address[] = [];
 
-  constructor({ limits = {}, name, book = createRegistry({}) }: Props) {
+  constructor({ limits = {}, name, registry = createRegistry({}) }: Props) {
     this.idMatrix = [];
     this.changedTime = Date.now();
     this._limits = {
@@ -291,7 +236,7 @@ export class Sheet implements UserSheet {
     };
     this.name = name || '';
     this.prevName = this.name;
-    this.registry = book;
+    this.registry = registry;
   }
 
   static is(obj: any): obj is Sheet {
@@ -299,11 +244,11 @@ export class Sheet implements UserSheet {
   }
 
   toString() {
-    return `Sheet(name=${escapeSheetName(this.name)}, size=${this.getNumRows()}x${this.getNumCols()})`;
+    return `Sheet(name=${escapeSheetName(this.name)}, size=${this.numRows}x${this.numCols})`;
   }
 
   get headerHeight() {
-    return this.getCellByPoint({ y: 0, x: 0 }, 'SYSTEM')?.height || HEADER_HEIGHT;
+    return this.getCell({ y: 0, x: 0 }, { resolution: 'SYSTEM' })?.height || HEADER_HEIGHT;
   }
 
   setHeaderHeight(height: number, historicize = true) {
@@ -315,7 +260,7 @@ export class Sheet implements UserSheet {
   }
 
   get headerWidth() {
-    return this.getCellByPoint({ y: 0, x: 0 }, 'SYSTEM')?.width || HEADER_WIDTH;
+    return this.getCell({ y: 0, x: 0 }, { resolution: 'SYSTEM' })?.width || HEADER_WIDTH;
   }
 
   setHeaderWidth(width: number, historicize = true) {
@@ -326,8 +271,11 @@ export class Sheet implements UserSheet {
     });
   }
 
-  /** Get the raw (mutable) cell data for a point. Unlike getCellByPoint, this returns the actual registry.data reference. */
-  private _getRawCellByPoint({ y, x }: PointType): CellType | undefined {
+  /**
+   * Get the raw (mutable) cell data for a point. Unlike getCell, this returns the actual registry.data reference.
+   * @internal
+   */
+  private _pointToRawCell({ y, x }: PointType): CellType | undefined {
     const id = this.idMatrix[y]?.[x];
     if (id == null) {
       return undefined;
@@ -336,13 +284,13 @@ export class Sheet implements UserSheet {
   }
 
   public isRowFiltered(y: number): boolean {
-    return !!this._getRawCellByPoint({ y, x: 0 })?.filtered;
+    return !!this._pointToRawCell({ y, x: 0 })?.filtered;
   }
 
   public hasActiveFilters(): boolean {
-    const numCols = this.getNumCols();
+    const numCols = this.numCols;
     for (let col = 1; col <= numCols; col++) {
-      const colCell = this._getRawCellByPoint({ y: 0, x: col });
+      const colCell = this._pointToRawCell({ y: 0, x: col });
       if (colCell?.filter && colCell.filter.conditions.length > 0) {
         return true;
       }
@@ -355,11 +303,11 @@ export class Sheet implements UserSheet {
    * (i.e. an async formula that hasn't resolved yet).
    */
   public hasPendingCells(): boolean {
-    const numRows = this.getNumRows();
-    const numCols = this.getNumCols();
+    const numRows = this.numRows;
+    const numCols = this.numCols;
     for (let y = 1; y <= numRows; y++) {
       for (let x = 1; x <= numCols; x++) {
-        const cell = this.getCellByPoint({ y, x }, 'COMPLETE');
+        const cell = this.getCell({ y, x }, { resolution: 'RESOLVED' });
         if (Pending.is(cell?.value)) {
           return true;
         }
@@ -411,12 +359,14 @@ export class Sheet implements UserSheet {
     return this.lastChangedAddresses;
   }
 
-  /** Capture the current state of all filter-related cells (column headers + row headers) as a CellsByIdType snapshot */
-  /** Capture the full cell state of all filter-related header cells as a CellsByIdType snapshot */
+  /**
+   * Capture the full cell state of all filter-related header cells as a CellsByIdType snapshot.
+   * @internal
+   */
   private _captureFilterCellStates(): CellsByIdType {
     const snapshot: CellsByIdType = {};
-    const numCols = this.getNumCols();
-    const numRows = this.getNumRows();
+    const numCols = this.numCols;
+    const numRows = this.numRows;
     // Column header cells (filter config)
     for (let col = 1; col <= numCols; col++) {
       const id = this.idMatrix[0]?.[col];
@@ -444,13 +394,13 @@ export class Sheet implements UserSheet {
     const diffBefore = this._captureFilterCellStates();
 
     if (x == null) {
-      const numCols = this.getNumCols();
+      const numCols = this.numCols;
       for (let col = 1; col <= numCols; col++) {
-        const colCell = this._getRawCellByPoint({ y: 0, x: col });
+        const colCell = this._pointToRawCell({ y: 0, x: col });
         delete colCell?.filter;
       }
     } else {
-      const colCell = this._getRawCellByPoint({ y: 0, x });
+      const colCell = this._pointToRawCell({ y: 0, x });
       if (colCell) {
         if (filter) {
           colCell.filter = filter;
@@ -468,7 +418,7 @@ export class Sheet implements UserSheet {
     );
 
     if (changed) {
-      this.pushHistory({
+      this._pushHistory({
         applyed: true,
         operation: 'UPDATE',
         srcSheetId: this.id,
@@ -482,13 +432,14 @@ export class Sheet implements UserSheet {
     return this.refresh(false, true);
   }
 
+  /** @internal */
   private _reapplyFilters() {
     // Collect active filters from column header cells
-    const numCols = this.getNumCols();
+    const numCols = this.numCols;
     const activeFilters: { x: number; filter: FilterConfig }[] = [];
     const changedAddresses: Address[] = [];
     for (let col = 1; col <= numCols; col++) {
-      const colCell = this._getRawCellByPoint({ y: 0, x: col });
+      const colCell = this._pointToRawCell({ y: 0, x: col });
       if (colCell?.filter && colCell.filter.conditions.length > 0) {
         activeFilters.push({ x: col, filter: colCell.filter });
       }
@@ -496,18 +447,18 @@ export class Sheet implements UserSheet {
       changedAddresses.push(p2a({ y: 0, x: col }));
     }
 
-    const numRows = this.getNumRows();
+    const numRows = this.numRows;
 
     // Evaluate each row and update filtered flag
     for (let y = 1; y <= numRows; y++) {
-      const rowCell = this._getRawCellByPoint({ y, x: 0 });
+      const rowCell = this._pointToRawCell({ y, x: 0 });
       if (!rowCell) {
         continue;
       }
 
       let shouldFilter = false;
       for (const { x: col, filter } of activeFilters) {
-        const cell = this.getCellByPoint({ y, x: col }, 'COMPLETE');
+        const cell = this.getCell({ y, x: col }, { resolution: 'RESOLVED' });
         if (!evaluateFilterConfig(filter, cell?.value)) {
           shouldFilter = true;
           break;
@@ -529,7 +480,7 @@ export class Sheet implements UserSheet {
   }
 
   public sortRows({ x, direction }: { x: number; direction: 'asc' | 'desc' }) {
-    const numRows = this.getNumRows();
+    const numRows = this.numRows;
     if (numRows <= 1) {
       return this;
     }
@@ -542,8 +493,8 @@ export class Sheet implements UserSheet {
 
     // Sort by resolved cell value at column x
     rowIndices.sort((a, b) => {
-      const cellA = this.getCellByPoint({ y: a, x }, 'COMPLETE');
-      const cellB = this.getCellByPoint({ y: b, x }, 'COMPLETE');
+      const cellA = this.getCell({ y: a, x }, { resolution: 'RESOLVED' });
+      const cellB = this.getCell({ y: b, x }, { resolution: 'RESOLVED' });
       const valA = cellA?.value;
       const valB = cellB?.value;
 
@@ -598,7 +549,7 @@ export class Sheet implements UserSheet {
     }
     this.addressCaches.clear();
 
-    this.pushHistory({
+    this._pushHistory({
       applyed: true,
       operation: 'SORT_ROWS',
       srcSheetId: this.id,
@@ -609,9 +560,10 @@ export class Sheet implements UserSheet {
     return this.refresh(true, true);
   }
 
+  /** @internal */
   private _sortRowMapping(sortedRowMapping: { [beforeY: number]: number }, inverse = false) {
     // Convert mapping to array and apply the sort order
-    const numRows = this.getNumRows();
+    const numRows = this.numRows;
     const newOrder: number[] = new Array(numRows);
 
     if (inverse) {
@@ -645,15 +597,12 @@ export class Sheet implements UserSheet {
     return this.status === 2;
   }
 
-  get functions() {
-    return this.registry.functions;
-  }
-
   get policies() {
     return this.registry.policies;
   }
 
-  public getSystemByPoint(point: PointType): System | undefined {
+  /** @internal */
+  public getSystem(point: PointType): System | undefined {
     const id = this.getId(point);
     if (id == null) {
       return undefined;
@@ -661,19 +610,21 @@ export class Sheet implements UserSheet {
     return this.registry.systems[id];
   }
 
+  /** @internal */
   public processFormula(value: any, { idMap, ...props }: ProcessFormulaProps): any {
     if (typeof value === 'string' || value instanceof String) {
       if (value.charAt(0) === '=') {
         const lexer = new Lexer(value.substring(1));
         lexer.tokenize(idMap);
         lexer.identify({ ...props, sheet: this });
-        lexer.dependencyIds.forEach((id) => this.addDependents(id, props.dependency));
+        lexer.dependencyIds.forEach((id) => this.addDependency(id, props.dependency));
         return '=' + lexer.identifiedFormula;
       }
     }
     return value;
   }
 
+  /** @internal */
   public resolveFormulas() {
     this.idsToBeIdentified.forEach((id) => {
       const cell = this.registry.data[id];
@@ -690,14 +641,17 @@ export class Sheet implements UserSheet {
     this.status = 2;
   }
 
+  /** @internal */
   public getSheetBySheetName(sheetName: string) {
     const sheetId = this.registry.sheetIdsByName[sheetName];
     return this.getSheetBySheetId(sheetId);
   }
+  /** @internal */
   public getSheetBySheetId(sheetId: number) {
     return this.registry.contextsBySheetId[sheetId]?.store?.sheetReactive?.current;
   }
 
+  /** @internal */
   private static _stack(...cells: CellType[]) {
     const extension: CellType = {};
     cells.forEach((cell) => {
@@ -711,6 +665,7 @@ export class Sheet implements UserSheet {
     return extension;
   }
 
+  /** @internal */
   public initialize(cells: CellsByAddressType) {
     if (this.status > 1) {
       return;
@@ -732,7 +687,7 @@ export class Sheet implements UserSheet {
       const ids: Ids = [];
       this.idMatrix.push(ids);
       for (let x = 0; x < auto.numCols + 1; x++) {
-        const id = this.generateId();
+        const id = this._generateId();
         ids.push(id);
         const address = p2a({ y, x });
         this.addressCaches.set(id, address);
@@ -800,14 +755,16 @@ export class Sheet implements UserSheet {
     this.registry.sheetIdsByName[this.name] = this.id;
   }
 
-  public incrementVersion() {
+  /** @internal */
+  private _incrementVersion() {
     this.version++;
     if (this.version >= Number.MAX_SAFE_INTEGER) {
       this.version = 1;
     }
   }
 
-  public xsheetDispatch(otherSheet: Sheet) {
+  /** @internal */
+  private _xsheetDispatch(otherSheet: Sheet) {
     if (otherSheet === this) {
       return;
     }
@@ -821,7 +778,8 @@ export class Sheet implements UserSheet {
     }
   }
 
-  private generateId() {
+  /** @internal */
+  private _generateId() {
     return (this.registry.cellHead++).toString();
   }
 
@@ -842,16 +800,17 @@ export class Sheet implements UserSheet {
     return { y: t, x: l, height, width };
   }
 
+  /** @internal */
   public setTotalSize() {
-    const numCols = this.getNumCols();
-    const numRows = this.getNumRows();
+    const numCols = this.numCols;
+    const numRows = this.numRows;
     const headerW = this.headerWidth;
     const headerH = this.headerHeight;
 
     // Write offsetLeft into column-header cells (y=0, x=1..numCols)
     let accW = 0;
     for (let x = 1; x <= numCols; x++) {
-      const cell = this.getCellByPoint({ y: 0, x }, 'SYSTEM');
+      const cell = this.getCell({ y: 0, x }, { resolution: 'SYSTEM' });
       const w = cell?.width || DEFAULT_WIDTH;
       const colSys = this.registry.systems[this.getId({ y: 0, x })];
       if (colSys != null) {
@@ -865,7 +824,7 @@ export class Sheet implements UserSheet {
     let accH = 0;
     let fullH = 0;
     for (let y = 1; y <= numRows; y++) {
-      const cell = this.getCellByPoint({ y, x: 0 }, 'SYSTEM');
+      const cell = this.getCell({ y, x: 0 }, { resolution: 'SYSTEM' });
       const h = cell?.height || DEFAULT_HEIGHT;
       const rowSys = this.registry.systems[this.getId({ y, x: 0 })];
       if (rowSys != null) {
@@ -880,8 +839,9 @@ export class Sheet implements UserSheet {
     this.fullHeight = headerH + fullH;
   }
 
+  /** @internal */
   public refresh(relocate = false, resize = false): Sheet {
-    this.incrementVersion();
+    this._incrementVersion();
     this.lastChangedTime = this.changedTime;
     this.changedTime = Date.now();
 
@@ -897,11 +857,13 @@ export class Sheet implements UserSheet {
     return this;
   }
 
+  /** @internal */
   public clone(relocate = false): Sheet {
     const copied: Sheet = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     return copied.refresh(relocate);
   }
 
+  /** @internal */
   public getPointById(
     id: Id,
     slideY = 0,
@@ -945,45 +907,35 @@ export class Sheet implements UserSheet {
     return { y: -1, x: -1, absCol, absRow };
   }
 
+  /** @internal */
   public getAddressById(id: Id, slideY = 0, slideX = 0): string | undefined {
     const { y, x, absCol, absRow } = this.getPointById(id, slideY, slideX);
     return grantAddressAbsolute(p2a({ y, x }), absCol, absRow);
   }
 
-  public getAddressesByIds(ids: CellsByIdType) {
-    const addresses: CellsByAddressType = {};
-    Object.keys(ids).forEach((id) => {
-      const cell = ids[id];
-      const address = this.getAddressById(id);
-      if (cell && address) {
-        addresses[address] = cell;
-      }
-    });
-    return addresses;
-  }
-
+  /** @internal */
   public clearAddressCaches() {
     this.addressCaches.clear();
   }
 
+  /** @internal */
+  private _warmAddressCaches() {
+    for (let y = 0; y < this.idMatrix.length; y++) {
+      const row = this.idMatrix[y];
+      for (let x = 0; x < row.length; x++) {
+        this.addressCaches.set(row[x], p2a({ y, x }));
+      }
+    }
+  }
+
+  /** @internal */
   public getId(point: PointType) {
     const { y, x } = point;
     return this.idMatrix[y]?.[x];
   }
 
-  public getIdFormula(point: ExtraPointType): { id: Id | null; formula: string | null } {
-    const { y, x, absX = false, absY = false } = point;
-    const id = this.getId({ y, x });
-    if (id == null) {
-      return { id: null, formula: null };
-    }
-    return {
-      id,
-      formula: `${absX ? '$' : ''}#${id}${absY ? '$' : ''}`,
-    };
-  }
-
-  public getCellByPoint(point: PointType, refEvaluation: RefEvaluation = 'COMPLETE', raise = false) {
+  /** @internal */
+  public getCell(point: PointType, { resolution = 'RESOLVED', raise = false }: SolveOptions = {}) {
     const { y, x } = point;
     if (y === -1 || x === -1) {
       return undefined;
@@ -997,29 +949,21 @@ export class Sheet implements UserSheet {
       return undefined;
     }
     let value = cell.value;
-    if (refEvaluation !== 'SYSTEM' && (cell.formulaEnabled ?? true)) {
-      value = solveFormula({ value, sheet: this, point, raise, refEvaluation, at: id });
+    if (resolution !== 'SYSTEM' && (cell.formulaEnabled ?? true)) {
+      value = solveFormula({ value, sheet: this, point, raise, resolution, at: id });
     }
     return { ...cell, value } as CellType;
   }
 
-  public getCellByAddress(address: Address, refEvaluation: RefEvaluation = 'COMPLETE', raise = false) {
-    const point = a2p(address);
-    return this.getCellByPoint(point, refEvaluation, raise);
-  }
-
-  public getById(id: Id) {
-    return this.registry.data[id];
-  }
-
-  public getNumRows(base = 1) {
+  /** @internal */
+  public get numRows() {
     const { top, bottom } = this.area;
-    return base + bottom - top;
+    return 1 + bottom - top;
   }
 
-  public getNumCols(base = 1) {
+  public get numCols() {
     const { left, right } = this.area;
-    return base + right - left;
+    return 1 + right - left;
   }
 
   public get top() {
@@ -1035,21 +979,15 @@ export class Sheet implements UserSheet {
     return this.area.right;
   }
 
-  getFullRef(ref: Address) {
-    if (this.name) {
-      return `#${this.name}!${ref}`;
-    }
-    return ref;
-  }
-
+  /** @internal */
   public _toValueMatrix({
     area,
     at,
-    refEvaluation = 'COMPLETE',
+    resolution = 'RESOLVED',
     raise = false,
     filter = noFilter,
     asScalar = false,
-  }: ToValueMatrixProps & { at?: Id } = {}) {
+  }: InternalToValueMatrixProps = {}) {
     const { top, left, bottom, right } = area ?? this.area;
     const matrix = createMatrix(bottom - top + 1, right - left + 1);
 
@@ -1060,11 +998,11 @@ export class Sheet implements UserSheet {
         if (at === id) {
           throw new FormulaError('#REF!', 'References are circulating.');
         }
-        const cell = this.getCellByPoint({ y, x }, refEvaluation, raise) ?? {};
+        const cell = this.getCell({ y, x }, { resolution, raise }) ?? {};
         if (filter(cell)) {
           let fieldValue = cell.value;
           if (asScalar) {
-            const policy = this.getPolicyByPoint({ y, x });
+            const policy = this.getPolicy({ y, x });
             fieldValue = policy.toScalar({ value: cell.value, cell, sheet: this, point: { y, x } });
           }
           matrix[y - top][x - left] = fieldValue;
@@ -1074,263 +1012,70 @@ export class Sheet implements UserSheet {
     return matrix;
   }
 
-  public toValueMatrix(props: ToValueMatrixProps = {}) {
-    return this._toValueMatrix(props);
-  }
-
-  public toValueObject({
-    refEvaluation = 'COMPLETE',
-    raise = false,
-    filter = noFilter,
-    addresses,
-    asScalar = false,
-  }: ToValueObjectProps = {}) {
-    const result: { [Address: Address]: any } = {};
-    if (addresses) {
-      for (const addr of addresses) {
-        const point = a2p(addr);
-        const cell = this.getCellByAddress(addr, refEvaluation, raise) ?? {};
-        if (filter(cell)) {
-          let fieldValue = cell.value;
-          if (asScalar) {
-            const policy = this.getPolicyByPoint(point);
-            fieldValue = policy.toScalar({ value: cell.value, cell, sheet: this, point });
-          }
-          result[addr] = fieldValue;
-        }
-      }
-      return result;
-    }
-    const { top, left, bottom, right } = this.area;
-    for (let y = top; y <= bottom; y++) {
-      for (let x = left; x <= right; x++) {
-        const cell = this.getCellByPoint({ y, x }, refEvaluation, raise) ?? {};
-        if (filter(cell)) {
-          let fieldValue = cell.value;
-          if (asScalar) {
-            const policy = this.getPolicyByPoint({ y, x });
-            fieldValue = policy.toScalar({ value: cell.value, cell, sheet: this, point: { y, x } });
-          }
-          result[p2a({ y, x })] = fieldValue;
-        }
-      }
-    }
-    return result;
-  }
-
-  public toValueRows({
-    refEvaluation = 'COMPLETE',
-    raise = false,
-    filter = noFilter,
-    rows,
-    asScalar = false,
-  }: ToValueRowsProps = {}) {
-    const result: CellsByAddressType[] = [];
-    const { top, left, bottom, right } = this.area;
-    const ys = rows ?? Array.from({ length: bottom - top + 1 }, (_, i) => top + i);
-    for (const y of ys) {
-      const row: CellsByAddressType = {};
-      result.push(row);
-      for (let x = left; x <= right; x++) {
-        const cell = this.getCellByPoint({ y, x }, refEvaluation, raise) ?? {};
-        if (filter(cell)) {
-          let fieldValue = cell.value;
-          if (asScalar) {
-            const policy = this.getPolicyByPoint({ y, x });
-            fieldValue = policy.toScalar({ value: cell.value, cell, sheet: this, point: { y, x } });
-          }
-          row[x2c(x)] = fieldValue as any;
-        }
-      }
-    }
-    return result;
-  }
-
-  public toValueCols({
-    refEvaluation = 'COMPLETE',
-    raise = false,
-    filter = noFilter,
-    cols,
-    asScalar = false,
-  }: ToValueColsProps = {}) {
-    const result: CellsByAddressType[] = [];
-    const { top, left, bottom, right } = this.area;
-    const xs = cols
-      ? cols.map((c) => (typeof c === 'string' ? c2x(c) : c))
-      : Array.from({ length: right - left + 1 }, (_, i) => left + i);
-    for (const x of xs) {
-      const col: CellsByAddressType = {};
-      result.push(col);
-      for (let y = top; y <= bottom; y++) {
-        const cell = this.getCellByPoint({ y, x }, refEvaluation, raise) ?? {};
-        if (filter(cell)) {
-          let fieldValue = cell.value;
-          if (asScalar) {
-            const policy = this.getPolicyByPoint({ y, x });
-            fieldValue = policy.toScalar({ value: cell.value, cell, sheet: this, point: { y, x } });
-          }
-          col[y2r(y)] = fieldValue as any;
-        }
-      }
-    }
-    return result;
-  }
-
-  public toCellMatrix({
-    area,
-    refEvaluation = 'SYSTEM',
-    raise = false,
-    filter = noFilter,
-    ignoreFields = [],
-  }: ToCellMatrixProps = {}): (CellType | null)[][] {
-    const { top, left, bottom, right } = area || {
-      top: 1,
-      left: 1,
-      bottom: this.area.bottom,
-      right: this.area.right,
-    };
-    const matrix = createMatrix(bottom - top + 1, right - left + 1);
-    for (let y = top; y <= bottom; y++) {
-      for (let x = left; x <= right; x++) {
-        const cell = this.getCellByPoint({ y, x }, refEvaluation, raise) ?? {};
-        if (filter(cell)) {
-          const filteredCell = filterCellFields(cell, ignoreFields);
-          matrix[y - top][x - left] = filteredCell;
-        }
-      }
-    }
-    return matrix;
-  }
-  public toCellObject({
-    refEvaluation = 'SYSTEM',
-    raise = false,
-    filter = noFilter,
-    addresses,
-    ignoreFields = [],
-  }: ToCellObjectProps = {}) {
-    const result: CellsByAddressType = {};
-    if (addresses) {
-      for (const addr of addresses) {
-        const cell = this.getCellByAddress(addr, refEvaluation, raise) ?? {};
-        if (filter(cell)) {
-          const filteredCell = filterCellFields(cell, ignoreFields);
-          result[addr] = filteredCell;
-        }
-      }
-      return result;
-    }
-    const { top, left, bottom, right } = {
-      top: 1,
-      left: 1,
-      bottom: this.area.bottom,
-      right: this.area.right,
-    };
-    for (let y = top; y <= bottom; y++) {
-      for (let x = left; x <= right; x++) {
-        const cell = this.getCellByPoint({ y, x }, refEvaluation, raise) ?? {};
-        if (filter(cell)) {
-          const filteredCell = filterCellFields(cell, ignoreFields);
-          result[p2a({ y, x })] = filteredCell;
-        }
-      }
-    }
-    return result;
-  }
-  public toCellRows({
-    refEvaluation = 'COMPLETE',
-    raise = false,
-    filter = noFilter,
-    rows,
-    ignoreFields = [],
-  }: ToCellRowsProps = {}) {
-    const result: CellsByAddressType[] = [];
-    const { top, left, bottom, right } = this.area;
-    const ys = rows ?? Array.from({ length: bottom - top + 1 }, (_, i) => top + i);
-    for (const y of ys) {
-      const row: CellsByAddressType = {};
-      result.push(row);
-      for (let x = left; x <= right; x++) {
-        const cell = this.getCellByPoint({ y: y - top, x: x - left }, refEvaluation, raise) ?? {};
-        if (filter(cell)) {
-          const filteredCell = filterCellFields(cell, ignoreFields);
-          row[x2c(x)] = filteredCell;
-        }
-      }
-    }
-    return result;
-  }
-  public toCellCols({
-    refEvaluation = 'COMPLETE',
-    raise = false,
-    filter = noFilter,
-    cols,
-    ignoreFields = [],
-  }: ToCellColsProps = {}) {
-    const result: CellsByAddressType[] = [];
-    const { top, left, bottom, right } = this.area;
-    const xs = cols
-      ? cols.map((c) => (typeof c === 'string' ? c2x(c) : c))
-      : Array.from({ length: right - left + 1 }, (_, i) => left + i);
-    for (const x of xs) {
-      const col: CellsByAddressType = {};
-      result.push(col);
-      for (let y = top; y <= bottom; y++) {
-        const cell = this.getCellByPoint({ y: y - top, x: x - left }, refEvaluation, raise) ?? {};
-        if (filter(cell)) {
-          const filteredCell = filterCellFields(cell, ignoreFields);
-          col[y2r(y)] = filteredCell;
-        }
-      }
-    }
-    return result;
-  }
-
-  private pushHistory(history: HistoryType) {
+  /** @internal */
+  private _pushHistory(history: HistoryType) {
     const book = this.registry;
     const strayedHistories = book.histories.splice(book.historyIndex + 1, book.histories.length);
-    strayedHistories.forEach(this.cleanStrayed.bind(this));
+    strayedHistories.forEach(this._cleanStrayed.bind(this));
     book.histories.push(history);
     book.lastHistory = book.currentHistory = history;
     if (book.histories.length > book.historyLimit) {
       const kickedOut = book.histories.splice(0, 1)[0];
-      this.cleanObsolete(kickedOut);
+      this._cleanObsolete(kickedOut);
     } else {
       book.historyIndex++;
     }
   }
 
-  private cleanObsolete(history: HistoryType) {
+  /** @internal */
+  private _cleanObsolete(history: HistoryType) {
     if (history.operation === 'REMOVE_ROWS' || history.operation === 'REMOVE_COLS') {
       history.deleted.forEach((ids) => {
         ids.forEach((id) => {
-          this.deleteOrphanedId(id);
+          this._deleteOrphanedId(id);
         });
       });
     }
     if (history.operation === 'MOVE') {
       history.moveRelations.forEach((rel) => {
         if (rel.new != null) {
-          this.deleteOrphanedId(rel.new);
+          this._deleteOrphanedId(rel.new);
         }
         if (rel.lost != null) {
-          this.deleteOrphanedId(rel.lost);
+          this._deleteOrphanedId(rel.lost);
         }
       });
     }
   }
 
-  private cleanStrayed(history: HistoryType) {
+  /** @internal */
+  private _cleanStrayed(history: HistoryType) {
+    /**
+     * Cleans up IDs that were created by a history entry that has been discarded
+     * ("strayed") due to a new operation being pushed while the history index was
+     * not at the end (i.e. after undo).
+     *
+     * When the user undoes one or more steps and then performs a new operation,
+     * the previously-redoable future histories are removed from the history stack.
+     * Any cells that were **inserted** by those discarded histories (INSERT_ROWS /
+     * INSERT_COLS) have IDs that are no longer reachable from the id-matrix, so
+     * their registry entries must be deleted to avoid memory leaks.
+     * @internal
+     */
     if (history.operation === 'INSERT_ROWS' || history.operation === 'INSERT_COLS') {
       history.idMatrix.forEach((ids) => {
         ids.forEach((id) => {
-          this.deleteOrphanedId(id);
+          this._deleteOrphanedId(id);
         });
       });
     }
   }
 
-  /** Remove an id from registry.data and registry.dependents entirely. */
-  private deleteOrphanedId(id: Id) {
+  /**
+   * Remove an id from registry.data and registry.dependents entirely.
+   * @internal
+   */
+  private _deleteOrphanedId(id: Id) {
     const sys = this.registry.systems[id];
     sys?.dependencies?.forEach((depId) => {
       this.registry.systems[depId]?.dependents?.delete(id);
@@ -1339,7 +1084,8 @@ export class Sheet implements UserSheet {
     delete this.registry.systems[id];
   }
 
-  private copyCellLayout(cell: CellType | undefined) {
+  /** @internal */
+  private _copyCellLayout(cell: CellType | undefined) {
     if (cell == null) {
       return undefined;
     }
@@ -1378,10 +1124,10 @@ export class Sheet implements UserSheet {
     const moveRelations = this._createMoveRelations(srcSheetRaw, src, this, dst);
     const { diffBefore, diffAfter } = this._moveCells(srcSheetRaw, this, moveRelations, false, operator);
 
-    this.xsheetDispatch(srcSheetRaw);
+    this._xsheetDispatch(srcSheetRaw);
 
     if (historicize) {
-      this.pushHistory({
+      this._pushHistory({
         applyed: true,
         operation: 'MOVE',
         srcSheetId: srcSheetRaw.id,
@@ -1406,12 +1152,13 @@ export class Sheet implements UserSheet {
    *   Entries whose [1] is an existing ID mean the destination cell is displaced/overflowed and
    *   is no longer addressable; on forward pass they are skipped; on reverse pass the ID is written back.
    */
+  /** @internal */
   private _createMoveRelations(srcSheet: Sheet, src: AreaType, dstSheet: Sheet, dst: AreaType): MoveRelations {
     const { top: srcTop, left: srcLeft, bottom: srcBottom, right: srcRight } = src;
     const { top: dstTop, left: dstLeft } = dst;
 
-    const dstNumRows = dstSheet.getNumRows();
-    const dstNumCols = dstSheet.getNumCols();
+    const dstNumRows = dstSheet.numRows;
+    const dstNumCols = dstSheet.numCols;
 
     // Collect visible (non-filtered) rows for src
     const srcVisibleRows: number[] = [];
@@ -1471,7 +1218,7 @@ export class Sheet implements UserSheet {
         let newId: Id | undefined;
         // Vacate: src cell is NOT covered by any dst write in the same sheet overlap
         if (!(srcSheet === dstSheet && dstAddrSet.has(srcAddr))) {
-          newId = srcSheet.generateId();
+          newId = srcSheet._generateId();
         }
 
         let lostId: Id | undefined;
@@ -1491,8 +1238,8 @@ export class Sheet implements UserSheet {
           }
         }
 
-        const srcCell = srcSheet.getCellByPoint({ y: srcY, x: srcX }, 'SYSTEM');
-        const dstCell = isDstInBounds ? dstSheet.getCellByPoint({ y: dstY, x: dstX }, 'SYSTEM') : undefined;
+        const srcCell = srcSheet.getCell({ y: srcY, x: srcX }, { resolution: 'SYSTEM' });
+        const dstCell = isDstInBounds ? dstSheet.getCell({ y: dstY, x: dstX }, { resolution: 'SYSTEM' }) : undefined;
 
         moveRelations.push({
           before: srcCell?.policy,
@@ -1523,6 +1270,7 @@ export class Sheet implements UserSheet {
    * On forward pass: applies policy, collects diffBefore, runs ReferencePreserver.
    * On reverse pass: only moves IDs (caller is responsible for applyDiff(diffBefore)).
    */
+  /** @internal */
   private _moveCells(
     srcSheet: Sheet,
     dstSheet: Sheet,
@@ -1623,7 +1371,7 @@ export class Sheet implements UserSheet {
 
           if (dstId != null) {
             preserver.map[dstId] = srcId;
-            preserver.addTheDependents(srcId, dstId);
+            preserver.collectDependents(srcId, dstId);
           }
         }
       }
@@ -1715,7 +1463,7 @@ export class Sheet implements UserSheet {
     }
     const dstVisibleRows: number[] = [];
     for (let y = topTo; y <= bottomTo; y++) {
-      if (y > this.getNumRows()) {
+      if (y > this.numRows) {
         continue;
       }
       if (!this.isRowFiltered(y)) {
@@ -1732,21 +1480,21 @@ export class Sheet implements UserSheet {
       const fromY = srcVisibleRows[di % srcNumVisibleRows];
       for (let j = 0; j <= dstNumCols - 1; j++) {
         const toX = leftTo + j;
-        if (toX > this.getNumCols()) {
+        if (toX > this.numCols) {
           continue;
         }
         const fromX = leftFrom + (j % srcNumCols);
         const slideY = isXSheet ? 0 : toY - fromY;
         const slideX = isXSheet ? 0 : toX - fromX;
         const cell: CellType = {
-          ...srcSheet.getCellByPoint({ y: fromY, x: fromX }, 'SYSTEM'),
+          ...srcSheet.getCell({ y: fromY, x: fromX }, { resolution: 'SYSTEM' }),
         };
         const dstPoint = { y: toY, x: toX };
-        const dstCell = this.getCellByPoint(dstPoint, 'SYSTEM');
-        const dstPolicy = this.getPolicyByPoint(dstPoint);
+        const dstCell = this.getCell(dstPoint, { resolution: 'SYSTEM' });
+        const dstPolicy = this.getPolicy(dstPoint);
         const srcPoint = { y: fromY, x: fromX };
-        const srcPolicy = srcSheet.getPolicyByPoint(srcPoint);
-        const srcCell = srcSheet.getCellByPoint(srcPoint, 'SYSTEM');
+        const srcPolicy = srcSheet.getPolicy(srcPoint);
+        const srcCell = srcSheet.getCell(srcPoint, { resolution: 'SYSTEM' });
 
         const isSrcWinner = srcPolicy.priority > dstPolicy.priority;
         cell.policy = isSrcWinner ? srcCell?.policy : dstCell?.policy;
@@ -1767,7 +1515,7 @@ export class Sheet implements UserSheet {
         }
         const address = p2a(dstPoint);
         if (onlyValue) {
-          const dstCell = this.getCellByPoint(dstPoint, 'SYSTEM');
+          const dstCell = this.getCell(dstPoint, { resolution: 'SYSTEM' });
           cell.style = dstCell?.style;
           cell.justifyContent = dstCell?.justifyContent;
           cell.alignItems = dstCell?.alignItems;
@@ -1785,14 +1533,15 @@ export class Sheet implements UserSheet {
     });
   }
 
-  public getPolicyByPoint(point: PointType): PolicyType {
-    const cell = this.getCellByPoint(point, 'SYSTEM');
+  public getPolicy(point: PointType): PolicyType {
+    const cell = this.getCell(point, { resolution: 'SYSTEM' });
     if (cell?.policy == null) {
       return this.defaultPolicy;
     }
     return this.policies[cell.policy] ?? this.defaultPolicy;
   }
 
+  /** @internal */
   private _update({
     diff,
     partial = true,
@@ -1920,7 +1669,7 @@ export class Sheet implements UserSheet {
     });
 
     if (historicize) {
-      this.pushHistory({
+      this._pushHistory({
         applyed: true,
         operation: 'UPDATE',
         srcSheetId: this.id,
@@ -1935,6 +1684,7 @@ export class Sheet implements UserSheet {
     return this.refresh(false, resized);
   }
 
+  /** @internal */
   public writeRawCellMatrix({
     point,
     matrix,
@@ -1979,7 +1729,7 @@ export class Sheet implements UserSheet {
         const parsed = this.parse(dstPoint, newCell.value ?? '');
         parsed.style = { ...newCell.style, ...parsed.style };
         if (onlyValue) {
-          const currentCell = this.getCellByPoint(dstPoint, 'SYSTEM');
+          const currentCell = this.getCell(dstPoint, { resolution: 'SYSTEM' });
           parsed.style = currentCell?.style;
           parsed.justifyContent = currentCell?.justifyContent;
           parsed.alignItems = currentCell?.alignItems;
@@ -2025,7 +1775,7 @@ export class Sheet implements UserSheet {
   }) {
     const { point, value } = props;
     const parsed = this.parse(point, value ?? '');
-    const current = this.getCellByPoint(point, 'RAW');
+    const current = this.getCell(point, { resolution: 'RAW' });
     if ((current?.value ?? null) === parsed.value) {
       // no change (treat undefined and null as equivalent empty values)
       return this;
@@ -2060,20 +1810,20 @@ export class Sheet implements UserSheet {
     undoReflection?: StorePatchType;
     redoReflection?: StorePatchType;
   }) {
-    if (this.maxNumRows !== -1 && this.getNumRows() + numRows > this.maxNumRows) {
+    if (this.maxNumRows !== -1 && this.numRows + numRows > this.maxNumRows) {
       console.error(`Rows are limited to ${this.maxNumRows}.`);
       return this;
     }
-    const numCols = this.getNumCols(1);
+    const numCols = this.numCols;
     const rows: IdMatrix = [];
     const changedTime = Date.now();
     for (let i = 0; i < numRows; i++) {
       const row: Ids = [];
       for (let j = 0; j <= numCols; j++) {
-        const id = this.generateId();
+        const id = this._generateId();
         row.push(id);
-        const cell = this.getCellByPoint({ y: baseY, x: j }, 'SYSTEM');
-        const copied = this.copyCellLayout(cell);
+        const cell = this.getCell({ y: baseY, x: j }, { resolution: 'SYSTEM' });
+        const copied = this._copyCellLayout(cell);
         this.registry.data[id] = { ...copied };
         this.registry.systems[id] = { id, sheetId: this.id, changedTime };
       }
@@ -2082,7 +1832,7 @@ export class Sheet implements UserSheet {
     this.idMatrix.splice(y, 0, ...rows);
     this.area.bottom += numRows;
 
-    this.pushHistory({
+    this._pushHistory({
       applyed: true,
       operation: 'INSERT_ROWS',
       srcSheetId: this.id,
@@ -2126,7 +1876,7 @@ export class Sheet implements UserSheet {
     undoReflection?: StorePatchType;
     redoReflection?: StorePatchType;
   }) {
-    if (this.minNumRows !== -1 && this.getNumRows() - numRows < this.minNumRows) {
+    if (this.minNumRows !== -1 && this.numRows - numRows < this.minNumRows) {
       console.error(`At least ${this.minNumRows} row(s) are required.`);
       return this;
     }
@@ -2136,17 +1886,17 @@ export class Sheet implements UserSheet {
     const backup = this.idMatrix.map((ids) => [...ids]); // backup before deletion
 
     for (let yi = y; yi < y + numRows; yi++) {
-      const cell = this.getCellByPoint({ y: yi, x: 0 }, 'SYSTEM');
+      const cell = this.getCell({ y: yi, x: 0 }, { resolution: 'SYSTEM' });
       if (operator === 'USER' && operation.hasOperation(cell?.prevention, operation.RemoveRows)) {
         console.warn(`Cannot delete row ${yi}.`);
         return this;
       }
-      for (let xi = 1; xi <= this.getNumCols(); xi++) {
+      for (let xi = 1; xi <= this.numCols; xi++) {
         const id = this.getId({ y: yi, x: xi });
         if (id == null) {
           continue;
         }
-        preserver.addTheDependents(id);
+        preserver.collectDependents(id);
         preserver.map[id] = this.getId({ y: yi + numRows, x: xi });
       }
       ys.unshift(yi);
@@ -2160,7 +1910,7 @@ export class Sheet implements UserSheet {
 
     const diffBefore = preserver.resolveDependents('removeRows');
 
-    this.pushHistory({
+    this._pushHistory({
       applyed: true,
       operation: 'REMOVE_ROWS',
       srcSheetId: this.id,
@@ -2208,20 +1958,20 @@ export class Sheet implements UserSheet {
     undoReflection?: StorePatchType;
     redoReflection?: StorePatchType;
   }) {
-    if (this.maxNumCols !== -1 && this.getNumCols() + numCols > this.maxNumCols) {
+    if (this.maxNumCols !== -1 && this.numCols + numCols > this.maxNumCols) {
       console.error(`Columns are limited to ${this.maxNumCols}.`);
       return this;
     }
-    const numRows = this.getNumRows(1);
+    const numRows = this.numRows;
     const rows: IdMatrix = [];
     const changedTime = Date.now();
     for (let i = 0; i <= numRows; i++) {
       const row: Ids = [];
       for (let j = 0; j < numCols; j++) {
-        const id = this.generateId();
+        const id = this._generateId();
         row.push(id);
-        const cell = this.getCellByPoint({ y: i, x: baseX }, 'SYSTEM');
-        const copied = this.copyCellLayout(cell);
+        const cell = this.getCell({ y: i, x: baseX }, { resolution: 'SYSTEM' });
+        const copied = this._copyCellLayout(cell);
         this.idMatrix[i].splice(x, 0, id);
         this.registry.data[id] = { ...copied };
         this.registry.systems[id] = { id, sheetId: this.id, changedTime };
@@ -2230,7 +1980,7 @@ export class Sheet implements UserSheet {
     }
     this.area.right += numCols;
 
-    this.pushHistory({
+    this._pushHistory({
       applyed: true,
       operation: 'INSERT_COLS',
       srcSheetId: this.id,
@@ -2274,7 +2024,7 @@ export class Sheet implements UserSheet {
     undoReflection?: StorePatchType;
     redoReflection?: StorePatchType;
   }) {
-    if (this.minNumCols !== -1 && this.getNumCols() - numCols < this.minNumCols) {
+    if (this.minNumCols !== -1 && this.numCols - numCols < this.minNumCols) {
       console.error(`At least ${this.minNumCols} column(s) are required.`);
       return this;
     }
@@ -2284,17 +2034,17 @@ export class Sheet implements UserSheet {
     const backup = this.idMatrix.map((ids) => [...ids]); // backup before deletion
 
     for (let xi = x; xi < x + numCols; xi++) {
-      const cell = this.getCellByPoint({ y: 0, x: xi }, 'SYSTEM');
+      const cell = this.getCell({ y: 0, x: xi }, { resolution: 'SYSTEM' });
       if (operator === 'USER' && operation.hasOperation(cell?.prevention, operation.RemoveCols)) {
         console.warn(`Cannot delete col ${xi}.`);
         continue;
       }
-      for (let yi = 1; yi <= this.getNumRows(); yi++) {
+      for (let yi = 1; yi <= this.numRows; yi++) {
         const id = this.getId({ y: yi, x: xi });
         if (id == null) {
           continue;
         }
-        preserver.addTheDependents(id);
+        preserver.collectDependents(id);
         preserver.map[id] = this.getId({ y: yi, x: xi + numCols });
       }
       xs.unshift(xi);
@@ -2312,7 +2062,7 @@ export class Sheet implements UserSheet {
     this.area.right -= xs.length;
     const diffBefore = preserver.resolveDependents('removeCols');
 
-    this.pushHistory({
+    this._pushHistory({
       applyed: true,
       operation: 'REMOVE_COLS',
       srcSheetId: this.id,
@@ -2338,80 +2088,80 @@ export class Sheet implements UserSheet {
     }
     return this.refresh(true, true);
   }
-  public getHistories() {
+  /** @internal */
+  public histories() {
     return [...this.registry.histories];
   }
-  public getHistoryIndex() {
+  /** @internal */
+  public historyIndex() {
     return this.registry.historyIndex;
   }
-  public getHistorySize() {
+  /** @internal */
+  public historySize() {
     return this.registry.histories.length;
   }
+  /** @internal */
   public getHistoryLimit() {
     return this.registry.historyLimit;
   }
 
-  public getArea(): AreaType {
-    return { ...this.area };
-  }
-
+  /** @internal */
   public parse(point: PointType, value: any): CellType {
-    const cell = this.getCellByPoint(point, 'SYSTEM') ?? {};
-    const policy = this.getPolicyByPoint(point);
+    const cell = this.getCell(point, { resolution: 'SYSTEM' }) ?? {};
+    const policy = this.getPolicy(point);
     return policy.deserializeValue(value, cell);
   }
 
+  /** @internal */
   public render(props: RenderProps) {
     const { point, sync } = props;
-    const policy = this.getPolicyByPoint(point);
+    const policy = this.getPolicy(point);
     return policy.render({ sheet: this, point, sync });
   }
 
-  public stringify({
+  public getSerializedValue({
     point,
     cell,
-    refEvaluation = 'COMPLETE',
+    resolution = 'RESOLVED',
   }: {
     point: PointType;
     cell?: CellType;
-    refEvaluation?: RefEvaluation;
+    resolution?: Resolution;
   }) {
     if (cell == null) {
       // Use raw cell from registry so cell.value is the original formula string.
-      // getCellByPoint(raise=false) would replace cell.value with undefined, losing the formula.
+      // getCell(raise=false) would replace cell.value with undefined, losing the formula.
       const id = this.idMatrix[point.y]?.[point.x];
       cell = id != null ? this.registry.data[id] : undefined;
     }
     if (cell == null) {
       return '';
     }
-    const policy = this.getPolicyByPoint(point);
-    const s = policy.serialize({ value: cell.value, cell, sheet: this, point });
+    const policy = this.getPolicy(point);
+    const raw = cell.value;
 
-    if (s[0] === '=') {
-      if (refEvaluation === 'SYSTEM') {
-        return s; // do not evaluate system references
+    if (typeof raw === 'string' && raw[0] === '=') {
+      if (resolution === 'SYSTEM') {
+        return raw; // do not evaluate system references
       }
-      if (refEvaluation === 'RAW') {
-        const lexer = new Lexer(s.substring(1));
+      if (resolution === 'RAW') {
+        const lexer = new Lexer(raw.substring(1));
         lexer.tokenize();
         return '=' + lexer.display({ sheet: this });
       }
       try {
         const id = this.idMatrix[point.y]?.[point.x];
-        const solved = solveFormula({ value: s, sheet: this, point, raise: true, refEvaluation, at: id });
+        const solved = solveFormula({ value: raw, sheet: this, point, raise: true, resolution, at: id });
         const value = stripSheet({ value: solved, raise: false });
         return policy.serialize({ value, cell, sheet: this, point });
       } catch (e) {
-        if (FormulaError.is(e)) {
-          return e.code;
-        }
-        return '';
+        return policy.serialize({ value: e, cell, sheet: this, point });
       }
     }
-    return s;
+    return policy.serialize({ value: raw, cell, sheet: this, point });
   }
 
+  /** @internal */
   public trim(area: AreaType): Sheet {
     const copied: Sheet = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     copied.area = area;
@@ -2422,6 +2172,7 @@ export class Sheet implements UserSheet {
 
   /**
    * Solve all formulas in this sheet and return a 2D matrix of resolved values.
+   * @internal
    */
   public solve({ raise = false, at }: { raise?: boolean; at: Id }): any[][] {
     return solveSheet({ sheet: this, raise, at });
@@ -2429,16 +2180,18 @@ export class Sheet implements UserSheet {
 
   /**
    * Collapse this sheet to a scalar (top-left cell value).
+   * @internal
    */
   public strip({ raise = false }: { raise?: boolean }): any {
     return stripSheet({ value: this, raise });
   }
 
-  private applyDiff(diff: CellsByIdType = {}, partial = true) {
+  /** @internal */
+  private _applyDiff(diff: CellsByIdType = {}, partial = true) {
     const ids = Object.keys(diff);
     ids.forEach((id) => {
       const cell = diff[id] ?? {};
-      const merged = partial ? { ...this.getById(id), ...cell } : { ...cell };
+      const merged = partial ? { ...this.registry.data[id], ...cell } : { ...cell };
       const sys = this.registry.systems[id];
       if (sys != null) {
         sys.changedTime = Date.now();
@@ -2447,6 +2200,7 @@ export class Sheet implements UserSheet {
       this.clearDependencies(id);
       this.processFormula(merged.value, { dependency: id });
     });
+    this._warmAddressCaches();
     const addresses: Address[] = [];
     for (const id of ids) {
       const address = this.getAddressById(id);
@@ -2474,11 +2228,11 @@ export class Sheet implements UserSheet {
 
     switch (history.operation) {
       case 'UPDATE':
-        dstSheet.applyDiff(history.diffBefore, false);
+        dstSheet._applyDiff(history.diffBefore, false);
         break;
       case 'INSERT_ROWS': {
         if (history.diffBefore) {
-          dstSheet.applyDiff(history.diffBefore, false);
+          dstSheet._applyDiff(history.diffBefore, false);
         }
         const { rows } = matrixShape({ matrix: history.idMatrix });
         dstSheet.idMatrix.splice(history.y, rows);
@@ -2487,7 +2241,7 @@ export class Sheet implements UserSheet {
       }
       case 'INSERT_COLS': {
         if (history.diffBefore) {
-          dstSheet.applyDiff(history.diffBefore, false);
+          dstSheet._applyDiff(history.diffBefore, false);
         }
         const { cols } = matrixShape({ matrix: history.idMatrix });
         dstSheet.idMatrix.forEach((row) => {
@@ -2502,7 +2256,7 @@ export class Sheet implements UserSheet {
           dstSheet.idMatrix.splice(y, 0, deleted[i]);
         });
         dstSheet.area.bottom += ys.length;
-        this.applyDiff(history.diffBefore, false);
+        this._applyDiff(history.diffBefore, false);
         break;
       }
       case 'REMOVE_COLS': {
@@ -2513,7 +2267,7 @@ export class Sheet implements UserSheet {
           }
         });
         dstSheet.area.right += xs.length;
-        this.applyDiff(history.diffBefore, false);
+        this._applyDiff(history.diffBefore, false);
         break;
       }
       case 'MOVE': {
@@ -2521,7 +2275,7 @@ export class Sheet implements UserSheet {
           this._moveCells(srcSheet, dstSheet, history.moveRelations, true);
         }
         const movedAddresses = dstSheet.lastChangedAddresses;
-        dstSheet.applyDiff(history.diffBefore, false);
+        dstSheet._applyDiff(history.diffBefore, false);
         dstSheet.lastChangedAddresses = [...new Set([...movedAddresses, ...dstSheet.lastChangedAddresses])];
         break;
       }
@@ -2537,7 +2291,7 @@ export class Sheet implements UserSheet {
       dstSheet.setTotalSize();
     }
     if (history.operation === 'MOVE' && srcSheet && srcSheet !== dstSheet) {
-      this.xsheetDispatch(srcSheet);
+      this._xsheetDispatch(srcSheet);
     }
     return {
       history,
@@ -2564,11 +2318,11 @@ export class Sheet implements UserSheet {
 
     switch (history.operation) {
       case 'UPDATE':
-        dstSheet.applyDiff(history.diffAfter, false);
+        dstSheet._applyDiff(history.diffAfter, false);
         break;
       case 'INSERT_ROWS': {
         if (history.diffAfter) {
-          dstSheet.applyDiff(history.diffAfter, false);
+          dstSheet._applyDiff(history.diffAfter, false);
         }
         const { rows } = matrixShape({ matrix: history.idMatrix });
         dstSheet.idMatrix.splice(history.y, 0, ...history.idMatrix);
@@ -2577,7 +2331,7 @@ export class Sheet implements UserSheet {
       }
       case 'INSERT_COLS': {
         if (history.diffAfter) {
-          dstSheet.applyDiff(history.diffAfter, false);
+          dstSheet._applyDiff(history.diffAfter, false);
         }
         const { cols } = matrixShape({ matrix: history.idMatrix });
         dstSheet.idMatrix.map((row, i) => {
@@ -2624,7 +2378,7 @@ export class Sheet implements UserSheet {
       dstSheet.setTotalSize();
     }
     if (history.operation === 'MOVE' && srcSheet && srcSheet !== dstSheet) {
-      this.xsheetDispatch(srcSheet);
+      this._xsheetDispatch(srcSheet);
     }
     return {
       history,
@@ -2633,21 +2387,12 @@ export class Sheet implements UserSheet {
       },
     };
   }
-  public getFunction(fname: string) {
-    return this.functions[fname];
+  /** @internal */
+  public getFunctionByName(name: string) {
+    return this.registry.functions[name];
   }
 
-  public getLabel(label: string | undefined, point: PointType, n: number): string | null {
-    if (label != null) {
-      return label;
-    }
-    const policy = this.getPolicyByPoint(point);
-    return (point.x === 0 ? policy.renderRowHeaderLabel(n) : policy.renderColHeaderLabel(n)) ?? null;
-  }
-  public getBase() {
-    return this;
-  }
-
+  /** @internal */
   public clearDependencies(id: Id): void {
     const sys = this.registry.systems[id];
     sys?.dependencies?.forEach((depId) => {
@@ -2658,7 +2403,8 @@ export class Sheet implements UserSheet {
     }
   }
 
-  public addDependents(id: Id, dependency: string): void {
+  /** @internal */
+  public addDependency(id: Id, dependency: Id): void {
     const sys = ensureSys(this.registry, id);
     if (sys.dependents == null) {
       sys.dependents = new Set();
@@ -2671,16 +2417,19 @@ export class Sheet implements UserSheet {
     depSys.dependencies.add(id);
   }
 
+  /** @internal */
   public getSolvedCache(point: PointType): [boolean, any] {
     const id = this.getId(point);
     return [this.registry.solvedCaches.has(id), this.registry.solvedCaches.get(id)];
   }
+  /** @internal */
   public setSolvingCache(point: PointType) {
     const id = this.getId(point);
     this.registry.solvedCaches.set(id, SOLVING);
     ensureSys(this.registry, id, { tmpAsyncCaches: {} });
   }
 
+  /** @internal */
   public finishSolvedCache(point: PointType, value: any) {
     if (SOLVING.is(value)) {
       return;
@@ -2706,6 +2455,7 @@ export class Sheet implements UserSheet {
     }
   }
 
+  /** @internal */
   public clearSolvedCaches() {
     this.registry.solvedCaches.clear();
     for (const id of this.registry.lastSpilledTargetIds) {
@@ -2726,6 +2476,7 @@ export class Sheet implements UserSheet {
    * @param origin  The anchor cell that produced the spill.
    * @param matrix  The 2D array of resolved scalar values.
    * @returns The top-left value (matrix[0][0]).
+   * @internal
    */
   public spill(origin: PointType, matrix: any[][]): any {
     const numRows = matrix.length;
@@ -2749,7 +2500,7 @@ export class Sheet implements UserSheet {
           console.warn(`Spill target ${address} is out of bounds.`);
           continue;
         }
-        const targetCell = this.getById(targetId);
+        const targetCell = this.registry.data[targetId];
         if (targetCell?.value != null && targetCell.value !== '') {
           throw new FormulaError(
             '#REF!',
@@ -2796,12 +2547,14 @@ export class Sheet implements UserSheet {
     return matrix[0][0];
   }
 
+  /** @internal */
   public sheetPrefix(omit = false) {
     if (omit) {
       return '';
     }
-    return getSheetPrefix(this.name);
+    return toSheetPrefix(this.name);
   }
+  /** @internal */
   public rangeToArea(range: string) {
     const cells = range.split(':');
     let [start, end] = cells;
@@ -2832,7 +2585,7 @@ export class Sheet implements UserSheet {
   }
 
   get shape() {
-    return areaShape({ base: 1, ...this.area });
+    return areaShape(this.area);
   }
   get hasSingleCell() {
     const shape = this.shape;
@@ -2842,15 +2595,3 @@ export class Sheet implements UserSheet {
     return this.version;
   }
 }
-
-export const escapeSheetName = (name: string): string => {
-  const escaped = name.replace(/'/g, "''");
-  return `'${escaped}'`;
-};
-
-export const getSheetPrefix = (name?: string): string => {
-  if (name) {
-    return `${escapeSheetName(name)}!`;
-  }
-  return '';
-};

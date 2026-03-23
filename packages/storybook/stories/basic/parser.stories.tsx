@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { CellType, buildInitialCells, GridSheet, Policy, RenderProps, useBook } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { CellType, buildInitialCells, GridSheet, Policy, RenderProps } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 import { Debugger } from '@gridsheet/react-dev';
 
 const meta: Meta = {
@@ -16,8 +16,7 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const ParseAsListSheet = () => {
-  const book = useBook({
-    additionalFunctions: allFunctions,
+  const book = useSpellbook({
     policies: {
       list: new Policy({
         mixins: [
