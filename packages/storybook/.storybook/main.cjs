@@ -11,7 +11,9 @@ module.exports = {
   ],
   framework: {
     name: '@storybook/react-vite',
-    options: {},
+    options: {
+      strictMode: true,
+    },
   },
   managerHead: (entry) => [
     ...entry,

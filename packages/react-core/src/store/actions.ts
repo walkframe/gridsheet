@@ -37,9 +37,34 @@ export const reducer = <T>(store: StoreType, action: { type: number; value: T })
     return store;
   }
 
+  // React StrictMode calls reducers twice per dispatch to detect side effects.
+  // Since Sheet is a mutable object, the second call re-applies operations (double undo, etc.).
+  // Guard: React passes the SAME action object reference to both calls, so we use object identity
+  // to distinguish a StrictMode second-call (same reference) from a new dispatch (new reference).
+  // Using a Map allows multiple batched dispatches to each have their own cached result,
+  // preventing the single-slot cache from being overwritten when actions are processed together.
+  const registry = store.sheetReactive.current?.registry;
+  if (registry?._strictModeCache?.has(action)) {
+    const cached = registry._strictModeCache.get(action) as StoreType;
+    registry._strictModeCache.delete(action);
+    return cached;
+  }
+
   const { callback, ...newStore } = act.reduce(store, action.value);
   callback?.(newStore);
-  return { ...store, ...newStore };
+  const result = { ...store, ...newStore };
+
+  if (registry) {
+    if (!registry._strictModeCache) {
+      registry._strictModeCache = new Map();
+    }
+    registry._strictModeCache.set(action, result);
+    queueMicrotask(() => {
+      registry._strictModeCache?.delete(action);
+    });
+  }
+
+  return result;
 };
 
 export class CoreAction<T> {

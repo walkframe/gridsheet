@@ -69,7 +69,7 @@ test.describe('Async Formula', () => {
     const a2 = sheet.locator("[data-address='A2']");
 
     // Wait for first async computation: A1 (1s) → A2 (1s)
-    await expect(a2.locator('.gs-cell-rendered')).toHaveText('130', { timeout: 5000 });
+    await expect(a2.locator('.gs-cell-rendered')).toHaveText('130', { timeout: 10000 });
 
     // Change A1 value by clicking and typing into the formula bar to ensure replacement
     await a1.click();

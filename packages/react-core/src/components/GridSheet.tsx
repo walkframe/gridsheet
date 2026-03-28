@@ -63,12 +63,17 @@ export function GridSheet({
   const book = initialBook ?? internalBook;
   const { registry } = book;
 
-  // useRef to manage sheetId and avoid Strict Mode issues
-  const sheetIdRef = useRef<number | null>(null);
-  if (sheetIdRef.current === null) {
-    sheetIdRef.current = ++registry.sheetHead;
-  }
-  const sheetId = sheetIdRef.current;
+  const [sheetId] = useState<number>(() => {
+    if (sheetName) {
+      // Named sheets: use sheetName as stable dedup key to prevent double-increment in Strict Mode.
+      if (!registry._componentSheetIds.has(sheetName)) {
+        registry._componentSheetIds.set(sheetName, ++registry.sheetHead);
+      }
+      return registry._componentSheetIds.get(sheetName)!;
+    }
+    // Unnamed sheets: accept double-increment in Strict Mode (IDs may skip, but remain unique).
+    return ++registry.sheetHead;
+  });
 
   // Initialize sheetReactive
   const sheetReactive = useRef<Sheet | null>(null);

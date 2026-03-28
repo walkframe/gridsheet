@@ -68,6 +68,12 @@ export class Registry {
   historyLimit: number = DEFAULT_HISTORY_LIMIT;
   lastHistory?: HistoryType;
   currentHistory?: HistoryType;
+  /** StrictMode guard: Map from action object (identity) to cached reducer result.
+   * Using a Map instead of a single slot allows multiple batched dispatches to coexist. */
+  _strictModeCache?: Map<unknown, unknown>;
+  /** StrictMode guard: Map from useId component key to assigned sheetId.
+   * Prevents double-increment of sheetHead when useState initializer runs twice in Strict Mode. */
+  _componentSheetIds: Map<string, number> = new Map();
   ready = false;
   functions: FunctionMapping = {};
   policies: { [policyName: string]: PolicyType | null } = {};
