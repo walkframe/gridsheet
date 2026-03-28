@@ -75,6 +75,7 @@ export const solveFormula = ({ value, sheet, point, raise = true, resolution = '
     // but routing through stripSheet would make the call graph harder to follow and reason about.
     solved = solveSheet({ sheet: solved, raise, at })[0]?.[0];
   }
+  // 'EVALUATED' resolution: keep Sheet objects intact (range formulas return Sheet, not scalar).
 
   if (Spilling.is(solved)) {
     solved = sheet.spill(point, solved.matrix);

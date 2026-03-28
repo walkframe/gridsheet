@@ -1,16 +1,52 @@
 import { type FC, useContext } from 'react';
 import { Context } from '../store';
-import { setRowMenu, insertRowsAbove, insertRowsBelow, removeRows } from '../store/actions';
+import { setRowMenu } from '../store/actions';
 import { Fixed } from './Fixed';
-import * as prevention from '../lib/operation';
-import { y2r } from '../lib/coords';
-import { between } from '../lib/spatial';
-import { copier, cutter, paster, searcher } from '../store/dispatchers';
 import { focus } from '../lib/dom';
+import type { RowMenuItemDescriptor } from '../lib/menu';
+import { buildMenuContext } from '../lib/menu';
+import { MenuItem, MenuDivider } from './MenuItem';
+
+function renderRowDescriptor(
+  descriptor: RowMenuItemDescriptor,
+  ctx: ReturnType<typeof buildMenuContext>,
+  y: number,
+  index: number,
+  close: () => void,
+) {
+  if (descriptor.type === 'divider') {
+    return <MenuDivider key={index} />;
+  }
+  if (descriptor.type === 'component') {
+    return null;
+  }
+  const visible = !descriptor.visible || descriptor.visible(ctx, y);
+  if (!visible) {
+    return null;
+  }
+  const disabled = descriptor.disabled?.(ctx, y) ?? false;
+  const label = typeof descriptor.label === 'function' ? descriptor.label(ctx, y) : descriptor.label;
+  const shortcuts = typeof descriptor.shortcuts === 'function' ? descriptor.shortcuts(ctx, y) : descriptor.shortcuts;
+  const checked = descriptor.checked != null ? descriptor.checked(ctx, y) : undefined;
+  return (
+    <MenuItem
+      key={index}
+      label={label}
+      shortcuts={shortcuts}
+      disabled={disabled}
+      checked={checked}
+      testId={descriptor.id ? `${descriptor.id}-item` : undefined}
+      onClick={() => {
+        descriptor.onClick(ctx, y);
+        close();
+      }}
+    />
+  );
+}
 
 export const RowMenu: FC = () => {
   const { store, dispatch } = useContext(Context);
-  const { rowMenuState, sheetReactive: sheetRef, editorRef, selectingZone } = store;
+  const { rowMenuState, sheetReactive: sheetRef, editorRef, rowMenu } = store;
   const sheet = sheetRef.current;
 
   const y = rowMenuState?.y;
@@ -25,25 +61,7 @@ export const RowMenu: FC = () => {
     return null;
   }
 
-  const rowCell = sheet.getCell({ y, x: 0 }, { resolution: 'SYSTEM' });
-
-  // Calculate the number of selected rows that include the current row
-  const selRowStart = Math.min(selectingZone.startY, selectingZone.endY);
-  const selRowEnd = Math.max(selectingZone.startY, selectingZone.endY);
-  const isFullRowSelection = selectingZone.startX === 1 && selectingZone.endX === sheet.numCols;
-  const numSelectedRows =
-    isFullRowSelection && between({ start: selectingZone.startY, end: selectingZone.endY }, y)
-      ? selRowEnd - selRowStart + 1
-      : 1;
-
-  const insertDisabled = sheet.maxNumRows !== -1 && sheet.numRows + numSelectedRows > sheet.maxNumRows;
-  const insertAboveDisabled =
-    insertDisabled || prevention.hasOperation(rowCell?.prevention, prevention.InsertRowsAbove);
-  const insertBelowDisabled =
-    insertDisabled || prevention.hasOperation(rowCell?.prevention, prevention.InsertRowsBelow);
-  const removeDisabled =
-    (sheet.minNumRows !== -1 && sheet.numRows - numSelectedRows < sheet.minNumRows) ||
-    prevention.hasOperation(rowCell?.prevention, prevention.RemoveRows);
+  const ctx = buildMenuContext(store, dispatch, handleClose);
 
   return (
     <Fixed
@@ -56,110 +74,7 @@ export const RowMenu: FC = () => {
     >
       <div className="gs-row-menu" style={{ top: position.y, left: position.x }} onClick={(e) => e.stopPropagation()}>
         <ul className="gs-menu-items">
-          <li
-            className="gs-menu-item gs-enabled"
-            onClick={async () => {
-              await cutter({ store, dispatch });
-              dispatch(setRowMenu(null));
-            }}
-          >
-            <div className="gs-menu-name">Cut</div>
-            <div className="gs-menu-shortcut">
-              <span className="gs-menu-underline">X</span>
-            </div>
-          </li>
-          <li
-            className="gs-menu-item gs-enabled"
-            onClick={async () => {
-              await copier({ store, dispatch });
-              dispatch(setRowMenu(null));
-            }}
-          >
-            <div className="gs-menu-name">Copy</div>
-            <div className="gs-menu-shortcut">
-              <span className="gs-menu-underline">C</span>
-            </div>
-          </li>
-          <li
-            className="gs-menu-item gs-enabled"
-            onClick={async () => {
-              await paster({ store, dispatch }, false);
-              dispatch(setRowMenu(null));
-            }}
-          >
-            <div className="gs-menu-name">Paste</div>
-            <div className="gs-menu-shortcut">
-              <span className="gs-menu-underline">V</span>
-            </div>
-          </li>
-          <li
-            className="gs-menu-item gs-enabled"
-            onClick={async () => {
-              await paster({ store, dispatch }, true);
-              dispatch(setRowMenu(null));
-            }}
-          >
-            <div className="gs-menu-name">Paste only value</div>
-            <div className="gs-menu-shortcut">
-              Shift + <span className="gs-menu-underline">V</span>
-            </div>
-          </li>
-          <li className="gs-menu-divider" />
-          <li
-            className={`gs-menu-item ${insertAboveDisabled ? 'gs-disabled' : 'gs-enabled'}`}
-            onClick={() => {
-              if (!insertAboveDisabled) {
-                dispatch(insertRowsAbove({ numRows: numSelectedRows, y, operator: 'USER' }));
-                dispatch(setRowMenu(null));
-                focus(editorRef.current);
-              }
-            }}
-          >
-            <div className="gs-menu-name">
-              Insert {numSelectedRows} row{numSelectedRows > 1 ? 's' : ''} above
-            </div>
-          </li>
-          <li
-            className={`gs-menu-item ${insertBelowDisabled ? 'gs-disabled' : 'gs-enabled'}`}
-            onClick={() => {
-              if (!insertBelowDisabled) {
-                dispatch(insertRowsBelow({ numRows: numSelectedRows, y, operator: 'USER' }));
-                dispatch(setRowMenu(null));
-                focus(editorRef.current);
-              }
-            }}
-          >
-            <div className="gs-menu-name">
-              Insert {numSelectedRows} row{numSelectedRows > 1 ? 's' : ''} below
-            </div>
-          </li>
-          <li
-            className={`gs-menu-item ${removeDisabled ? 'gs-disabled' : 'gs-enabled'}`}
-            onClick={() => {
-              if (!removeDisabled) {
-                dispatch(removeRows({ numRows: numSelectedRows, y, operator: 'USER' }));
-                dispatch(setRowMenu(null));
-                focus(editorRef.current);
-              }
-            }}
-          >
-            <div className="gs-menu-name">
-              Remove {numSelectedRows} row{numSelectedRows > 1 ? 's' : ''}
-            </div>
-          </li>
-          <li className="gs-menu-divider" />
-          <li
-            className="gs-menu-item gs-enabled"
-            onClick={async () => {
-              await searcher({ store, dispatch });
-              dispatch(setRowMenu(null));
-            }}
-          >
-            <div className="gs-menu-name">Search</div>
-            <div className="gs-menu-shortcut">
-              <span className="gs-menu-underline">F</span>
-            </div>
-          </li>
+          {rowMenu.map((descriptor, index) => renderRowDescriptor(descriptor, ctx, y, index, handleClose))}
         </ul>
       </div>
     </Fixed>

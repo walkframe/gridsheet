@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import {
   GridSheet,
   buildInitialCells,
-  useConnector,
+  useSheetRef,
   HistoryType,
   sheet2csv,
   FormulaError,
@@ -40,8 +40,8 @@ const SheetTSVComponent: React.FC = () => {
   const [ignoreError, setIgnoreError] = React.useState<boolean>(false);
   const [trailingEmptyRowsOmitted, setTrailingEmptyRowsOmitted] = React.useState<boolean>(true);
   const [histories, setHistories] = React.useState<HistoryType[]>([]);
-  const connector = useConnector();
-  const sheet = connector.current?.sheetManager.sheet;
+  const sheetRef = useSheetRef();
+  const sheet = sheetRef.current?.sheet;
 
   const getter = (sheet: UserSheet, point: PointType) => {
     const value = sheet.getCell(point, { resolution: evaluates ? 'RESOLVED' : 'RAW' })?.value ?? '';
@@ -72,7 +72,7 @@ const SheetTSVComponent: React.FC = () => {
       <div>
         <div style={{ display: 'flex', alignItems: 'stretch' }}>
           <GridSheet
-            connector={connector}
+            sheetRef={sheetRef}
             book={book}
             initialCells={buildInitialCells({
               matrices: {

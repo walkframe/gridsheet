@@ -44,11 +44,11 @@ export type ScalarProps<T = any> = {
 };
 
 export type RenderProps<T = any> = {
-  value?: T;
+  value: T;
   cell?: CellType<T>;
   sheet: Sheet;
   point: PointType;
-  sync?: (sheet: UserSheet) => void;
+  apply?: (sheet: UserSheet) => void;
 };
 
 export type SerializeProps<T = any> = {
@@ -185,7 +185,7 @@ export class Policy implements PolicyMixinType {
 
     // Cell lookup: if cell not provided, resolve from sheet (entry-point usage)
     if (cell == null) {
-      cell = sheet.getCell(point, { resolution: 'RESOLVED', raise: true }) ?? {};
+      cell = sheet.getCell(point, { resolution: 'EVALUATED', raise: true }) ?? {};
       value = cell.value;
     }
 
@@ -275,8 +275,9 @@ export class Policy implements PolicyMixinType {
     return '';
   }
 
-  public renderSheet({ value, ...rest }: RenderProps<Sheet>): any {
-    const stripped = value!.strip({ raise: false });
+  public renderSheet({ value: sheet, ...rest }: RenderProps<Sheet>): any {
+    const at = sheet.getId(rest.point);
+    const stripped = sheet.strip({ raise: true, at });
     return this.render({ ...rest, value: stripped });
   }
 

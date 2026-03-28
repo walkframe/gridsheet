@@ -18,6 +18,22 @@ export class ReferencePreserver {
     });
   }
 
+  /**
+   * Compare two idMatrix snapshots (`before` and `after`) and populate
+   * `this.map` and collect dependents for every position where the occupying
+   * cell ID changed. Works for any rearrangement (sort, move, etc.).
+   */
+  buildMap(before: Id[], after: Id[]) {
+    for (let i = 0; i < before.length; i++) {
+      const prevId = before[i];
+      const currId = after[i];
+      if (prevId != null && currId != null && prevId !== currId) {
+        this.collectDependents(prevId, currId);
+        this.map[prevId] = currId;
+      }
+    }
+  }
+
   resolveDependents(operation?: 'move' | 'removeRows' | 'removeCols'): CellsByIdType {
     this.sheet.clearAddressCaches();
     const diffBefore: CellsByIdType = {};

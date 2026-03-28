@@ -2,6 +2,7 @@ import js from "@eslint/js";
 import tseslint from "@typescript-eslint/eslint-plugin";
 import tseslintParser from "@typescript-eslint/parser";
 import prettier from "eslint-config-prettier";
+import reactHooks from "eslint-plugin-react-hooks";
 
 export default [
   {
@@ -21,9 +22,11 @@ export default [
     },
   },
   {
+    files: ['**/*.ts', '**/*.tsx'],
     plugins: {
       "@typescript-eslint": tseslint,
       prettier,
+      "react-hooks": reactHooks,
     },
     languageOptions: {
       parserOptions: {
@@ -39,6 +42,8 @@ export default [
       "@typescript-eslint/no-unsafe-return": "off",
       "@typescript-eslint/no-unused-vars": "off",
       curly: ['error', 'all'],
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
     },
   },
 ];

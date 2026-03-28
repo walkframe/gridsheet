@@ -1,4 +1,4 @@
-import { useContext, useRef, useCallback, useEffect, memo, useMemo } from 'react';
+import { useContext, useRef, useCallback, useEffect, memo, useMemo, useState } from 'react';
 import { x2c, y2r } from '../lib/coords';
 import { zoneToArea, among, areaToRange } from '../lib/spatial';
 import {
@@ -24,6 +24,7 @@ import { isXSheetFocused } from '../store/helpers';
 import type { FC, RefObject } from 'react';
 import { isTouching, safePreventDefault } from '../lib/events';
 import type { UserSheet } from '../lib/sheet';
+import { calcBelowPosition, hAlignTransform, type PopupPosition } from '../lib/popup';
 
 type Props = {
   y: number;
@@ -38,6 +39,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
   const isFirstPointed = useRef(true);
 
   const cellRef = useRef<HTMLTableCellElement>(null);
+  const [errorTooltipPos, setErrorTooltipPos] = useState<PopupPosition | null>(null);
   const {
     sheetReactive,
     editingAddress,
@@ -47,7 +49,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
     topHeaderSelecting,
     editorRef,
     autofillDraggingTo,
-    contextMenuItems,
+    contextMenu,
   } = store;
   const sheet = sheetReactive.current;
 
@@ -73,7 +75,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
         width: rect.width,
       }),
     );
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     // Avoid setting coordinates on the initial render to account for shifts caused by redrawing due to virtualization.
@@ -82,25 +84,30 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
       return;
     }
     isFirstPointed.current = false;
-  }, [pointed, editing]);
+  }, [pointed, editing, _setEditorRect]);
 
-  if (!sheet) {
-    return null;
-  }
+  const cell = sheet?.getCell({ y, x }, { resolution: 'SYSTEM' });
 
-  const cell = sheet.getCell({ y, x }, { resolution: 'SYSTEM' });
-  const writeCell = useCallback((value: string) => {
-    dispatch(write({ value }));
-  }, []);
+  const writeCell = useCallback(
+    (value: string) => {
+      dispatch(write({ value }));
+    },
+    [dispatch],
+  );
 
-  const sync = useCallback((sheet: UserSheet) => {
-    dispatch(setStore({ sheetReactive: { current: sheet.__raw__ } }));
-  }, []);
+  const apply = useCallback(
+    (sheet: UserSheet) => {
+      dispatch(setStore({ sheetReactive: { current: sheet.__raw__ } }));
+    },
+    [dispatch],
+  );
 
   let errorMessage = '';
   let rendered: any;
   try {
-    rendered = sheet.render({ sheet, point: { y, x }, sync });
+    if (sheet) {
+      rendered = sheet.render({ sheet, point: { y, x }, apply, value: undefined });
+    }
   } catch (e: any) {
     if (FormulaError.is(e)) {
       errorMessage = e.message;
@@ -110,17 +117,20 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
       rendered = '#UNKNOWN';
     }
   }
-  const [, v] = sheet.getSolvedCache({ y, x });
+  const [, v] = sheet?.getSolvedCache({ y, x }) ?? [undefined, undefined];
   const isPendingCell = Pending.is(v);
   const input = editorRef.current;
 
-  const editingAnywhere = !!(sheet.registry.editingAddress || editingAddress);
+  const editingAnywhere = !!(sheet?.registry.editingAddress || editingAddress);
 
   const handleDragStart = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
       e.stopPropagation();
       safePreventDefault(e);
 
+      if (!sheet) {
+        return false;
+      }
       if (!isTouching(e)) {
         return false;
       }
@@ -171,7 +181,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
       }
       return true;
     },
-    [editingAnywhere, input, address, xSheetFocused, lastFocused, autofillDraggingTo, writeCell],
+    [editingAnywhere, input, address, xSheetFocused, lastFocused, autofillDraggingTo, writeCell, sheet],
   );
 
   const handleDragEnd = useCallback(
@@ -203,6 +213,10 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
 
       // Do nothing for touch events
       if (e.type.startsWith('touch')) {
+        return false;
+      }
+
+      if (!sheet) {
         return false;
       }
 
@@ -246,16 +260,31 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
     ],
   );
 
-  const handleAutofillMouseDown = useCallback((e: React.MouseEvent) => {
-    dispatch(setAutofillDraggingTo({ x, y }));
-    dispatch(setDragging(true));
-    e.stopPropagation();
+  const handleAutofillMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      dispatch(setAutofillDraggingTo({ x, y }));
+      dispatch(setDragging(true));
+      e.stopPropagation();
+    },
+    [dispatch, x, y],
+  );
+
+  const handleErrorTriangleEnter = useCallback(() => {
+    const rect = cellRef.current?.getBoundingClientRect();
+    if (!rect) {
+      return;
+    }
+    setErrorTooltipPos(calcBelowPosition(rect));
+  }, []);
+
+  const handleErrorTriangleLeave = useCallback(() => {
+    setErrorTooltipPos(null);
   }, []);
 
   // --- Memoize event handlers with useCallback ---
   const onContextMenu = useCallback(
     (e: React.MouseEvent<HTMLTableCellElement>) => {
-      if (contextMenuItems.length > 0) {
+      if (contextMenu.length > 0) {
         e.stopPropagation();
         safePreventDefault(e);
         dispatch(setContextMenuPosition({ y: e.clientY, x: e.clientX }));
@@ -263,7 +292,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
       }
       return true;
     },
-    [contextMenuItems.length],
+    [contextMenu.length],
   );
 
   const onDoubleClick = useCallback(
@@ -289,6 +318,10 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
     }
     return 'gs-autofill-drag gs-hidden';
   }, [editing, pointed, selectingArea]);
+
+  if (!sheet) {
+    return null;
+  }
 
   if (!input) {
     return (
@@ -334,9 +367,27 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
             alignItems: cell?.alignItems || 'start',
           }}
         >
-          {errorMessage && <div className="gs-formula-error-triangle" title={errorMessage} />}
+          {errorMessage && (
+            <div
+              className="gs-formula-error-triangle"
+              onMouseEnter={handleErrorTriangleEnter}
+              onMouseLeave={handleErrorTriangleLeave}
+            />
+          )}
           <div className="gs-cell-rendered">{rendered}</div>
         </div>
+        {errorMessage && errorTooltipPos && (
+          <div
+            className="gs-formula-error-tooltip"
+            style={{
+              top: errorTooltipPos.y + 4,
+              left: errorTooltipPos.x,
+              transform: hAlignTransform(errorTooltipPos.hAlign),
+            }}
+          >
+            {errorMessage}
+          </div>
+        )}
         <div className={autofillDragClass} onMouseDown={handleAutofillMouseDown}></div>
       </div>
     </td>

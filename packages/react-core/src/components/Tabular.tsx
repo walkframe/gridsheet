@@ -13,6 +13,7 @@ import { virtualize } from '../lib/virtualization';
 import { p2a, stripAddressAbsolute } from '../lib/coords';
 import { Lexer, stripSheetName } from '../formula/evaluator';
 import { ScrollHandle } from './ScrollHandle';
+import { preventSafariBounce } from '../lib/dom';
 
 export const Tabular = () => {
   const [palette, setPalette] = useState<RefPaletteType>({});
@@ -28,7 +29,7 @@ export const Tabular = () => {
     inputting,
     leftHeaderSelecting,
     topHeaderSelecting,
-    contextMenuItems,
+    contextMenu,
   } = store;
   const sheet = sheetReactive.current;
 
@@ -124,6 +125,14 @@ export const Tabular = () => {
     setVirtualized(virtualize(sheet, tabularRef.current));
   }, [tabularRef.current, sheetReactive, mainRef.current?.clientHeight, mainRef.current?.clientWidth]);
 
+  useEffect(() => {
+    const el = tabularRef.current;
+    if (!el) {
+      return;
+    }
+    return preventSafariBounce(el);
+  }, [sheetReactive]);
+
   const mergedRefs: RefPaletteType = {
     ...palette,
     ...(sheet ? sheet.registry.paletteBySheetName[sheet.name] : {}),
@@ -168,7 +177,7 @@ export const Tabular = () => {
                       horizontal={leftHeaderSelecting ? 0 : -1}
                       vertical={topHeaderSelecting ? 0 : -1}
                     />
-                    {contextMenuItems.length > 0 && (
+                    {contextMenu.length > 0 && (
                       <button
                         className="gs-menu-btn gs-corner-menu-btn"
                         title="Menu"
@@ -223,7 +232,7 @@ export const Tabular = () => {
             <tbody className="gs-sheet-body-data">
               {virtualized?.ys?.map((y) => {
                 return (
-                  <tr key={y} className="gs-row">
+                  <tr key={y} className={`gs-row ${y % 2 === 0 ? 'gs-row-even' : 'gs-row-odd'}`}>
                     <HeaderCellLeft y={y} />
                     <td className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-left" />
                     {virtualized?.xs?.map((x) => <Cell key={x} y={y} x={x} />)}

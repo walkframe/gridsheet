@@ -44,7 +44,7 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
     sheetReactive: sheetRef,
     autofillDraggingTo,
     dragging,
-    contextMenuItems,
+    contextMenu,
     rowMenuState,
   } = store;
   const sheet = sheetRef.current;
@@ -196,7 +196,7 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
 
   const handleContextMenu = useCallback(
     (e: React.MouseEvent<HTMLTableCellElement>) => {
-      if (contextMenuItems.length > 0) {
+      if (contextMenu.length > 0) {
         e.stopPropagation();
         safePreventDefault(e);
         dispatch(setContextMenuPosition({ y: e.clientY, x: e.clientX }));
@@ -204,7 +204,7 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
       }
       return true;
     },
-    [contextMenuItems.length],
+    [contextMenu.length],
   );
 
   if (!sheet) {
@@ -220,8 +220,8 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
             ? 'gs-th-selecting'
             : 'gs-selecting'
           : ''
-      }`}
-      style={{ height }}
+      } ${row?.filterFixed ? 'gs-filter-fixed' : ''} ${row?.sortFixed ? 'gs-sort-fixed' : ''}`}
+      style={{ ...row?.style, height }}
       onContextMenu={handleContextMenu}
     >
       <div

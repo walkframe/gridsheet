@@ -2,52 +2,89 @@ import Case7 from './case7.component';
 
 # 👥 Real-time Collaboration Interface
 
-This demo showcases a real-time collaboration interface built with GridSheet.
-
-It simulates multiple users working on the same spreadsheet simultaneously.
+This demo simulates multiple users working on the same spreadsheet simultaneously,
+with user avatars shown directly inside cells and a live activity feed.
 
 <Case7 />
 
-## Implementation Guide
-
 <a href="https://github.com/walkframe/gridsheet/tree/master/packages/docs/pages/examples/case7.component.tsx" target="_blank" rel="noopener noreferrer" style={{display: 'inline-block', background: '#007bff', color: 'white', padding: '8px 16px', textDecoration: 'none', borderRadius: '4px', fontWeight: '500', margin: '10px 0'}}>📄 View Source Code</a>
 
-### 🔄 Real-time Collaboration Overview
-This comprehensive real-time collaboration interface demonstrates how GridSheet can be used to create collaborative spreadsheet applications. The implementation includes user presence tracking, real-time updates, activity logging, and conflict resolution mechanisms.
+## How it works
 
-### 👤 User Presence Management
-Implement user presence tracking with visual indicators including colored cursors, avatars, and status indicators. Track user activity, cursor positions, and online status. Provide real-time updates of user presence across all connected clients.
+### User cursor tracking with `renderCallback`
 
-### ⚡ Real-time Data Synchronization
-Create real-time data synchronization that propagates changes across all connected users. Implement efficient update mechanisms, conflict resolution, and data consistency. Handle network latency and connection issues gracefully.
+User avatars are displayed inside cells using `renderCallback` on the **default policy**.
+This approach is scroll-safe because the callback runs inside each cell's DOM node — no
+absolute positioning relative to the grid container is needed.
 
-### 📝 Activity Logging System
-Develop a comprehensive activity logging system that tracks all user actions including edits, cursor movements, and formatting changes. Display activity feed with timestamps, user attribution, and action descriptions. Implement activity filtering and search capabilities.
+```tsx
+const policies = React.useMemo(() => ({
+  default: new Policy({
+    mixins: [{
+      renderCallback(rendered, { point }) {
+        const cursorsHere = Object.entries(userCursorsRef.current).filter(
+          ([, pos]) => pos.row === point.y && pos.col === point.x,
+        );
+        if (cursorsHere.length === 0) return rendered;
+        const users = cursorsHere
+          .map(([id]) => virtualUsers.find((u) => u.id === id))
+          .filter(Boolean);
+        return (
+          <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+            {rendered}
+            <div style={{ position: 'absolute', top: 2, right: 2, display: 'flex', gap: '2px' }}>
+              {users.map((user) => (
+                <span key={user.id} title={user.name}>{user.avatar}</span>
+              ))}
+            </div>
+          </div>
+        );
+      },
+    }],
+  }),
+  priority: new Policy({ mixins: [PriorityPolicy] }),
+}), []);
+```
 
-### 🎨 Visual User Attribution
-Implement visual user attribution for all changes including color-coded highlights, user avatars, and change indicators. Provide clear visual feedback for which user made specific changes. Include temporary highlighting for recent edits.
+`renderCallback` receives the already-rendered cell content as `rendered` and wraps it.
+By returning a new React element, you can overlay any UI on top of the default rendering
+without replacing it.
 
-### 📋 Policy-Based Formatting
-Use policies to maintain consistent formatting across collaborative editing sessions. Implement automatic formatting rules, style inheritance, and conflict resolution for formatting changes. Ensure data integrity while allowing collaborative styling.
+### Why `userCursorsRef` instead of reading state directly
 
-### ⚔️ Conflict Resolution
-Implement robust conflict resolution mechanisms for simultaneous edits. Handle edit conflicts, data merging, and version control. Provide user feedback for conflicts and resolution options.
+The `useMemo` callback is evaluated only once (`[]` deps), so the policy closure would
+capture a stale copy of `userCursors` state if used directly. Instead, a `ref` is kept
+in sync with the latest state on every render:
 
-### ⚡ Performance Optimization
-Optimize performance for real-time collaboration with multiple users. Implement efficient update batching, change compression, and selective synchronization. Consider bandwidth limitations and connection quality.
+```tsx
+const userCursorsRef = React.useRef({});
+// ...
+userCursorsRef.current = userCursors; // always up-to-date
+```
 
-### 🎨 User Interface Design
-Design collaborative interfaces that clearly show user presence and activity. Include user lists, activity feeds, and collaboration controls. Implement intuitive visual indicators for different types of user activity.
+The `renderCallback` reads `userCursorsRef.current` at call time, so it always sees the
+current cursor positions without needing to re-create the policy object.
 
-### 🌐 Network Communication
-Implement efficient network communication for real-time updates. Use WebSocket connections, message queuing, and connection management. Handle reconnection scenarios and offline editing capabilities.
+### Simulated user actions
 
-### ✅ Best Practices
-1. **Data Consistency**: Ensure data consistency across all connected users
-2. **User Experience**: Provide clear visual feedback for all collaborative actions
-3. **Performance**: Optimize for real-time updates and multiple concurrent users
-4. **Conflict Resolution**: Implement robust conflict resolution mechanisms
-5. **Network Resilience**: Handle network issues and connection problems gracefully
+A `setInterval` fires every 1.2 seconds and picks a random virtual user, moves their
+cursor to a random cell, and (with higher probability) actually edits that cell via
+`sheetRef`:
+
+```tsx
+apply(sheet.update({
+  diff: { [cellAddress]: { value: newValue } },
+}));
+```
+
+The activity log keeps the last 10 actions and is displayed in the sidebar.
+
+### Policy for the Priority column
+
+The `priority` policy is assigned to the range `E1:E5` in `initialCells`. It currently
+uses an empty mixin (`PriorityPolicy = {}`), but you can add custom `render*` methods or
+validation logic there to extend the behaviour of that column independently.
+
 6. **Security**: Implement proper authentication and authorization for collaborative features
 7. **Scalability**: Design for multiple concurrent users and large datasets
 

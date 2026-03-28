@@ -23,7 +23,12 @@ const ArrayformulaBasicSheet: React.FC = () => {
         sheetName="AFBasic"
         initialCells={buildInitialCells({
           cells: {
-            default: { width: 100 },
+            A: { width: 100 },
+            B: { width: 100 },
+            C: { width: 100 },
+            D: { width: 100 },
+            E: { width: 100 },
+            F: { width: 100 },
             // Input data
             A1: { value: 'A' },
             B1: { value: 'B' },
@@ -62,7 +67,7 @@ const ArrayformulaRangeSheet: React.FC = () => {
       sheetName="AFRange"
       initialCells={buildInitialCells({
         cells: {
-          default: { width: 140 },
+          defaultCol: { width: 140 },
           A1: { value: 'source' },
           C1: { value: 'ARRAYFORMULA(A2:A5)' },
           A2: { value: 10 },
@@ -88,7 +93,7 @@ const ArrayformulaIfSheet: React.FC = () => {
       sheetName="AFWithIf"
       initialCells={buildInitialCells({
         cells: {
-          default: { width: 200 },
+          defaultCol: { width: 200 },
           A1: { value: 'score' },
           B1: { value: 'ARRAYFORMULA(IF(...))' },
           A2: { value: 90 },

@@ -1,4 +1,4 @@
-export { GridSheet, createConnector, useConnector } from './components/GridSheet';
+export { GridSheet, createSheetRef, useSheetRef, createStoreRef, useStoreRef } from './components/GridSheet';
 export {
   oa2aa,
   aa2oa,
@@ -14,9 +14,10 @@ export {
 } from './lib/spatial';
 
 export { Time } from './lib/time';
-export { x2c, c2x, y2r, r2y, p2a, a2p } from './lib/coords';
+export { x2c, c2x, y2r, r2y, p2a, a2p, rh, ch } from './lib/coords';
 export { updateSheet } from './store/actions';
 export { PluginBase, useInitialPluginContext, usePluginContext } from './components/PluginBase';
+export { MenuItem, MenuDivider } from './components/MenuItem';
 export type {
   MatrixType,
   CellType,
@@ -41,7 +42,8 @@ export type {
   AreaType,
   ZoneType,
   Props,
-  Connector,
+  SheetHandle,
+  StoreHandle,
   EditorEvent,
   CursorStateType,
 } from './types';
@@ -51,7 +53,7 @@ export { Registry, useBook, createBook } from './lib/book';
 export type { Dispatcher } from './store';
 export { ThousandSeparatorPolicyMixin } from './policy/thousand_separator';
 export { CheckboxPolicyMixin } from './policy/checkbox';
-export { BaseFunction, BaseFunctionSync, BaseFunctionAsync } from './formula/functions/__base';
+export { BaseFunction, BaseFunctionAsync } from './formula/functions/__base';
 export type {
   FunctionProps,
   FunctionArgumentDefinition as FunctionArgumentDefinition,
@@ -99,7 +101,26 @@ export { userActions } from './store/actions';
 export { clip, sheet2csv } from './lib/clipboard';
 
 export { makeBorder } from './styles/utils';
-export { syncers } from './store/dispatchers';
+export { applyers } from './store/dispatchers';
+
+export type {
+  MenuContext,
+  MenuItemBase,
+  MenuComponentItem,
+  ContextMenuItemDescriptor,
+  RowMenuItemDescriptor,
+  ColMenuItemDescriptor,
+  MenuDividerItem,
+  ContextMenuSectionProps,
+  RowMenuSectionProps,
+  ColMenuSectionProps,
+} from './lib/menu';
+export {
+  defaultContextMenuDescriptors,
+  defaultRowMenuDescriptors,
+  defaultColMenuDescriptors,
+  registerMenuComponent,
+} from './lib/menu';
 
 export {
   ensureString,

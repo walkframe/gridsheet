@@ -43,6 +43,8 @@ import {
   HEADER_WIDTH,
   DEFAULT_HISTORY_LIMIT,
   DEFAULT_KEY,
+  DEFAULT_COL_KEY,
+  DEFAULT_ROW_KEY,
 } from '../constants';
 import { Pending, SOLVING, Spilling } from '../sentinels';
 import { shouldTracking } from '../store/helpers';
@@ -215,6 +217,10 @@ export class Sheet implements UserSheet {
   public totalHeight = 0;
   /** @internal */
   public fullHeight = 0;
+  /** @internal */
+  public defaultColWidth: number = DEFAULT_WIDTH;
+  /** @internal */
+  public defaultRowHeight: number = DEFAULT_HEIGHT;
 
   /** @internal */
   private version = 0;
@@ -367,18 +373,18 @@ export class Sheet implements UserSheet {
     const snapshot: CellsByIdType = {};
     const numCols = this.numCols;
     const numRows = this.numRows;
-    // Column header cells (filter config)
+    // Column header cells: only capture the 'filter' field (undefined if absent)
     for (let col = 1; col <= numCols; col++) {
       const id = this.idMatrix[0]?.[col];
       if (id != null) {
-        snapshot[id] = this.registry.data[id] ?? {};
+        snapshot[id] = { filter: this.registry.data[id]?.filter };
       }
     }
-    // Row header cells (filtered flag)
+    // Row header cells: only capture the 'filtered' field (undefined if absent)
     for (let y = 1; y <= numRows; y++) {
       const id = this.idMatrix[y]?.[0];
       if (id != null) {
-        snapshot[id] = this.registry.data[id] ?? {};
+        snapshot[id] = { filtered: this.registry.data[id]?.filtered };
       }
     }
     return snapshot;
@@ -413,19 +419,26 @@ export class Sheet implements UserSheet {
 
     const diffAfter = this._captureFilterCellStates();
 
-    const changed = Object.keys(diffBefore).some(
+    // Only keep cells whose state actually changed
+    const changedIds = Object.keys(diffBefore).filter(
       (id) => JSON.stringify(diffBefore[id]) !== JSON.stringify(diffAfter[id]),
     );
 
-    if (changed) {
+    if (changedIds.length > 0) {
+      const trimmedBefore: CellsByIdType = {};
+      const trimmedAfter: CellsByIdType = {};
+      for (const id of changedIds) {
+        trimmedBefore[id] = diffBefore[id];
+        trimmedAfter[id] = diffAfter[id];
+      }
       this._pushHistory({
         applyed: true,
         operation: 'UPDATE',
         srcSheetId: this.id,
         dstSheetId: this.id,
-        diffBefore,
-        diffAfter,
-        partial: false,
+        diffBefore: trimmedBefore,
+        diffAfter: trimmedAfter,
+        partial: true,
       });
     }
 
@@ -453,6 +466,10 @@ export class Sheet implements UserSheet {
     for (let y = 1; y <= numRows; y++) {
       const rowCell = this._pointToRawCell({ y, x: 0 });
       if (!rowCell) {
+        continue;
+      }
+
+      if (rowCell.filterFixed) {
         continue;
       }
 
@@ -485,14 +502,20 @@ export class Sheet implements UserSheet {
       return this;
     }
 
-    // Collect row indices (data rows: 1..numRows)
-    const rowIndices: number[] = [];
+    // Collect row indices (data rows: 1..numRows), separating fixed rows
+    const fixedPositions = new Set<number>();
+    const sortableIndices: number[] = [];
     for (let y = 1; y <= numRows; y++) {
-      rowIndices.push(y);
+      const rowCell = this._pointToRawCell({ y, x: 0 });
+      if (rowCell?.sortFixed) {
+        fixedPositions.add(y);
+      } else {
+        sortableIndices.push(y);
+      }
     }
 
     // Sort by resolved cell value at column x
-    rowIndices.sort((a, b) => {
+    sortableIndices.sort((a, b) => {
       const cellA = this.getCell({ y: a, x }, { resolution: 'RESOLVED' });
       const cellB = this.getCell({ y: b, x }, { resolution: 'RESOLVED' });
       const valA = cellA?.value;
@@ -520,10 +543,18 @@ export class Sheet implements UserSheet {
       return direction === 'asc' ? cmp : -cmp;
     });
 
-    // Check if order actually changed
+    // Check if order actually changed (only among sortable rows)
+    // Assign sortable rows to the positions not occupied by fixed rows
+    const availablePositions: number[] = [];
+    for (let y = 1; y <= numRows; y++) {
+      if (!fixedPositions.has(y)) {
+        availablePositions.push(y);
+      }
+    }
+
     let changed = false;
-    for (let i = 0; i < rowIndices.length; i++) {
-      if (rowIndices[i] !== i + 1) {
+    for (let i = 0; i < sortableIndices.length; i++) {
+      if (sortableIndices[i] !== availablePositions[i]) {
         changed = true;
         break;
       }
@@ -533,21 +564,26 @@ export class Sheet implements UserSheet {
     }
 
     // Build row mapping: original position -> new position
+    // Fixed rows map to themselves; sortable rows map to available positions in sorted order
     const sortedRowMapping: { [beforeY: number]: number } = {};
-    for (let newY = 0; newY < rowIndices.length; newY++) {
-      const oldY = rowIndices[newY];
-      sortedRowMapping[oldY] = newY + 1;
+    for (const y of fixedPositions) {
+      sortedRowMapping[y] = y;
+    }
+    for (let i = 0; i < sortableIndices.length; i++) {
+      sortedRowMapping[sortableIndices[i]] = availablePositions[i];
     }
 
-    // Apply the sort by rearranging idMatrix rows
-    const savedRows: Ids[] = [];
-    for (let i = 0; i < rowIndices.length; i++) {
-      savedRows.push(this.idMatrix[rowIndices[i]]);
-    }
-    for (let i = 0; i < rowIndices.length; i++) {
-      this.idMatrix[i + 1] = savedRows[i];
+    // Save row references before rearranging (rows are re-slotted, not mutated).
+    const matrixSnapshot = this.idMatrix.slice();
+
+    for (const [oldY, newY] of Object.entries(sortedRowMapping)) {
+      this.idMatrix[Number(newY)] = matrixSnapshot[Number(oldY)];
     }
     this.addressCaches.clear();
+
+    const preserver = new ReferencePreserver(this);
+    preserver.buildMap(matrixSnapshot.flat(), this.idMatrix.flat());
+    preserver.resolveDependents();
 
     this._pushHistory({
       applyed: true,
@@ -652,7 +688,7 @@ export class Sheet implements UserSheet {
   }
 
   /** @internal */
-  private static _stack(...cells: CellType[]) {
+  private static _stack(...cells: (CellType | undefined)[]) {
     const extension: CellType = {};
     cells.forEach((cell) => {
       if (cell?.style) {
@@ -694,7 +730,7 @@ export class Sheet implements UserSheet {
       }
     }
     Object.keys(cells).forEach((address) => {
-      if (address === DEFAULT_KEY) {
+      if (address === DEFAULT_KEY || address === DEFAULT_COL_KEY || address === DEFAULT_ROW_KEY) {
         return;
       }
       const range = expandRange(address);
@@ -711,22 +747,62 @@ export class Sheet implements UserSheet {
     });
 
     const common = cells?.[DEFAULT_KEY];
+    const commonCol = cells?.[DEFAULT_COL_KEY];
+    const commonRow = cells?.[DEFAULT_ROW_KEY];
+    if (commonCol?.width != null) {
+      this.defaultColWidth = commonCol.width;
+    }
+    if (commonRow?.height != null) {
+      this.defaultRowHeight = commonRow.height;
+    }
     for (let y = 0; y < auto.numRows + 1; y++) {
       const rowId = y2r(y);
-      const rowDefault = cells?.[rowId];
       for (let x = 0; x < auto.numCols + 1; x++) {
         const id = this.getId({ y, x });
-        const address = p2a({ y, x });
         const colId = x2c(x);
-        const colDefault = cells?.[colId];
-        const cell = cells?.[address];
-        let stacked = {
-          ...common,
-          ...rowDefault,
-          ...colDefault,
-          ...cell,
-          ...Sheet._stack(common, rowDefault, colDefault, cell),
-        } as CellType;
+        let stacked: CellType;
+        if (y === 0 && x > 0) {
+          // Column header: defaultCol as base (width, style, etc.),
+          // then 'A' layout props (width, label, no style), then 'A0' overrides.
+          const colDefault = cells?.[colId];
+          const { style: _cs, ...colDefaultLayout } = colDefault ?? {};
+          const headerCell = cells?.[colId + '0'];
+          stacked = {
+            ...commonCol,
+            ...colDefaultLayout,
+            ...headerCell,
+            ...Sheet._stack(commonCol, headerCell),
+          } as CellType;
+        } else if (x === 0 && y > 0) {
+          // Row header: defaultRow as base (height, style, etc.),
+          // then '1' layout props (height, no style), then '01' overrides.
+          const rowDefault = cells?.[rowId];
+          const { style: _rs, ...rowDefaultLayout } = rowDefault ?? {};
+          const headerCell = cells?.['0' + rowId];
+          stacked = {
+            ...commonRow,
+            ...rowDefaultLayout,
+            ...headerCell,
+            ...Sheet._stack(commonRow, headerCell),
+          } as CellType;
+        } else if (y === 0 && x === 0) {
+          // Corner cell (y=0, x=0): excluded from all defaults to keep headerHeight correct.
+          const cell = cells?.['0'];
+          stacked = { ...cell, ...Sheet._stack(cell) } as CellType;
+        } else {
+          // Data cell: 'A' applies to all column-A cells, '1' to all row-1 cells.
+          const address = p2a({ y, x });
+          const rowDefault = cells?.[rowId];
+          const colDefault = cells?.[colId];
+          const cell = cells?.[address];
+          stacked = {
+            ...common,
+            ...rowDefault,
+            ...colDefault,
+            ...cell,
+            ...Sheet._stack(common, rowDefault, colDefault, cell),
+          } as CellType;
+        }
 
         if (stacked?.value?.startsWith?.('=') && (stacked?.formulaEnabled ?? true)) {
           this.idsToBeIdentified.push(id);
@@ -811,7 +887,7 @@ export class Sheet implements UserSheet {
     let accW = 0;
     for (let x = 1; x <= numCols; x++) {
       const cell = this.getCell({ y: 0, x }, { resolution: 'SYSTEM' });
-      const w = cell?.width || DEFAULT_WIDTH;
+      const w = cell?.width || this.defaultColWidth || DEFAULT_WIDTH;
       const colSys = this.registry.systems[this.getId({ y: 0, x })];
       if (colSys != null) {
         colSys.offsetLeft = headerW + accW;
@@ -825,7 +901,7 @@ export class Sheet implements UserSheet {
     let fullH = 0;
     for (let y = 1; y <= numRows; y++) {
       const cell = this.getCell({ y, x: 0 }, { resolution: 'SYSTEM' });
-      const h = cell?.height || DEFAULT_HEIGHT;
+      const h = cell?.height || this.defaultRowHeight || DEFAULT_HEIGHT;
       const rowSys = this.registry.systems[this.getId({ y, x: 0 })];
       if (rowSys != null) {
         rowSys.offsetTop = headerH + accH;
@@ -1329,10 +1405,6 @@ export class Sheet implements UserSheet {
           };
           this.registry.systems[newId] = { id: newId, sheetId: srcSheet.id, changedTime: Date.now() };
           idWritesSrc.push({ y: srcPoint.y, x: srcPoint.x, id: newId });
-
-          if (srcId != null) {
-            preserver.map[srcId] = newId;
-          }
         }
 
         // Actual Move
@@ -1368,11 +1440,6 @@ export class Sheet implements UserSheet {
           }
 
           idWritesDst.push({ y: dstPoint.y, x: dstPoint.x, id: srcId });
-
-          if (dstId != null) {
-            preserver.map[dstId] = srcId;
-            preserver.collectDependents(srcId, dstId);
-          }
         }
       }
     } else {
@@ -1410,6 +1477,10 @@ export class Sheet implements UserSheet {
       }
     }
 
+    // Snapshot idMatrix before flush
+    const srcSnapshot = !reverse ? srcSheet.idMatrix.flat() : null;
+    const dstSnapshot = !reverse && srcSheet !== dstSheet ? dstSheet.idMatrix.flat() : null;
+
     // Flush registry.data writes first
     Object.assign(this.registry.data, wireWrites);
     // Then flush idMatrix writes
@@ -1432,6 +1503,10 @@ export class Sheet implements UserSheet {
     }
 
     if (!reverse) {
+      preserver.buildMap(srcSnapshot!.flat(), srcSheet.idMatrix.flat());
+      if (srcSheet !== dstSheet) {
+        preserver.buildMap(dstSnapshot!.flat(), dstSheet.idMatrix.flat());
+      }
       const resolvedDiff = preserver.resolveDependents('move');
       Object.assign(diffBefore, resolvedDiff);
     }
@@ -2114,9 +2189,10 @@ export class Sheet implements UserSheet {
 
   /** @internal */
   public render(props: RenderProps) {
-    const { point, sync } = props;
+    const { point, apply } = props;
+    const at = this.getId(point);
     const policy = this.getPolicy(point);
-    return policy.render({ sheet: this, point, sync });
+    return policy.render({ sheet: this, point, apply, value: undefined });
   }
 
   public getSerializedValue({
@@ -2182,8 +2258,8 @@ export class Sheet implements UserSheet {
    * Collapse this sheet to a scalar (top-left cell value).
    * @internal
    */
-  public strip({ raise = false }: { raise?: boolean }): any {
-    return stripSheet({ value: this, raise });
+  public strip({ raise = false, at }: { raise?: boolean; at?: Id }): any {
+    return stripSheet({ value: this, raise, at });
   }
 
   /** @internal */
@@ -2191,7 +2267,19 @@ export class Sheet implements UserSheet {
     const ids = Object.keys(diff);
     ids.forEach((id) => {
       const cell = diff[id] ?? {};
-      const merged = partial ? { ...this.registry.data[id], ...cell } : { ...cell };
+      let merged: CellType;
+      if (partial) {
+        merged = { ...this.registry.data[id] };
+        (Object.keys(cell) as (keyof CellType)[]).forEach((key) => {
+          if (cell[key] === undefined) {
+            delete merged[key];
+          } else {
+            (merged as any)[key] = cell[key];
+          }
+        });
+      } else {
+        merged = { ...cell };
+      }
       const sys = this.registry.systems[id];
       if (sys != null) {
         sys.changedTime = Date.now();
@@ -2228,7 +2316,7 @@ export class Sheet implements UserSheet {
 
     switch (history.operation) {
       case 'UPDATE':
-        dstSheet._applyDiff(history.diffBefore, false);
+        dstSheet._applyDiff(history.diffBefore, history.partial ?? false);
         break;
       case 'INSERT_ROWS': {
         if (history.diffBefore) {
@@ -2280,7 +2368,11 @@ export class Sheet implements UserSheet {
         break;
       }
       case 'SORT_ROWS': {
+        const snapshotIds = dstSheet.idMatrix.flat();
         dstSheet._sortRowMapping(history.sortedRowMapping, true);
+        const preserver = new ReferencePreserver(dstSheet);
+        preserver.buildMap(snapshotIds, dstSheet.idMatrix.flat());
+        preserver.resolveDependents();
         dstSheet._reapplyFilters();
         break;
       }
@@ -2318,7 +2410,7 @@ export class Sheet implements UserSheet {
 
     switch (history.operation) {
       case 'UPDATE':
-        dstSheet._applyDiff(history.diffAfter, false);
+        dstSheet._applyDiff(history.diffAfter, history.partial ?? false);
         break;
       case 'INSERT_ROWS': {
         if (history.diffAfter) {
@@ -2367,7 +2459,11 @@ export class Sheet implements UserSheet {
         break;
       }
       case 'SORT_ROWS': {
+        const snapshotIds = dstSheet.idMatrix.flat();
         dstSheet._sortRowMapping(history.sortedRowMapping, false);
+        const preserver = new ReferencePreserver(dstSheet);
+        preserver.buildMap(snapshotIds, dstSheet.idMatrix.flat());
+        preserver.resolveDependents();
         dstSheet._reapplyFilters();
         break;
       }

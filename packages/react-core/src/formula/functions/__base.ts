@@ -536,14 +536,6 @@ export class BaseFunction {
 }
 
 /**
- * Base class for sync functions.
- * Extend this class to create sync functions that support caching.
- */
-export class BaseFunctionSync extends BaseFunction {
-  protected isAsync: boolean = false;
-}
-
-/**
  * Base class for async functions.
  * Extend this class to create async functions that support caching.
  */

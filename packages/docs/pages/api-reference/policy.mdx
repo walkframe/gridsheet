@@ -1,0 +1,384 @@
+# Policy System
+
+The Policy system controls how cells render values, parse user input, serialize data, and restrict operations. It is GridSheet's primary extension point for custom cell behavior.
+
+## Overview
+
+A `Policy` instance is:
+- **Composable** — built from one or more `PolicyMixinType` objects
+- **Priority-based** — the `priority` number determines which policy wins when multiple apply
+- **Per-cell** — each cell references a policy by its string key (set via `cell.policy`)
+
+## Registering Policies
+
+Policies are registered through `useBook` and referenced by key in cell definitions:
+
+```tsx
+import { GridSheet, Policy, useBook, ThousandSeparatorPolicyMixin } from '@gridsheet/react-core';
+
+function MySheet() {
+  const book = useBook({
+    policies: {
+      currency: new Policy({ mixins: [ThousandSeparatorPolicyMixin] }),
+    },
+  });
+
+  return (
+    <GridSheet
+      book={book}
+      initialCells={{
+        B: { policy: 'currency' },
+        'B1': { value: 1234567.89 },
+      }}
+    />
+  );
+}
+```
+
+Use `useSpellbook` from `@gridsheet/functions` to create a book with all extended formula functions pre-loaded:
+
+```tsx
+import { GridSheet, Policy, ThousandSeparatorPolicyMixin } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
+
+function MySheet() {
+  const book = useSpellbook({
+    policies: {
+      currency: new Policy({ mixins: [ThousandSeparatorPolicyMixin] }),
+    },
+  });
+
+  return (
+    <GridSheet
+      book={book}
+      initialCells={{
+        B: { policy: 'currency' },
+        'B1': { value: 1234567.89 },
+      }}
+    />
+  );
+}
+```
+
+## Creating a Custom Policy
+
+### Using Mixins (recommended)
+
+Define a `PolicyMixinType` object and pass it to the `Policy` constructor:
+
+```tsx
+import { Policy, PolicyMixinType, RenderProps, SelectProps, AutocompleteOption } from '@gridsheet/react-core';
+
+const StatusPolicyMixin: PolicyMixinType = {
+  getSelectOptions(): AutocompleteOption[] {
+    return [
+      { value: 'active',   label: '🟢 Active' },
+      { value: 'inactive', label: '🔴 Inactive' },
+      { value: 'pending',  label: '🟡 Pending' },
+    ];
+  },
+  select({ next }: SelectProps) {
+    const allowed = ['active', 'inactive', 'pending'];
+    if (!allowed.includes(next?.value)) {
+      return { ...next, value: 'pending' };
+    }
+    return next;
+  },
+  renderString({ value }: RenderProps<string>) {
+    const map: Record<string, string> = {
+      active: '🟢 Active',
+      inactive: '🔴 Inactive',
+      pending: '🟡 Pending',
+    };
+    return map[value] ?? value;
+  },
+};
+
+const statusPolicy = new Policy({ mixins: [StatusPolicyMixin] });
+```
+
+### Combining Multiple Mixins
+
+```tsx
+import { Policy, ThousandSeparatorPolicyMixin } from '@gridsheet/react-core';
+
+const currencyPolicy = new Policy({
+  mixins: [
+    ThousandSeparatorPolicyMixin,
+    {
+      renderColHeaderLabel: () => 'Amount ($)',
+    },
+  ],
+});
+```
+
+### Subclassing
+
+```tsx
+import { Policy, RenderProps } from '@gridsheet/react-core';
+
+class UpperCasePolicy extends Policy {
+  override renderString({ value }: RenderProps<string>) {
+    return value?.toUpperCase() ?? '';
+  }
+}
+
+const upperCasePolicy = new UpperCasePolicy();
+```
+
+## Policy Constructor
+
+```tsx
+new Policy(props?: PolicyProps)
+
+type PolicyProps = {
+  mixins?: PolicyMixinType[];
+  priority?: number;   // default: 1
+};
+```
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `mixins` | `PolicyMixinType[]` | `undefined` | Mixin objects whose methods are merged into the policy |
+| `priority` | `number` | `1` | Resolution priority when multiple policies apply |
+
+## PolicyMixinType Reference
+
+### Format Settings
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `datetimeFormat` | `string` | `'YYYY-MM-DD HH:mm:ss'` | Format for datetime values |
+| `dateFormat` | `string` | `'YYYY-MM-DD'` | Format for date-only values |
+| `timeFormat` | `string` | `'HH:mm:ss'` | Format for time values |
+| `decimalPrecision` | `number` | `15` | Significant digits for number rendering |
+
+### Rendering Methods
+
+These methods control what is displayed inside a cell. Return a React node or a primitive value.
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `render` | `(props: RenderProps) => any` | Override the entire render dispatch |
+| `renderCallback` | `(rendered: any, props: RenderProps) => any` | Post-process the rendered value |
+| `renderString` | `(props: RenderProps<string>) => any` | Render string values |
+| `renderNumber` | `(props: RenderProps<number>) => any` | Render number values |
+| `renderBool` | `(props: RenderProps<boolean>) => any` | Render boolean values |
+| `renderDate` | `(props: RenderProps<Date>) => any` | Render Date values |
+| `renderTime` | `(props: RenderProps<Time>) => any` | Render Time values |
+| `renderArray` | `(props: RenderProps<any[]>) => any` | Render array values |
+| `renderObject` | `(props: RenderProps<any>) => any` | Render object values |
+| `renderNull` | `(props: RenderProps<null \| undefined>) => any` | Render null/undefined values |
+| `renderSheet` | `(props: RenderProps<Sheet>) => any` | Render Sheet values |
+| `renderRowHeaderLabel` | `(n: number) => string \| null` | Custom row header label |
+| `renderColHeaderLabel` | `(n: number) => string \| null` | Custom column header label |
+
+**`RenderProps`**
+
+```tsx
+type RenderProps<T = any> = {
+  value?: T;
+  cell?: CellType<T>;
+  sheet: Sheet;
+  point: PointType;
+  sync?: (sheet: UserSheet) => void;
+};
+```
+
+### Serialization Methods
+
+These methods convert cell values to strings for clipboard and export.
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `serialize` | `(props: SerializeProps) => string` | Override entire serialization dispatch |
+| `serializeString` | `(props: SerializeProps<string>) => string` | Serialize string values |
+| `serializeNumber` | `(props: SerializeProps<number>) => string` | Serialize number values |
+| `serializeBool` | `(props: SerializeProps<boolean>) => string` | Serialize boolean values |
+| `serializeDate` | `(props: SerializeProps<Date>) => string` | Serialize Date values |
+| `serializeTime` | `(props: SerializeProps<Time>) => string` | Serialize Time values |
+| `serializeArray` | `(props: SerializeProps<any[]>) => string` | Serialize array values |
+| `serializeNull` | `(props: SerializeProps<null \| undefined>) => string` | Serialize null/undefined values |
+| `serializeFormulaError` | `(props: SerializeProps<FormulaError>) => string` | Serialize formula errors |
+| `serializeError` | `(props: SerializeProps<Error>) => string` | Serialize generic errors |
+| `serializeForClipboard` | `(props: SerializeForClipboardProps) => string` | Custom clipboard serialization |
+
+**`SerializeProps`**
+
+```tsx
+type SerializeProps<T = any> = {
+  value: T;
+  cell?: CellType<T>;
+  sheet: Sheet;
+  point: PointType;
+};
+```
+
+### Deserialization Methods
+
+These methods parse user input (strings) into typed cell values.
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `deserialize` | `(value: string, cell?: CellType) => CellType` | Override entire deserialize dispatch |
+| `deserializeRaw` | `(value: any, cell?: CellType) => CellType` | Parse raw (non-string) input |
+| `deserializeCallback` | `(parsed: any, cell?: CellType) => CellType` | Post-process any deserialized value |
+| `deserializeFirst` | `(value: string, cell?: CellType) => CellPatchType<any>` | Runs before built-in deserializers (highest priority) |
+| `deserializeNumber` | `(value: string, cell?: CellType) => CellPatchType<number \| undefined>` | Parse as number |
+| `deserializeBool` | `(value: string, cell?: CellType) => CellPatchType<boolean \| undefined>` | Parse as boolean |
+| `deserializeDate` | `(value: string, cell?: CellType) => CellPatchType<Date \| undefined>` | Parse as Date |
+| `deserializeTime` | `(value: string, cell?: CellType) => CellPatchType<Time \| undefined>` | Parse as Time |
+| `deserializeAny` | `(value: string, cell?: CellType) => CellPatchType<string \| undefined>` | Fallback — treat as string |
+
+**Deserialization order** (built-in):
+
+1. `deserializeFirst` (if defined — runs before all others)
+2. `deserializeNumber`
+3. `deserializeTime`
+4. `deserializeDate`
+5. `deserializeBool`
+6. `deserializeAny`
+
+### toScalar Methods
+
+These methods convert cell values to scalars used by the formula engine.
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `toScalar` | `(props: ScalarProps) => Scalar` | Override entire scalar dispatch |
+| `toScalarString` | `(props: ScalarProps<string>) => Scalar` | Convert string to scalar |
+| `toScalarNumber` | `(props: ScalarProps<number>) => Scalar` | Convert number to scalar |
+| `toScalarBool` | `(props: ScalarProps<boolean>) => Scalar` | Convert boolean to scalar |
+| `toScalarDate` | `(props: ScalarProps<Date>) => Scalar` | Convert Date to scalar |
+| `toScalarTime` | `(props: ScalarProps<Time>) => Scalar` | Convert Time to scalar |
+| `toScalarArray` | `(props: ScalarProps<any[]>) => Scalar` | Convert array to scalar |
+| `toScalarNull` | `(props: ScalarProps<null \| undefined>) => Scalar` | Convert null/undefined to scalar |
+
+```tsx
+type ScalarProps<T = any> = {
+  value?: T;
+  cell?: CellType<T>;
+  sheet: Sheet;
+  point: PointType;
+};
+
+type Scalar = string | number | boolean | null | undefined;
+```
+
+### Selection / Autocomplete Methods
+
+These methods control dropdown menus and value validation when users select from a list.
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `getSelectOptions` | `() => AutocompleteOption[]` | Return available dropdown options |
+| `select` | `(props: SelectProps) => CellType \| undefined` | Validate/transform the selected value |
+| `getSelectFallback` | `(props: SelectFallbackProps) => CellType \| undefined` | Return a default cell when validation fails |
+
+**`AutocompleteOption`**
+
+```tsx
+type AutocompleteOption = {
+  value: any;
+  label?: any;                                       // React node displayed in dropdown
+  keywords?: string[];                               // Extra search terms
+  tooltip?: ReactNode | FC<{ value?: any }>;         // Tooltip shown on hover
+};
+```
+
+**`SelectProps`**
+
+```tsx
+type SelectProps = {
+  sheet: UserSheet;
+  point: PointType;
+  current?: CellType;   // Cell value before the change
+  next?: CellType;      // Cell value after the change
+  operation: OperationType;
+};
+```
+
+#### Example: Dropdown with Validation
+
+```tsx
+import { Policy, PolicyMixinType, AutocompleteOption, SelectProps } from '@gridsheet/react-core';
+
+const ColorPolicyMixin: PolicyMixinType = {
+  getSelectOptions(): AutocompleteOption[] {
+    return [
+      { value: 'red',   label: <span style={{ color: 'red' }}>Red</span> },
+      { value: 'green', label: <span style={{ color: 'green' }}>Green</span> },
+      { value: 'blue',  label: <span style={{ color: 'blue' }}>Blue</span> },
+    ];
+  },
+  select({ next, current }: SelectProps) {
+    const allowed = ['red', 'green', 'blue'];
+    if (allowed.includes(next?.value)) {
+      return { value: next!.value, style: { backgroundColor: next!.value } };
+    }
+    // Preserve current value if input is invalid
+    return current ?? { value: null };
+  },
+};
+
+const colorPolicy = new Policy({ mixins: [ColorPolicyMixin], priority: 2 });
+```
+
+## Built-in Mixins
+
+GridSheet ships with several ready-to-use mixins:
+
+### `ThousandSeparatorPolicyMixin`
+
+Formats numbers with comma separators.
+
+```tsx
+import { Policy, ThousandSeparatorPolicyMixin } from '@gridsheet/react-core';
+
+const policy = new Policy({ mixins: [ThousandSeparatorPolicyMixin] });
+// 1234567.89 → "1,234,567.89"
+```
+
+### `ThousandSpaceSeparatorPolicyMixin`
+
+Same as above but uses a space as the thousands separator.
+
+```tsx
+import { Policy, ThousandSpaceSeparatorPolicyMixin } from '@gridsheet/react-core';
+
+const policy = new Policy({ mixins: [ThousandSpaceSeparatorPolicyMixin] });
+// 1234567.89 → "1 234 567.89"
+```
+
+### `CheckboxPolicyMixin`
+
+Renders boolean cells as interactive `<input type="checkbox">` elements.
+
+```tsx
+import { Policy, CheckboxPolicyMixin } from '@gridsheet/react-core';
+
+const policy = new Policy({ mixins: [CheckboxPolicyMixin] });
+```
+
+```tsx
+// Registration and cell assignment
+const book = useBook({
+  policies: {
+    checkbox: new Policy({ mixins: [CheckboxPolicyMixin] }),
+  },
+});
+
+const initialCells = {
+  A: { policy: 'checkbox' },
+  'A1': { value: true },
+  'A2': { value: false },
+};
+```
+
+## `nonePolicy`
+
+A minimal policy with `priority: 0` that applies no customization. Used as the baseline default.
+
+```tsx
+import { nonePolicy } from '@gridsheet/react-core';
+```

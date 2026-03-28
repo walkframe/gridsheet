@@ -4,13 +4,13 @@ import * as React from 'react';
 import {
   GridSheet,
   buildInitialCells,
-  useHub,
   Policy,
   PolicyMixinType,
   RenderProps,
   makeBorder,
-  type UserTable,
+  type UserSheet,
 } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 // Stock level policy mixin
 const StockPolicyMixin: PolicyMixinType = {
@@ -67,14 +67,14 @@ const CategoryPolicyMixin: PolicyMixinType = {
 
 // Delete button policy mixin
 const DeleteButtonPolicyMixin: PolicyMixinType = {
-  renderNull({ value, point, sync, table }: RenderProps<null | undefined>) {
+  renderNull({ value, point, apply, sheet }: RenderProps<null | undefined>) {
     // Only show delete button for product rows
     const shouldShowButton = point.y >= 1;
 
     // Get product name for tooltip
     let productName = 'Unknown';
     try {
-      const productCell = table.getCell({ y: point.y, x: 2 }, 'RESOLVED');
+      const productCell = sheet.getCell({ y: point.y, x: 2 }, { resolution: 'RESOLVED' });
       if (productCell?.value != null) {
         productName = String(productCell.value);
       }
@@ -89,13 +89,13 @@ const DeleteButtonPolicyMixin: PolicyMixinType = {
             onClick={(e) => {
               e.stopPropagation();
               // Trigger row deletion with product name
-              if (sync) {
+              if (apply) {
                 // Create a custom event to pass product name
                 const deleteEvent = new CustomEvent('productDelete', {
                   detail: { row: point.y, productName: productName },
                 });
                 document.dispatchEvent(deleteEvent);
-                sync(table.removeRows({ y: point.y, numRows: 1 }));
+                apply(sheet.removeRows({ y: point.y, numRows: 1 }));
               }
             }}
             style={{
@@ -124,11 +124,11 @@ const DeleteButtonPolicyMixin: PolicyMixinType = {
 };
 
 // TSV conversion utility function
-const convertToTSV = (table: UserTable, evaluates: boolean = true): string => {
-  if (!table) {
+const convertToTSV = (sheet: UserSheet, evaluates: boolean = true): string => {
+  if (!sheet) {
     return '';
   }
-  const matrix = table.toValueMatrix({ resolution: evaluates ? 'RESOLVED' : 'RAW' });
+  const matrix = sheet.__raw__._toValueMatrix({ resolution: evaluates ? 'RESOLVED' : 'RAW' });
   if (!matrix || matrix.length === 0) {
     return '';
   }
@@ -173,50 +173,48 @@ export default function InventoryManagement() {
     };
   }, []);
 
-  const hub = useHub({
+  const book = useSpellbook({
     policies: {
       stock: new Policy({ mixins: [StockPolicyMixin] }),
       category: new Policy({ mixins: [CategoryPolicyMixin] }),
       delete: new Policy({ mixins: [DeleteButtonPolicyMixin] }),
     },
-    onSave: ({ table, points }) => {
+    onSave: ({ sheet, points }) => {
       const posInfo = Array.isArray(points)
         ? points.map((p) => `(${p.pointing.y},${p.pointing.x})`).join(', ')
-        : `(${points.pointing.y},${points.pointing.x})`;
+        : `(${points?.pointing.y},${points?.pointing.x})`;
       addActivityLog(`💾 Inventory data saved at ${Array.isArray(points) ? points.length : 1} position(s): ${posInfo}`);
     },
-    onChange: ({ table }: { table: UserTable }) => {
-      const addresses = table.getLastChangedAddresses();
+    onChange: ({ sheet }: { sheet: UserSheet }) => {
+      const addresses = sheet.getLastChangedAddresses();
       if (addresses.length > 0) {
         addActivityLog(`✏️ Inventory edited. (onChange) Cells: ${addresses.join(', ')}`);
       }
-      setTsv(convertToTSV(table));
+      setTsv(convertToTSV(sheet));
     },
-    onRemoveRows: ({ table, ys }: { table: UserTable; ys: number[] }) => {
-      ys.forEach((y, i) => {
-        if (pendingDeleteInfo && pendingDeleteInfo.row === i) {
+    onRemoveRows: ({ sheet, ys }: { sheet: UserSheet; ys: number[] }) => {
+      ys.forEach((y) => {
+        if (pendingDeleteInfo) {
           const productName = pendingDeleteInfo.productName;
           setPendingDeleteInfo(null);
           addActivityLog(`🗑️ Removed product: row ${y} (${productName})`);
         } else {
-          const valueRows = table.toValueRows();
-          const productName = valueRows[y - 1]?.['B'] ?? 'Unknown';
-          addActivityLog(`🗑️ Removed product: row ${y} (${productName})`);
+          addActivityLog(`🗑️ Removed product row ${y}`);
         }
       });
     },
-    onRemoveCols: ({ table, xs }: { table: UserTable; xs: number[] }) => {
+    onRemoveCols: ({ sheet, xs }: { sheet: UserSheet; xs: number[] }) => {
       const colInfo = xs.map((x) => `col ${String.fromCharCode(65 + x)}`).join(', ');
       addActivityLog(`🗑️ Removed ${xs.length} column(s) from inventory: ${colInfo}`);
     },
-    onInsertRows: ({ table, y, numRows }: { table: UserTable; y: number; numRows: number }) => {
+    onInsertRows: ({ sheet, y, numRows }: { sheet: UserSheet; y: number; numRows: number }) => {
       addActivityLog(`➕ Added ${numRows} new product(s) to inventory at row ${y}`);
     },
-    onInsertCols: ({ table, x, numCols }: { table: UserTable; x: number; numCols: number }) => {
+    onInsertCols: ({ sheet, x, numCols }: { sheet: UserSheet; x: number; numCols: number }) => {
       const colName = String.fromCharCode(65 + x);
       addActivityLog(`➕ Added ${numCols} new column(s) to inventory at column ${colName}`);
     },
-    onInit: ({ table }) => {
+    onInit: ({ sheet }) => {
       addActivityLog(`📦 Inventory management system initialized`);
     },
   });
@@ -252,14 +250,15 @@ export default function InventoryManagement() {
         width: 120,
         height: 32,
         style: {
-          ...makeBorder({ all: '1px solid #e0e0e0' }),
           fontSize: '11px',
         },
       },
-      A: { width: 40, policy: 'delete' },
-      B: { width: 140, label: 'Product Name' },
-      C: { width: 100, policy: 'stock', label: 'Stock Level' },
-      D: { width: 90, label: 'Unit Price' },
+      A0: { width: 40 },
+      A: { policy: 'delete' },
+      B0: { width: 140, label: 'Product Name' },
+      C0: { width: 100, label: 'Stock Level' },
+      C: { policy: 'stock' },
+      D0: { width: 90, label: 'Unit Price' },
     },
   });
 
@@ -277,7 +276,7 @@ export default function InventoryManagement() {
       {/* Inventory Management Dashboard */}
       <div style={{ display: 'flex', gap: '20px', padding: 10 }}>
         <GridSheet
-          hub={hub}
+          book={book}
           sheetName="inventory-management"
           initialCells={initialCells}
           style={{ border: '1px solid #ccc' }}

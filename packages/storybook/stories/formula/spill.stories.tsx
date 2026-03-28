@@ -81,7 +81,7 @@ class DelaySequenceFunction extends BaseFunctionAsync {
 function makeInitialCells(prefix: 'SEQUENCE' | 'DELAY_SEQUENCE') {
   return buildInitialCells({
     cells: {
-      default: { width: 80 },
+      defaultCol: { width: 80 },
       // ---- Label row (row 1) ----
       A1: { value: `${prefix}(4)` },
       C1: { value: `${prefix}(3, 2)` },
@@ -158,7 +158,7 @@ const SpillBlockedSheet: React.FC = () => {
         sheetName="SpillBlocked"
         initialCells={buildInitialCells({
           cells: {
-            default: { width: 100 },
+            defaultCol: { width: 100 },
             // ---- Case 1: existing value blocks the spill ----
             A1: { value: '=SEQUENCE(3, 1)' },
             // A3 sits inside the 3×2 spill range (A1:B3), so A1 → #REF!

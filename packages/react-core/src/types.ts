@@ -1,11 +1,24 @@
 import type { UserSheet, Sheet, SheetLimits } from './lib/sheet';
-import type { FC, RefObject } from 'react';
+import type { RefObject } from 'react';
 import type { BookType, TransmitProps } from './lib/book';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import type { PolicyType } from './policy/core';
 import type { Dispatcher } from './store';
+import type { ContextMenuItemDescriptor, RowMenuItemDescriptor, ColMenuItemDescriptor } from './lib/menu';
 
-export type Resolution = 'RESOLVED' | 'RAW' | 'SYSTEM';
+/**
+ * Controls how formula values are resolved when reading a cell.
+ *
+ * - `'RESOLVED'` (default) — Fully evaluates formulas to a scalar value.
+ *   Range references (e.g. `=C1:F1`) are unwrapped to the top-left scalar.
+ * - `'EVALUATED'` — Evaluates formulas one level deep but keeps range/Sheet
+ *   results intact. Use this when you need the `Sheet` object a range formula
+ *   produces (e.g. in `renderSheet` policy hooks).
+ * - `'RAW'` — Returns the formula string with cell addresses resolved to their
+ *   display form; does not evaluate.
+ * - `'SYSTEM'` — Returns the raw stored value with no evaluation or transformation.
+ */
+export type Resolution = 'RESOLVED' | 'EVALUATED' | 'RAW' | 'SYSTEM';
 
 export type Y = number;
 export type X = number;
@@ -96,6 +109,10 @@ export type CellType<T = any, Custom = any> = {
   filter?: FilterConfig;
   /** Whether this row is hidden by a filter. Set on row-header cells (x=0). */
   filtered?: boolean;
+  /** If true, this row is excluded from sort and stays at its original position. Set on row-header cells (x=0). */
+  sortFixed?: boolean;
+  /** If true, this row is always visible regardless of active filters. Set on row-header cells (x=0). */
+  filterFixed?: boolean;
 };
 
 export type RawCellType = {
@@ -119,7 +136,9 @@ export type OptionsType = {
   showFormulaBar?: boolean;
   limits?: SheetLimits;
   mode?: ModeType;
-  contextMenuItems?: FC<ContextMenuProps>[];
+  contextMenu?: ContextMenuItemDescriptor[];
+  rowMenu?: RowMenuItemDescriptor[];
+  colMenu?: ColMenuItemDescriptor[];
 };
 
 export type RangeType = { start: number; end: number }; // [start, end]
@@ -162,7 +181,9 @@ export type StoreType = {
   matchingCellIndex: number;
   editingOnEnter: boolean;
   contextMenuPosition: PositionType;
-  contextMenuItems: FC<ContextMenuProps>[];
+  contextMenu: ContextMenuItemDescriptor[];
+  rowMenu: RowMenuItemDescriptor[];
+  colMenu: ColMenuItemDescriptor[];
   resizingPositionY: [Y, Y, Y]; // indexY, startY, endY
   resizingPositionX: [X, X, X]; // indexX, startX, endX
   columnMenuState: { x: number; position: PositionType } | null;
@@ -175,23 +196,23 @@ export type Manager<T> = {
   sync: T extends StoreType ? Dispatcher : (instance: T) => void;
 };
 
-export type Connector = {
-  sheetManager: {
-    sheet: UserSheet;
-    sync: (sheet: UserSheet) => void;
-  };
-  storeManager: {
-    store: StoreType;
-    sync: (store: StoreType) => void;
-    dispatch: Dispatcher;
-  };
+export type SheetHandle = {
+  sheet: UserSheet;
+  apply: (sheet: UserSheet) => void;
+};
+
+export type StoreHandle = {
+  store: StoreType;
+  apply: (store: StoreType) => void;
+  dispatch: Dispatcher;
 };
 
 export type Props = {
   initialCells: CellsByAddressType;
   sheetName?: string;
   book?: BookType;
-  connector?: RefObject<Connector | null>;
+  sheetRef?: RefObject<SheetHandle | null>;
+  storeRef?: RefObject<StoreHandle | null>;
   options?: OptionsType;
   className?: string;
   style?: CSSProperties;
@@ -334,7 +355,7 @@ export type StoreDispatchType = {
   store: StoreType;
   dispatch: Dispatcher;
 };
-export type ContextsBySheetId = { [sheetId: string]: StoreDispatchType }; // id: { store, sync }
+export type ContextsBySheetId = { [sheetId: string]: StoreDispatchType }; // id: { store, apply }
 export type SheetIdsByName = { [sheetName: string]: number }; // name: id
 
 export type RefPaletteType = { [address: string]: number };
@@ -343,5 +364,3 @@ export type EditorEvent = KeyboardEvent<HTMLTextAreaElement>;
 export type EditorEventWithNativeEvent = EditorEvent & {
   nativeEvent: KeyboardEvent & { isComposing: boolean };
 };
-
-export type ContextMenuProps = StoreDispatchType;

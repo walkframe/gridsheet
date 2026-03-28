@@ -68,9 +68,9 @@ const ParseAsListSheet = () => {
           },
           cells: {
             default: {
-              height: 100,
               policy: 'list',
             },
+            defaultRow: { height: 100 },
           },
           ensured: { numRows: 30, numCols: 20 },
         })}

@@ -1,0 +1,682 @@
+# Sheet Class
+
+The `UserSheet` interface provides the public API for manipulating spreadsheet data programmatically. It offers comprehensive methods for data access, manipulation, and history management.
+
+## Overview
+
+The `UserSheet` interface provides access to:
+- Cell data retrieval and manipulation
+- Row and column operations
+- History and undo/redo functionality
+- Sort and filter operations
+- Cross-sheet communication
+
+**Important**: When using sheet methods that return a new `UserSheet` instance (like `update`, `write`, `setHeaderHeight`, etc.), you must call `apply()` to apply the changes to the GridSheet component. The sheet instance alone is not sufficient to update the UI.
+
+## UserSheet vs Sheet
+
+`UserSheet` is the **public interface** exposed to application code — callbacks (`onChange`, `onInit`, etc.), `sheetRef`, and all documented methods operate on `UserSheet`. It intentionally exposes only stable, public APIs.
+
+`Sheet` is the **concrete class** that implements `UserSheet`. It contains additional internal methods (such as `getSystem()`) that are marked `@internal` and are not part of the public API contract. These may change without notice.
+
+In practice, `Sheet` implements `UserSheet`, so `sheet.__raw__` simply returns `this` — the same object, typed as `Sheet`.
+
+### Accessing the Sheet class via `__raw__`
+
+If you need `Sheet`-level internals (e.g. `getSystem()`), use `sheet.__raw__`:
+
+```tsx
+import { Sheet } from '@gridsheet/react-core';
+
+const book = useBook({
+  onChange: ({ sheet }) => {
+    const raw: Sheet = sheet.__raw__;
+    const system = raw.getSystem({ y: 1, x: 1 });
+    console.log('changedTime:', system?.changedTime);
+  },
+});
+```
+
+> **Warning**: `__raw__` and any methods accessed through it are internal APIs. They are not covered by semver guarantees and may change or be removed in future versions. Prefer `UserSheet` methods wherever possible.
+
+## Core Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `name` | `string` | The sheet name |
+| `changedTime` | `number` | Timestamp (ms since epoch) of the most recent change |
+| `lastChangedTime` | `number \| undefined` | Timestamp (ms since epoch) of the previous change |
+| `area` | `AreaType` | Current sheet boundaries `{ top, left, bottom, right }` |
+| `top`, `left`, `bottom`, `right` | `number` | Current sheet boundaries (individual accessors) |
+| `numRows` | `number` | Number of data rows |
+| `numCols` | `number` | Number of data columns |
+| `shape` | `{ rows: number; cols: number }` | Number of data rows and columns |
+| `minNumRows`, `maxNumRows` | `number` | Row count limits (-1 means unlimited) |
+| `minNumCols`, `maxNumCols` | `number` | Column count limits (-1 means unlimited) |
+| `headerWidth`, `headerHeight` | `number` | Header dimensions in pixels |
+
+## Data Access Methods
+
+### Cell Retrieval
+
+#### `getCell(point: PointType, options?: { resolution?: Resolution; raise?: boolean }): CellType | undefined`
+Retrieves a cell by its coordinates.
+
+- `resolution`: controls how formula values are resolved — see the [Resolution](#resolution) section below
+- `raise`: If `true`, throws on formula errors instead of returning them
+
+```tsx
+const cell = sheet.getCell({ y: 1, x: 1 });
+console.log(cell?.value, cell?.style);
+
+// Get the raw formula string without evaluation
+const raw = sheet.getCell({ y: 1, x: 1 }, { resolution: 'RAW' });
+```
+
+#### `getPolicy(point: PointType): PolicyType`
+Returns the `Policy` instance applied to a cell.
+
+```tsx
+const policy = sheet.getPolicy({ y: 1, x: 1 });
+```
+
+#### `getRectSize(area: AreaType): RectType`
+Returns the pixel dimensions and position of a cell area. `RectType` is `{ y: number; x: number; height: number; width: number }`.
+
+```tsx
+const rect = sheet.getRectSize({ top: 1, left: 1, bottom: 3, right: 3 });
+console.log(rect.width, rect.height, rect.x, rect.y);
+```
+
+#### `getSerializedValue(props: { point: PointType; cell?: CellType; resolution?: Resolution }): string`
+Serializes a cell's value to a string using its policy.
+
+```tsx
+const str = sheet.getSerializedValue({ point: { y: 1, x: 1 } });
+```
+
+#### `getLastChangedAddresses(): Address[]`
+Returns addresses of cells changed in the last operation.
+
+```tsx
+const changed = sheet.getLastChangedAddresses();
+console.log(changed); // e.g. ['A1', 'B2']
+```
+
+## Reading Sheet Data with `toXXX` Functions
+
+To export or read the sheet data in bulk, use the standalone `toXXX` utility functions exported from `@gridsheet/react-core`. These functions take a `UserSheet` as their first argument and are **not** methods on the sheet object itself.
+
+```tsx
+import {
+  toValueMatrix,
+  toValueObject,
+  toValueRows,
+  toValueCols,
+  toCellMatrix,
+  toCellObject,
+  toCellRows,
+  toCellCols,
+} from '@gridsheet/react-core';
+```
+
+All `toXXX` functions accept an optional second argument with these common options:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `resolution` | `'RESOLVED' \| 'EVALUATED' \| 'RAW' \| 'SYSTEM'` | `'RESOLVED'` | How formula values are resolved — see [Resolution](#resolution) |
+| `raise` | `boolean` | `false` | Throw on formula errors instead of returning them |
+| `filter` | `CellFilter` | (all cells) | Predicate to include/exclude cells |
+| `asScalar` | `boolean` | `false` | Convert values to scalar via the cell's policy |
+
+### Resolution
+
+The `resolution` option controls how formula results are resolved when reading cells.
+
+| Value | Description |
+|-------|-------------|
+| `'RESOLVED'` | **(default)** Fully evaluates formulas to a scalar. Range references like `=C1:F1` are unwrapped to the top-left scalar value. |
+| `'EVALUATED'` | Evaluates formulas one level deep but preserves range results as a `Sheet` object. Use this in `renderSheet` policy hooks to receive the full range. |
+| `'RAW'` | Returns the formula string with addresses resolved to display form; does not evaluate. |
+| `'SYSTEM'` | Returns the raw stored value with no evaluation or transformation. |
+
+```tsx
+// Default: =C1:F1 → scalar value of C1
+sheet.getCell({ y: 1, x: 2 });
+
+// EVALUATED: =C1:F1 → Sheet object spanning C1:F1
+sheet.getCell({ y: 1, x: 2 }, { resolution: 'EVALUATED' });
+
+// RAW: =C1:F1 → '=C1:F1' string
+sheet.getCell({ y: 1, x: 2 }, { resolution: 'RAW' });
+```
+
+`'EVALUATED'` is particularly useful when writing a `renderSheet` policy mixin — `Policy.render()` internally uses `'EVALUATED'` so that range formulas arrive as `Sheet` objects:
+
+```tsx
+const ChartPolicyMixin: PolicyMixinType = {
+  renderSheet({ value }: RenderProps<Sheet>) {
+    // value is the Sheet spanning the referenced range (e.g. C1:F1)
+    const matrix = value._toValueMatrix();
+    // ... render chart from matrix data
+  },
+};
+```
+
+### Value Functions
+
+#### `toValueMatrix(sheet, args?: ToValueMatrixProps): any[][]`
+Returns cell values as a 2D array (rows × columns).
+
+```tsx
+const matrix = toValueMatrix(sheet);
+// [[1, 2, 3], [4, 5, 6], ...]
+
+// Only a specific area
+const area = toValueMatrix(sheet, { area: { top: 1, left: 1, bottom: 3, right: 3 } });
+
+// Unevaluated formula strings
+const raw = toValueMatrix(sheet, { resolution: 'RAW' });
+```
+
+#### `toValueObject(sheet, args?: ToValueObjectProps): { [address: Address]: any }`
+Returns cell values as an object keyed by address (e.g. `'A1'`).
+
+```tsx
+const values = toValueObject(sheet);
+console.log(values['A1']); // value of A1
+
+// Only specific addresses
+const partial = toValueObject(sheet, { addresses: ['A1', 'B2', 'C3'] });
+```
+
+#### `toValueRows(sheet, args?: ToValueRowsProps): { [col: string]: any }[]`
+Returns an array of objects, one per row, mapping column letter to value.
+
+```tsx
+const rows = toValueRows(sheet);
+console.log(rows[0]); // { A: 1, B: 'hello', ... } for row 1
+
+// Only specific rows (1-based)
+const subset = toValueRows(sheet, { rows: [1, 3, 5] });
+```
+
+#### `toValueCols(sheet, args?: ToValueColsProps): { [row: string]: any }[]`
+Returns an array of objects, one per column, mapping row number to value.
+
+```tsx
+const cols = toValueCols(sheet);
+console.log(cols[0]); // { '1': 1, '2': 4, ... } for column A
+
+// Only specific columns (1-based index or letter)
+const subset = toValueCols(sheet, { cols: ['A', 'C'] });
+```
+
+### Cell Object Functions
+
+The `toCellXXX` variants return full `CellType` objects instead of plain values, giving access to styles and other metadata.
+
+#### `toCellMatrix(sheet, args?: ToCellMatrixProps): (CellType | null)[][]`
+Returns full cell objects as a 2D array.
+
+```tsx
+const matrix = toCellMatrix(sheet);
+console.log(matrix[0][0]?.value);
+console.log(matrix[0][0]?.style);
+```
+
+#### `toCellObject(sheet, args?: ToCellObjectProps): CellsByAddressType`
+Returns full cell objects keyed by address.
+
+```tsx
+const cells = toCellObject(sheet);
+console.log(cells['A1']?.style);
+```
+
+#### `toCellRows(sheet, args?: ToCellRowsProps): CellsByAddressType[]`
+Returns an array of cell-objects-by-column-letter, one entry per row.
+
+```tsx
+const rows = toCellRows(sheet);
+console.log(rows[0]); // { A: CellType, B: CellType, ... } for row 1
+```
+
+#### `toCellCols(sheet, args?: ToCellColsProps): CellsByAddressType[]`
+Returns an array of cell-objects-by-row-number, one entry per column.
+
+```tsx
+const cols = toCellCols(sheet);
+console.log(cols[0]); // { '1': CellType, '2': CellType, ... } for column A
+```
+
+### Example: Reading data in an onChange handler
+
+```tsx
+import { GridSheet, useConnector, toValueMatrix } from '@gridsheet/react-core';
+
+function MyComponent() {
+  const connector = useConnector();
+
+  return (
+    <GridSheet
+      connector={connector}
+      initialCells={{ A1: { value: 1 }, B1: { value: 2 } }}
+      options={{
+        onChange: ({ sheet }) => {
+          const matrix = toValueMatrix(sheet);
+          console.log('Current values:', matrix);
+        },
+      }}
+    />
+  );
+}
+```
+
+## Data Manipulation Methods
+
+**Important**: All data manipulation methods return a new `UserSheet` instance. To apply changes to the GridSheet component, you must use the `sync` function from `connector`.
+
+### Using Sheet References
+
+To manipulate sheet data programmatically, access the sheet through a connector:
+
+#### React (useConnector)
+
+`useConnector` is a React hook and must be called within a function component:
+
+```tsx
+import { useConnector, GridSheet } from '@gridsheet/react-core';
+
+function MyComponent() {
+  const connector = useConnector(); // Must be called inside function component
+  
+  const handleUpdate = () => {
+    if (connector.current) {
+      const { sheetManager } = connector.current;
+      const { sheet, apply } = sheetManager;
+      const newSheet = sheet.write({ point: { x: 1, y: 1 }, value: 'New Value' });
+      apply(newSheet);
+    }
+  };
+
+  return (
+    <GridSheet connector={connector} initialCells={initialCells} />
+  );
+}
+```
+
+#### Global Usage and Other Frameworks (createConnector)
+
+For global usage or non-React frameworks (Vue, Svelte), use `createConnector`:
+
+```tsx
+import { createConnector, GridSheet } from '@gridsheet/react-core';
+
+const connector = createConnector();
+
+function MyComponent() {
+  return (
+    <GridSheet connector={connector} initialCells={initialCells} />
+  );
+}
+
+// Can be called from anywhere:
+function updateFromOutside() {
+  if (connector.current) {
+    const { sheetManager } = connector.current;
+    const { sheet, apply } = sheetManager;
+    const newSheet = sheet.write({ point: { x: 1, y: 1 }, value: 'Hello' });
+    apply(newSheet);
+  }
+}
+```
+
+### Cell Updates
+
+**Note**: The `sync` function used in the examples below should be obtained from `connector.current.sheetManager`.
+
+#### `update(args): UserSheet`
+
+```ts
+update(args: {
+  diff: CellsByAddressType;
+  historicize?: boolean;
+  partial?: boolean;
+  updateChangedTime?: boolean;
+  reflection?: StorePatchType;
+}): UserSheet
+```
+
+Updates multiple cells at once.
+
+```tsx
+const { sheet, apply } = connector.current.sheetManager;
+
+const newSheet = sheet.update({
+  diff: {
+    'A1': { value: 'Updated Value' },
+    'B1': { style: { color: '#FF0000' } },
+  },
+  historicize: true,
+});
+apply(newSheet); // Required to apply changes
+```
+
+#### `write(args): UserSheet`
+
+```ts
+write(args: {
+  point: PointType;
+  value: string;
+  updateChangedTime?: boolean;
+  reflection?: StorePatchType;
+}): UserSheet
+```
+
+Writes a value to a specific cell.
+
+```tsx
+const { sheet, apply } = connector.current.sheetManager;
+
+const newSheet = sheet.write({
+  point: { x: 1, y: 1 },
+  value: 'Hello World',
+});
+apply(newSheet); // Required to apply changes
+```
+
+#### `writeMatrix(args): UserSheet`
+
+```ts
+writeMatrix(args: {
+  point: PointType;
+  matrix: MatrixType<string>;
+  updateChangedTime?: boolean;
+  reflection?: StorePatchType;
+}): UserSheet
+```
+
+Writes a 2D matrix of string values starting at a specific point.
+
+```tsx
+const { sheet, apply } = connector.current.sheetManager;
+
+const newSheet = sheet.writeMatrix({
+  point: { x: 1, y: 1 },
+  matrix: [['A1', 'B1'], ['A2', 'B2']],
+});
+apply(newSheet); // Required to apply changes
+```
+
+### Row Operations
+
+#### `insertRows(args): UserSheet`
+
+```ts
+insertRows(args: {
+  y: number;
+  numRows: number;
+  baseY: number;
+  diff?: CellsByAddressType;
+  partial?: boolean;
+  updateChangedTime?: boolean;
+  reflection?: StorePatchType;
+}): UserSheet
+```
+
+Inserts rows at position `y`. `baseY` specifies which existing row to copy layout from. If `diff` is provided, those cells are updated after insertion.
+
+```tsx
+const { sheet, apply } = connector.current.sheetManager;
+
+const newSheet = sheet.insertRows({
+  y: 5,
+  numRows: 2,
+  baseY: 5,
+  diff: {
+    A5: { value: 'New Row 1' },
+    A6: { value: 'New Row 2' },
+  },
+});
+apply(newSheet); // Required to apply changes
+```
+
+#### `removeRows(args): UserSheet`
+
+```ts
+removeRows(args: { y: number; numRows: number; reflection?: StorePatchType }): UserSheet
+```
+
+Removes rows starting at position `y`.
+
+```tsx
+const { sheet, apply } = connector.current.sheetManager;
+
+const newSheet = sheet.removeRows({ y: 2, numRows: 3 });
+apply(newSheet); // Required to apply changes
+```
+
+### Column Operations
+
+#### `insertCols(args): UserSheet`
+
+```ts
+insertCols(args: {
+  x: number;
+  numCols: number;
+  baseX: number;
+  diff?: CellsByAddressType;
+  partial?: boolean;
+  updateChangedTime?: boolean;
+  reflection?: StorePatchType;
+}): UserSheet
+```
+
+Inserts columns at position `x`. `baseX` specifies which existing column to copy layout from. If `diff` is provided, those cells are updated after insertion.
+
+```tsx
+const { sheet, apply } = connector.current.sheetManager;
+
+const newSheet = sheet.insertCols({
+  x: 3,
+  numCols: 2,
+  baseX: 3,
+  diff: {
+    C1: { value: 'New Col 1' },
+    D1: { value: 'New Col 2' },
+  },
+});
+apply(newSheet); // Required to apply changes
+```
+
+#### `removeCols(args): UserSheet`
+
+```ts
+removeCols(args: { x: number; numCols: number; reflection?: StorePatchType }): UserSheet
+```
+
+Removes columns starting at position `x`.
+
+```tsx
+const { sheet, apply } = connector.current.sheetManager;
+
+const newSheet = sheet.removeCols({ x: 2, numCols: 3 });
+apply(newSheet); // Required to apply changes
+```
+
+### Move and Copy Operations
+
+#### `move(args): UserSheet`
+Moves cells from one area to another.
+
+```tsx
+const { sheet, apply } = connector.current.sheetManager;
+
+const newSheet = sheet.move({
+  src: { top: 1, left: 1, bottom: 3, right: 3 },
+  dst: { top: 5, left: 5, bottom: 7, right: 7 },
+});
+apply(newSheet); // Required to apply changes
+```
+
+#### `copy(args): UserSheet`
+Copies cells from one area to another. Pass `onlyValue: true` to copy only values without styles.
+
+```tsx
+const { sheet, apply } = connector.current.sheetManager;
+
+const newSheet = sheet.copy({
+  src: { top: 1, left: 1, bottom: 3, right: 3 },
+  dst: { top: 5, left: 5, bottom: 7, right: 7 },
+  onlyValue: false,
+});
+apply(newSheet); // Required to apply changes
+```
+
+### Header Operations
+
+#### `setHeaderHeight(height: number, historicize?: boolean): UserSheet`
+Sets the row header height in pixels.
+
+```tsx
+const { sheet, apply } = connector.current.sheetManager;
+apply(sheet.setHeaderHeight(32));
+```
+
+#### `setHeaderWidth(width: number, historicize?: boolean): UserSheet`
+Sets the column header width in pixels.
+
+```tsx
+const { sheet, apply } = connector.current.sheetManager;
+apply(sheet.setHeaderWidth(60));
+```
+
+### Sort and Filter Operations
+
+Rows marked with `sortFixed: true` or `filterFixed: true` (via their row header cell) are exempt from sort reordering and filter hiding respectively. See [Fixed Rows](/api-reference/props#fixed-rows-sortfixed--filterfixed) in the Props reference.
+
+#### `sortRows(args: { x: number; direction: 'asc' | 'desc' }): UserSheet`
+Sorts all data rows by the values in the specified column. Supports ascending and descending order. Null/undefined values are sorted to the end. Rows with `sortFixed: true` on their header cell remain in place. This operation is recorded in the undo/redo history.
+
+```tsx
+const { sheet, apply } = connector.current.sheetManager;
+
+// Sort by column B ascending
+apply(sheet.sortRows({ x: 2, direction: 'asc' }));
+
+// Sort by column A descending
+apply(sheet.sortRows({ x: 1, direction: 'desc' }));
+```
+
+#### `filterRows(args?: { x?: number; filter?: FilterConfig }): UserSheet`
+Applies a filter to the specified column. Rows that do not match the filter conditions are hidden. Rows with `filterFixed: true` on their header cell are always visible regardless of filter conditions. Multiple columns can have independent filters, and they are combined with AND logic across columns.
+If called without `filter`, clears the filter for the specified column. If called without `x`, clears all column filters.
+
+The `FilterConfig` object has the following structure:
+
+```tsx
+type FilterConfig = {
+  mode: 'and' | 'or';        // How multiple conditions are combined
+  conditions: FilterCondition[];
+};
+
+type FilterCondition = {
+  method: FilterConditionMethod;  // e.g., 'eq', 'contains', 'gt', etc.
+  value: string[];
+};
+```
+
+Available filter methods:
+
+| Method | Description |
+|--------|-------------|
+| `eq` | Equals |
+| `ne` | Not equals |
+| `gt` | Greater than |
+| `gte` | Greater than or equal |
+| `lt` | Less than |
+| `lte` | Less than or equal |
+| `contains` | Contains substring |
+| `notContains` | Does not contain substring |
+| `empty` | Cell is empty (no value required) |
+| `notEmpty` | Cell is not empty (no value required) |
+
+```tsx
+const { sheet, apply } = connector.current.sheetManager;
+
+// Filter column B: show only rows where value > 80
+apply(sheet.filterRows({
+  x: 2,
+  filter: {
+    mode: 'and',
+    conditions: [{ method: 'gt', value: ['80'] }],
+  },
+}));
+
+// Clear filter on column B only
+apply(sheet.filterRows({ x: 2 }));
+
+// Clear all filters
+apply(sheet.filterRows());
+```
+
+#### `isRowFiltered(y: number): boolean`
+Returns `true` if the specified row is currently hidden by a filter.
+
+```tsx
+if (sheet.isRowFiltered(3)) {
+  console.log('Row 3 is hidden by a filter');
+}
+```
+
+#### `hasActiveFilters(): boolean`
+Returns `true` if any column currently has an active filter.
+
+```tsx
+if (sheet.hasActiveFilters()) {
+  console.log('Some rows are filtered');
+}
+```
+
+## History (Undo/Redo)
+
+#### `undo(): { history: HistoryType | null }`
+Undoes the most recent operation.
+
+```tsx
+const { sheet, apply } = connector.current.sheetManager;
+const { history } = sheet.undo();
+apply(sheet);
+```
+
+#### `redo(): { history: HistoryType | null }`
+Redoes the most recently undone operation.
+
+```tsx
+const { sheet, apply } = connector.current.sheetManager;
+sheet.redo();
+apply(sheet);
+```
+
+#### `histories(): HistoryType[]`
+Returns all undo/redo history entries.
+
+#### `historyIndex(): number`
+Returns the current position in the history stack.
+
+#### `historySize(): number`
+Returns the total number of history entries.
+
+## Async Formulas
+
+#### `hasPendingCells(): boolean`
+Returns `true` if any cells with async formulas are still loading.
+
+#### `waitForPending(): Promise<void>`
+Resolves when all pending async formula cells have settled.
+
+```tsx
+const { sheet } = connector.current.sheetManager;
+await sheet.waitForPending();
+const matrix = toValueMatrix(sheet);
+```

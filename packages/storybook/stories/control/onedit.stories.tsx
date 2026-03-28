@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, buildInitialCells, useConnector, addressesToAreas, toCellObject } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells, addressesToAreas, toCellObject } from '@gridsheet/react-core';
 import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {

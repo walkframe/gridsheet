@@ -1,6 +1,7 @@
 {
   "props": { "title": "GridSheet Props" },
-  "table": { "title": "Table Class" },
+  "sheet": { "title": "Sheet Class" },
   "formula": { "title": "Formula System" },
+  "policy": { "title": "Policy System" },
   "utility-functions": { "title": "Utility Functions" }
 }

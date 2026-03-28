@@ -39,7 +39,7 @@ const IfSheet: React.FC = () => {
       sheetName="IfDemo"
       initialCells={buildInitialCells({
         cells: {
-          default: { width: 200 },
+          defaultCol: { width: 200 },
           // Labels
           A1: { value: 'score' },
           B1: { value: 'IF pass/fail' },
@@ -78,7 +78,7 @@ const IfsSheet: React.FC = () => {
       sheetName="IfsDemo"
       initialCells={buildInitialCells({
         cells: {
-          default: { width: 220 },
+          defaultCol: { width: 220 },
           A1: { value: 'score' },
           B1: { value: 'IFS grade' },
           A2: { value: 95 },
@@ -106,7 +106,7 @@ const IfnaSheet: React.FC = () => {
       sheetName="IfnaDemo"
       initialCells={buildInitialCells({
         cells: {
-          default: { width: 240 },
+          defaultCol: { width: 240 },
           A1: { value: 'formula' },
           B1: { value: 'IFNA result' },
           // Direct NA formula
@@ -155,7 +155,7 @@ const IfnaDelayNaSheet: React.FC = () => {
       sheetName="IfnaDelayNaDemo"
       initialCells={buildInitialCells({
         cells: {
-          default: { width: 280 },
+          defaultCol: { width: 280 },
           A1: { value: 'pattern' },
           B1: { value: 'formula' },
           C1: { value: 'result' },
@@ -185,7 +185,7 @@ const IferrorIfnaSheet: React.FC = () => {
       sheetName="IferrorIfnaDemo"
       initialCells={buildInitialCells({
         cells: {
-          default: { width: 220 },
+          defaultCol: { width: 220 },
           A1: { value: 'input' },
           B1: { value: 'IFERROR result' },
           C1: { value: 'IFNA result' },

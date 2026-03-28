@@ -41,7 +41,7 @@ const CustomFunctionSheet = () => {
       book={book}
       initialCells={buildInitialCells({
         cells: {
-          default: { width: 200 },
+          defaultCol: { width: 200 },
           B2: { value: '=HOPE("WORLD PEACE") & "!"' },
           A3: { value: '=test()' },
         },

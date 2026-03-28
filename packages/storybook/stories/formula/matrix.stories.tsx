@@ -15,7 +15,14 @@ const MatrixFunctions: React.FC = () => {
   // ---- MMULT: A(2×2) × B(2×2) → 2×2 result spills from E2 ----
   const mmultCells = buildInitialCells({
     cells: {
-      default: { width: 90 },
+      A: { width: 90 },
+      B: { width: 90 },
+      C: { width: 90 },
+      D: { width: 90 },
+      E: { width: 90 },
+      F: { width: 90 },
+      G: { width: 90 },
+      H: { width: 90 },
       A1: { value: 'Matrix A', style: { fontWeight: 'bold' } },
       A2: { value: 1 },
       B2: { value: 2 },
@@ -35,7 +42,14 @@ const MatrixFunctions: React.FC = () => {
   // ---- TRANSPOSE: 2×3 matrix → 3×2 result spills from E2 ----
   const transposeCells = buildInitialCells({
     cells: {
-      default: { width: 90 },
+      A: { width: 90 },
+      B: { width: 90 },
+      C: { width: 90 },
+      D: { width: 90 },
+      E: { width: 90 },
+      F: { width: 90 },
+      G: { width: 90 },
+      H: { width: 90 },
       A1: { value: 'Matrix (2×3)', style: { fontWeight: 'bold' } },
       A2: { value: 1 },
       B2: { value: 2 },
@@ -52,7 +66,15 @@ const MatrixFunctions: React.FC = () => {
   // ---- MINVERSE: 3×3 invertible matrix → 3×3 result spills from E2 ----
   const minverseCells = buildInitialCells({
     cells: {
-      default: { width: 90 },
+      A: { width: 90 },
+      B: { width: 90 },
+      C: { width: 90 },
+      D: { width: 90 },
+      E: { width: 90 },
+      F: { width: 90 },
+      G: { width: 90 },
+      H: { width: 90 },
+      I: { width: 90 },
       A1: { value: 'Matrix C (3×3)', style: { fontWeight: 'bold' } },
       A2: { value: 1 },
       B2: { value: 2 },
@@ -72,7 +94,14 @@ const MatrixFunctions: React.FC = () => {
   // ---- MDETERM: 3×3 matrix → scalar ----
   const mdetermCells = buildInitialCells({
     cells: {
-      default: { width: 90 },
+      A: { width: 90 },
+      B: { width: 90 },
+      C: { width: 90 },
+      D: { width: 90 },
+      E: { width: 90 },
+      F: { width: 90 },
+      G: { width: 90 },
+      H: { width: 90 },
       A1: { value: 'Matrix C (3×3)', style: { fontWeight: 'bold' } },
       A2: { value: 1 },
       B2: { value: 2 },
@@ -92,7 +121,14 @@ const MatrixFunctions: React.FC = () => {
   // ---- SUMPRODUCT: dot product of two 3-element vectors ----
   const sumproductCells = buildInitialCells({
     cells: {
-      default: { width: 90 },
+      A: { width: 90 },
+      B: { width: 90 },
+      C: { width: 90 },
+      D: { width: 90 },
+      E: { width: 90 },
+      F: { width: 90 },
+      G: { width: 90 },
+      H: { width: 90 },
       A1: { value: 'Array A', style: { fontWeight: 'bold' } },
       A2: { value: 1 },
       A3: { value: 2 },

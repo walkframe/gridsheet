@@ -479,6 +479,23 @@
 
 .gs-row-menu {
   .gs-header-menu();
+
+  .gs-row-fixed-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .gs-row-fixed-check {
+    font-size: 12px;
+    width: 14px;
+    text-align: center;
+    color: rgba(0, 119, 255, 0.1);
+
+    &.gs-row-fixed-active {
+      color: #0077ff;
+    }
+  }
 }
 
 .gs-row-menu-btn {

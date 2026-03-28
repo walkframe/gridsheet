@@ -44,7 +44,7 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
     editorRef,
     autofillDraggingTo,
     dragging,
-    contextMenuItems,
+    contextMenu,
     columnMenuState,
   } = store;
   const sheet = sheetRef.current;
@@ -217,9 +217,9 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
             : 'gs-selecting'
           : ''
       }`}
-      style={{ width, minWidth: width, maxWidth: width }}
+      style={{ ...col?.style, width, minWidth: width, maxWidth: width }}
       onContextMenu={(e) => {
-        if (contextMenuItems.length > 0) {
+        if (contextMenu.length > 0) {
           e.stopPropagation();
           safePreventDefault(e);
           dispatch(setContextMenuPosition({ y: e.clientY, x: e.clientX }));

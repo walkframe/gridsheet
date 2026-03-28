@@ -1,7 +1,7 @@
 import type { FC, MutableRefObject } from 'react';
 import { createRef, useContext, useEffect, useRef, useState } from 'react';
 
-import type { OptionsType, Props, Connector } from '../types';
+import type { OptionsType, Props, SheetHandle, StoreHandle } from '../types';
 import { Context } from '../store';
 
 import { setStore, updateSheet } from '../store/actions';
@@ -11,22 +11,26 @@ import { Sheet } from '../lib/sheet';
 
 type StoreObserverProps = OptionsType & {
   sheetName?: string;
-  connector?: MutableRefObject<Connector | null>;
+  sheetRef?: MutableRefObject<SheetHandle | null>;
+  storeRef?: MutableRefObject<StoreHandle | null>;
 };
 
-export const createConnector = () => createRef<Connector | null>();
-export const useConnector = () => useRef<Connector | null>(null);
+export const createSheetRef = () => createRef<SheetHandle | null>();
+export const useSheetRef = () => useRef<SheetHandle | null>(null);
+export const createStoreRef = () => createRef<StoreHandle | null>();
+export const useStoreRef = () => useRef<StoreHandle | null>(null);
 export const StoreObserver: FC<StoreObserverProps> = ({
   sheetName,
   sheetHeight,
   sheetWidth,
-  connector,
+  sheetRef,
+  storeRef,
   editingOnEnter,
   mode,
 }) => {
   const { store, dispatch } = useContext(Context);
-  const { sheetReactive: sheetRef } = store;
-  const sheet = sheetRef.current;
+  const { sheetReactive } = store;
+  const sheet = sheetReactive.current;
 
   useEffect(() => {
     if (!sheet) {
@@ -50,24 +54,24 @@ export const StoreObserver: FC<StoreObserverProps> = ({
     registry.contextsBySheetId[sheet.id] = { store, dispatch };
     registry.transmit();
 
-    if (connector) {
-      connector.current = {
-        sheetManager: {
-          sheet,
-          sync: (sheet) => {
-            dispatch(updateSheet(sheet as Sheet));
-          },
-        },
-        storeManager: {
-          store,
-          sync: (store) => {
-            dispatch(setStore(store));
-          },
-          dispatch,
+    if (sheetRef) {
+      sheetRef.current = {
+        sheet,
+        apply: (sheet) => {
+          dispatch(updateSheet(sheet as Sheet));
         },
       };
     }
-  }, [store, sheet, connector]);
+    if (storeRef) {
+      storeRef.current = {
+        store,
+        apply: (store) => {
+          dispatch(setStore(store));
+        },
+        dispatch,
+      };
+    }
+  }, [store, sheet, sheetRef, storeRef]);
 
   useEffect(() => {
     if (sheetHeight) {
@@ -96,7 +100,7 @@ export const StoreObserver: FC<StoreObserverProps> = ({
       return;
     }
     pluginContext.setStore(store);
-    pluginContext.setSync(() => dispatch);
+    pluginContext.setApply(() => dispatch);
   }, [store, pluginProvided, pluginContext]);
 
   return <></>;

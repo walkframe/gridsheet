@@ -30,11 +30,12 @@ const SortFilterSheet = () => {
       }}
       initialCells={buildInitialCells({
         cells: {
-          default: { width: 120 },
-          A: { label: 'Active', policy: 'checkbox', width: 60 },
-          B: { label: 'Name' },
-          C: { label: 'Score' },
-          D: { label: 'Grade' },
+          defaultCol: { width: 120 },
+          A0: { label: 'Active', width: 60 },
+          A: { policy: 'checkbox' },
+          B0: { label: 'Name' },
+          C0: { label: 'Score' },
+          D0: { label: 'Grade' },
           A1: { value: true },
           B1: { value: 'Alice' },
           C1: { value: 90 },
@@ -55,8 +56,12 @@ const SortFilterSheet = () => {
           B5: { value: 'Eve' },
           C5: { value: 40 },
           D5: { value: 'D' },
+          B6: { value: 'Total' },
+          C6: { value: '=SUM(C1:C5)' },
+          '6': { style: { borderTop: '3px double #555' } },
+          '06': { sortFixed: true, filterFixed: true },
         },
-        ensured: { numRows: 5, numCols: 4 },
+        ensured: { numRows: 6, numCols: 4 },
       })}
     />
   );

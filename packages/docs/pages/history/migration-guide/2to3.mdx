@@ -8,34 +8,393 @@ v3.0.0 introduces async/await support for formulas and several breaking changes.
 
 ## Breaking Changes
 
-### 1. CellType.system Property Rename
+### 1. CellType.system Property Removed
+
+In v2, system metadata was stored directly on the cell object. In v3, it is no longer available as a cell property.
 
 **From v2:**
 ```tsx
-const cell = table.getCell({ x: 0, y: 0 });
+const cell = table.getCellByPoint({ x: 0, y: 0 });
 if (cell?.system?.changedAt) {
   console.log('Last changed at:', cell.system.changedAt);
 }
 ```
 
 **To v3:**
+
+System metadata is now accessed via `getSystem()` on the `Sheet` class (an internal API). Because callbacks and `sheetRef` expose the `UserSheet` interface — which does not include `getSystem()` — you must go through `sheet.__raw__` to reach it:
+
 ```tsx
-const cell = table.getCell({ x: 0, y: 0 });
-if (cell?._sys?.changedTime) {
-  console.log('Last changed at:', cell._sys.changedTime);
+import { Sheet } from '@gridsheet/react-core';
+
+const book = useBook({
+  onChange: ({ sheet }) => {
+    const raw: Sheet = sheet.__raw__;
+    const system = raw.getSystem({ y: 0, x: 0 });
+    if (system?.changedTime) {
+      console.log('Last changed at:', system.changedTime);
+    }
+  },
+});
+```
+
+> **Note**: `sheet.__raw__` exposes the internal `Sheet` class, which is not part of the public API and may change in future versions. Use it only when no `UserSheet` alternative is available.
+
+**What Changed:**
+- `cell.system` (and `cell._sys`) are no longer available on `CellType`
+- System metadata is retrieved via `getSystem(point)` on the internal `Sheet` class, accessed through `sheet.__raw__`
+- `changedAt` has been renamed to `changedTime` inside the `System` type
+- `changedTime` is consistent with the sheet-level `sheet.changedTime` and `sheet.lastChangedTime` properties
+
+### UserSheet vs Sheet
+
+v3 formalizes the distinction between `UserSheet` and `Sheet`:
+
+- **`UserSheet`** is the public interface exposed to application code. All callbacks (`onChange`, `onInit`, etc.) and `sheetRef` provide a `UserSheet`. Rely on this for stable, version-safe code.
+- **`Sheet`** is the concrete class that implements `UserSheet`. It contains additional internal methods not included in `UserSheet`. Access it via `sheet.__raw__` when absolutely necessary.
+
+See the [Sheet API Reference](../api-reference/sheet.mdx#usersheet-vs-sheet) for details.
+
+### 2. options.showAddress Removed
+
+The `showAddress` option that overlaid cell addresses in the top-right corner of each cell has been removed from `OptionsType`.
+
+**From v2:**
+```tsx
+<GridSheet
+  initialCells={initialCells}
+  options={{ showAddress: true }}
+/>
+```
+
+**To v3:**
+
+Implement the same visual using a `Policy` with `renderCallback`. Use `p2a(point)` to convert the `{y, x}` coordinates to an address string, then wrap the rendered content:
+
+```tsx
+import {
+  GridSheet,
+  Policy,
+  PolicyMixinType,
+  RenderProps,
+  useBook,
+  p2a,
+  buildInitialCells,
+} from '@gridsheet/react-core';
+
+const AddressOverlayMixin: PolicyMixinType = {
+  renderCallback(rendered: any, { point }: RenderProps) {
+    return (
+      <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ position: 'absolute', top: 2, right: 4, fontSize: '9px', color: '#aaa', fontFamily: 'monospace', pointerEvents: 'none', userSelect: 'none' }}>
+          {p2a(point)}
+        </span>
+        {rendered}
+      </div>
+    );
+  },
+};
+
+function MySheet() {
+  const book = useBook({
+    policies: { address: new Policy({ mixins: [AddressOverlayMixin] }) },
+  });
+
+  return (
+    <GridSheet
+      book={book}
+      initialCells={buildInitialCells({ cells: { default: { policy: 'address' } } })}
+    />
+  );
+}
+```
+
+See [Case 2](../examples/case2.mdx) for a full working example.
+
+### 3. Connector Split into SheetHandle and StoreHandle
+
+In v2, a single `Connector` object was used to link a `GridSheet` to external code. In v3 it has been replaced by two focused handles: `SheetHandle` and `StoreHandle`.
+
+| Concern | Old (`Connector`) | New |
+|---|---|---|
+| Sheet data access | `connector.current.tableManager.instance` (`UserTable`) | `sheetRef.current?.sheet` (`UserSheet`) |
+| Push sheet update | `tableManager.sync(table)` | `sheetRef.current?.apply(sheet)` |
+| UI state access | `connector.current.storeManager.instance` | `storeRef.current?.store` |
+| Push store update | `storeManager.sync` | `storeRef.current?.apply(store)` |
+| Raw dispatch | — | `storeRef.current?.dispatch` |
+| Prop name | `connector={connector}` | `sheetRef={sheetRef} storeRef={storeRef}` |
+
+**From v2:**
+```tsx
+import { useConnector } from '@gridsheet/react-core';
+
+const connector = useConnector();
+
+// read sheet data
+const table = connector.current.tableManager.instance;
+
+return <GridSheet connector={connector} initialCells={initialCells} />;
+```
+
+**To v3:**
+```tsx
+import {
+  GridSheet,
+  useSheetRef,
+  useStoreRef,
+} from '@gridsheet/react-core';
+
+const sheetRef = useSheetRef();
+const storeRef = useStoreRef();
+
+// read sheet data
+const sheet = sheetRef.current?.sheet;
+
+// programmatically move the cursor
+const store = storeRef.current?.store;
+storeRef.current?.apply({ ...store, choosing: { y: 2, x: 3 } });
+
+return (
+  <GridSheet
+    sheetRef={sheetRef}
+    storeRef={storeRef}
+    initialCells={initialCells}
+  />
+);
+```
+
+When working outside a React component, use the `createSheetRef` / `createStoreRef` factory functions instead of the `use*` hooks.
+
+**What Changed:**
+- `useConnector()` and `createConnector()` are removed; replace them with `useSheetRef()` / `createSheetRef()` and `useStoreRef()` / `createStoreRef()`
+- The data type for sheet content changed from `UserTable` to `UserSheet`
+- `SheetHandle` exposes sheet data and an `apply` method to push updates
+- `StoreHandle` exposes UI state (cursor, selection mode, dimensions, etc.) and both an `apply` method and a raw `dispatch` function
+
+### 4. BaseFunction Structure Changes
+
+The `BaseFunction` base class for custom formula functions has been reworked. The `helpTexts` array is gone; documentation is now declared with a single `description` string on the class and an inline `description` on each argument definition.
+
+**From v2:**
+```tsx
+class MyFunc extends BaseFunction {
+  helpTexts = ['Computes something.', 'arg1: the input value'];
+
+  protected main(arg1: string) {
+    return arg1.toUpperCase();
+  }
+}
+```
+
+**To v3:**
+```tsx
+import {
+  BaseFunction,
+  FunctionArgumentDefinition,
+  FunctionCategory,
+} from '@gridsheet/react-core';
+
+class MyFunc extends BaseFunction {
+  example = 'MY_FUNC("hello")';
+  description = 'Computes something.';
+  category: FunctionCategory = 'text';
+
+  defs: FunctionArgumentDefinition[] = [
+    {
+      name: 'arg1',
+      description: 'The input value.',
+      acceptedTypes: ['string', 'number', 'boolean'],
+    },
+  ];
+
+  protected main(arg1: string) {
+    return arg1.toUpperCase();
+  }
+}
+```
+
+**Automatic Validation**
+
+A key improvement in v3 is that `BaseFunction` now automatically validates arguments before `main()` is called, based on the `defs` schema. You no longer need to write boilerplate argument-count or type checks inside `main()`:
+
+- **Argument count** — the minimum and maximum allowed counts are derived from `defs`. If too few or too many arguments are passed, a `#N/A` error is thrown automatically.
+- **Type checking** — each argument is verified against its `acceptedTypes` list. A `#VALUE!` error is thrown on mismatch.
+- **Variadic args** — set `variadic: true` on a definition to accept a repeating parameter.
+- **Optional args** — set `optional: true` to allow the argument to be omitted.
+- **Matrix extraction** — by default, a 1×1 matrix is automatically unwrapped to a scalar before being passed to `main()`. Set `takesMatrix: true` to suppress this.
+
+When the built-in validation is insufficient you can override `validate(args)` to apply custom coercion, then return the processed argument list:
+
+```tsx
+protected validate(args: any[]): any[] {
+  const matrix = this.extractNumberMatrix(args[0], 'matrix');
+  this.requireSquare(matrix, 'MY_MATRIX_FUNC');
+  return [matrix];
 }
 ```
 
 **What Changed:**
-- `changedAt` property has been removed from `CellType._sys`
-- `changedTime` property is now used to track the timestamp of the last change
-- This change provides consistency with the table's `changedTime` and `lastChangedTime` properties
+- `helpTexts: string[]` is removed; use `description: string` on the class and `description` on each `defs` entry
+- `defs: FunctionArgumentDefinition[]` drives automatic argument-count and type validation before `main()` is invoked
+- `example: string` documents a canonical call expression shown in formula autocomplete
 
-### 2. Table Public Methods
+### 5. Renderer Merged into Policy
 
-Several table public methods have been refactored to support async operations. Review the [Table API Reference](../api-reference/table.mdx) for the complete and updated method signatures.
+In v2, `Renderer` and `Policy` were separate classes with separate mixin systems. In v3 they have been **merged into a single `Policy` class**.
 
-### 3. Filter Operations
+**From v2:**
+```tsx
+import { Renderer, Policy } from '@gridsheet/react-core';
+
+const myRenderer = new Renderer({
+  mixins: [ThousandSeparatorRendererMixin],
+});
+
+const myPolicy = new Policy({
+  mixins: [DropdownPolicyMixin],
+});
+```
+
+**To v3:**
+```tsx
+import { Policy } from '@gridsheet/react-core';
+
+// Rendering and policy behaviour are both configured through Policy
+const myPolicy = new Policy({
+  mixins: [ThousandSeparatorPolicyMixin, DropdownPolicyMixin],
+});
+```
+
+`PolicyMixinType` now covers rendering, serialization, deserialization, scalar extraction, and selection helpers all in one place. The most commonly used mixin hooks are:
+
+| Hook | Purpose |
+|---|---|
+| `render` | Fully custom cell renderer |
+| `renderCallback` | Wrap the default rendered output |
+| `renderRowHeaderLabel` / `renderColHeaderLabel` | Custom header labels |
+| `serialize` / `deserialize` | Clipboard and init value conversion |
+| `toScalar` | How the cell value is passed to formula evaluation |
+| `getSelectOptions` | Dropdown/autocomplete choices |
+
+**What Changed:**
+- `Renderer` class is removed; replace all `new Renderer(...)` with `new Policy(...)`
+- All `*RendererMixin` objects must be replaced with their `*PolicyMixin` equivalents
+- `renderer` prop and `renderers` option no longer exist; use `policies` and `policy` on cells
+
+### 6. Header-Only Cell Addressing with `A0` and `01`
+
+v3 introduces two new address keys specifically for targeting header cells without affecting the data cells below or beside them.
+
+**Previous behavior (still valid for data cells):**
+
+| Key | Example | Applies to |
+|---|---|---|
+| `A` | column letter | All cells in column A — width and label. Style is **not** applied to the column header (only to data cells) |
+| `1` | row number | All cells in row 1 — height only. Style is **not** applied to the row header |
+
+**New header-only keys:**
+
+| Key | Example | Applies to |
+|---|---|---|
+| `A0` | column + zero | **Only** the column header cell for column A |
+| `01` | zero + row number | **Only** the row header cell for row 1 |
+
+The critical difference is that `A0` and `01` fully support `style`, whereas `style` set on `A` or `1` is silently stripped when the spreadsheet stacks cells in the header row/column.
+
+```tsx
+buildInitialCells({
+  cells: {
+    // Column A: set width for all cells and a label for the header
+    A: { width: 120, label: 'Name' },
+
+    // Style and label applied ONLY to the column-A header cell
+    A0: {
+      style: { backgroundColor: '#e8f0fe', fontWeight: 'bold' },
+      label: 'Full Name',
+    },
+
+    // Row 1: set height for all cells
+    1: { height: 28 },
+
+    // Style applied ONLY to the row-1 header cell
+    '01': {
+      style: { backgroundColor: '#fce8e6' },
+      label: 'R1',
+    },
+  },
+});
+```
+
+Stacking order for a column header (e.g. `A0`):
+
+1. `DEFAULT_COL_KEY` defaults
+2. Layout from `A` (width, label — style stripped)
+3. Full override from `A0` (including style)
+
+Stacking order for a row header (e.g. `01`):
+
+1. `DEFAULT_ROW_KEY` defaults
+2. Layout from `1` (height — style stripped)
+3. Full override from `01` (including style)
+
+**What Changed / New:**
+- `style` placed on a column key (`A`) or row key (`1`) no longer bleeds into the corresponding header cell — this is a behavioural change if you previously relied on `A`/`1` to style headers
+- `A0` targets only the column header cell and fully supports `style`
+- `01` targets only the row header cell and fully supports `style`
+- Header cells now participate in the full style system; you can set background colour, font weight, borders, etc. directly on header cells
+
+**Utility Functions for Header Address Keys**
+
+`@gridsheet/react-core` exports two helper functions for generating header address keys programmatically:
+
+| Function | Signature | Example | Output |
+|---|---|---|---|
+| `ch` | `ch(col: string \| number): string` | `ch('A')` / `ch(1)` | `'A0'` |
+| `rh` | `rh(y: number): string` | `rh(1)` / `rh(10)` | `'01'` / `'010'` |
+
+```tsx
+import { ch, rh } from '@gridsheet/react-core';
+
+ch('A')  // → 'A0'  (column header key for column A)
+ch(1)    // → 'A0'  (also accepts a 1-based column index)
+ch('Z')  // → 'Z0'
+
+rh(1)    // → '01'  (row header key for row 1)
+rh(10)   // → '010'
+```
+
+> **Note:** `ch(col)` returns the *header-only* key `A0`. Use a plain column letter (e.g. `'A'`) when you want to set `width` across all cells in the column. Use `ch(col)` when you want to target the column header cell specifically (e.g. to set its `style` or `label`).
+
+These helpers are especially useful when building `CellsByAddressType` dynamically:
+
+```tsx
+import { buildInitialCells, ch, rh } from '@gridsheet/react-core';
+
+const columns = ['A', 'B', 'C'];
+
+buildInitialCells({
+  cells: {
+    // Set column width for all cells in each column (plain column letter key)
+    ...Object.fromEntries(columns.map((col) => [col, { width: 120 }])),
+
+    // Apply a bold label to each column header cell only (ch() key)
+    ...Object.fromEntries(
+      columns.map((col, i) => [ch(col), { label: `Column ${i + 1}`, style: { fontWeight: 'bold' } }])
+    ),
+
+    // Set row height on each row header cell (rh() key)
+    ...Object.fromEntries(
+      Array.from({ length: 10 }, (_, i) => [rh(i + 1), { height: 28 }])
+    ),
+  },
+});
+```
+
+### 7. Sheet Methods
+
+Several sheet methods have been refactored to support async operations. Review the [Sheet API Reference](../api-reference/sheet.mdx) for the complete and updated method signatures.
+
+### 8. Filter Operations
 
 Filter operations now properly apply to all sheet operations (delete, copy, move, paste). If your code relies on filters being ignored during these operations, you may need to adjust your logic.
 
@@ -52,7 +411,7 @@ import { BaseFunctionAsync } from '@gridsheet/react-core';
 
 class FetchWeather extends BaseFunctionAsync {
   example = 'FETCH_WEATHER("Tokyo")';
-  helpTexts = ['Fetches weather data for a city'];
+  description = 'Fetches weather data for a city.';
   defs = [{ name: 'city', description: 'City name' }];
 
   async main(city: string) {
@@ -65,14 +424,125 @@ class FetchWeather extends BaseFunctionAsync {
 
 Async formulas are automatically awaited during evaluation, and filtering/sorting operations automatically wait for all async computations to complete.
 
+### Sheet Data Extraction with `toValue*` / `toCell*` Functions
+
+Instead of calling methods directly on a `UserSheet` object to read data, v3 provides a set of standalone utility functions. Import them alongside your other `@gridsheet/react-core` imports and pass the `sheet` received from a callback or `sheetRef`.
+
+```tsx
+import {
+  toValueMatrix,
+  toValueObject,
+  toValueRows,
+  toValueCols,
+  toCellMatrix,
+  toCellObject,
+  toCellRows,
+  toCellCols,
+} from '@gridsheet/react-core';
+```
+
+**Overview**
+
+| Function | Returns | Best for |
+|---|---|---|
+| `toValueMatrix` | `any[][]` | Feeding data into a chart or table |
+| `toValueObject` | `{ [address]: any }` | Keyed lookup by cell address |
+| `toValueRows` | `{ [col]: any }[]` | Row-oriented export (one object per row) |
+| `toValueCols` | `{ [row]: any }[]` | Column-oriented export (one object per column) |
+| `toCellMatrix` | `(CellType \| null)[][]` | Reading styles/metadata alongside values |
+| `toCellObject` | `{ [address]: CellType }` | Partial reads of specific cells with metadata |
+| `toCellRows` | `{ [col]: CellType }[]` | Row-oriented read with full cell objects |
+| `toCellCols` | `{ [row]: CellType }[]` | Column-oriented read with full cell objects |
+
+All functions share these common options:
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `resolution` | `'RESOLVED' \| 'EVALUATED' \| 'RAW' \| 'SYSTEM'` | `'RESOLVED'` | How formula results are resolved |
+| `raise` | `boolean` | `false` | Throw on formula errors instead of returning an error string |
+| `filter` | `CellFilter` | (all cells) | Predicate to include or exclude cells |
+| `asScalar` | `boolean` | `false` | Coerce values through the cell's policy |
+
+**Examples**
+
+Read all values as a 2-D array (useful for chart libraries):
+
+```tsx
+const book = useBook({
+  onChange: ({ sheet }) => {
+    const matrix = toValueMatrix(sheet);
+    // [[1, 2, 3], [4, 5, 6], ...]
+  },
+});
+```
+
+Read only the cells that changed in the last edit:
+
+```tsx
+const book = useBook({
+  onChange: ({ sheet }) => {
+    const changed = toCellObject(sheet, {
+      addresses: sheet.getLastChangedAddresses(),
+    });
+    // { A1: CellType, B2: CellType, ... }
+  },
+});
+```
+
+Read values keyed by address, restricting to a rectangular area:
+
+```tsx
+const matrix = toValueMatrix(sheet, {
+  area: { top: 1, left: 1, bottom: 5, right: 3 },
+});
+```
+
+Read unevaluated formula strings:
+
+```tsx
+const raw = toValueMatrix(sheet, { resolution: 'RAW' });
+```
+
+Row-oriented export for serialisation:
+
+```tsx
+const rows = toValueRows(sheet);
+console.log(rows[0]); // { A: 'Alice', B: 30, C: 'Engineer' }
+```
+
+**Using with `sheetRef`**
+
+```tsx
+const sheetRef = useSheetRef();
+
+function handleExport() {
+  const sheet = sheetRef.current?.sheet;
+  if (!sheet) return;
+  const data = toValueObject(sheet);
+  console.log(data);
+}
+
+return <GridSheet sheetRef={sheetRef} initialCells={initialCells} />;
+```
+
 ### Context Menus on Headers
 
-v3 enhances the context menu system. You can now open menus on row headers and the top-left corner area. Check the [API Reference](../api-reference/table.mdx) for implementation details.
+v3 enhances the context menu system. You can now open menus on row headers and the top-left corner area. Check the [API Reference](../api-reference/sheet.mdx) for implementation details.
 
 ## Migration Checklist
 
-- [ ] Search codebase for `changedAt` and replace with `changedTime`
-- [ ] Review table method implementations and update signatures if needed
+- [ ] Search codebase for `cell.system` / `cell._sys` and replace with `sheet.getSystem(point)`
+- [ ] Replace `changedAt` with `changedTime` in any system metadata access
+- [ ] Remove `options.showAddress` and replace with a `renderCallback` policy if needed (see [Case 2](../examples/case2.mdx))
+- [ ] Replace `useConnector()` / `createConnector()` with `useSheetRef()` / `createSheetRef()` and `useStoreRef()` / `createStoreRef()`
+- [ ] Update connector prop usage: `connector={connector}` → `sheetRef={sheetRef} storeRef={storeRef}`
+- [ ] Replace `UserTable` references accessed via a connector with `UserSheet` via `sheetRef`
+- [ ] Replace `new Renderer(...)` with `new Policy(...)` and rename all `*RendererMixin` to `*PolicyMixin`
+- [ ] Remove `renderer` / `renderers` props and migrate to `policies` + per-cell `policy`
+- [ ] Replace `helpTexts` in custom formula classes with a `description` string and per-argument `description` in `defs`
+- [ ] Add `defs` entries to custom formula classes to enable automatic argument validation
+- [ ] Review cell address keys: if you applied `style` on a column key (`A`) or row key (`1`) to style the header, move those styles to `A0` or `01`
+- [ ] Review sheet method implementations and update signatures if needed
 - [ ] Test filter/sort operations, especially with async data
 - [ ] Consider implementing async formulas for external API integration
 - [ ] Update unit tests to reflect the new `changedTime` property
@@ -82,6 +552,6 @@ v3 enhances the context menu system. You can now open menus on row headers and t
 
 If you encounter issues during migration:
 
-1. Check the [Table API Reference](../api-reference/table.mdx) for updated method signatures
+1. Check the [Sheet API Reference](../api-reference/sheet.mdx) for updated method signatures
 2. Review [case11 example](../examples/case11.mdx) for async formula patterns
 3. Refer to the [Architecture Guide](../development/architecture.mdx) for technical details

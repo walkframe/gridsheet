@@ -35,6 +35,7 @@ const StyleSheet = () => {
               height: 60,
             },
             A: {},
+            B0: { width: 200 },
             B: {
               style: {
                 backgroundColor: '#eeeeee',
@@ -44,7 +45,6 @@ const StyleSheet = () => {
                 letterSpacing: 20,
                 lineHeight: '60px',
               },
-              width: 200,
             },
             C: {
               style: { backgroundColor: '#dddddd', textDecoration: 'underline' },
@@ -58,15 +58,15 @@ const StyleSheet = () => {
             1: {
               style: { color: '#333' },
             },
+            '02': { height: 100 },
             2: {
               style: { color: '#F00' },
-              height: 100,
               alignItems: 'center',
               justifyContent: 'center',
             },
+            '03': { height: 250 },
             3: {
               style: { color: '#0C0' },
-              height: 250,
             },
             4: {
               style: { color: '#00F' },

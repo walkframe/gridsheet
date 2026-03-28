@@ -14,22 +14,77 @@ Each cell containing a `GH_REPO` formula fetches data asynchronously and shows a
 
 <a href="https://github.com/walkframe/gridsheet/tree/master/packages/docs/pages/examples/case11.component.tsx" target="_blank" rel="noopener noreferrer" style={{display: 'inline-block', background: '#007bff', color: 'white', padding: '8px 16px', textDecoration: 'none', borderRadius: '4px', fontWeight: '500', margin: '10px 0'}}>📄 View Source Code</a>
 
-### 🔌 Custom Async Formula: `GH_REPO`
-The `GH_REPO(repo, field)` formula is implemented by extending `BaseFunction` with an `async main()` method. When the formula is evaluated, GridSheet automatically detects the async return and displays a pending animation while the network request completes.
+### Async Formula Functions with `BaseFunctionAsync`
 
-### 📡 GitHub API Integration
-The function calls GitHub's public REST API (`api.github.com/repos/...`) to retrieve repository metadata. No authentication is required for public repos, and the API supports CORS out of the box.
+Extend `BaseFunctionAsync` (instead of `BaseFunction`) to define a formula whose `main` method returns a `Promise`. GridSheet automatically handles the pending state and re-renders each cell when the promise resolves.
 
-### 🔗 Chained Dependencies
-The summary row uses `SUM(B2:B9)` to total all stars — since each source cell is async, the SUM automatically propagates the pending state until all upstream cells resolve.
+```tsx
+import { BaseFunctionAsync } from '@gridsheet/react-core';
 
-### 🎨 Custom Renderers
-- **Repository renderer**: Clickable links to GitHub
-- **Number renderer**: Locale-aware formatting with thousands separators
-- **Language renderer**: Color-coded dots matching GitHub's language colors
-- **Header renderer**: Dark themed header row
+class GhRepoFunction extends BaseFunctionAsync {
+  example = 'GH_REPO("facebook/react")';
+  ttlMilliseconds = 60 * 1000; // cache result for 1 minute
+  defs = [{ name: 'repo', description: '"owner/repo" format', acceptedTypes: ['string'] }];
 
-### ✅ Try It Out
-- Edit a repository name in column A to fetch data for any public repo
-- Watch the loading animation cascade through dependent cells
-- The total row stays pending until all repos are loaded
+  async main(repo: string) {
+    const resp = await fetch(`https://api.github.com/repos/${encodeURI(repo.trim())}`, {
+      headers: { Accept: 'application/vnd.github.v3+json' },
+      cache: 'force-cache',
+    });
+    const data = await resp.json();
+    return new Spilling([[data.stargazers_count, data.forks_count, data.open_issues, data.size, data.subscribers_count]]);
+  }
+}
+```
+
+Register it via `additionalFunctions` in `useSpellbook`. The formula name is the key uppercased: `=GH_REPO(A1)`.
+
+### Spilling Results Across Multiple Columns
+
+`Spilling` wraps a 2D array and causes the result to overflow into adjacent cells automatically. Returning `new Spilling([[v1, v2, v3]])` from a single formula call fills that cell and the next N−1 cells to the right.
+
+```tsx
+return new Spilling([
+  [data.stargazers_count, data.forks_count, data.open_issues, data.size, data.subscribers_count],
+]);
+```
+
+In this demo, placing `=GH_REPO(A1)` in cell B1 spills Stars, Forks, Issues, Size, and Subscribers into B1:F1 with a single API call — 5 values per row, 3 repos, 3 API calls total instead of 15.
+
+### Pending State Propagation
+
+When an async cell is still resolving, GridSheet marks it as `Pending`. Any formula that depends on a `Pending` cell (e.g., `=SUM(B1:B3)`) automatically waits and displays the loading animation until all upstream cells settle.
+
+In this demo, the Total row uses `=SUM(B1:B3)` for each column. It stays pending until all three `GH_REPO` calls complete.
+
+### Built-in Result Caching via `ttlMilliseconds`
+
+Set `ttlMilliseconds` on the function class to enable automatic result caching. The same arguments will return the cached result without making a new network request until the TTL expires.
+
+```tsx
+ttlMilliseconds = 60 * 1000; // cache for 60 seconds
+```
+
+This prevents redundant API calls when a formula is re-evaluated due to an unrelated cell change.
+
+### Making Cells Editable to Trigger Re-fetches
+
+Because the repo slug in column A is a plain string value, the user can edit it directly in the grid. When the value changes, `=GH_REPO(A1)` is invalidated and re-evaluated, fetching data for the new repository.
+
+```tsx
+// In initialCells:
+A1: { value: 'facebook/react', policy: 'repo' },
+// Column B formula:
+'=GH_REPO(A1)'  // re-runs whenever A1 changes
+```
+
+### The `Debugger` Component
+
+`@gridsheet/react-dev` exports a `Debugger` component that visualizes the current `book` state — pending cells, resolved values, and formula dependency graphs. It is useful during development to inspect async resolution.
+
+```tsx
+import { Debugger } from '@gridsheet/react-dev';
+
+<GridSheet book={book} ... />
+<Debugger book={book} />
+```

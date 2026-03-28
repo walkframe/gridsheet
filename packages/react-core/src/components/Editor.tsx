@@ -114,12 +114,8 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
     );
   };
 
-  if (!sheet) {
-    return null;
-  }
-
-  const policy = sheet.getPolicy(choosing);
-  const optionsAll = policy.getSelectOptions();
+  const policy = sheet?.getPolicy(choosing);
+  const optionsAll = policy?.getSelectOptions() ?? [];
 
   const handleSelect = useCallback((e: React.SyntheticEvent<HTMLTextAreaElement>) => {
     setSelectionStart(e.currentTarget.selectionStart);
@@ -139,7 +135,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
     inputting,
     selectionStart,
     optionsAll,
-    functions: sheet.registry.functions,
+    functions: sheet?.registry.functions,
   });
 
   useEffect(() => {
@@ -147,6 +143,9 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
   }, [editorRef]);
 
   useEffect(() => {
+    if (!sheet) {
+      return;
+    }
     if (sheet.registry.lastFocused == null) {
       return;
     }
@@ -158,8 +157,11 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
     }
 
     dispatch(setEditingAddress(''));
-  }, [sheet.registry.lastFocused, editorRef, largeEditorRef, dispatch]);
+  }, [sheet?.registry.lastFocused, sheet, editorRef, largeEditorRef, dispatch]);
   useEffect(() => {
+    if (!sheet) {
+      return;
+    }
     sheet.registry.editingSheetId = sheetId;
     sheet.registry.editingAddress = editingAddress;
   }, [editingAddress, sheet, sheetId]);
@@ -177,8 +179,8 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
 
   // Use 'RAW' so that spilled values (stored in solvedCaches) are already
   // reflected in cell.value without re-evaluating the formula.
-  const cell = sheet.getCell({ y, x }, { resolution: 'RAW' });
-  const currentString = sheet.getSerializedValue({ point: choosing, cell, resolution: 'RAW' });
+  const cell = sheet?.getCell({ y, x }, { resolution: 'RAW' });
+  const currentString = sheet ? sheet.getSerializedValue({ point: choosing, cell, resolution: 'RAW' }) : '';
   const [before, setBefore] = useState<string>(currentString);
 
   const writeCell = useCallback(
@@ -193,6 +195,9 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
 
   const selectValue = useCallback(
     (selectedIndex: number) => {
+      if (!sheet) {
+        return;
+      }
       const option = filteredOptions[selectedIndex];
       if (option) {
         if (option.isFunction) {
@@ -221,6 +226,9 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
   );
 
   useEffect(() => {
+    if (!sheet) {
+      return;
+    }
     setBefore(currentString);
     dispatch(setInputting(currentString));
     resetInput(editorRef.current, sheet, choosing);
@@ -232,6 +240,9 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
   const [isKeyDown, setIsKeyDown] = useState(false);
   const handleKeyDown = useCallback(
     (e: EditorEventWithNativeEvent) => {
+      if (!sheet) {
+        return;
+      }
       if (isKeyDown) {
         return;
       }
@@ -476,6 +487,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
           }
           break;
         case 'r': // R
+        case 'y': // Y
           if (e.ctrlKey || e.metaKey) {
             if (!editing) {
               e.preventDefault();
@@ -532,7 +544,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
               e.preventDefault();
               if (e.shiftKey) {
                 dispatch(redo(null));
-                //window.setTimeout(() => sync(setInputting('')), 100); // resetting textarea
+                //window.setTimeout(() => apply(setInputting('')), 100); // resetting textarea
               } else {
                 dispatch(undo(null));
               }
@@ -586,6 +598,9 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
   const handleFocus = useCallback(
     (e: React.FocusEvent<HTMLTextAreaElement>) => {
       setIsFocused(true);
+      if (!sheet) {
+        return;
+      }
       sheet.registry.lastFocused = e.currentTarget;
     },
     [sheet],
@@ -667,7 +682,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       setShiftKey(false);
       const selectingArea = zoneToArea(store.selectingZone);
-      sheet.registry.onKeyUp?.({
+      sheet?.registry.onKeyUp?.({
         e,
         points: {
           pointing: choosing,
@@ -676,7 +691,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
         },
       });
     },
-    [store.selectingZone, choosing],
+    [store.selectingZone, choosing, sheet],
   );
 
   const handleOptionMouseDown = useCallback(
@@ -688,6 +703,10 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
     },
     [selectValue],
   );
+
+  if (!sheet) {
+    return null;
+  }
 
   return (
     <Fixed

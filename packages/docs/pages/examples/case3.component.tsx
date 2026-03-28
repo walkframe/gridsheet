@@ -4,14 +4,13 @@ import * as React from 'react';
 import {
   GridSheet,
   buildInitialCells,
-  useConnector,
-  useHub,
-  updateTable,
-  syncers,
+  useSheetRef,
+  useStoreRef,
   clip,
   p2a,
   CellsByAddressType,
 } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 // Color palette
 const COLORS = [
@@ -219,7 +218,8 @@ const myHeart: CellsByAddressType = {
 };
 
 export default function DataManagement() {
-  const connector = useConnector();
+  const sheetRef = useSheetRef();
+  const storeRef = useStoreRef();
   const [selectedColor, setSelectedColor] = React.useState('#FF0000');
 
   // Load data from localStorage
@@ -231,11 +231,9 @@ export default function DataManagement() {
       const savedData = localStorage.getItem('demo3');
       if (savedData) {
         const parsedData = JSON.parse(savedData);
-        if (parsedData.cells && connector.current) {
-          const { tableManager } = connector.current;
-          const { table: table, sync } = tableManager;
-          table.update({ diff: parsedData.cells });
-          sync(table);
+        if (parsedData.cells && sheetRef.current) {
+          const { sheet, apply } = sheetRef.current;
+          apply(sheet.update({ diff: parsedData.cells }));
         }
       }
     } catch (error) {
@@ -248,19 +246,19 @@ export default function DataManagement() {
       return;
     }
     try {
-      if (connector.current) {
-        const { tableManager } = connector.current;
-        const { table: table } = tableManager;
-        const cells = table.toCellObject();
+      if (sheetRef.current) {
+        const { sheet } = sheetRef.current;
 
         // Extract only cells with colors
         const coloredCells: { [key: string]: string } = {};
-        Object.keys(cells).forEach((address) => {
-          const cell = cells[address];
-          if (cell?.style?.backgroundColor) {
-            coloredCells[address] = cell.style.backgroundColor;
+        for (let row = sheet.top; row <= sheet.bottom; row++) {
+          for (let col = sheet.left; col <= sheet.right; col++) {
+            const cell = sheet.getCell({ y: row, x: col });
+            if (cell?.style?.backgroundColor) {
+              coloredCells[p2a({ y: row, x: col })] = cell.style.backgroundColor;
+            }
           }
-        });
+        }
 
         const dataToSave = {
           cells: coloredCells,
@@ -273,7 +271,7 @@ export default function DataManagement() {
     }
   }, []);
 
-  const hub = useHub({
+  const book = useSpellbook({
     onChange: saveData,
   });
 
@@ -325,7 +323,8 @@ export default function DataManagement() {
 
   const initialCells = buildInitialCells({
     cells: {
-      default: { width: 20, height: 20 },
+      defaultRow: { height: 25 },
+      defaultCol: { width: 25 },
       ...getSavedData(),
     },
     ensured: {
@@ -336,13 +335,12 @@ export default function DataManagement() {
 
   // Function to fill selected cells
   const fillSelectedCells = () => {
-    if (!connector.current) {
+    if (!sheetRef.current || !storeRef.current) {
       return;
     }
 
-    const { tableManager, storeManager } = connector.current;
-    const { table: table, sync } = tableManager;
-    const { store: store } = storeManager;
+    const { sheet, apply } = sheetRef.current;
+    const { store } = storeRef.current;
 
     // Get current selection area
     const area = clip(store);
@@ -362,8 +360,7 @@ export default function DataManagement() {
       }
     }
 
-    table.update({ diff });
-    sync(table);
+    apply(sheet.update({ diff }));
   };
 
   return (
@@ -449,17 +446,17 @@ export default function DataManagement() {
       </div>
 
       <GridSheet
-        connector={connector}
-        hub={hub}
+        sheetRef={sheetRef}
+        storeRef={storeRef}
+        book={book}
         initialCells={initialCells}
         options={{
           sheetResize: 'both',
-          showAddress: false,
           showFormulaBar: false,
         }}
         style={{
-          width: typeof window !== 'undefined' ? Math.min(400, window.innerWidth - 60) : 400,
-          height: typeof window !== 'undefined' ? Math.min(400, window.innerHeight - 200) : 400,
+          width: typeof window !== 'undefined' ? Math.min(500, window.innerWidth - 60) : 500,
+          height: typeof window !== 'undefined' ? Math.min(500, window.innerHeight - 200) : 500,
         }}
       />
     </div>

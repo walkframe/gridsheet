@@ -1,13 +1,22 @@
 import { useEffect, useState, useRef, useReducer, createRef } from 'react';
-import type { CellsByAddressType, Connector, OptionsType, Props, StoreType } from '../types';
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH, HEADER_HEIGHT, HEADER_WIDTH, SHEET_HEIGHT, SHEET_WIDTH } from '../constants';
+import type { CellsByAddressType, SheetHandle, StoreHandle, OptionsType, Props, StoreType } from '../types';
+import {
+  DEFAULT_HEIGHT,
+  DEFAULT_WIDTH,
+  HEADER_HEIGHT,
+  HEADER_WIDTH,
+  SHEET_HEIGHT,
+  SHEET_WIDTH,
+  DEFAULT_COL_KEY,
+  DEFAULT_ROW_KEY,
+} from '../constants';
 import { Context } from '../store';
 import { reducer as defaultReducer } from '../store/actions';
 import { Editor } from './Editor';
 import { StoreObserver } from './StoreObserver';
 import { Resizer } from './Resizer';
 import { Emitter } from './Emitter';
-import { ContextMenu, defaultContextMenuItems } from './ContextMenu';
+import { ContextMenu } from './ContextMenu';
 import { ColumnMenu } from './ColumnMenu';
 import { RowMenu } from './RowMenu';
 import { Sheet } from '../lib/sheet';
@@ -19,18 +28,22 @@ import { FormulaBar } from './FormulaBar';
 import { SearchBar } from './SearchBar';
 import { useBook } from '../lib/book';
 import { ScrollHandle } from './ScrollHandle';
+import { defaultContextMenuDescriptors, defaultRowMenuDescriptors, defaultColMenuDescriptors } from '../lib/menu';
 
-export const createConnector = () => createRef<Connector | null>();
-export const useConnector = () => useRef<Connector | null>(null);
+export const createSheetRef = () => createRef<SheetHandle | null>();
+export const useSheetRef = () => useRef<SheetHandle | null>(null);
+export const createStoreRef = () => createRef<StoreHandle | null>();
+export const useStoreRef = () => useRef<StoreHandle | null>(null);
 
 export function GridSheet({
   initialCells,
   sheetName = '',
-  connector: initialConnector,
+  sheetRef: initialSheetRef,
+  storeRef: initialStoreRef,
   options = {},
   className,
   style,
-  book: initialHub,
+  book: initialBook,
 }: Props) {
   const { sheetResize, showFormulaBar = true, mode = 'light' } = options;
   const rootRef = useRef<HTMLDivElement>(null);
@@ -41,11 +54,13 @@ export function GridSheet({
   const largeEditorRef = useRef<HTMLTextAreaElement>(null);
   const tabularRef = useRef<HTMLDivElement>(null);
 
-  const internalConnector = useConnector();
-  const connector = initialConnector ?? internalConnector;
+  const internalSheetRef = useSheetRef();
+  const sheetRef = initialSheetRef ?? internalSheetRef;
+  const internalStoreRef = useStoreRef();
+  const storeRef = initialStoreRef ?? internalStoreRef;
 
-  const internalHub = useBook({});
-  const book = initialHub ?? internalHub;
+  const internalBook = useBook({});
+  const book = initialBook ?? internalBook;
   const { registry } = book;
 
   // useRef to manage sheetId and avoid Strict Mode issues
@@ -63,7 +78,7 @@ export function GridSheet({
       sheetName = `Sheet${sheetId}`;
       console.debug('GridSheet: sheetName is not provided, using default name:', sheetName);
     }
-    const { limits, contextMenuItems } = options;
+    const { limits, contextMenu, rowMenu, colMenu } = options;
     const sheet = new Sheet({
       limits,
       name: sheetName,
@@ -106,7 +121,9 @@ export function GridSheet({
       searchRegex: false,
       editingOnEnter: true,
       contextMenuPosition: { y: -1, x: -1 },
-      contextMenuItems: contextMenuItems ?? defaultContextMenuItems,
+      contextMenu: contextMenu ?? defaultContextMenuDescriptors,
+      rowMenu: rowMenu ?? defaultRowMenuDescriptors,
+      colMenu: colMenu ?? defaultColMenuDescriptors,
       resizingPositionY: [-1, -1, -1],
       resizingPositionX: [-1, -1, -1],
       columnMenuState: null,
@@ -183,7 +200,7 @@ export function GridSheet({
         >
           <Editor mode={mode} />
           <Tabular />
-          <StoreObserver {...{ ...options, sheetHeight, sheetWidth, sheetName, connector }} />
+          <StoreObserver {...{ ...options, sheetHeight, sheetWidth, sheetName, sheetRef, storeRef }} />
           <ContextMenu />
           <ColumnMenu />
           <RowMenu />
@@ -198,9 +215,14 @@ export function GridSheet({
 const estimateSheetHeight = (initialCells: CellsByAddressType) => {
   const auto = getMaxSizesFromCells(initialCells);
   let estimatedHeight = initialCells[0]?.height ?? HEADER_HEIGHT;
-  for (let y = 0; y < auto.numRows; y++) {
+  for (let y = 1; y <= auto.numRows; y++) {
     const row = y2r(y);
-    const height = initialCells?.[row]?.height || initialCells?.default?.height || DEFAULT_HEIGHT;
+    const height =
+      initialCells?.[row]?.height ||
+      initialCells?.['0' + row]?.height ||
+      initialCells?.[DEFAULT_ROW_KEY]?.height ||
+      initialCells?.default?.height ||
+      DEFAULT_HEIGHT;
     if (estimatedHeight + height > SHEET_HEIGHT) {
       return SHEET_HEIGHT;
     }
@@ -212,9 +234,14 @@ const estimateSheetHeight = (initialCells: CellsByAddressType) => {
 const estimateSheetWidth = (initialCells: CellsByAddressType) => {
   const auto = getMaxSizesFromCells(initialCells);
   let estimatedWidth = initialCells[0]?.width ?? HEADER_WIDTH;
-  for (let x = 0; x < auto.numCols; x++) {
+  for (let x = 1; x <= auto.numCols; x++) {
     const col = x2c(x);
-    const width = initialCells?.[col]?.width || initialCells?.default?.width || DEFAULT_WIDTH;
+    const width =
+      initialCells?.[col]?.width ||
+      initialCells?.[col + '0']?.width ||
+      initialCells?.[DEFAULT_COL_KEY]?.width ||
+      initialCells?.default?.width ||
+      DEFAULT_WIDTH;
     if (estimatedWidth + width > SHEET_WIDTH) {
       return SHEET_WIDTH;
     }

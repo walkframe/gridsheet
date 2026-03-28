@@ -14,64 +14,123 @@ The demo includes multiple sheets with different data types and a streamlined me
 
 <a href="https://github.com/walkframe/gridsheet/tree/master/packages/docs/pages/examples/case5.component.tsx" target="_blank" rel="noopener noreferrer" style={{display: 'inline-block', background: '#007bff', color: 'white', padding: '8px 16px', textDecoration: 'none', borderRadius: '4px', fontWeight: '500', margin: '10px 0'}}>📄 View Source Code</a>
 
-### 📋 Menu Bar Implementation
-Create a professional menu bar with dropdown menus for common spreadsheet operations. Implement File operations (Save/Reset), Edit operations (Undo/Redo/Cut/Copy/Paste), and Format operations (Background/Text Color). Include proper event handling and user feedback.
+### One `useSheetRef` / `useStoreRef` Per Sheet
 
-### 📑 Multiple Sheet Management
-Implement a multi-sheet interface with tabbed navigation at the bottom. Each sheet maintains its own data and state while sharing common functionality. Include sheet switching, data isolation, and proper state management for each sheet.
+Because React disallows conditional hook calls, you must declare a fixed set of refs at the component's top level — one pair per possible sheet. Map them by sheet name for easy lookup.
 
-### 💾 Data Persistence with localStorage
-Implement data persistence using browser localStorage for automatic data saving. Save sheet data, active sheet selection, and user preferences. Include error handling for storage limitations and data corruption scenarios.
+```tsx
+const salesSheetRef   = useSheetRef();
+const salesStoreRef   = useStoreRef();
+const budgetSheetRef  = useSheetRef();
+const budgetStoreRef  = useStoreRef();
+// ...
 
-### ⌨️ Keyboard Shortcuts and Auto-Save
-Implement keyboard shortcuts for common operations including Ctrl+S for saving data. The onSave callback is automatically triggered when users press Ctrl+S, providing familiar Excel-like behavior. Include visual feedback and notifications for save operations.
+const sheetRefs = { Sales: salesSheetRef, Budget: budgetSheetRef, ... };
+const storeRefs = { Sales: salesStoreRef, Budget: budgetStoreRef, ... };
+```
 
-### 🎨 Color Formatting System
-Create a comprehensive color formatting system with background and text color options. Implement color picker dialogs, color preview, and undo/redo functionality for formatting changes. Include accessibility considerations for color-blind users.
+When an action targets the active sheet, look up the correct ref by name:
 
-### 🎯 Professional UI Design
-Design a professional interface that mimics Excel's familiar layout and styling. Include proper spacing, typography, and visual hierarchy. Implement responsive design that works across different screen sizes and devices.
+```tsx
+const storeHandle = storeRefs[activeSheet]?.current;
+```
 
-### 📋 Clipboard Operations
-Implement full clipboard functionality including cut, copy, and paste operations. Handle cell ranges, multiple data types, and cross-sheet operations. Include proper error handling and user feedback for clipboard operations.
+### Dispatching `userActions` for Undo / Redo / Cut / Copy / Paste
 
-### ↩️ Undo/Redo System
-Create a robust undo/redo system that tracks all user actions including data changes, formatting, and structural modifications. Implement efficient state management and memory optimization for large datasets.
+`userActions` exports a set of action creators that can be dispatched directly to the store.
 
-### 📊 Sheet Data Management
-Manage different types of sheet data including sales data, budget information, and inventory tracking. Implement appropriate formulas, formatting, and validation for each data type. Include sample data and realistic business scenarios.
+```tsx
+import { userActions, clip, areaToZone } from '@gridsheet/react-core';
 
-### ⚡ Performance Optimization
-Optimize performance for large datasets and multiple sheets. Implement efficient rendering, memory management, and state updates. Consider virtualization and lazy loading for better performance.
+// Undo / Redo
+storeHandle.dispatch(userActions.undo(null));
+storeHandle.dispatch(userActions.redo(null));
 
-### ✅ Best Practices
-1. **Data Integrity**: Ensure data consistency across multiple sheets and operations
-2. **User Experience**: Provide familiar Excel-like interactions and feedback
-3. **Performance**: Optimize for large datasets and multiple sheets
-4. **Accessibility**: Ensure all features are accessible to all users
-5. **Error Handling**: Implement comprehensive error handling for all operations
-6. **Data Persistence**: Provide reliable data saving and recovery mechanisms
-7. **Responsive Design**: Make the application work across different devices
-8. **Keyboard Shortcuts**: Implement familiar keyboard shortcuts for better UX
+// Cut requires the current selection area
+const area = clip(store);
+storeHandle.dispatch(userActions.cut(areaToZone(area)));
 
-### 🎯 Common Use Cases
-- **Business Applications**: Create custom business spreadsheet applications
-- **Data Analysis**: Build tools for data analysis and reporting
-- **Project Management**: Develop project tracking and management tools
-- **Financial Modeling**: Create financial analysis and modeling applications
-- **Inventory Management**: Build inventory tracking and management systems
+// Copy
+storeHandle.dispatch(userActions.copy(areaToZone(area)));
 
-### 🚀 Advanced Features
-- **Custom Themes**: Branded visualizations with custom styling
-- **Multi-dimensional Analysis**: Complex data analysis across multiple dimensions
-- **Data Export**: Export functionality for reports and analysis
-- **Real-time Collaboration**: Live collaboration features
-- **Advanced Filtering**: Complex filtering and search capabilities
+// Paste (values only)
+storeHandle.dispatch(userActions.paste({ matrix: [], onlyValue: true }));
+```
 
-### 💾 Data Management Patterns
-- **Multi-sheet Architecture**: Efficient management of multiple data sheets
-- **State Persistence**: Reliable data saving and recovery mechanisms
-- **Format Management**: Comprehensive styling and formatting systems
-- **Clipboard Integration**: Full clipboard support for data operations
-- **History Management**: Robust undo/redo functionality for all operations
-- **Auto-Save Integration**: Automatic saving with keyboard shortcuts
+`clip(store)` returns the selected area; `areaToZone` converts it to the zone format expected by cut/copy actions.
+
+### Auto-save on Ctrl+S via `onSave`
+
+`useSpellbook`'s `onSave` callback is triggered automatically when the user presses Ctrl+S inside the grid. Wire it to your save logic to provide Excel-like keyboard saving.
+
+```tsx
+const book = useSpellbook({
+  onSave: () => handleMenuAction('save'),
+});
+```
+
+The `save` action reads `sheetRef.current.sheet`, serializes each cell's `value` and `style` into a matrix, and writes it to `localStorage` under a per-sheet key (`gridsheet_demo5.<sheetName>`).
+
+### Per-sheet localStorage Keys
+
+Each sheet is stored independently under a namespaced key so sheets don't overwrite each other.
+
+```tsx
+// Save
+localStorage.setItem(`gridsheet_demo5.${activeSheet}`, JSON.stringify(saveData));
+
+// Load recent
+const allKeys = Object.keys(localStorage).filter((key) => key.startsWith('gridsheet_demo5.'));
+```
+
+On mount, the most recently saved entry (determined by `timestamp`) is used to restore `sheets` and `activeSheet` state.
+
+### Memoizing `initialCells` with `useMemo`
+
+Computing `buildInitialCells` for all sheets on every render is expensive. Wrap the computation in `useMemo` keyed on the `sheets` array to recalculate only when sheets are added or removed.
+
+```tsx
+const initialCellsForSheets = React.useMemo(() => {
+  const cellsMap: Record<string, ReturnType<typeof buildInitialCells>> = {};
+  allPossibleSheets.forEach((sheetName) => {
+    // ... load from localStorage or fall back to SHEET_DATA
+    cellsMap[sheetName] = buildInitialCells({ matrices: { A1: data }, cells: { ... } });
+  });
+  return cellsMap;
+}, [sheets]);
+```
+
+All 10 possible sheet slots are always computed (to keep hook counts stable), but only the active sheet's result is actually rendered.
+
+### Adding a New Sheet at Runtime
+
+To add a new sheet without reloading the page, append the new name to `sheets` state, switch `activeSheet` to it, and write initial data to localStorage.
+
+```tsx
+const newSheetName = `Sheet${sheets.length + 1}`;
+setSheets((prev) => [...prev, newSheetName]);
+setActiveSheet(newSheetName);
+localStorage.setItem(`gridsheet_demo5.${newSheetName}`, JSON.stringify(newSheetData));
+```
+
+Because `initialCellsForSheets` is memoized on `sheets`, the new entry is computed automatically on the next render.
+
+### Keeping Summary Rows Fixed with `sortFixed` and `filterFixed`
+
+Row-level options `sortFixed` and `filterFixed` prevent a specific row from being reordered during sort or hidden during filter operations. Set them on the row's **header cell** using the `'0<row>'` address format.
+
+```tsx
+buildInitialCells({
+  cells: {
+    B6: { value: 'Total' },
+    C6: { value: '=SUM(C1:C5)' },
+    '6': { style: { borderTop: '3px double #000' } },
+    '06': { sortFixed: true, filterFixed: true },
+  },
+})
+```
+
+- **`sortFixed`**: The row stays in place when any column is sorted.
+- **`filterFixed`**: The row is never hidden by filter operations.
+
+Rows with these flags show **‹ ›** markers in their row header automatically via CSS.

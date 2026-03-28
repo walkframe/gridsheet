@@ -4,10 +4,10 @@ import {
   GridSheet,
   buildInitialCells,
   buildInitialCellsFromOrigin,
-  useConnector,
+  useStoreRef,
   toValueObject,
 } from '@gridsheet/react-core';
-import { syncers } from '@gridsheet/react-core';
+import { applyers } from '@gridsheet/react-core';
 import { useSpellbook } from '@gridsheet/functions';
 import { Debugger } from '@gridsheet/react-dev';
 
@@ -33,7 +33,7 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const InsertComponent: React.FC = () => {
-  const connector = useConnector();
+  const storeRef = useStoreRef();
 
   const book = useSpellbook({
     onInsertRows: ({ sheet, y, numRows }) => {
@@ -55,57 +55,51 @@ const InsertComponent: React.FC = () => {
   });
 
   const handleInsertRowsAbove = () => {
-    if (connector?.current == null) {
+    if (storeRef?.current == null) {
       return;
     }
-    const { storeManager } = connector.current;
-    const { store, dispatch } = storeManager;
-    syncers.insertRowsAbove({ store, dispatch });
+    const { store, dispatch } = storeRef.current;
+    applyers.insertRowsAbove({ store, dispatch });
   };
 
   const handleInsertRowsBelow = () => {
-    if (connector?.current == null) {
+    if (storeRef?.current == null) {
       return;
     }
-    const { storeManager } = connector.current;
-    const { store, dispatch } = storeManager;
-    syncers.insertRowsBelow({ store, dispatch });
+    const { store, dispatch } = storeRef.current;
+    applyers.insertRowsBelow({ store, dispatch });
   };
 
   const handleInsertColsLeft = () => {
-    if (connector?.current == null) {
+    if (storeRef?.current == null) {
       return;
     }
-    const { storeManager } = connector.current;
-    const { store, dispatch } = storeManager;
-    syncers.insertColsLeft({ store, dispatch });
+    const { store, dispatch } = storeRef.current;
+    applyers.insertColsLeft({ store, dispatch });
   };
 
   const handleInsertColsRight = () => {
-    if (connector?.current == null) {
+    if (storeRef?.current == null) {
       return;
     }
-    const { storeManager } = connector.current;
-    const { store, dispatch } = storeManager;
-    syncers.insertColsRight({ store, dispatch });
+    const { store, dispatch } = storeRef.current;
+    applyers.insertColsRight({ store, dispatch });
   };
 
   const handleRemoveRows = () => {
-    if (connector?.current == null) {
+    if (storeRef?.current == null) {
       return;
     }
-    const { storeManager } = connector.current;
-    const { store, dispatch } = storeManager;
-    syncers.removeRows({ store, dispatch });
+    const { store, dispatch } = storeRef.current;
+    applyers.removeRows({ store, dispatch });
   };
 
   const handleRemoveCols = () => {
-    if (connector?.current == null) {
+    if (storeRef?.current == null) {
       return;
     }
-    const { storeManager } = connector.current;
-    const { store, dispatch } = storeManager;
-    syncers.removeCols({ store, dispatch });
+    const { store, dispatch } = storeRef.current;
+    applyers.removeCols({ store, dispatch });
   };
 
   return (
@@ -206,7 +200,7 @@ const InsertComponent: React.FC = () => {
       </div>
 
       <GridSheet
-        connector={connector}
+        storeRef={storeRef}
         book={book}
         initialCells={buildInitialCellsFromOrigin({
           matrix: [

@@ -18,7 +18,7 @@ import { Sheet } from '../lib/sheet';
 
 import { p2a, a2p } from '../lib/coords';
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '../constants';
-import { initSearchStatement, restrictPoints, flashSheet, flashWithCallback } from './helpers';
+import { initSearchStatement, restrictPoints, flashSheet, flashWithCallback, compactReflection } from './helpers';
 import { smartScroll } from '../lib/virtualization';
 import * as prevention from '../lib/operation';
 import { Autofill } from '../lib/autofill';
@@ -332,17 +332,17 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
         src,
         dst,
         operator: 'USER',
-        undoReflection: {
+        undoReflection: compactReflection({
           sheetId: srcSheet.id,
           selectingZone: nextSelectingZone,
           choosing,
           transmit: { copyingSheetId: srcSheet.id, copyingZone, cutting: true },
-        },
-        redoReflection: {
+        }),
+        redoReflection: compactReflection({
           sheetId: srcSheet.id,
           choosing,
           transmit: { copyingSheetId: srcSheet.id, copyingZone: resetZone },
-        },
+        }),
       });
 
       return {
@@ -376,16 +376,16 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
         point: { y, x },
         matrix,
         onlyValue,
-        undoReflection: {
+        undoReflection: compactReflection({
           sheetId: dstSheet.id,
           selectingZone: nextSelectingZone,
           choosing,
-        },
-        redoReflection: {
+        }),
+        redoReflection: compactReflection({
           sheetId: dstSheet.id,
           selectingZone: nextSelectingZone,
           choosing,
-        },
+        }),
       });
     } else {
       if (srcSheet == null) {
@@ -406,18 +406,18 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
         dst: selectingArea,
         onlyValue,
         operator: 'USER',
-        undoReflection: {
+        undoReflection: compactReflection({
           sheetId: srcSheet.id,
           transmit: { copyingZone },
           choosing,
           selectingZone,
-        },
-        redoReflection: {
+        }),
+        redoReflection: compactReflection({
           sheetId: srcSheet.id,
           transmit: { copyingSheetId: srcSheet.id, copyingZone: resetZone },
           choosing,
           selectingZone: areaToZone(selectingArea),
-        },
+        }),
       });
     }
 
@@ -600,16 +600,16 @@ class WriteAction<T extends { value: string; point?: PointType }> extends CoreAc
       point: point,
       value,
       operator: 'USER',
-      undoReflection: {
+      undoReflection: compactReflection({
         sheetId: sheet.id,
         selectingZone,
         choosing: point,
-      },
-      redoReflection: {
+      }),
+      redoReflection: compactReflection({
         sheetId: sheet.id,
         selectingZone,
         choosing: point,
-      },
+      }),
     });
     return {
       ...store,
@@ -670,16 +670,16 @@ class ClearAction<T extends null> extends CoreAction<T> {
       diff,
       partial: true,
       operator: 'USER',
-      undoReflection: {
+      undoReflection: compactReflection({
         sheetId: sheet.id,
         selectingZone,
         choosing,
-      },
-      redoReflection: {
+      }),
+      redoReflection: compactReflection({
         sheetId: sheet.id,
         selectingZone,
         choosing,
-      },
+      }),
     });
     return {
       ...store,
@@ -1001,16 +1001,16 @@ class InsertRowsAboveAction<T extends { numRows: number; y: number; operator?: O
       numRows,
       baseY: y,
       operator,
-      undoReflection: {
+      undoReflection: compactReflection({
         sheetId: sheet.id,
         selectingZone,
         choosing,
-      },
-      redoReflection: {
+      }),
+      redoReflection: compactReflection({
         sheetId: sheet.id,
         selectingZone,
         choosing,
-      },
+      }),
     });
     return {
       ...store,
@@ -1040,16 +1040,16 @@ class InsertRowsBelowAction<T extends { numRows: number; y: number; operator?: O
       numRows,
       baseY: y,
       operator,
-      undoReflection: {
+      undoReflection: compactReflection({
         sheetId: sheet.id,
         selectingZone,
         choosing,
-      },
-      redoReflection: {
+      }),
+      redoReflection: compactReflection({
         sheetId: sheet.id,
         selectingZone: nextSelectingZone,
         choosing: nextChoosing,
-      },
+      }),
     });
     return {
       ...store,
@@ -1075,16 +1075,16 @@ class InsertColsLeftAction<T extends { numCols: number; x: number; operator?: Op
       numCols,
       baseX: x,
       operator,
-      undoReflection: {
+      undoReflection: compactReflection({
         sheetId: sheet.id,
         selectingZone,
         choosing,
-      },
-      redoReflection: {
+      }),
+      redoReflection: compactReflection({
         sheetId: sheet.id,
         selectingZone,
         choosing,
-      },
+      }),
     });
     return {
       ...store,
@@ -1117,16 +1117,16 @@ class InsertColsRightAction<T extends { numCols: number; x: number; operator?: O
       numCols,
       baseX: x,
       operator,
-      undoReflection: {
+      undoReflection: compactReflection({
         sheetId: sheet.id,
         selectingZone,
         choosing,
-      },
-      redoReflection: {
+      }),
+      redoReflection: compactReflection({
         sheetId: sheet.id,
         selectingZone: nextSelectingZone,
         choosing: nextChoosing,
-      },
+      }),
     });
     return {
       ...store,
@@ -1151,17 +1151,17 @@ class RemoveRowsAction<T extends { numRows: number; y: number; operator?: Operat
       y,
       numRows,
       operator,
-      undoReflection: {
+      undoReflection: compactReflection({
         sheetId: sheet.id,
         selectingZone,
         choosing,
         sheetHeight: store.sheetHeight,
-      },
-      redoReflection: {
+      }),
+      redoReflection: compactReflection({
         sheetId: sheet.id,
         selectingZone,
         choosing,
-      },
+      }),
     });
 
     return {
@@ -1185,17 +1185,17 @@ class RemoveColsAction<T extends { numCols: number; x: number; operator?: Operat
       x,
       numCols,
       operator,
-      undoReflection: {
+      undoReflection: compactReflection({
         sheetId: sheet.id,
         selectingZone,
         choosing,
         sheetWidth: store.sheetWidth,
-      },
-      redoReflection: {
+      }),
+      redoReflection: compactReflection({
         sheetId: sheet.id,
         selectingZone,
         choosing,
-      },
+      }),
     });
 
     return {
@@ -1215,7 +1215,7 @@ class SortRowsAction<T extends { x: number; direction: 'asc' | 'desc' }> extends
       return store;
     }
     sheet.sortRows({ x, direction });
-    const reflection = { sheetId: sheet.id, selectingZone, choosing };
+    const reflection = compactReflection({ sheetId: sheet.id, selectingZone, choosing });
     if (sheet.registry.lastHistory) {
       sheet.registry.lastHistory.undoReflection = reflection;
       sheet.registry.lastHistory.redoReflection = reflection;
@@ -1237,7 +1237,7 @@ class FilterRowsAction<T extends { x?: number; filter?: FilterConfig }> extends 
       return store;
     }
     sheet.filterRows({ x, filter });
-    const reflection = { sheetId: sheet.id, selectingZone, choosing };
+    const reflection = compactReflection({ sheetId: sheet.id, selectingZone, choosing });
     if (sheet.registry.lastHistory) {
       sheet.registry.lastHistory.undoReflection = reflection;
       sheet.registry.lastHistory.redoReflection = reflection;

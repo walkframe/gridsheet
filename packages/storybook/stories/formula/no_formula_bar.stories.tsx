@@ -22,9 +22,7 @@ const NoFormulaBarSheet = () => {
       initialCells={buildInitialCells({
         matrices: {},
         cells: {
-          default: {
-            width: 50,
-          },
+          defaultCol: { width: 50 },
         },
         ensured: { numRows: 10, numCols: 10 },
       })}

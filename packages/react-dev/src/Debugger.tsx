@@ -14,6 +14,15 @@ import atelierHeathLight from 'react-syntax-highlighter/dist/esm/styles/hljs/ate
 
 SyntaxHighlighter.registerLanguage('json', jsonLang);
 
+const ss = {
+  get: (key: string) => (typeof window !== 'undefined' ? sessionStorage.getItem(key) : null),
+  set: (key: string, value: string) => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(key, value);
+    }
+  },
+};
+
 type HljsStyle = SyntaxHighlighterProps['style'];
 
 const JsonCode: React.FC<{ data: any; replacer?: (k: string, v: any) => any; theme: HljsStyle }> = ({
@@ -27,7 +36,8 @@ const JsonCode: React.FC<{ data: any; replacer?: (k: string, v: any) => any; the
       language="json"
       style={theme}
       showLineNumbers
-      customStyle={{ margin: 0, fontSize: '12px', minHeight: '100%', borderRadius: 0 }}
+      customStyle={{ margin: 0, fontSize: '10px', minHeight: '100%', borderRadius: 0, whiteSpace: 'pre' }}
+      codeTagProps={{ style: { display: 'block', whiteSpace: 'pre', fontSize: '10px' } }}
     >
       {code}
     </SyntaxHighlighter>
@@ -43,17 +53,24 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
   const { registry } = book;
   const [snapshot, setSnapshot] = useState<any>({});
   const [activeTabId, setActiveTabId] = useState<number | null>(null);
-  const [topHeight, setTopHeight] = useState<number>(() => {
-    const saved = sessionStorage.getItem('debugger_top_height');
-    return saved ? Number(saved) : 200;
-  });
-  const [bottomHeight, setBottomHeight] = useState<number>(() => {
-    const saved = sessionStorage.getItem('debugger_bottom_height');
-    return saved ? Number(saved) : 200;
-  });
-  const [formulaView, setFormulaView] = useState<'expressions' | 'tokens'>(() => {
-    return (sessionStorage.getItem('debugger_formula_view') as 'expressions' | 'tokens') ?? 'expressions';
-  });
+  const [topHeight, setTopHeight] = useState<number>(200);
+  const [bottomHeight, setBottomHeight] = useState<number>(200);
+  const [formulaView, setFormulaView] = useState<'expressions' | 'tokens'>('expressions');
+
+  useEffect(() => {
+    const savedTop = ss.get('gs-debugger-top-height');
+    if (savedTop) {
+      setTopHeight(Number(savedTop));
+    }
+    const savedBottom = ss.get('gs-debugger-bottom-height');
+    if (savedBottom) {
+      setBottomHeight(Number(savedBottom));
+    }
+    const savedFormula = ss.get('gs-debugger-formula-view') as 'expressions' | 'tokens';
+    if (savedFormula) {
+      setFormulaView(savedFormula);
+    }
+  }, []);
 
   useEffect(() => {
     const updateSnapshot = () => {
@@ -240,7 +257,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
     const onMouseMove = (moveEvent: MouseEvent) => {
       const h = Math.max(100, startHeight + moveEvent.clientY - startY);
       setTopHeight(h);
-      sessionStorage.setItem('debugger_top_height', String(h));
+      ss.set('gs-debugger-top-height', String(h));
     };
     const onMouseUp = () => {
       document.removeEventListener('mousemove', onMouseMove);
@@ -257,7 +274,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
     const onMouseMove = (moveEvent: MouseEvent) => {
       const h = Math.max(100, startHeight + moveEvent.clientY - startY);
       setBottomHeight(h);
-      sessionStorage.setItem('debugger_bottom_height', String(h));
+      ss.set('gs-debugger-bottom-height', String(h));
     };
     const onMouseUp = () => {
       document.removeEventListener('mousemove', onMouseMove);
@@ -405,7 +422,7 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
               onClick={() => {
                 const next = formulaView === 'expressions' ? 'tokens' : 'expressions';
                 setFormulaView(next);
-                sessionStorage.setItem('debugger_formula_view', next);
+                ss.set('gs-debugger-formula-view', next);
               }}
               style={{
                 marginLeft: 'auto',

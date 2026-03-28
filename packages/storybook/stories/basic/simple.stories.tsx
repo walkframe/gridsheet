@@ -29,7 +29,8 @@ const SimpleSheet = () => {
       }}
       initialCells={buildInitialCells({
         cells: {
-          default: { width: 150, policy: 'raw' },
+          defaultCol: { width: 150 },
+          default: { policy: 'raw' },
           A1: {
             value: 'A1',
           },

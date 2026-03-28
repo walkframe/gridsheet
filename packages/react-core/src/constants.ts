@@ -33,3 +33,5 @@ export const RESET_ZONE: ZoneType = {
 export const BASE_DATE = new Date(1900, 0, 1);
 
 export const DEFAULT_KEY = 'default';
+export const DEFAULT_COL_KEY = 'defaultCol';
+export const DEFAULT_ROW_KEY = 'defaultRow';

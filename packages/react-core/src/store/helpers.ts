@@ -1,6 +1,18 @@
 import { a2p, x2c, y2r } from '../lib/coords';
 import { Sheet } from '../lib/sheet';
-import type { Address, PointType, StoreType } from '../types';
+import type { Address, PointType, StorePatchType, StoreType } from '../types';
+
+/**
+ * Strip redundant fields from a StorePatchType before recording in history.
+ * - selectingZone with endY === -1 && endX === -1 is a no-selection sentinel and need not be stored.
+ */
+export const compactReflection = (reflection: StorePatchType): StorePatchType => {
+  const result = { ...reflection };
+  if (result.selectingZone != null && result.selectingZone.endY === -1 && result.selectingZone.endX === -1) {
+    delete result.selectingZone;
+  }
+  return result;
+};
 
 export const restrictPoints = (store: StoreType, sheet: Sheet) => {
   const { choosing, selectingZone } = store;

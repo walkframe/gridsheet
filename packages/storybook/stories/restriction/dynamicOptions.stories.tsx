@@ -76,7 +76,8 @@ const DynamicOptionsComponent: React.FC = () => {
         book={book}
         initialCells={buildInitialCells({
           cells: {
-            default: { policy: 'fw', width: 150 },
+            defaultCol: { width: 150 },
+            default: { policy: 'fw' },
           },
           ensured: { numRows: 4, numCols: 3 },
         })}
@@ -90,10 +91,10 @@ const DynamicOptionsComponent: React.FC = () => {
         initialCells={buildInitialCellsFromOrigin({
           matrix: optionMatrix,
           cells: {
-            A: {
+            A0: {
               label: 'Value',
             },
-            B: {
+            B0: {
               label: 'Label',
             },
             default: {

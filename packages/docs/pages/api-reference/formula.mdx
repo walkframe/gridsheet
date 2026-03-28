@@ -177,14 +177,27 @@ class SafeAsyncFunction extends BaseFunctionAsync {
 
 ## Registering Custom Formulas
 
-Custom formulas are registered through the `useHub` hook via the `additionalFunctions` option. Keys are the formula names (case-insensitive in formulas):
+Custom formulas are registered through the `useBook` hook via the `additionalFunctions` option. Keys are the formula names (case-insensitive in formulas):
 
 ```tsx
-import { useHub } from '@gridsheet/react-core';
+import { useBook } from '@gridsheet/react-core';
 import MyCustomFunction from './MyCustomFunction';
 import FetchWeather from './FetchWeather';
 
-const hub = useHub({
+const book = useBook({
+  additionalFunctions: {
+    my_func: MyCustomFunction,
+    fetch_weather: FetchWeather,
+  },
+});
+```
+
+If you also want the full set of built-in extended functions (from `@gridsheet/functions`), use `useSpellbook` instead — it wraps `useBook` with all extended functions pre-loaded:
+
+```tsx
+import { useSpellbook } from '@gridsheet/functions';
+
+const book = useSpellbook({
   additionalFunctions: {
     my_func: MyCustomFunction,
     fetch_weather: FetchWeather,
@@ -233,6 +246,9 @@ class BaseFunction {
   // Short description of the function
   description?: string;
 
+  // Function category for grouping in autocomplete
+  category: FunctionCategory = 'other';
+
   // Argument definitions (drives arg-count and type validation)
   defs: FunctionArgumentDefinition[] = [];
 
@@ -242,6 +258,15 @@ class BaseFunction {
   // Hash segments in cache key. Higher = lower collision risk. Default: 1
   protected hashPrecision: number;
 
+  // If true, reuse the same in-flight Promise for matching cache keys. Default: true
+  protected useInflight: boolean;
+
+  // If true, broadcasting is unconditionally disabled for this function. Default: false
+  protected broadcastDisabled: boolean;
+
+  // If true, wraps return value in a Spilling sentinel for spill behaviour. Default: false
+  protected autoSpilling: boolean;
+
   // Main function implementation
   protected main(...args: any[]): any;
 
@@ -249,14 +274,19 @@ class BaseFunction {
   protected validate(args: any[]): any[];
 }
 
+type FunctionCategory =
+  | 'math' | 'statistics' | 'text' | 'time' | 'lookup'
+  | 'information' | 'finance' | 'engineering' | 'logical' | 'other';
+
 type FunctionArgumentDefinition = {
   name: string;
   description: string;
-  optional?: boolean;   // allows fewer args than defs.length
-  variadic?: boolean;   // last matching def receives all remaining args
-  nullable?: boolean;   // blank treated as 0 / "" etc. (default: true)
+  optional?: boolean;      // allows fewer args than defs.length
+  variadic?: boolean;      // last matching def receives all remaining args
+  nullable?: boolean;      // blank treated as 0 / "" etc. (default: true)
+  errorTolerant?: boolean; // forward FormulaError values instead of throwing
   acceptedTypes?: FunctionArgumentType[]; // runtime type check
-  takesMatrix?: boolean; // suppresses broadcasting for this arg
+  takesMatrix?: boolean;   // suppresses broadcasting for this arg
 };
 
 type FunctionArgumentType =

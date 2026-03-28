@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, buildInitialCells, useConnector, HistoryType } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells, useSheetRef, HistoryType } from '@gridsheet/react-core';
 import { useSpellbook } from '@gridsheet/functions';
 
 type Props = {
@@ -34,7 +34,7 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const WriteComponent: React.FC<Props> = ({ x, y, value }: Props) => {
-  const connector = useConnector();
+  const sheetRef = useSheetRef();
 
   const book = useSpellbook({
     onKeyUp: ({ e, points }) => {
@@ -46,17 +46,16 @@ const WriteComponent: React.FC<Props> = ({ x, y, value }: Props) => {
   });
 
   React.useEffect(() => {
-    if (connector?.current == null) {
+    if (sheetRef?.current == null) {
       return;
     }
-    const { sheetManager } = connector.current;
-    const { sheet, sync } = sheetManager;
-    sync(sheet.write({ point: { x, y }, value }));
-  }, [x, y, value, connector]);
+    const { sheet, apply } = sheetRef.current;
+    apply(sheet.write({ point: { x, y }, value }));
+  }, [x, y, value, sheetRef]);
 
   return (
     <GridSheet
-      connector={connector}
+      sheetRef={sheetRef}
       book={book}
       initialCells={buildInitialCells({
         cells: {},

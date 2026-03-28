@@ -12,52 +12,117 @@ A 5x5 grid is provided for drawing basic shapes and patterns.
 
 <a href="https://github.com/walkframe/gridsheet/tree/master/packages/docs/pages/examples/case3.component.tsx" target="_blank" rel="noopener noreferrer" style={{display: 'inline-block', background: '#007bff', color: 'white', padding: '8px 16px', textDecoration: 'none', borderRadius: '4px', fontWeight: '500', margin: '10px 0'}}>📄 View Source Code</a>
 
-### 🎨 Pixel Art Drawing Interface Overview
-This comprehensive pixel art drawing interface demonstrates how GridSheet can be used to create creative applications beyond traditional spreadsheet use cases. The implementation includes color selection, drawing tools, data persistence, and artistic features.
+### Imperative Sheet Access with `useSheetRef` and `useStoreRef`
 
-### 📐 Grid-Based Drawing System
-Implement a grid-based drawing system that treats each cell as a pixel. Create a canvas-like interface with customizable grid sizes and cell dimensions. Support both individual cell coloring and area filling operations.
+`useSheetRef` and `useStoreRef` give you imperative access to the internal sheet state and Redux-like store outside the normal React data flow.
 
-### 🎨 Color Palette Management
-Create a comprehensive color palette system with predefined colors and custom color selection. Implement color preview, selection indicators, and color history. Include accessibility features for color-blind users.
+```tsx
+const sheetRef = useSheetRef();
+const storeRef = useStoreRef();
 
-### 🖌️ Drawing Tools and Operations
-Implement various drawing tools including single cell coloring, area filling, and selection-based operations. Support keyboard shortcuts, mouse interactions, and touch gestures. Include undo/redo functionality for drawing operations.
+// Pass them as props to GridSheet
+<GridSheet sheetRef={sheetRef} storeRef={storeRef} ... />
+```
 
-### 💾 Data Persistence and Export
-Implement data persistence using localStorage to save drawing progress automatically. Create export functionality for saving drawings as images or data files. Include import capabilities for loading existing drawings.
+After the grid mounts, `sheetRef.current` exposes `{ sheet, apply }` and `storeRef.current` exposes `{ store, dispatch }`.
 
-### 📦 Selection and Area Operations
-Create selection tools that allow users to select multiple cells for bulk operations. Implement area filling, copying, and moving operations. Include visual feedback for selection areas and operation previews.
+### Reading the Current Selection with `clip`
 
-### 🎨 User Interface Design
-Design an intuitive drawing interface with clear tool organization and visual feedback. Include color palette, drawing tools, and canvas area. Implement responsive design that works across different screen sizes.
+`clip(store)` returns the currently selected area as `{ top, bottom, left, right }`. This is the entry point for any operation that acts on the user's selection.
 
-### ⚡ Performance Optimization
-Optimize drawing performance for large grids and complex operations. Implement efficient rendering, memory management, and update mechanisms. Consider virtualization for very large drawing canvases.
+```tsx
+const area = clip(store);
+if (!area) return;
 
-### 🎨 Drawing Patterns and Templates
-Provide predefined drawing patterns and templates for common pixel art subjects. Include geometric shapes, simple objects, and artistic patterns. Allow users to save and share custom templates.
+for (let row = area.top; row <= area.bottom; row++) {
+  for (let col = area.left; col <= area.right; col++) {
+    const cellAddress = p2a({ y: row, x: col });
+    diff[cellAddress] = { style: { backgroundColor: selectedColor } };
+  }
+}
+```
 
-### ✅ Best Practices
-1. **User Experience**: Provide intuitive drawing tools and clear visual feedback
-2. **Performance**: Optimize for smooth drawing experience with large grids
-3. **Data Management**: Implement reliable saving and loading of drawings
-4. **Accessibility**: Ensure drawing tools are accessible to all users
-5. **Export Options**: Provide multiple export formats for sharing drawings
-6. **Undo/Redo**: Implement comprehensive undo/redo for all drawing operations
-7. **Mobile Support**: Ensure drawing works well on touch devices
+`p2a({ y, x })` converts a zero-based coordinate into a cell address string like `"C3"`.
 
-### 🎯 Common Use Cases
-- **Pixel Art Creation**: Create pixel art and digital drawings
-- **Educational Tools**: Teaching basic drawing and color concepts
-- **Prototyping**: Quick visual prototyping and mockups
-- **Game Development**: Creating simple game sprites and assets
-- **Creative Expression**: Artistic expression and digital art creation
+### Writing Style Changes Imperatively with `sheet.update`
 
-### 🚀 Advanced Features
-- **Layers**: Multi-layer drawing with transparency support
-- **Brushes**: Different brush sizes and patterns
+To apply changes programmatically (e.g., from a button click), build a `diff` object keyed by cell address and call `sheet.update({ diff })`. Pass the result to `sync` to commit it to the store.
+
+```tsx
+const { sheet, apply } = sheetRef.current;
+const diff: CellsByAddressType = {
+  A1: { style: { backgroundColor: '#FF0000' } },
+  B1: { style: { backgroundColor: '#FF0000' } },
+};
+apply(sheet.update({ diff }));
+```
+
+This pattern lets you drive cell mutations from outside the grid — for example, from a color picker or a fill button.
+
+### Guaranteeing Grid Size with `ensured`
+
+By default, GridSheet only allocates rows/columns for cells that have data. Use the `ensured` option in `buildInitialCells` to reserve a minimum grid size regardless of data.
+
+```tsx
+buildInitialCells({
+  cells: {
+    defaultRow: { height: 25 },
+    defaultCol: { width: 25 },
+    ...getSavedData(),
+  },
+  ensured: {
+    numRows: 50,
+    numCols: 50,
+  },
+})
+```
+
+This is essential for a blank drawing canvas where the user should be able to click any cell even before any data exists.
+
+### Persisting Cell Styles to localStorage
+
+To save only the relevant data (background colors), iterate over the sheet's cell range, read `cell.style.backgroundColor`, and store a compact mapping of address → color.
+
+```tsx
+const coloredCells: { [key: string]: string } = {};
+for (let row = sheet.top; row <= sheet.bottom; row++) {
+  for (let col = sheet.left; col <= sheet.right; col++) {
+    const cell = sheet.getCell({ y: row, x: col });
+    if (cell?.style?.backgroundColor) {
+      coloredCells[p2a({ y: row, x: col })] = cell.style.backgroundColor;
+    }
+  }
+}
+localStorage.setItem('demo3', JSON.stringify({ cells: coloredCells }));
+```
+
+On load, reconstruct `CellsByAddressType` from the saved map and pass it into `buildInitialCells` as spread cells.
+
+### Auto-saving on Every Change with `onChange`
+
+`useSpellbook` accepts an `onChange` callback that fires after every cell mutation. Wiring the save logic there means the drawing is persisted automatically without requiring an explicit save button.
+
+```tsx
+const book = useSpellbook({
+  onChange: saveData,
+});
+```
+
+### Initial Pixel Art as `CellsByAddressType`
+
+The heart shape pre-drawn on first load is defined as a plain `CellsByAddressType` object, where each key is a cell address and the value sets a `backgroundColor`.
+
+```tsx
+const myHeart: CellsByAddressType = {
+  C3: { style: { backgroundColor: 'red' } },
+  D3: { style: { backgroundColor: 'red' } },
+  // ...
+  B5: { style: { backgroundColor: 'pink' } },
+  // ...
+};
+```
+
+This object is spread directly into the `cells` option of `buildInitialCells`, making it trivial to define any initial pixel art pattern.
 - **Filters**: Apply effects and filters to drawings
 - **Animation**: Create simple animated pixel art
 - **Collaboration**: Real-time collaborative drawing

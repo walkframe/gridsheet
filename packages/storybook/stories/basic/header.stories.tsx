@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, createConnector, GridSheet, updateSheet, useConnector } from '@gridsheet/react-core';
+import { buildInitialCells, createSheetRef, GridSheet, updateSheet } from '@gridsheet/react-core';
 import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
@@ -13,7 +13,7 @@ const DESCRIPTION = [
   'It demonstrates dynamic header sizing with interactive controls.',
 ].join('\n\n');
 
-const connector = createConnector();
+const sheetRef = createSheetRef();
 
 const HeaderSheet = () => {
   const [headerHeight, setHeaderHeight] = useState(40);
@@ -21,34 +21,30 @@ const HeaderSheet = () => {
   const book = useSpellbook();
 
   useEffect(() => {
-    if (connector.current) {
-      const { sheetManager } = connector.current;
-      const { sheet, sync } = sheetManager;
-      sync(sheet.setHeaderHeight(headerHeight));
+    if (sheetRef.current) {
+      const { sheet, apply } = sheetRef.current;
+      apply(sheet.setHeaderHeight(headerHeight));
     }
   }, [headerHeight]);
 
   useEffect(() => {
-    if (connector.current) {
-      const { sheetManager } = connector.current;
-      const { sheet, sync } = sheetManager;
-      sync(sheet.setHeaderWidth(headerWidth));
+    if (sheetRef.current) {
+      const { sheet, apply } = sheetRef.current;
+      apply(sheet.setHeaderWidth(headerWidth));
     }
   }, [headerWidth]);
 
   const handleSetHeaderHeight = () => {
-    if (connector.current) {
-      const { sheetManager } = connector.current;
-      const { sheet, sync } = sheetManager;
-      sync(sheet.setHeaderHeight(60));
+    if (sheetRef.current) {
+      const { sheet, apply } = sheetRef.current;
+      apply(sheet.setHeaderHeight(60));
     }
   };
 
   const handleSetHeaderWidth = () => {
-    if (connector.current) {
-      const { sheetManager } = connector.current;
-      const { sheet, sync } = sheetManager;
-      sync(sheet.setHeaderWidth(80));
+    if (sheetRef.current) {
+      const { sheet, apply } = sheetRef.current;
+      apply(sheet.setHeaderWidth(80));
     }
   };
 
@@ -88,7 +84,7 @@ const HeaderSheet = () => {
 
       <GridSheet
         book={book}
-        connector={connector}
+        sheetRef={sheetRef}
         initialCells={buildInitialCells({
           matrices: {
             A1: [
@@ -98,6 +94,20 @@ const HeaderSheet = () => {
               ['A4', 'B4', 'C4', 'D4', 'E4'],
               ['A5', 'B5', 'C5', 'D5', 'E5'],
             ],
+          },
+          cells: {
+            // A column header only (y=0, x=A)
+            A0: { style: { backgroundColor: 'rgb(255, 200, 200)' } },
+            // Row 1 header only (y=1, x=0)
+            '01': { style: { backgroundColor: 'rgb(200, 255, 200)' } },
+            // All data cells in column A (A1, A2, ...)
+            A: { style: { backgroundColor: 'rgb(200, 200, 255)' } },
+            // All data cells in row 1 (A1, B1, ...)
+            1: { style: { backgroundColor: 'rgb(255, 255, 180)' } },
+            // All data cells in columns C, D, E
+            'C:E': { style: { backgroundColor: 'rgb(220, 200, 255)' } },
+            // Column headers F and G only
+            'F0:G0': { style: { color: 'blue' } },
           },
           ensured: { numRows: 10, numCols: 8 },
         })}

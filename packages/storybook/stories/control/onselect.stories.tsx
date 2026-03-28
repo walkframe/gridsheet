@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, buildInitialCells, useConnector } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells } from '@gridsheet/react-core';
 import type { FeedbackType } from '@gridsheet/react-core';
 import { useSpellbook } from '@gridsheet/functions';
 
@@ -24,7 +24,6 @@ const DESCRIPTION = [
 
 const SheetOnSelectComponent: React.FC = () => {
   const [selectionInfo, setSelectionInfo] = React.useState<any>({});
-  const connector = useConnector();
 
   const handleSelect: FeedbackType = React.useCallback(({ sheet, points }) => {
     if (points) {
@@ -51,7 +50,6 @@ const SheetOnSelectComponent: React.FC = () => {
       <div style={{ display: 'flex' }}>
         <div style={{ flex: 1 }}>
           <GridSheet
-            connector={connector}
             book={book}
             initialCells={buildInitialCells({
               matrices: {

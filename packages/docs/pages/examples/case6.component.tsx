@@ -1,7 +1,16 @@
 'use client';
 
 import * as React from 'react';
-import { GridSheet, buildInitialCells, Policy, PolicyMixinType, RenderProps, useHub } from '@gridsheet/react-core';
+import {
+  GridSheet,
+  buildInitialCells,
+  Policy,
+  PolicyMixinType,
+  RenderProps,
+  SerializeProps,
+} from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
+import { Debugger } from '@gridsheet/react-dev';
 
 type EventType = {
   time: string;
@@ -57,13 +66,8 @@ const getDateFromPosition = (row: number, col: number): { date: string; weekday:
 
 // Calendar policy mixin (combines render + parse)
 const CalendarCellPolicyMixin: PolicyMixinType = {
-  renderArray({ value, point }: RenderProps<ValueType>) {
-    if (!value) {
-      return null;
-    }
-
-    const { date, isWeekend } = getDateFromPosition(point.y, point.x);
-    const events = value || [];
+  renderCallback(rendered: any, { point }: RenderProps<ValueType>) {
+    const { date } = getDateFromPosition(point.y, point.x);
 
     return (
       <div
@@ -71,9 +75,6 @@ const CalendarCellPolicyMixin: PolicyMixinType = {
           width: '100%',
           height: '100%',
           padding: 8,
-          background: isWeekend ? '#f8d7da' : '#fff',
-          borderRadius: 6,
-          border: isWeekend ? '1px solid #e74c3c' : '1px solid #eee',
           position: 'relative',
           display: 'flex',
           flexDirection: 'column',
@@ -83,7 +84,6 @@ const CalendarCellPolicyMixin: PolicyMixinType = {
         <div
           style={{
             fontWeight: 700,
-            color: isWeekend ? '#e74c3c' : '#2c3e50',
             fontSize: 14,
             marginBottom: 4,
           }}
@@ -99,70 +99,83 @@ const CalendarCellPolicyMixin: PolicyMixinType = {
             overflow: 'hidden',
           }}
         >
-          {events.length > 0 ? (
-            events.map((event: EventType, i: number) => (
-              <div
-                key={i}
-                style={{
-                  background: '#3498db',
-                  color: '#fff',
-                  borderRadius: 3,
-                  padding: '2px 4px',
-                  fontSize: 11,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  minHeight: 16,
-                }}
-              >
-                {event.time && (
-                  <span
-                    style={{
-                      fontWeight: 'bold',
-                      fontSize: 10,
-                      minWidth: 28,
-                    }}
-                  >
-                    {event.time}
-                  </span>
-                )}
-                <span
-                  style={{
-                    flex: 1,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {event.task}
-                </span>
-              </div>
-            ))
-          ) : (
-            <span
-              style={{
-                color: '#aaa',
-                fontSize: 11,
-                fontStyle: 'italic',
-                textAlign: 'center',
-                marginTop: 'auto',
-                marginBottom: 'auto',
-              }}
-            >
-              No events
-            </span>
-          )}
+          {rendered}
         </div>
       </div>
     );
   },
-  serialize({ value }: RenderProps<ValueType>): string {
+  renderNull() {
+    return (
+      <span
+        style={{
+          color: '#aaa',
+          fontSize: 11,
+          fontStyle: 'italic',
+          textAlign: 'center',
+          marginTop: 'auto',
+          marginBottom: 'auto',
+        }}
+      >
+        No events
+      </span>
+    );
+  },
+  renderArray({ value }: RenderProps<ValueType>) {
+    const events = Array.isArray(value) ? value : [];
+
+    return (
+      <>
+        {events.map((event: EventType, i: number) => (
+          <div
+            key={i}
+            style={{
+              background: '#3498db',
+              color: '#fff',
+              borderRadius: 3,
+              padding: '2px 4px',
+              fontSize: 11,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              minHeight: 16,
+            }}
+          >
+            {event.time && (
+              <span
+                style={{
+                  fontWeight: 'bold',
+                  fontSize: 10,
+                  minWidth: 28,
+                }}
+              >
+                {event.time}
+              </span>
+            )}
+            <span
+              style={{
+                flex: 1,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {event.task}
+            </span>
+          </div>
+        ))}
+      </>
+    );
+  },
+  serializeArray({ value }: SerializeProps<ValueType>): string {
     if (!value || value.length === 0) {
       return '';
     }
-    return value.map((ev: EventType) => `${ev.time} ${ev.task}`).join('\n');
+    return value.map((ev: EventType) => `${ev.time ? ev.time + ' ' : ''}${ev.task}`).join('\n');
   },
   deserializeFirst: (value: string) => {
+    if (!value || !value.trim()) {
+      return { value: null };
+    }
     const events = parseEvents(value);
     return { value: events };
   },
@@ -174,7 +187,7 @@ for (let w = 0; w < 4; w++) {
   const week: ValueType[] = [];
   for (let d = 0; d < 7; d++) {
     // Sample events (only for some days)
-    let events: EventType[] = [];
+    let events: EventType[] | null = null;
     const weekday = (d + 1) % 7; // Start from Monday
 
     if (weekday === 1 && w === 0) {
@@ -197,16 +210,9 @@ for (let w = 0; w < 4; w++) {
 }
 
 export default function CustomRendering() {
-  const hub = useHub({
+  const book = useSpellbook({
     policies: {
       calendar: new Policy({ mixins: [CalendarCellPolicyMixin] }),
-      sun: new Policy({ mixins: [{ renderColHeaderLabel: () => 'Sun' }] }),
-      mon: new Policy({ mixins: [{ renderColHeaderLabel: () => 'Mon' }] }),
-      tue: new Policy({ mixins: [{ renderColHeaderLabel: () => 'Tue' }] }),
-      wed: new Policy({ mixins: [{ renderColHeaderLabel: () => 'Wed' }] }),
-      thu: new Policy({ mixins: [{ renderColHeaderLabel: () => 'Thu' }] }),
-      fri: new Policy({ mixins: [{ renderColHeaderLabel: () => 'Fri' }] }),
-      sat: new Policy({ mixins: [{ renderColHeaderLabel: () => 'Sat' }] }),
     },
   });
 
@@ -220,7 +226,7 @@ export default function CustomRendering() {
       }}
     >
       <GridSheet
-        hub={hub}
+        book={book}
         initialCells={buildInitialCells({
           matrices: {
             A1: weeks,
@@ -228,22 +234,24 @@ export default function CustomRendering() {
           cells: {
             default: {
               policy: 'calendar',
-              width: 120,
-              height: 100,
             },
-            A: { policy: 'mon' },
-            B: { policy: 'tue' },
-            C: { policy: 'wed' },
-            D: { policy: 'thu' },
-            E: { policy: 'fri' },
-            F: { policy: 'sat' },
-            G: { policy: 'sun' },
+            defaultCol: { width: 120 },
+            defaultRow: { height: 100 },
+            A0: { label: 'Mon' },
+            B0: { label: 'Tue' },
+            C0: { label: 'Wed' },
+            D0: { label: 'Thu' },
+            E0: { label: 'Fri' },
+            F0: { label: 'Sat', style: { backgroundColor: '#4a90d9' } },
+            F: { style: { backgroundColor: 'rgba(74, 144, 217, 0.15)' } },
+            G0: { label: 'Sun', style: { backgroundColor: '#d94a4a' } },
+            G: { style: { backgroundColor: 'rgba(217, 74, 74, 0.15)' } },
           },
         })}
         options={{
           sheetWidth: typeof window !== 'undefined' ? Math.min(900, window.innerWidth - 60) : 900,
           sheetHeight: 450,
-          showAddress: false,
+          limits: { minCols: 7, maxCols: 7, minRows: 5, maxRows: 5 },
         }}
       />
     </div>

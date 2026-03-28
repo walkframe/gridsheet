@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, buildInitialCells, useConnector, syncers, toValueObject } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells, useStoreRef, applyers, toValueObject } from '@gridsheet/react-core';
 import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
@@ -23,7 +23,7 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const RemoveComponent: React.FC = () => {
-  const connector = useConnector();
+  const storeRef = useStoreRef();
 
   const book = useSpellbook({
     onRemoveRows: ({ sheet, ys }) => {
@@ -37,23 +37,21 @@ const RemoveComponent: React.FC = () => {
   });
 
   const handleRemoveRows = () => {
-    if (connector?.current == null) {
+    if (storeRef?.current == null) {
       return;
     }
-    const { storeManager } = connector.current;
-    const { store, dispatch } = storeManager;
+    const { store, dispatch } = storeRef.current;
     // Remove 2nd row (index 2)
-    syncers.removeRows({ store, dispatch });
+    applyers.removeRows({ store, dispatch });
   };
 
   const handleRemoveCols = () => {
-    if (connector?.current == null) {
+    if (storeRef?.current == null) {
       return;
     }
-    const { storeManager } = connector.current;
-    const { store, dispatch } = storeManager;
+    const { store, dispatch } = storeRef.current;
     // Remove 2nd column (index 2)
-    syncers.removeCols({ store, dispatch });
+    applyers.removeCols({ store, dispatch });
   };
 
   return (
@@ -92,7 +90,7 @@ const RemoveComponent: React.FC = () => {
       </div>
 
       <GridSheet
-        connector={connector}
+        storeRef={storeRef}
         book={book}
         initialCells={buildInitialCells({
           matrices: {
@@ -107,10 +105,10 @@ const RemoveComponent: React.FC = () => {
               width: 80,
               height: 30,
             },
-            A: { label: 'Header1' },
-            B: { label: 'Header2' },
-            C: { label: 'Header3' },
-            D: { label: 'Header4' },
+            A0: { label: 'Header1' },
+            B0: { label: 'Header2' },
+            C0: { label: 'Header3' },
+            D0: { label: 'Header4' },
           },
           ensured: {
             numRows: 10,

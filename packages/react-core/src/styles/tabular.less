@@ -1,4 +1,3 @@
-
 .gs-adjuster {
   padding: 0;
 }
@@ -11,14 +10,13 @@
   overflow: auto;
   display: block;
   box-sizing: border-box;
-  overscroll-behavior: none;
   position: relative;
 }
 
 .gs-tabular-inner {
-  & > table {
+  &>table {
     table-layout: fixed;
-    border-collapse: separate;
+    border-collapse: collapse;
     border-spacing: 0;
   }
 }
@@ -37,9 +35,11 @@
     border-color: transparent;
     box-sizing: border-box;
     z-index: 2;
+
     &:hover {
       background-color: #0077ff;
     }
+
     &.gs-protected {
       display: none;
     }
@@ -105,6 +105,14 @@
   left: 0;
   z-index: 3;
   border: none !important;
+}
+
+.gs-th-left.gs-filter-fixed .gs-th-inner::before {
+  content: '‹\00a0';
+}
+
+.gs-th-left.gs-sort-fixed .gs-th-inner::after {
+  content: '\00a0›';
 }
 
 .gs-col-addr {

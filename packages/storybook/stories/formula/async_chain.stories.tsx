@@ -157,10 +157,8 @@ const AsyncChainSheet = () => {
             sheetName="AsyncChain"
             initialCells={buildInitialCells({
               cells: {
-                default: {
-                  width: 350,
-                },
-                A: { width: 100 },
+                defaultCol: { width: 350 },
+                A0: { width: 100 },
                 A1: { value: '=SUM_DELAY(10, 20)' },
                 A2: { value: '=SUM_DELAY(A1, 100)' },
                 A3: { value: '=SUM_DELAY(A2, 200)' },
@@ -198,10 +196,8 @@ const AsyncChainSheet = () => {
             sheetName="AsyncChainInflight"
             initialCells={buildInitialCells({
               cells: {
-                default: {
-                  width: 400,
-                },
-                A: { width: 100 },
+                defaultCol: { width: 400 },
+                A0: { width: 100 },
                 A1: { value: '=SUM_DELAY_INFLIGHT(10, 20)' },
                 A2: { value: '=SUM_DELAY_INFLIGHT(A1, 100)' },
                 A3: { value: '=SUM_DELAY_INFLIGHT(A2, 200)' },
