@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => ({
         //preserveModulesRoot: process.cwd(),
       },
     },
-    sourcemap: mode === "development",
+    sourcemap: true,
     minify: mode === "development" ? false : "esbuild",
   },
 }));
