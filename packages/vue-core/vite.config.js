@@ -29,6 +29,8 @@ export default defineConfig({
     },
     outDir: 'dist',
     emptyOutDir: true,
+    sourcemap: true,
+    minify: "esbuild",
     rollupOptions: {
       external: ['vue', '@gridsheet/preact-core'],
     }

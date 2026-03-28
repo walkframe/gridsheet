@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig(() => ({
   plugins: [dts({ insertTypesEntry: true })],
   build: {
     lib: {
@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => ({
         preserveModules: false,
       },
     },
-    sourcemap: mode === "development",
-    minify: mode === "development" ? false : "esbuild",
+    sourcemap: true,
+    minify: "esbuild",
   },
 }));

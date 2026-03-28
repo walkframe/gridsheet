@@ -45,7 +45,7 @@ jobs:
         run: |
           cd packages/react-core
           pnpm install
-          pnpm build --mode development
+          pnpm build
           VERSION=$(node -p "require('./package.json').version")
           TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
           npm publish --access public --provenance $TAG || true
@@ -63,7 +63,7 @@ jobs:
         run: |
           cd packages/functions
           pnpm install
-          pnpm build --mode development
+          pnpm build
           VERSION=$(node -p "require('./package.json').version")
           TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
           npm publish --access public --provenance $TAG || true
@@ -72,7 +72,7 @@ jobs:
         run: |
           cd packages/react-dev
           pnpm install
-          pnpm build --mode development
+          pnpm build
           VERSION=$(node -p "require('./package.json').version")
           TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
           npm publish --access public --provenance $TAG || true
@@ -82,5 +82,5 @@ jobs:
         run: |
           cd packages/vue-core
           pnpm install
-          pnpm build --mode development
+          pnpm build
           npm publish --access public --provenance --tag next || true

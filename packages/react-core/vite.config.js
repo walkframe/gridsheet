@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import dts from "vite-plugin-dts";
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig(() => ({
   plugins: [react(), dts({ insertTypesEntry: true, exclude: ['**/*.spec.ts', '**/*.spec.tsx'] })],
   build: {
     lib: {
@@ -22,6 +22,6 @@ export default defineConfig(({ mode }) => ({
       },
     },
     sourcemap: true,
-    minify: mode === "development" ? false : "esbuild",
+    minify: "esbuild",
   },
 }));
