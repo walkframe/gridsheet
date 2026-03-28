@@ -4,15 +4,13 @@ import {
   BaseFunctionAsync,
   buildInitialCells,
   GridSheet,
-  useHub,
   ensureNumber,
-  solveTable,
-  Table,
+  Sheet,
   p2a,
   FunctionArgumentDefinition,
 } from '@gridsheet/react-core';
 import { Debugger } from '@gridsheet/react-dev';
-import { allFunctions } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Formula/AsyncChain',
@@ -33,9 +31,10 @@ class SumDelayFunction extends BaseFunctionAsync {
   protected validate(args: any[]): any[] {
     const spreaded: number[] = [];
     args.forEach((arg) => {
-      if (arg instanceof Table) {
+      if (arg instanceof Sheet) {
         spreaded.push(
-          ...solveTable({ table: arg, at: this.at })
+          ...arg
+            .solve({ at: this.at })
             .reduce((a: any[], b: any[]) => a.concat(b))
             .map((v: any) => ensureNumber(v, { ignore: true })),
         );
@@ -47,7 +46,7 @@ class SumDelayFunction extends BaseFunctionAsync {
   }
 
   async main(...values: number[]) {
-    const origin = this.table.getPointById(this.at);
+    const origin = this.sheet.getPointById(this.at);
     const msg = `SUM_DELAY called with [${values.join(', ')}] at ${p2a(origin!)}`;
     //console.log(msg);
     if (typeof window !== 'undefined') {
@@ -80,9 +79,10 @@ class SumDelayFunctionInflight extends BaseFunctionAsync {
   protected validate(args: any[]): any[] {
     const spreaded: number[] = [];
     args.forEach((arg) => {
-      if (arg instanceof Table) {
+      if (arg instanceof Sheet) {
         spreaded.push(
-          ...solveTable({ table: arg, at: this.at })
+          ...arg
+            .solve({ at: this.at })
             .reduce((a: any[], b: any[]) => a.concat(b))
             .map((v: any) => ensureNumber(v, { ignore: true })),
         );
@@ -94,7 +94,7 @@ class SumDelayFunctionInflight extends BaseFunctionAsync {
   }
 
   async main(...values: number[]) {
-    const origin = this.table.getPointById(this.at);
+    const origin = this.sheet.getPointById(this.at);
     const msg = `SUM_DELAY_INFLIGHT called with [${values.join(', ')}] at ${p2a(origin!)}`;
     //console.log(msg);
     if (typeof window !== 'undefined') {
@@ -125,9 +125,8 @@ const ASYNC_CHAIN_DESCRIPTION = [
 ].join('\n\n');
 
 const AsyncChainSheet = () => {
-  const hub = useHub({
+  const book = useSpellbook({
     additionalFunctions: {
-      ...allFunctions,
       sum_delay: SumDelayFunction,
       sum_delay_inflight: SumDelayFunctionInflight,
     },
@@ -154,14 +153,12 @@ const AsyncChainSheet = () => {
         <div className="async-inflight-false">
           <h3>inflight = false</h3>
           <GridSheet
-            hub={hub}
+            book={book}
             sheetName="AsyncChain"
             initialCells={buildInitialCells({
               cells: {
-                default: {
-                  width: 350,
-                },
-                A: { width: 100 },
+                defaultCol: { width: 350 },
+                A0: { width: 100 },
                 A1: { value: '=SUM_DELAY(10, 20)' },
                 A2: { value: '=SUM_DELAY(A1, 100)' },
                 A3: { value: '=SUM_DELAY(A2, 200)' },
@@ -195,14 +192,12 @@ const AsyncChainSheet = () => {
         <div className="async-inflight-true">
           <h3>inflight = true</h3>
           <GridSheet
-            hub={hub}
+            book={book}
             sheetName="AsyncChainInflight"
             initialCells={buildInitialCells({
               cells: {
-                default: {
-                  width: 400,
-                },
-                A: { width: 100 },
+                defaultCol: { width: 400 },
+                A0: { width: 100 },
                 A1: { value: '=SUM_DELAY_INFLIGHT(10, 20)' },
                 A2: { value: '=SUM_DELAY_INFLIGHT(A1, 100)' },
                 A3: { value: '=SUM_DELAY_INFLIGHT(A2, 200)' },
@@ -234,7 +229,7 @@ const AsyncChainSheet = () => {
           ></textarea>
         </div>
       </div>
-      <Debugger hub={hub} />
+      <Debugger book={book} />
     </>
   );
 };

@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, useHub } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Basic/Two',
@@ -11,12 +11,10 @@ export default meta;
 const DESCRIPTION = ['## Example', 'This demo is smallest simple grid sheet with a few cells for debug.'].join('\n\n');
 
 const TwoSheet = () => {
-  const hub = useHub({
-    additionalFunctions: allFunctions,
-  });
+  const book = useSpellbook();
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       options={{
         sheetResize: 'both',
       }}

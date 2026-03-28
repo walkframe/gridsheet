@@ -1,20 +1,20 @@
 import { PiFunction } from './pi';
-import { Table, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
 
 describe('pi', () => {
-  const table = new Table({});
-  table.initialize({});
+  const sheet = new Sheet({});
+  sheet.initialize({});
 
   describe('normal', () => {
     it('returns the value of PI', () => {
-      const f = new PiFunction({ table, args: [] });
+      const f = new PiFunction({ sheet, args: [] });
       expect(f.call()).toBe(Math.PI);
     });
   });
 
   describe('validation error', () => {
     it('has arguments', () => {
-      const f = new PiFunction({ table, args: [new ValueEntity(1)] });
+      const f = new PiFunction({ sheet, args: [new ValueEntity(1)] });
       expect(f.call.bind(f)).toThrow(FormulaError);
     });
   });

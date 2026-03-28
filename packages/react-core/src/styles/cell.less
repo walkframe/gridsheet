@@ -56,11 +56,12 @@
     position: absolute;
     top: 0;
     right: 0;
-    border-top: 3px solid rgba(200, 0, 0, 0.9);
-    border-right: 3px solid rgba(200, 0, 0, 0.9);
-    border-bottom: 3px solid transparent;
-    border-left: 3px solid transparent;
-    z-index: 1;
+    border-top: 4px solid rgba(200, 0, 0, 0.9);
+    border-right: 4px solid rgba(200, 0, 0, 0.9);
+    border-bottom: 4px solid transparent;
+    border-left: 4px solid transparent;
+    z-index: 2;
+    cursor: help;
   }
   .gs-cell-label {
     font-size: 8px;
@@ -137,10 +138,21 @@
   }
 }
 
-.gs-cell[data-x="1"] {
-  border-left: none;
+.gs-formula-error-tooltip {
+  position: fixed;
+  background-color: rgba(35, 8, 8, 0.94);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 4px;
+  border-left: 3px solid rgba(220, 50, 50, 0.8);
+  font-size: 12px;
+  line-height: 1.5;
+  max-width: 260px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+  z-index: 100;
+  pointer-events: none;
+  letter-spacing: 0.3px;
 }
 
-.gs-cell[data-y="1"] {
-  border-top: none;
-}

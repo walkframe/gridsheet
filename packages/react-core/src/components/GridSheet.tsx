@@ -1,36 +1,49 @@
 import { useEffect, useState, useRef, useReducer, createRef } from 'react';
-import type { CellsByAddressType, Connector, OptionsType, Props, StoreType } from '../types';
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH, HEADER_HEIGHT, HEADER_WIDTH, SHEET_HEIGHT, SHEET_WIDTH } from '../constants';
+import type { CellsByAddressType, SheetHandle, StoreHandle, OptionsType, Props, StoreType } from '../types';
+import {
+  DEFAULT_HEIGHT,
+  DEFAULT_WIDTH,
+  HEADER_HEIGHT,
+  HEADER_WIDTH,
+  SHEET_HEIGHT,
+  SHEET_WIDTH,
+  DEFAULT_COL_KEY,
+  DEFAULT_ROW_KEY,
+} from '../constants';
 import { Context } from '../store';
 import { reducer as defaultReducer } from '../store/actions';
 import { Editor } from './Editor';
 import { StoreObserver } from './StoreObserver';
 import { Resizer } from './Resizer';
 import { Emitter } from './Emitter';
-import { ContextMenu, defaultContextMenuItems } from './ContextMenu';
+import { ContextMenu } from './ContextMenu';
 import { ColumnMenu } from './ColumnMenu';
 import { RowMenu } from './RowMenu';
-import { Table } from '../lib/table';
+import { Sheet } from '../lib/sheet';
 import { Tabular } from './Tabular';
 import { getMaxSizesFromCells } from '../lib/spatial';
 import { x2c, y2r } from '../lib/coords';
 import { embedStyle } from '../styles/embedder';
 import { FormulaBar } from './FormulaBar';
 import { SearchBar } from './SearchBar';
-import { useHub } from '../lib/hub';
+import { useBook } from '../lib/book';
 import { ScrollHandle } from './ScrollHandle';
+import { defaultContextMenuDescriptors, defaultRowMenuDescriptors, defaultColMenuDescriptors } from '../lib/menu';
 
-export const createConnector = () => createRef<Connector | null>();
-export const useConnector = () => useRef<Connector | null>(null);
+export const createSheetRef = () => createRef<SheetHandle | null>();
+export const useSheetRef = () => useRef<SheetHandle | null>(null);
+export const createStoreRef = () => createRef<StoreHandle | null>();
+export const useStoreRef = () => useRef<StoreHandle | null>(null);
 
 export function GridSheet({
   initialCells,
   sheetName = '',
-  connector: initialConnector,
+  sheetRef: initialSheetRef,
+  storeRef: initialStoreRef,
   options = {},
   className,
   style,
-  hub: initialHub,
+  book: initialBook,
 }: Props) {
   const { sheetResize, showFormulaBar = true, mode = 'light' } = options;
   const rootRef = useRef<HTMLDivElement>(null);
@@ -41,49 +54,48 @@ export function GridSheet({
   const largeEditorRef = useRef<HTMLTextAreaElement>(null);
   const tabularRef = useRef<HTMLDivElement>(null);
 
-  const internalConnector = useConnector();
-  const connector = initialConnector ?? internalConnector;
+  const internalSheetRef = useSheetRef();
+  const sheetRef = initialSheetRef ?? internalSheetRef;
+  const internalStoreRef = useStoreRef();
+  const storeRef = initialStoreRef ?? internalStoreRef;
 
-  const internalHub = useHub({});
-  const hub = initialHub ?? internalHub;
-  const { wire } = hub;
+  const internalBook = useBook({});
+  const book = initialBook ?? internalBook;
+  const { registry } = book;
 
   // useRef to manage sheetId and avoid Strict Mode issues
   const sheetIdRef = useRef<number | null>(null);
   if (sheetIdRef.current === null) {
-    sheetIdRef.current = ++wire.sheetHead;
+    sheetIdRef.current = ++registry.sheetHead;
   }
   const sheetId = sheetIdRef.current;
 
-  // Initialize tableReactive
-  const tableReactive = useRef<Table | null>(null);
+  // Initialize sheetReactive
+  const sheetReactive = useRef<Sheet | null>(null);
 
   const [initialState] = useState<StoreType>(() => {
     if (!sheetName) {
       sheetName = `Sheet${sheetId}`;
       console.debug('GridSheet: sheetName is not provided, using default name:', sheetName);
     }
-    const { minNumRows, maxNumRows, minNumCols, maxNumCols, contextMenuItems } = options;
-    const table = new Table({
-      minNumRows,
-      maxNumRows,
-      minNumCols,
-      maxNumCols,
-      sheetName,
-      hub: wire,
+    const { limits, contextMenu, rowMenu, colMenu } = options;
+    const sheet = new Sheet({
+      limits,
+      name: sheetName,
+      registry,
     });
-    table.sheetId = sheetId;
-    wire.sheetIdsByName[sheetName] = sheetId;
+    sheet.id = sheetId;
+    registry.sheetIdsByName[sheetName] = sheetId;
 
-    table.initialize(initialCells);
-    wire.onInit?.({ table });
+    sheet.initialize(initialCells);
+    registry.onInit?.({ sheet });
 
-    table.setTotalSize();
-    tableReactive.current = table;
+    sheet.setTotalSize();
+    sheetReactive.current = sheet;
 
     const store: StoreType = {
       sheetId,
-      tableReactive,
+      sheetReactive,
       rootRef,
       flashRef,
       mainRef,
@@ -108,18 +120,15 @@ export function GridSheet({
       searchCaseSensitive: false,
       searchRegex: false,
       editingOnEnter: true,
-      showAddress: false,
       contextMenuPosition: { y: -1, x: -1 },
-      contextMenuItems: contextMenuItems ?? defaultContextMenuItems,
+      contextMenu: contextMenu ?? defaultContextMenuDescriptors,
+      rowMenu: rowMenu ?? defaultRowMenuDescriptors,
+      colMenu: colMenu ?? defaultColMenuDescriptors,
       resizingPositionY: [-1, -1, -1],
       resizingPositionX: [-1, -1, -1],
       columnMenuState: null,
       rowMenuState: null,
       editorHovering: true,
-      minNumRows: 1,
-      maxNumRows: -1,
-      minNumCols: 1,
-      maxNumCols: -1,
       mode: 'light',
     };
     return store;
@@ -160,26 +169,30 @@ export function GridSheet({
   return (
     <Context.Provider value={{ store, dispatch }}>
       <div
-        className={`gs-root1 ${wire.ready ? 'gs-initialized' : ''}`}
+        className={`gs-root1 ${registry.ready ? 'gs-initialized' : ''}`}
         ref={rootRef}
         data-sheet-name={sheetName}
         data-mode={mode}
-        data-rows={store.tableReactive.current?.getNumRows() ?? 0}
-        data-cols={store.tableReactive.current?.getNumCols() ?? 0}
+        data-rows={store.sheetReactive.current?.numRows ?? 0}
+        data-cols={store.sheetReactive.current?.numCols ?? 0}
       >
         <div className="gs-flash-overlay" ref={flashRef} />
         <ScrollHandle style={{ position: 'fixed', top: 0, left: 0 }} />
         <ScrollHandle style={{ position: 'absolute', zIndex: 4, right: 0, top: 0, width: 5 }} horizontal={1} />
         <ScrollHandle style={{ position: 'absolute', zIndex: 4, left: 0, bottom: 0, height: 5 }} vertical={1} />
 
-        {typeof store.searchQuery === 'undefined' ? showFormulaBar && <FormulaBar ready={wire.ready} /> : <SearchBar />}
+        {typeof store.searchQuery === 'undefined' ? (
+          showFormulaBar && <FormulaBar ready={registry.ready} />
+        ) : (
+          <SearchBar />
+        )}
         <div
           className={`gs-main ${className || ''}`}
           ref={mainRef}
           style={{
             //width: '100%',
-            maxWidth: (store.tableReactive.current?.totalWidth || 0) + 2,
-            maxHeight: (store.tableReactive.current?.fullHeight || 0) + 2,
+            maxWidth: (store.sheetReactive.current?.totalWidth || 0) + 2,
+            maxHeight: (store.sheetReactive.current?.fullHeight || 0) + 2,
             overflow: 'auto',
             resize: sheetResize,
             ...style,
@@ -187,7 +200,7 @@ export function GridSheet({
         >
           <Editor mode={mode} />
           <Tabular />
-          <StoreObserver {...{ ...options, sheetHeight, sheetWidth, sheetName, connector }} />
+          <StoreObserver {...{ ...options, sheetHeight, sheetWidth, sheetName, sheetRef, storeRef }} />
           <ContextMenu />
           <ColumnMenu />
           <RowMenu />
@@ -202,9 +215,14 @@ export function GridSheet({
 const estimateSheetHeight = (initialCells: CellsByAddressType) => {
   const auto = getMaxSizesFromCells(initialCells);
   let estimatedHeight = initialCells[0]?.height ?? HEADER_HEIGHT;
-  for (let y = 0; y < auto.numRows; y++) {
+  for (let y = 1; y <= auto.numRows; y++) {
     const row = y2r(y);
-    const height = initialCells?.[row]?.height || initialCells?.default?.height || DEFAULT_HEIGHT;
+    const height =
+      initialCells?.[row]?.height ||
+      initialCells?.['0' + row]?.height ||
+      initialCells?.[DEFAULT_ROW_KEY]?.height ||
+      initialCells?.default?.height ||
+      DEFAULT_HEIGHT;
     if (estimatedHeight + height > SHEET_HEIGHT) {
       return SHEET_HEIGHT;
     }
@@ -216,9 +234,14 @@ const estimateSheetHeight = (initialCells: CellsByAddressType) => {
 const estimateSheetWidth = (initialCells: CellsByAddressType) => {
   const auto = getMaxSizesFromCells(initialCells);
   let estimatedWidth = initialCells[0]?.width ?? HEADER_WIDTH;
-  for (let x = 0; x < auto.numCols; x++) {
+  for (let x = 1; x <= auto.numCols; x++) {
     const col = x2c(x);
-    const width = initialCells?.[col]?.width || initialCells?.default?.width || DEFAULT_WIDTH;
+    const width =
+      initialCells?.[col]?.width ||
+      initialCells?.[col + '0']?.width ||
+      initialCells?.[DEFAULT_COL_KEY]?.width ||
+      initialCells?.default?.width ||
+      DEFAULT_WIDTH;
     if (estimatedWidth + width > SHEET_WIDTH) {
       return SHEET_WIDTH;
     }

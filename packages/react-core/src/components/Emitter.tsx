@@ -4,13 +4,13 @@ import { Context } from '../store';
 
 export const Emitter: FC = () => {
   const { store } = useContext(Context);
-  const { choosing: pointing, selectingZone: zone, tableReactive } = store;
-  const table = tableReactive.current;
+  const { choosing: pointing, selectingZone: zone, sheetReactive } = store;
+  const sheet = sheetReactive.current;
 
   useEffect(() => {
-    if (table?.isInitialized && table.currentVersion > 0 && table.wire.onChange) {
-      table.wire.onChange({
-        table,
+    if (sheet?.isInitialized && sheet.currentVersion > 0 && sheet.registry.onChange) {
+      sheet.registry.onChange({
+        sheet,
         points: {
           pointing,
           selectingFrom: { y: zone.startY, x: zone.startX },
@@ -18,12 +18,12 @@ export const Emitter: FC = () => {
         },
       });
     }
-  }, [tableReactive]);
+  }, [sheetReactive]);
 
   useEffect(() => {
-    if (table && table.wire.onSelect) {
-      table.wire.onSelect({
-        table,
+    if (sheet && sheet.registry.onSelect) {
+      sheet.registry.onSelect({
+        sheet,
         points: {
           pointing,
           selectingFrom: { y: zone.startY, x: zone.startX },

@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, useHub } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Basic/Style',
@@ -14,11 +14,11 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const StyleSheet = () => {
-  const hub = useHub({ additionalFunctions: allFunctions });
+  const book = useSpellbook();
   return (
     <div style={{ transform: 'translate(30px, 30px)' }}>
       <GridSheet
-        hub={hub}
+        book={book}
         initialCells={buildInitialCells({
           matrices: {
             A1: [
@@ -35,6 +35,7 @@ const StyleSheet = () => {
               height: 60,
             },
             A: {},
+            B0: { width: 200 },
             B: {
               style: {
                 backgroundColor: '#eeeeee',
@@ -44,7 +45,6 @@ const StyleSheet = () => {
                 letterSpacing: 20,
                 lineHeight: '60px',
               },
-              width: 200,
             },
             C: {
               style: { backgroundColor: '#dddddd', textDecoration: 'underline' },
@@ -58,15 +58,15 @@ const StyleSheet = () => {
             1: {
               style: { color: '#333' },
             },
+            '02': { height: 100 },
             2: {
               style: { color: '#F00' },
-              height: 100,
               alignItems: 'center',
               justifyContent: 'center',
             },
+            '03': { height: 250 },
             3: {
               style: { color: '#0C0' },
-              height: 250,
             },
             4: {
               style: { color: '#00F' },

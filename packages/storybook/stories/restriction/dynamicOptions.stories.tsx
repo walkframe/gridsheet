@@ -7,10 +7,10 @@ import {
   buildInitialCells,
   buildInitialCellsFromOrigin,
   operations,
-  useHub,
+  toValueMatrix,
   type SelectProps,
 } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Restriction/DynamicOptions',
@@ -58,14 +58,13 @@ const DynamicOptionsComponent: React.FC = () => {
       }),
     [optionMatrix],
   );
-  const hub = useHub({
-    additionalFunctions: allFunctions,
+  const book = useSpellbook({
     policies: {
       fw: fwPolicy,
     },
-    onChange: ({ table, points }) => {
-      if (table.sheetName === 'options') {
-        const matrix = table.toValueMatrix() as [string, string][];
+    onChange: ({ sheet, points }) => {
+      if (sheet.name === 'options') {
+        const matrix = toValueMatrix(sheet) as [string, string][];
         setOptionMatrix(matrix);
       }
     },
@@ -74,10 +73,11 @@ const DynamicOptionsComponent: React.FC = () => {
   return (
     <>
       <GridSheet
-        hub={hub}
+        book={book}
         initialCells={buildInitialCells({
           cells: {
-            default: { policy: 'fw', width: 150 },
+            defaultCol: { width: 150 },
+            default: { policy: 'fw' },
           },
           ensured: { numRows: 4, numCols: 3 },
         })}
@@ -87,14 +87,14 @@ const DynamicOptionsComponent: React.FC = () => {
 
       <GridSheet
         sheetName="options"
-        hub={hub}
+        book={book}
         initialCells={buildInitialCellsFromOrigin({
           matrix: optionMatrix,
           cells: {
-            A: {
+            A0: {
               label: 'Value',
             },
-            B: {
+            B0: {
               label: 'Label',
             },
             default: {

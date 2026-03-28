@@ -3,340 +3,414 @@
 import * as React from 'react';
 import {
   GridSheet,
-  useHub,
   makeBorder,
-  buildInitialCellsFromOrigin,
+  buildInitialCells,
   Policy,
   PolicyMixinType,
   AutocompleteOption,
+  BaseFunctionAsync,
+  Spilling,
+  FunctionArgumentDefinition,
+  FormulaError,
 } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
-// Star rating policy mixin
-const StarRatingPolicyMixin: PolicyMixinType = {
-  renderNumber({ value, sync, table, point }) {
-    const stars = Math.round(value);
-
-    const handleStarClick = (clickedStar: number) => {
-      if (sync) {
-        sync(table.write({ point, value: clickedStar.toString() }));
+// ── Completion Policy (range slider) ────────────────────────────────────────
+const CompletionPolicyMixin: PolicyMixinType = {
+  renderNumber({ value, apply, sheet, point }) {
+    const pct = Math.min(100, Math.max(0, Math.round(value)));
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (apply) {
+        apply(sheet.write({ point, value: e.target.value }));
       }
     };
-
+    const color = pct >= 80 ? '#059669' : pct >= 50 ? '#d97706' : '#dc2626';
     return (
       <div
         style={{
-          color: '#fbbf24',
-          fontSize: '14px',
-          fontWeight: 'bold',
-          textAlign: 'center',
-          cursor: 'pointer',
-          userSelect: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          padding: '0 6px',
+          width: '100%',
+          boxSizing: 'border-box',
+          overflow: 'hidden',
         }}
       >
-        {[1, 2, 3, 4, 5].map((starIndex) => (
-          <span
-            key={starIndex}
-            onClick={() => handleStarClick(starIndex)}
-            style={{
-              cursor: 'pointer',
-              transition: 'transform 0.1s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.2)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-          >
-            {starIndex <= stars ? '★' : '☆'}
-          </span>
-        ))}
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={pct}
+          onChange={handleChange}
+          onMouseDown={(e) => e.stopPropagation()}
+          style={{ flex: 1, minWidth: 0, accentColor: color }}
+        />
+        <span
+          style={{ fontSize: '11px', fontWeight: 'bold', color, minWidth: '30px', textAlign: 'right', flexShrink: 0 }}
+        >
+          {pct}%
+        </span>
       </div>
     );
   },
 };
 
-// Status Policy with dynamic styling
-const StatusPolicy: PolicyMixinType = {
+// ── Status Policy (autocomplete + dynamic style) ────────────────────────────
+const statusColors: Record<string, { bg: string; text: string }> = {
+  complete: { bg: '#dcfce7', text: '#166534' },
+  'in progress': { bg: '#fef3c7', text: '#92400e' },
+  pending: { bg: '#fee2e2', text: '#991b1b' },
+  'not started': { bg: '#f3f4f6', text: '#374151' },
+};
+
+const StatusPolicyMixin: PolicyMixinType = {
   getSelectOptions: (): AutocompleteOption[] => [
     { value: 'Not Started', label: '⏸️ Not Started' },
     { value: 'In Progress', label: '🔄 In Progress' },
     { value: 'Pending', label: '⏳ Pending' },
     { value: 'Complete', label: '✅ Complete' },
   ],
-  getSelectFallback: (_props: any) => {
-    return { value: 'Not Started' };
-  },
-  validate: (props: any) => {
-    const { patch } = props;
-    if (patch?.value == null) {
-      return patch;
+  getSelectFallback: () => ({ value: 'Not Started' }),
+  select: ({ next }: any) => {
+    if (next?.value == null) {
+      return next;
     }
-
-    const options = StatusPolicy.getSelectOptions!();
-    const validOption = options.find((option) => option.value === patch?.value);
-    if (!validOption) {
-      return { ...patch, value: 'Not Started' };
-    }
-
-    // Add dynamic styling based on status
-    const getStatusStyle = (status: string) => {
-      switch (status.toLowerCase()) {
-        case 'complete':
-          return {
-            backgroundColor: '#dcfce7',
-            color: '#166534',
-            borderRadius: '12px',
-            padding: '2px 8px',
-            fontSize: '11px',
-            fontWeight: 'bold',
-          };
-        case 'in progress':
-          return {
-            backgroundColor: '#fef3c7',
-            color: '#92400e',
-            borderRadius: '12px',
-            padding: '2px 8px',
-            fontSize: '11px',
-            fontWeight: 'bold',
-          };
-        case 'pending':
-          return {
-            backgroundColor: '#fee2e2',
-            color: '#991b1b',
-            borderRadius: '12px',
-            padding: '2px 8px',
-            fontSize: '11px',
-            fontWeight: 'bold',
-          };
-        case 'not started':
-          return {
-            backgroundColor: '#f3f4f6',
-            color: '#374151',
-            borderRadius: '12px',
-            padding: '2px 8px',
-            fontSize: '11px',
-            fontWeight: 'bold',
-          };
-        default:
-          return {
-            backgroundColor: '#f3f4f6',
-            color: '#374151',
-            borderRadius: '12px',
-            padding: '2px 8px',
-            fontSize: '11px',
-            fontWeight: 'bold',
-          };
-      }
-    };
-
+    const c = statusColors[(next.value as string).toLowerCase()] ?? statusColors['not started'];
     return {
-      ...patch,
-      style: getStatusStyle(patch.value),
+      ...next,
+      style: {
+        backgroundColor: c.bg,
+        color: c.text,
+        borderRadius: '12px',
+        padding: '2px 8px',
+        fontSize: '11px',
+        fontWeight: 'bold',
+        textAlign: 'center',
+      },
     };
   },
 };
 
+// ── Category Policy (autocomplete with color badges) ────────────────────────
+const categoryColors: Record<string, string> = {
+  Core: '#dbeafe',
+  Customize: '#fff7ed',
+  Formula: '#dcfce7',
+  UX: '#fce7f3',
+};
+
+const CategoryPolicyMixin: PolicyMixinType = {
+  getSelectOptions: (): AutocompleteOption[] => [
+    { value: 'Core', label: '🔧 Core' },
+    { value: 'Customize', label: '⚙️ Customize' },
+    { value: 'Formula', label: '📐 Formula' },
+    { value: 'UX', label: '✨ UX' },
+  ],
+  select: ({ next }: any) => {
+    if (next?.value == null) {
+      return next;
+    }
+    const bg = categoryColors[next.value as string] ?? '#f9fafb';
+    return {
+      ...next,
+      style: {
+        backgroundColor: bg,
+        textAlign: 'center',
+        fontSize: '11px',
+        fontWeight: '600',
+        borderRadius: '10px',
+        padding: '2px 6px',
+      },
+    };
+  },
+};
+
+// ── Async Function: GH_REPO ──────────────────────────────────────────────────
+// Fetches public repo stats from the GitHub API and spills [[stars, forks, open_issues]].
+// Uses browser HTTP cache (cache: 'default'). Throws #ASYNC! on failure.
+class GhRepoFunction extends BaseFunctionAsync {
+  example = 'GH_REPO("walkframe/gridsheet")';
+  description = 'Fetches public repo stats from GitHub API. Spills [[stars, forks, open_issues]].';
+  defs: FunctionArgumentDefinition[] = [
+    { name: 'repo', description: '"owner/repo" e.g. "walkframe/gridsheet"', acceptedTypes: ['string'] },
+  ];
+  ttlMilliseconds = 5 * 60 * 1000;
+
+  async main(repo: string) {
+    try {
+      const resp = await fetch(`https://api.github.com/repos/${repo.trim()}`, {
+        headers: { Accept: 'application/vnd.github.v3+json' },
+        cache: 'default',
+      });
+      if (!resp.ok) {
+        throw new Error(`HTTP ${resp.status}`);
+      }
+      const d = await resp.json();
+      return new Spilling([[d.stargazers_count ?? 0, d.forks_count ?? 0, d.open_issues_count ?? 0]]);
+    } catch {
+      throw new FormulaError('#ASYNC!', 'Failed to fetch GitHub data');
+    }
+  }
+}
+
+// ── Shared style constants ───────────────────────────────────────────────────
+const border = null;
+
+const cellBase = { fontSize: '12px', padding: '4px' };
+
+const headerCellStyle = {
+  backgroundColor: '#1e40af',
+  color: 'white',
+  fontWeight: 'bold' as const,
+  textAlign: 'center' as const,
+  fontSize: '12px',
+  ...border,
+};
+
+const featureNameStyle = {
+  ...cellBase,
+  fontWeight: '600' as const,
+  backgroundColor: '#f8fafc',
+};
+
+const sectionHeaderStyle = {
+  backgroundColor: '#1f2937',
+  color: '#94a3b8',
+  fontSize: '11px',
+  fontWeight: '600' as const,
+  letterSpacing: '0.5px',
+  ...border,
+};
+
+const ghStatsCellStyle = {
+  backgroundColor: '#e0f2fe',
+  color: '#0369a1',
+  textAlign: 'center' as const,
+  fontWeight: 'bold' as const,
+  fontSize: '14px',
+  ...border,
+};
+
+const ghLabelStyle = {
+  backgroundColor: '#f0f9ff',
+  color: '#0369a1',
+  textAlign: 'center' as const,
+  fontSize: '11px',
+  fontWeight: '600' as const,
+  ...border,
+};
+
+const categoryCellStyle = (cat: string) => ({
+  ...cellBase,
+  backgroundColor: categoryColors[cat] ?? '#f9fafb',
+  textAlign: 'center' as const,
+  fontSize: '11px',
+  fontWeight: '600' as const,
+});
+
+const completionCellStyle = (pct: number) => ({
+  ...cellBase,
+  backgroundColor: pct >= 80 ? '#f0fdf4' : pct >= 50 ? '#fffbeb' : '#fef2f2',
+});
+
+const memoStyle = {
+  ...cellBase,
+  color: '#6b7280',
+  fontSize: '10px',
+  fontStyle: 'italic' as const,
+  padding: '2px 6px',
+};
+
+// ── Component ────────────────────────────────────────────────────────────────
 export default function IntroductionExample() {
-  const hub = useHub({
+  const book = useSpellbook({
+    additionalFunctions: { gh_repo: GhRepoFunction as any },
     policies: {
-      starRating: new Policy({ mixins: [StarRatingPolicyMixin] }),
-      status: new Policy({ mixins: [StatusPolicy] }),
+      completion: new Policy({ mixins: [CompletionPolicyMixin] }),
+      status: new Policy({ mixins: [StatusPolicyMixin] }),
+      category: new Policy({ mixins: [CategoryPolicyMixin] }),
     },
   });
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '32px',
+        alignItems: 'center',
+        maxWidth: 'calc(100vw - 40px)',
+        overflow: 'hidden',
+        margin: '0 auto',
+      }}
+    >
+      {/* ── Sheet 1: Live GitHub Stats (async spill) ──────────────────────── */}
       <GridSheet
-        hub={hub}
-        sheetName="intro-example"
-        initialCells={buildInitialCellsFromOrigin({
-          matrix: [
-            ['Task', 'Priority', 'Rate', 'Cost', 'Rating', 'Status'],
-            ['Design UI', 'High', 50, '=C2*8', 4, 'Complete'],
-            ['Backend API', 'High', 60, '=C3*12', 5, 'In Progress'],
-            ['Database Setup', 'Medium', 45, '=C4*6', 3, 'Complete'],
-            ['Testing', 'Medium', 55, '=C5*10', 4, 'In Progress'],
-            ['Total:', '', '', '=SUM(D2:D5)', '=AVERAGE(E2:E5)', ''],
-            ['Max:', '', '', '=MAX(D2:D5)', '=MAX(E2:E5)', ''],
-          ],
+        book={book}
+        sheetName="github-stats"
+        initialCells={buildInitialCells({
           cells: {
-            default: {
-              width: 90,
-              height: 35,
-              style: {
-                ...makeBorder({ all: '1px solid #d1d5db' }),
-                fontSize: '12px',
-                padding: '4px',
-              },
+            default: { style: cellBase },
+            defaultCol: { width: 110 },
+            defaultRow: { height: 34 },
+
+            // Column labels
+            A0: { label: 'Repo', style: ghLabelStyle, width: 180 },
+            B0: { label: '⭐ Stars', style: ghLabelStyle },
+            C0: { label: '🍴 Forks', style: ghLabelStyle },
+            D0: { label: '🐛 Issues / PRs', style: ghLabelStyle },
+
+            // Data rows — formula in B spills into C, D
+            A1: {
+              value: 'walkframe/gridsheet',
+              style: { ...cellBase, color: '#0369a1', fontWeight: '600', fontSize: '11px' },
             },
-            'A1:F1': {
-              style: {
-                backgroundColor: '#1e40af',
-                color: 'white',
-                fontWeight: 'bold',
-                textAlign: 'center',
-                fontSize: '13px',
-              },
+            B1: { value: '=GH_REPO(A1)' },
+          },
+          ensured: { numRows: 1, numCols: 4 },
+        })}
+        options={{ sheetHeight: 150, sheetWidth: 500, sheetResize: 'both' }}
+      />
+
+      {/* ── Sheet 2: Feature Matrix ────────────────────────────────────────── */}
+      <GridSheet
+        book={book}
+        sheetName="features"
+        initialCells={buildInitialCells({
+          cells: {
+            default: { style: cellBase },
+            defaultCol: { width: 90 },
+            defaultRow: { height: 34 },
+            A0: { width: 175, label: 'Feature', style: headerCellStyle },
+            B0: { width: 105, label: 'Category', style: headerCellStyle },
+            C0: { width: 130, label: 'Completion', style: headerCellStyle },
+            D0: { width: 220, label: 'Memo', style: { ...headerCellStyle, textAlign: 'left' as const } },
+
+            // ── Core ──
+            A1: { value: 'Virtualization', style: featureNameStyle },
+            A2: { value: 'Keyboard Shortcut', style: featureNameStyle },
+            A3: { value: 'Undo / Redo', style: featureNameStyle },
+            A4: { value: 'Context Menu', style: featureNameStyle },
+
+            // ── Customize ──
+            A5: { value: 'Custom Renderer', style: featureNameStyle },
+            A6: { value: 'Custom Serializer', style: featureNameStyle },
+            A7: { value: 'Custom Deserializer', style: featureNameStyle },
+            A8: { value: 'Sheet API', style: featureNameStyle },
+            A9: { value: 'Event Handler', style: featureNameStyle },
+
+            // ── Formula ──
+            A10: { value: 'Formula Engine', style: featureNameStyle },
+            A11: { value: 'Formula Functions', style: featureNameStyle },
+            A12: { value: 'Formula Spill', style: featureNameStyle },
+            A13: { value: 'Async Formula', style: featureNameStyle },
+            A14: { value: 'Async Formula Cache', style: featureNameStyle },
+            A15: { value: 'Async Formula Inflight', style: featureNameStyle },
+            A16: { value: 'Absolute Reference', style: featureNameStyle },
+
+            // ── UX ──
+            A17: { value: 'Autocomplete', style: featureNameStyle },
+            A18: { value: 'Cross-sheet Reference', style: featureNameStyle },
+            A19: { value: 'Sort', style: featureNameStyle },
+            A20: { value: 'Filter', style: featureNameStyle },
+            A21: { value: 'Search', style: featureNameStyle },
+
+            // Category column
+            B1: { value: 'Core', policy: 'category', style: categoryCellStyle('Core') },
+            B2: { value: 'Core', policy: 'category', style: categoryCellStyle('Core') },
+            B3: { value: 'Core', policy: 'category', style: categoryCellStyle('Core') },
+            B4: { value: 'Core', policy: 'category', style: categoryCellStyle('Core') },
+            B5: { value: 'Customize', policy: 'category', style: categoryCellStyle('Customize') },
+            B6: { value: 'Customize', policy: 'category', style: categoryCellStyle('Customize') },
+            B7: { value: 'Customize', policy: 'category', style: categoryCellStyle('Customize') },
+            B8: { value: 'Customize', policy: 'category', style: categoryCellStyle('Customize') },
+            B9: { value: 'Customize', policy: 'category', style: categoryCellStyle('Customize') },
+            B10: { value: 'Formula', policy: 'category', style: categoryCellStyle('Formula') },
+            B11: { value: 'Formula', policy: 'category', style: categoryCellStyle('Formula') },
+            B12: { value: 'Formula', policy: 'category', style: categoryCellStyle('Formula') },
+            B13: { value: 'Formula', policy: 'category', style: categoryCellStyle('Formula') },
+            B14: { value: 'Formula', policy: 'category', style: categoryCellStyle('Formula') },
+            B15: { value: 'Formula', policy: 'category', style: categoryCellStyle('Formula') },
+            B16: { value: 'Formula', policy: 'category', style: categoryCellStyle('Formula') },
+            B17: { value: 'UX', policy: 'category', style: categoryCellStyle('UX') },
+            B18: { value: 'UX', policy: 'category', style: categoryCellStyle('UX') },
+            B19: { value: 'UX', policy: 'category', style: categoryCellStyle('UX') },
+            B20: { value: 'UX', policy: 'category', style: categoryCellStyle('UX') },
+            B21: { value: 'UX', policy: 'category', style: categoryCellStyle('UX') },
+
+            // Completion column
+            'C1:C21': { policy: 'completion' },
+            C1: { value: 95, policy: 'completion', style: completionCellStyle(95) },
+            C2: { value: 95, policy: 'completion', style: completionCellStyle(95) },
+            C3: { value: 80, policy: 'completion', style: completionCellStyle(80) },
+            C4: { value: 80, policy: 'completion', style: completionCellStyle(80) },
+            C5: { value: 100, policy: 'completion', style: completionCellStyle(100) },
+            C6: { value: 100, policy: 'completion', style: completionCellStyle(100) },
+            C7: { value: 100, policy: 'completion', style: completionCellStyle(100) },
+            C8: { value: 80, policy: 'completion', style: completionCellStyle(80) },
+            C9: { value: 70, policy: 'completion', style: completionCellStyle(70) },
+            C10: { value: 80, policy: 'completion', style: completionCellStyle(80) },
+            C11: { value: 30, policy: 'completion', style: completionCellStyle(30) },
+            C12: { value: 100, policy: 'completion', style: completionCellStyle(100) },
+            C13: { value: 100, policy: 'completion', style: completionCellStyle(100) },
+            C14: { value: 100, policy: 'completion', style: completionCellStyle(100) },
+            C15: { value: 100, policy: 'completion', style: completionCellStyle(100) },
+            C16: { value: 100, policy: 'completion', style: completionCellStyle(100) },
+            C17: { value: 90, policy: 'completion', style: completionCellStyle(90) },
+            C18: { value: 70, policy: 'completion', style: completionCellStyle(70) },
+            C19: { value: 100, policy: 'completion', style: completionCellStyle(100) },
+            C20: { value: 90, policy: 'completion', style: completionCellStyle(90) },
+            C21: { value: 100, policy: 'completion', style: completionCellStyle(100) },
+
+            // Memo column
+            D2: { value: 'Want to implement F4 to cycle absolute reference', style: memoStyle },
+            D4: { value: 'Not enough customizability', style: memoStyle },
+            D8: { value: 'History-related APIs are lacking', style: memoStyle },
+            D10: {
+              value: 'Temporary refs like LET planned for future. Array literals {} not yet supported',
+              style: memoStyle,
             },
-            A: {
-              width: 110,
-            },
-            'A2:A5': {
+            D11: { value: 'Of ~500 functions, ~140 are currently supported', style: memoStyle },
+            D18: { value: 'Plan to sync column count / width across sheets in the future', style: memoStyle },
+
+            // Summary
+            A22: {
+              value: 'Avg Completion',
               style: {
-                backgroundColor: '#f8fafc',
-                fontWeight: '600',
-                fontSize: '12px',
-              },
-            },
-            'A6:A7': {
-              style: {
+                ...cellBase,
                 backgroundColor: '#1f2937',
                 color: 'white',
                 fontWeight: 'bold',
-                fontSize: '12px',
+                textAlign: 'right' as const,
               },
             },
-            'A6:F6': {
+            B22: {
+              value: '=COUNTA(A1:A21)&" features"',
               style: {
-                borderTop: '3px double #d1d5db',
-              },
-            },
-            'B2:B5': {
-              style: {
-                backgroundColor: '#fef3c7',
-                textAlign: 'center',
-                fontWeight: '500',
+                ...cellBase,
+                backgroundColor: '#1f2937',
+                color: '#94a3b8',
+                textAlign: 'center' as const,
                 fontSize: '11px',
               },
             },
-            C: {
-              width: 70,
-            },
-            'C2:C5': {
+            C22: {
+              value: '=ROUND(AVERAGE(C1:C21),1)&"%"',
               style: {
-                backgroundColor: '#dbeafe',
-                textAlign: 'right',
-                fontWeight: '500',
-              },
-            },
-            D: {
-              width: 70,
-            },
-            'D2:D5': {
-              style: {
-                backgroundColor: '#f0f9ff',
-                fontWeight: 'bold',
-                textAlign: 'right',
-              },
-            },
-            'E2:E5': {
-              width: 80,
-              policy: 'starRating',
-              style: { backgroundColor: '#fef7ff' },
-            },
-            F: {
-              width: 120,
-            },
-            'F2:F5': {
-              policy: 'status',
-            },
-            F2: {
-              style: {
-                backgroundColor: '#dcfce7',
-                color: '#166534',
-                borderRadius: '12px',
-                padding: '2px 8px',
-                fontSize: '11px',
-                fontWeight: 'bold',
-              },
-              policy: 'status',
-            },
-            F3: {
-              style: {
-                backgroundColor: '#fef3c7',
-                color: '#92400e',
-                borderRadius: '12px',
-                padding: '2px 8px',
-                fontSize: '11px',
-                fontWeight: 'bold',
-              },
-              policy: 'status',
-            },
-            F4: {
-              style: {
-                backgroundColor: '#dcfce7',
-                color: '#166534',
-                borderRadius: '12px',
-                padding: '2px 8px',
-                fontSize: '11px',
-                fontWeight: 'bold',
-              },
-              policy: 'status',
-            },
-            F5: {
-              style: {
-                backgroundColor: '#fef3c7',
-                color: '#92400e',
-                borderRadius: '12px',
-                padding: '2px 8px',
-                fontSize: '11px',
-                fontWeight: 'bold',
-              },
-              policy: 'status',
-            },
-            'C6:D7': {
-              style: {
-                backgroundColor: '#f0f9ff',
-                color: '#1f2937',
-                fontWeight: 'bold',
-                textAlign: 'right',
-                fontSize: '12px',
-              },
-            },
-            D6: {
-              style: {
+                ...cellBase,
                 backgroundColor: '#059669',
                 color: 'white',
                 fontWeight: 'bold',
-                textAlign: 'right',
-                fontSize: '13px',
+                textAlign: 'center' as const,
               },
             },
-            E6: {
-              style: {
-                backgroundColor: '#f59e0b',
-                color: 'white',
-                fontWeight: 'bold',
-                textAlign: 'center',
-                fontSize: '13px',
-              },
-            },
-            D7: {
-              style: {
-                backgroundColor: '#7c3aed',
-                color: 'white',
-                fontWeight: 'bold',
-                textAlign: 'right',
-                fontSize: '13px',
-              },
-            },
-            E7: {
-              style: {
-                backgroundColor: '#ef4444',
-                color: 'white',
-                fontWeight: 'bold',
-                textAlign: 'center',
-                fontSize: '13px',
-              },
-            },
+            D22: { style: { backgroundColor: '#1f2937' } },
+            '022': { sortFixed: true, filterFixed: true },
           },
+          ensured: { numRows: 22, numCols: 4 },
         })}
-        options={{
-          sheetHeight: 280,
-          sheetWidth: 560,
-          sheetResize: 'both',
-        }}
+        options={{ sheetHeight: 400, sheetWidth: 500, sheetResize: 'both' }}
       />
     </div>
   );

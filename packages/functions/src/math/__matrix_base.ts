@@ -6,7 +6,7 @@ import type { FunctionCategory } from '@gridsheet/react-core';
  * Common base class for matrix functions (MMULT, TRANSPOSE, MINVERSE, MDETERM).
  *
  * Provides:
- * - `extractNumberMatrix()` to convert a Table/Spilling/2D-array arg into number[][]
+ * - `extractNumberMatrix()` to convert a Sheet/Spilling/2D-array arg into number[][]
  */
 export abstract class MatrixFunction extends BaseFunction {
   category: FunctionCategory = 'math';

@@ -25,7 +25,21 @@
     "baseUrl": ".",
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "paths": {
+      "@gridsheet/react-core": [
+        "../react-core/src"
+      ],
+      "@gridsheet/react-core/dev": [
+        "../react-core/src/dev"
+      ],
+      "@gridsheet/preact-core": [
+        "../preact-core"
+      ],
+      "@gridsheet/react-dev": [
+        "../react-dev/src"
+      ]
+    }
   },
   "exclude": [
     "node_modules",
@@ -40,16 +54,5 @@
   ],
   "ts-node": {
     "esm": true
-  },
-  "paths": {
-    "@gridsheet/react-core": [
-      "../react-core/src"
-    ],
-    "@gridsheet/react-core/dev": [
-      "../react-core/src/dev"
-    ],
-    "@gridsheet/preact-core": [
-      "../preact-core"
-    ],
   }
 }

@@ -6,7 +6,7 @@ This guide covers the development workflow, tools, and best practices for contri
 
 ### Prerequisites
 
-- **Node.js**: Version 24.1.0
+- **Node.js**: Version 22.x or later
 - **pnpm**: For package management
 - **Git**: For version control
 
@@ -44,12 +44,10 @@ pnpm lint:fix
 
 ### Testing Policy
 
-GridSheet follows a specific testing strategy:
+GridSheet follows this testing strategy:
 
-- **Formula Functions**: When adding new formula functions, unit tests are required
-- **Other Features**: All other features are covered by e2e tests
-- **Component Behavior**: Use e2e tests to verify component interactions and user workflows
-- **Integration**: E2e tests ensure proper integration between components
+- **E2E tests (Playwright)**: The default for all features — component behavior, user interactions, and integration between components.
+- **Unit tests (Jest)**: Used **only** for `packages/functions`. Every formula function in that package must have a corresponding Jest unit test.
 
 ### E2E Test Example
 
@@ -87,6 +85,10 @@ These utilities are available in `e2e/utils.ts` and can be imported to simplify 
 
 When adding new formula functions to GridSheet, follow these guidelines:
 
+#### Package Location Strategy
+
+To keep the distribution size of `@gridsheet/react-core` as compact as possible, it only includes essential, minimum functions. **All future function additions must be made to the `@gridsheet/functions` package (`packages/functions`).**
+
 #### Google Spreadsheet Compatibility
 
 When adding new functions, prioritize those that are also supported by Google Spreadsheet:
@@ -103,25 +105,17 @@ All custom formula functions must extend the `BaseFunction` class:
 
 ```typescript
 import { BaseFunction, ensureString } from '@gridsheet/react-core';
+import type { FunctionArgumentDefinition } from '@gridsheet/react-core';
 
 class CustomFunction extends BaseFunction {
-  // Required properties for documentation
+  // Required properties for documentation and the function guide UI
   example = 'CUSTOM_FUNCTION("value", 123)';
-  helpText = ['Performs a custom operation on the input values'];
-  defs = [
-    { name: 'value', description: 'The input value to process' },
-    { name: 'number', description: 'A numeric parameter' }
+  description = 'Performs a custom operation on the input values';
+  category = 'text' as const;  // math | statistics | text | time | lookup | information | logical | other
+  defs: FunctionArgumentDefinition[] = [
+    { name: 'value', description: 'The input value to process', acceptedTypes: ['string'] },
+    { name: 'number', description: 'A numeric parameter', acceptedTypes: ['number'] },
   ];
-
-  // Required validation method
-  protected validate() {
-    if (this.args.length !== 2) {
-      throw new Error('CUSTOM_FUNCTION requires exactly 2 arguments');
-    }
-    // Ensure proper types
-    this.args[0] = ensureString(this.args[0]);
-    this.args[1] = Number(this.args[1]);
-  }
 
   // Required main implementation
   protected main(value: string, number: number) {
@@ -131,26 +125,40 @@ class CustomFunction extends BaseFunction {
 }
 ```
 
+> **Note**: The built-in `validate()` method automatically checks argument count and types based on `defs`. Override it only when you need custom coercion logic beyond what `defs` provides.
+
 #### Documentation Properties
 
-Every formula function must include these properties for future help system integration:
+Every formula function must include these properties:
 
 - **`example`**: Shows how to use the function in a formula
-- **`helpText`**: Array of description strings explaining what the function does
-- **`defs`**: Array of argument descriptions with name and description
+- **`description`**: A string describing what the function does (used in the FunctionGuide UI)
+- **`category`**: Classification (`math`, `statistics`, `text`, `time`, `lookup`, `information`, `logical`, `other`)
+- **`defs`**: Array of `FunctionArgumentDefinition` objects with name, description, and optional type constraints
 
 #### Function Registration
 
-Functions must be registered in `formula/mapping.ts`:
+Register custom functions via the `additionalFunctions` option in `useBook` (or `createBook`):
 
 ```typescript
-// formula/mapping.ts
-import { CustomFunction } from './functions/CustomFunction';
+import { useBook } from '@gridsheet/react-core';
 
-export const functions = {
-  // ... existing functions
-  CUSTOM_FUNCTION: CustomFunction,
-};
+const book = useBook({
+  additionalFunctions: {
+    CUSTOM_FUNCTION: CustomFunction,
+  },
+});
+```
+
+For apps that want all extended functions from the `@gridsheet/functions` package:
+
+```typescript
+import { useSpellbook } from '@gridsheet/functions';
+
+// useSpellbook pre-loads all extended functions and accepts extra ones
+const book = useSpellbook({
+  additionalFunctions: { CUSTOM_FUNCTION: CustomFunction },
+});
 ```
 
 ## Documentation
@@ -195,6 +203,7 @@ pnpm build:storybook
 
 ### Release Process
 
-1. **Version Bump**: Update version in package.json
-2. **Build**: Run full build and test suite
-3. **Publish**: Publish to npm
+1. **Version Bump**: Update version in `package.json` for all affected packages
+2. **Build**: `pnpm build:all`
+3. **Test**: `pnpm test`
+4. **Publish**: Publish to npm

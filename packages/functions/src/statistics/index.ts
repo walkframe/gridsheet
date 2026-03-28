@@ -11,6 +11,7 @@ import { QuartileIncFunction } from './quartile_inc';
 import { RankEqFunction } from './rank_eq';
 import { CorrelFunction } from './correl';
 import { CovarianceSFunction } from './covariance_s';
+import { CovariancePFunction } from './covariance_p';
 import { ModeSnglFunction } from './mode_sngl';
 import { RsqFunction } from './rsq';
 import { TTestFunction } from './t_test';
@@ -28,6 +29,7 @@ export const statisticsFunctions: FunctionMapping = {
   'rank.eq': RankEqFunction,
   correl: CorrelFunction,
   'covariance.s': CovarianceSFunction,
+  'covariance.p': CovariancePFunction,
   'mode.sngl': ModeSnglFunction,
   rsq: RsqFunction,
   't.test': TTestFunction,

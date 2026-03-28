@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, useHub } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Multiple/CompareResizers',
@@ -21,7 +21,7 @@ const tdStyle: React.CSSProperties = {
 };
 
 const CompareResizersSheet = () => {
-  const hub = useHub({ additionalFunctions: allFunctions });
+  const book = useSpellbook();
   return (
     <>
       <table style={{ tableLayout: 'fixed' }}>
@@ -30,7 +30,7 @@ const CompareResizersSheet = () => {
             <td style={tdStyle}>
               {' '}
               <GridSheet
-                hub={hub}
+                book={book}
                 initialCells={buildInitialCells({
                   matrices: {
                     A1: [
@@ -53,7 +53,7 @@ const CompareResizersSheet = () => {
             <td style={tdStyle}>
               {' '}
               <GridSheet
-                hub={hub}
+                book={book}
                 initialCells={buildInitialCells({
                   matrices: {
                     A1: [
@@ -77,7 +77,7 @@ const CompareResizersSheet = () => {
             <td style={tdStyle}>
               {' '}
               <GridSheet
-                hub={hub}
+                book={book}
                 initialCells={buildInitialCells({
                   matrices: {
                     A1: [
@@ -100,7 +100,7 @@ const CompareResizersSheet = () => {
             <td style={tdStyle}>
               {' '}
               <GridSheet
-                hub={hub}
+                book={book}
                 initialCells={buildInitialCells({
                   matrices: {
                     A1: [

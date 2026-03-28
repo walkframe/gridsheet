@@ -2,7 +2,7 @@ import { useContext } from 'react';
 import type { MouseEvent } from 'react';
 
 import { Context } from '../store';
-import { setResizingPositionY, setResizingPositionX, updateTable, setStore } from '../store/actions';
+import { setResizingPositionY, setResizingPositionX, updateSheet, setStore } from '../store/actions';
 
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH, MIN_WIDTH, MIN_HEIGHT } from '../constants';
 import { zoneToArea, makeSequence, between } from '../lib/spatial';
@@ -15,23 +15,23 @@ export const Resizer = () => {
   const {
     resizingPositionY: posY,
     resizingPositionX: posX,
-    tableReactive: tableRef,
+    sheetReactive: sheetRef,
     leftHeaderSelecting,
     topHeaderSelecting,
     selectingZone,
     editorRef,
     mainRef,
   } = store;
-  const table = tableRef.current;
+  const sheet = sheetRef.current;
 
   const [y, startY, endY] = posY;
   const [x, startX, endX] = posX;
 
-  if (mainRef.current == null || editorRef.current == null || !table) {
+  if (mainRef.current == null || editorRef.current == null || !sheet) {
     return <div className="gs-resizing gs-hidden" />;
   }
 
-  const cell = table.getCellByPoint({ y: y === -1 ? 0 : y, x: x === -1 ? 0 : x }, 'SYSTEM');
+  const cell = sheet.getCell({ y: y === -1 ? 0 : y, x: x === -1 ? 0 : x }, { resolution: 'SYSTEM' });
   const { y: offsetY, x: offsetX } = mainRef.current.getBoundingClientRect();
 
   const baseWidth = cell?.width || DEFAULT_WIDTH;
@@ -62,15 +62,15 @@ export const Resizer = () => {
         diff[p2a({ y, x: 0 })] = { height };
       });
     }
-    table.update({
+    sheet.update({
       diff,
       partial: true,
       operator: 'USER',
-      undoReflection: { selectingZone, sheetId: table.sheetId },
+      undoReflection: { selectingZone, sheetId: sheet.id },
     });
     dispatch(
       setStore({
-        tableReactive: { current: table },
+        sheetReactive: { current: sheet },
       }),
     );
     dispatch(setResizingPositionY([-1, -1, -1]));

@@ -378,6 +378,64 @@ console.log(a2p('AA100'));  // `{ y: 100, x: 27 }`
 - Row settings use `{ y: y, x: 0 }` format
 - The point `{ y: 0, x: 0 }` is not used
 
+### Row Header Address
+
+#### `rh(y: number): string`
+
+Returns the row header cell address for the given row number by prepending `0`. The row header cell is at column 0 of that row and is used to set row-level properties such as `sortFixed`, `filterFixed`, `height`, and `style`.
+
+```tsx
+import { rh } from '@gridsheet/react-core';
+
+rh(1)  // '01'
+rh(6)  // '06'
+
+// multiple rows — use .map()
+[1, 2, 6].map(rh)  // ['01', '02', '06']
+```
+
+```tsx
+import { buildInitialCells, rh } from '@gridsheet/react-core';
+
+buildInitialCells({
+  cells: {
+    [rh(6)]: { sortFixed: true, filterFixed: true },
+  },
+})
+```
+
+### Column Header Address
+
+#### `ch(col: string | number): string`
+
+Returns the column header cell address for the given column letter or column index (1-based, same as `point.x`) by appending `0`. The column header cell is at row 0 of that column and is used to set column-level properties such as `width`, `label`, and `style`.
+
+```tsx
+import { ch } from '@gridsheet/react-core';
+
+ch('A')  // 'A0'
+ch(1)    // 'A0'  (column index 1 = column A)
+ch('B')  // 'B0'
+ch(2)    // 'B0'
+
+// multiple columns — use .map()
+['A', 'B', 'C'].map(ch)  // ['A0', 'B0', 'C0']
+[1, 2, 3].map(ch)        // ['A0', 'B0', 'C0']
+```
+
+```tsx
+import { buildInitialCells, ch } from '@gridsheet/react-core';
+
+buildInitialCells({
+  cells: {
+    [ch('A')]: { width: 150, label: 'Product' },
+    [ch('B')]: { width: 100, label: 'Q1' },
+    [ch(3)]:   { width: 100, label: 'Q2' },
+  },
+})
+```
+```
+
 ## Practical Examples
 
 ### Converting Between Formats
@@ -512,88 +570,6 @@ interface InitialCellsOriginConfig {
 - For large datasets, consider using `buildInitialCellsFromOrigin` with matrix data for better performance
 - Coordinate conversion functions are pure functions and can be safely memoized
 
-## Connector Management
+## Programmatic Control
 
-### `useConnector()`
-
-Creates a connector reference that provides access to both table and store managers for programmatic control of GridSheet instances.
-
-#### Returns
-
-```tsx
-RefObject<Connector | null>
-```
-
-#### Connector Interface
-
-```tsx
-interface Connector {
-  tableManager: {
-    instance: UserTable;
-    sync: (table: UserTable) => void;
-  };
-  storeManager: {
-    instance: StoreType;
-    sync: Dispatcher;
-  };
-}
-```
-
-#### Usage Example
-
-```tsx
-import { useConnector } from '@gridsheet/react-core';
-
-function MyComponent() {
-  const connector = useConnector();
-
-  const handleUpdateCell = () => {
-    const { tableManager } = connector.current;
-    if (tableManager) {
-      const { table, sync } = tableManager;
-      
-      // Update cells
-      const newTable = table.update({
-        diff: { 'A1': { value: 'Updated' } }
-      });
-      sync(newTable);
-    }
-  };
-
-  const handleAccessStore = () => {
-    const { storeManager } = connector.current;
-    if (storeManager) {
-      const { store, sync } = storeManager;
-      // Use store and sync as needed
-    }
-  };
-
-  return (
-    <GridSheet 
-      connector={connector} 
-      initialCells={initialCells}
-    />
-  );
-}
-```
-
-### `createConnector()`
-
-Creates a connector reference outside of React components. Useful for creating connectors in utility functions or class components.
-
-#### Returns
-
-```tsx
-RefObject<Connector | null>
-```
-
-#### Usage Example
-
-```tsx
-import { createConnector } from '@gridsheet/react-core';
-
-const connector = createConnector();
-
-// Use in class components or utility functions
-<GridSheet connector={connector} initialCells={initialCells} />
-``` 
+To control a GridSheet instance programmatically from outside the component, use `sheetRef` and `storeRef`. See [Props Reference](/api-reference/props#sheetref--storeref) for the full API.

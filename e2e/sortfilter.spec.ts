@@ -113,6 +113,47 @@ test.describe('Sort & Filter', () => {
     expect(visibleNames).not.toContain('Eve');
   });
 
+  test('filter undo restores all rows', async ({ page }) => {
+    await page.goto(STORY_URL);
+    await page.waitForSelector('.gs-initialized');
+
+    // Apply filter: Grade (column D, x=4) = 'A' → only Alice and Diana visible
+    await openColumnMenu(page, 4);
+    const methodSelect = page.locator('.gs-filter-method-select').first();
+    await methodSelect.selectOption('eq');
+    const valueInput = page.locator('.gs-filter-value-input').first();
+    await valueInput.fill('A');
+    await page.locator('.gs-filter-apply-btn').click();
+
+    // Verify filter is applied: Bob, Charlie, Eve are hidden
+    let visibleNames = await getVisibleNames(page);
+    expect(visibleNames).toContain('Alice');
+    expect(visibleNames).toContain('Diana');
+    expect(visibleNames).not.toContain('Bob');
+    expect(visibleNames).not.toContain('Charlie');
+    expect(visibleNames).not.toContain('Eve');
+
+    // Undo the filter
+    await ctrl(page, 'z');
+
+    // All rows should be visible again
+    visibleNames = await getVisibleNames(page);
+    expect(visibleNames).toContain('Alice');
+    expect(visibleNames).toContain('Bob');
+    expect(visibleNames).toContain('Charlie');
+    expect(visibleNames).toContain('Diana');
+    expect(visibleNames).toContain('Eve');
+
+    // Redo should re-apply the filter
+    await ctrl(page, 'z', true);
+    visibleNames = await getVisibleNames(page);
+    expect(visibleNames).toContain('Alice');
+    expect(visibleNames).toContain('Diana');
+    expect(visibleNames).not.toContain('Bob');
+    expect(visibleNames).not.toContain('Charlie');
+    expect(visibleNames).not.toContain('Eve');
+  });
+
   test('filter by contains', async ({ page }) => {
     await page.goto(STORY_URL);
     await page.waitForSelector('.gs-initialized');
@@ -330,5 +371,55 @@ test.describe('Sort & Filter', () => {
     // Hidden src rows must be untouched
     expect(await cellText(page, 'B3')).toBe('Charlie');
     expect(await cellText(page, 'B5')).toBe('Eve');
+  });
+
+  test('summary row stays fixed during filter and sort', async ({ page }) => {
+    await page.goto(STORY_URL);
+    await page.waitForSelector('.gs-initialized');
+
+    // Initial state: Total row at row 6, SUM(C1:C5) = 350
+    expect(await cellText(page, 'B6')).toBe('Total');
+    expect(await cellText(page, 'C6')).toContain('350');
+
+    // --- Apply filter: Score (column C, x=3) >= 75 ---
+    await openColumnMenu(page, 3);
+    const methodSelect = page.locator('.gs-filter-method-select').first();
+    await methodSelect.selectOption('gte');
+    const valueInput = page.locator('.gs-filter-value-input').first();
+    await valueInput.fill('75');
+    await page.locator('.gs-filter-apply-btn').click();
+    await page.waitForTimeout(300);
+
+    // filterFixed row 6 must remain visible
+    expect(await page.locator("[data-address='B6']").isVisible()).toBe(true);
+    expect(await cellText(page, 'B6')).toBe('Total');
+
+    // Charlie(60) and Eve(40) are hidden by filter
+    expect(await page.locator("[data-address='B3']").isVisible()).toBe(false);
+    expect(await page.locator("[data-address='B5']").isVisible()).toBe(false);
+
+    // --- Clear filter ---
+    await openColumnMenu(page, 3);
+    await page.locator('.gs-filter-reset-btn').click();
+    await page.waitForTimeout(300);
+
+    // All data rows visible again
+    expect(await page.locator("[data-address='B3']").isVisible()).toBe(true);
+    expect(await page.locator("[data-address='B5']").isVisible()).toBe(true);
+
+    // --- Sort ascending by Score (column C, x=3) ---
+    await openColumnMenu(page, 3);
+    await page.locator('.gs-column-menu .gs-sort-btn-asc').click();
+
+    // Data rows sorted ascending: Eve(40), Charlie(60), Bob(75), Diana(85), Alice(90)
+    expect(await cellText(page, 'B1')).toBe('Eve');
+    expect(await cellText(page, 'B2')).toBe('Charlie');
+    expect(await cellText(page, 'B3')).toBe('Bob');
+    expect(await cellText(page, 'B4')).toBe('Diana');
+    expect(await cellText(page, 'B5')).toBe('Alice');
+
+    // sortFixed row 6 stays at the bottom
+    expect(await cellText(page, 'B6')).toBe('Total');
+    expect(await cellText(page, 'C6')).toContain('350');
   });
 });

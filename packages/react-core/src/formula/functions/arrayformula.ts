@@ -1,9 +1,9 @@
-import { Table } from '../../lib/table';
+import { Sheet } from '../../lib/sheet';
 import { Spilling } from '../../sentinels';
 import { BaseFunction, FunctionCategory, FunctionArgumentDefinition } from './__base';
 
 const description = `Enables the display of values returned from an array formula into multiple rows and/or columns.
-If the argument is already a Spilling, it is returned as-is. If it is a Table (range reference), the field matrix is extracted and wrapped in a Spilling. Otherwise the value is wrapped as a single-element Spilling.`;
+If the argument is already a Spilling, it is returned as-is. If it is a Sheet (range reference), the field matrix is extracted and wrapped in a Spilling. Otherwise the value is wrapped as a single-element Spilling.`;
 
 export class ArrayformulaFunction extends BaseFunction {
   autoSpilling = true;
@@ -24,8 +24,8 @@ export class ArrayformulaFunction extends BaseFunction {
     if (Spilling.is(value)) {
       return value;
     }
-    if (value instanceof Table) {
-      return value.toValueMatrix();
+    if (value instanceof Sheet) {
+      return value._toValueMatrix();
     }
     if (Array.isArray(value)) {
       return value;

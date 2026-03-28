@@ -6,7 +6,6 @@ import {
   GridSheet,
   buildInitialCells,
   operations,
-  useHub,
   Policy,
   PolicyMixinType,
   AutocompleteOption,
@@ -16,6 +15,7 @@ import {
   FeedbackType,
   SelectProps,
 } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 const DEPARTMENT_OPTIONS: AutocompleteOption[] = [
   { value: 'Engineering', label: '🔧 Engineering', keywords: ['Engineering', 'dev', 'development'] },
@@ -124,7 +124,7 @@ export default function BudgetManagement() {
     [tags],
   );
 
-  const hub = useHub({
+  const book = useSpellbook({
     policies: {
       department: new Policy({ mixins: [DepartmentPolicy] }),
       status: new Policy({ mixins: [StatusPolicy] }),
@@ -133,32 +133,32 @@ export default function BudgetManagement() {
       checkbox: new Policy({ mixins: [CheckboxPolicyMixin] }),
     },
     // Event handlers for budget monitoring
-    onSave: ({ table, points }) => {
+    onSave: ({ sheet, points }) => {
       addEventLog(`Budget data saved at ${Array.isArray(points) ? points.length : 1} position(s)`);
     },
-    onChange: ({ table, points }) => {
+    onChange: ({ sheet, points }) => {
       addEventLog(`Budget data changed at ${Array.isArray(points) ? points.length : 1} position(s)`);
     },
-    onSelect: ({ table, points }) => {
+    onSelect: ({ sheet, points }) => {
       addEventLog(`Selected ${Array.isArray(points) ? points.length : 1} cell(s)`);
     },
-    onRemoveRows: ({ table, ys }) => {
+    onRemoveRows: ({ sheet, ys }) => {
       addEventLog(`Removed ${ys.length} row(s): ${ys.join(', ')}`);
     },
-    onRemoveCols: ({ table, xs }) => {
+    onRemoveCols: ({ sheet, xs }) => {
       addEventLog(`Removed ${xs.length} column(s): ${xs.join(', ')}`);
     },
-    onInsertRows: ({ table, y, numRows }) => {
+    onInsertRows: ({ sheet, y, numRows }) => {
       addEventLog(`Inserted ${numRows} row(s) at position ${y}`);
     },
-    onInsertCols: ({ table, x, numCols }) => {
+    onInsertCols: ({ sheet, x, numCols }) => {
       addEventLog(`Inserted ${numCols} column(s) at position ${x}`);
     },
     onKeyUp: ({ e, points }) => {
       addEventLog(`Key pressed: ${e.key}`);
     },
-    onInit: ({ table }) => {
-      addEventLog(`Budget table initialized: ${table.sheetName}`);
+    onInit: ({ sheet }) => {
+      addEventLog(`Budget table initialized: ${sheet.name}`);
     },
   });
 
@@ -203,7 +203,7 @@ export default function BudgetManagement() {
           📊 Budget Overview
         </h3>
         <GridSheet
-          hub={hub}
+          book={book}
           sheetName="budget"
           initialCells={buildInitialCells({
             matrices: {
@@ -221,9 +221,9 @@ export default function BudgetManagement() {
               default: {
                 width: 100,
                 height: 40,
-                style: {
-                  ...makeBorder({ all: '1px solid #000000' }),
-                },
+              },
+              0: {
+                height: 50,
               },
               A: {
                 label: 'Department',
@@ -250,7 +250,7 @@ export default function BudgetManagement() {
                 policy: 'budget',
               },
               D: {
-                label: 'Remaining',
+                label: 'Remaining\n(Readonly)',
                 width: 80,
                 style: {
                   backgroundColor: '#d1ecf1',
@@ -261,7 +261,7 @@ export default function BudgetManagement() {
               },
               E: {
                 label: 'Status',
-                width: 90,
+                width: 100,
                 policy: 'status',
               },
               F: {
@@ -318,37 +318,7 @@ export default function BudgetManagement() {
                 },
                 prevention: operations.Write,
               },
-              // Conditional styling for status
-              E1: {
-                style: {
-                  backgroundColor: '#d4edda',
-                  color: '#155724',
-                },
-              },
-              E2: {
-                style: {
-                  backgroundColor: '#d4edda',
-                  color: '#155724',
-                },
-              },
-              E3: {
-                style: {
-                  backgroundColor: '#fff3cd',
-                  color: '#856404',
-                },
-              },
-              E4: {
-                style: {
-                  backgroundColor: '#f8d7da',
-                  color: '#721c24',
-                },
-              },
-              E5: {
-                style: {
-                  backgroundColor: '#f8d7da',
-                  color: '#721c24',
-                },
-              },
+              '07': { sortFixed: true, filterFixed: true },
             },
           })}
           options={{

@@ -1,9 +1,9 @@
 import type { PointType } from '../types';
-import type { Table } from './table';
+import type { Sheet } from './sheet';
 import { Lexer, splitRef } from '../formula/evaluator';
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '../constants';
 import { a2p, grantAddressAbsolute } from './coords';
-import { getSheetPrefix } from './sheet';
+import { toSheetPrefix } from './sheet_utils';
 import { focus } from './dom';
 
 export const insertTextAtCursor = (input: HTMLTextAreaElement, text: string) => {
@@ -55,7 +55,7 @@ export const insertRef = ({ input, ref, dryRun = false }: InsertRefProps): boole
         refAddresses.push(refAddresses[0]);
       }
       ref =
-        getSheetPrefix(refSheetName) +
+        toSheetPrefix(refSheetName) +
         refAddresses
           .map((r, i) => {
             return grantAddressAbsolute(r, !!tokenAbsolutes[i]?.absX, !!tokenAbsolutes[i]?.absY);
@@ -84,13 +84,13 @@ export const expandInput = (input: HTMLTextAreaElement | null) => {
   input.style.height = `${input.scrollHeight}px`;
 };
 
-export const resetInput = (input: HTMLTextAreaElement | null, table: Table, point: PointType) => {
+export const resetInput = (input: HTMLTextAreaElement | null, sheet: Sheet, point: PointType) => {
   const style = input?.style;
   if (style == null) {
     return;
   }
-  const width = table.getCellByPoint({ x: point.x, y: 0 }, 'SYSTEM')?.width ?? DEFAULT_WIDTH;
-  const height = table.getCellByPoint(point, 'SYSTEM')?.height ?? DEFAULT_HEIGHT;
+  const width = sheet.getCell({ x: point.x, y: 0 }, { resolution: 'SYSTEM' })?.width ?? DEFAULT_WIDTH;
+  const height = sheet.getCell(point, { resolution: 'SYSTEM' })?.height ?? DEFAULT_HEIGHT;
   style.width = `${width}px`;
   style.height = `${height}px`;
 };

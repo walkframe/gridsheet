@@ -1,9 +1,9 @@
 import { MedianFunction } from './median';
-import { Table, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/react-core';
 
 describe('median', () => {
-  const table = new Table({});
-  table.initialize({
+  const sheet = new Sheet({});
+  sheet.initialize({
     A1: { value: 1 },
     A2: { value: 3 },
     A3: { value: 5 },
@@ -15,24 +15,24 @@ describe('median', () => {
 
   describe('normal', () => {
     it('returns median of odd count', () => {
-      const f = new MedianFunction({ table, args: [new RangeEntity('A1:A3')] });
+      const f = new MedianFunction({ sheet, args: [new RangeEntity('A1:A3')] });
       // sorted: 1,3,5 → 3
       expect(f.call()).toBe(3);
     });
 
     it('returns median of even count (average of two middle values)', () => {
-      const f = new MedianFunction({ table, args: [new RangeEntity('A1:A4')] });
+      const f = new MedianFunction({ sheet, args: [new RangeEntity('A1:A4')] });
       // sorted: 1,2,3,5 → (2+3)/2 = 2.5
       expect(f.call()).toBe(2.5);
     });
 
     it('accepts individual values', () => {
-      const f = new MedianFunction({ table, args: [new ValueEntity(10), new ValueEntity(20), new ValueEntity(30)] });
+      const f = new MedianFunction({ sheet, args: [new ValueEntity(10), new ValueEntity(20), new ValueEntity(30)] });
       expect(f.call()).toBe(20);
     });
 
     it('ignores text and blank cells in range', () => {
-      const f = new MedianFunction({ table, args: [new RangeEntity('A1:B2')] });
+      const f = new MedianFunction({ sheet, args: [new RangeEntity('A1:B2')] });
       // numeric: 1, 3 → (1+3)/2 = 2
       expect(f.call()).toBe(2);
     });
@@ -40,12 +40,12 @@ describe('median', () => {
 
   describe('validation error', () => {
     it('throws on no numeric values', () => {
-      const f = new MedianFunction({ table, args: [new RangeEntity('B1:B2')] });
+      const f = new MedianFunction({ sheet, args: [new RangeEntity('B1:B2')] });
       expect(f.call.bind(f)).toThrow(FormulaError);
     });
 
     it('throws on zero args', () => {
-      const f = new MedianFunction({ table, args: [] });
+      const f = new MedianFunction({ sheet, args: [] });
       expect(f.call.bind(f)).toThrow(FormulaError);
     });
   });

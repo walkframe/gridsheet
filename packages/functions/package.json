@@ -69,12 +69,12 @@
   "homepage": "https://gridsheet.walkframe.com/",
   "packageManager": "pnpm@10.6.5",
   "devDependencies": {
+    "@gridsheet/react-core": "workspace:*",
+    "@types/jest": "^29.5.14",
+    "jest": "^29.4.3",
     "typescript": "^5.8.2",
     "vite": "^6.2.2",
-    "vite-plugin-dts": "^4.5.3",
-    "jest": "^29.4.3",
-    "@types/jest": "^29.4.0",
-    "@gridsheet/react-core": "workspace:*"
+    "vite-plugin-dts": "^4.5.3"
   },
   "peerDependencies": {
     "@gridsheet/react-core": "^3.0.0-rc.2",

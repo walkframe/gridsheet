@@ -47,6 +47,10 @@ test.describe('Spill — SEQUENCE vs DELAY_SEQUENCE', () => {
     await expect(syncSheet.locator("[data-address='J2'] .gs-cell-rendered")).toHaveText('1');
     // SUM(C2:D4) — sum of the SEQUENCE(3,2) spill range: 1+2+3+4+5+6 = 21
     await expect(syncSheet.locator("[data-address='C10'] .gs-cell-rendered")).toHaveText('21');
+    // RANGE.1D(5) at E10 — 1D array [1,2,3,4,5] expands horizontally: E10=1, G10=3, I10=5
+    await expect(syncSheet.locator("[data-address='E10'] .gs-cell-rendered")).toHaveText('1');
+    await expect(syncSheet.locator("[data-address='G10'] .gs-cell-rendered")).toHaveText('3');
+    await expect(syncSheet.locator("[data-address='I10'] .gs-cell-rendered")).toHaveText('5');
 
     // --- SpillAsync: DELAY_SEQUENCE — same values expected
     await expect(asyncSheet.locator("[data-address='A2'] .gs-cell-rendered")).toHaveText('1');
@@ -71,6 +75,10 @@ test.describe('Spill — SEQUENCE vs DELAY_SEQUENCE', () => {
     await expect(asyncSheet.locator("[data-address='J2'] .gs-cell-rendered")).toHaveText('1');
     // SUM(C2:D4) — sum of the DELAY_SEQUENCE(3,2) spill range: 1+2+3+4+5+6 = 21
     await expect(asyncSheet.locator("[data-address='C10'] .gs-cell-rendered")).toHaveText('21');
+    // RANGE.1D(5) at E10 — 1D array [1,2,3,4,5] expands horizontally: E10=1, G10=3, I10=5
+    await expect(asyncSheet.locator("[data-address='E10'] .gs-cell-rendered")).toHaveText('1');
+    await expect(asyncSheet.locator("[data-address='G10'] .gs-cell-rendered")).toHaveText('3');
+    await expect(asyncSheet.locator("[data-address='I10'] .gs-cell-rendered")).toHaveText('5');
   });
 });
 
@@ -119,6 +127,19 @@ test.describe('Spill — UI behavior (address bar, formula bar, double-click, De
     await a3.click();
     await page.keyboard.press('Delete');
     await expect(a3.locator('.gs-cell-rendered')).toHaveText('2');
+
+    // ---- 5. Pressing Backspace on a spilled cell leaves the displayed value unchanged ----
+    await a3.click();
+    await page.keyboard.press('Backspace');
+    await expect(a3.locator('.gs-cell-rendered')).toHaveText('2');
+
+    // ---- 6. Formula bar value does not disappear after Delete/Backspace on a spilled cell ----
+    // The formula bar must continue to show the spilled value (not go blank).
+    await a3.click();
+    await page.keyboard.press('Delete');
+    await expect(formulaBarTextarea).toHaveValue('2');
+    await page.keyboard.press('Backspace');
+    await expect(formulaBarTextarea).toHaveValue('2');
   });
 });
 

@@ -1,8 +1,8 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { BaseFunction, FunctionArgumentDefinition, useHub } from '@gridsheet/react-core';
+import { BaseFunction, FunctionArgumentDefinition } from '@gridsheet/react-core';
 import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Formula/Custom',
@@ -16,9 +16,8 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const CustomFunctionSheet = () => {
-  const hub = useHub({
+  const book = useSpellbook({
     additionalFunctions: {
-      ...allFunctions,
       hope: class HopeFunction extends BaseFunction {
         defs: FunctionArgumentDefinition[] = [
           { name: 'text', description: 'Text to be hopeful about.', acceptedTypes: ['string'] },
@@ -39,10 +38,10 @@ const CustomFunctionSheet = () => {
   });
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       initialCells={buildInitialCells({
         cells: {
-          default: { width: 200 },
+          defaultCol: { width: 200 },
           B2: { value: '=HOPE("WORLD PEACE") & "!"' },
           A3: { value: '=test()' },
         },

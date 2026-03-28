@@ -1,8 +1,8 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, buildInitialCells, useConnector, useHub } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells } from '@gridsheet/react-core';
 import type { FeedbackType } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Control/OnSelect',
@@ -24,9 +24,8 @@ const DESCRIPTION = [
 
 const SheetOnSelectComponent: React.FC = () => {
   const [selectionInfo, setSelectionInfo] = React.useState<any>({});
-  const connector = useConnector();
 
-  const handleSelect: FeedbackType = React.useCallback(({ table, points }) => {
+  const handleSelect: FeedbackType = React.useCallback(({ sheet, points }) => {
     if (points) {
       console.log('onSelect', {
         pointing: points.pointing,
@@ -42,8 +41,7 @@ const SheetOnSelectComponent: React.FC = () => {
     }
   }, []);
 
-  const hub = useHub({
-    additionalFunctions: allFunctions,
+  const book = useSpellbook({
     onSelect: handleSelect,
   });
 
@@ -52,8 +50,7 @@ const SheetOnSelectComponent: React.FC = () => {
       <div style={{ display: 'flex' }}>
         <div style={{ flex: 1 }}>
           <GridSheet
-            connector={connector}
-            hub={hub}
+            book={book}
             initialCells={buildInitialCells({
               matrices: {
                 A1: [

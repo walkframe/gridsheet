@@ -12,66 +12,118 @@ The example demonstrates efficient rendering and data handling for massive sprea
 
 <a href="https://github.com/walkframe/gridsheet/tree/master/packages/docs/pages/examples/case8.component.tsx" target="_blank" rel="noopener noreferrer" style={{display: 'inline-block', background: '#007bff', color: 'white', padding: '8px 16px', textDecoration: 'none', borderRadius: '4px', fontWeight: '500', margin: '10px 0'}}>📄 View Source Code</a>
 
-### 📊 Large Dataset Performance Overview
-This comprehensive large dataset demo demonstrates how GridSheet handles massive amounts of data efficiently. The implementation includes optimized rendering, memory management, and performance considerations for datasets with thousands of rows and columns.
+### Batched Data Generation with `setTimeout`
 
-### ⚡ Performance Optimization
-Implement performance optimizations for large datasets including virtual scrolling, efficient cell rendering, and memory management. Optimize data structures, rendering algorithms, and update mechanisms for handling massive amounts of data without performance degradation.
+Generating 10,000 × 100 = 1,000,000 cell definitions synchronously would block the main thread and freeze the UI. The solution is to split the work into batches and yield control back to the browser between each batch using `setTimeout(..., 0)`.
 
-### 🎯 Data Generation Strategy
-Create efficient data generation strategies for large datasets. Implement scalable data creation algorithms, memory-efficient data structures, and optimized initialization processes. Consider data patterns and realistic scenarios for large-scale applications.
+```tsx
+const batchSize = 1000;
+const totalBatches = Math.ceil(rows / batchSize);
 
-### 📈 Memory Management
-Implement effective memory management for large datasets. Optimize memory usage, implement garbage collection strategies, and manage data caching efficiently. Consider memory constraints and optimize for both performance and resource usage.
+const generateBatch = (batchIndex: number) => {
+  const startRow = batchIndex * batchSize + 1;
+  const endRow = Math.min(startRow + batchSize - 1, rows);
 
-### 🔄 Rendering Optimization
-Optimize rendering performance for large datasets. Implement efficient cell rendering, minimize DOM operations, and optimize update mechanisms. Consider rendering strategies that balance performance with user experience.
+  for (let row = startRow; row <= endRow; row++) {
+    for (let col = 1; col <= cols; col++) {
+      cells[address] = { value, style };
+    }
+  }
 
-### 📊 Data Visualization
-Implement effective data visualization for large datasets. Consider how to present massive amounts of data in a meaningful way, implement efficient charting and graphing capabilities, and optimize visual representation for performance.
+  setProgress(Math.round(((batchIndex + 1) / totalBatches) * 100));
 
-### 🎨 User Interface Design
-Design interfaces that handle large datasets gracefully. Implement efficient navigation, search capabilities, and data filtering. Consider user experience when dealing with massive amounts of data.
+  if (batchIndex + 1 < totalBatches) {
+    setTimeout(() => generateBatch(batchIndex + 1), 0); // yield to browser
+  } else {
+    setIsLoading(false);
+  }
+};
 
-### 🔍 Search and Filtering
-Implement efficient search and filtering capabilities for large datasets. Optimize search algorithms, implement fast filtering mechanisms, and provide responsive user interface for data exploration.
+generateBatch(0);
+```
 
-### 📱 Responsive Design
-Ensure responsive design for large datasets across different screen sizes and devices. Implement adaptive layouts, efficient mobile rendering, and optimized touch interactions for large spreadsheets.
+Calling `setProgress` after each batch keeps the progress bar reactive without adding extra overhead.
 
-### ✅ Best Practices
-1. **Performance First**: Prioritize performance when dealing with large datasets
-2. **Memory Efficiency**: Implement efficient memory management strategies
-3. **User Experience**: Maintain responsive user interface despite large data volumes
-4. **Data Structure**: Use optimized data structures for large datasets
-5. **Rendering Strategy**: Implement efficient rendering algorithms
-6. **Caching**: Use appropriate caching strategies for frequently accessed data
-7. **Progressive Loading**: Implement progressive data loading when possible
+### Showing a Progress Bar During Generation
 
-### 🎯 Common Use Cases
-- **Data Analysis**: Large-scale data analysis and processing
-- **Financial Modeling**: Complex financial models with extensive datasets
-- **Scientific Computing**: Scientific data processing and analysis
-- **Business Intelligence**: Large-scale business data management
-- **Research Applications**: Academic and research data processing
+Use a `loading` state and a `progress` percentage to display a progress bar. The grid itself is not mounted until generation completes, preventing `initialCells` from being passed before it is ready.
 
-### 🚀 Advanced Features
-- **Virtual Scrolling**: Efficient rendering of large datasets
-- **Data Compression**: Optimize memory usage for large datasets
-- **Progressive Loading**: Load data progressively as needed
-- **Search and Filter**: Fast search and filtering capabilities
-- **Export Functionality**: Export large datasets efficiently
+```tsx
+const [isLoading, setIsLoading] = React.useState(true);
+const [progress, setProgress] = React.useState(0);
 
-### 🔄 Performance Patterns
-- **Lazy Loading**: Load data on-demand to improve initial performance
-- **Data Chunking**: Process data in chunks to manage memory efficiently
-- **Caching Strategies**: Implement intelligent caching for frequently accessed data
-- **Update Batching**: Batch updates to minimize rendering overhead
-- **Memory Pooling**: Use memory pooling for frequently allocated objects
+if (isLoading) {
+  return (
+    <div>
+      <div style={{ width: `${progress}%`, height: '20px', backgroundColor: '#3b82f6' }} />
+      <span>{progress}% Complete</span>
+    </div>
+  );
+}
 
-### 📊 Scaling Considerations
-- **Horizontal Scaling**: Design for horizontal scaling across multiple instances
-- **Data Partitioning**: Implement data partitioning strategies
-- **Load Balancing**: Consider load balancing for large-scale deployments
-- **Resource Management**: Implement comprehensive resource management
-- **Monitoring**: Add performance monitoring and metrics collection 
+return <GridSheet book={book} initialCells={initialCells} ... />;
+```
+
+### Multi-letter Column Address Generation
+
+Excel-style column addresses beyond `Z` (i.e., `AA`, `AB`, ...) require a custom converter. With 100 columns this covers through `CV`.
+
+```tsx
+const getColumnLetter = (colNum: number): string => {
+  let result = '';
+  while (colNum > 0) {
+    colNum--;
+    result = String.fromCharCode(65 + (colNum % 26)) + result;
+    colNum = Math.floor(colNum / 26);
+  }
+  return result;
+};
+// getColumnLetter(1)  → 'A'
+// getColumnLetter(27) → 'AA'
+```
+
+### `buildInitialCellsFromOrigin` vs Flat `cells` Object
+
+This demo builds a plain `{ [address: string]: CellType }` object directly and passes it to `GridSheet` as `initialCells`. This avoids calling `buildInitialCells` on an already-generated flat structure and removes the overhead of the matrix-to-address conversion that `buildInitialCells` performs internally.
+
+```tsx
+const [initialCells, setInitialCells] = React.useState<{ [address: string]: any }>({
+  defaultCol: { width: 80 },
+  defaultRow: { height: 20 },
+});
+
+React.useEffect(() => {
+  const cells = generateLargeDataset();
+  setInitialCells(cells);
+}, [generateLargeDataset]);
+```
+
+Setting `defaultCol` and `defaultRow` in the initial state means the grid renders immediately with reasonable dimensions, even while data generation is in progress.
+
+### `sheetResize: 'both'` for Resizable Grid
+
+The `sheetResize` option exposes a resize handle so users can adjust the grid dimensions interactively — useful when exploring wide or tall datasets at different viewport sizes.
+
+```tsx
+options={{
+  sheetHeight: 600,
+  sheetWidth: Math.min(1200, window.innerWidth - 60),
+  sheetResize: 'both',
+}}
+```
+
+### Applying Row Stripes with CSS
+
+GridSheet automatically adds `gs-row-odd` and `gs-row-even` classes to each `<tr>` element based on the row's position (`y`). You can use these classes in a `<style>` tag to apply alternating row background colors without touching cell data:
+
+```tsx
+<>
+  <GridSheet ... />
+  <style>{`
+    .gs-row-odd .gs-cell  { background-color: #ffffff; }
+    .gs-row-even .gs-cell { background-color: #f0f4f8; }
+  `}</style>
+</>
+```
+
+Because these are CSS rules (not inline styles), any `style.backgroundColor` set directly on a cell object will take priority and override the stripe color for that specific cell.

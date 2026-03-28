@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, useHub } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 import { Debugger } from '@gridsheet/react-dev';
 
 const meta: Meta = {
@@ -15,15 +15,20 @@ export default meta;
 
 /** Basic element-wise arithmetic over a range */
 const ArrayformulaBasicSheet: React.FC = () => {
-  const hub = useHub({ additionalFunctions: allFunctions });
+  const book = useSpellbook();
   return (
     <>
       <GridSheet
-        hub={hub}
+        book={book}
         sheetName="AFBasic"
         initialCells={buildInitialCells({
           cells: {
-            default: { width: 100 },
+            A: { width: 100 },
+            B: { width: 100 },
+            C: { width: 100 },
+            D: { width: 100 },
+            E: { width: 100 },
+            F: { width: 100 },
             // Input data
             A1: { value: 'A' },
             B1: { value: 'B' },
@@ -48,21 +53,21 @@ const ArrayformulaBasicSheet: React.FC = () => {
         })}
         options={{ sheetHeight: 320 }}
       />
-      <Debugger hub={hub} />
+      <Debugger book={book} />
     </>
   );
 };
 
 /** ARRAYFORMULA wrapping a range passthrough */
 const ArrayformulaRangeSheet: React.FC = () => {
-  const hub = useHub({ additionalFunctions: allFunctions });
+  const book = useSpellbook();
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       sheetName="AFRange"
       initialCells={buildInitialCells({
         cells: {
-          default: { width: 140 },
+          defaultCol: { width: 140 },
           A1: { value: 'source' },
           C1: { value: 'ARRAYFORMULA(A2:A5)' },
           A2: { value: 10 },
@@ -81,14 +86,14 @@ const ArrayformulaRangeSheet: React.FC = () => {
 
 /** ARRAYFORMULA combined with IF for conditional element-wise output */
 const ArrayformulaIfSheet: React.FC = () => {
-  const hub = useHub({ additionalFunctions: allFunctions });
+  const book = useSpellbook();
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       sheetName="AFWithIf"
       initialCells={buildInitialCells({
         cells: {
-          default: { width: 200 },
+          defaultCol: { width: 200 },
           A1: { value: 'score' },
           B1: { value: 'ARRAYFORMULA(IF(...))' },
           A2: { value: 90 },

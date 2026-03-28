@@ -1,4 +1,4 @@
-import Case2 from './case2.component';
+import Case2, { AddressOverlayExample } from './case2.component';
 
 # 🌐 GitHub Contributors Dashboard
 
@@ -12,51 +12,167 @@ It uses the GitHub API to fetch contributor data and displays it in a grid.
 
 <a href="https://github.com/walkframe/gridsheet/tree/master/packages/docs/pages/examples/case2.component.tsx" target="_blank" rel="noopener noreferrer" style={{display: 'inline-block', background: '#007bff', color: 'white', padding: '8px 16px', textDecoration: 'none', borderRadius: '4px', fontWeight: '500', margin: '10px 0'}}>📄 View Source Code</a>
 
-### 🌐 GitHub API Integration
-This demo demonstrates how to integrate external APIs with GridSheet for real-time data display. The implementation uses the GitHub API to fetch contributor data from the React repository, showcasing how to handle asynchronous data loading and API responses.
+### Converting an API Response to a Matrix with `oa2aa`
 
-### 📡 Data Fetching Strategy
-Implement efficient data fetching using React hooks and async/await patterns. The strategy includes loading states, error handling, and data transformation. Use proper state management to handle the asynchronous nature of API calls.
+`oa2aa` (Object Array to Array Array) is a utility that converts an array of objects into the 2D array format that `GridSheet` expects.
 
-### 🔄 Data Transformation
-Transform API response data into the matrix format required by GridSheet. Use utility functions to convert object arrays to matrix format, ensuring proper field mapping and data structure compatibility.
+```tsx
+const fields = ['id', 'avatar_url', 'login', 'html_url', 'contributions'];
+const response = await request('GET /repos/{owner}/{repo}/contributors', { ... });
+setData(oa2aa(response.data as { [s: string]: any }[], fields));
+```
 
-### 🖼️ Custom Image Renderer
-Create custom renderers for displaying user avatars as circular background images. These renderers handle image URLs, apply styling for circular avatars, and include visual effects like borders and shadows for professional appearance.
+Specify the keys you want to extract in `fields` in the desired order, and each object will be projected into a row in that column order. The order of `fields` directly determines the column order.
 
-### 🔗 Interactive Link Renderer
-Implement interactive link renderers that display URLs as clickable elements. Include hover effects, visual feedback, and proper styling to enhance user experience. Handle cases where URLs might be missing or invalid.
+### Loading Dynamic Data with `buildInitialCellsFromOrigin`
 
-### 🔢 Number Formatting
-Apply custom number formatting for contribution counts using thousand separators. This improves readability of large numbers and provides consistent formatting across the application.
+After fetching data from an API, pass the `matrix` to `buildInitialCellsFromOrigin` to populate the grid starting from A1. Unlike the `matrices` key in `buildInitialCells`, the origin is always fixed at A1.
 
-### ⏳ Loading State Management
-Implement comprehensive loading states with visual indicators like spinners. Provide user feedback during data fetching operations and handle loading states gracefully to prevent layout shifts.
+```tsx
+<GridSheet
+  book={book}
+  sheetName="contributors"
+  initialCells={buildInitialCellsFromOrigin({
+    matrix: data,   // the state value from useState
+    cells: { ... }, // column styles and header definitions go here
+  })}
+/>
+```
 
-### ⚠️ Error Handling
-Include robust error handling for API failures, network issues, and data processing errors. Provide meaningful error messages and fallback states to ensure application reliability.
+Although `initialCells` is recomputed whenever `data` changes, `GridSheet` only reads it on first initialization. Toggling rendering with the `loading` flag is the reliable way to handle this.
 
-### 📱 Responsive Design
-Design the interface to work across different screen sizes and devices. Use responsive layouts, flexible grids, and adaptive styling to ensure optimal user experience on various platforms.
+### Post-processing Rendered Output with `renderCallback`
 
-### ⚡ Performance Optimization
-Optimize performance for large datasets by implementing efficient rendering strategies. Consider virtualization for large contributor lists and optimize image loading for better performance.
+`renderCallback` on `PolicyMixinType` is a hook that runs **after** the type-specific render method (`renderString`, `renderNumber`, etc.) has executed. It is ideal for adding decorations that are independent of the cell's value type — such as badges or address overlays.
 
-### ✅ Best Practices
-1. **API Rate Limiting**: Respect API rate limits and implement proper caching
-2. **Error Boundaries**: Use React error boundaries for graceful error handling
-3. **Loading States**: Provide clear loading indicators for better UX
-4. **Data Validation**: Validate API responses before processing
-5. **Accessibility**: Ensure all interactive elements are accessible
-6. **Performance**: Optimize image loading and rendering performance
-7. **Security**: Handle external URLs safely and prevent XSS attacks
+```tsx
+const AddressOverlayMixin: PolicyMixinType = {
+  renderCallback(rendered: any, { point }: RenderProps) {
+    const address = p2a(point);
+    return (
+      <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+        <span style={{ position: 'absolute', top: 2, right: 4, fontSize: '9px', color: '#aaa' }}>
+          {address}
+        </span>
+        {rendered}
+      </div>
+    );
+  },
+};
+```
 
-### 🎯 Common Use Cases
-- **GitHub Analytics**: Display repository statistics and contributor data
-- **Social Media Dashboards**: Show user engagement and activity metrics
-- **Team Management**: Display team member information and contributions
-- **Open Source Projects**: Track contributor activity and project health
-- **Community Platforms**: Showcase community members and their contributions
+`rendered` is the JSX already returned by `renderString` or similar. `p2a(point)` converts the `{ y, x }` coordinate to a human-readable address string like `"A1"`.
+
+### Composing Policy Mixins
+
+A single `Policy` can combine multiple mixins. Later mixins override earlier ones, so place shared behaviors first and specific overrides last.
+
+```tsx
+const book = useSpellbook({
+  policies: {
+    avatar: new Policy({
+      mixins: [
+        ImagePolicyMixin,                        // renders the image via renderString
+        { renderColHeaderLabel: () => 'Avatar' }, // overrides the column header label
+        AddressOverlayMixin,                      // adds the address badge via renderCallback
+      ],
+    }),
+    contributions: new Policy({
+      mixins: [
+        ThousandSeparatorPolicyMixin,             // formats numbers with thousand separators
+        { renderColHeaderLabel: () => 'Contributions' },
+        AddressOverlayMixin,
+      ],
+    }),
+  },
+});
+```
+
+Dropping in an inline object with `renderColHeaderLabel` is all you need to customize a column's header label.
+
+### Built-in `ThousandSeparatorPolicyMixin`
+
+This built-in mixin from `@gridsheet/react-core` renders numbers with thousand separators (`1,234,567`).
+
+```tsx
+import { ThousandSeparatorPolicyMixin } from '@gridsheet/react-core';
+
+new Policy({ mixins: [ThousandSeparatorPolicyMixin] })
+```
+
+### Locking Column Count with `limits`
+
+When the number of columns is fixed by the data source, use the `limits` option to set equal `minCols` and `maxCols`. This prevents users from accidentally adding or removing columns.
+
+```tsx
+options={{
+  mode: 'dark',
+  sheetHeight: 500,
+  sheetWidth: 1000,
+  limits: { minCols: 5, maxCols: 5 },
+}}
+```
+
+Setting `mode: 'dark'` switches the entire grid to a dark theme with no additional configuration.
+
+### Async Data Fetching and Loading State
+
+Make the API call inside an immediately-invoked async function (IIFE) within `useEffect`, and toggle rendering with a `loading` state.
+
+```tsx
+React.useEffect(() => {
+  (async () => {
+    try {
+      setLoading(true);
+      const response = await request('GET /repos/{owner}/{repo}/contributors', { ... });
+      setData(oa2aa(response.data as any[], fields));
+    } catch (error) {
+      console.error('Failed to fetch data:', error);
+    } finally {
+      setLoading(false);
+    }
+  })();
+}, []);
+```
+
+Calling `setLoading(false)` in `finally` ensures the loading indicator disappears even when an error occurs.
+
+---
+
+## Cell Address Overlay with renderCallback
+
+This example demonstrates how to display the cell address (e.g. `A1`, `B2`) in the top-right corner of every cell using a custom `Policy` with `renderCallback`.
+
+This pattern is the recommended replacement for the `showAddress` option that was available in v2 but removed in v3.
+
+<AddressOverlayExample />
+
+### How It Works
+
+The key is the `renderCallback` hook on `PolicyMixinType`. It receives:
+- `rendered` — the output already produced by the policy's type-specific render method (e.g. `renderString`, `renderNumber`)
+- `props` — a `RenderProps` object including `point: { y, x }`
+
+Use `p2a(point)` (exported from `@gridsheet/react-core`) to convert the coordinates to a human-readable address string.
+
+### Why renderCallback?
+
+`renderCallback` is called **after** the primary render method resolves the value. This makes it ideal for decorating cells with metadata that is independent of the cell's value type — such as an address badge, a status icon, or a tooltip trigger.
+
+### Applying Only to Specific Cells
+
+If you only want the overlay on certain cells (rather than all cells via `default`), assign the policy per cell or per column:
+
+```tsx
+const initialCells = buildInitialCells({
+  cells: {
+    // Only column A shows addresses
+    A: { policy: 'address' },
+    A1: { value: 'Alice' },
+    A2: { value: 'Bob' },
+  },
+});
+```
 
 ### 🚀 Advanced Features
 - **Real-time Data Updates**: Live data synchronization with external APIs

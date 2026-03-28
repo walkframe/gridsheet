@@ -4,17 +4,31 @@ import {
   BaseFunctionAsync,
   buildInitialCells,
   GridSheet,
-  useHub,
   Spilling,
   FunctionArgumentDefinition,
 } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/functions';
 import { Debugger } from '@gridsheet/react-dev';
 
 const meta: Meta = {
   title: 'Formula/Spill',
 };
 export default meta;
+
+class Range1DFunction extends BaseFunctionAsync {
+  example = 'RANGE.1D(5)';
+  description = 'Returns a 1D array that spills downward.';
+  defs: FunctionArgumentDefinition[] = [{ name: 'length', description: 'The length of the array.' }];
+
+  async main(length: number) {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const result = [];
+    for (let i = 0; i < length; i++) {
+      result.push(i + 1);
+    }
+    return new Spilling(result);
+  }
+}
 
 // ---------------------------------------------------------------------------
 // DelaySequence: async version of SEQUENCE that spills after 0.5 seconds
@@ -67,7 +81,7 @@ class DelaySequenceFunction extends BaseFunctionAsync {
 function makeInitialCells(prefix: 'SEQUENCE' | 'DELAY_SEQUENCE') {
   return buildInitialCells({
     cells: {
-      default: { width: 80 },
+      defaultCol: { width: 80 },
       // ---- Label row (row 1) ----
       A1: { value: `${prefix}(4)` },
       C1: { value: `${prefix}(3, 2)` },
@@ -82,21 +96,22 @@ function makeInitialCells(prefix: 'SEQUENCE' | 'DELAY_SEQUENCE') {
       J2: { value: `=${prefix}(1, 4)` },
 
       C10: { value: '=SUM(C2:D4)' },
+      E10: { value: '=RANGE.1D(5)' },
     },
     ensured: { numRows: 10, numCols: 10 },
   });
 }
 
 // ---------------------------------------------------------------------------
-// Side-by-side view (Sync left / Async right) — single hub
+// Side-by-side view (Sync left / Async right) — single book
 // ---------------------------------------------------------------------------
 const SpillSideBySide: React.FC = () => {
-  const hub = useHub({
+  const book = useSpellbook({
     onChange: (change) => {
-      console.log('Hub change:', change);
+      console.log('Book change:', change);
     },
     additionalFunctions: {
-      ...allFunctions,
+      'range.1d': Range1DFunction,
       delay_sequence: DelaySequenceFunction,
     },
   });
@@ -105,7 +120,7 @@ const SpillSideBySide: React.FC = () => {
       <div>
         <h3 style={{ margin: '0 0 0.5rem' }}>Sync: SEQUENCE</h3>
         <GridSheet
-          hub={hub}
+          book={book}
           sheetName="SpillSync"
           initialCells={makeInitialCells('SEQUENCE')}
           options={{ sheetHeight: 300 }}
@@ -114,12 +129,13 @@ const SpillSideBySide: React.FC = () => {
       <div>
         <h3 style={{ margin: '0 0 0.5rem' }}>Async: DELAY_SEQUENCE (0.5 s)</h3>
         <GridSheet
-          hub={hub}
+          book={book}
           sheetName="SpillAsync"
           initialCells={makeInitialCells('DELAY_SEQUENCE')}
           options={{ sheetHeight: 300 }}
         />
       </div>
+      <Debugger book={book} />
     </div>
   );
 };
@@ -130,20 +146,19 @@ const SpillSideBySide: React.FC = () => {
 // D1: SEQUENCE(3,2) and D2: SEQUENCE(3,2) — spill ranges overlap → D2 origin → #REF!
 // ---------------------------------------------------------------------------
 const SpillBlockedSheet: React.FC = () => {
-  const hub = useHub({
+  const book = useSpellbook({
     onChange: (change) => {
-      console.log('Hub change:', change);
+      console.log('Book change:', change);
     },
-    additionalFunctions: allFunctions,
   });
   return (
     <>
       <GridSheet
-        hub={hub}
+        book={book}
         sheetName="SpillBlocked"
         initialCells={buildInitialCells({
           cells: {
-            default: { width: 100 },
+            defaultCol: { width: 100 },
             // ---- Case 1: existing value blocks the spill ----
             A1: { value: '=SEQUENCE(3, 1)' },
             // A3 sits inside the 3×2 spill range (A1:B3), so A1 → #REF!
@@ -160,7 +175,7 @@ const SpillBlockedSheet: React.FC = () => {
         })}
         options={{ sheetHeight: 300 }}
       />
-      <Debugger hub={hub} />
+      <Debugger book={book} />
     </>
   );
 };

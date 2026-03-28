@@ -1,6 +1,6 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type FunctionArgumentDefinition, conditionArg } from '@gridsheet/react-core';
-import { Table, createBooleanMask, ensureString } from '@gridsheet/react-core';
+import { Sheet, createBooleanMask, ensureString } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
 const description = `Returns the count of a range depending on multiple criteria.`;
@@ -28,24 +28,24 @@ export class CountifsFunction extends BaseFunction {
     if (validatedArgs.length % 2 !== 0) {
       throw new FormulaError('#N/A', 'COUNTIFS requires at least one range/condition pair.');
     }
-    const refRange = validatedArgs[0] instanceof Table ? validatedArgs[0] : null;
+    const refRange = validatedArgs[0] instanceof Sheet ? validatedArgs[0] : null;
     let expectedRows = 0;
     let expectedCols = 0;
     if (refRange) {
-      expectedRows = refRange.getNumRows();
-      expectedCols = refRange.getNumCols();
+      expectedRows = refRange.numRows;
+      expectedCols = refRange.numCols;
     }
 
-    const tables: Table[] = [];
+    const tables: Sheet[] = [];
     const conditions: string[] = [];
     for (let i = 0; i < validatedArgs.length; i += 2) {
-      if (!(validatedArgs[i] instanceof Table)) {
+      if (!(validatedArgs[i] instanceof Sheet)) {
         throw new FormulaError('#VALUE!', `Argument ${i + 1} of COUNTIFS must be a range.`);
       }
-      if (validatedArgs[i].getNumRows() !== expectedRows || validatedArgs[i].getNumCols() !== expectedCols) {
+      if (validatedArgs[i].numRows !== expectedRows || validatedArgs[i].numCols !== expectedCols) {
         throw new FormulaError('#VALUE!', 'Array arguments to COUNTIFS are of different size.');
       }
-      tables.push(validatedArgs[i] as Table);
+      tables.push(validatedArgs[i] as Sheet);
       conditions.push(ensureString(validatedArgs[i + 1]));
     }
     const mask = createBooleanMask(tables, conditions, this.at);

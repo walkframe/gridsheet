@@ -1,36 +1,51 @@
-import { identifyFormula } from '../formula/evaluator';
 import { CellsByIdType, Id } from '../types';
-import { Table } from './table';
+import { Sheet } from './sheet';
 
 export class ReferencePreserver {
   public map: { [id: Id]: Id } = {};
-  private table: Table;
+  private sheet: Sheet;
   private dependentIds: Set<Id> = new Set<Id>();
 
-  constructor(table: Table) {
-    this.table = table;
+  constructor(sheet: Sheet) {
+    this.sheet = sheet;
   }
 
-  addTheDependents(...ids: Id[]) {
+  collectDependents(...ids: Id[]) {
     ids.forEach((id) => {
-      this.table.wire.dependents.get(id)?.forEach((did) => {
+      this.sheet.registry.systems[id]?.dependents?.forEach((did) => {
         this.dependentIds.add(did);
       });
     });
   }
 
+  /**
+   * Compare two idMatrix snapshots (`before` and `after`) and populate
+   * `this.map` and collect dependents for every position where the occupying
+   * cell ID changed. Works for any rearrangement (sort, move, etc.).
+   */
+  buildMap(before: Id[], after: Id[]) {
+    for (let i = 0; i < before.length; i++) {
+      const prevId = before[i];
+      const currId = after[i];
+      if (prevId != null && currId != null && prevId !== currId) {
+        this.collectDependents(prevId, currId);
+        this.map[prevId] = currId;
+      }
+    }
+  }
+
   resolveDependents(operation?: 'move' | 'removeRows' | 'removeCols'): CellsByIdType {
-    this.table.clearAddressCaches();
+    this.sheet.clearAddressCaches();
     const diffBefore: CellsByIdType = {};
     this.dependentIds.forEach((id) => {
-      const dep = this.table.wire.data[id];
+      const dep = this.sheet.registry.data[id];
       if (dep == null) {
         return;
       }
       diffBefore[id] = { ...dep };
-      dep.value = identifyFormula(dep.value, {
+      this.sheet.clearDependencies(id);
+      dep.value = this.sheet.processFormula(dep.value, {
         dependency: id,
-        table: this.table,
         idMap: this.map,
         operation,
       });

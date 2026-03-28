@@ -1,6 +1,6 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { Table } from '@gridsheet/react-core';
+import { Sheet } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
 const description = `Returns the column number of a specified cell.`;
@@ -19,8 +19,8 @@ export class ColumnFunction extends BaseFunction {
   category: FunctionCategory = 'lookup';
 
   protected toMatrix(value: any): any[][] {
-    if (value instanceof Table) {
-      const area = value.getArea();
+    if (value instanceof Sheet) {
+      const area = value.area;
       const result: any[][] = [];
       for (let r = area.top; r <= area.bottom; r++) {
         const row: any[] = [];
@@ -35,8 +35,8 @@ export class ColumnFunction extends BaseFunction {
   }
 
   protected toScalar(value: any): any {
-    if (value instanceof Table) {
-      const area = value.getArea();
+    if (value instanceof Sheet) {
+      const area = value.area;
       return value.trim({ ...area, right: area.left });
     }
     return super.toScalar(value);
@@ -44,11 +44,11 @@ export class ColumnFunction extends BaseFunction {
 
   protected validate(args: any[]): any[] {
     if (args.length === 0) {
-      const point = this.table.getPointById(this.at);
+      const point = this.sheet.getPointById(this.at);
       return [point?.x ?? 1];
     } else if (args.length === 1) {
-      const table = args[0] as Table;
-      return [table.left];
+      const sheet = args[0] as Sheet;
+      return [sheet.left];
     } else {
       throw new FormulaError('#N/A', 'Number of arguments for COLUMN is incorrect.');
     }

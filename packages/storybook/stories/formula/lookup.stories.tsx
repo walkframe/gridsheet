@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, operations, useHub } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { buildInitialCells, GridSheet, operations } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Formula/Lookup',
@@ -15,12 +15,12 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const LookUpSheet = () => {
-  const hub = useHub({ historyLimit: 10, additionalFunctions: allFunctions });
+  const book = useSpellbook({ historyLimit: 10 });
   return (
     <>
       <h1>HLOOKUP</h1>
       <GridSheet
-        hub={hub}
+        book={book}
         initialCells={buildInitialCells({
           cells: {
             1: { style: { backgroundColor: '#ddd' } },
@@ -67,7 +67,7 @@ const LookUpSheet = () => {
       <div style={{ display: 'flex', flexDirection: 'row', gap: 10, width: '100%' }}>
         <div style={{ width: 160 }}>
           <GridSheet
-            hub={hub}
+            book={book}
             sheetName="eto"
             initialCells={buildInitialCells({
               cells: {
@@ -95,7 +95,7 @@ const LookUpSheet = () => {
         </div>
         <div style={{ flex: 1 }}>
           <GridSheet
-            hub={hub}
+            book={book}
             sheetName="year"
             initialCells={buildInitialCells({
               cells: {

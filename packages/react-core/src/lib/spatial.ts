@@ -1,11 +1,10 @@
+import { DEFAULT_KEY, DEFAULT_COL_KEY, DEFAULT_ROW_KEY } from '../constants';
 import type {
   MatrixType,
   AreaType,
   ZoneType,
   RangeType,
   PointType,
-  Y,
-  X,
   CellsByAddressType,
   ShapeType,
   MatricesByAddress,
@@ -14,14 +13,9 @@ import type {
 } from '../types';
 import { a2p, p2a, x2c, c2x } from './coords';
 
-export const slideArea = (area: AreaType, y: Y, x: X): AreaType => {
-  const { top, left, bottom, right } = area;
-  return { top: top + y, left: left + x, bottom: bottom + y, right: right + x };
-};
-
 export const superposeArea = (srcArea: AreaType, dstArea: AreaType): ShapeType => {
-  const { rows: srcRows, cols: srcCols } = areaShape(srcArea);
-  const { rows: dstRows, cols: dstCols } = areaShape(dstArea);
+  const { rows: srcRows, cols: srcCols } = areaDiff(srcArea);
+  const { rows: dstRows, cols: dstCols } = areaDiff(dstArea);
 
   // biggerRows, biggerCols
   return {
@@ -93,20 +87,37 @@ export const among = (area: AreaType, point: PointType) => {
 
 type ShapeExtension = { base?: number };
 
-export const zoneShape = ({ base = 0, ...zone }: ZoneType & ShapeExtension): ShapeType => {
+export const zoneDiff = (zone: ZoneType): ShapeType => {
+  if (zone.endY === -1 || zone.endX === -1) {
+    return { rows: 0, cols: 0 };
+  }
+  return {
+    rows: Math.abs(zone.startY - zone.endY),
+    cols: Math.abs(zone.startX - zone.endX),
+  };
+};
+
+export const zoneShape = (zone: ZoneType): ShapeType => {
   if (zone.endY === -1 || zone.endX === -1) {
     return { rows: 1, cols: 1 };
   }
   return {
-    rows: base + Math.abs(zone.startY - zone.endY),
-    cols: base + Math.abs(zone.startX - zone.endX),
+    rows: 1 + Math.abs(zone.startY - zone.endY),
+    cols: 1 + Math.abs(zone.startX - zone.endX),
   };
 };
 
-export const areaShape = ({ base = 0, ...area }: AreaType & ShapeExtension): ShapeType => {
+export const areaDiff = (area: AreaType): ShapeType => {
   return {
-    rows: base + Math.abs(area.top - area.bottom),
-    cols: base + Math.abs(area.left - area.right),
+    rows: Math.abs(area.top - area.bottom),
+    cols: Math.abs(area.left - area.right),
+  };
+};
+
+export const areaShape = (area: AreaType): ShapeType => {
+  return {
+    rows: 1 + Math.abs(area.top - area.bottom),
+    cols: 1 + Math.abs(area.left - area.right),
   };
 };
 
@@ -150,54 +161,8 @@ export const aa2oa = (aa: MatrixType, fields: string[]): { [s: string]: any }[] 
   return oa;
 };
 
-type PutMatrixFilterProps<T = any> = {
-  srcValue: T;
-  dstValue: T;
-  srcPoint: PointType;
-  dstPoint: PointType;
-};
-
-export const putMatrix = <T = any>(
-  dst: T[][],
-  src: T[][],
-  dstArea: AreaType,
-  filter: (arg: PutMatrixFilterProps) => boolean = () => true,
-) => {
-  const lostRows: MatricesByAddress<T> = {};
-  const { top, left, bottom, right } = dstArea;
-  const { rows: dstNumRows, cols: dstNumCols } = matrixShape({
-    matrix: dst,
-    base: 1,
-  });
-  for (let y = top; y <= bottom; y++) {
-    const lostRow: T[] = [];
-    for (let x = left; x <= right; x++) {
-      const srcPoint = { y: y - top, x: x - left };
-      const dstPoint = { y, x };
-      const value = src[y - top][x - left];
-      // -1 means excluding headers
-      if (y < dstNumRows - 1 && x < dstNumCols - 1) {
-        if (filter({ srcValue: value, dstValue: dst[y][x], srcPoint, dstPoint })) {
-          dst[y][x] = value;
-        }
-        continue;
-      }
-      if (lostRow.length === 0) {
-        lostRows[p2a(dstPoint)] = [lostRow];
-      }
-      lostRow.push(value);
-    }
-  }
-  return lostRows;
-};
-
 export const createMatrix = <T = any>(numRows: number, numCols: number, fill?: T): T[][] => {
   return [...Array(numRows)].map(() => Array(numCols).fill(fill));
-};
-
-export const cropMatrix = <T = any>(matrix: T[][], area: AreaType): T[][] => {
-  const { top, left, bottom, right } = area;
-  return matrix.slice(top, bottom + 1).map((cols) => cols.slice(left, right + 1));
 };
 
 export const buildInitialCellsFromOrigin = ({
@@ -277,7 +242,7 @@ export const buildCells = <T>({
 export const getMaxSizesFromCells = (cells: CellsByAddressType = {}) => {
   let [lastY, lastX] = [0, 0];
   Object.keys(cells).forEach((address) => {
-    if (address === 'default') {
+    if (address === DEFAULT_KEY || address === DEFAULT_COL_KEY || address === DEFAULT_ROW_KEY) {
       return;
     }
     const { y, x } = a2p(address);
@@ -309,22 +274,6 @@ export const complementSelectingArea = (selectingArea: AreaType, choosing: Point
     };
   }
   return selectingArea;
-};
-
-export const isSameArea = (area1: AreaType, area2: AreaType) => {
-  if (area1.top !== area2.top) {
-    return false;
-  }
-  if (area1.left !== area2.left) {
-    return false;
-  }
-  if (area1.bottom !== area2.bottom) {
-    return false;
-  }
-  if (area1.right !== area2.right) {
-    return false;
-  }
-  return true;
 };
 
 export const expandRange = (range: string): Address[] => {
@@ -369,7 +318,7 @@ export const expandRange = (range: string): Address[] => {
 
 // restrictZone resets a zone if the zone consists of a single cell.
 export const restrictZone = (zone: ZoneType): ZoneType => {
-  const s = zoneShape(zone);
+  const s = zoneDiff(zone);
   if (s.rows + s.cols === 0) {
     return { startY: -1, startX: -1, endY: -1, endX: -1 };
   }
@@ -401,25 +350,6 @@ export const binarySearch = (
     }
   }
   return lessThan ? low : high;
-};
-
-export const moveKey = (obj: any, keyFrom: string, keyTo: string): void => {
-  const v = obj[keyFrom];
-  if (v == null) {
-    return;
-  }
-  delete obj[keyFrom];
-  obj[keyTo] = v;
-};
-
-export const invertObject = (obj: { [key: string]: string }): { [value: string]: string } => {
-  const inverted: { [value: string]: string } = {};
-  for (const key in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, key)) {
-      inverted[obj[key]] = key;
-    }
-  }
-  return inverted;
 };
 
 /**
@@ -533,10 +463,6 @@ export const addressesToRows = (addresses: Address[], asc: boolean | null = true
     rows.sort((a, b) => b - a);
   }
   return rows;
-};
-
-export const isAreaNotSelected = (area: AreaType): boolean => {
-  return area.top === -1 || area.left === -1 || area.bottom === -1 || area.right === -1;
 };
 
 export const isZoneNotSelected = (zone: ZoneType): boolean => {

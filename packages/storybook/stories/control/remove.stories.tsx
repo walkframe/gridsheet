@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, buildInitialCells, useConnector, useHub, syncers } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { GridSheet, buildInitialCells, useStoreRef, applyers, toValueObject } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Control/Remove',
@@ -16,44 +16,42 @@ const DESCRIPTION = [
 
   '## How it works',
   'Remove operations trigger onRemoveRows and onRemoveCols events with the removed data.',
-  '1. Use hub to set up onRemoveRows and onRemoveCols event handlers.',
-  '2. The event handlers receive a cloned table with the removed data and the indices of removed rows/columns.',
-  '3. The removed data can be accessed through the cloned table.',
+  '1. Use book to set up onRemoveRows and onRemoveCols event handlers.',
+  '2. The event handlers receive a cloned sheet with the removed data and the indices of removed rows/columns.',
+  '3. The removed data can be accessed through the cloned sheet.',
   '4. Console logs show the removed data and indices.',
 ].join('\n\n');
 
 const RemoveComponent: React.FC = () => {
-  const connector = useConnector();
+  const storeRef = useStoreRef();
 
-  const hub = useHub({
-    additionalFunctions: allFunctions,
-    onRemoveRows: ({ table, ys }) => {
-      console.log('onRemoveRows called with:', { table, ys });
-      console.log('matrix', table.toValueObject());
+  const book = useSpellbook({
+    onRemoveRows: ({ sheet, ys }) => {
+      console.log('onRemoveRows called with:', { sheet, ys });
+      console.log('matrix', toValueObject(sheet));
     },
-    onRemoveCols: ({ table, xs }) => {
-      console.log('onRemoveCols called with:', { table, xs });
+    onRemoveCols: ({ sheet, xs }) => {
+      console.log('onRemoveCols called with:', { sheet, xs });
+      console.log('matrix', toValueObject(sheet));
     },
   });
 
   const handleRemoveRows = () => {
-    if (connector?.current == null) {
+    if (storeRef?.current == null) {
       return;
     }
-    const { storeManager } = connector.current;
-    const { store, dispatch } = storeManager;
+    const { store, dispatch } = storeRef.current;
     // Remove 2nd row (index 2)
-    syncers.removeRows({ store, dispatch });
+    applyers.removeRows({ store, dispatch });
   };
 
   const handleRemoveCols = () => {
-    if (connector?.current == null) {
+    if (storeRef?.current == null) {
       return;
     }
-    const { storeManager } = connector.current;
-    const { store, dispatch } = storeManager;
+    const { store, dispatch } = storeRef.current;
     // Remove 2nd column (index 2)
-    syncers.removeCols({ store, dispatch });
+    applyers.removeCols({ store, dispatch });
   };
 
   return (
@@ -92,8 +90,8 @@ const RemoveComponent: React.FC = () => {
       </div>
 
       <GridSheet
-        connector={connector}
-        hub={hub}
+        storeRef={storeRef}
+        book={book}
         initialCells={buildInitialCells({
           matrices: {
             A1: [
@@ -107,10 +105,10 @@ const RemoveComponent: React.FC = () => {
               width: 80,
               height: 30,
             },
-            A: { label: 'Header1' },
-            B: { label: 'Header2' },
-            C: { label: 'Header3' },
-            D: { label: 'Header4' },
+            A0: { label: 'Header1' },
+            B0: { label: 'Header2' },
+            C0: { label: 'Header3' },
+            D0: { label: 'Header4' },
           },
           ensured: {
             numRows: 10,

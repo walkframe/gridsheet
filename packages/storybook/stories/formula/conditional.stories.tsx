@@ -3,12 +3,11 @@ import type { Meta, StoryObj } from '@storybook/react';
 import {
   buildInitialCells,
   GridSheet,
-  useHub,
   BaseFunctionAsync,
   FormulaError,
   type FunctionArgumentDefinition,
 } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/functions';
 
 class DelayNaFunction extends BaseFunctionAsync {
   example = 'DELAY_NA()';
@@ -33,14 +32,14 @@ export default meta;
 
 /** Basic IF demo */
 const IfSheet: React.FC = () => {
-  const hub = useHub({ additionalFunctions: allFunctions });
+  const book = useSpellbook();
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       sheetName="IfDemo"
       initialCells={buildInitialCells({
         cells: {
-          default: { width: 200 },
+          defaultCol: { width: 200 },
           // Labels
           A1: { value: 'score' },
           B1: { value: 'IF pass/fail' },
@@ -72,14 +71,14 @@ const IfSheet: React.FC = () => {
 
 /** IFS demo */
 const IfsSheet: React.FC = () => {
-  const hub = useHub({ additionalFunctions: allFunctions });
+  const book = useSpellbook();
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       sheetName="IfsDemo"
       initialCells={buildInitialCells({
         cells: {
-          default: { width: 220 },
+          defaultCol: { width: 220 },
           A1: { value: 'score' },
           B1: { value: 'IFS grade' },
           A2: { value: 95 },
@@ -100,14 +99,14 @@ const IfsSheet: React.FC = () => {
 
 /** IFNA demo */
 const IfnaSheet: React.FC = () => {
-  const hub = useHub({ additionalFunctions: allFunctions });
+  const book = useSpellbook();
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       sheetName="IfnaDemo"
       initialCells={buildInitialCells({
         cells: {
-          default: { width: 240 },
+          defaultCol: { width: 240 },
           A1: { value: 'formula' },
           B1: { value: 'IFNA result' },
           // Direct NA formula
@@ -145,19 +144,18 @@ const IfnaSheet: React.FC = () => {
 
 /** IFNA with async DELAY_NA demo */
 const IfnaDelayNaSheet: React.FC = () => {
-  const hub = useHub({
+  const book = useSpellbook({
     additionalFunctions: {
-      ...allFunctions,
       delay_na: DelayNaFunction,
     },
   });
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       sheetName="IfnaDelayNaDemo"
       initialCells={buildInitialCells({
         cells: {
-          default: { width: 280 },
+          defaultCol: { width: 280 },
           A1: { value: 'pattern' },
           B1: { value: 'formula' },
           C1: { value: 'result' },
@@ -180,14 +178,14 @@ const IfnaDelayNaSheet: React.FC = () => {
 
 /** IFERROR vs IFNA side-by-side demo */
 const IferrorIfnaSheet: React.FC = () => {
-  const hub = useHub({ additionalFunctions: allFunctions });
+  const book = useSpellbook();
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       sheetName="IferrorIfnaDemo"
       initialCells={buildInitialCells({
         cells: {
-          default: { width: 220 },
+          defaultCol: { width: 220 },
           A1: { value: 'input' },
           B1: { value: 'IFERROR result' },
           C1: { value: 'IFNA result' },

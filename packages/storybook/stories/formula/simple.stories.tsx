@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, useHub } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Formula/Simple',
@@ -69,12 +69,10 @@ const FORMULAS = [
 const matrix = FORMULAS.map((f) => [f, f]);
 
 const SimpleCalculationSheet = () => {
-  const hub = useHub({
-    additionalFunctions: allFunctions,
-  });
+  const book = useSpellbook();
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       initialCells={buildInitialCells({
         matrices: { A1: matrix },
         cells: {

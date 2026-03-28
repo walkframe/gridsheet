@@ -5,9 +5,9 @@ export const parseHTML = (html: string, onlyValue = false): RawCellType[][] => {
   const doc = parser.parseFromString(html, 'text/html');
   const results: RawCellType[][] = [];
 
-  const processTable = (table: HTMLTableElement) => {
+  const processSheet = (sheet: HTMLTableElement) => {
     const spans = new Set<string>();
-    const rows = table.querySelectorAll('tr,caption');
+    const rows = sheet.querySelectorAll('tr,caption');
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
       if (row.tagName === 'CAPTION') {
@@ -56,7 +56,7 @@ export const parseHTML = (html: string, onlyValue = false): RawCellType[][] => {
           results.push(currentLine.slice());
           currentLine.length = 0;
         }
-        processTable(el as HTMLTableElement);
+        processSheet(el as HTMLTableElement);
       } else if (tagName === 'BR') {
         results.push(currentLine.slice());
         currentLine.length = 0;

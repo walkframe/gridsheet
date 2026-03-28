@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, buildInitialCells, useHub, Policy } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { GridSheet, buildInitialCells, Policy } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Basic/Labeler',
@@ -15,8 +15,7 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const LabelerSheet = () => {
-  const hub = useHub({
-    additionalFunctions: allFunctions,
+  const book = useSpellbook({
     policies: {
       hiragana: new Policy({ mixins: [{ renderColHeaderLabel: (n) => 'あいうえおかきくけこ'.slice(n - 1, n) }] }),
       katakana: new Policy({ mixins: [{ renderRowHeaderLabel: (n) => 'アイウエオカキクケコ'.slice(n - 1, n) }] }),
@@ -25,7 +24,7 @@ const LabelerSheet = () => {
 
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       initialCells={buildInitialCells({
         cells: {
           A: { policy: 'hiragana' },

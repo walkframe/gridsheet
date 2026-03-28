@@ -3,15 +3,15 @@ import type { Meta, StoryObj } from '@storybook/react';
 import {
   GridSheet,
   buildInitialCells,
-  useConnector,
+  useSheetRef,
   HistoryType,
-  useHub,
-  table2csv,
+  sheet2csv,
   FormulaError,
-  UserTable,
+  UserSheet,
   PointType,
+  toCellObject,
 } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/functions';
 import CodeMirror from '@uiw/react-codemirror';
 import { lineNumbers } from '@codemirror/view';
 import { oneDark } from '@codemirror/theme-one-dark';
@@ -40,42 +40,40 @@ const SheetTSVComponent: React.FC = () => {
   const [ignoreError, setIgnoreError] = React.useState<boolean>(false);
   const [trailingEmptyRowsOmitted, setTrailingEmptyRowsOmitted] = React.useState<boolean>(true);
   const [histories, setHistories] = React.useState<HistoryType[]>([]);
-  const connector = useConnector();
-  const table = connector.current?.tableManager.table;
+  const sheetRef = useSheetRef();
+  const sheet = sheetRef.current?.sheet;
 
-  const getter = (table: UserTable, point: PointType) => {
-    const value = table.getCellByPoint(point, evaluates ? 'COMPLETE' : 'RAW')?.value ?? '';
+  const getter = (sheet: UserSheet, point: PointType) => {
+    const value = sheet.getCell(point, { resolution: evaluates ? 'RESOLVED' : 'RAW' })?.value ?? '';
     if (FormulaError.is(value)) {
       return ignoreError ? '' : value.code;
     }
     return String(value);
   };
 
-  const hub = useHub({
-    additionalFunctions: allFunctions,
-    onChange: ({ table, points }) => {
-      const tsv = table2csv(table, { getter, trailingEmptyRowsOmitted });
+  const book = useSpellbook({
+    onChange: ({ sheet, points }) => {
+      const tsv = sheet2csv(sheet, { getter, trailingEmptyRowsOmitted });
       setCsvData(tsv);
-      setHistories(table.getHistories());
-      const changed = table.toCellObject({ addresses: table.getLastChangedAddresses() });
-      console.log('changed', changed);
+      setHistories(sheet.__raw__.histories());
+      const changed = toCellObject(sheet, { addresses: sheet.getLastChangedAddresses() });
     },
   });
   React.useEffect(() => {
-    if (table == null) {
+    if (sheet == null) {
       return;
     }
-    const tsv = table2csv(table, { getter, trailingEmptyRowsOmitted });
+    const tsv = sheet2csv(sheet, { getter, trailingEmptyRowsOmitted });
     setCsvData(tsv);
-  }, [table, evaluates, ignoreError, trailingEmptyRowsOmitted]);
+  }, [sheet, evaluates, ignoreError, trailingEmptyRowsOmitted]);
 
   return (
     <>
       <div>
         <div style={{ display: 'flex', alignItems: 'stretch' }}>
           <GridSheet
-            connector={connector}
-            hub={hub}
+            sheetRef={sheetRef}
+            book={book}
             initialCells={buildInitialCells({
               matrices: {
                 A1: [
@@ -161,14 +159,21 @@ const SheetTSVComponent: React.FC = () => {
                 lineHeight: '20px',
                 borderBottom: 'solid 1px #777',
                 marginBottom: '10px',
-                backgroundColor: table?.getHistoryIndex() === i ? '#fdd' : 'transparent',
+                backgroundColor: sheet?.historyIndex() === i ? '#fdd' : 'transparent',
               }}
             >
               <div style={{ color: '#09a' }}>[{history.operation}]</div>
               <pre style={{ margin: 0 }}>
                 {(() => {
                   if (history.operation === 'UPDATE') {
-                    return JSON.stringify(table?.__raw__.getAddressesByIds(history.diffAfter));
+                    const raw = sheet?.__raw__;
+                    if (raw == null) return null;
+                    const addresses: Record<string, unknown> = {};
+                    Object.keys(history.diffAfter).forEach((id) => {
+                      const address = raw.getAddressById(id);
+                      if (address) addresses[address] = history.diffAfter[id];
+                    });
+                    return JSON.stringify(addresses);
                   }
                 })()}
               </pre>

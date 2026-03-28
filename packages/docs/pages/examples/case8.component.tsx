@@ -1,13 +1,14 @@
 'use client';
 
 import * as React from 'react';
-import { GridSheet, buildInitialCellsFromOrigin, useHub, makeBorder } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCellsFromOrigin, makeBorder } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 export default function LargeDatasetDemo() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [progress, setProgress] = React.useState(0);
 
-  const hub = useHub();
+  const book = useSpellbook();
 
   // Generate large dataset efficiently
   const generateLargeDataset = React.useCallback(() => {
@@ -60,7 +61,6 @@ export default function LargeDatasetDemo() {
             value = row;
             style = {
               ...style,
-              backgroundColor: '#f8fafc',
               fontWeight: 'bold',
               textAlign: 'center',
             };
@@ -70,7 +70,6 @@ export default function LargeDatasetDemo() {
             value = `${names[(row - 1) % names.length]} ${Math.floor((row - 1) / names.length) + 1}`;
             style = {
               ...style,
-              backgroundColor: '#f0f9ff',
               fontWeight: '500',
             };
           } else if (col === 3) {
@@ -88,7 +87,6 @@ export default function LargeDatasetDemo() {
             value = departments[(row - 1) % departments.length];
             style = {
               ...style,
-              backgroundColor: '#fef3c7',
               textAlign: 'center',
               fontSize: '10px',
             };
@@ -97,7 +95,6 @@ export default function LargeDatasetDemo() {
             value = Math.floor(Math.random() * 50000) + 30000;
             style = {
               ...style,
-              backgroundColor: '#dbeafe',
               textAlign: 'right',
               fontWeight: '500',
             };
@@ -107,7 +104,6 @@ export default function LargeDatasetDemo() {
             value = statuses[(row - 1) % statuses.length];
             style = {
               ...style,
-              backgroundColor: '#f3f4f6',
               textAlign: 'center',
               fontSize: '10px',
             };
@@ -116,7 +112,6 @@ export default function LargeDatasetDemo() {
             value = Math.floor(Math.random() * 1000);
             style = {
               ...style,
-              backgroundColor: '#f9fafb',
               textAlign: 'right',
             };
           } else {
@@ -124,7 +119,6 @@ export default function LargeDatasetDemo() {
             value = Math.floor(Math.random() * 100);
             style = {
               ...style,
-              backgroundColor: '#ffffff',
               textAlign: 'center',
             };
           }
@@ -154,7 +148,8 @@ export default function LargeDatasetDemo() {
   }, []);
 
   const [initialCells, setInitialCells] = React.useState<{ [address: string]: any }>({
-    default: { width: 80, height: 20 },
+    defaultCol: { width: 80 },
+    defaultRow: { height: 20 },
   });
 
   React.useEffect(() => {
@@ -220,16 +215,19 @@ export default function LargeDatasetDemo() {
       }}
     >
       <GridSheet
-        hub={hub}
+        book={book}
         sheetName="large-dataset"
         initialCells={initialCells}
         options={{
           sheetHeight: 600,
           sheetWidth: typeof window !== 'undefined' ? Math.min(1200, window.innerWidth - 60) : 1200,
           sheetResize: 'both',
-          showAddress: true,
         }}
       />
+      <style>{`
+        .gs-row-odd .gs-cell { background-color: #ffffff; }
+        .gs-row-even .gs-cell { background-color: #f0f4f8; }
+      `}</style>
     </div>
   );
 }

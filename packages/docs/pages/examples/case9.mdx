@@ -10,55 +10,114 @@ This example demonstrates advanced security features in GridSheet, including dat
 
 <a href="https://github.com/walkframe/gridsheet/tree/master/packages/docs/pages/examples/case9.component.tsx" target="_blank" rel="noopener noreferrer" style={{display: 'inline-block', background: '#007bff', color: 'white', padding: '8px 16px', textDecoration: 'none', borderRadius: '4px', fontWeight: '500', margin: '10px 0'}}>📄 View Source Code</a>
 
-### 🔒 Security Features Overview
+### Masking Display Values with `renderString`
 
-- **Data Masking**: Password column is partially masked in display (first 2 characters visible, rest as asterisks)
-- **Clipboard Protection**: Copying sensitive data results in masked values in clipboard
-- **Custom Security Functions**: Built-in security functions for data hashing and encryption
-- **Selective Protection**: Only the Password column is protected while others remain fully accessible
-- **Formula Bar Hidden**: Formula bar is disabled to prevent password exposure
+To show a partially masked value in the grid while keeping the raw value intact in the data model, override `renderString` in a `PolicyMixinType`.
 
-## How it works
+```tsx
+const securityPolicy = new Policy({
+  mixins: [
+    {
+      renderString({ value }: RenderProps<string>) {
+        const str = String(value);
+        if (str.length <= 2) return str;
+        // Show only first 2 characters; asterisks for the rest
+        return `${str.substring(0, 2)}${'*'.repeat(str.length - 2)}`;
+      },
+    },
+  ],
+});
+```
 
-The security system uses a combination of policies and renderers to protect sensitive data:
+The actual cell value remains unchanged — only the visual output is masked. This means formulas that reference the cell still receive the true value.
 
-1. **Security Policy**: Intercepts clipboard operations and replaces sensitive data with asterisks
-2. **Security Renderer**: Displays partially masked values in the grid interface
-3. **Custom Functions**: Security functions for data hashing and processing
-4. **Selective Application**: Security features are applied only to the Password column
+### Clipboard Protection with `serializeForClipboard`
 
-## Security Functions
+`serializeForClipboard` is called when a cell is copied to the clipboard. Returning a replacement string here prevents the raw value from leaking via Ctrl+C.
 
-- `SECURE_HASH(text)`: Creates a secure hash of the input text for password storage
+```tsx
+serializeForClipboard({ point, sheet }) {
+  const cellValue = sheet.getSerializedValue({ point }) ?? '';
+  // Replace every character with an asterisk
+  return '*'.repeat(cellValue.length);
+},
+```
 
-## Implementation
+Combine this with `renderString` in the same mixin object to get both display masking and clipboard protection in a single policy.
 
-The security features are implemented using:
-- Custom policies with `serializeForClipboard` handlers for clipboard protection
-- Custom renderers with `string` methods for display masking
-- Custom functions extending `BaseFunction` for security operations
-- Hub configuration to register all security components
+### Hiding the Formula Bar with `showFormulaBar: false`
 
-This approach ensures that sensitive data remains protected both during display and when copied to external applications.
+Even with display masking in place, the formula bar would expose the raw cell value when a masked cell is selected. Disable it entirely with the `showFormulaBar` option.
 
-## Try it out
+```tsx
+<GridSheet
+  book={book}
+  options={{ showFormulaBar: false }}
+  initialCells={...}
+/>
+```
 
-1. **Data Masking**: Notice how the Password column shows only the first 2 characters, with the rest masked as asterisks
-2. **Clipboard Protection**: Try copying cells from the Password column - you'll get asterisks in your clipboard
-3. **Custom Functions**: The Hash column uses the SECURE_HASH function to generate secure hashes of passwords
-4. **Visual Indicators**: Different colored borders and backgrounds indicate security levels
+### Custom Functions via `BaseFunction`
 
-## Security Features Explained
+Extend `BaseFunction` to add spreadsheet functions that operate on cell values. The `main` method receives the resolved argument values and returns the result.
 
-- **Data Masking**: Password column shows only first 2 characters, rest are masked with asterisks
-- **Clipboard Protection**: Copying sensitive cells results in asterisks in clipboard
-- **Custom Functions**: SECURE_HASH creates hexadecimal hashes for secure password storage
-- **Selective Protection**: Only the Password column is protected, others remain fully accessible
-- **Formula Bar Hidden**: Formula bar is disabled to prevent password exposure in the formula bar 
+```tsx
+import { BaseFunction } from '@gridsheet/react-core';
 
-### 🚀 Advanced Features
-- **Data Encryption**: Encrypt sensitive data at rest and in transit
-- **Access Control**: Role-based access control and permissions
-- **Audit Logging**: Comprehensive audit trails for all actions
-- **Data Masking**: Mask sensitive data in displays and exports
-- **Compliance**: Meet regulatory requirements for data protection 
+const SecureHashFunction = class extends BaseFunction {
+  example = 'SECURE_HASH("password123")';
+  helpText = ['Creates a hash of the input text'];
+  defs = [{ name: 'text', description: 'Text to hash', acceptedTypes: ['string'] }];
+
+  protected main(text: string) {
+    let hash = 0;
+    for (let i = 0; i < text.length; i++) {
+      const char = text.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash; // 32-bit integer
+    }
+    return Math.abs(hash).toString(16);
+  }
+};
+```
+
+Register it under a lowercase key in `additionalFunctions`. The formula name in the grid is that key uppercased: `=SECURE_HASH(C1)`.
+
+```tsx
+const book = useSpellbook({
+  additionalFunctions: {
+    secure_hash:    SecureHashFunction,
+    validate_email: ValidateEmailFunction,
+    encrypt_level:  EncryptLevelFunction,
+  },
+  policies: { security: securityPolicy },
+});
+```
+
+### Preventing Numeric Auto-coercion with a Dedicated Policy
+
+Cell values that look like integers (e.g., `"001"`) can be silently coerced to numbers. To keep them as strings, apply a minimal policy whose `renderString` forces the value through `String()`.
+
+```tsx
+const idPolicy = new Policy({
+  mixins: [{
+    renderString({ value }: any) {
+      return String(value ?? '');
+    },
+  }],
+});
+```
+
+Assign it to the ID column: `A: { policy: 'id' }`.
+
+### Selective Policy Application
+
+Sensitive policies only need to be assigned to the columns that hold sensitive data. All other columns continue to use the default behavior.
+
+```tsx
+cells: {
+  C: { policy: 'security' },  // Password column — masked + clipboard protected
+  A: { policy: 'id' },        // ID column — string-forced only
+  // B and D use default policy
+}
+```

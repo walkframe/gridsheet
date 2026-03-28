@@ -1,9 +1,9 @@
 import { FormulaError } from '@gridsheet/react-core';
 import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { Table, ensureNumber } from '@gridsheet/react-core';
+import { Sheet, ensureNumber } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
-const description = `Returns a trimmed table based on row and column indices.
+const description = `Returns a trimmed sheet based on row and column indices.
 If row or column is 0 or omitted, returns all rows or columns.`;
 
 export class IndexFunction extends BaseFunction {
@@ -31,7 +31,7 @@ export class IndexFunction extends BaseFunction {
       throw new FormulaError('#N/A', 'Number of arguments for INDEX is incorrect.');
     }
 
-    if (!(args[0] instanceof Table)) {
+    if (!(args[0] instanceof Sheet)) {
       throw new FormulaError('#VALUE!', 'First argument must be a range.');
     }
 
@@ -51,20 +51,20 @@ export class IndexFunction extends BaseFunction {
     return args;
   }
 
-  protected main(table: Table, y?: number, x?: number) {
-    const area = table.getArea();
+  protected main(sheet: Sheet, y?: number, x?: number) {
+    const area = sheet.area;
     if (y) {
-      if (y < 0 || y > table.getNumRows(1)) {
+      if (y < 0 || y > sheet.numRows) {
         throw new FormulaError('#NUM!', `Row number ${y} is out of range.`);
       }
       area.top = area.bottom = area.top + y - 1;
     }
     if (x) {
-      if (x < 0 || x > table.getNumCols(1)) {
+      if (x < 0 || x > sheet.numCols) {
         throw new FormulaError('#NUM!', `Column number ${x} is out of range.`);
       }
       area.left = area.right = area.left + x - 1;
     }
-    return table.trim(area);
+    return sheet.trim(area);
   }
 }

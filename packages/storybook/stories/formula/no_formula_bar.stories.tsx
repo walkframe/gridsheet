@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, useHub } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Formula/NoFormulaBar',
@@ -15,18 +15,14 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const NoFormulaBarSheet = () => {
-  const hub = useHub({
-    additionalFunctions: allFunctions,
-  });
+  const book = useSpellbook();
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       initialCells={buildInitialCells({
         matrices: {},
         cells: {
-          default: {
-            width: 50,
-          },
+          defaultCol: { width: 50 },
         },
         ensured: { numRows: 10, numCols: 10 },
       })}

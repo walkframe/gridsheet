@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { GridSheet, buildInitialCells, useConnector, useHub, Policy, PolicyMixinType } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells, useSheetRef, Policy, PolicyMixinType } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 // Policy for Priority column
 const PriorityPolicy: PolicyMixinType = {};
@@ -15,7 +16,8 @@ const virtualUsers = [
 ];
 
 export default function RealTimeCollaboration() {
-  const connector = useConnector();
+  const sheetRef = useSheetRef();
+  const userCursorsRef = React.useRef<Record<string, { row: number; col: number }>>({});
   const [activityLog, setActivityLog] = React.useState<
     Array<{
       user: string;
@@ -30,12 +32,61 @@ export default function RealTimeCollaboration() {
     charlie: { row: 4, col: 2 },
     diana: { row: 3, col: 4 },
   });
+  userCursorsRef.current = userCursors;
 
-  const hub = useHub({
-    policies: {
+  const policies = React.useMemo(
+    () => ({
+      default: new Policy({
+        mixins: [
+          {
+            renderCallback(rendered: any, { point }: { point: { y: number; x: number } }) {
+              const cursorsHere = Object.entries(userCursorsRef.current).filter(
+                ([, pos]) => pos.row === point.y && pos.col === point.x,
+              );
+              if (cursorsHere.length === 0) {
+                return rendered;
+              }
+              const users = cursorsHere.map(([id]) => virtualUsers.find((u) => u.id === id)).filter(Boolean);
+              return (
+                <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                  {rendered}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 2,
+                      right: 2,
+                      display: 'flex',
+                      gap: '2px',
+                      pointerEvents: 'none',
+                    }}
+                  >
+                    {users.map((user) => (
+                      <span
+                        key={user!.id}
+                        title={user!.name}
+                        style={{
+                          fontSize: 14,
+                          lineHeight: 1,
+                          filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))',
+                          animation: 'pulse 2s infinite',
+                        }}
+                      >
+                        {user!.avatar}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            },
+          },
+        ],
+      }),
       priority: new Policy({ mixins: [PriorityPolicy] }),
-    },
-  });
+    }),
+    [],
+  );
+
+  const book = useSpellbook({ policies });
 
   // Add to activity log
   const addActivity = React.useCallback((user: string, action: string, cell?: string) => {
@@ -89,11 +140,10 @@ export default function RealTimeCollaboration() {
         }));
 
         // If edit action, actually edit the cell after 1 second
-        if (selectedAction.action === 'edited cell' && connector.current) {
+        if (selectedAction.action === 'edited cell' && sheetRef.current) {
           setTimeout(() => {
-            if (connector.current) {
-              const { tableManager } = connector.current;
-              const { table: table, sync } = tableManager;
+            if (sheetRef.current) {
+              const { sheet, apply } = sheetRef.current;
               const cellAddress = `${String.fromCharCode(64 + newCol)}${newRow}`;
 
               // Select appropriate data based on column
@@ -154,10 +204,11 @@ export default function RealTimeCollaboration() {
               }
 
               // Update the cell
-              table.update({
-                diff: { [cellAddress]: { value: newValue } },
-              });
-              sync(table);
+              apply(
+                sheet.update({
+                  diff: { [cellAddress]: { value: newValue } },
+                }),
+              );
 
               addActivity(randomUser.name, 'edited cell', cellAddress);
             }
@@ -170,16 +221,15 @@ export default function RealTimeCollaboration() {
 
     const intervalId = setInterval(simulateUserAction, 1200); // Action every 1.2 seconds (adjusted frequency)
     return () => clearInterval(intervalId);
-  }, [addActivity, connector]);
+  }, [addActivity, sheetRef]);
 
   // Get current user (simulate authentication)
   const getCurrentUser = () => {
-    if (!connector.current) {
+    if (!sheetRef.current) {
       return null;
     }
-    const { tableManager } = connector.current;
-    const { table: table } = tableManager;
-    // Simulate getting current user from table context
+    const { sheet } = sheetRef.current;
+    // Simulate getting current user from sheet context
     return virtualUsers[0]; // For demo, always return Alice
   };
 
@@ -195,99 +245,16 @@ export default function RealTimeCollaboration() {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gridTemplateColumns: '1fr 220px',
           gap: '20px',
         }}
       >
         {/* Main grid */}
         <div>
-          <div
-            style={{
-              position: 'relative',
-              overflow: 'hidden',
-            }}
-          >
-            {/* User cursor overlay */}
-            <div
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                pointerEvents: 'none',
-                zIndex: 10,
-              }}
-            >
-              {Object.entries(userCursors).map(([userId, pos]) => {
-                const user = virtualUsers.find((u) => u.id === userId);
-                if (!user || !connector.current) {
-                  return null;
-                }
-
-                const { tableManager } = connector.current;
-                const { table: table } = tableManager;
-                const position = pos as { row: number; col: number };
-
-                // Get actual column width and row height
-                const columnWidths = table.getRectSize({
-                  top: 1,
-                  left: 1,
-                  bottom: 1,
-                  right: position.col,
-                });
-
-                const rowHeights = table.getRectSize({
-                  top: 1,
-                  left: 1,
-                  bottom: position.row,
-                  right: 1,
-                });
-
-                // Get current cell width and height
-                const currentColWidth = table.getCellByPoint({ y: 0, x: position.col })?.width || 120;
-                const currentRowHeight = table.getCellByPoint({ y: position.row, x: 0 })?.height || 40;
-
-                // Get header width and height
-                const headerWidth = table.headerWidth;
-                const headerHeight = table.headerHeight;
-
-                // Calculate position to center the cell
-                const x = columnWidths.width + headerWidth + currentColWidth / 2 - 10;
-                const y = rowHeights.height + headerHeight + currentRowHeight / 2 - 10;
-
-                return (
-                  <div
-                    key={userId}
-                    style={{
-                      position: 'absolute',
-                      left: x,
-                      top: y,
-                      width: 20,
-                      height: 20,
-                      backgroundColor: user.color,
-                      borderRadius: '50%',
-                      border: '2px solid white',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '12px',
-                      color: 'white',
-                      fontWeight: 'bold',
-                      animation: 'pulse 2s infinite',
-                    }}
-                    title={`${user.name} is here`}
-                  >
-                    {user.avatar}
-                  </div>
-                );
-              })}
-            </div>
-
+          <div>
             <GridSheet
-              connector={connector}
-              hub={hub}
+              sheetRef={sheetRef}
+              book={book}
               initialCells={buildInitialCells({
                 matrices: {
                   A1: [
@@ -299,10 +266,8 @@ export default function RealTimeCollaboration() {
                   ],
                 },
                 cells: {
-                  default: {
-                    width: 120,
-                    height: 40,
-                  },
+                  defaultCol: { width: 120 },
+                  defaultRow: { height: 40 },
                   0: { height: 32, width: 30 }, // Header row height
                   A: { width: 150, label: 'Project' },
                   B: { width: 100, label: 'Status' },
@@ -319,7 +284,7 @@ export default function RealTimeCollaboration() {
                 },
               })}
               options={{
-                sheetWidth: typeof window !== 'undefined' ? Math.min(800, window.innerWidth - 60) : 800,
+                sheetWidth: typeof window !== 'undefined' ? Math.min(1100, window.innerWidth - 300) : 1100,
                 sheetHeight: 300,
               }}
             />
@@ -327,7 +292,7 @@ export default function RealTimeCollaboration() {
         </div>
 
         {/* Sidebar */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '220px' }}>
           {/* Activity feed */}
           <div
             style={{

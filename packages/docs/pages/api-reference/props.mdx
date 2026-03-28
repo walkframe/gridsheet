@@ -8,8 +8,9 @@ The GridSheet component accepts the following props to configure its behavior an
 |------|------|----------|-------------|
 | `initialCells` | `CellsByAddressType` | Yes | Initial cell data and configuration |
 | `sheetName` | `string` | No | Unique identifier for the sheet |
-| `hub` | `HubType` | No | Shared hub for cross-sheet communication |
-| `connector` | `Connector` | No | Reference to access table and store managers |
+| `book` | `BookType` | No | Shared book for cross-sheet communication |
+| `sheetRef` | `RefObject<SheetHandle \| null>` | No | Ref to access the sheet and its sync function |
+| `storeRef` | `RefObject<StoreHandle \| null>` | No | Ref to access the store and dispatch function |
 | `options` | `OptionsType` | No | Configuration options for sheet behavior |
 | `className` | `string` | No | CSS class name for styling |
 | `style` | `CSSProperties` | No | Inline styles for the component |
@@ -26,14 +27,23 @@ The format uses cell addresses as keys for cell configuration objects. For examp
 
 ### Default Configuration
 
-The `default` key applies configuration to all cells in the spreadsheet. This is useful for setting global defaults like width, height, or styles.
+The `default` key applies a base configuration to all cells in the spreadsheet, which is useful for setting global shared styles. However, **`width` and `height` cannot be set via `default`**. 
+
+To set a global default width or height that applies to all headers, use the `defaultCol` and `defaultRow` keys instead:
 
 ```tsx
 const initialCells = {
+  // Applies to all cells in the sheet
   default: { 
-    width: 100, 
-    height: 30,
     style: { fontSize: '14px' }
+  },
+  // Base configuration for all column headers
+  defaultCol: {
+    width: 100
+  },
+  // Base configuration for all row headers
+  defaultRow: {
+    height: 30
   },
   'A1': { value: 'Hello World' },
   'B2': { value: 100 },
@@ -42,21 +52,43 @@ const initialCells = {
 
 ### Header Configuration
 
-Header dimensions are configured using the `0` key for both header height and header width:
+Header dimensions are configured using the `0` key for the corner cell (sets default header height/width):
 
 ```tsx
 const initialCells = {
-  // Header height and width (row 0)
+  // Corner cell: default header row height and column header width
   '0': {
-    height: 60,  // Header height
-    width: 80,   // Header width
+    height: 60,  // Header row height
+    width: 80,   // Row header width
   },
-  // Other cells...
   'A1': { value: 'Hello World' },
 };
 ```
 
-**Note**: Header width is set on row `0`, not on column letters. Column letters like `'A': { width: 80 }` only affect the width of that specific column, not the header width.
+### Header Cell Addressing (`ch()`, `rh()`, `A0:G0`)
+
+To configure individual column or row header cells, you should use the `ch()` and `rh()` utility functions provided by `@gridsheet/react-core`. While internally GridSheet appends a `0` (e.g., `A0`, `01`), Using the `ch` and `rh` functions is strongly recommended. 
+
+- **`ch('A')`** (evaluates to `A0`) — Column A's header cell only (width, label, style, etc.)
+- **`rh(1)`** (evaluates to `01`) — Row 1's header cell only (height, style, etc.)
+- **`A0:G0`** — Range of column header cells (A through G)
+
+```tsx
+import { ch, rh } from '@gridsheet/react-core';
+
+const initialCells = {
+  // Column A header: set width and label
+  [ch('A')]: { width: 150, label: 'Product' },
+  // Row 1 header: set height
+  [rh(1)]: { height: 50 },
+  // Style column headers F and G blue
+  'F0:G0': { style: { color: 'blue' } },
+  // All data cells in column A (does NOT affect the header)
+  A: { style: { backgroundColor: '#eef' } },
+};
+```
+
+**Note**: `A: { ... }` applies to **all data cells** in column A (rows 1 and below). Use `ch('A')` to target the column A header cell. Similarly, `1: { ... }` applies to all data cells in row 1; use `rh(1)` for the row 1 header.
 
 ### Column and Row Specifications
 
@@ -70,11 +102,11 @@ Some properties are only valid for columns or rows:
 
 | Property | Valid For | Description |
 |----------|-----------|-------------|
-| `width` | Columns only | Column width in pixels |
-| `height` | Rows only | Row height in pixels |
-| `label` | Columns only | Custom display text for the column header |
+| `width` | Column header keys only (`ch('A')`, `defaultCol`) | Column width in pixels |
+| `height` | Row header keys only (`rh(1)`, `defaultRow`) | Row height in pixels |
+| `label` | Column header keys only (`ch('A')`) | Custom display text for the column header |
 
-**Note**: If you specify `width` or `height` on a cell address like `D3`, it will be ignored.
+**Note**: `width`, `height`, and `label` are header-only properties. Specifying them on data cell keys like `A`, `1`, or `D3` has no effect. Furthermore, they will not work on the generic `default` key.
 
 ### Cell Configuration
 
@@ -89,14 +121,41 @@ Each cell can be configured with the following properties:
 | `label` | `string` | Fixed custom display text for column headers (columns only). Takes precedence over `labeler` if both are specified. |
 | `width` | `Width` | Cell width in pixels |
 | `height` | `Height` | Cell height in pixels |
-| `policy` | `string` | Key of a policy registered in the hub |
+| `policy` | `string` | Key of a policy registered in the book |
 | `custom` | `Custom` | Custom data for the cell. You can store any arbitrary data here for your application's needs |
 | `formulaEnabled` | `boolean` | Enable formula evaluation for this cell (default: `true`) |
 | `prevention` | `OperationType` | Operation restrictions for the cell |
+| `sortFixed` | `boolean` | Row header only. Prevents this row from being reordered during sort operations |
+| `filterFixed` | `boolean` | Row header only. Prevents this row from being hidden during filter operations |
 
 **Important Notes:**
 - **Serialization**: Cell values (except `system` field) are designed to be serializable. Avoid storing non-serializable objects like class instances.
 - **System Field**: The `system` field contains values used by the system to display correct values. Do not modify this field manually.
+
+### Fixed Rows (`sortFixed` / `filterFixed`)
+
+`sortFixed` and `filterFixed` are row-level flags that keep specific rows anchored when the user sorts or filters the sheet. They are set on the **row header cell**, addressed as `'0<row>'` (column 0, the row header column).
+
+```tsx
+import { rh } from '@gridsheet/react-core';
+
+buildInitialCells({
+  cells: {
+    B6: { value: 'Total' },
+    C6: { value: '=SUM(C1:C5)' },
+    '6': { style: { borderTop: '3px double #555' } },
+    // Row 6 header cell — fix during sort and filter
+    [rh(6)]: { sortFixed: true, filterFixed: true },
+  },
+})
+```
+
+| Flag | Effect |
+|------|--------|
+| `sortFixed` | The row stays in its original position when any column is sorted. Other rows move around it. |
+| `filterFixed` | The row is never hidden regardless of active filter conditions. |
+
+Rows with `filterFixed` show a **‹** prefix and rows with `sortFixed` show a **›** suffix in their row header, rendered automatically via CSS `::before`/`::after` pseudo-elements.
 
 ### Prevention Flags
 
@@ -152,18 +211,20 @@ import { operations } from '@gridsheet/react-core';
 ### Example Usage
 
 ```tsx
+import { ch, rh } from '@gridsheet/react-core';
+
 const initialCells = {
   // Default configuration for all cells
   default: { 
-    width: 100, 
-    height: 30,
     style: { fontSize: '14px' }
   },
+  defaultCol: { width: 100 },
+  defaultRow: { height: 30 },
   
   // Header configuration
   '0': { 
-    height: 60,  // Header height
-    width: 80,   // Header width
+    height: 60,  // Header row height
+    width: 80,   // Header column width
   },
   
   // Individual cell configuration
@@ -171,26 +232,31 @@ const initialCells = {
   'B2': { value: 100, policy: 'currency' },
   'C3': { value: 'Active', policy: 'status' },
   
-  // Column configuration
-  'A': { width: 150 },
-  'B': { width: 200 },
+  // Column header configuration (width, label only affect headers)
+  [ch('A')]: { width: 150, label: 'Name' }, // A0
+  [ch(2)]: { width: 200, label: 'Value' }, // B0
   
-  // Row configuration
-  '1': { height: 40 },
-  '2': { height: 50 },
+  // Style for all data cells in column A
+  'A': { style: { backgroundColor: '#f9f9f9' } },
+
+  // Row header configuration
+  [rh(1)]: { height: 40 }, // 01
+  [rh(2)]: { height: 50 }, // 02
 };
 
 <GridSheet initialCells={initialCells} />
 ```
 
-### Hub-Registered Components
+### Book-Registered Components
 
-The `policy` property references a `Policy` instance registered in the hub by its string key. A `Policy` unifies rendering, parsing, serialization, and header-label logic.
+The `policy` property references a `Policy` instance registered in the book by its string key. A `Policy` unifies rendering, parsing, serialization, and header-label logic.
 
 ### Example Usage
 
 ```tsx
-const hub = useHub({
+import { useBook } from '@gridsheet/react-core';
+
+const book = useBook({
   policies: {
     currency: new Policy({ mixins: [CurrencyPolicyMixin] }),
     status: new Policy({ mixins: [StatusPolicyMixin] }),
@@ -201,12 +267,12 @@ const hub = useHub({
 {
   'A1': {
     value: 1000,
-    policy: 'currency',    // References hub.policies.currency
+    policy: 'currency',
     style: { backgroundColor: '#f0f9ff' },
   },
   'B1': {
     value: 'Active',
-    policy: 'status',      // References hub.policies.status
+    policy: 'status',
   },
 }
 ```
@@ -215,15 +281,104 @@ const hub = useHub({
 
 ## Sheet Name
 
-A unique identifier for the sheet that enables cross-sheet references and communication. When multiple sheets share a hub, the sheet name is used to distinguish between them for formula calculations and data sharing.
+A unique identifier for the sheet that enables cross-sheet references and communication. When multiple sheets share a book, the sheet name is used to distinguish between them for formula calculations and data sharing.
 
-## Hub
+## sheetRef / storeRef
 
-The hub enables communication between multiple GridSheet instances. Use the `useHub` hook to create a shared hub that allows sheets to reference each other's data in formulas.
+`sheetRef` and `storeRef` are refs that give you programmatic access to the sheet and store from outside the GridSheet component.
 
-### Hub Configuration
+### Types
 
-The `useHub` hook accepts configuration options that are shared across all sheets using the same hub:
+```ts
+type SheetHandle = {
+  sheet: UserSheet;
+  apply: (sheet: UserSheet) => void;
+};
+
+type StoreHandle = {
+  store: StoreType;
+  apply: (store: StoreType) => void;
+  dispatch: Dispatcher;
+};
+```
+
+### Creating refs
+
+Use the provided hooks (inside a component) or factory functions (outside):
+
+```ts
+import { useSheetRef, useStoreRef, createSheetRef, createStoreRef } from '@gridsheet/react-core';
+
+// Inside a component
+const sheetRef = useSheetRef();
+const storeRef = useStoreRef();
+
+// Outside a component (e.g. in a class or module)
+const sheetRef = createSheetRef();
+const storeRef = createStoreRef();
+```
+
+### sheetRef — programmatic sheet updates
+
+Use `sheetRef` when you need to read or mutate the sheet data from outside the component:
+
+```tsx
+const sheetRef = useSheetRef();
+
+const handleUpdate = () => {
+  if (!sheetRef.current) return;
+  const { sheet, apply } = sheetRef.current;
+  apply(sheet.update({ diff: { A1: { value: 'Hello' } } }));
+};
+
+<GridSheet sheetRef={sheetRef} initialCells={...} />
+```
+
+### storeRef — store access and applyers
+
+Use `storeRef` when you need to trigger UI-level operations (insert/remove rows, undo/redo, etc.) via `applyers`.
+
+`StoreHandle` has the same shape as `StoreDispatchType`, so you can pass `storeRef.current` directly to any `applyers` function:
+
+```tsx
+import { useStoreRef, applyers } from '@gridsheet/react-core';
+
+const storeRef = useStoreRef();
+
+const handleInsert = () => {
+  if (!storeRef.current) return;
+  applyers.insertRowsAbove(storeRef.current); // pass directly — no destructuring needed
+};
+
+<GridSheet storeRef={storeRef} initialCells={...} />
+```
+
+`storeRef.current.dispatch` is the raw Redux-style dispatcher. `applyers` functions need it because they fire multiple distinct actions internally (not just a single store patch). The `sync` shortcut on `StoreHandle` only covers simple store patches via `setStore`.
+
+### Using both refs together
+
+You can pass both at the same time:
+
+```tsx
+const sheetRef = useSheetRef();
+const storeRef = useStoreRef();
+
+<GridSheet sheetRef={sheetRef} storeRef={storeRef} initialCells={...} />
+```
+
+## Book
+
+The book enables communication between multiple GridSheet instances. Use the `useBook` hook to create a shared book that allows sheets to reference each other's data in formulas.
+
+```tsx
+import { useBook } from '@gridsheet/react-core';
+// or, to include all extended formula functions:
+import { useSpellbook } from '@gridsheet/functions';
+```
+
+### Book Configuration
+
+The `useBook` hook accepts configuration options that are shared across all sheets using the same book:
 
 | Option | Type | Description |
 |--------|------|-------------|
@@ -232,41 +387,40 @@ The `useHub` hook accepts configuration options that are shared across all sheet
 | `policies` | `{ [policyName: string]: PolicyType }` | Custom cell policies |
 | `onSave` | `FeedbackType` | Callback when cell data is saved |
 | `onChange` | `FeedbackType` | Callback when cell data changes |
-| `onEdit` | `(args: { table: UserTable }) => void` | Callback when cell is being edited |
-| `onRemoveRows` | `(args: { table: UserTable; ys: number[] }) => void` | Callback when rows are removed from the spreadsheet |
-| `onRemoveCols` | `(args: { table: UserTable; xs: number[] }) => void` | Callback when columns are removed from the spreadsheet |
-| `onInsertRows` | `(args: { table: UserTable; y: number; numRows: number }) => void` | Callback when rows are inserted into the spreadsheet |
-| `onInsertCols` | `(args: { table: UserTable; x: number; numCols: number }) => void` | Callback when columns are inserted into the spreadsheet |
+| `onRemoveRows` | `(args: { sheet: UserSheet; ys: number[] }) => void` | Callback when rows are removed from the spreadsheet |
+| `onRemoveCols` | `(args: { sheet: UserSheet; xs: number[] }) => void` | Callback when columns are removed from the spreadsheet |
+| `onInsertRows` | `(args: { sheet: UserSheet; y: number; numRows: number }) => void` | Callback when rows are inserted into the spreadsheet |
+| `onInsertCols` | `(args: { sheet: UserSheet; x: number; numCols: number }) => void` | Callback when columns are inserted into the spreadsheet |
 | `onSelect` | `FeedbackType` | Callback when cell selection changes |
-| `onKeyUp` | `(args: { e: EditorEvent, points: CursorStateType }) => void` | Callback when a key is pressed in the cell editor |
-| `onInit` | `(args: { table: UserTable }) => void` | Callback when the table is initialized |
+| `onKeyUp` | `(args: { e: EditorEvent; points: CursorStateType }) => void` | Callback when a key is pressed in the cell editor |
+| `onInit` | `(args: { sheet: UserSheet }) => void` | Callback when the sheet is initialized |
 
-### Event Handler Table Identification
+### Event Handler Sheet Identification
 
-When multiple sheets share the same hub, event handlers receive a `table` parameter that contains the `UserTable` instance. You can use `table.sheetName` to identify which sheet triggered the event:
+When multiple sheets share the same book, event handlers receive a `sheet` parameter that contains the `UserSheet` instance. You can use `sheet.name` to identify which sheet triggered the event:
 
 ```tsx
-const hub = useHub({
-  onChange: ({ table, points }) => {
-    if (table.sheetName === 'Sales') {
+const book = useBook({
+  onChange: ({ sheet, points }) => {
+    if (sheet.name === 'Sales') {
       console.log('Sales sheet data changed:', points);
-    } else if (table.sheetName === 'Inventory') {
+    } else if (sheet.name === 'Inventory') {
       console.log('Inventory sheet data changed:', points);
     }
   },
-  onRemoveRows: ({ table, ys }) => {
-    console.log(`Rows removed from ${table.sheetName}:`, ys);
+  onRemoveRows: ({ sheet, ys }) => {
+    console.log(`Rows removed from ${sheet.name}:`, ys);
   },
-  onInsertCols: ({ table, x, numCols }) => {
-    console.log(`Inserted ${numCols} columns at position ${x} in ${table.sheetName}`);
+  onInsertCols: ({ sheet, x, numCols }) => {
+    console.log(`Inserted ${numCols} columns at position ${x} in ${sheet.name}`);
   },
   onKeyUp: ({ e, points }) => {
     console.log(`Key pressed: ${e.key} at position:`, points);
   },
-  onInit: ({ table }) => {
-    console.log(`Table initialized: ${table.sheetName}`);
+  onInit: ({ sheet }) => {
+    console.log(`Sheet initialized: ${sheet.name}`);
   },
 });
 ```
 
-**Important**: Always use `table.sheetName` for conditional logic when multiple sheets share the same hub to ensure proper event handling and data management.
+**Important**: Always use `sheet.name` for conditional logic when multiple sheets share the same book to ensure proper event handling and data management.

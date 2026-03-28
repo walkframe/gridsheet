@@ -29,9 +29,9 @@ const storeRef = useStoreRef();
 <GridSheet tableRef={tableRef} storeRef={storeRef} initialCells={initialCells} />
 
 // Access table
-const { table, sync } = tableRef.current;
+const { table, apply } = tableRef.current;
 // Access store
-const { store, sync } = storeRef.current;
+const { store, apply } = storeRef.current;
 ```
 
 **After (v2.x):**
@@ -44,11 +44,11 @@ const connector = useConnector();
 
 // Access table manager
 const { tableManager } = connector.current;
-const { table, sync } = tableManager;
+const { table, apply } = tableManager;
 
 // Access store manager
 const { storeManager } = connector.current;
-const { store, sync } = storeManager;
+const { store, apply } = storeManager;
 ```
 
 ### 2. Hook Unification
@@ -71,11 +71,11 @@ const connector = useConnector();
 
 // Access table manager
 const { tableManager } = connector.current;
-const { table, sync } = tableManager;
+const { table, apply } = tableManager;
 
 // Access store manager
 const { storeManager } = connector.current;
-const { store, sync } = storeManager;
+const { store, apply } = storeManager;
 ```
 
 ### Hook and Function Renaming
@@ -231,14 +231,14 @@ type GetProps = {
 **Usage Examples:**
 ```tsx
 // Before (1.x)
-table.getCellByPoint({ y: 1, x: 1 }, { evaluates: true });
-table.getCellByPoint({ y: 1, x: 1 }, { evaluates: false });
-table.getCellByPoint({ y: 1, x: 1 }, { evaluates: null });
+table.getCell({ y: 1, x: 1 }, { evaluates: true });
+table.getCell({ y: 1, x: 1 }, { evaluates: false });
+table.getCell({ y: 1, x: 1 }, { evaluates: null });
 
 // After (2.x)
-table.getCellByPoint({ y: 1, x: 1 }, { refEvaluation: 'COMPLETE' });
-table.getCellByPoint({ y: 1, x: 1 }, { refEvaluation: 'RAW' });
-table.getCellByPoint({ y: 1, x: 1 }, { refEvaluation: 'SYSTEM' });
+table.getCell({ y: 1, x: 1 }, { refEvaluation: 'COMPLETE' });
+table.getCell({ y: 1, x: 1 }, { refEvaluation: 'RAW' });
+table.getCell({ y: 1, x: 1 }, { refEvaluation: 'SYSTEM' });
 ```
 
 **RefEvaluation Values:**
@@ -375,11 +375,11 @@ function MyComponent() {
   const handleUpdate = () => {
     const { tableManager } = connector.current;
     if (tableManager) {
-      const { table, sync } = tableManager;
+      const { table, apply } = tableManager;
       table.update({
         diff: { 'A1': { value: 'Updated' } }
       });
-      sync(table);
+      apply(table);
     }
   };
 }
@@ -599,11 +599,11 @@ const connector = useConnector();
 
 // Access table manager
 const { tableManager } = connector.current;
-const { table, sync } = tableManager;
+const { table, apply } = tableManager;
 
 // Access store manager
 const { storeManager } = connector.current;
-const { store, sync } = storeManager;
+const { store, apply } = storeManager;
 ```
 
 ### Step 3: Migrate Renderers
@@ -757,12 +757,12 @@ Update any usage of the `GetProps` type to use the new `refEvaluation` property:
 
 ```tsx
 // Before (1.x)
-table.getCellByPoint({ y: 1, x: 1 }, { evaluates: true });
-table.getCellByPoint({ y: 1, x: 1 }, { evaluates: false });
+table.getCell({ y: 1, x: 1 }, { evaluates: true });
+table.getCell({ y: 1, x: 1 }, { evaluates: false });
 
 // After (2.x)
-table.getCellByPoint({ y: 1, x: 1 }, { refEvaluation: 'COMPLETE' });
-table.getCellByPoint({ y: 1, x: 1 }, { refEvaluation: 'RAW' });
+table.getCell({ y: 1, x: 1 }, { refEvaluation: 'COMPLETE' });
+table.getCell({ y: 1, x: 1 }, { refEvaluation: 'RAW' });
 ```
 
 ### Step 10: Update Connector Function Calls
@@ -780,8 +780,8 @@ if (tableRef.current) {
 // After (2.x)
 const { tableManager } = connector.current;
 if (tableManager) {
-  const { table, sync } = tableManager;
+  const { table, apply } = tableManager;
   table.update({ diff: { 'A1': { value: 'New' } } });
-  sync(table);
+  apply(table);
 }
 ```

@@ -3,7 +3,7 @@ import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-
 import { ensureNumber } from '@gridsheet/react-core';
 import type { FunctionCategory } from '@gridsheet/react-core';
 
-const description = `Converts a number to a character according to the current Unicode table.`;
+const description = `Converts a number to a character according to the current Unicode sheet.`;
 
 export class CharFunction extends BaseFunction {
   example = 'CHAR(65)';

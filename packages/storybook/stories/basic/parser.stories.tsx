@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { CellType, buildInitialCells, GridSheet, Policy, RenderProps, useHub } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { CellType, buildInitialCells, GridSheet, Policy, RenderProps } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 import { Debugger } from '@gridsheet/react-dev';
 
 const meta: Meta = {
@@ -16,8 +16,7 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const ParseAsListSheet = () => {
-  const hub = useHub({
-    additionalFunctions: allFunctions,
+  const book = useSpellbook({
     policies: {
       list: new Policy({
         mixins: [
@@ -46,7 +45,7 @@ const ParseAsListSheet = () => {
   return (
     <>
       <GridSheet
-        hub={hub}
+        book={book}
         initialCells={buildInitialCells({
           matrices: {
             A1: [
@@ -69,14 +68,14 @@ const ParseAsListSheet = () => {
           },
           cells: {
             default: {
-              height: 100,
               policy: 'list',
             },
+            defaultRow: { height: 100 },
           },
           ensured: { numRows: 30, numCols: 20 },
         })}
       />
-      <Debugger hub={hub} />
+      <Debugger book={book} />
     </>
   );
 };

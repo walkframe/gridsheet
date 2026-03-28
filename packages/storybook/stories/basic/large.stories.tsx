@@ -1,8 +1,9 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import ReactMarkdown from 'react-markdown';
-import { buildInitialCells, GridSheet, useHub, Policy } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { buildInitialCells, GridSheet, Policy } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
+import { Debugger } from '@gridsheet/react-dev';
 
 const meta: Meta = {
   title: 'Basic/Large',
@@ -39,8 +40,7 @@ const LargeSheet = () => {
   const rawPolicy = new Policy({
     mixins: [{ renderColHeaderLabel: (n) => String(n), renderRowHeaderLabel: (n) => String(n) }],
   });
-  const hub = useHub({
-    additionalFunctions: allFunctions,
+  const book = useSpellbook({
     policies: { raw: rawPolicy },
   });
 
@@ -55,44 +55,22 @@ const LargeSheet = () => {
       </div>
 
       <GridSheet
-        hub={hub}
+        book={book}
         initialCells={buildInitialCells({
           matrices: {
             A1: largeData,
           },
           cells: {
-            default: {
-              width: 120,
-              height: 24,
-              policy: 'raw',
-            },
-            A: { width: 60, label: 'ID' },
-            B: { width: 150, label: 'Name' },
-            C: {
-              width: 100,
-              label: 'Date',
-              style: { backgroundColor: '#f8f9fa' },
-            },
-            D: {
-              width: 80,
-              label: 'Status',
-              style: { backgroundColor: '#e8f5e8' },
-            },
-            E: {
-              width: 60,
-              label: 'Category',
-              style: { backgroundColor: '#fff3cd' },
-            },
-            F: {
-              width: 60,
-              label: 'Score',
-              style: { backgroundColor: '#f8d7da' },
-            },
-            G: {
-              width: 200,
-              label: 'Notes',
-              style: { backgroundColor: '#f8f9fa' },
-            },
+            defaultCol: { width: 120 },
+            defaultRow: { height: 24 },
+            default: { policy: 'raw' },
+            A0: { width: 60, label: 'ID' },
+            B0: { width: 150, label: 'Name' },
+            C0: { width: 100, label: 'Date' },
+            D0: { width: 80, label: 'Status' },
+            E0: { width: 60, label: 'Category' },
+            F0: { width: 60, label: 'Score' },
+            G0: { width: 200, label: 'Notes' },
           },
           ensured: { numRows: 2000, numCols: 100 },
         })}
@@ -102,6 +80,10 @@ const LargeSheet = () => {
           sheetResize: 'both',
         }}
       />
+      <style>{`
+        .gs-row-odd .gs-cell { background-color: #ffffff; }
+        .gs-row-even .gs-cell { background-color: #f0f4f8; }
+      `}</style>
     </>
   );
 };

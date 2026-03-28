@@ -13,12 +13,13 @@ import { virtualize } from '../lib/virtualization';
 import { p2a, stripAddressAbsolute } from '../lib/coords';
 import { Lexer, stripSheetName } from '../formula/evaluator';
 import { ScrollHandle } from './ScrollHandle';
+import { preventSafariBounce } from '../lib/dom';
 
 export const Tabular = () => {
   const [palette, setPalette] = useState<RefPaletteType>({});
   const { store, dispatch } = useContext(Context);
   const {
-    tableReactive,
+    sheetReactive,
     choosing,
     editingAddress,
     tabularRef,
@@ -28,9 +29,9 @@ export const Tabular = () => {
     inputting,
     leftHeaderSelecting,
     topHeaderSelecting,
-    contextMenuItems,
+    contextMenu,
   } = store;
-  const table = tableReactive.current;
+  const sheet = sheetReactive.current;
 
   const [virtualized, setVirtualized] = useState<Virtualization | null>(null);
 
@@ -41,15 +42,15 @@ export const Tabular = () => {
 
   const handleScroll = useCallback(
     (e: React.UIEvent<HTMLDivElement>) => {
-      if (table) {
-        setVirtualized(virtualize(table, e.currentTarget));
+      if (sheet) {
+        setVirtualized(virtualize(sheet, e.currentTarget));
       }
     },
-    [tableReactive],
+    [sheetReactive],
   );
 
   const handleSelectAllClick = useCallback(() => {
-    if (!table) {
+    if (!sheet) {
       return;
     }
     dispatch(choose({ y: -1, x: -1 }));
@@ -59,21 +60,21 @@ export const Tabular = () => {
         select({
           startY: 1,
           startX: 1,
-          endY: table.getNumRows(),
-          endX: table.getNumCols(),
+          endY: sheet.numRows,
+          endX: sheet.numCols,
         }),
       );
     });
-  }, [tableReactive]);
+  }, [sheetReactive]);
 
   useEffect(() => {
-    if (!table) {
+    if (!sheet) {
       return;
     }
     const formulaEditing = editingAddress && inputting.startsWith('=');
     if (!formulaEditing) {
       setPalette({});
-      table.wire.paletteBySheetName = {};
+      sheet.registry.paletteBySheetName = {};
       return;
     }
     const palette: RefPaletteType = {};
@@ -106,30 +107,38 @@ export const Tabular = () => {
       }
     }
     setPalette(palette);
-    table.wire.paletteBySheetName = paletteBySheetName;
-  }, [store.inputting, store.editingAddress, tableReactive]);
+    sheet.registry.paletteBySheetName = paletteBySheetName;
+  }, [store.inputting, store.editingAddress, sheetReactive]);
 
   useEffect(() => {
-    if (!table) {
+    if (!sheet) {
       return;
     }
-    table.wire.choosingAddress = p2a(choosing);
-    table.wire.choosingSheetId = table.sheetId;
+    sheet.registry.choosingAddress = p2a(choosing);
+    sheet.registry.choosingSheetId = sheet.id;
   }, [choosing]);
 
   useEffect(() => {
-    if (!table) {
+    if (!sheet) {
       return;
     }
-    setVirtualized(virtualize(table, tabularRef.current));
-  }, [tabularRef.current, tableReactive, mainRef.current?.clientHeight, mainRef.current?.clientWidth]);
+    setVirtualized(virtualize(sheet, tabularRef.current));
+  }, [tabularRef.current, sheetReactive, mainRef.current?.clientHeight, mainRef.current?.clientWidth]);
+
+  useEffect(() => {
+    const el = tabularRef.current;
+    if (!el) {
+      return;
+    }
+    return preventSafariBounce(el);
+  }, [sheetReactive]);
 
   const mergedRefs: RefPaletteType = {
     ...palette,
-    ...(table ? table.wire.paletteBySheetName[table.sheetName] : {}),
+    ...(sheet ? sheet.registry.paletteBySheetName[sheet.name] : {}),
   };
 
-  if (!table || !table.wire.ready) {
+  if (!sheet || !sheet.registry.ready) {
     return null;
   }
 
@@ -148,17 +157,17 @@ export const Tabular = () => {
         <div
           className={'gs-tabular-inner'}
           style={{
-            width: table.totalWidth + 1,
-            height: table.totalHeight + 1,
+            width: sheet.totalWidth + 1,
+            height: sheet.totalHeight + 1,
           }}
         >
           <CellStateOverlay refs={mergedRefs} />
           <table className={`gs-table`}>
-            <thead className="gs-thead" style={{ height: table.headerHeight }}>
+            <thead className="gs-thead" style={{ height: sheet.headerHeight }}>
               <tr className="gs-row">
                 <th
                   className="gs-th gs-th-left gs-th-top"
-                  style={{ position: 'sticky', width: table.headerWidth, height: table.headerHeight }}
+                  style={{ position: 'sticky', width: sheet.headerWidth, height: sheet.headerHeight }}
                   onClick={handleSelectAllClick}
                 >
                   <div className="gs-th-inner">
@@ -168,7 +177,7 @@ export const Tabular = () => {
                       horizontal={leftHeaderSelecting ? 0 : -1}
                       vertical={topHeaderSelecting ? 0 : -1}
                     />
-                    {contextMenuItems.length > 0 && (
+                    {contextMenu.length > 0 && (
                       <button
                         className="gs-menu-btn gs-corner-menu-btn"
                         title="Menu"
@@ -208,7 +217,7 @@ export const Tabular = () => {
               </tr>
             </thead>
 
-            <tbody className="gs-table-body-adjuster">
+            <tbody className="gs-sheet-body-adjuster">
               <tr className="gs-row">
                 <th
                   className={`gs-adjuster gs-adjuster-horizontal gs-adjuster-vertical`}
@@ -220,10 +229,10 @@ export const Tabular = () => {
               </tr>
             </tbody>
 
-            <tbody className="gs-table-body-data">
+            <tbody className="gs-sheet-body-data">
               {virtualized?.ys?.map((y) => {
                 return (
-                  <tr key={y} className="gs-row">
+                  <tr key={y} className={`gs-row ${y % 2 === 0 ? 'gs-row-even' : 'gs-row-odd'}`}>
                     <HeaderCellLeft y={y} />
                     <td className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-left" />
                     {virtualized?.xs?.map((x) => <Cell key={x} y={y} x={x} />)}

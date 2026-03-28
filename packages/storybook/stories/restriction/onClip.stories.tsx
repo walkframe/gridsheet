@@ -1,7 +1,7 @@
 import React, { type CSSProperties } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, Policy, buildInitialCells, useHub } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { GridSheet, Policy, buildInitialCells } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Restriction/SerializeForClipboard',
@@ -32,15 +32,14 @@ const SerializeForClipboardComponent: React.FC = () => {
           }
           return `${value.substring(0, 1)}${'*'.repeat(value.substring(1).length)}`;
         },
-        serializeForClipboard({ point, table }) {
-          const s = table.stringify({ point }) ?? '';
+        serializeForClipboard({ point, sheet }) {
+          const s = sheet.getSerializedValue({ point }) ?? '';
           return '*'.repeat(s.length);
         },
       },
     ],
   });
-  const hub = useHub({
-    additionalFunctions: allFunctions,
+  const book = useSpellbook({
     policies: {
       mask: maskPolicy,
     },
@@ -48,7 +47,7 @@ const SerializeForClipboardComponent: React.FC = () => {
 
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       options={{
         showFormulaBar: false,
       }}

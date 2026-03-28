@@ -1,4 +1,4 @@
-import { useContext, useRef, useCallback, useEffect, memo, useMemo } from 'react';
+import { useContext, useRef, useCallback, useEffect, memo, useMemo, useState } from 'react';
 import { x2c, y2r } from '../lib/coords';
 import { zoneToArea, among, areaToRange } from '../lib/spatial';
 import {
@@ -23,7 +23,8 @@ import { focus } from '../lib/dom';
 import { isXSheetFocused } from '../store/helpers';
 import type { FC, RefObject } from 'react';
 import { isTouching, safePreventDefault } from '../lib/events';
-import type { UserTable } from '../lib/table';
+import type { UserSheet } from '../lib/sheet';
+import { calcBelowPosition, hAlignTransform, type PopupPosition } from '../lib/popup';
 
 type Props = {
   y: number;
@@ -38,24 +39,24 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
   const isFirstPointed = useRef(true);
 
   const cellRef = useRef<HTMLTableCellElement>(null);
+  const [errorTooltipPos, setErrorTooltipPos] = useState<PopupPosition | null>(null);
   const {
-    tableReactive,
+    sheetReactive,
     editingAddress,
     choosing,
     selectingZone,
     leftHeaderSelecting,
     topHeaderSelecting,
     editorRef,
-    showAddress,
     autofillDraggingTo,
-    contextMenuItems,
+    contextMenu,
   } = store;
-  const table = tableReactive.current;
+  const sheet = sheetReactive.current;
 
   // Whether the focus is on another sheet
   const xSheetFocused = isXSheetFocused(store);
 
-  const lastFocused = table?.wire.lastFocused;
+  const lastFocused = sheet?.registry.lastFocused;
 
   const selectingArea = zoneToArea(selectingZone); // (top, left) -> (bottom, right)
 
@@ -74,7 +75,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
         width: rect.width,
       }),
     );
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     // Avoid setting coordinates on the initial render to account for shifts caused by redrawing due to virtualization.
@@ -83,25 +84,30 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
       return;
     }
     isFirstPointed.current = false;
-  }, [pointed, editing]);
+  }, [pointed, editing, _setEditorRect]);
 
-  if (!table) {
-    return null;
-  }
+  const cell = sheet?.getCell({ y, x }, { resolution: 'SYSTEM' });
 
-  const cell = table.getCellByPoint({ y, x }, 'SYSTEM');
-  const writeCell = useCallback((value: string) => {
-    dispatch(write({ value }));
-  }, []);
+  const writeCell = useCallback(
+    (value: string) => {
+      dispatch(write({ value }));
+    },
+    [dispatch],
+  );
 
-  const sync = useCallback((table: UserTable) => {
-    dispatch(setStore({ tableReactive: { current: table.__raw__ } }));
-  }, []);
+  const apply = useCallback(
+    (sheet: UserSheet) => {
+      dispatch(setStore({ sheetReactive: { current: sheet.__raw__ } }));
+    },
+    [dispatch],
+  );
 
   let errorMessage = '';
   let rendered: any;
   try {
-    rendered = table.render({ table, point: { y, x }, sync });
+    if (sheet) {
+      rendered = sheet.render({ sheet, point: { y, x }, apply, value: undefined });
+    }
   } catch (e: any) {
     if (FormulaError.is(e)) {
       errorMessage = e.message;
@@ -111,17 +117,20 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
       rendered = '#UNKNOWN';
     }
   }
-  const [, v] = table.getSolvedCache({ y, x });
+  const [, v] = sheet?.getSolvedCache({ y, x }) ?? [undefined, undefined];
   const isPendingCell = Pending.is(v);
   const input = editorRef.current;
 
-  const editingAnywhere = !!(table.wire.editingAddress || editingAddress);
+  const editingAnywhere = !!(sheet?.registry.editingAddress || editingAddress);
 
   const handleDragStart = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
       e.stopPropagation();
       safePreventDefault(e);
 
+      if (!sheet) {
+        return false;
+      }
       if (!isTouching(e)) {
         return false;
       }
@@ -148,7 +157,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
       }
 
       dispatch(setDragging(true));
-      const fullAddress = `${table.sheetPrefix(!xSheetFocused)}${address}`;
+      const fullAddress = `${sheet.sheetPrefix(!xSheetFocused)}${address}`;
       if (editingAnywhere) {
         const inserted = insertRef({ input: lastFocused || null, ref: fullAddress });
         if (inserted) {
@@ -156,7 +165,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
         }
       }
 
-      table.wire.lastFocused = input;
+      sheet.registry.lastFocused = input;
       focus(input);
       dispatch(setEditingAddress(''));
 
@@ -172,7 +181,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
       }
       return true;
     },
-    [editingAnywhere, input, address, xSheetFocused, lastFocused, autofillDraggingTo, writeCell],
+    [editingAnywhere, input, address, xSheetFocused, lastFocused, autofillDraggingTo, writeCell, sheet],
   );
 
   const handleDragEnd = useCallback(
@@ -207,6 +216,10 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
         return false;
       }
 
+      if (!sheet) {
+        return false;
+      }
+
       safePreventDefault(e);
       e.stopPropagation();
 
@@ -215,11 +228,11 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
         return false;
       }
       if (leftHeaderSelecting) {
-        dispatch(drag({ y, x: table.getNumCols() }));
+        dispatch(drag({ y, x: sheet.numCols }));
         return false;
       }
       if (topHeaderSelecting) {
-        dispatch(drag({ y: table.getNumRows(), x }));
+        dispatch(drag({ y: sheet.numRows, x }));
         return false;
       }
       if (editingAnywhere && !isRefInsertable(lastFocused || null)) {
@@ -229,17 +242,17 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
 
       if (editingAnywhere) {
         const newArea = zoneToArea({ ...selectingZone, endY: y, endX: x });
-        const fullRange = `${table.sheetPrefix(!xSheetFocused)}${areaToRange(newArea)}`;
+        const fullRange = `${sheet.sheetPrefix(!xSheetFocused)}${areaToRange(newArea)}`;
         insertRef({ input: lastFocused || null, ref: fullRange });
       }
-      //table.wire.transmit(); // Force drawing because the formula is not reflected in largeInput
+      //sheet.registry.transmit(); // Force drawing because the formula is not reflected in largeInput
       return true;
     },
     [
       autofillDraggingTo,
       leftHeaderSelecting,
       topHeaderSelecting,
-      table,
+      sheet,
       editingAnywhere,
       lastFocused,
       selectingZone,
@@ -247,16 +260,31 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
     ],
   );
 
-  const handleAutofillMouseDown = useCallback((e: React.MouseEvent) => {
-    dispatch(setAutofillDraggingTo({ x, y }));
-    dispatch(setDragging(true));
-    e.stopPropagation();
+  const handleAutofillMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      dispatch(setAutofillDraggingTo({ x, y }));
+      dispatch(setDragging(true));
+      e.stopPropagation();
+    },
+    [dispatch, x, y],
+  );
+
+  const handleErrorTriangleEnter = useCallback(() => {
+    const rect = cellRef.current?.getBoundingClientRect();
+    if (!rect) {
+      return;
+    }
+    setErrorTooltipPos(calcBelowPosition(rect));
+  }, []);
+
+  const handleErrorTriangleLeave = useCallback(() => {
+    setErrorTooltipPos(null);
   }, []);
 
   // --- Memoize event handlers with useCallback ---
   const onContextMenu = useCallback(
     (e: React.MouseEvent<HTMLTableCellElement>) => {
-      if (contextMenuItems.length > 0) {
+      if (contextMenu.length > 0) {
         e.stopPropagation();
         safePreventDefault(e);
         dispatch(setContextMenuPosition({ y: e.clientY, x: e.clientX }));
@@ -264,7 +292,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
       }
       return true;
     },
-    [contextMenuItems.length],
+    [contextMenu.length],
   );
 
   const onDoubleClick = useCallback(
@@ -290,6 +318,10 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
     }
     return 'gs-autofill-drag gs-hidden';
   }, [editing, pointed, selectingArea]);
+
+  if (!sheet) {
+    return null;
+  }
 
   if (!input) {
     return (
@@ -335,10 +367,27 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
             alignItems: cell?.alignItems || 'start',
           }}
         >
-          {errorMessage && <div className="gs-formula-error-triangle" title={errorMessage} />}
-          {showAddress && <div className="gs-cell-label">{address}</div>}
+          {errorMessage && (
+            <div
+              className="gs-formula-error-triangle"
+              onMouseEnter={handleErrorTriangleEnter}
+              onMouseLeave={handleErrorTriangleLeave}
+            />
+          )}
           <div className="gs-cell-rendered">{rendered}</div>
         </div>
+        {errorMessage && errorTooltipPos && (
+          <div
+            className="gs-formula-error-tooltip"
+            style={{
+              top: errorTooltipPos.y + 4,
+              left: errorTooltipPos.x,
+              transform: hAlignTransform(errorTooltipPos.hAlign),
+            }}
+          >
+            {errorMessage}
+          </div>
+        )}
         <div className={autofillDragClass} onMouseDown={handleAutofillMouseDown}></div>
       </div>
     </td>

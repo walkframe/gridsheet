@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, Time, useHub, Policy } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { buildInitialCells, GridSheet, Time, Policy } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Basic/Simple',
@@ -18,19 +18,19 @@ const SimpleSheet = () => {
   const rawPolicy = new Policy({
     mixins: [{ renderColHeaderLabel: (n) => String(n), renderRowHeaderLabel: (n) => String(n) }],
   });
-  const hub = useHub({
-    additionalFunctions: allFunctions,
+  const book = useSpellbook({
     policies: { raw: rawPolicy },
   });
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       options={{
         sheetResize: 'both',
       }}
       initialCells={buildInitialCells({
         cells: {
-          default: { width: 150, policy: 'raw' },
+          defaultCol: { width: 150 },
+          default: { policy: 'raw' },
           A1: {
             value: 'A1',
           },

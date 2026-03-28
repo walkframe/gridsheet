@@ -5,7 +5,7 @@ const makeThousandSeparatorMixin = (sep: string): PolicyMixinType => ({
     if (value == null || isNaN(value)) {
       return 'NaN';
     }
-    const [int, fraction] = String(value.toPrecision(this.decimalPrecision)).split('.');
+    const [int, fraction] = String(parseFloat(value.toPrecision(this.decimalPrecision))).split('.');
     const result = int.replace(/(\d)(?=(\d\d\d)+(?!\d))/g, `$1${sep}`);
     if (fraction == null) {
       return result;

@@ -7,22 +7,22 @@ import type { Dispatcher } from '../store';
 export type PluginContextType = {
   provided: boolean;
   store?: StoreType;
-  sync?: Dispatcher;
+  apply?: Dispatcher;
   setStore: (store: StoreType) => void;
-  setSync: (sync: Dispatcher) => void;
+  setApply: (apply: Dispatcher) => void;
 };
 
 export const PluginContext = createContext({} as PluginContextType);
 
 export function useInitialPluginContext(): PluginContextType {
   const [store, setStore] = useState<StoreType | undefined>(undefined);
-  const [sync, setSync] = useState<Dispatcher>();
+  const [apply, setApply] = useState<Dispatcher>();
   return {
     provided: true,
     store,
-    sync,
+    apply,
     setStore,
-    setSync,
+    setApply,
   };
 }
 

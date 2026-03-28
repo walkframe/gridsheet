@@ -1,74 +1,77 @@
 import type { FC, MutableRefObject } from 'react';
 import { createRef, useContext, useEffect, useRef, useState } from 'react';
 
-import type { OptionsType, Props, Connector } from '../types';
+import type { OptionsType, Props, SheetHandle, StoreHandle } from '../types';
 import { Context } from '../store';
 
-import { setStore, updateTable } from '../store/actions';
+import { setStore, updateSheet } from '../store/actions';
 
 import { usePluginContext } from './PluginBase';
-import { Table } from '../lib/table';
+import { Sheet } from '../lib/sheet';
 
 type StoreObserverProps = OptionsType & {
   sheetName?: string;
-  connector?: MutableRefObject<Connector | null>;
+  sheetRef?: MutableRefObject<SheetHandle | null>;
+  storeRef?: MutableRefObject<StoreHandle | null>;
 };
 
-export const createConnector = () => createRef<Connector | null>();
-export const useConnector = () => useRef<Connector | null>(null);
+export const createSheetRef = () => createRef<SheetHandle | null>();
+export const useSheetRef = () => useRef<SheetHandle | null>(null);
+export const createStoreRef = () => createRef<StoreHandle | null>();
+export const useStoreRef = () => useRef<StoreHandle | null>(null);
 export const StoreObserver: FC<StoreObserverProps> = ({
   sheetName,
   sheetHeight,
   sheetWidth,
-  connector,
+  sheetRef,
+  storeRef,
   editingOnEnter,
-  showAddress,
   mode,
 }) => {
   const { store, dispatch } = useContext(Context);
-  const { tableReactive: tableRef } = store;
-  const table = tableRef.current;
+  const { sheetReactive } = store;
+  const sheet = sheetReactive.current;
 
   useEffect(() => {
-    if (!table) {
+    if (!sheet) {
       return;
     }
-    if (sheetName && sheetName !== table.sheetName) {
-      table.sheetName = sheetName;
-      table.wire.sheetIdsByName[sheetName] = table.sheetId;
-      delete table.wire.sheetIdsByName[table.prevSheetName];
-      table.prevSheetName = sheetName;
-      //hub.transmit();
+    if (sheetName && sheetName !== sheet.name) {
+      sheet.name = sheetName;
+      sheet.registry.sheetIdsByName[sheetName] = sheet.id;
+      delete sheet.registry.sheetIdsByName[sheet.prevName];
+      sheet.prevName = sheetName;
+      //book.transmit();
     }
   }, [sheetName]);
 
   useEffect(() => {
-    if (!table) {
+    if (!sheet) {
       return;
     }
-    const { wire } = table;
-    requestAnimationFrame(() => wire.identifyFormula());
-    wire.contextsBySheetId[table.sheetId] = { store, dispatch };
-    wire.transmit();
+    const { registry } = sheet;
+    requestAnimationFrame(() => registry.boot());
+    registry.contextsBySheetId[sheet.id] = { store, dispatch };
+    registry.transmit();
 
-    if (connector) {
-      connector.current = {
-        tableManager: {
-          table,
-          sync: (table) => {
-            dispatch(updateTable(table as Table));
-          },
-        },
-        storeManager: {
-          store,
-          sync: (store) => {
-            dispatch(setStore(store));
-          },
-          dispatch,
+    if (sheetRef) {
+      sheetRef.current = {
+        sheet,
+        apply: (sheet) => {
+          dispatch(updateSheet(sheet as Sheet));
         },
       };
     }
-  }, [store, table, connector]);
+    if (storeRef) {
+      storeRef.current = {
+        store,
+        apply: (store) => {
+          dispatch(setStore(store));
+        },
+        dispatch,
+      };
+    }
+  }, [store, sheet, sheetRef, storeRef]);
 
   useEffect(() => {
     if (sheetHeight) {
@@ -86,12 +89,6 @@ export const StoreObserver: FC<StoreObserverProps> = ({
     }
   }, [editingOnEnter]);
   useEffect(() => {
-    if (typeof showAddress !== 'undefined') {
-      dispatch(setStore({ showAddress }));
-    }
-  }, [showAddress]);
-
-  useEffect(() => {
     if (mode) {
       dispatch(setStore({ mode }));
     }
@@ -103,7 +100,7 @@ export const StoreObserver: FC<StoreObserverProps> = ({
       return;
     }
     pluginContext.setStore(store);
-    pluginContext.setSync(() => dispatch);
+    pluginContext.setApply(() => dispatch);
   }, [store, pluginProvided, pluginContext]);
 
   return <></>;

@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { buildInitialCells, GridSheet, operations, useHub } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { buildInitialCells, GridSheet, operations } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Restriction/Protection',
@@ -28,10 +28,10 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const PreventionComponent: React.FC = () => {
-  const hub = useHub({ additionalFunctions: allFunctions });
+  const book = useSpellbook();
   return (
     <GridSheet
-      hub={hub}
+      book={book}
       initialCells={buildInitialCells({
         cells: {
           4: {

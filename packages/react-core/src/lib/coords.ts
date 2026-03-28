@@ -81,14 +81,13 @@ export const r2y = (row: number | string, absolute = false) => {
   return absolute ? -row : row;
 };
 
-export const p2a = ({ y, x, absX, absY }: ExtraPointType) => {
-  if (x === 0 && y === 0) {
-    return '0';
-  }
+export const p2a = ({ y, x, absX, absY }: Partial<ExtraPointType>) => {
   if (x === -1 && y === -1) {
     return '?';
   }
-  return `${absX ? '$' : ''}${x2c(x)}${absY ? '$' : ''}${y2r(y)}`;
+  const colPart = x === undefined ? '' : x === 0 ? '0' : `${absX ? '$' : ''}${x2c(x)}`;
+  const rowPart = y === undefined ? '' : y === 0 ? '0' : `${absY ? '$' : ''}${y2r(y)}`;
+  return `${colPart}${rowPart}`;
 };
 
 export const a2p = (address: Address): ExtraPointType => {
@@ -113,6 +112,24 @@ export const grantAddressAbsolute = (address: Address, absCol: boolean, absRow: 
   return `${absCol ? '$' : ''}${col.toUpperCase()}${absRow ? '$' : ''}${row}`;
 };
 
+/**
+ * Returns the row header cell address for a given row number by prepending `0`.
+ * e.g. rh(6) → '06', rh(1) → '01'
+ */
+export const rh = (y: number): string => `0${y}`;
+
+/**
+ * Returns the column header cell address for a given column letter or column index
+ * (1-based, same as point.x) by appending `0`.
+ * e.g. ch('A') → 'A0', ch(1) → 'A0'
+ */
+export const ch = (col: string | number): string =>
+  typeof col === 'number' ? `${x2c(col)}0` : `${col.toUpperCase()}0`;
+
 export const stripAddressAbsolute = (address: Address) => {
   return address.replace(/\$/g, '');
+};
+
+export const buildIdentifiedRef = (id: string, absX = false, absY = false): string => {
+  return `${absX ? '$' : ''}#${id}${absY ? '$' : ''}`;
 };

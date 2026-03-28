@@ -1,14 +1,14 @@
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH, OVERSCAN_X, OVERSCAN_Y } from '../constants';
 import { range, binarySearch, type BinarySearchPredicate } from './spatial';
-import { Table } from './table';
+import { Sheet } from './sheet';
 import type { AreaType, PointType, Virtualization } from '../types';
 
-export const getCellRectPositions = (table: Table, { y, x }: PointType) => {
+export const getCellRectPositions = (sheet: Sheet, { y, x }: PointType) => {
   // Use System.offsetLeft / offsetTop stored on header cells for O(1) lookup
-  const colCell = table.getCellByPoint({ y: 0, x }, 'SYSTEM');
-  const rowCell = table.getCellByPoint({ y, x: 0 }, 'SYSTEM');
-  const left = colCell?._sys?.offsetLeft ?? 0;
-  const top = rowCell?._sys?.offsetTop ?? 0;
+  const colCell = sheet.getCell({ y: 0, x }, { resolution: 'SYSTEM' });
+  const rowCell = sheet.getCell({ y, x: 0 }, { resolution: 'SYSTEM' });
+  const left = sheet.getSystem({ y: 0, x })?.offsetLeft ?? 0;
+  const top = sheet.getSystem({ y, x: 0 })?.offsetTop ?? 0;
   const w = colCell?.width || DEFAULT_WIDTH;
   const h = rowCell?.filtered ? 0 : rowCell?.height || DEFAULT_HEIGHT;
   return {
@@ -31,56 +31,56 @@ export const getScreenRect = (e: HTMLDivElement) => {
   return { top, left, bottom, right, height, width };
 };
 
-export const virtualize = (table: Table, e: HTMLDivElement | null): Virtualization | null => {
+export const virtualize = (sheet: Sheet, e: HTMLDivElement | null): Virtualization | null => {
   if (e == null) {
     return null;
   }
   let boundaryTop = 0,
     boundaryLeft = 0,
-    boundaryBottom = table.getNumRows(),
-    boundaryRight = table.getNumCols();
+    boundaryBottom = sheet.numRows,
+    boundaryRight = sheet.numCols;
 
   const { top, left, bottom, right } = getScreenRect(e);
   let width = 0,
     height = 0;
-  for (let x = 1; x <= table.getNumCols(); x++) {
-    const w = table.getCellByPoint({ y: 0, x }, 'SYSTEM')?.width || DEFAULT_WIDTH;
+  for (let x = 1; x <= sheet.numCols; x++) {
+    const w = sheet.getCell({ y: 0, x }, { resolution: 'SYSTEM' })?.width || DEFAULT_WIDTH;
     width += w;
     if (boundaryLeft === 0 && width > left) {
       boundaryLeft = Math.max(x - OVERSCAN_X, 1);
     }
     if (width > right) {
-      boundaryRight = Math.min(x + OVERSCAN_X, table.getNumCols());
+      boundaryRight = Math.min(x + OVERSCAN_X, sheet.numCols);
       break;
     }
   }
-  for (let y = 1; y <= table.getNumRows(); y++) {
-    if (table.isRowFiltered(y)) {
+  for (let y = 1; y <= sheet.numRows; y++) {
+    if (sheet.isRowFiltered(y)) {
       continue;
     }
-    const h = table.getCellByPoint({ y, x: 0 }, 'SYSTEM')?.height || DEFAULT_HEIGHT;
+    const h = sheet.getCell({ y, x: 0 }, { resolution: 'SYSTEM' })?.height || DEFAULT_HEIGHT;
     height += h;
     if (boundaryTop === 0 && height > top) {
       boundaryTop = Math.max(y - OVERSCAN_Y, 1);
     }
     if (height > bottom) {
-      boundaryBottom = Math.min(y + OVERSCAN_Y, table.getNumRows());
+      boundaryBottom = Math.min(y + OVERSCAN_Y, sheet.numRows);
       break;
     }
   }
-  const ys = boundaryTop === 0 ? [] : range(boundaryTop, boundaryBottom).filter((y) => !table.isRowFiltered(y));
+  const ys = boundaryTop === 0 ? [] : range(boundaryTop, boundaryBottom).filter((y) => !sheet.isRowFiltered(y));
   const xs = range(boundaryLeft, boundaryRight);
-  const before = table.getRectSize({
+  const before = sheet.getRectSize({
     top: 1,
     left: 1,
     bottom: boundaryTop,
     right: boundaryLeft,
   });
-  const after = table.getRectSize({
+  const after = sheet.getRectSize({
     top: boundaryBottom,
     left: boundaryRight,
-    bottom: table.getNumRows(),
-    right: table.getNumCols(),
+    bottom: sheet.numRows,
+    right: sheet.numCols,
   });
   return {
     ys,
@@ -95,7 +95,7 @@ export const virtualize = (table: Table, e: HTMLDivElement | null): Virtualizati
 };
 
 export const smartScroll = (
-  table: Table,
+  sheet: Sheet,
   e: HTMLDivElement | null,
   targetPoint: PointType,
   behavior: ScrollBehavior = 'auto',
@@ -104,11 +104,11 @@ export const smartScroll = (
     return;
   }
   const screen = getScreenRect(e);
-  const target = getCellRectPositions(table, targetPoint);
+  const target = getCellRectPositions(sheet, targetPoint);
 
   // when header is sticky
-  const up = target.top - table.headerHeight;
-  const left = target.left - table.headerWidth;
+  const up = target.top - sheet.headerHeight;
+  const left = target.left - sheet.headerWidth;
   const down = target.bottom - screen.height + 1;
   const right = target.right - screen.width + 1;
 

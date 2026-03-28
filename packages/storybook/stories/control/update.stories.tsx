@@ -3,45 +3,43 @@ import type { Meta, StoryObj } from '@storybook/react';
 import {
   GridSheet,
   buildInitialCells,
-  useConnector,
+  useSheetRef,
   HistoryType,
-  Table,
-  createHub,
-  UserTable,
+  Sheet,
+  UserSheet,
+  toValueObject,
 } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import { createSpellbook } from '@gridsheet/functions';
 
 const meta: Meta = {
   title: 'Control/Update',
 };
 export default meta;
 
-const hub = createHub({
-  additionalFunctions: allFunctions,
-  onInsertRows: ({ table, y, numRows }) => {
-    console.log('onInsertRows called with:', { table, y, numRows });
-    console.log('Inserted data:', table.toValueObject());
+const book = createSpellbook({
+  onInsertRows: ({ sheet, y, numRows }) => {
+    console.log('onInsertRows called with:', { sheet, y, numRows });
+    console.log('Inserted data:', toValueObject(sheet));
   },
-  onInsertCols: ({ table, x, numCols }) => {
-    console.log('onInsertCols called with:', { table, x, numCols });
-    console.log('Inserted data:', table.toValueObject());
+  onInsertCols: ({ sheet, x, numCols }) => {
+    console.log('onInsertCols called with:', { sheet, x, numCols });
+    console.log('Inserted data:', toValueObject(sheet));
   },
 });
 
 const UpdateComponent: React.FC = () => {
-  const connector = useConnector();
+  const sheetRef = useSheetRef();
   const [json, setJson] = React.useState(`
   {
     "A5": {"value": "test"}
   }`);
 
   const update = () => {
-    if (connector.current) {
-      const { tableManager } = connector.current;
-      const { table, sync } = tableManager;
+    if (sheetRef.current) {
+      const { sheet, apply } = sheetRef.current;
       const diff = JSON.parse(json);
       console.log(diff);
-      sync(table.update({ diff }));
+      apply(sheet.update({ diff }));
     }
   };
 
@@ -57,7 +55,7 @@ const UpdateComponent: React.FC = () => {
       <br />
       <button onClick={update}>Update!</button>
       <GridSheet
-        connector={connector}
+        sheetRef={sheetRef}
         initialCells={buildInitialCells({
           cells: {},
           ensured: {
@@ -82,14 +80,13 @@ export const Update: StoryObj = {
 };
 
 const InsertRowsAndUpdateComponent: React.FC = () => {
-  const connector = useConnector();
+  const sheetRef = useSheetRef();
 
   const add = () => {
-    if (connector.current) {
-      const { tableManager } = connector.current;
-      const { table, sync } = tableManager;
-      sync(
-        table.insertRows({
+    if (sheetRef.current) {
+      const { sheet, apply } = sheetRef.current;
+      apply(
+        sheet.insertRows({
           y: 5,
           numRows: 1,
           baseY: 5,
@@ -106,8 +103,8 @@ const InsertRowsAndUpdateComponent: React.FC = () => {
       <br />
       <button onClick={add}>Insert Rows and Update!</button>
       <GridSheet
-        hub={hub}
-        connector={connector}
+        book={book}
+        sheetRef={sheetRef}
         initialCells={buildInitialCells({
           cells: {
             B: { style: { color: '#F00' } },
@@ -137,14 +134,13 @@ export const InsertRowsAndUpdate: StoryObj = {
 };
 
 const InsertColsAndUpdateComponent: React.FC = () => {
-  const connector = useConnector();
+  const sheetRef = useSheetRef();
 
   const add = () => {
-    if (connector.current) {
-      const { tableManager } = connector.current;
-      const { table, sync } = tableManager;
-      sync(
-        table.insertCols({
+    if (sheetRef.current) {
+      const { sheet, apply } = sheetRef.current;
+      apply(
+        sheet.insertCols({
           x: 4,
           numCols: 1,
           baseX: 4,
@@ -161,8 +157,8 @@ const InsertColsAndUpdateComponent: React.FC = () => {
       <br />
       <button onClick={add}>Insert Columns and Update!</button>
       <GridSheet
-        hub={hub}
-        connector={connector}
+        book={book}
+        sheetRef={sheetRef}
         initialCells={buildInitialCells({
           cells: {
             B: { style: { color: '#F00' } },

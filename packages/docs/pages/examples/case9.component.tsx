@@ -1,13 +1,6 @@
 import React from 'react';
-import {
-  GridSheet,
-  Policy,
-  buildInitialCells,
-  useHub,
-  BaseFunction,
-  makeBorder,
-  ensureString,
-} from '@gridsheet/react-core';
+import { GridSheet, Policy, buildInitialCells, BaseFunction, makeBorder, ensureString } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 import { FunctionArgumentDefinition } from '@gridsheet/react-core';
 
 export default function Case9Component() {
@@ -15,7 +8,7 @@ export default function Case9Component() {
   const SecureHashFunction = class extends BaseFunction {
     example = 'SECURE_HASH("password123")';
     helpText = ['Creates a secure hash of the input text'];
-    defs = [{ name: 'text', description: 'Text to hash' }];
+    defs: FunctionArgumentDefinition[] = [{ name: 'text', description: 'Text to hash', acceptedTypes: ['string'] }];
 
     protected main(text: string) {
       // Simple hash function for demonstration
@@ -62,8 +55,8 @@ export default function Case9Component() {
   const securityPolicy = new Policy({
     mixins: [
       {
-        serializeForClipboard({ point, table }) {
-          const cellValue = table.stringify({ point }) ?? '';
+        serializeForClipboard({ point, sheet }) {
+          const cellValue = sheet.getSerializedValue({ point }) ?? '';
           // Return asterisks for clipboard copy
           return '*'.repeat(cellValue.length);
         },
@@ -98,7 +91,7 @@ export default function Case9Component() {
   });
 
   // Hub with security functions and components
-  const hub = useHub({
+  const book = useSpellbook({
     additionalFunctions: {
       secure_hash: SecureHashFunction,
       validate_email: ValidateEmailFunction,
@@ -123,31 +116,30 @@ export default function Case9Component() {
       }}
     >
       <GridSheet
-        hub={hub}
+        book={book}
         options={{
           showFormulaBar: false,
         }}
         initialCells={buildInitialCells({
           cells: {
             default: {
-              width: 160,
-              height: 45,
               style: {
-                ...makeBorder({ all: '1px solid #e1e5e9' }),
                 fontSize: '14px',
               },
             },
-            A: {
+            defaultCol: { width: 160 },
+            defaultRow: { height: 45 },
+            A0: {
               width: 80,
               label: 'ID',
             },
-            B: {
+            B0: {
               label: 'Username',
             },
-            C: {
+            C0: {
               label: '🔐 Password',
             },
-            D: {
+            D0: {
               label: '🔑 Hash',
             },
 
@@ -156,7 +148,6 @@ export default function Case9Component() {
               value: '001',
               policy: 'id',
               style: {
-                backgroundColor: '#f8f9fa',
                 textAlign: 'center',
                 fontWeight: '500',
                 ...makeBorder({ all: '1px solid #e1e5e9' }),
@@ -165,7 +156,6 @@ export default function Case9Component() {
             B1: {
               value: 'john_doe',
               style: {
-                backgroundColor: '#f8f9fa',
                 fontWeight: '500',
                 ...makeBorder({ all: '1px solid #e1e5e9' }),
               },
@@ -174,7 +164,6 @@ export default function Case9Component() {
               value: 'super_secret_password_123',
               policy: 'security',
               style: {
-                backgroundColor: '#fdf2f2',
                 ...makeBorder({ all: '2px solid #e74c3c' }),
                 fontWeight: '500',
               },
@@ -182,7 +171,6 @@ export default function Case9Component() {
             D1: {
               value: '=SECURE_HASH(C1)',
               style: {
-                backgroundColor: '#f8f4ff',
                 ...makeBorder({ all: '2px solid #9b59b6' }),
                 fontWeight: '500',
                 fontFamily: 'monospace',
@@ -194,7 +182,6 @@ export default function Case9Component() {
               value: '002',
               policy: 'id',
               style: {
-                backgroundColor: 'white',
                 textAlign: 'center',
                 fontWeight: '500',
                 ...makeBorder({ all: '1px solid #e1e5e9' }),
@@ -203,7 +190,6 @@ export default function Case9Component() {
             B2: {
               value: 'jane_smith',
               style: {
-                backgroundColor: 'white',
                 fontWeight: '500',
                 ...makeBorder({ all: '1px solid #e1e5e9' }),
               },
@@ -212,7 +198,6 @@ export default function Case9Component() {
               value: 'another_secure_password',
               policy: 'security',
               style: {
-                backgroundColor: '#fdf2f2',
                 ...makeBorder({ all: '2px solid #e74c3c' }),
                 fontWeight: '500',
               },
@@ -220,7 +205,6 @@ export default function Case9Component() {
             D2: {
               value: '=SECURE_HASH(C2)',
               style: {
-                backgroundColor: '#f8f4ff',
                 ...makeBorder({ all: '2px solid #9b59b6' }),
                 fontWeight: '500',
                 fontFamily: 'monospace',
@@ -232,7 +216,6 @@ export default function Case9Component() {
               value: '003',
               policy: 'id',
               style: {
-                backgroundColor: '#f8f9fa',
                 textAlign: 'center',
                 fontWeight: '500',
                 ...makeBorder({ all: '1px solid #e1e5e9' }),
@@ -241,7 +224,6 @@ export default function Case9Component() {
             B3: {
               value: 'admin_user',
               style: {
-                backgroundColor: '#f8f9fa',
                 fontWeight: '500',
                 ...makeBorder({ all: '1px solid #e1e5e9' }),
               },
@@ -250,7 +232,6 @@ export default function Case9Component() {
               value: 'admin_password_2024',
               policy: 'security',
               style: {
-                backgroundColor: '#fdf2f2',
                 ...makeBorder({ all: '2px solid #e74c3c' }),
                 fontWeight: '500',
               },
@@ -258,7 +239,6 @@ export default function Case9Component() {
             D3: {
               value: '=SECURE_HASH(C3)',
               style: {
-                backgroundColor: '#f8f4ff',
                 ...makeBorder({ all: '2px solid #9b59b6' }),
                 fontWeight: '500',
                 fontFamily: 'monospace',
@@ -270,7 +250,6 @@ export default function Case9Component() {
               value: '004',
               policy: 'id',
               style: {
-                backgroundColor: 'white',
                 textAlign: 'center',
                 fontWeight: '500',
                 ...makeBorder({ all: '1px solid #e1e5e9' }),
@@ -279,7 +258,6 @@ export default function Case9Component() {
             B4: {
               value: 'guest_user',
               style: {
-                backgroundColor: 'white',
                 fontWeight: '500',
                 ...makeBorder({ all: '1px solid #e1e5e9' }),
               },
@@ -288,7 +266,6 @@ export default function Case9Component() {
               value: 'guest_password',
               policy: 'security',
               style: {
-                backgroundColor: '#fdf2f2',
                 ...makeBorder({ all: '2px solid #e74c3c' }),
                 fontWeight: '500',
               },
@@ -296,7 +273,6 @@ export default function Case9Component() {
             D4: {
               value: '=SECURE_HASH(C4)',
               style: {
-                backgroundColor: '#f8f4ff',
                 ...makeBorder({ all: '2px solid #9b59b6' }),
                 fontWeight: '500',
                 fontFamily: 'monospace',

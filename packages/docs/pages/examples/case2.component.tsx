@@ -8,11 +8,49 @@ import {
   Policy,
   PolicyMixinType,
   MatrixType,
+  buildInitialCells,
   buildInitialCellsFromOrigin,
   ThousandSeparatorPolicyMixin,
-  useHub,
+  p2a,
   type RenderProps,
 } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
+
+// Policy mixin that overlays the cell address in the top-right corner
+const AddressOverlayMixin: PolicyMixinType = {
+  renderCallback(rendered: any, { point }: RenderProps) {
+    const address = p2a(point);
+    return (
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <span
+          style={{
+            position: 'absolute',
+            top: 2,
+            right: 4,
+            fontSize: '9px',
+            color: '#aaa',
+            lineHeight: 1,
+            pointerEvents: 'none',
+            userSelect: 'none',
+            fontFamily: 'monospace',
+          }}
+        >
+          {address}
+        </span>
+        {rendered}
+      </div>
+    );
+  },
+};
 
 const ImagePolicyMixin: PolicyMixinType = {
   renderString({ value }: RenderProps<string>) {
@@ -97,17 +135,17 @@ export default function GitHubContributors() {
     })();
   }, []);
 
-  const hub = useHub({
+  const book = useSpellbook({
     policies: {
       thousand_separator: new Policy({ mixins: [ThousandSeparatorPolicyMixin] }),
       image: new Policy({ mixins: [ImagePolicyMixin] }),
       link: new Policy({ mixins: [LinkPolicyMixin] }),
-      id: new Policy({ mixins: [{ renderColHeaderLabel: () => 'ID' }] }),
-      avatar: new Policy({ mixins: [ImagePolicyMixin, { renderColHeaderLabel: () => 'Avatar' }] }),
-      user: new Policy({ mixins: [{ renderColHeaderLabel: () => 'user' }] }),
-      url: new Policy({ mixins: [LinkPolicyMixin, { renderColHeaderLabel: () => 'URL' }] }),
+      id: new Policy({ mixins: [{ renderColHeaderLabel: () => 'ID' }, AddressOverlayMixin] }),
+      avatar: new Policy({ mixins: [ImagePolicyMixin, { renderColHeaderLabel: () => 'Avatar' }, AddressOverlayMixin] }),
+      user: new Policy({ mixins: [{ renderColHeaderLabel: () => 'user' }, AddressOverlayMixin] }),
+      url: new Policy({ mixins: [LinkPolicyMixin, { renderColHeaderLabel: () => 'URL' }, AddressOverlayMixin] }),
       contributions: new Policy({
-        mixins: [ThousandSeparatorPolicyMixin, { renderColHeaderLabel: () => 'Contributions' }],
+        mixins: [ThousandSeparatorPolicyMixin, { renderColHeaderLabel: () => 'Contributions' }, AddressOverlayMixin],
       }),
     },
   });
@@ -157,17 +195,17 @@ export default function GitHubContributors() {
         </div>
       ) : (
         <GridSheet
-          hub={hub}
+          book={book}
           sheetName="contributors"
           initialCells={buildInitialCellsFromOrigin({
             matrix: data,
             cells: {
-              default: {
+              defaultRow: {
                 height: 80,
               },
+              A0: { width: 80 },
               A: {
                 policy: 'id',
-                width: 80,
                 justifyContent: 'right',
                 alignItems: 'center',
                 style: {
@@ -183,9 +221,9 @@ export default function GitHubContributors() {
                   backgroundColor: 'rgba(52, 152, 219, 0.05)',
                 },
               },
+              C0: { width: 150 },
               C: {
                 policy: 'user',
-                width: 150,
                 alignItems: 'center',
                 style: {
                   backgroundColor: 'rgba(52, 152, 219, 0.1)',
@@ -193,9 +231,9 @@ export default function GitHubContributors() {
                   color: '#ffffff',
                 },
               },
+              D0: { width: 230 },
               D: {
                 policy: 'url',
-                width: 230,
                 alignItems: 'center',
                 style: {
                   backgroundColor: 'rgba(52, 152, 219, 0.05)',
@@ -217,8 +255,7 @@ export default function GitHubContributors() {
             mode: 'dark',
             sheetHeight: 500,
             sheetWidth: 1000,
-            minNumCols: 5,
-            maxNumCols: 5,
+            limits: { minCols: 5, maxCols: 5 },
           }}
         />
       )}
@@ -229,6 +266,50 @@ export default function GitHubContributors() {
           100% { transform: rotate(360deg); }
         }
       `}</style>
+    </div>
+  );
+}
+
+const addressOverlayPolicy = new Policy({ mixins: [AddressOverlayMixin] });
+
+export function AddressOverlayExample() {
+  const book = useSpellbook({
+    policies: {
+      address: addressOverlayPolicy,
+    },
+  });
+
+  const initialCells = buildInitialCells({
+    cells: {
+      defaultCol: { width: 120 },
+      defaultRow: { height: 44 },
+      default: { policy: 'address' },
+      '0': { height: 24, width: 50 },
+      A1: { value: 'Alice' },
+      B1: { value: 82 },
+      C1: { value: 'B+' },
+      A2: { value: 'Bob' },
+      B2: { value: 95 },
+      C2: { value: 'A' },
+      A3: { value: 'Carol' },
+      B3: { value: 67 },
+      C3: { value: 'C+' },
+      A4: { value: 'Dave' },
+      B4: { value: 74 },
+      C4: { value: 'B-' },
+      A5: { value: 'Eve' },
+      B5: { value: '=AVERAGE(B1:B4)' },
+      C5: { value: 'Avg' },
+    },
+  });
+
+  return (
+    <div style={{ fontFamily: 'sans-serif', padding: '16px' }}>
+      <p style={{ marginBottom: 12, fontSize: 14, color: '#555' }}>
+        Each cell displays its address (e.g. <code>A1</code>) in the top-right corner using a{' '}
+        <code>renderCallback</code> policy.
+      </p>
+      <GridSheet book={book} initialCells={initialCells} options={{ sheetHeight: 260, sheetWidth: 420 }} />
     </div>
   );
 }

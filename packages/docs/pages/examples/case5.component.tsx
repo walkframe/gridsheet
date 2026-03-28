@@ -5,15 +5,15 @@ import {
   GridSheet,
   buildInitialCells,
   operations,
-  useHub,
-  useConnector,
+  useSheetRef,
+  useStoreRef,
   userActions,
   clip,
   areaToZone,
-  Connector,
   Policy,
   ThousandSeparatorPolicyMixin,
 } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
 
 // Menu item types
 type MenuItem =
@@ -95,43 +95,80 @@ export default function AdvancedFeatures() {
   const [activeMenuGroup, setActiveMenuGroup] = React.useState<'File' | 'History' | 'Edit' | null>(null);
   const loadedSheetsRef = React.useRef<Set<string>>(new Set());
 
-  // Create connectors for all possible sheets at component level - always create the same number
-  const salesConnector = useConnector();
-  const budgetConnector = useConnector();
-  const inventoryConnector = useConnector();
-  const sheet4Connector = useConnector();
-  const sheet5Connector = useConnector();
-  const sheet6Connector = useConnector();
-  const sheet7Connector = useConnector();
-  const sheet8Connector = useConnector();
-  const sheet9Connector = useConnector();
-  const sheet10Connector = useConnector();
+  // Create sheetRefs and storeRefs for all possible sheets at component level
+  const salesSheetRef = useSheetRef();
+  const salesStoreRef = useStoreRef();
+  const budgetSheetRef = useSheetRef();
+  const budgetStoreRef = useStoreRef();
+  const inventorySheetRef = useSheetRef();
+  const inventoryStoreRef = useStoreRef();
+  const sheet4SheetRef = useSheetRef();
+  const sheet4StoreRef = useStoreRef();
+  const sheet5SheetRef = useSheetRef();
+  const sheet5StoreRef = useStoreRef();
+  const sheet6SheetRef = useSheetRef();
+  const sheet6StoreRef = useStoreRef();
+  const sheet7SheetRef = useSheetRef();
+  const sheet7StoreRef = useStoreRef();
+  const sheet8SheetRef = useSheetRef();
+  const sheet8StoreRef = useStoreRef();
+  const sheet9SheetRef = useSheetRef();
+  const sheet9StoreRef = useStoreRef();
+  const sheet10SheetRef = useSheetRef();
+  const sheet10StoreRef = useStoreRef();
 
-  // Map sheet names to connectors
-  const connectors = React.useMemo(
+  // Map sheet names to refs
+  const sheetRefs = React.useMemo(
     () => ({
-      Sales: salesConnector,
-      Budget: budgetConnector,
-      Inventory: inventoryConnector,
-      Sheet4: sheet4Connector,
-      Sheet5: sheet5Connector,
-      Sheet6: sheet6Connector,
-      Sheet7: sheet7Connector,
-      Sheet8: sheet8Connector,
-      Sheet9: sheet9Connector,
-      Sheet10: sheet10Connector,
+      Sales: salesSheetRef,
+      Budget: budgetSheetRef,
+      Inventory: inventorySheetRef,
+      Sheet4: sheet4SheetRef,
+      Sheet5: sheet5SheetRef,
+      Sheet6: sheet6SheetRef,
+      Sheet7: sheet7SheetRef,
+      Sheet8: sheet8SheetRef,
+      Sheet9: sheet9SheetRef,
+      Sheet10: sheet10SheetRef,
     }),
     [
-      salesConnector,
-      budgetConnector,
-      inventoryConnector,
-      sheet4Connector,
-      sheet5Connector,
-      sheet6Connector,
-      sheet7Connector,
-      sheet8Connector,
-      sheet9Connector,
-      sheet10Connector,
+      salesSheetRef,
+      budgetSheetRef,
+      inventorySheetRef,
+      sheet4SheetRef,
+      sheet5SheetRef,
+      sheet6SheetRef,
+      sheet7SheetRef,
+      sheet8SheetRef,
+      sheet9SheetRef,
+      sheet10SheetRef,
+    ],
+  );
+
+  const storeRefs = React.useMemo(
+    () => ({
+      Sales: salesStoreRef,
+      Budget: budgetStoreRef,
+      Inventory: inventoryStoreRef,
+      Sheet4: sheet4StoreRef,
+      Sheet5: sheet5StoreRef,
+      Sheet6: sheet6StoreRef,
+      Sheet7: sheet7StoreRef,
+      Sheet8: sheet8StoreRef,
+      Sheet9: sheet9StoreRef,
+      Sheet10: sheet10StoreRef,
+    }),
+    [
+      salesStoreRef,
+      budgetStoreRef,
+      inventoryStoreRef,
+      sheet4StoreRef,
+      sheet5StoreRef,
+      sheet6StoreRef,
+      sheet7StoreRef,
+      sheet8StoreRef,
+      sheet9StoreRef,
+      sheet10StoreRef,
     ],
   );
 
@@ -169,7 +206,7 @@ export default function AdvancedFeatures() {
     } catch {}
   }, []);
 
-  const hub = useHub({
+  const book = useSpellbook({
     policies: {
       thousand_separator: new Policy({ mixins: [ThousandSeparatorPolicyMixin] }),
     },
@@ -249,37 +286,23 @@ export default function AdvancedFeatures() {
         },
         cells: {
           default: {
-            height: 35,
             style: {
               borderBottom: '1px solid #e0e0e0',
               borderRight: '1px solid #e0e0e0',
             },
           },
-          A: { width: 150, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['A'] },
-          B: {
-            width: 100,
-            policy: 'thousand_separator',
-            label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['B'],
-          },
-          C: {
-            width: 100,
-            policy: 'thousand_separator',
-            label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['C'],
-          },
-          D: {
-            width: 100,
-            policy: 'thousand_separator',
-            label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['D'],
-          },
-          E: {
-            width: 100,
-            policy: 'thousand_separator',
-            label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['E'],
-          },
+          A0: { width: 150, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['A'] },
+          B0: { width: 100, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['B'] },
+          B: { policy: 'thousand_separator' },
+          C0: { width: 100, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['C'] },
+          C: { policy: 'thousand_separator' },
+          D0: { width: 100, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['D'] },
+          D: { policy: 'thousand_separator' },
+          E0: { width: 100, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['E'] },
+          E: { policy: 'thousand_separator' },
+          F0: { width: 100, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['F'] },
           F: {
-            width: 100,
             policy: 'thousand_separator',
-            label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['F'],
             ...(currentSheet === 'Sales' && {
               style: {
                 borderLeft: '3px double #000',
@@ -295,6 +318,7 @@ export default function AdvancedFeatures() {
                 borderTop: '3px double #000',
               },
             },
+            '06': { sortFixed: true, filterFixed: true },
           }),
           ...savedCells,
         },
@@ -357,22 +381,26 @@ export default function AdvancedFeatures() {
         break;
       }
       case 'save': {
-        const connector = connectors[activeSheet]?.current;
-        if (connector) {
-          const { tableManager } = connector;
-          const { table } = tableManager;
-          const matrixData = table.toCellMatrix({ refEvaluation: 'RAW' });
-          const cleanMatrixData = matrixData.map((row: any[]) =>
-            row.map((cell: any) => {
-              if (cell && typeof cell === 'object') {
-                const { system, ...cleanCell } = cell;
-                return cleanCell;
+        const sheetHandle = sheetRefs[activeSheet]?.current;
+        if (sheetHandle) {
+          const { sheet } = sheetHandle;
+          // Build matrixData from current sheet cells
+          const matrixData: any[][] = [];
+          for (let row = sheet.top; row <= sheet.bottom; row++) {
+            const rowData: any[] = [];
+            for (let col = sheet.left; col <= sheet.right; col++) {
+              const cell = sheet.getCell({ y: row, x: col });
+              if (cell) {
+                const { value, style } = cell;
+                rowData.push({ value, style });
+              } else {
+                rowData.push('');
               }
-              return cell;
-            }),
-          );
+            }
+            matrixData.push(rowData);
+          }
           const saveData = {
-            matrixData: cleanMatrixData,
+            matrixData,
             activeSheet,
             sheets,
             timestamp: new Date().toISOString(),
@@ -401,63 +429,55 @@ export default function AdvancedFeatures() {
         break;
       }
       case 'undo': {
-        const connector = connectors[activeSheet]?.current;
-        if (connector) {
-          const { storeManager } = connector;
-          const { store, sync } = storeManager;
-          sync(userActions.undo(null));
+        const storeHandle = storeRefs[activeSheet]?.current;
+        if (storeHandle) {
+          storeHandle.dispatch(userActions.undo(null));
           showNotification('Undo action performed');
         }
         break;
       }
       case 'redo': {
-        const connector = connectors[activeSheet]?.current;
-        if (connector) {
-          const { storeManager } = connector;
-          const { store, sync } = storeManager;
-          sync(userActions.redo(null));
+        const storeHandle = storeRefs[activeSheet]?.current;
+        if (storeHandle) {
+          storeHandle.dispatch(userActions.redo(null));
           showNotification('Redo action performed');
         }
         break;
       }
       case 'cut': {
-        const connector = connectors[activeSheet]?.current;
-        if (connector) {
-          const { storeManager } = connector;
-          const { store, sync } = storeManager;
+        const storeHandle = storeRefs[activeSheet]?.current;
+        if (storeHandle) {
+          const { store, dispatch } = storeHandle;
           const area = clip(store);
-          sync(userActions.cut(areaToZone(area)));
+          dispatch(userActions.cut(areaToZone(area)));
           showNotification('Cut to clipboard');
         }
         break;
       }
       case 'copy': {
-        const connector = connectors[activeSheet]?.current;
-        if (connector) {
-          const { storeManager } = connector;
-          const { store, sync } = storeManager;
+        const storeHandle = storeRefs[activeSheet]?.current;
+        if (storeHandle) {
+          const { store, dispatch } = storeHandle;
           const area = clip(store);
-          sync(userActions.copy(areaToZone(area)));
+          dispatch(userActions.copy(areaToZone(area)));
           showNotification('Copied to clipboard');
         }
         break;
       }
       case 'paste': {
-        const connector = connectors[activeSheet]?.current;
-        if (connector) {
-          const { storeManager } = connector;
-          const { store, sync } = storeManager;
-          sync(userActions.paste({ matrix: [], onlyValue: false }));
+        const storeHandle = storeRefs[activeSheet]?.current;
+        if (storeHandle) {
+          const { dispatch } = storeHandle;
+          dispatch(userActions.paste({ matrix: [], onlyValue: false }));
           showNotification('Pasted from clipboard');
         }
         break;
       }
       case 'pasteValues': {
-        const connector = connectors[activeSheet]?.current;
-        if (connector) {
-          const { storeManager } = connector;
-          const { store, sync } = storeManager;
-          sync(userActions.paste({ matrix: [], onlyValue: true }));
+        const storeHandle = storeRefs[activeSheet]?.current;
+        if (storeHandle) {
+          const { dispatch } = storeHandle;
+          dispatch(userActions.paste({ matrix: [], onlyValue: true }));
           showNotification('Pasted values only');
         }
         break;
@@ -638,8 +658,9 @@ export default function AdvancedFeatures() {
               >
                 {activeSheet === sheet && (
                   <GridSheet
-                    connector={connectors[sheet]}
-                    hub={hub}
+                    sheetRef={sheetRefs[sheet]}
+                    storeRef={storeRefs[sheet]}
+                    book={book}
                     sheetName={sheet}
                     initialCells={initialCellsForSheets[sheet]}
                     style={{

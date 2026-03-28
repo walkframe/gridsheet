@@ -1,7 +1,8 @@
-import React, { useContext, useRef } from 'react';
+import React, { useContext, useLayoutEffect, useRef } from 'react';
 import type { FunctionHelp } from '../formula/mapping';
 import type { AutocompleteOption } from '../policy/core';
 import { Context } from '../store';
+import { calcSideStyle, clampPopup } from '../lib/popup';
 
 type OptionWithGuide = AutocompleteOption & {
   isFunction?: boolean;
@@ -30,13 +31,31 @@ export const FunctionGuide: React.FC<FunctionGuideProps> = ({
   left,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
+  const guide1Ref = useRef<HTMLDivElement>(null);
   const { store } = useContext(Context);
   // Hide the active help when not hovering over the editor, to prevent it from blocking clicks on other options.
   const isHidden = !store.editorHovering;
 
+  useLayoutEffect(() => {
+    const el = guide1Ref.current;
+    if (!el) {
+      return;
+    }
+    calcSideStyle(el);
+  });
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || left === undefined) {
+      return;
+    }
+    clampPopup(el);
+  });
+
   if (option) {
     return (
       <div
+        ref={guide1Ref}
         className="gs-fn-guide1"
         onMouseDown={(e) => {
           e.preventDefault();

@@ -1,12 +1,24 @@
 import { a2p, x2c, y2r } from '../lib/coords';
-import { Table } from '../lib/table';
-import type { Address, PointType, StoreType } from '../types';
+import { Sheet } from '../lib/sheet';
+import type { Address, PointType, StorePatchType, StoreType } from '../types';
 
-export const restrictPoints = (store: StoreType, table: Table) => {
+/**
+ * Strip redundant fields from a StorePatchType before recording in history.
+ * - selectingZone with endY === -1 && endX === -1 is a no-selection sentinel and need not be stored.
+ */
+export const compactReflection = (reflection: StorePatchType): StorePatchType => {
+  const result = { ...reflection };
+  if (result.selectingZone != null && result.selectingZone.endY === -1 && result.selectingZone.endX === -1) {
+    delete result.selectingZone;
+  }
+  return result;
+};
+
+export const restrictPoints = (store: StoreType, sheet: Sheet) => {
   const { choosing, selectingZone } = store;
   let { y, x } = choosing;
   let { startY: y1, startX: x1, endY: y2, endX: x2 } = selectingZone;
-  const [numRows, numCols] = [table.getNumRows(), table.getNumCols()];
+  const [numRows, numCols] = [sheet.numRows, sheet.numCols];
   if (y > numRows) {
     y = numRows;
   }
@@ -46,11 +58,11 @@ export const flashSheet = (el: HTMLElement | null) => {
 
 export const flashWithCallback = (
   store: StoreType,
-  table: Table,
+  sheet: Sheet,
   callback: ((s: StoreType) => void) | undefined,
 ): StoreType & { callback?: (store: StoreType) => void } => ({
   ...store,
-  tableReactive: { current: table },
+  sheetReactive: { current: sheet },
   callback: (s: StoreType) => {
     callback?.(s);
     flashSheet(store.flashRef.current);
@@ -75,7 +87,7 @@ export const shouldTracking = (operation: string) => {
   return false;
 };
 
-export const initSearchStatement = (table: Table, store: StoreType) => {
+export const initSearchStatement = (sheet: Sheet, store: StoreType) => {
   const { searchQuery, searchCaseSensitive, searchRegex, searchRange } = store;
   let { choosing } = store;
   if (!searchQuery) {
@@ -107,9 +119,9 @@ export const initSearchStatement = (table: Table, store: StoreType) => {
 
   // Determine search range
   let startY = 1,
-    endY = table.bottom;
+    endY = sheet.bottom;
   let startX = 1,
-    endX = table.right;
+    endX = sheet.right;
   if (searchRange) {
     startY = searchRange.startY;
     endY = searchRange.endY;
@@ -119,7 +131,7 @@ export const initSearchStatement = (table: Table, store: StoreType) => {
 
   for (let y = startY; y <= endY; y++) {
     for (let x = startX; x <= endX; x++) {
-      const v = table.stringify({ point: { y, x } });
+      const v = sheet.getSerializedValue({ point: { y, x } });
       if (matcher(v)) {
         matchingCells.push(`${x2c(x)}${y2r(y)}`);
       }
@@ -134,13 +146,13 @@ export const initSearchStatement = (table: Table, store: StoreType) => {
 };
 
 export const isXSheetFocused = (store: StoreType) => {
-  const { sheetId, tableReactive: tableRef } = store;
-  const table = tableRef.current;
-  if (!table) {
+  const { sheetId, sheetReactive: sheetRef } = store;
+  const sheet = sheetRef.current;
+  if (!sheet) {
     return false;
   }
-  if (sheetId === table.wire.editingSheetId) {
+  if (sheetId === sheet.registry.editingSheetId) {
     return false;
   }
-  return !!table.wire.editingAddress;
+  return !!sheet.registry.editingAddress;
 };

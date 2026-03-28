@@ -1,6 +1,7 @@
-import type { ContextMenuProps, FilterConfig, RawCellType } from '../types';
+import type { StoreDispatchType, FilterConfig, RawCellType } from '../types';
 import { areaToZone, zoneShape, zoneToArea } from '../lib/spatial';
 import { focus } from '../lib/dom';
+import { p2a } from '../lib/coords';
 import {
   copy,
   cut,
@@ -17,25 +18,26 @@ import {
   filterRows,
   setSearchQuery,
   setEntering,
+  updateSheet,
 } from './actions';
 import { clip } from '../lib/clipboard';
 import { parseHTML, parseText } from '../lib/paste';
 
-export const copier = async ({ store, dispatch }: ContextMenuProps) => {
+export const copier = async ({ store, dispatch }: StoreDispatchType) => {
   const { editorRef } = store;
   const area = clip(store);
   dispatch(copy(areaToZone(area)));
   focus(editorRef.current);
 };
 
-export const cutter = async ({ store, dispatch }: ContextMenuProps) => {
+export const cutter = async ({ store, dispatch }: StoreDispatchType) => {
   const { editorRef } = store;
   const area = clip(store);
   dispatch(cut(areaToZone(area)));
   focus(editorRef.current);
 };
 
-export const paster = async ({ store, dispatch }: ContextMenuProps, onlyValue = false) => {
+export const paster = async ({ store, dispatch }: StoreDispatchType, onlyValue = false) => {
   const { editorRef } = store;
   const items = await navigator.clipboard.read();
   let cells: RawCellType[][] = [];
@@ -61,99 +63,125 @@ export const paster = async ({ store, dispatch }: ContextMenuProps, onlyValue = 
   focus(editorRef.current);
 };
 
-export const undoer = async ({ store, dispatch }: ContextMenuProps) => {
+export const undoer = async ({ store, dispatch }: StoreDispatchType) => {
   const { editorRef } = store;
   dispatch(undo(null));
   focus(editorRef.current);
 };
 
-export const redoer = async ({ store, dispatch }: ContextMenuProps) => {
+export const redoer = async ({ store, dispatch }: StoreDispatchType) => {
   const { editorRef } = store;
   dispatch(redo(null));
   focus(editorRef.current);
 };
 
-export const rowsInserterAbove = async ({ store, dispatch }: ContextMenuProps) => {
+export const rowsInserterAbove = async ({ store, dispatch }: StoreDispatchType) => {
   const { selectingZone, editorRef } = store;
   const { top } = zoneToArea(selectingZone);
-  const numRows = zoneShape({ ...selectingZone, base: 1 }).rows;
+  const numRows = zoneShape(selectingZone).rows;
   dispatch(insertRowsAbove({ numRows, y: top, operator: 'USER' }));
   focus(editorRef.current);
 };
 
-export const rowsInserterBelow = async ({ store, dispatch }: ContextMenuProps) => {
+export const rowsInserterBelow = async ({ store, dispatch }: StoreDispatchType) => {
   const { selectingZone, editorRef } = store;
   const { bottom } = zoneToArea(selectingZone);
-  const numRows = zoneShape({ ...selectingZone, base: 1 }).rows;
+  const numRows = zoneShape(selectingZone).rows;
   dispatch(insertRowsBelow({ numRows, y: bottom, operator: 'USER' }));
   focus(editorRef.current);
 };
 
-export const colsInserterLeft = async ({ store, dispatch }: ContextMenuProps) => {
+export const colsInserterLeft = async ({ store, dispatch }: StoreDispatchType) => {
   const { selectingZone, editorRef } = store;
   const { left } = zoneToArea(selectingZone);
-  const numCols = zoneShape({ ...selectingZone, base: 1 }).cols;
+  const numCols = zoneShape(selectingZone).cols;
   dispatch(insertColsLeft({ numCols, x: left, operator: 'USER' }));
   focus(editorRef.current);
 };
 
-export const colsInserterRight = async ({ store, dispatch }: ContextMenuProps) => {
+export const colsInserterRight = async ({ store, dispatch }: StoreDispatchType) => {
   const { selectingZone, editorRef } = store;
   const { right } = zoneToArea(selectingZone);
-  const numCols = zoneShape({ ...selectingZone, base: 1 }).cols;
+  const numCols = zoneShape(selectingZone).cols;
   dispatch(insertColsRight({ numCols, x: right, operator: 'USER' }));
   focus(editorRef.current);
 };
 
-export const rowsRemover = async ({ store, dispatch }: ContextMenuProps) => {
+export const rowsRemover = async ({ store, dispatch }: StoreDispatchType) => {
   const { selectingZone, editorRef } = store;
   const { top } = zoneToArea(selectingZone);
-  const numRows = zoneShape({ ...selectingZone, base: 1 }).rows;
+  const numRows = zoneShape(selectingZone).rows;
   dispatch(removeRows({ numRows, y: top, operator: 'USER' }));
   focus(editorRef.current);
 };
 
-export const colsRemover = async ({ store, dispatch }: ContextMenuProps) => {
+export const colsRemover = async ({ store, dispatch }: StoreDispatchType) => {
   const { selectingZone, editorRef } = store;
   const { left } = zoneToArea(selectingZone);
-  const numCols = zoneShape({ ...selectingZone, base: 1 }).cols;
+  const numCols = zoneShape(selectingZone).cols;
   dispatch(removeCols({ numCols, x: left, operator: 'USER' }));
   focus(editorRef.current);
 };
 
-export const rowsSorterAsc = async ({ store, dispatch }: ContextMenuProps, x: number) => {
-  const table = store.tableReactive.current;
-  if (table && (table.hasPendingCells() || table.wire.asyncPending.size > 0)) {
-    await table.waitForPending();
+export const rowsSorterAsc = async ({ store, dispatch }: StoreDispatchType, x: number) => {
+  const sheet = store.sheetReactive.current;
+  if (sheet && (sheet.hasPendingCells() || sheet.registry.asyncPending.size > 0)) {
+    await sheet.waitForPending();
   }
   dispatch(sortRows({ x, direction: 'asc' }));
   focus(store.editorRef.current);
 };
 
-export const rowsSorterDesc = async ({ store, dispatch }: ContextMenuProps, x: number) => {
-  const table = store.tableReactive.current;
-  if (table && (table.hasPendingCells() || table.wire.asyncPending.size > 0)) {
-    await table.waitForPending();
+export const rowsSorterDesc = async ({ store, dispatch }: StoreDispatchType, x: number) => {
+  const sheet = store.sheetReactive.current;
+  if (sheet && (sheet.hasPendingCells() || sheet.registry.asyncPending.size > 0)) {
+    await sheet.waitForPending();
   }
   dispatch(sortRows({ x, direction: 'desc' }));
   focus(store.editorRef.current);
 };
 
-export const rowsFilterer = async ({ store, dispatch }: ContextMenuProps, x: number, filter: FilterConfig) => {
-  const table = store.tableReactive.current;
-  if (table && (table.hasPendingCells() || table.wire.asyncPending.size > 0)) {
-    await table.waitForPending();
+export const rowsFilterer = async ({ store, dispatch }: StoreDispatchType, x: number, filter: FilterConfig) => {
+  const sheet = store.sheetReactive.current;
+  if (sheet && (sheet.hasPendingCells() || sheet.registry.asyncPending.size > 0)) {
+    await sheet.waitForPending();
   }
   dispatch(filterRows({ x, filter }));
   focus(store.editorRef.current);
 };
 
-export const rowsFilterClearer = async ({ store, dispatch }: ContextMenuProps, x?: number) => {
+export const rowsFilterClearer = async ({ store, dispatch }: StoreDispatchType, x?: number) => {
   dispatch(filterRows({ x }));
   focus(store.editorRef.current);
 };
 
-export const searcher = async ({ store, dispatch }: ContextMenuProps) => {
+export const rowSortFixedToggler = ({ store, dispatch }: StoreDispatchType, y: number) => {
+  const sheet = store.sheetReactive.current;
+  if (!sheet) {
+    return;
+  }
+  const addr = p2a({ y, x: 0 });
+  const rowCell = sheet.getCell({ y, x: 0 }, { resolution: 'SYSTEM' });
+  const next = !rowCell?.sortFixed || undefined;
+  sheet.update({ diff: { [addr]: { sortFixed: next } }, partial: true });
+  dispatch(updateSheet(sheet));
+  focus(store.editorRef.current);
+};
+
+export const rowFilterFixedToggler = ({ store, dispatch }: StoreDispatchType, y: number) => {
+  const sheet = store.sheetReactive.current;
+  if (!sheet) {
+    return;
+  }
+  const addr = p2a({ y, x: 0 });
+  const rowCell = sheet.getCell({ y, x: 0 }, { resolution: 'SYSTEM' });
+  const next = !rowCell?.filterFixed || undefined;
+  sheet.update({ diff: { [addr]: { filterFixed: next } }, partial: true });
+  dispatch(updateSheet(sheet));
+  focus(store.editorRef.current);
+};
+
+export const searcher = async ({ store, dispatch }: StoreDispatchType) => {
   if (typeof store.searchQuery === 'undefined') {
     dispatch(setSearchQuery(''));
   }
@@ -161,7 +189,7 @@ export const searcher = async ({ store, dispatch }: ContextMenuProps) => {
   requestAnimationFrame(() => focus(store.searchInputRef.current));
 };
 
-export const syncers = {
+export const applyers = {
   copy: copier,
   cut: cutter,
   paste: paster,
@@ -177,5 +205,7 @@ export const syncers = {
   sortRowsDesc: rowsSorterDesc,
   filterRows: rowsFilterer,
   clearFilter: rowsFilterClearer,
+  toggleSortFixed: rowSortFixedToggler,
+  toggleFilterFixed: rowFilterFixedToggler,
   search: searcher,
 };

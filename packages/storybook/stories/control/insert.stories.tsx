@@ -1,8 +1,15 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { GridSheet, buildInitialCells, buildInitialCellsFromOrigin, useConnector, useHub } from '@gridsheet/react-core';
-import { syncers } from '@gridsheet/react-core';
-import { allFunctions } from '@gridsheet/functions';
+import {
+  GridSheet,
+  buildInitialCells,
+  buildInitialCellsFromOrigin,
+  useStoreRef,
+  toValueObject,
+} from '@gridsheet/react-core';
+import { applyers } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
+import { Debugger } from '@gridsheet/react-dev';
 
 const meta: Meta = {
   title: 'Control/Insert',
@@ -26,80 +33,73 @@ const DESCRIPTION = [
 ].join('\n\n');
 
 const InsertComponent: React.FC = () => {
-  const connector = useConnector();
+  const storeRef = useStoreRef();
 
-  const hub = useHub({
-    additionalFunctions: allFunctions,
-    onInsertRows: ({ table, y, numRows }) => {
-      console.log('onInsertRows called with:', { table, y, numRows });
-      console.log('Inserted data:', table.toValueObject());
+  const book = useSpellbook({
+    onInsertRows: ({ sheet, y, numRows }) => {
+      console.log('onInsertRows called with:', { sheet, y, numRows });
+      console.log('Inserted data:', toValueObject(sheet));
     },
-    onInsertCols: ({ table, x, numCols }) => {
-      console.log('onInsertCols called with:', { table, x, numCols });
-      console.log('Inserted data:', table.toValueObject());
+    onInsertCols: ({ sheet, x, numCols }) => {
+      console.log('onInsertCols called with:', { sheet, x, numCols });
+      console.log('Inserted data:', toValueObject(sheet));
     },
-    onRemoveRows: ({ table, ys }) => {
-      console.log('onRemoveRows called with:', { table, ys });
-      console.log('Removed data:', table.toValueObject());
+    onRemoveRows: ({ sheet, ys }) => {
+      console.log('onRemoveRows called with:', { sheet, ys });
+      console.log('Removed data:', toValueObject(sheet));
     },
-    onRemoveCols: ({ table, xs }) => {
-      console.log('onRemoveCols called with:', { table, xs });
-      console.log('Removed data:', table.toValueObject());
+    onRemoveCols: ({ sheet, xs }) => {
+      console.log('onRemoveCols called with:', { sheet, xs });
+      console.log('Removed data:', toValueObject(sheet));
     },
   });
 
   const handleInsertRowsAbove = () => {
-    if (connector?.current == null) {
+    if (storeRef?.current == null) {
       return;
     }
-    const { storeManager } = connector.current;
-    const { store, dispatch } = storeManager;
-    syncers.insertRowsAbove({ store, dispatch });
+    const { store, dispatch } = storeRef.current;
+    applyers.insertRowsAbove({ store, dispatch });
   };
 
   const handleInsertRowsBelow = () => {
-    if (connector?.current == null) {
+    if (storeRef?.current == null) {
       return;
     }
-    const { storeManager } = connector.current;
-    const { store, dispatch } = storeManager;
-    syncers.insertRowsBelow({ store, dispatch });
+    const { store, dispatch } = storeRef.current;
+    applyers.insertRowsBelow({ store, dispatch });
   };
 
   const handleInsertColsLeft = () => {
-    if (connector?.current == null) {
+    if (storeRef?.current == null) {
       return;
     }
-    const { storeManager } = connector.current;
-    const { store, dispatch } = storeManager;
-    syncers.insertColsLeft({ store, dispatch });
+    const { store, dispatch } = storeRef.current;
+    applyers.insertColsLeft({ store, dispatch });
   };
 
   const handleInsertColsRight = () => {
-    if (connector?.current == null) {
+    if (storeRef?.current == null) {
       return;
     }
-    const { storeManager } = connector.current;
-    const { store, dispatch } = storeManager;
-    syncers.insertColsRight({ store, dispatch });
+    const { store, dispatch } = storeRef.current;
+    applyers.insertColsRight({ store, dispatch });
   };
 
   const handleRemoveRows = () => {
-    if (connector?.current == null) {
+    if (storeRef?.current == null) {
       return;
     }
-    const { storeManager } = connector.current;
-    const { store, dispatch } = storeManager;
-    syncers.removeRows({ store, dispatch });
+    const { store, dispatch } = storeRef.current;
+    applyers.removeRows({ store, dispatch });
   };
 
   const handleRemoveCols = () => {
-    if (connector?.current == null) {
+    if (storeRef?.current == null) {
       return;
     }
-    const { storeManager } = connector.current;
-    const { store, dispatch } = storeManager;
-    syncers.removeCols({ store, dispatch });
+    const { store, dispatch } = storeRef.current;
+    applyers.removeCols({ store, dispatch });
   };
 
   return (
@@ -200,8 +200,8 @@ const InsertComponent: React.FC = () => {
       </div>
 
       <GridSheet
-        connector={connector}
-        hub={hub}
+        storeRef={storeRef}
+        book={book}
         initialCells={buildInitialCellsFromOrigin({
           matrix: [
             [1, 2, '=SUM(A1:B1)'],
@@ -215,6 +215,7 @@ const InsertComponent: React.FC = () => {
           sheetResize: 'both',
         }}
       />
+      <Debugger book={book} />
     </div>
   );
 };
