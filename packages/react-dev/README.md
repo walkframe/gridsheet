@@ -2,9 +2,7 @@
 
 Development tools for [GridSheet](https://github.com/walkframe/gridsheet).
 
-## Overview
-
-`@gridsheet/react-dev` provides a `Debugger` component that gives you real-time visibility into the internal state of a GridSheet instance. It is intended for use during development only and should **not** be included in production builds.
+> **Note:** Intended for use during development only. Do not include in production builds.
 
 ## Installation
 
@@ -16,19 +14,19 @@ pnpm add -D @gridsheet/react-dev
 
 ## Usage
 
-Pass a `hub` object (created via `useHub` from `@gridsheet/react-core`) to the `Debugger` component.
+Pass a `book` object (created via `useBook` from `@gridsheet/react-core`) to the `Debugger` component.
 
 ```tsx
 import React from 'react';
-import { GridSheet, useHub } from '@gridsheet/react-core';
+import { GridSheet, useBook } from '@gridsheet/react-core';
 import { Debugger } from '@gridsheet/react-dev';
 
 export default function App() {
-  const hub = useHub();
+  const book = useBook();
   return (
     <>
-      <GridSheet hub={hub} />
-      <Debugger hub={hub} />
+      <GridSheet book={book} />
+      <Debugger book={book} />
     </>
   );
 }
@@ -38,36 +36,10 @@ export default function App() {
 
 ### `Debugger`
 
-| Prop         | Type      | Default | Description                                           |
-|--------------|-----------|---------|-------------------------------------------------------|
-| `hub`        | `HubType` | —       | The hub object connected to a `GridSheet` instance.   |
-| `intervalMs` | `number`  | `500`   | Polling interval (ms) for refreshing the state view.  |
-
-## Panel Layout
-
-The `Debugger` renders a resizable panel divided into two rows:
-
-### Top row (resizable height)
-
-| Panel                  | Description                                                            |
-|------------------------|------------------------------------------------------------------------|
-| **Wire State**         | Snapshot of the shared wire state (choosing address, history, etc.).   |
-| **Cell**               | Data of the currently selected cell (value, style, meta, etc.).        |
-| **Formula Expressions**| Parsed AST of the formula in the selected cell (if any).               |
-| **Formula Tokens**     | Tokenized result of the formula lexer for the selected cell (if any).  |
-
-### Sheet tabs
-
-Tabs to switch which sheet's internal data is shown in the bottom row.
-
-### Bottom row (resizable height)
-
-| Panel          | Description                                      |
-|----------------|--------------------------------------------------|
-| **Table Data** | Raw table instance data for the selected sheet.  |
-| **Store Data** | Internal store state for the selected sheet.     |
-
-Both rows can be resized by dragging the divider between them. Heights are persisted in `sessionStorage`.
+| Prop         | Type       | Default | Description                                          |
+|--------------|------------|---------|------------------------------------------------------|
+| `book`       | `BookType` | —       | The book object connected to a `GridSheet` instance. |
+| `intervalMs` | `number`   | `500`   | Polling interval (ms) for refreshing the state view. |
 
 ## License
 
