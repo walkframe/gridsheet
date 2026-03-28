@@ -8,6 +8,7 @@ import {
   PolicyMixinType,
   RenderProps,
   makeBorder,
+  toValueMatrix,
   type UserSheet,
 } from '@gridsheet/react-core';
 import { useSpellbook } from '@gridsheet/functions';
@@ -128,7 +129,7 @@ const convertToTSV = (sheet: UserSheet, evaluates: boolean = true): string => {
   if (!sheet) {
     return '';
   }
-  const matrix = sheet.__raw__._toValueMatrix({ resolution: evaluates ? 'RESOLVED' : 'RAW' });
+  const matrix = toValueMatrix(sheet, { resolution: evaluates ? 'RESOLVED' : 'RAW' });
   if (!matrix || matrix.length === 0) {
     return '';
   }
@@ -214,8 +215,9 @@ export default function InventoryManagement() {
       const colName = String.fromCharCode(65 + x);
       addActivityLog(`➕ Added ${numCols} new column(s) to inventory at column ${colName}`);
     },
-    onInit: ({ sheet }) => {
+    onInit: ({ sheet }: { sheet: UserSheet }) => {
       addActivityLog(`📦 Inventory management system initialized`);
+      setTsv(convertToTSV(sheet));
     },
   });
 

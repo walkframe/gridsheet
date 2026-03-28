@@ -50,11 +50,11 @@ Use these to build audit logs, update summary stats, or sync deleted rows to a b
 
 ### Exporting Sheet Data as TSV
 
-The `UserSheet` object can be converted to a TSV string by calling `sheet.__raw__._toValueMatrix({ resolution: 'RESOLVED' })`. This evaluates formulas and returns a 2D array of plain values.
+The `UserSheet` object can be converted to a TSV string by calling `toValueMatrix(sheet, { resolution: 'RESOLVED' })`. This evaluates formulas and returns a 2D array of plain values.
 
 ```tsx
 const convertToTSV = (sheet: UserSheet): string => {
-  const matrix = sheet.__raw__._toValueMatrix({ resolution: 'RESOLVED' });
+  const matrix = toValueMatrix(sheet, { resolution: 'RESOLVED' });
   return matrix
     .map((row) =>
       row
@@ -70,7 +70,7 @@ const convertToTSV = (sheet: UserSheet): string => {
 };
 ```
 
-Call this inside `onChange` and store it in state to keep the TSV display in sync with every edit.
+Call this inside `onInit` and `onChange` and store it in state to keep the TSV display populated initially and in sync with every edit.
 
 ### `renderNumber` for Color-coded Stock Indicators
 

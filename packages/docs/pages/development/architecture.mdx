@@ -4,56 +4,58 @@ This document provides an overview of GridSheet's architecture and design princi
 
 ## Core Architecture
 
-### Table and Hub Relationship
+### Registry and Sheet Relationship
 
-The most important architectural relationship in GridSheet is between the **Hub** and **Table** instances. The Hub serves as a cross-cutting access point for multiple Table instances, while each Table instance corresponds one-to-one with a sheet.
+The most important architectural relationship in GridSheet is between the **Registry** and **Sheet** instances. The Registry serves as a cross-cutting access point for multiple Sheet instances, while each Sheet instance corresponds one-to-one with a rendered `<GridSheet>` component.
 
 ```mermaid
 graph LR
-    subgraph HUB ["Hub (Wire wrapper)"]
-        subgraph WI["Wire Instance"]
+    subgraph BOOK ["Book (useBook / createBook)"]
+        subgraph REG["Registry Instance"]
             P["Policies"]
-            R["Renderers"]
-            PR["Parsers"]
+            FN["Functions"]
             HIST["Histories"]
-            L["Labelers"]
-            CACHE["Calculation Cache"]
+            CACHE["Async Cache"]
+            EV["Event Handlers"]
         end
     end
     
-    T1["Table 1"]
-    T2["Table 2"]
-    T3["Table 3"]
+    T1["Sheet 1"]
+    T2["Sheet 2"]
+    T3["Sheet 3"]
     
-    T1 --> WI
-    T2 --> WI
-    T3 --> WI
+    T1 --> REG
+    T2 --> REG
+    T3 --> REG
     
-    style WI fill:#f3e5f5,color:#2c3e50
+    style REG fill:#f3e5f5,color:#2c3e50
     style T1 fill:#e8f5e8,color:#2c3e50
     style T2 fill:#e8f5e8,color:#2c3e50
     style T3 fill:#e8f5e8,color:#2c3e50
 ```
 
-### Hub Architecture
+### Registry Architecture
 
-The **Hub** is a cross-cutting instance that provides access to multiple Table instances. It contains:
+The **Registry** (accessed via a `Book`) is a cross-cutting instance shared across multiple sheets. It contains:
 
-- **Cross-cutting Configuration**: Policies, renderers, parsers, histories, and labelers
-- **Cell Data**: Actual cell values, formulas, and metadata
-- **Calculation Cache**: Cached formula results for performance
+- **Function Registry**: Built-in and custom formula functions
+- **Policy Registry**: Named cell policies (which handle both parsing and rendering)
+- **History**: Undo/redo stack
+- **Async Cache**: In-flight and completed async formula results
+- **Event Handlers**: `onChange`, `onSave`, `onInit`, `onKeyUp`, etc.
 
-The Hub is actually a wrapper around the **Wire** class, which is the core implementation. This design allows React/Preact to trigger sheet re-renders by changing references, while the internal Wire instance maintains the same reference throughout its lifecycle.
+A `Book` is a thin wrapper `{ registry: Registry }` created by `useBook()` (React hook) or `createBook()` (imperative). This wrapper pattern allows React to trigger re-renders by replacing the `Book` reference while the inner `Registry` object maintains stable identity.
 
-> **Note**: Even when using only a single table, a Hub (Wire instance) is implicitly created to manage the cell data and configuration.
+> **Note**: Even when using only a single sheet, a `Registry` is implicitly created by the `<GridSheet>` component. Pass an explicit `book` prop to share a single Registry across multiple sheets.
 
-### Table Architecture
+### Sheet Architecture
 
-Each **Table** instance corresponds one-to-one with a sheet and contains:
+Each **Sheet** instance corresponds one-to-one with a rendered `<GridSheet>` component and contains:
 
 - **ID Matrix**: Internal data identifiers that correspond to sheet row/column positions
-- **Sheet State**: Current state of the specific sheet
-- **UI State**: Visual state and rendering information
+- **Cell Data**: The actual cell data keyed by cell ID, shared via the Registry
+- **System Metadata**: Offset positions, sizes, and rendering metadata per cell
+- **Sheet State**: Name, dimensions, limits, and formula resolution state
 
 ### Cell Reference System
 
@@ -79,50 +81,50 @@ This architecture provides:
 
 ## Data Flow
 
-GridSheet processes data through two main flows: data input and data output. Each flow uses identifiers (strings) rather than instances for parsers and renderers to enable persistence.
+GridSheet processes data through two main flows: data input and data output. Each flow uses identifiers (strings) for policies to enable persistence.
 
 ### Data Input Flow
 
-Data input follows this sequence: User Input → Parser → Policy
+Data input follows this sequence: User Input → Policy Registration → Policy Deserialization
 
 ```mermaid
 graph LR
-    UI["User Input"] --> PARSER["Parser<br/>cell.parser"]
-    PARSER --> POLICY["Policy<br/>cell.policy"]
-    POLICY --> CD["Cell Data"]
+    UI["User Input"] --> POL_REG["Policy Registration<br/>cell.policy"]
+    POL_REG --> DESERIALIZE["Deserialization<br/>policy.deserialize()"]
+    DESERIALIZE --> CD["Cell Data"]
     
     style UI fill:#e3f2fd,color:#1565c0
-    style PARSER fill:#fff3e0,color:#e65100
-    style POLICY fill:#f3e5f5,color:#7b1fa2
+    style POL_REG fill:#fff3e0,color:#e65100
+    style DESERIALIZE fill:#f3e5f5,color:#7b1fa2
     style CD fill:#e8f5e8,color:#2e7d32
 ```
 
 - **User Input**: Raw input from keyboard, paste, or programmatic updates
-- **Parser**: Converts input to appropriate data type using `cell.parser` identifier
-- **Policy**: Validates and processes data using `cell.policy` identifier
+- **Policy Registration**: Looks up the active policy instance using the `cell.policy` identifier
+- **Deserialization**: Converts input string/data to appropriate data type using `policy.deserialize()`
 - **Cell Data**: Final processed data stored in the cell
 
 ### Data Output Flow
 
-Data output follows this sequence: Cell Data → Formula Evaluation → Renderer → CSS Application
+Data output follows this sequence: Cell Data → Formula Evaluation → Policy Render → CSS Application
 
 ```mermaid
 graph LR
     CD["Cell Data"] --> FE["Formula Evaluation"]
-    FE --> RENDERER["Renderer<br/>cell.renderer"]
-    RENDERER --> CSS["CSS Application<br/>cell.style"]
+    FE --> RENDER["Render<br/>policy.render()"]
+    RENDER --> CSS["CSS Application<br/>cell.style"]
     CSS --> UI["User Interface"]
     
     style CD fill:#e8f5e8,color:#2e7d32
     style FE fill:#fff8e1,color:#f57f17
-    style RENDERER fill:#f1f8e9,color:#33691e
+    style RENDER fill:#f1f8e9,color:#33691e
     style CSS fill:#fce4ec,color:#c2185b
     style UI fill:#e3f2fd,color:#1565c0
 ```
 
 - **Cell Data**: Raw cell value or formula
 - **Formula Evaluation**: Calculates formula results if present
-- **Renderer**: Formats display using `cell.renderer` identifier
+- **Policy Render**: Formats display using the `policy.render()` method from the `cell.policy` identifier
 - **CSS Application**: Applies styling using `cell.style` properties
 - **User Interface**: Final rendered cell in the grid
 
@@ -146,57 +148,58 @@ To handle non-serializable objects while maintaining cell serialization, GridShe
 graph TB
     subgraph CELL ["Cell (Serializable)"]
         V["value: 'user123'"]
-        P["parser: 'userParser'"]
-        R["renderer: 'userRenderer'"]
+        P["policy: 'userPolicy'"]
     end
     
-    subgraph HUB ["Hub (Non-Serializable)"]
-        PARSERS["Parsers Registry"]
-        RENDERERS["Renderers Registry"]
+    subgraph REGISTRY ["Registry (Non-Serializable)"]
+        POLICIES["Policies Registry"]
         HANDLERS["Event Handlers"]
     end
     
-    CELL -->|"parser: 'userParser'"| HUB
-    CELL -->|"renderer: 'userRenderer'"| HUB
+    CELL -->|"policy: 'userPolicy'"| REGISTRY
     
     style CELL fill:#e8f5e8,color:#2e7d32
-    style HUB fill:#fff3e0,color:#e65100
+    style REGISTRY fill:#fff3e0,color:#e65100
 ```
 
 ### Multi-Sheet Event Handling
 
-When multiple sheets share the same hub, event handlers receive a `table` parameter that contains the `UserTable` instance. You can use `table.sheetName` to identify which sheet triggered the event:
+When multiple sheets share the same registry (via a shared `book`), event handlers receive a `sheet` parameter that is a `UserSheet` instance. Use `sheet.name` to identify which sheet triggered the event:
 
 ```tsx
-const hub = useHub({
-  onChange: ({ table, points }) => {
-    // Use table.sheetName to identify the source sheet
-    if (table.sheetName === 'Sales') {
+const book = useBook({
+  onChange: ({ sheet, points }) => {
+    // Use sheet.name to identify the source sheet
+    if (sheet.name === 'Sales') {
       console.log('Sales sheet data changed:', points);
-    } else if (table.sheetName === 'Inventory') {
+    } else if (sheet.name === 'Inventory') {
       console.log('Inventory sheet data changed:', points);
     }
   },
-  onRemoveRows: ({ table, ys }) => {
-    console.log(`Rows removed from ${table.sheetName}:`, ys);
+  onRemoveRows: ({ sheet, ys }) => {
+    console.log(`Rows removed from ${sheet.name}:`, ys);
   },
   onKeyUp: ({ e, points }) => {
     console.log(`Key pressed: ${e.key} at position:`, points);
   },
-  onInit: ({ table }) => {
-    console.log(`Table initialized: ${table.sheetName}`);
+  onInit: ({ sheet }) => {
+    console.log(`Sheet initialized: ${sheet.name}`);
   },
 });
+
+// Pass the same book to multiple GridSheet components
+<GridSheet sheetName="Sales" book={book} ... />
+<GridSheet sheetName="Inventory" book={book} ... />
 ```
 
-**Important**: Always use `table.sheetName` for conditional logic when multiple sheets share the same hub to ensure proper event handling and data management.
+**Important**: Always use `sheet.name` for conditional logic when multiple sheets share the same book to ensure proper event handling and data management.
 
 **How it works:**
 
-1. **Cell Storage**: Cells store only serializable identifiers (strings) for parsers, renderers, and other components
-2. **Hub Registry**: The Hub maintains registries of actual instances, event handlers, and class objects
-3. **Identifier Resolution**: When needed, the system resolves identifiers to actual instances from the Hub
-4. **Persistence**: Only the cell data (with identifiers) is persisted, while the Hub instances are recreated as needed
+1. **Cell Storage**: Cells store only serializable identifiers (strings) for policies, formats, and other components
+2. **Registry**: The Registry maintains instantiated objects, event handlers, and class objects
+3. **Identifier Resolution**: When needed, the system resolves identifiers to actual instances from the Registry
+4. **Persistence**: Only the cell data (with identifiers) is persisted, while the Registry instances are configured per-app
 
 ### Benefits of This Design
 
@@ -204,7 +207,7 @@ const hub = useHub({
 - **Flexibility**: Non-serializable objects can still be used through the Hub system
 - **Performance**: Direct object references are maintained during runtime
 - **Persistence**: Data can be safely saved and restored without losing functionality
-- **Extensibility**: New parsers, renderers, and handlers can be added without breaking existing data
+- **Extensibility**: New policies and handlers can be added without breaking existing data
 
 ### Example Implementation
 
@@ -212,23 +215,20 @@ const hub = useHub({
 // Cell stores only serializable data
 const cell = {
   value: "user123",
-  parser: "userParser",        // Identifier, not the actual parser instance
-  renderer: "userRenderer",    // Identifier, not the actual renderer instance
+  policy: "userPolicy",        // Identifier, not the actual policy instance
   custom: { userId: 123 }      // Serializable custom data
 }
 
-// Hub stores the actual instances
-const hub = {
-  parsers: {
-    userParser: new UserParser(),  // Actual parser instance
+// Registry (book.registry) stores the actual instances
+const book = useBook({
+  policies: {
+    userPolicy: new UserPolicy(),    // Actual policy instance (handles parsing + rendering)
   },
-  renderers: {
-    userRenderer: new UserRenderer(),  // Actual renderer instance
+  additionalFunctions: {
+    MY_FUNC: MyFunction,             // Formula function class
   },
-  eventHandlers: {
-    userHandler: (event) => { /* handler logic */ }  // Event handler function
-  }
-}
+  onChange: ({ sheet }) => { /* event handler */ },
+});
 ```
 
 This architecture ensures that GridSheet can handle complex, non-serializable objects while maintaining the ability to persist and restore cell data reliably.
@@ -369,17 +369,21 @@ Sorting works similarly to filtering:
 GridSheet is composed of several key components that work together to provide the complete spreadsheet experience:
 
 - **GridSheet**: Main container and orchestrator
-  - **FormulaBar**: Displays and edits cell formulas
-  - **SearchBar**: Provides search functionality across the grid
+  - **FormulaBar**: Displays and edits cell formulas; contains **FunctionGuide** for autocomplete help
+  - **SearchBar**: Provides search/replace functionality across the grid (shown instead of FormulaBar)
   - **Editor**: Handles cell editing and input validation
   - **Tabular**: Core grid rendering component
     - **CellStateOverlay**: Canvas-based overlay for selection visuals
-    - **HeaderCellLeft...**: Left-side row headers
-    - **HeaderCellTop...**: Top-side column headers
-    - **Cell...**: Individual cell components
-  - **StoreObserver**: Monitors state changes and triggers updates
-  - **ContextMenu**: Right-click context menu functionality
-  - **Resizer**: Handles column/row resizing operations
+    - **HeaderCellLeft**: Left-side row headers
+    - **HeaderCellTop**: Top-side column headers
+    - **Cell**: Individual cell components
+  - **StoreObserver**: Monitors state changes and triggers `onChange`, `onSave`, etc.
+  - **ContextMenu**: Right-click context menu
+  - **ColumnMenu**: Column header click menu (filter/sort/label)
+  - **RowMenu**: Row header click menu
+  - **Resizer**: Handles column/row resizing via drag
+  - **ScrollHandle**: Invisible scroll triggers at edges (for autoscroll during drag/select)
+  - **Emitter**: Broadcasts keyboard/focus events to the parent
 
 ## Canvas Overlay (CellStateOverlay)
 

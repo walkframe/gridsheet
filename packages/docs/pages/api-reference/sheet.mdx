@@ -155,9 +155,9 @@ sheet.getCell({ y: 1, x: 2 }, { resolution: 'RAW' });
 
 ```tsx
 const ChartPolicyMixin: PolicyMixinType = {
-  renderSheet({ value }: RenderProps<Sheet>) {
+  renderSheet({ value }: RenderProps<UserSheet>) {
     // value is the Sheet spanning the referenced range (e.g. C1:F1)
-    const matrix = value._toValueMatrix();
+    const matrix = toValueMatrix(value);
     // ... render chart from matrix data
   },
 };
@@ -252,21 +252,20 @@ console.log(cols[0]); // { '1': CellType, '2': CellType, ... } for column A
 ### Example: Reading data in an onChange handler
 
 ```tsx
-import { GridSheet, useConnector, toValueMatrix } from '@gridsheet/react-core';
+import { GridSheet, useBook, toValueMatrix } from '@gridsheet/react-core';
 
 function MyComponent() {
-  const connector = useConnector();
+  const book = useBook({
+    onChange: ({ sheet }) => {
+      const matrix = toValueMatrix(sheet);
+      console.log('Current values:', matrix);
+    },
+  });
 
   return (
     <GridSheet
-      connector={connector}
+      book={book}
       initialCells={{ A1: { value: 1 }, B1: { value: 2 } }}
-      options={{
-        onChange: ({ sheet }) => {
-          const matrix = toValueMatrix(sheet);
-          console.log('Current values:', matrix);
-        },
-      }}
     />
   );
 }
@@ -274,66 +273,62 @@ function MyComponent() {
 
 ## Data Manipulation Methods
 
-**Important**: All data manipulation methods return a new `UserSheet` instance. To apply changes to the GridSheet component, you must use the `sync` function from `connector`.
+**Important**: All data manipulation methods return a new `UserSheet` instance. To apply changes to the GridSheet component, you must call `apply` with the returned sheet via `sheetRef`.
 
 ### Using Sheet References
 
-To manipulate sheet data programmatically, access the sheet through a connector:
+To manipulate sheet data programmatically, use `sheetRef` (inside a component) or `createSheetRef` (outside a component):
 
-#### React (useConnector)
+#### React (useSheetRef)
 
-`useConnector` is a React hook and must be called within a function component:
+`useSheetRef` is a React hook and must be called within a function component:
 
 ```tsx
-import { useConnector, GridSheet } from '@gridsheet/react-core';
+import { useSheetRef, GridSheet } from '@gridsheet/react-core';
 
 function MyComponent() {
-  const connector = useConnector(); // Must be called inside function component
-  
+  const sheetRef = useSheetRef();
+
   const handleUpdate = () => {
-    if (connector.current) {
-      const { sheetManager } = connector.current;
-      const { sheet, apply } = sheetManager;
-      const newSheet = sheet.write({ point: { x: 1, y: 1 }, value: 'New Value' });
-      apply(newSheet);
-    }
+    if (!sheetRef.current) return;
+    const { sheet, apply } = sheetRef.current;
+    const newSheet = sheet.write({ point: { x: 1, y: 1 }, value: 'New Value' });
+    apply(newSheet);
   };
 
   return (
-    <GridSheet connector={connector} initialCells={initialCells} />
+    <GridSheet sheetRef={sheetRef} initialCells={initialCells} />
   );
 }
 ```
 
-#### Global Usage and Other Frameworks (createConnector)
+#### Global Usage (createSheetRef)
 
-For global usage or non-React frameworks (Vue, Svelte), use `createConnector`:
+For global usage or use outside a React component:
 
 ```tsx
-import { createConnector, GridSheet } from '@gridsheet/react-core';
+import { createSheetRef, GridSheet } from '@gridsheet/react-core';
 
-const connector = createConnector();
+const sheetRef = createSheetRef();
 
 function MyComponent() {
   return (
-    <GridSheet connector={connector} initialCells={initialCells} />
+    <GridSheet sheetRef={sheetRef} initialCells={initialCells} />
   );
 }
 
 // Can be called from anywhere:
 function updateFromOutside() {
-  if (connector.current) {
-    const { sheetManager } = connector.current;
-    const { sheet, apply } = sheetManager;
-    const newSheet = sheet.write({ point: { x: 1, y: 1 }, value: 'Hello' });
-    apply(newSheet);
-  }
+  if (!sheetRef.current) return;
+  const { sheet, apply } = sheetRef.current;
+  const newSheet = sheet.write({ point: { x: 1, y: 1 }, value: 'Hello' });
+  apply(newSheet);
 }
 ```
 
 ### Cell Updates
 
-**Note**: The `sync` function used in the examples below should be obtained from `connector.current.sheetManager`.
+**Note**: The `apply` function and `sheet` object in the examples below are obtained from `sheetRef.current`.
 
 #### `update(args): UserSheet`
 
@@ -350,7 +345,8 @@ update(args: {
 Updates multiple cells at once.
 
 ```tsx
-const { sheet, apply } = connector.current.sheetManager;
+if (!sheetRef.current) return;
+const { sheet, apply } = sheetRef.current;
 
 const newSheet = sheet.update({
   diff: {
@@ -376,7 +372,8 @@ write(args: {
 Writes a value to a specific cell.
 
 ```tsx
-const { sheet, apply } = connector.current.sheetManager;
+if (!sheetRef.current) return;
+const { sheet, apply } = sheetRef.current;
 
 const newSheet = sheet.write({
   point: { x: 1, y: 1 },
@@ -399,7 +396,8 @@ writeMatrix(args: {
 Writes a 2D matrix of string values starting at a specific point.
 
 ```tsx
-const { sheet, apply } = connector.current.sheetManager;
+if (!sheetRef.current) return;
+const { sheet, apply } = sheetRef.current;
 
 const newSheet = sheet.writeMatrix({
   point: { x: 1, y: 1 },
@@ -427,7 +425,8 @@ insertRows(args: {
 Inserts rows at position `y`. `baseY` specifies which existing row to copy layout from. If `diff` is provided, those cells are updated after insertion.
 
 ```tsx
-const { sheet, apply } = connector.current.sheetManager;
+if (!sheetRef.current) return;
+const { sheet, apply } = sheetRef.current;
 
 const newSheet = sheet.insertRows({
   y: 5,
@@ -450,7 +449,8 @@ removeRows(args: { y: number; numRows: number; reflection?: StorePatchType }): U
 Removes rows starting at position `y`.
 
 ```tsx
-const { sheet, apply } = connector.current.sheetManager;
+if (!sheetRef.current) return;
+const { sheet, apply } = sheetRef.current;
 
 const newSheet = sheet.removeRows({ y: 2, numRows: 3 });
 apply(newSheet); // Required to apply changes
@@ -475,7 +475,8 @@ insertCols(args: {
 Inserts columns at position `x`. `baseX` specifies which existing column to copy layout from. If `diff` is provided, those cells are updated after insertion.
 
 ```tsx
-const { sheet, apply } = connector.current.sheetManager;
+if (!sheetRef.current) return;
+const { sheet, apply } = sheetRef.current;
 
 const newSheet = sheet.insertCols({
   x: 3,
@@ -498,7 +499,8 @@ removeCols(args: { x: number; numCols: number; reflection?: StorePatchType }): U
 Removes columns starting at position `x`.
 
 ```tsx
-const { sheet, apply } = connector.current.sheetManager;
+if (!sheetRef.current) return;
+const { sheet, apply } = sheetRef.current;
 
 const newSheet = sheet.removeCols({ x: 2, numCols: 3 });
 apply(newSheet); // Required to apply changes
@@ -510,7 +512,8 @@ apply(newSheet); // Required to apply changes
 Moves cells from one area to another.
 
 ```tsx
-const { sheet, apply } = connector.current.sheetManager;
+if (!sheetRef.current) return;
+const { sheet, apply } = sheetRef.current;
 
 const newSheet = sheet.move({
   src: { top: 1, left: 1, bottom: 3, right: 3 },
@@ -523,7 +526,8 @@ apply(newSheet); // Required to apply changes
 Copies cells from one area to another. Pass `onlyValue: true` to copy only values without styles.
 
 ```tsx
-const { sheet, apply } = connector.current.sheetManager;
+if (!sheetRef.current) return;
+const { sheet, apply } = sheetRef.current;
 
 const newSheet = sheet.copy({
   src: { top: 1, left: 1, bottom: 3, right: 3 },
@@ -539,7 +543,8 @@ apply(newSheet); // Required to apply changes
 Sets the row header height in pixels.
 
 ```tsx
-const { sheet, apply } = connector.current.sheetManager;
+if (!sheetRef.current) return;
+const { sheet, apply } = sheetRef.current;
 apply(sheet.setHeaderHeight(32));
 ```
 
@@ -547,7 +552,8 @@ apply(sheet.setHeaderHeight(32));
 Sets the column header width in pixels.
 
 ```tsx
-const { sheet, apply } = connector.current.sheetManager;
+if (!sheetRef.current) return;
+const { sheet, apply } = sheetRef.current;
 apply(sheet.setHeaderWidth(60));
 ```
 
@@ -559,7 +565,8 @@ Rows marked with `sortFixed: true` or `filterFixed: true` (via their row header 
 Sorts all data rows by the values in the specified column. Supports ascending and descending order. Null/undefined values are sorted to the end. Rows with `sortFixed: true` on their header cell remain in place. This operation is recorded in the undo/redo history.
 
 ```tsx
-const { sheet, apply } = connector.current.sheetManager;
+if (!sheetRef.current) return;
+const { sheet, apply } = sheetRef.current;
 
 // Sort by column B ascending
 apply(sheet.sortRows({ x: 2, direction: 'asc' }));
@@ -596,19 +603,20 @@ Available filter methods:
 | `gte` | Greater than or equal |
 | `lt` | Less than |
 | `lte` | Less than or equal |
-| `contains` | Contains substring |
-| `notContains` | Does not contain substring |
-| `empty` | Cell is empty (no value required) |
-| `notEmpty` | Cell is not empty (no value required) |
+| `includes` | Contains substring |
+| `excludes` | Does not contain substring |
+| `blank` | Cell is empty (no value required) |
+| `nonblank` | Cell is not empty (no value required) |
 
 ```tsx
-const { sheet, apply } = connector.current.sheetManager;
+if (!sheetRef.current) return;
+const { sheet, apply } = sheetRef.current;
 
 // Filter column B: show only rows where value > 80
 apply(sheet.filterRows({
   x: 2,
   filter: {
-    mode: 'and',
+    mode: 'or',
     conditions: [{ method: 'gt', value: ['80'] }],
   },
 }));
@@ -644,7 +652,8 @@ if (sheet.hasActiveFilters()) {
 Undoes the most recent operation.
 
 ```tsx
-const { sheet, apply } = connector.current.sheetManager;
+if (!sheetRef.current) return;
+const { sheet, apply } = sheetRef.current;
 const { history } = sheet.undo();
 apply(sheet);
 ```
@@ -653,7 +662,8 @@ apply(sheet);
 Redoes the most recently undone operation.
 
 ```tsx
-const { sheet, apply } = connector.current.sheetManager;
+if (!sheetRef.current) return;
+const { sheet, apply } = sheetRef.current;
 sheet.redo();
 apply(sheet);
 ```
@@ -676,7 +686,8 @@ Returns `true` if any cells with async formulas are still loading.
 Resolves when all pending async formula cells have settled.
 
 ```tsx
-const { sheet } = connector.current.sheetManager;
+if (!sheetRef.current) return;
+const { sheet } = sheetRef.current;
 await sheet.waitForPending();
 const matrix = toValueMatrix(sheet);
 ```

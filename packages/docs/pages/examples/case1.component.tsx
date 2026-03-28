@@ -8,7 +8,8 @@ import {
   Policy,
   PolicyMixinType,
   RenderProps,
-  Sheet,
+  UserSheet,
+  toValueMatrix,
 } from '@gridsheet/react-core';
 import { useSpellbook } from '@gridsheet/functions';
 import {
@@ -27,10 +28,10 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 // Line chart policy
 const LineChartPolicyMixin: PolicyMixinType = {
-  renderSheet({ value }: RenderProps<Sheet>) {
+  renderSheet({ value }: RenderProps<UserSheet>) {
     // =C1:F1 with resolution:'AREA' delivers the range as a Sheet.
     // Extract numeric values from the trimmed sheet.
-    const matrix = value._toValueMatrix();
+    const matrix = toValueMatrix(value);
     const values: number[] = matrix.flatMap((row) => row.filter((v): v is number => typeof v === 'number'));
 
     if (values.length === 0) {

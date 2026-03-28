@@ -238,13 +238,32 @@ protected validate(args: any[]): any[] {
 - `defs: FunctionArgumentDefinition[]` drives automatic argument-count and type validation before `main()` is invoked
 - `example: string` documents a canonical call expression shown in formula autocomplete
 
-### 5. Renderer Merged into Policy
+**Providing Built-in Functions**
 
-In v2, `Renderer` and `Policy` were separate classes with separate mixin systems. In v3 they have been **merged into a single `Policy` class**.
+If you want to use the standard suite of spreadsheet functions (like `SUM`, `VLOOKUP`, etc.), we highly recommend using the `useSpellbook()` hook from the `@gridsheet/functions` package to provide them to your `book`:
+
+```tsx
+import { useBook } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/functions';
+
+function App() {
+  const spellbook = useSpellbook();
+  
+  const book = useBook({
+    additionalFunctions: spellbook,
+  });
+  
+  // ...
+}
+```
+
+### 5. Renderer, Parser, Labeler, and Policy Merged
+
+In v2, `Renderer`, `Parser`, `Labeler`, and `Policy` were separate classes with separate mixin systems. In v3 they have been **merged into a single `Policy` class**.
 
 **From v2:**
 ```tsx
-import { Renderer, Policy } from '@gridsheet/react-core';
+import { Renderer, Policy, Parser, Labeler } from '@gridsheet/react-core';
 
 const myRenderer = new Renderer({
   mixins: [ThousandSeparatorRendererMixin],
@@ -277,71 +296,68 @@ const myPolicy = new Policy({
 | `getSelectOptions` | Dropdown/autocomplete choices |
 
 **What Changed:**
-- `Renderer` class is removed; replace all `new Renderer(...)` with `new Policy(...)`
-- All `*RendererMixin` objects must be replaced with their `*PolicyMixin` equivalents
-- `renderer` prop and `renderers` option no longer exist; use `policies` and `policy` on cells
+- `Renderer`, `Parser`, and `Labeler` classes are removed; replace all `new Renderer(...)` (and parser/labeler equivalents) with `new Policy(...)`
+- All `*RendererMixin`, `*ParserMixin`, `*LabelerMixin` objects must be replaced with their `*PolicyMixin` equivalents
+- `renderer`, `parser`, `labeler` props and their corresponding options no longer exist; use `policies` and `policy` on cells
 
-### 6. Header-Only Cell Addressing with `A0` and `01`
+### 6. Header-Only Cell Addressing with `ch()` and `rh()`
 
-v3 introduces two new address keys specifically for targeting header cells without affecting the data cells below or beside them.
+v3 introduces dedicated address keys specifically for targeting header cells without affecting the data cells below or beside them.
+
+Internally, these address keys append or prepend learning a `0` (e.g., `A0` for column A's header, `01` for row 1's header). However, we strongly recommend using the provided coordinate utility functions `ch()` and `rh()` to generate these addressing strings instead of writing the internal `0` variants manually.
 
 **Previous behavior (still valid for data cells):**
 
 | Key | Example | Applies to |
 |---|---|---|
-| `A` | column letter | All cells in column A — width and label. Style is **not** applied to the column header (only to data cells) |
-| `1` | row number | All cells in row 1 — height only. Style is **not** applied to the row header |
+| `A` | column letter | All data cells in column A (`A1`, `A2`...). Crucially, this does **not** include the column header (`A0`). Therefore, setting `width` here will **not** change the column's width in the UI. |
+| `1` | row number | All data cells in row 1 (`A1`, `B1`...). This does **not** include the row header (`01`). Therefore, setting `height` here will **not** change the row's height in the UI. |
 
 **New header-only keys:**
 
 | Key | Example | Applies to |
 |---|---|---|
-| `A0` | column + zero | **Only** the column header cell for column A |
-| `01` | zero + row number | **Only** the row header cell for row 1 |
+| `ch('A')` (evaluates to `A0`) | `ch('A')` | **Only** the column header cell for column A. You **must** define `width` here to resize the column visually. |
+| `rh(1)` (evaluates to `01`) | `rh(1)` | **Only** the row header cell for row 1. You **must** define `height` here to resize the row visually. |
 
-The critical difference is that `A0` and `01` fully support `style`, whereas `style` set on `A` or `1` is silently stripped when the spreadsheet stacks cells in the header row/column.
+The critical difference is that header cells targeted via `ch` and `rh` fully support `style` and are the authoritative source for layout sizes (`width` and `height`). Note that `A` and `1` do not get copied to the headers.
 
 ```tsx
+import { buildInitialCells, ch, rh } from '@gridsheet/react-core';
+
 buildInitialCells({
   cells: {
-    // Column A: set width for all cells and a label for the header
-    A: { width: 120, label: 'Name' },
+    // Style applied ONLY to the data cells in column A
+    A: { style: { color: 'green' } },
 
-    // Style and label applied ONLY to the column-A header cell
-    A0: {
-      style: { backgroundColor: '#e8f0fe', fontWeight: 'bold' },
+    // Style, label, and width applied ONLY to the column-A header cell
+    [ch('A')]: {
+      width: 120,
       label: 'Full Name',
+      style: { backgroundColor: '#e8f0fe', fontWeight: 'bold' },
     },
 
-    // Row 1: set height for all cells
-    1: { height: 28 },
+    // Style applied ONLY to the data cells in row 1
+    1: { style: { color: 'blue' } },
 
-    // Style applied ONLY to the row-1 header cell
-    '01': {
-      style: { backgroundColor: '#fce8e6' },
+    // Style and height applied ONLY to the row-1 header cell
+    [rh(1)]: {
+      height: 28,
       label: 'R1',
+      style: { backgroundColor: '#fce8e6' },
     },
   },
 });
 ```
 
-Stacking order for a column header (e.g. `A0`):
-
-1. `DEFAULT_COL_KEY` defaults
-2. Layout from `A` (width, label — style stripped)
-3. Full override from `A0` (including style)
-
-Stacking order for a row header (e.g. `01`):
-
-1. `DEFAULT_ROW_KEY` defaults
-2. Layout from `1` (height — style stripped)
-3. Full override from `01` (including style)
+(removed outdated stacking order details as A and 1 do not propagate to header cells anymore)
 
 **What Changed / New:**
-- `style` placed on a column key (`A`) or row key (`1`) no longer bleeds into the corresponding header cell — this is a behavioural change if you previously relied on `A`/`1` to style headers
-- `A0` targets only the column header cell and fully supports `style`
-- `01` targets only the row header cell and fully supports `style`
-- Header cells now participate in the full style system; you can set background colour, font weight, borders, etc. directly on header cells
+- `A` and `1` strictly point to data cells (`A1`, `A2`... for `A` and `A1`, `B1`... for `1`) and do **not** cascade any properties to the header cells.
+- Because layout size is read from headers, setting `width` on `A` or `height` on `1` no longer resizes the column/row in the UI. You must set them via the header address using `ch()` or `rh()`.
+- `ch('A')` targets only the column header cell and fully supports both `width` and `style`.
+- `rh(1)` targets only the row header cell and fully supports both `height` and `style`.
+- Header cells now participate in the full style system; you can set background colour, font weight, borders, etc. directly on header cells.
 
 **Utility Functions for Header Address Keys**
 
@@ -374,12 +390,9 @@ const columns = ['A', 'B', 'C'];
 
 buildInitialCells({
   cells: {
-    // Set column width for all cells in each column (plain column letter key)
-    ...Object.fromEntries(columns.map((col) => [col, { width: 120 }])),
-
-    // Apply a bold label to each column header cell only (ch() key)
+    // Apply width, label, and style to each column header cell only (ch() key)
     ...Object.fromEntries(
-      columns.map((col, i) => [ch(col), { label: `Column ${i + 1}`, style: { fontWeight: 'bold' } }])
+      columns.map((col, i) => [ch(col), { label: `Column ${i + 1}`, width: 120, style: { fontWeight: 'bold' } }])
     ),
 
     // Set row height on each row header cell (rh() key)

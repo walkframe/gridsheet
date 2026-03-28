@@ -76,7 +76,7 @@ export type PolicyMixinType = {
   renderArray?: (props: RenderProps<any[]>) => any;
   renderObject?: (props: RenderProps<any>) => any;
   renderNull?: (props: RenderProps<null | undefined>) => any;
-  renderSheet?: (props: RenderProps<Sheet>) => any;
+  renderSheet?: (props: RenderProps<UserSheet>) => any;
   renderRowHeaderLabel?: (n: number) => string | null;
   renderColHeaderLabel?: (n: number) => string | null;
 
@@ -275,9 +275,9 @@ export class Policy implements PolicyMixinType {
     return '';
   }
 
-  public renderSheet({ value: sheet, ...rest }: RenderProps<Sheet>): any {
-    const at = sheet.getId(rest.point);
-    const stripped = sheet.strip({ raise: true, at });
+  public renderSheet({ value: childSheet, ...rest }: RenderProps<UserSheet>): any {
+    const at = rest.sheet.getId(rest.point);
+    const stripped = childSheet.__raw__.strip({ raise: true, at });
     return this.render({ ...rest, value: stripped });
   }
 

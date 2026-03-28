@@ -9,14 +9,17 @@ GridSheet is organized as a monorepo using pnpm workspaces:
 ```
 gridsheet/
 ├── packages/
-│   ├── react-core/          # React implementation
-│   ├── preact-core/         # Preact implementation
-│   ├── vue-core/           # Vue.js implementation
-│   ├── docs/              # Documentation site
-│   └── storybook/         # Component examples and testing
-├── package.json           # Root package configuration
-├── tsconfig.json         # Root TypeScript configuration
-└── README.md             # Project overview
+│   ├── react-core/          # React implementation (core source of truth)
+│   ├── preact-core/         # Preact implementation (same codebase, different build target)
+│   ├── react-dev/           # Development utilities for React
+│   ├── functions/           # Extended formula functions (@gridsheet/functions)
+│   ├── vue-core/            # Vue.js implementation (wrapper around preact-core)
+│   ├── docs/                # Documentation site
+│   └── storybook/           # Component examples and testing
+├── e2e/                     # Playwright end-to-end tests
+├── package.json             # Root package configuration
+├── tsconfig.json            # Root TypeScript configuration
+└── README.md                # Project overview
 ```
 
 ## Versioning Strategy
@@ -25,10 +28,15 @@ gridsheet/
 
 GridSheet is fundamentally implemented in `react-core` and built for both React and Preact:
 
-- **@gridsheet/react-core**: React implementation
+- **@gridsheet/react-core**: React implementation (core source of truth)
 - **@gridsheet/preact-core**: Preact implementation (same codebase, different build target)
 
 These core packages always maintain identical versions following semantic versioning: `MAJOR.MINOR.PATCH[-PRERELEASE]`
+
+### Extended Packages
+
+- **@gridsheet/functions**: Extended formula functions library. Provides `useSpellbook` / `createSpellbook` which bundle all built-in extended functions and accept custom `additionalFunctions`.
+- **@gridsheet/react-dev**: Development utilities for React.
 
 ### Wrapper Packages
 
@@ -56,6 +64,18 @@ When only the wrapper layer is updated, this package uses the format: `MAJOR.MIN
   "version": "2.0.0-rc.2-0"
 }
 ```
+
+### Git Tagging Strategy
+
+All packages in the monorepo use the following git tag format upon release:
+
+```
+{package-name}/{version}
+```
+
+For example:
+- `@gridsheet/react-core/2.0.0-rc.2`
+- `@gridsheet/vue-core/2.0.0-rc.2-0`
 
 ### Version Bumping Rules
 

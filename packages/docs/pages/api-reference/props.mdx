@@ -27,14 +27,23 @@ The format uses cell addresses as keys for cell configuration objects. For examp
 
 ### Default Configuration
 
-The `default` key applies configuration to all cells in the spreadsheet. This is useful for setting global defaults like width, height, or styles.
+The `default` key applies a base configuration to all cells in the spreadsheet, which is useful for setting global shared styles. However, **`width` and `height` cannot be set via `default`**. 
+
+To set a global default width or height that applies to all headers, use the `defaultCol` and `defaultRow` keys instead:
 
 ```tsx
 const initialCells = {
+  // Applies to all cells in the sheet
   default: { 
-    width: 100, 
-    height: 30,
     style: { fontSize: '14px' }
+  },
+  // Base configuration for all column headers
+  defaultCol: {
+    width: 100
+  },
+  // Base configuration for all row headers
+  defaultRow: {
+    height: 30
   },
   'A1': { value: 'Hello World' },
   'B2': { value: 100 },
@@ -56,20 +65,22 @@ const initialCells = {
 };
 ```
 
-### Header Cell Addressing (`A0`, `01`, `A0:G0`)
+### Header Cell Addressing (`ch()`, `rh()`, `A0:G0`)
 
-To configure individual column or row header cells, append `0` to the address:
+To configure individual column or row header cells, you should use the `ch()` and `rh()` utility functions provided by `@gridsheet/react-core`. While internally GridSheet appends a `0` (e.g., `A0`, `01`), Using the `ch` and `rh` functions is strongly recommended. 
 
-- **`A0`** — Column A's header cell only (width, label, style, etc.)
-- **`01`** — Row 1's header cell only (height, style, etc.)
+- **`ch('A')`** (evaluates to `A0`) — Column A's header cell only (width, label, style, etc.)
+- **`rh(1)`** (evaluates to `01`) — Row 1's header cell only (height, style, etc.)
 - **`A0:G0`** — Range of column header cells (A through G)
 
 ```tsx
+import { ch, rh } from '@gridsheet/react-core';
+
 const initialCells = {
   // Column A header: set width and label
-  A0: { width: 150, label: 'Product' },
+  [ch('A')]: { width: 150, label: 'Product' },
   // Row 1 header: set height
-  '01': { height: 50 },
+  [rh(1)]: { height: 50 },
   // Style column headers F and G blue
   'F0:G0': { style: { color: 'blue' } },
   // All data cells in column A (does NOT affect the header)
@@ -77,7 +88,7 @@ const initialCells = {
 };
 ```
 
-**Note**: `A: { ... }` applies to **all data cells** in column A (rows 1 and below). Use `A0` to target the column A header cell. Similarly, `1: { ... }` applies to all data cells in row 1; use `01` for the row 1 header.
+**Note**: `A: { ... }` applies to **all data cells** in column A (rows 1 and below). Use `ch('A')` to target the column A header cell. Similarly, `1: { ... }` applies to all data cells in row 1; use `rh(1)` for the row 1 header.
 
 ### Column and Row Specifications
 
@@ -91,11 +102,11 @@ Some properties are only valid for columns or rows:
 
 | Property | Valid For | Description |
 |----------|-----------|-------------|
-| `width` | Column header keys only (`A0`, `default`) | Column width in pixels |
-| `height` | Row header keys only (`01`, `default`) | Row height in pixels |
-| `label` | Column header keys only (`A0`) | Custom display text for the column header |
+| `width` | Column header keys only (`ch('A')`, `defaultCol`) | Column width in pixels |
+| `height` | Row header keys only (`rh(1)`, `defaultRow`) | Row height in pixels |
+| `label` | Column header keys only (`ch('A')`) | Custom display text for the column header |
 
-**Note**: `width`, `height`, and `label` are header-only properties. Specifying them on data cell keys like `A`, `1`, or `D3` has no effect — use `A0`/`01` instead.
+**Note**: `width`, `height`, and `label` are header-only properties. Specifying them on data cell keys like `A`, `1`, or `D3` has no effect. Furthermore, they will not work on the generic `default` key.
 
 ### Cell Configuration
 
@@ -126,13 +137,15 @@ Each cell can be configured with the following properties:
 `sortFixed` and `filterFixed` are row-level flags that keep specific rows anchored when the user sorts or filters the sheet. They are set on the **row header cell**, addressed as `'0<row>'` (column 0, the row header column).
 
 ```tsx
+import { rh } from '@gridsheet/react-core';
+
 buildInitialCells({
   cells: {
     B6: { value: 'Total' },
     C6: { value: '=SUM(C1:C5)' },
     '6': { style: { borderTop: '3px double #555' } },
     // Row 6 header cell — fix during sort and filter
-    '06': { sortFixed: true, filterFixed: true },
+    [rh(6)]: { sortFixed: true, filterFixed: true },
   },
 })
 ```
@@ -198,18 +211,20 @@ import { operations } from '@gridsheet/react-core';
 ### Example Usage
 
 ```tsx
+import { ch, rh } from '@gridsheet/react-core';
+
 const initialCells = {
   // Default configuration for all cells
   default: { 
-    width: 100, 
-    height: 30,
     style: { fontSize: '14px' }
   },
+  defaultCol: { width: 100 },
+  defaultRow: { height: 30 },
   
   // Header configuration
   '0': { 
-    height: 60,  // Header height
-    width: 80,   // Header width
+    height: 60,  // Header row height
+    width: 80,   // Header column width
   },
   
   // Individual cell configuration
@@ -218,14 +233,15 @@ const initialCells = {
   'C3': { value: 'Active', policy: 'status' },
   
   // Column header configuration (width, label only affect headers)
-  'A0': { width: 150, label: 'Name' },
-  'B0': { width: 200, label: 'Value' },
+  [ch('A')]: { width: 150, label: 'Name' }, // A0
+  [ch(2)]: { width: 200, label: 'Value' }, // B0
+  
   // Style for all data cells in column A
   'A': { style: { backgroundColor: '#f9f9f9' } },
 
   // Row header configuration
-  '01': { height: 40 },
-  '02': { height: 50 },
+  [rh(1)]: { height: 40 }, // 01
+  [rh(2)]: { height: 50 }, // 02
 };
 
 <GridSheet initialCells={initialCells} />
@@ -276,12 +292,12 @@ A unique identifier for the sheet that enables cross-sheet references and commun
 ```ts
 type SheetHandle = {
   sheet: UserSheet;
-  sync: (sheet: UserSheet) => void;
+  apply: (sheet: UserSheet) => void;
 };
 
 type StoreHandle = {
   store: StoreType;
-  sync: (store: StoreType) => void;
+  apply: (store: StoreType) => void;
   dispatch: Dispatcher;
 };
 ```

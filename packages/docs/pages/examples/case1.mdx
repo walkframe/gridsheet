@@ -22,8 +22,8 @@ By setting a range formula on a cell and implementing `renderSheet` on that cell
 
 ```tsx
 const LineChartPolicyMixin: PolicyMixinType = {
-  renderSheet({ value }: RenderProps<Sheet>) {
-    const matrix = value._toValueMatrix();
+  renderSheet({ value }: RenderProps<UserSheet>) {
+    const matrix = toValueMatrix(value);
     const values: number[] = matrix.flatMap(
       (row) => row.filter((v): v is number => typeof v === 'number')
     );
@@ -33,7 +33,7 @@ const LineChartPolicyMixin: PolicyMixinType = {
 };
 ```
 
-`_toValueMatrix()` converts the cells held by the `Sheet` into a 2D array of plain values. Using a type guard in the filter safely extracts numbers only.
+`toValueMatrix()` converts the cells held by the `UserSheet` into a 2D array of plain values. Using a type guard in the filter safely extracts numbers only.
 
 ### Pairing a Range Formula with a Policy
 
