@@ -39,6 +39,11 @@ jobs:
           pnpm install
           npx playwright install --with-deps
 
+      - name: build functions
+        run: |
+          cd packages/functions
+          pnpm build
+
       - name: build storybook
         run: |
           cd packages/storybook
