@@ -373,18 +373,24 @@ export class Sheet implements UserSheet {
     const snapshot: CellsByIdType = {};
     const numCols = this.numCols;
     const numRows = this.numRows;
-    // Column header cells: only capture the 'filter' field (undefined if absent)
+    // Column header cells: capture the 'filter' field.
+    // Use null instead of undefined so the value survives JSON serialization
+    // (undefined is stripped by JSON.stringify, causing undo to silently no-op in environments
+    // that serialize/deserialize state such as StackBlitz hot-reload).
     for (let col = 1; col <= numCols; col++) {
       const id = this.idMatrix[0]?.[col];
       if (id != null) {
-        snapshot[id] = { filter: this.registry.data[id]?.filter };
+        snapshot[id] = { filter: this.registry.data[id]?.filter ?? null };
       }
     }
-    // Row header cells: only capture the 'filtered' field (undefined if absent)
+    // Row header cells: capture the 'filtered' field.
+    // Use false instead of undefined so the value survives JSON serialization
+    // (undefined is stripped by JSON.stringify, causing undo to silently no-op in environments
+    // that serialize/deserialize state such as StackBlitz hot-reload).
     for (let y = 1; y <= numRows; y++) {
       const id = this.idMatrix[y]?.[0];
       if (id != null) {
-        snapshot[id] = { filtered: this.registry.data[id]?.filtered };
+        snapshot[id] = { filtered: this.registry.data[id]?.filtered ?? false };
       }
     }
     return snapshot;

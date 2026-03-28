@@ -105,8 +105,8 @@ export type CellType<T = any, Custom = any> = {
   prevention?: OperationType;
   /** Cached result from an async formula. Stored directly on the cell for serializability. */
   asyncCaches?: Record<string, AsyncCache>;
-  /** Filter configuration. Set on col-header cells (y=0). */
-  filter?: FilterConfig;
+  /** Filter configuration. Set on col-header cells (y=0). null means explicitly absent (used in undo diffBefore to survive JSON serialization). */
+  filter?: FilterConfig | null;
   /** Whether this row is hidden by a filter. Set on row-header cells (x=0). */
   filtered?: boolean;
   /** If true, this row is excluded from sort and stays at its original position. Set on row-header cells (x=0). */
