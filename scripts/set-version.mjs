@@ -2,6 +2,7 @@
 
 import { readFileSync, writeFileSync, readdirSync } from 'fs';
 import { join } from 'path';
+import { execSync } from 'child_process';
 
 const version = process.argv[2];
 if (!version) {
@@ -52,3 +53,16 @@ for (const dir of pkgDirs) {
 }
 
 console.log(`\nUpdated ${changed} packages to ${version}`);
+
+execSync(`git add packages/*/package.json`, { cwd: root, stdio: 'inherit' });
+execSync(`git commit -m "${version}"`, { cwd: root, stdio: 'inherit' });
+console.log(`\nCommitted as "${version}"`);
+
+for (const dir of pkgDirs) {
+  const pkgPath = join(root, 'packages', dir, 'package.json');
+  const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
+  const shortName = pkg.name.split('/').pop();
+  const tag = `${shortName}/${version}`;
+  execSync(`git tag "${tag}"`, { cwd: root, stdio: 'pipe' });
+  console.log(`  tagged: ${tag}`);
+}
