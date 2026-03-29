@@ -19,7 +19,7 @@
     "react-chartjs-2": "^5.0.0",
     "@octokit/request": "^8.0.0",
     "react-select": "^5.7.0",
-    "next": "^14.0.0",
+    "next": "^15.5.14",
     "nextra": "^2.13.2",
     "nextra-theme-docs": "^2.13.2",
     "react": "^18.0.0",
