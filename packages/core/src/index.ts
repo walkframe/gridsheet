@@ -180,7 +180,15 @@ export { Pending, Spilling } from './sentinels';
 export { focus, preventSafariBounce } from './lib/dom';
 
 // --- Input ---
-export { handleFormulaQuoteAutoClose, insertTextAtCursor, isFocus, insertRef, isRefInsertable, expandInput, resetInput } from './lib/input';
+export {
+  handleFormulaQuoteAutoClose,
+  insertTextAtCursor,
+  isFocus,
+  insertRef,
+  isRefInsertable,
+  expandInput,
+  resetInput,
+} from './lib/input';
 
 // --- Virtualization ---
 export { smartScroll, virtualize, getAreaInTabular, getCellRectPositions } from './lib/virtualization';

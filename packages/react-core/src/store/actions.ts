@@ -13,15 +13,7 @@ import {
   OperatorType,
   FilterConfig,
 } from '../types';
-import {
-  zoneToArea,
-  superposeArea,
-  matrixShape,
-  areaShape,
-  areaDiff,
-  areaToZone,
-  restrictZone,
-} from '@gridsheet/core';
+import { zoneToArea, superposeArea, matrixShape, areaShape, areaDiff, areaToZone, restrictZone } from '@gridsheet/core';
 import { Sheet } from '@gridsheet/core';
 
 import { p2a, a2p } from '@gridsheet/core';
