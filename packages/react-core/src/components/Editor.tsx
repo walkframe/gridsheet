@@ -648,6 +648,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
         return;
       }
       dispatch(setInputting(e.currentTarget.value));
+      setSelectionStart(e.currentTarget.selectionStart);
       setSelected(0);
     },
     [cell],

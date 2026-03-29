@@ -98,6 +98,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
 
   const handleInput = useCallback((e: React.SyntheticEvent<HTMLTextAreaElement>) => {
     dispatch(setInputting(e.currentTarget.value));
+    setSelectionStart(e.currentTarget.selectionStart);
   }, []);
 
   const handleSelect = useCallback((e: React.SyntheticEvent<HTMLTextAreaElement>) => {
