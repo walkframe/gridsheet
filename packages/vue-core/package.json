@@ -42,6 +42,16 @@
     "vite": "^6.3.5",
     "vite-plugin-dts": "^4.5.3"
   },
+  "keywords": [
+    "spreadsheet",
+    "spread-sheet",
+    "excel",
+    "gridsheet",
+    "vue",
+    "vue3",
+    "formula",
+    "grid"
+  ],
   "author": "righ",
   "license": "Apache-2.0"
 }

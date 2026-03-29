@@ -54,7 +54,11 @@
   "keywords": [
     "spreadsheet",
     "formula",
-    "functions"
+    "functions",
+    "gridsheet",
+    "excel",
+    "math",
+    "statistics"
   ],
   "author": "righ",
   "license": "Apache-2.0",

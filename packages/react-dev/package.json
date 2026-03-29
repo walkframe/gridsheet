@@ -16,6 +16,12 @@
     "build": "rm -rf ./dist || true && vite build",
     "typecheck": "pnpm tsc --noEmit"
   },
+  "keywords": [
+    "spreadsheet",
+    "gridsheet",
+    "react",
+    "devtools"
+  ],
   "author": "righ",
   "license": "Apache-2.0",
   "files": [

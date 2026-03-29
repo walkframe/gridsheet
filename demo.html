@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GridSheet Preact Demo</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+    }
+    h1 { margin: 0 0 16px; font-size: 1.4rem; }
+    .sheet-section { margin-bottom: 24px; }
+    .sheet-section h2 { font-size: 1rem; margin: 0 0 8px; color: #aaa; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import { h, render } from "https://cdn.jsdelivr.net/npm/preact@10.29.0/+esm";
+    import htm from "https://cdn.jsdelivr.net/npm/htm@3/+esm";
+    import { GridSheet, useBook } from "https://cdn.jsdelivr.net/npm/@gridsheet/preact-core@3.0.1/+esm";
+    import { allFunctions } from "https://cdn.jsdelivr.net/npm/@gridsheet/functions@3.0.1/+esm";
+
+    const html = htm.bind(h);
+
+    function App() {
+      const book = useBook({ additionalFunctions: allFunctions });
+
+      return html`
+        <div>
+          <h1>GridSheet Demo</h1>
+          <p style="margin: 0 0 16px; color: #888; font-size: 0.85rem;">
+            A fully functional spreadsheet in a single HTML file — no build tools required.
+            Just load <code>@gridsheet/preact-core</code> and <code>@gridsheet/functions</code> from CDN via ESM imports.
+          </p>
+
+          <div class="sheet-section">
+            <h2>Sheet1 — Basic Operations & Formulas</h2>
+            <${GridSheet}
+              book=${book}
+              sheetName="Sheet1"
+              initialCells=${{
+                A0: { label: "Name" },
+                B0: { label: "Score" },
+                C0: { label: "Grade" },
+                A1: { value: "Alice" },
+                B1: { value: 92 },
+                C1: { value: '=IF(B1>=90,"A",IF(B1>=80,"B","C"))' },
+                A2: { value: "Bob" },
+                B2: { value: 75 },
+                C2: { value: '=IF(B2>=90,"A",IF(B2>=80,"B","C"))' },
+                A3: { value: "Carol" },
+                B3: { value: 88 },
+                C3: { value: '=IF(B3>=90,"A",IF(B3>=80,"B","C"))' },
+                "06": { sortFixed: true },
+                "07": { sortFixed: true },
+                "08": { sortFixed: true },
+                "09": { sortFixed: true },
+                A6: { value: "AVG",   style: { fontWeight: "bold", backgroundColor: "#2a2a4a" } },
+                B6: { value: "=AVERAGE(B1:B3)", style: { backgroundColor: "#2a2a4a" } },
+                C6: { value: "", style: { backgroundColor: "#2a2a4a" } },
+                A7: { value: "SUM",   style: { fontWeight: "bold", backgroundColor: "#2a2a4a" } },
+                B7: { value: "=SUM(B1:B3)", style: { backgroundColor: "#2a2a4a" } },
+                C7: { value: "", style: { backgroundColor: "#2a2a4a" } },
+                A8: { value: "MAX",   style: { fontWeight: "bold", backgroundColor: "#2a2a4a" } },
+                B8: { value: "=MAX(B1:B3)", style: { backgroundColor: "#2a2a4a" } },
+                C8: { value: "", style: { backgroundColor: "#2a2a4a" } },
+                A9: { value: "MIN",   style: { fontWeight: "bold", backgroundColor: "#2a2a4a" } },
+                B9: { value: "=MIN(B1:B3)", style: { backgroundColor: "#2a2a4a" } },
+                C9: { value: "", style: { backgroundColor: "#2a2a4a" } },
+              }}
+              options=${{
+                mode: "dark",
+                sheetHeight: 300,
+              }}
+            />
+          </div>
+
+          <div class="sheet-section">
+            <h2>Sheet2 — Cross-sheet References</h2>
+            <${GridSheet}
+              book=${book}
+              sheetName="Sheet2"
+              initialCells=${{
+                A1: { value: "SUM from Sheet1", style: { fontWeight: "bold" } },
+                A2: { value: "=Sheet1!B7" },
+                B1: { value: "TODAY()", style: { fontWeight: "bold" } },
+                B2: { value: "=TODAY()" },
+              }}
+              options=${{
+                mode: "dark",
+                sheetHeight: 200,
+              }}
+            />
+          </div>
+        </div>
+      `;
+    }
+
+    render(html`<${App} />`, document.getElementById("app"));
+  </script>
+</body>
+</html>

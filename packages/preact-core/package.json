@@ -50,6 +50,15 @@
   "files": [
     "dist"
   ],
+  "keywords": [
+    "spreadsheet",
+    "spread-sheet",
+    "excel",
+    "gridsheet",
+    "preact",
+    "formula",
+    "grid"
+  ],
   "author": "righ",
   "license": "Apache-2.0"
 }

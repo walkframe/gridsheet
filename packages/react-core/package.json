@@ -34,7 +34,11 @@
   "keywords": [
     "spreadsheet",
     "spread-sheet",
-    "excel"
+    "excel",
+    "gridsheet",
+    "react",
+    "formula",
+    "grid"
   ],
   "author": "righ",
   "license": "Apache-2.0",
