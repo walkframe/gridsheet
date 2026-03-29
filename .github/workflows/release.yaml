@@ -173,3 +173,26 @@ jobs:
           pnpm install
           pnpm build
           pnpm publish --access public --provenance --tag next --no-git-checks || true
+
+  upload-svelte-core:
+    needs: upload-preact-core
+    runs-on: ubuntu-latest
+    name: upload svelte-core
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.1.0'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm install -g npm@latest
+      - name: remove authToken from .npmrc
+        run: |
+          NPM_RC=$(npm config get userconfig)
+          sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
+      - name: publish svelte-core
+        run: |
+          cd packages/svelte-core
+          pnpm install
+          pnpm build
+          pnpm publish --access public --provenance --tag next --no-git-checks || true
