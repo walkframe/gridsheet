@@ -1,25 +1,19 @@
-import { shallowRef, watch } from 'vue';
-import { createBook, RegistryProps, type TransmitProps } from '@gridsheet/preact-core';
+import { shallowRef } from 'vue';
+import { createBook, updateSheet, type BookType, type RegistryProps, type TransmitProps } from '@gridsheet/preact-core';
 
-export function useBook(registryProps: RegistryProps = {}) {
-  const book = createBook(registryProps);
-  const ref = shallowRef(book);
+export function useBook(props: RegistryProps = {}) {
+  const book = createBook(props);
+  const ref = shallowRef<BookType>(book);
   const { registry } = ref.value;
 
-  function transmit(patch?: TransmitProps) {
+  registry.updateSheet = updateSheet;
+  registry.transmit = (patch?: TransmitProps) => {
     Object.assign(registry, patch);
     if (!registry.ready) {
       return;
     }
-    requestAnimationFrame(() => (ref.value = { ...ref.value }));
-  }
-  registry.transmit = transmit;
+    requestAnimationFrame(() => (ref.value = { registry }));
+  };
 
-  // Watch for registryProps changes and apply them to book
-  watch(
-    () => registryProps,
-    (newProps) => transmit(newProps),
-    { deep: true },
-  );
   return ref;
 }

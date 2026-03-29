@@ -4,14 +4,14 @@
     
     <div class="grid-container">
       <GridSheet
-        :hub="hub"
+        :book="book"
         :initialCells="{
           A1: { value: 'Hello' },
           B1: { value: 'Vue', style: { backgroundColor: '#448888'} },
           A2: { value: 123 },
           B2: { value: 456 },
           A3: { value: 789},
-          C10: { value: '=SUM(A2:B2)' },
+          C6: { value: '=SUM(A2:B2)' },
         }"
         :options="{
           mode: 'dark',
@@ -20,10 +20,10 @@
       />
 
       <GridSheet
-        :hub="hub"
+        :book="book"
         :initialCells="{
           C3: { value: '=SUM(Sheet1!A2:B3)' },
-          default: { labeler: 'decimal' },
+          defaultCol: { policy: 'decimal' },
         }"
         :options="{}"
         sheetName="Sheet2"
@@ -33,10 +33,10 @@
     <!-- Labeler Control -->
     <div class="labeler-control">
       <label>
-        <input 
-          type="checkbox" 
-          v-model="enableDecimalLabeler" 
-          @change="updateWireProps"
+        <input
+          type="checkbox"
+          v-model="enableDecimalLabeler"
+          @change="handleToggle"
         />
         Enable Decimal Labeler for Sheet2
       </label>
@@ -45,27 +45,21 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
-import { GridSheet, useHub } from '@gridsheet/vue-core';
+import { ref } from 'vue';
+import { GridSheet, Policy } from '@gridsheet/vue-core';
+import { useSpellbook } from '@gridsheet/vue-core/spellbook';
 
 const enableDecimalLabeler = ref(false);
 
-const hubProps = reactive({
-  labelers: enableDecimalLabeler.value ? {
-    decimal: (n) => String(n)
-  } : {}
-});
+const bookProps = { policies: {} };
+const book = useSpellbook(bookProps);
 
-const hub = useHub(hubProps);
-
-const updateWireProps = () => {
-  if (enableDecimalLabeler.value) {
-    hubProps.labelers = {
-      decimal: (n) => String(n)
-    };
-  } else {
-    hubProps.labelers = {};
-  }
+const handleToggle = () => {
+  const { registry } = book.value;
+  bookProps.policies.decimal = enableDecimalLabeler.value
+    ? new Policy({ mixins: [{ renderColHeaderLabel: (n) => String(n) }] })
+    : null;
+  registry.transmit(bookProps);
 };
 </script>
 

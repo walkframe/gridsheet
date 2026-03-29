@@ -1,17 +1,17 @@
 <script lang="ts">
-import { defineComponent, onMounted, onBeforeUnmount, ref, h as vueH, isRef, watch } from 'vue';
+import { defineComponent, onMounted, onBeforeUnmount, ref, h as vueH, watch } from 'vue';
 import {
   GridSheet as PreactGridSheet,
   h as preactH,
   render as preactRender,
 } from '@gridsheet/preact-core';
-import type { Ref } from 'vue';
 
-import type { 
-  CellsByAddressType, 
-  OptionsType, 
-  HubType,
-  Connector,
+import type {
+  CellsByAddressType,
+  OptionsType,
+  BookType,
+  SheetHandle,
+  StoreHandle,
 } from '@gridsheet/preact-core';
 
 interface RefObject<T> {
@@ -29,13 +29,17 @@ export default defineComponent({
       type: String,
       default: '',
     },
-    hub: {
-      type: Object as () => HubType | Ref<HubType>,
-      default: null,
+    book: {
+      type: Object as () => BookType,
+      default: undefined,
     },
-    connector: {
-      type: Object as () => RefObject<Connector | null>,
-      default: null,
+    sheetRef: {
+      type: Object as () => RefObject<SheetHandle | null>,
+      default: undefined,
+    },
+    storeRef: {
+      type: Object as () => RefObject<StoreHandle | null>,
+      default: undefined,
     },
     options: {
       type: Object as () => OptionsType,
@@ -55,11 +59,15 @@ export default defineComponent({
     let root: HTMLElement | null = null;
 
     function getPreactProps() {
-      // Remove legacy tableRef, use connector instead
-      const { tableRef, ...rest } = props as any;
       return {
-        ...rest,
-        hub: isRef(props.hub) ? (props.hub.value as HubType | undefined) : (props.hub as HubType | undefined),
+        initialCells: props.initialCells,
+        sheetName: props.sheetName,
+        book: props.book,
+        sheetRef: props.sheetRef,
+        storeRef: props.storeRef,
+        options: props.options,
+        className: props.className,
+        style: props.style,
       };
     }
 
@@ -75,24 +83,16 @@ export default defineComponent({
 
     onMounted(() => {
       renderPreact();
-      if (isRef(props.hub)) {
-        watch(
-          () => (props.hub as Ref<HubType>).value,
-          renderPreact,
-          { deep: false }
-        );
-      } else {
-        watch(
-          () => props.hub,
-          renderPreact,
-          { deep: false }
-        );
-      }
+      watch(
+        () => props.book,
+        renderPreact,
+        { deep: false }
+      );
     });
 
     onBeforeUnmount(() => {
       if (root) {
-        root.innerHTML = '';
+        preactRender(null, root);
       }
     });
 
@@ -101,8 +101,6 @@ export default defineComponent({
     };
   },
 });
-
-
 </script>
 
 <template>

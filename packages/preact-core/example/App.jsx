@@ -1,25 +1,21 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useRef } from 'preact/hooks';
 import { GridSheet, Policy } from '@gridsheet/preact-core';
 import { useSpellbook } from '@gridsheet/preact-core/spellbook';
 
 export function App() {
   const [enableDecimalLabeler, setEnableDecimalLabeler] = useState(false);
 
-  const bookProps = {
-    policies: {},
-  };
-  const book = useSpellbook(bookProps);
+  const bookPropsRef = useRef({ policies: {} });
+  const book = useSpellbook(bookPropsRef.current);
 
-  useEffect(() => {
-    bookProps.policies.decimal = enableDecimalLabeler
-      ? new Policy({ mixins: [{ renderRowHeaderLabel: (n) => String(n) }] })
+  const handleToggle = (e) => {
+    const checked = e.target.checked;
+    setEnableDecimalLabeler(checked);
+    bookPropsRef.current.policies.decimal = checked
+      ? new Policy({ mixins: [{ renderColHeaderLabel: (n) => String(n) }] })
       : null;
-    book.registry.transmit(bookProps);
-  }, [enableDecimalLabeler]);
-
-  setTimeout(() => {
-    console.log('Current policies:', book.registry);
-  }, 5000);
+    book.registry.transmit(bookPropsRef.current);
+  };
 
   return (
     <main>
@@ -57,7 +53,7 @@ export function App() {
           <input
             type="checkbox"
             checked={enableDecimalLabeler}
-            onChange={(e) => setEnableDecimalLabeler(e.target.checked)}
+            onChange={handleToggle}
           />
           Enable Decimal Labeler for Sheet2
         </label>

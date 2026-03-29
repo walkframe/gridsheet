@@ -1,15 +1,26 @@
 {
   "name": "@gridsheet/vue-core",
-  "version": "2.2.0-0",
+  "version": "3.0.0-rc.11",
   "description": "Spreadsheet component for Vue 3",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./spellbook": {
+      "types": "./dist/spellbook.d.ts",
+      "import": "./dist/spellbook.js",
+      "default": "./dist/spellbook.js"
+    }
+  },
   "files": ["dist"],
   "scripts": {
     "dev": "vite example",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "rm -rf ./dist || true && vite build"
   },
   "homepage": "https://gridsheet.walkframe.com/",
   "repository": {
@@ -20,13 +31,14 @@
     "vue": "^3.3.0"
   },
   "dependencies": {
-    "@gridsheet/preact-core": "^2.2.0"
+    "@gridsheet/preact-core": "workspace:*"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.4",
+    "@gridsheet/functions": "workspace:*",
     "vue": "^3.4.21",
     "vite": "^6.3.5",
-    "vite-plugin-dts": "^3.9.0"
+    "vite-plugin-dts": "^4.5.3"
   },
   "author": "righ",
   "license": "Apache-2.0"

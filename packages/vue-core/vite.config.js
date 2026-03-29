@@ -14,26 +14,30 @@ export default defineConfig({
     vue(),
     dts({
       tsconfigPath: path.resolve(__dirname, 'tsconfig.json'),
-      include: ['index.ts', 'src'],
+      include: ['src'],
       outDir: 'dist',
       insertTypesEntry: true,
-      copyDtsFiles: true
-    })
+      copyDtsFiles: true,
+    }),
   ],
   build: {
     lib: {
       entry: path.resolve(__dirname, './src/index.ts'),
       name: 'GridSheetVueCore',
       formats: ['es'],
-      fileName: () => 'index.js'
+      fileName: (_, name) => `${name}.js`,
     },
     outDir: 'dist',
     emptyOutDir: true,
     sourcemap: true,
-    minify: "esbuild",
+    minify: 'esbuild',
     rollupOptions: {
-      external: ['vue', '@gridsheet/preact-core'],
-    }
+      external: ['vue', /^@gridsheet\/preact-core/, /^@gridsheet\/core/, /^@gridsheet\/functions/, /^dayjs/],
+      input: {
+        index: path.resolve(__dirname, './src/index.ts'),
+        spellbook: path.resolve(__dirname, './src/spellbook.ts'),
+      },
+    },
   },
   resolve: {
     alias: {
