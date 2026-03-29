@@ -62,6 +62,11 @@ jobs:
         run: |
           NPM_RC=$(npm config get userconfig)
           sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
+      - name: build core
+        run: |
+          cd packages/core
+          pnpm install
+          pnpm build
       - name: publish react-core
         run: |
           cd packages/react-core
@@ -87,11 +92,10 @@ jobs:
         run: |
           NPM_RC=$(npm config get userconfig)
           sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
-      - name: build react-core (needed for preact-core copy-types)
+      - name: build dependencies (core, react-core)
         run: |
-          cd packages/react-core
-          pnpm install
-          pnpm build
+          cd packages/core && pnpm install && pnpm build && cd ../..
+          cd packages/react-core && pnpm install && pnpm build && cd ../..
       - name: publish preact-core
         run: |
           cd packages/preact-core
@@ -117,6 +121,11 @@ jobs:
         run: |
           NPM_RC=$(npm config get userconfig)
           sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
+      - name: build core
+        run: |
+          cd packages/core
+          pnpm install
+          pnpm build
       - name: publish functions
         run: |
           cd packages/functions
