@@ -1,5 +1,5 @@
 import { UplusFunction } from './uplus';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('uplus', () => {
   const sheet = new Sheet({});

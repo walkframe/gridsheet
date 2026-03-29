@@ -1,5 +1,5 @@
 import { VarSFunction } from './var_s';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/core';
 
 describe('var.s', () => {
   const sheet = new Sheet({});

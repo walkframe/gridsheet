@@ -1,4 +1,4 @@
-import type { FunctionMapping } from '@gridsheet/react-core';
+import type { FunctionMapping } from '@gridsheet/core';
 import { TodayFunction } from './today';
 import { DateFunction } from './date';
 import { TimeFunction } from './time';

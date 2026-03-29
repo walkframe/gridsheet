@@ -1,5 +1,5 @@
 import { NFunction } from './n';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('n', () => {
   const sheet = new Sheet({});

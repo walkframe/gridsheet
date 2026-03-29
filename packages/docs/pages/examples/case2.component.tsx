@@ -14,7 +14,7 @@ import {
   p2a,
   type RenderProps,
 } from '@gridsheet/react-core';
-import { useSpellbook } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 
 // Policy mixin that overlays the cell address in the top-right corner
 const AddressOverlayMixin: PolicyMixinType = {

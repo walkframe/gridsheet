@@ -1,7 +1,8 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { buildInitialCells, GridSheet, Policy, PolicyMixinType, RenderProps, p2a } from '@gridsheet/react-core';
-import { useSpellbook } from '@gridsheet/functions';
+
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 
 const meta: Meta = {
   title: 'Basic/Renderer',

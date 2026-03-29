@@ -1,5 +1,5 @@
 import { LogFunction } from './log';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('log', () => {
   const sheet = new Sheet({});

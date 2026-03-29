@@ -1,6 +1,6 @@
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { Sheet, eachMatrix, ensureString, check, conditionArg } from '@gridsheet/react-core';
-import type { FunctionCategory } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/core';
+import { Sheet, eachMatrix, ensureString, check, conditionArg } from '@gridsheet/core';
+import type { FunctionCategory } from '@gridsheet/core';
 
 const description = `Returns the count of a series of cells.`;
 

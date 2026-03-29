@@ -1,5 +1,5 @@
 import { IstextFunction } from './istext';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('istext', () => {
   const sheet = new Sheet({});

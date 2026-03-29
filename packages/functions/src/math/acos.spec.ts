@@ -1,5 +1,5 @@
 import { AcosFunction } from './acos';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('acos', () => {
   const sheet = new Sheet({});

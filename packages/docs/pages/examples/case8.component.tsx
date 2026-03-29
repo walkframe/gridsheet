@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { GridSheet, buildInitialCellsFromOrigin, makeBorder } from '@gridsheet/react-core';
-import { useSpellbook } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 
 export default function LargeDatasetDemo() {
   const [isLoading, setIsLoading] = React.useState(true);

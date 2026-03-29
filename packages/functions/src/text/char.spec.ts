@@ -1,5 +1,5 @@
 import { CharFunction } from './char';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('char', () => {
   const sheet = new Sheet({});

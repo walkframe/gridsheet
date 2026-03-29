@@ -1,5 +1,5 @@
 import { ExactFunction } from './exact';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('exact', () => {
   const sheet = new Sheet({});

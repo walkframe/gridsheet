@@ -1,5 +1,5 @@
 import { CosFunction } from './cos';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('cos', () => {
   const sheet = new Sheet({});

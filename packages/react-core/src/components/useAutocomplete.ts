@@ -1,8 +1,8 @@
 import { useState, useMemo, useCallback } from 'react';
-import { getFunctionHelps, type FunctionHelp } from '../formula/mapping';
-import type { FunctionMapping } from '../formula/functions/__base';
-import type { AutocompleteOption } from '../policy/core';
-import { Lexer } from '../formula/evaluator';
+import { getFunctionHelps, type FunctionHelp } from '@gridsheet/core/formula/mapping';
+import type { FunctionMapping } from '@gridsheet/core/formula/functions/__base';
+import type { AutocompleteOption } from '@gridsheet/core/policy/core';
+import { Lexer } from '@gridsheet/core/formula/evaluator';
 
 type UseAutocompleteProps = {
   inputting: string;

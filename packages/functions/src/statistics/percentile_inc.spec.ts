@@ -1,5 +1,5 @@
 import { PercentileIncFunction } from './percentile_inc';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/core';
 
 describe('percentile.inc', () => {
   const sheet = new Sheet({});

@@ -1,6 +1,6 @@
-import { BaseFunction, FormulaError } from '@gridsheet/react-core';
-import { type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { ensureBoolean } from '@gridsheet/react-core';
+import { BaseFunction, FormulaError } from '@gridsheet/core';
+import { type FunctionArgumentDefinition } from '@gridsheet/core';
+import { ensureBoolean } from '@gridsheet/core';
 
 const description = `Evaluates multiple conditions and returns the value corresponding to the first TRUE condition.
 Arguments must be supplied in (condition, value) pairs.`;

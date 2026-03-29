@@ -2,7 +2,7 @@ import { type FC, useContext, useCallback, useState } from 'react';
 import { Context } from '../store';
 import { setColumnMenu } from '../store/actions';
 import { Fixed } from './Fixed';
-import { focus } from '../lib/dom';
+import { focus } from '@gridsheet/core/lib/dom';
 import { buildMenuContext } from '../lib/menu';
 import { getMenuComponent } from '../lib/menu';
 import { MenuItem, MenuDivider } from './MenuItem';

@@ -12,7 +12,7 @@ import {
   makeBorder,
   Spilling,
 } from '@gridsheet/react-core';
-import { useSpellbook } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 import { FunctionArgumentDefinition } from '@gridsheet/react-core';
 import { Debugger } from '@gridsheet/react-dev';
 

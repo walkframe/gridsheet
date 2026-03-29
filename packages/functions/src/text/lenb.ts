@@ -1,5 +1,5 @@
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import type { FunctionCategory } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/core';
+import type { FunctionCategory } from '@gridsheet/core';
 
 const description = `Returns the number of bytes in the length of the string.`;
 

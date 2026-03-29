@@ -1,8 +1,8 @@
-import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type FunctionArgumentDefinition, conditionArg } from '@gridsheet/react-core';
-import { Sheet, eachMatrix, stripMatrix, createBooleanMask, ensureString } from '@gridsheet/react-core';
-import type { PointType } from '@gridsheet/react-core';
-import type { FunctionCategory } from '@gridsheet/react-core';
+import { FormulaError } from '@gridsheet/core';
+import { BaseFunction, type FunctionArgumentDefinition, conditionArg } from '@gridsheet/core';
+import { Sheet, eachMatrix, stripMatrix, createBooleanMask, ensureString } from '@gridsheet/core';
+import type { PointType } from '@gridsheet/core';
+import type { FunctionCategory } from '@gridsheet/core';
 
 const description = `Returns the sum of a range depending on multiple criteria.`;
 

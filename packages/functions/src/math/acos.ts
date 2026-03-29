@@ -1,7 +1,7 @@
-import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { ensureNumber } from '@gridsheet/react-core';
-import type { FunctionCategory } from '@gridsheet/react-core';
+import { FormulaError } from '@gridsheet/core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/core';
+import { ensureNumber } from '@gridsheet/core';
+import type { FunctionCategory } from '@gridsheet/core';
 
 const description = `Returns the inverse cos of the value in radians.`;
 

@@ -11,7 +11,7 @@ import {
   toValueMatrix,
   type UserSheet,
 } from '@gridsheet/react-core';
-import { useSpellbook } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 
 // Stock level policy mixin
 const StockPolicyMixin: PolicyMixinType = {

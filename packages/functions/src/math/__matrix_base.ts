@@ -1,6 +1,6 @@
-import { BaseFunction } from '@gridsheet/react-core';
-import { FormulaError, eachMatrix, ensureNumber } from '@gridsheet/react-core';
-import type { FunctionCategory } from '@gridsheet/react-core';
+import { BaseFunction } from '@gridsheet/core';
+import { FormulaError, eachMatrix, ensureNumber } from '@gridsheet/core';
+import type { FunctionCategory } from '@gridsheet/core';
 
 /**
  * Common base class for matrix functions (MMULT, TRANSPOSE, MINVERSE, MDETERM).

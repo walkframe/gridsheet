@@ -1,6 +1,6 @@
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { Sheet, eachMatrix, stripMatrix, check, conditionArg, ensureString } from '@gridsheet/react-core';
-import type { FunctionCategory } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/core';
+import { Sheet, eachMatrix, stripMatrix, check, conditionArg, ensureString } from '@gridsheet/core';
+import type { FunctionCategory } from '@gridsheet/core';
 
 const description = `Returns the sum of a series of cells.`;
 

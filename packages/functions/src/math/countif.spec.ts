@@ -1,5 +1,5 @@
 import { CountifFunction } from './countif';
-import { Sheet, FormulaError, RangeEntity, RefEntity, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, RangeEntity, RefEntity, ValueEntity } from '@gridsheet/core';
 
 describe('countif', () => {
   const sheet = new Sheet({});

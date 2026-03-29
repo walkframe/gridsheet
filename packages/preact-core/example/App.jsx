@@ -1,52 +1,50 @@
 import { useState, useEffect } from 'preact/hooks';
-import { GridSheet, useBook } from '@gridsheet/preact-core';
+import { GridSheet, Policy } from '@gridsheet/preact-core';
+import { useSpellbook } from '@gridsheet/preact-core/spellbook';
 
-function App() {
+export function App() {
   const [enableDecimalLabeler, setEnableDecimalLabeler] = useState(false);
 
-  const bookProps = {};
-  const book = useBook(bookProps);
+  const bookProps = {
+    policies: {},
+  };
+  const book = useSpellbook(bookProps);
 
   useEffect(() => {
-    // Update book props when enableDecimalLabeler changes
-    if (enableDecimalLabeler) {
-      bookProps.labelers = {
-        decimal: (n) => String(n)
-      };
-    } else {
-      bookProps.labelers = {
-        decimal: undefined,
-      };
-    }
+    bookProps.policies.decimal = enableDecimalLabeler
+      ? new Policy({ mixins: [{ renderRowHeaderLabel: (n) => String(n) }] })
+      : null;
     book.registry.transmit(bookProps);
   }, [enableDecimalLabeler]);
 
+  setTimeout(() => {
+    console.log('Current policies:', book.registry);
+  }, 5000);
+
   return (
     <main>
-      <h1>GridSheet Preact Example</h1>
-      
       <div class="grid-container">
         <GridSheet
           book={book}
           initialCells={{
             A1: { value: 'Hello' },
-            B1: { value: 'Preact', style: { backgroundColor: '#448888'} },
+            B1: { value: 'Preact', style: { backgroundColor: '#6F51A1' } },
             A2: { value: 123 },
             B2: { value: 456 },
-            A3: { value: 789},
-            C10: { value: '=SUM(A2:B2)' },
+            A3: { value: 789 },
+            C6: { value: '=SUM(A2:B2)' },
           }}
           options={{
             mode: 'dark',
           }}
           sheetName="Sheet1"
         />
-
+        <br />
         <GridSheet
           book={book}
           initialCells={{
             C3: { value: '=SUM(Sheet1!A2:B3)' },
-            default: { labeler: 'decimal' },
+            defaultCol: { policy: 'decimal' },
           }}
           options={{}}
           sheetName="Sheet2"
@@ -56,8 +54,8 @@ function App() {
       {/* Labeler Control */}
       <div class="labeler-control">
         <label>
-          <input 
-            type="checkbox" 
+          <input
+            type="checkbox"
             checked={enableDecimalLabeler}
             onChange={(e) => setEnableDecimalLabeler(e.target.checked)}
           />
@@ -68,4 +66,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;

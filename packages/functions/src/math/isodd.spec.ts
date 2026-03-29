@@ -1,5 +1,5 @@
 import { IsoddFunction } from './isodd';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('isodd', () => {
   const sheet = new Sheet({});

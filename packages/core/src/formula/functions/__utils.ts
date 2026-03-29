@@ -147,6 +147,33 @@ export const ensureBoolean = (value: any, options?: EnsureBooleanOptions): boole
   return Boolean(value);
 };
 
+/**
+ * Converts a value to a Date object.
+ * Accepts: Date, number (ms since epoch), string (parseable date string).
+ */
+export function ensureDate(value: any): Date {
+  if (Pending.is(value)) {
+    return value as any;
+  }
+  if (value instanceof Date) {
+    return value;
+  }
+  if (value instanceof Sheet) {
+    const v = stripSheet({ value });
+    return ensureDate(v);
+  }
+  if (typeof value === 'number') {
+    return new Date(value);
+  }
+  if (typeof value === 'string') {
+    const d = new Date(value);
+    if (!isNaN(d.getTime())) {
+      return d;
+    }
+  }
+  throw new FormulaError('#VALUE!', `${value} cannot be converted to a date`);
+}
+
 const CONDITION_REGEX = /^(<=|>=|<>|>|<|=)?(.*)$/;
 
 export const check = (value: any, condition: string): boolean => {

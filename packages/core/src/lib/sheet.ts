@@ -20,7 +20,7 @@ import {
   OperationType,
   RawCellType,
   ExtraPointType,
-  StoreType,
+  RefLike,
   Resolution,
   MoveRelations,
   Y,
@@ -47,9 +47,20 @@ import {
   DEFAULT_ROW_KEY,
 } from '../constants';
 import { Pending, SOLVING, Spilling } from '../sentinels';
-import { shouldTracking } from '../store/helpers';
-import { updateSheet } from '../store/actions';
 import * as operation from './operation';
+
+const shouldTracking = (op: string) => {
+  switch (op) {
+    case 'INSERT_ROWS':
+    case 'INSERT_COLS':
+    case 'REMOVE_ROWS':
+    case 'REMOVE_COLS':
+    case 'MOVE':
+    case 'SORT_ROWS':
+      return true;
+  }
+  return false;
+};
 import { Registry, createRegistry } from './book';
 import { nonePolicy, PolicyType, DEFAULT_POLICY_NAME, RenderProps, ScalarProps } from '../policy/core';
 import { evaluateFilterConfig } from './filter';
@@ -855,7 +866,7 @@ export class Sheet implements UserSheet {
     if (context !== null) {
       const { dispatch } = context;
       requestAnimationFrame(() => {
-        dispatch(updateSheet(otherSheet));
+        dispatch(this.registry.updateSheet(otherSheet));
       });
     }
   }
@@ -2338,7 +2349,7 @@ export class Sheet implements UserSheet {
           dstSheet._applyDiff(history.diffBefore, false);
         }
         const { cols } = matrixShape({ matrix: history.idMatrix });
-        dstSheet.idMatrix.forEach((row) => {
+        dstSheet.idMatrix.forEach((row: string[]) => {
           row.splice(history.x, cols);
         });
         dstSheet.area.right -= cols;
@@ -2355,7 +2366,7 @@ export class Sheet implements UserSheet {
       }
       case 'REMOVE_COLS': {
         const { xs, deleted } = history;
-        dstSheet.idMatrix.forEach((row, i) => {
+        dstSheet.idMatrix.forEach((row: string[], i: number) => {
           for (let j = 0; j < xs.length; j++) {
             row.splice(xs[j], 0, deleted[i][j]);
           }
@@ -2393,7 +2404,7 @@ export class Sheet implements UserSheet {
     }
     return {
       history,
-      callback: ({ sheetReactive: sheetRef }: StoreType) => {
+      callback: ({ sheetReactive: sheetRef }: { sheetReactive: RefLike<Sheet> }) => {
         sheetRef.current?.registry.transmit(history.undoReflection?.transmit);
       },
     };
@@ -2432,7 +2443,7 @@ export class Sheet implements UserSheet {
           dstSheet._applyDiff(history.diffAfter, false);
         }
         const { cols } = matrixShape({ matrix: history.idMatrix });
-        dstSheet.idMatrix.map((row, i) => {
+        dstSheet.idMatrix.map((row: string[], i: number) => {
           row.splice(history.x, 0, ...history.idMatrix[i]);
         });
         dstSheet.area.right += cols;
@@ -2484,7 +2495,7 @@ export class Sheet implements UserSheet {
     }
     return {
       history,
-      callback: ({ sheetReactive: sheetRef }: StoreType) => {
+      callback: ({ sheetReactive: sheetRef }: { sheetReactive: RefLike<Sheet> }) => {
         sheetRef.current?.registry.transmit(history.redoReflection?.transmit);
       },
     };

@@ -1,5 +1,5 @@
 import { IsformulaFunction } from './isformula';
-import { Sheet, FormulaError, RefEntity, ValueEntity, RangeEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, RefEntity, ValueEntity, RangeEntity } from '@gridsheet/core';
 
 describe('isformula', () => {
   const sheet = new Sheet({});

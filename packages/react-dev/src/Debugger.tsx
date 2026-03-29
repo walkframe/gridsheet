@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import type { BookType } from '@gridsheet/react-core';
-import { a2p, x2c, Lexer, FormulaParser, Sheet } from '@gridsheet/react-core';
+import type { BookType } from '@gridsheet/core';
+import { a2p, x2c, Lexer, FormulaParser, Sheet } from '@gridsheet/core';
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import type { SyntaxHighlighterProps } from 'react-syntax-highlighter';
 import jsonLang from 'react-syntax-highlighter/dist/esm/languages/hljs/json';

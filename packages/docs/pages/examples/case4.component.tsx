@@ -15,7 +15,7 @@ import {
   FeedbackType,
   SelectProps,
 } from '@gridsheet/react-core';
-import { useSpellbook } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 
 const DEPARTMENT_OPTIONS: AutocompleteOption[] = [
   { value: 'Engineering', label: '🔧 Engineering', keywords: ['Engineering', 'dev', 'development'] },

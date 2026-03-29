@@ -1,6 +1,6 @@
-import { BaseFunction, FormulaError } from '@gridsheet/react-core';
-import type { FunctionArgumentDefinition, FunctionProps } from '@gridsheet/react-core';
-import type { FunctionCategory } from '@gridsheet/react-core';
+import { BaseFunction, FormulaError } from '@gridsheet/core';
+import type { FunctionArgumentDefinition, FunctionProps } from '@gridsheet/core';
+import type { FunctionCategory } from '@gridsheet/core';
 
 const description = `Returns TRUE if the value is any error value.`;
 

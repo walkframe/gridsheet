@@ -16,9 +16,7 @@ import type {
   EditorEvent,
   CursorStateType,
 } from '../types';
-import type { UserSheet } from './sheet';
-import { useEffect, useState } from 'react';
-import { updateSheet } from '../store/actions';
+import type { UserSheet, Sheet } from './sheet';
 import type { FunctionMapping } from '../formula/functions/__base';
 import { functions as functionsDefault } from '../formula/mapping';
 import { PolicyType } from '../policy/core';
@@ -91,6 +89,9 @@ export class Registry {
     // This method will be overridden by useBook
   };
 
+  /** Injected by react-core / preact-core to create a store action for sheet updates. */
+  updateSheet: (sheet: Sheet) => { type: number; value: any } = (sheet) => ({ type: 0, value: sheet });
+
   public boot() {
     if (this.ready || Object.keys(this.contextsBySheetId).length === 0) {
       return;
@@ -113,7 +114,7 @@ export class Registry {
         continue;
       }
       sheet.resolveFormulas();
-      dispatch(updateSheet(sheet));
+      dispatch(this.updateSheet(sheet));
     }
     this.ready = true;
   }
@@ -171,20 +172,4 @@ export type BookType = {
 
 export const createBook = (props: RegistryProps = {}): BookType => {
   return { registry: createRegistry(props) };
-};
-
-export const useBook = (props: RegistryProps = {}) => {
-  const [book, setBook] = useState<BookType>(() => createBook(props));
-  const { registry } = book;
-  registry.transmit = (patch?: TransmitProps) => {
-    Object.assign(registry, patch);
-    if (!registry.ready) {
-      return;
-    }
-    requestAnimationFrame(() => setBook({ registry }));
-  };
-  useEffect(() => {
-    Object.assign(registry, props);
-  }, [props]);
-  return book;
 };

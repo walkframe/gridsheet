@@ -1,4 +1,4 @@
-import type { FunctionMapping } from '@gridsheet/react-core';
+import type { FunctionMapping } from '@gridsheet/core';
 import { VlookupFunction } from './vlookup';
 import { HlookupFunction } from './hlookup';
 import { IndexFunction } from './indexFn';

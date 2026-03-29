@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { GridSheet, buildInitialCells, useSheetRef, Policy, PolicyMixinType } from '@gridsheet/react-core';
-import { useSpellbook } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 
 // Policy for Priority column
 const PriorityPolicy: PolicyMixinType = {};

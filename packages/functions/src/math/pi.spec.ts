@@ -1,5 +1,5 @@
 import { PiFunction } from './pi';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('pi', () => {
   const sheet = new Sheet({});

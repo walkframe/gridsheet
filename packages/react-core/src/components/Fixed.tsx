@@ -1,5 +1,5 @@
 import type { CSSProperties, FC, ReactNode } from 'react';
-import { useBrowser } from './hooks';
+import { useBrowser } from '../lib/hooks';
 import { createPortal } from 'react-dom';
 
 type Props = {

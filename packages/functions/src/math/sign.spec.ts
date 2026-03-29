@@ -1,5 +1,5 @@
 import { SignFunction } from './sign';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('sign', () => {
   const sheet = new Sheet({});

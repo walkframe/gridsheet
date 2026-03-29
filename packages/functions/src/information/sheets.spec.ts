@@ -1,5 +1,5 @@
 import { SheetsFunction } from './sheets';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('sheets', () => {
   const sheet = new Sheet({});

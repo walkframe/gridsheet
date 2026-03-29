@@ -30,14 +30,17 @@ module.exports = {
     config.resolve.conditions = ['development', 'import', 'require'];
     config.optimizeDeps = config.optimizeDeps || {};
     config.optimizeDeps.include = ['react', 'react-dom'];
-    config.optimizeDeps.exclude = ['@gridsheet/react-core', '@gridsheet/preact-core', '@gridsheet/react-right-menu'];
-    config.resolve.alias = {
-      ...(config.resolve.alias || {}),
-      '@gridsheet/react-core/dev': path.resolve(__dirname, '../../react-core/src/dev.ts'),
-      '@gridsheet/react-core': path.resolve(__dirname, '../../react-core/src/index.ts'),
-      '@gridsheet/preact-core': path.resolve(__dirname, '../../preact-core/dist/index.js'),
-      '@gridsheet/functions': path.resolve(__dirname, '../../functions/dist/index.js'),
-    };
+    config.optimizeDeps.exclude = ['@gridsheet/core', '@gridsheet/react-core', '@gridsheet/preact-core', '@gridsheet/react-right-menu'];
+    config.resolve.alias = [
+      ...(Array.isArray(config.resolve.alias) ? config.resolve.alias : []),
+      { find: '@gridsheet/react-core/spellbook', replacement: path.resolve(__dirname, '../../react-core/src/spellbook.ts') },
+      { find: '@gridsheet/react-core/dev', replacement: path.resolve(__dirname, '../../react-core/src/dev.ts') },
+      { find: '@gridsheet/react-core', replacement: path.resolve(__dirname, '../../react-core/src/index.ts') },
+      { find: /^@gridsheet\/core\/(.*)$/, replacement: path.resolve(__dirname, '../../core/src/$1') },
+      { find: '@gridsheet/core', replacement: path.resolve(__dirname, '../../core/src/index.ts') },
+      { find: '@gridsheet/preact-core', replacement: path.resolve(__dirname, '../../preact-core/dist/index.js') },
+      { find: '@gridsheet/functions', replacement: path.resolve(__dirname, '../../functions/dist/index.js') },
+    ];
     return config;
   },
 }; 

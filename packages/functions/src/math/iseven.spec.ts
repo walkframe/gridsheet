@@ -1,5 +1,5 @@
 import { IsevenFunction } from './iseven';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('iseven', () => {
   const sheet = new Sheet({});

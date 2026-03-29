@@ -283,6 +283,20 @@ const book = useBook({
 
 A unique identifier for the sheet that enables cross-sheet references and communication. When multiple sheets share a book, the sheet name is used to distinguish between them for formula calculations and data sharing.
 
+**Sheet names must be unique within the same book.** When sharing a `book` across multiple `GridSheet` components, each component must be given a distinct `sheetName`. Duplicate names will cause cross-sheet formula references (e.g. `='Sheet1'!A1`) to break and may result in incorrect sheet IDs.
+
+```tsx
+const book = useBook({});
+
+// ✅ Correct — each sheet has a unique name
+<GridSheet book={book} sheetName="Sheet1" initialCells={...} />
+<GridSheet book={book} sheetName="Sheet2" initialCells={...} />
+
+// ❌ Incorrect — duplicate names within the same book
+<GridSheet book={book} sheetName="Sheet1" initialCells={...} />
+<GridSheet book={book} sheetName="Sheet1" initialCells={...} />
+```
+
 ## sheetRef / storeRef
 
 `sheetRef` and `storeRef` are refs that give you programmatic access to the sheet and store from outside the GridSheet component.
@@ -373,7 +387,7 @@ The book enables communication between multiple GridSheet instances. Use the `us
 ```tsx
 import { useBook } from '@gridsheet/react-core';
 // or, to include all extended formula functions:
-import { useSpellbook } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 ```
 
 ### Book Configuration

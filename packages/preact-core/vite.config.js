@@ -20,8 +20,11 @@ export default defineConfig(({ mode }) => ({
     preserveModules: true,
     preserveModulesRoot: 'src',
     rollupOptions: {
-      external: [/^preact/],
-      input: path.resolve(__dirname, './index.ts'),
+      external: [/^preact/, /^@gridsheet\/core/, /^@gridsheet\/functions/, /^dayjs/],
+      input: {
+        index: path.resolve(__dirname, './index.ts'),
+        spellbook: path.resolve(__dirname, './spellbook.ts'),
+      },
     },
     sourcemap: mode === "development",
     minify: mode === "development" ? false : "esbuild",

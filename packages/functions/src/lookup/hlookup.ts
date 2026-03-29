@@ -1,7 +1,7 @@
-import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { Sheet } from '@gridsheet/react-core';
-import type { FunctionCategory } from '@gridsheet/react-core';
+import { FormulaError } from '@gridsheet/core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/core';
+import { Sheet } from '@gridsheet/core';
+import type { FunctionCategory } from '@gridsheet/core';
 
 const description = `Searches horizontally for the specified key in the first row of the range and returns the value of the specified cell in the same column.`;
 

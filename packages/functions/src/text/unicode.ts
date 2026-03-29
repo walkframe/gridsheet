@@ -1,7 +1,7 @@
-import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { ensureString } from '@gridsheet/react-core';
-import type { FunctionCategory } from '@gridsheet/react-core';
+import { FormulaError } from '@gridsheet/core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/core';
+import { ensureString } from '@gridsheet/core';
+import type { FunctionCategory } from '@gridsheet/core';
 
 const description = `Returns the Unicode code point (decimal) of the first character of the text.
 Numbers passed as argument are treated as strings.`;

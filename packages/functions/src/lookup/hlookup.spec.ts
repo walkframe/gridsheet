@@ -1,5 +1,5 @@
 import { HlookupFunction } from './hlookup';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/core';
 
 describe('hlookup', () => {
   const sheet = new Sheet({});

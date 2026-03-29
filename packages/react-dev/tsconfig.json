@@ -6,7 +6,7 @@
     ],
     "target": "ES2015",
     "module": "ES2015",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "lib": [
       "DOM",
       "ESNext",
@@ -27,11 +27,6 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "baseUrl": "./",
-    "paths": {
-      "@gridsheet/react-core": [
-        "../react-core/src/index.ts"
-      ]
-    },
     "forceConsistentCasingInFileNames": true
   },
   "exclude": [

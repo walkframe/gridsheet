@@ -1,5 +1,5 @@
 import { IserrorFunction } from './iserror';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('iserror', () => {
   const sheet = new Sheet({});

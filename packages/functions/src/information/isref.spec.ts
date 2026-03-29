@@ -1,5 +1,5 @@
 import { IsrefFunction } from './isref';
-import { Sheet, FormulaError, ValueEntity, RefEntity, RangeEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity, RefEntity, RangeEntity } from '@gridsheet/core';
 
 describe('isref', () => {
   const sheet = new Sheet({});

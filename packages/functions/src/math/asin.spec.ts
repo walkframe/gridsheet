@@ -1,5 +1,5 @@
 import { AsinFunction } from './asin';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('asin', () => {
   const sheet = new Sheet({});

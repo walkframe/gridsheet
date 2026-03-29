@@ -8,7 +8,8 @@ import {
   toValueObject,
 } from '@gridsheet/react-core';
 import { applyers } from '@gridsheet/react-core';
-import { useSpellbook } from '@gridsheet/functions';
+
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 import { Debugger } from '@gridsheet/react-dev';
 
 const meta: Meta = {

@@ -8,6 +8,7 @@ export default defineConfig(() => ({
     lib: {
       entry: {
         index: "./src/index.ts",
+        spellbook: "./src/spellbook.ts",
       },
       name: "GridSheet",
       formats: ["es"],
@@ -15,7 +16,7 @@ export default defineConfig(() => ({
     },
     outDir: 'dist',
     rollupOptions: {
-      external: [/^react/, /^@?react-dom/, "@gridsheet/react-core", /^dayjs/],
+      external: [/^react/, /^@?react-dom/, /^@gridsheet\/core/, /^@gridsheet\/functions/, /^dayjs/],
       output: {
         preserveModules: false,
         //preserveModulesRoot: process.cwd(),

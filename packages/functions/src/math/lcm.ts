@@ -1,7 +1,7 @@
-import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import { ensureNumber } from '@gridsheet/react-core';
-import type { FunctionCategory } from '@gridsheet/react-core';
+import { FormulaError } from '@gridsheet/core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/core';
+import { ensureNumber } from '@gridsheet/core';
+import type { FunctionCategory } from '@gridsheet/core';
 
 function gcd(a: number, b: number): number {
   a = Math.abs(Math.floor(a));

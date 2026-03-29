@@ -15,9 +15,30 @@
     "type": "git",
     "url": "git+https://github.com/walkframe/gridsheet.git"
   },
+  "dependencies": {
+    "@gridsheet/core": "workspace:*"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./spellbook": {
+      "types": "./dist/spellbook.d.ts",
+      "import": "./dist/spellbook.js",
+      "default": "./dist/spellbook.js"
+    }
+  },
   "peerDependencies": {
+    "@gridsheet/functions": "^3.0.0-rc.5",
     "dayjs": "^1.11.13",
     "preact": "^10.26.6"
+  },
+  "peerDependenciesMeta": {
+    "@gridsheet/functions": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/react": "^19.1.4",
@@ -26,7 +47,8 @@
     "typescript": "^5.8.2",
     "vite": "^6.2.2",
     "vite-plugin-dts": "^4.5.3",
-    "@preact/preset-vite": "^2.10.1"
+    "@preact/preset-vite": "^2.10.1",
+    "@gridsheet/functions": "workspace:*"
   },
   "bugs": {
     "url": "https://github.com/walkframe/gridsheet/issues"

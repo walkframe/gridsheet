@@ -1,5 +1,5 @@
 import { IsnontextFunction } from './isnontext';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('isnontext', () => {
   const sheet = new Sheet({});

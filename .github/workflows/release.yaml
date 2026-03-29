@@ -10,38 +10,59 @@ permissions:
   contents: read
 
 jobs:
-  package-release:
-    # needs: test
+  upload-core:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
-    name: npm upload
+    name: upload core
     steps:
       - uses: actions/checkout@v4
-      - name: setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: setup node
-        uses: actions/setup-node@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '24.1.0'
           registry-url: 'https://registry.npmjs.org'
-
-      - name: upgrade npm
-        run: npm install -g npm@latest
-
+      - run: npm install -g npm@latest
       - name: remove authToken from .npmrc
         run: |
           NPM_RC=$(npm config get userconfig)
           sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
+      - name: publish core
+        run: |
+          cd packages/core
+          pnpm install
+          pnpm build
+          VERSION=$(node -p "require('./package.json').version")
+          TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
+          npm publish --access public --provenance $TAG || true
+      - name: wait for core on npm
+        run: |
+          VERSION=$(node -p "require('./packages/core/package.json').version")
+          for i in $(seq 1 30); do
+            if npm view "@gridsheet/core@$VERSION" version 2>/dev/null; then
+              echo "core@$VERSION is available"
+              break
+            fi
+            echo "Waiting for core@$VERSION... ($i/30)"
+            sleep 5
+          done
 
-      - name: cache
-        uses: actions/cache@v3
+  upload-react-core:
+    needs: upload-core
+    runs-on: ubuntu-latest
+    name: upload react-core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
         with:
-          path: |
-            node_modules
-          key: ${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-
-      - name: upload react-core
+          node-version: '24.1.0'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm install -g npm@latest
+      - name: remove authToken from .npmrc
+        run: |
+          NPM_RC=$(npm config get userconfig)
+          sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
+      - name: publish react-core
         run: |
           cd packages/react-core
           pnpm install
@@ -50,7 +71,23 @@ jobs:
           TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
           npm publish --access public --provenance $TAG || true
 
-      - name: upload preact-core
+  upload-preact-core:
+    needs: upload-core
+    runs-on: ubuntu-latest
+    name: upload preact-core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24.1.0'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm install -g npm@latest
+      - name: remove authToken from .npmrc
+        run: |
+          NPM_RC=$(npm config get userconfig)
+          sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
+      - name: publish preact-core
         run: |
           cd packages/preact-core
           pnpm install
@@ -59,7 +96,23 @@ jobs:
           TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
           npm publish --access public --provenance $TAG || true
 
-      - name: upload functions
+  upload-functions:
+    needs: upload-core
+    runs-on: ubuntu-latest
+    name: upload functions
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24.1.0'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm install -g npm@latest
+      - name: remove authToken from .npmrc
+        run: |
+          NPM_RC=$(npm config get userconfig)
+          sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
+      - name: publish functions
         run: |
           cd packages/functions
           pnpm install
@@ -68,7 +121,23 @@ jobs:
           TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
           npm publish --access public --provenance $TAG || true
 
-      - name: upload react-dev
+  upload-react-dev:
+    needs: upload-react-core
+    runs-on: ubuntu-latest
+    name: upload react-dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24.1.0'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm install -g npm@latest
+      - name: remove authToken from .npmrc
+        run: |
+          NPM_RC=$(npm config get userconfig)
+          sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
+      - name: publish react-dev
         run: |
           cd packages/react-dev
           pnpm install
@@ -77,8 +146,23 @@ jobs:
           TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
           npm publish --access public --provenance $TAG || true
 
-
-      - name: upload vue-core
+  upload-vue-core:
+    needs: upload-preact-core
+    runs-on: ubuntu-latest
+    name: upload vue-core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24.1.0'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm install -g npm@latest
+      - name: remove authToken from .npmrc
+        run: |
+          NPM_RC=$(npm config get userconfig)
+          sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
+      - name: publish vue-core
         run: |
           cd packages/vue-core
           pnpm install

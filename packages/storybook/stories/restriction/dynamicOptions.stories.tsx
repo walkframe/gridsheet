@@ -10,7 +10,8 @@ import {
   toValueMatrix,
   type SelectProps,
 } from '@gridsheet/react-core';
-import { useSpellbook } from '@gridsheet/functions';
+
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 
 const meta: Meta = {
   title: 'Restriction/DynamicOptions',

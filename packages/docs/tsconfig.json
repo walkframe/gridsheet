@@ -16,8 +16,11 @@
     "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
+      "@gridsheet/core": ["../core/src"],
+      "@gridsheet/core/*": ["../core/src/*"],
       "@gridsheet/react-core": ["../react-core/src"],
-      "@gridsheet/react-core/*": ["../react-core/src/*"]
+      "@gridsheet/react-core/*": ["../react-core/src/*"],
+      "@gridsheet/react-dev": ["../react-dev/src"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],

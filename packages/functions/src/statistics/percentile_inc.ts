@@ -1,7 +1,7 @@
-import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/react-core';
-import { ensureNumber } from '@gridsheet/react-core';
-import type { FunctionCategory } from '@gridsheet/react-core';
+import { FormulaError } from '@gridsheet/core';
+import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/core';
+import { ensureNumber } from '@gridsheet/core';
+import type { FunctionCategory } from '@gridsheet/core';
 
 const description = `Returns the k-th percentile of values in a range, where k is in the range 0 to 1, inclusive.`;
 

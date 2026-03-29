@@ -9,8 +9,7 @@ import {
   RenderProps,
   SerializeProps,
 } from '@gridsheet/react-core';
-import { useSpellbook } from '@gridsheet/functions';
-import { Debugger } from '@gridsheet/react-dev';
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 
 type EventType = {
   time: string;

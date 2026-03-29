@@ -1,5 +1,5 @@
 import { ReptFunction } from './rept';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('rept', () => {
   const sheet = new Sheet({});
