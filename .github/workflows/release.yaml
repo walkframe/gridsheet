@@ -33,7 +33,7 @@ jobs:
           pnpm build
           VERSION=$(node -p "require('./package.json').version")
           TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
-          npm publish --access public --provenance $TAG || true
+          pnpm publish --access public --provenance $TAG --no-git-checks || true
       - name: wait for core on npm
         run: |
           VERSION=$(node -p "require('./packages/core/package.json').version")
@@ -69,7 +69,7 @@ jobs:
           pnpm build
           VERSION=$(node -p "require('./package.json').version")
           TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
-          npm publish --access public --provenance $TAG || true
+          pnpm publish --access public --provenance $TAG --no-git-checks || true
 
   upload-preact-core:
     needs: upload-core
@@ -99,7 +99,7 @@ jobs:
           pnpm build
           VERSION=$(node -p "require('./package.json').version")
           TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
-          npm publish --access public --provenance $TAG || true
+          pnpm publish --access public --provenance $TAG --no-git-checks || true
 
   upload-functions:
     needs: upload-core
@@ -124,7 +124,7 @@ jobs:
           pnpm build
           VERSION=$(node -p "require('./package.json').version")
           TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
-          npm publish --access public --provenance $TAG || true
+          pnpm publish --access public --provenance $TAG --no-git-checks || true
 
   upload-react-dev:
     needs: upload-core
@@ -149,7 +149,7 @@ jobs:
           pnpm build
           VERSION=$(node -p "require('./package.json').version")
           TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
-          npm publish --access public --provenance $TAG || true
+          pnpm publish --access public --provenance $TAG --no-git-checks || true
 
   upload-vue-core:
     needs: upload-preact-core
@@ -172,4 +172,4 @@ jobs:
           cd packages/vue-core
           pnpm install
           pnpm build
-          npm publish --access public --provenance --tag next || true
+          pnpm publish --access public --provenance --tag next --no-git-checks || true
