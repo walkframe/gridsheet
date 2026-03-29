@@ -9,7 +9,8 @@ GridSheet is organized as a monorepo using pnpm workspaces:
 ```
 gridsheet/
 ├── packages/
-│   ├── react-core/          # React implementation (core source of truth)
+│   ├── core/                # Framework-agnostic core (Sheet, Registry, formula engine, etc.)
+│   ├── react-core/          # React implementation (components, hooks, store)
 │   ├── preact-core/         # Preact implementation (same codebase, different build target)
 │   ├── react-dev/           # Development utilities for React
 │   ├── functions/           # Extended formula functions (@gridsheet/functions)
@@ -22,14 +23,46 @@ gridsheet/
 └── README.md                # Project overview
 ```
 
+## Dependency Graph
+
+```
+@gridsheet/core              ← Framework-agnostic (no React/Preact imports)
+  ├── @gridsheet/react-core   ← React components, hooks, store (dep: core)
+  │     └── @gridsheet/react-dev (peerDep: core)
+  ├── @gridsheet/preact-core  ← Preact build via alias (dep: core)
+  │     └── @gridsheet/vue-core (dep: preact-core)
+  └── @gridsheet/functions    ← Formula definitions (peerDep: core)
+```
+
+### Why `@gridsheet/core` exists
+
+`@gridsheet/functions` uses classes like `Sheet`, `Registry`, and `BaseFunction` from the core. Previously, functions depended on `@gridsheet/react-core`, which forced Preact users to install react-core as well. This resulted in two separate copies of these classes in the bundle, causing `instanceof` checks to fail (e.g. `SUM` returning `0`).
+
+By extracting framework-agnostic code into `@gridsheet/core`, all packages share the same class instances regardless of the framework.
+
+### External and peerDependencies
+
+When a package marks a dependency as **external** in its Vite config, the import statement (e.g. `from "@gridsheet/core"`) is preserved in the built output rather than bundled. This means the dependency must exist in the user's `node_modules` at runtime.
+
+**peerDependencies** declares this requirement to the package manager. Without it, `npm`/`pnpm` would not warn users when the external dependency is missing or has an incompatible version. Therefore, **external and peerDependencies are always paired together**.
+
+| Package | external (Vite) | peerDependencies |
+|---------|----------------|-----------------|
+| `@gridsheet/core` | `dayjs` | `dayjs` |
+| `@gridsheet/react-core` | `react`, `react-dom`, `@gridsheet/core`, `dayjs` | `react`, `react-dom`, `dayjs` (core is in dependencies) |
+| `@gridsheet/preact-core` | `preact`, `@gridsheet/core`, `dayjs` | `preact`, `dayjs` (core is in dependencies) |
+| `@gridsheet/functions` | `@gridsheet/core`, `dayjs` | `@gridsheet/core`, `dayjs` |
+| `@gridsheet/react-dev` | `react`, `react-dom`, `@gridsheet/core` | `react`, `react-dom`, `@gridsheet/core` |
+
+> **Note:** `@gridsheet/core` is listed in **dependencies** (not peerDependencies) for `react-core` and `preact-core` because they always require it. For `functions` and `react-dev`, it is a **peerDependency** because core is expected to be provided by the framework package (`react-core` or `preact-core`) that the user already has installed.
+
 ## Versioning Strategy
 
-### Core Implementation
+### Core Packages
 
-GridSheet is fundamentally implemented in `react-core` and built for both React and Preact:
-
-- **@gridsheet/react-core**: React implementation (core source of truth)
-- **@gridsheet/preact-core**: Preact implementation (same codebase, different build target)
+- **@gridsheet/core**: Framework-agnostic core (Sheet, Registry, formula engine, policy, coords, spatial, etc.)
+- **@gridsheet/react-core**: React components, hooks, and store
+- **@gridsheet/preact-core**: Preact build (same codebase via react→preact/compat alias)
 
 These core packages always maintain identical versions following semantic versioning: `MAJOR.MINOR.PATCH[-PRERELEASE]`
 

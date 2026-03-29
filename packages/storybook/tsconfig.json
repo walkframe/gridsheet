@@ -27,17 +27,26 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "paths": {
+      "@gridsheet/core": [
+        "../core/src"
+      ],
+      "@gridsheet/core/*": [
+        "../core/src/*"
+      ],
       "@gridsheet/react-core": [
         "../react-core/src"
       ],
-      "@gridsheet/react-core/dev": [
-        "../react-core/src/dev"
+      "@gridsheet/react-core/*": [
+        "../react-core/src/*"
       ],
       "@gridsheet/preact-core": [
         "../preact-core"
       ],
       "@gridsheet/react-dev": [
         "../react-dev/src"
+      ],
+      "@gridsheet/functions": [
+        "../functions/src"
       ]
     }
   },

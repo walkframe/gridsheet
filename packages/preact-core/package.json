@@ -31,14 +31,8 @@
     }
   },
   "peerDependencies": {
-    "@gridsheet/functions": "^3.0.0-rc.5",
     "dayjs": "^1.11.13",
     "preact": "^10.26.6"
-  },
-  "peerDependenciesMeta": {
-    "@gridsheet/functions": {
-      "optional": true
-    }
   },
   "devDependencies": {
     "@types/react": "^19.1.4",
