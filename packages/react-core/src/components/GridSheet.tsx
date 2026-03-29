@@ -9,7 +9,7 @@ import {
   SHEET_WIDTH,
   DEFAULT_COL_KEY,
   DEFAULT_ROW_KEY,
-} from '@gridsheet/core/constants';
+} from '@gridsheet/core';
 import { Context } from '../store';
 import { reducer as defaultReducer } from '../store/actions';
 import { Editor } from './Editor';
@@ -19,11 +19,11 @@ import { Emitter } from './Emitter';
 import { ContextMenu } from './ContextMenu';
 import { ColumnMenu } from './ColumnMenu';
 import { RowMenu } from './RowMenu';
-import { Sheet } from '@gridsheet/core/lib/sheet';
+import { Sheet } from '@gridsheet/core';
 import { Tabular } from './Tabular';
-import { getMaxSizesFromCells } from '@gridsheet/core/lib/spatial';
-import { x2c, y2r } from '@gridsheet/core/lib/coords';
-import { embedStyle } from '@gridsheet/core/styles/embedder';
+import { getMaxSizesFromCells } from '@gridsheet/core';
+import { x2c, y2r } from '@gridsheet/core';
+import { embedStyle } from '@gridsheet/core';
 import { FormulaBar } from './FormulaBar';
 import { SearchBar } from './SearchBar';
 import { useBook } from '../lib/hooks';

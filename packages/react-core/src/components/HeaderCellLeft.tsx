@@ -1,8 +1,8 @@
 import type { FC } from 'react';
 import { useContext, useCallback, memo, useRef } from 'react';
-import { y2r } from '@gridsheet/core/lib/coords';
-import { getLabel } from '@gridsheet/core/lib/label';
-import { between, zoneToArea } from '@gridsheet/core/lib/spatial';
+import { y2r } from '@gridsheet/core';
+import { getLabel } from '@gridsheet/core';
+import { between, zoneToArea } from '@gridsheet/core';
 import { Context } from '../store';
 import {
   choose,
@@ -18,10 +18,10 @@ import {
   submitAutofill,
   write,
 } from '../store/actions';
-import { DEFAULT_HEIGHT } from '@gridsheet/core/constants';
-import * as prevention from '@gridsheet/core/lib/operation';
-import { insertRef } from '@gridsheet/core/lib/input';
-import { focus } from '@gridsheet/core/lib/dom';
+import { DEFAULT_HEIGHT } from '@gridsheet/core';
+import { operations as prevention } from '@gridsheet/core';
+import { insertRef } from '@gridsheet/core';
+import { focus } from '@gridsheet/core';
 import { isXSheetFocused } from '../store/helpers';
 import { ScrollHandle } from './ScrollHandle';
 import { isTouching, safePreventDefault } from '../lib/events';

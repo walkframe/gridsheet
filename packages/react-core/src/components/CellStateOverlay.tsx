@@ -1,12 +1,12 @@
 import { useContext, useEffect, useRef, useCallback } from 'react';
 import { Context } from '../store';
-import { zoneToArea } from '@gridsheet/core/lib/spatial';
-import { between } from '@gridsheet/core/lib/spatial';
-import { a2p } from '@gridsheet/core/lib/coords';
-import { COLOR_PALETTE } from '@gridsheet/core/lib/palette';
-import { Autofill } from '@gridsheet/core/lib/autofill';
-import { getCellRectPositions } from '@gridsheet/core/lib/virtualization';
-import type { Sheet } from '@gridsheet/core/lib/sheet';
+import { zoneToArea } from '@gridsheet/core';
+import { between } from '@gridsheet/core';
+import { a2p } from '@gridsheet/core';
+import { COLOR_PALETTE } from '@gridsheet/core';
+import { Autofill } from '@gridsheet/core';
+import { getCellRectPositions } from '@gridsheet/core';
+import type { Sheet } from '@gridsheet/core';
 import type { FC } from 'react';
 import type { RefPaletteType, AreaType, ModeType } from '../types';
 

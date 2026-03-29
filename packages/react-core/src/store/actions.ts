@@ -21,15 +21,15 @@ import {
   areaDiff,
   areaToZone,
   restrictZone,
-} from '@gridsheet/core/lib/spatial';
-import { Sheet } from '@gridsheet/core/lib/sheet';
+} from '@gridsheet/core';
+import { Sheet } from '@gridsheet/core';
 
-import { p2a, a2p } from '@gridsheet/core/lib/coords';
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '@gridsheet/core/constants';
+import { p2a, a2p } from '@gridsheet/core';
+import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '@gridsheet/core';
 import { initSearchStatement, restrictPoints, flashSheet, flashWithCallback, compactReflection } from './helpers';
-import { smartScroll } from '@gridsheet/core/lib/virtualization';
-import * as prevention from '@gridsheet/core/lib/operation';
-import { Autofill } from '@gridsheet/core/lib/autofill';
+import { smartScroll } from '@gridsheet/core';
+import { operations as prevention } from '@gridsheet/core';
+import { Autofill } from '@gridsheet/core';
 
 const resetZone: ZoneType = { startY: -1, startX: -1, endY: -1, endX: -1 };
 

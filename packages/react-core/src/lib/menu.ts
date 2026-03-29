@@ -5,12 +5,12 @@
 // ---- types ----------------------------------------------------------------
 
 import type { PointType, ZoneType, FilterConfig } from '../types';
-import type { UserSheet } from '@gridsheet/core/lib/sheet';
+import type { UserSheet } from '@gridsheet/core';
 import type { StoreType } from '../types';
 import type { Dispatcher } from '../store';
-import * as prevention from '@gridsheet/core/lib/operation';
-import { zoneShape } from '@gridsheet/core/lib/spatial';
-import { p2a } from '@gridsheet/core/lib/coords';
+import { operations as prevention } from '@gridsheet/core';
+import { zoneShape } from '@gridsheet/core';
+import { p2a } from '@gridsheet/core';
 import {
   copier,
   cutter,

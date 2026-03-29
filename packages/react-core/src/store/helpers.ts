@@ -1,5 +1,5 @@
-import { a2p, x2c, y2r } from '@gridsheet/core/lib/coords';
-import { Sheet } from '@gridsheet/core/lib/sheet';
+import { a2p, x2c, y2r } from '@gridsheet/core';
+import { Sheet } from '@gridsheet/core';
 import type { Address, PointType, StorePatchType, StoreType } from '../types';
 
 /**

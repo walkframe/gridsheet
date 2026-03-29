@@ -14,6 +14,10 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "baseUrl": "./src/",
+    "paths": {
+      "@gridsheet/core": ["../../core/src"],
+      "@gridsheet/core/*": ["../../core/src/*"]
+    },
     "forceConsistentCasingInFileNames": true
   },
   "exclude": ["node_modules", "dist"],

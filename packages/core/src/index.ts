@@ -11,13 +11,27 @@ export {
   addressesToAreas,
   addressesToCols,
   addressesToRows,
+  // additional internals used by react-core
+  between,
+  among,
+  zoneShape,
+  makeSequence,
+  getMaxSizesFromCells,
+  isZoneNotSelected,
+  complementSelectingArea,
+  concatAreas,
+  createMatrix,
+  areaShape,
+  areaDiff,
+  restrictZone,
+  superposeArea,
 } from './lib/spatial';
 
 // --- Time ---
 export { Time } from './lib/time';
 
 // --- Coords ---
-export { x2c, c2x, y2r, r2y, p2a, a2p, rh, ch } from './lib/coords';
+export { x2c, c2x, y2r, r2y, p2a, a2p, rh, ch, stripAddressAbsolute, grantAddressAbsolute } from './lib/coords';
 
 // --- Types ---
 export type {
@@ -114,7 +128,7 @@ export type {
   FunctionCategory,
   FunctionMapping,
 } from './formula/functions/__base';
-export { Lexer, FormulaParser, RefEntity, ValueEntity, RangeEntity } from './formula/evaluator';
+export { Lexer, FormulaParser, RefEntity, ValueEntity, RangeEntity, stripSheetName } from './formula/evaluator';
 export { FormulaError } from './formula/formula-error';
 export {
   ensureString,
@@ -127,6 +141,7 @@ export {
 } from './formula/functions/__utils';
 export type { EnsureNumberOptions, EnsureBooleanOptions } from './formula/functions/__utils';
 export { conditionArg, stripMatrix } from './formula/functions/__base';
+export { getFunctionHelps, type FunctionHelp } from './formula/mapping';
 
 // --- Policy ---
 export { Policy } from './policy/core';
@@ -146,5 +161,42 @@ export { ThousandSeparatorPolicyMixin } from './policy/thousand_separator';
 export * as operations from './lib/operation';
 
 // --- Constants & Sentinels ---
-export { DEFAULT_HISTORY_LIMIT } from './constants';
+export {
+  DEFAULT_HISTORY_LIMIT,
+  DEFAULT_HEIGHT,
+  DEFAULT_WIDTH,
+  MIN_WIDTH,
+  MIN_HEIGHT,
+  HEADER_HEIGHT,
+  HEADER_WIDTH,
+  SHEET_HEIGHT,
+  SHEET_WIDTH,
+  DEFAULT_COL_KEY,
+  DEFAULT_ROW_KEY,
+} from './constants';
 export { Pending, Spilling } from './sentinels';
+
+// --- DOM ---
+export { focus, preventSafariBounce } from './lib/dom';
+
+// --- Input ---
+export { handleFormulaQuoteAutoClose, insertTextAtCursor, isFocus, insertRef, isRefInsertable, expandInput, resetInput } from './lib/input';
+
+// --- Virtualization ---
+export { smartScroll, virtualize, getAreaInTabular, getCellRectPositions } from './lib/virtualization';
+
+// --- Popup ---
+export { calcBelowPosition, clampLeft, calcSideStyle, clampPopup, hAlignTransform } from './lib/popup';
+export type { HAlign, VAlign, PopupPosition, SideStyle } from './lib/popup';
+
+// --- Label ---
+export { getLabel } from './lib/label';
+
+// --- Palette ---
+export { COLOR_PALETTE } from './lib/palette';
+
+// --- Autofill ---
+export { Autofill } from './lib/autofill';
+
+// --- Styles ---
+export { embedStyle } from './styles/embedder';

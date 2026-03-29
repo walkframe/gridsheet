@@ -1,6 +1,6 @@
 import { useContext, useRef, useCallback, useEffect, memo, useMemo, useState } from 'react';
-import { x2c, y2r } from '@gridsheet/core/lib/coords';
-import { zoneToArea, among, areaToRange } from '@gridsheet/core/lib/spatial';
+import { x2c, y2r } from '@gridsheet/core';
+import { zoneToArea, among, areaToRange } from '@gridsheet/core';
 import {
   choose,
   select,
@@ -16,15 +16,15 @@ import {
 } from '../store/actions';
 
 import { Context } from '../store';
-import { FormulaError } from '@gridsheet/core/formula/formula-error';
-import { Pending } from '@gridsheet/core/sentinels';
-import { insertRef, isRefInsertable } from '@gridsheet/core/lib/input';
-import { focus } from '@gridsheet/core/lib/dom';
+import { FormulaError } from '@gridsheet/core';
+import { Pending } from '@gridsheet/core';
+import { insertRef, isRefInsertable } from '@gridsheet/core';
+import { focus } from '@gridsheet/core';
 import { isXSheetFocused } from '../store/helpers';
 import type { FC, RefObject } from 'react';
 import { isTouching, safePreventDefault } from '../lib/events';
-import type { UserSheet } from '@gridsheet/core/lib/sheet';
-import { calcBelowPosition, hAlignTransform, type PopupPosition } from '@gridsheet/core/lib/popup';
+import type { UserSheet } from '@gridsheet/core';
+import { calcBelowPosition, hAlignTransform, type PopupPosition } from '@gridsheet/core';
 
 type Props = {
   y: number;

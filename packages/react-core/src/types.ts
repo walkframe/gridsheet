@@ -57,16 +57,16 @@ export type {
   ContextsBySheetId,
   SheetIdsByName,
   RefPaletteType,
-} from '@gridsheet/core/types';
+} from '@gridsheet/core';
 
 // React-specific types
 import type { RefObject, CSSProperties, KeyboardEvent } from 'react';
-import type { Sheet, UserSheet } from '@gridsheet/core/lib/sheet';
+import type { Sheet, UserSheet } from '@gridsheet/core';
 import type { BookType } from '@gridsheet/core';
-import type { PolicyType } from '@gridsheet/core/policy/core';
+import type { PolicyType } from '@gridsheet/core';
 import type { ContextMenuItemDescriptor, RowMenuItemDescriptor, ColMenuItemDescriptor } from './lib/menu';
-import type { ModeType, PointType, ZoneType, RectType, PositionType, CellsByAddressType } from '@gridsheet/core/types';
-import type { SheetLimits } from '@gridsheet/core/lib/sheet';
+import type { ModeType, PointType, ZoneType, RectType, PositionType, CellsByAddressType } from '@gridsheet/core';
+import type { SheetLimits } from '@gridsheet/core';
 
 export type Policies = { [s: string]: PolicyType };
 

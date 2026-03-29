@@ -1,7 +1,7 @@
 import type { StoreDispatchType, FilterConfig, RawCellType } from '../types';
-import { areaToZone, zoneShape, zoneToArea } from '@gridsheet/core/lib/spatial';
-import { focus } from '@gridsheet/core/lib/dom';
-import { p2a } from '@gridsheet/core/lib/coords';
+import { areaToZone, zoneShape, zoneToArea } from '@gridsheet/core';
+import { focus } from '@gridsheet/core';
+import { p2a } from '@gridsheet/core';
 import {
   copy,
   cut,
