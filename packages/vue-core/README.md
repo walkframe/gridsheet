@@ -19,39 +19,46 @@ This package requires the following peer dependency:
 ```vue
 <template>
   <main>
-    <h1>GridSheet Vue Example</h1>
-    <div class="grid-container">
-      <GridSheet
-        :hub="hub"
-        :initialCells="{
-          A1: { value: 'Hello' },
-          B1: { value: 'Vue', style: { backgroundColor: '#448888'} },
-          A2: { value: 123 },
-          B2: { value: 456 },
-          A3: { value: 789},
-          C10: { value: '=SUM(A2:B2)' },
-        }"
-        :options="{
-          mode: 'dark',
-        }"
-        sheetName="Sheet1"
-      />
+    <GridSheet
+      :book="book"
+      :initialCells="{
+        A1: { value: 'Hello' },
+        B1: { value: 'Vue', style: { backgroundColor: '#448888'} },
+        A2: { value: 123 },
+        B2: { value: 456 },
+        A3: { value: 789},
+        C6: { value: '=SUM(A2:B2)' },
+      }"
+      :options="{
+        mode: 'dark',
+      }"
+      sheetName="Sheet1"
+    />
 
-      <GridSheet
-        :hub="hub"
-        :initialCells="{
-          C3: { value: '=SUM(Sheet1!A2:B3)' },
-        }"
-        :options="{}"
-        sheetName="Sheet2"
-      />
-    </div>
+    <GridSheet
+      :book="book"
+      :initialCells="{
+        C3: { value: '=SUM(Sheet1!A2:B3)' },
+      }"
+      :options="{}"
+      sheetName="Sheet2"
+    />
   </main>
 </template>
 
 <script setup>
-import { GridSheet, useHub } from '@gridsheet/vue-core';
-const hub = useHub();
+import { GridSheet, useBook } from '@gridsheet/vue-core';
+const book = useBook();
+</script>
+```
+
+### With Extended Functions (Spellbook)
+
+```vue
+<script setup>
+import { GridSheet } from '@gridsheet/vue-core';
+import { useSpellbook } from '@gridsheet/vue-core/spellbook';
+const book = useSpellbook();
 </script>
 ```
 
@@ -62,14 +69,32 @@ const hub = useHub();
 The main spreadsheet component for Vue 3 applications.
 
 **Props:**
-- `hub` - Reactive hub for data binding and state management
+- `book` - Book object for cross-sheet data binding and state management
 - `initialCells` - Initial cell data with values, styles, and formulas
 - `options` - GridSheet options (e.g., mode: 'dark')
 - `sheetName` - Name of the sheet
+- `sheetRef` - Ref object to access sheet handle
+- `storeRef` - Ref object to access store handle
+- `className` - CSS class name
+- `style` - Inline styles
 
-### useHub
+### useBook
 
-A Vue 3-specific composable for creating reactive hubs that can be used for data binding and state management.
+A Vue 3-specific composable for creating a reactive book. Returns a `shallowRef<BookType>`.
+
+```js
+import { useBook } from '@gridsheet/vue-core';
+const book = useBook({ /* RegistryProps */ });
+```
+
+### useSpellbook
+
+Same as `useBook` but with all extended functions (`@gridsheet/functions`) pre-loaded.
+
+```js
+import { useSpellbook } from '@gridsheet/vue-core/spellbook';
+const book = useSpellbook({ /* RegistryProps */ });
+```
 
 ## Exports
 
@@ -77,7 +102,8 @@ This package exports:
 
 - All core GridSheet functionality from `@gridsheet/preact-core`
 - `GridSheet` - Vue 3 component
-- `useHub` - Vue 3-specific reactive hub composable
+- `useBook` - Vue 3-specific reactive book composable
+- `@gridsheet/vue-core/spellbook` - `useSpellbook`, `createSpellbook`
 
 ## Docs
 
@@ -92,11 +118,8 @@ pnpm dev
 
 # Build the package
 pnpm build
-
-# Preview the build
-pnpm preview
 ```
 
 ## License
 
-Apache-2.0 
+Apache-2.0
