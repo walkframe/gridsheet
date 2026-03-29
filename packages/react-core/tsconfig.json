@@ -18,6 +18,11 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "baseUrl": "./src/",
+    "paths": {
+      "@gridsheet/core": ["../../core/src"],
+      "@gridsheet/core/*": ["../../core/src/*"],
+      "@gridsheet/functions": ["../../functions/src"]
+    },
     "forceConsistentCasingInFileNames": true
   },
   "exclude": ["node_modules", "storybook", "dist", "e2e", "plugins"],
