@@ -1,6 +1,6 @@
 {
   "name": "@gridsheet/core",
-  "version": "3.0.0-rc.12",
+  "version": "3.0.0-rc.13",
   "description": "Framework-agnostic core for gridsheet (Sheet, Registry, formula engine, etc.)",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
