@@ -203,7 +203,10 @@ pnpm build:storybook
 
 ### Release Process
 
-1. **Version Bump**: Update version in `package.json` for all affected packages
-2. **Build**: `pnpm build:all`
-3. **Test**: `pnpm test`
-4. **Publish**: Publish to npm
+1. **Version Bump**: `pnpm set-version <version>` (updates all packages, commits, and tags)
+2. **Push to master**: `git push origin master --tags`
+3. GitHub Actions (`release.yaml`) will automatically build and publish all packages to npm
+
+> **Recommended:** Release via GitHub Actions rather than manually. The CI pipeline handles build order and dependency resolution correctly.
+>
+> If you must publish manually, always use `pnpm publish` (not `npm publish`). `pnpm publish` automatically converts `workspace:*` references to actual version numbers. `npm publish` will leave `workspace:*` as-is, causing installation failures for users.
