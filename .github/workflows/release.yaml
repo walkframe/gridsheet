@@ -186,7 +186,9 @@ jobs:
           cd packages/vue-core
           pnpm install
           pnpm build
-          pnpm publish --access public --provenance --tag next --no-git-checks || true
+          VERSION=$(node -p "require('./package.json').version")
+          TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
+          pnpm publish --access public --provenance $TAG --no-git-checks || true
 
   upload-svelte-core:
     needs: upload-preact-core
@@ -214,4 +216,6 @@ jobs:
           cd packages/svelte-core
           pnpm install
           pnpm build
-          pnpm publish --access public --provenance --tag next --no-git-checks || true
+          VERSION=$(node -p "require('./package.json').version")
+          TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
+          pnpm publish --access public --provenance $TAG --no-git-checks || true
