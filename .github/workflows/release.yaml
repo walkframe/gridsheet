@@ -47,7 +47,7 @@ jobs:
           done
 
   upload-react-core:
-    needs: upload-functions
+    needs: upload-core
     runs-on: ubuntu-latest
     name: upload react-core
     steps:
@@ -72,7 +72,7 @@ jobs:
           npm publish --access public --provenance $TAG || true
 
   upload-preact-core:
-    needs: upload-functions
+    needs: upload-core
     runs-on: ubuntu-latest
     name: upload preact-core
     steps:
