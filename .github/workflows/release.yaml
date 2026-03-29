@@ -167,6 +167,11 @@ jobs:
         run: |
           NPM_RC=$(npm config get userconfig)
           sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
+      - name: build dependencies (preact-core, functions)
+        run: |
+          cd packages/react-core && pnpm install && pnpm build && cd ../..
+          cd packages/preact-core && pnpm install && pnpm build && cd ../..
+          cd packages/functions && pnpm install && pnpm build && cd ../..
       - name: publish vue-core
         run: |
           cd packages/vue-core
@@ -190,6 +195,11 @@ jobs:
         run: |
           NPM_RC=$(npm config get userconfig)
           sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
+      - name: build dependencies (react-core, preact-core, functions)
+        run: |
+          cd packages/react-core && pnpm install && pnpm build && cd ../..
+          cd packages/preact-core && pnpm install && pnpm build && cd ../..
+          cd packages/functions && pnpm install && pnpm build && cd ../..
       - name: publish svelte-core
         run: |
           cd packages/svelte-core
