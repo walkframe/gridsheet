@@ -15,9 +15,9 @@ jobs:
     if: github.ref == 'refs/heads/master'
     name: upload core
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: '24.1.0'
           registry-url: 'https://registry.npmjs.org'
@@ -51,9 +51,9 @@ jobs:
     runs-on: ubuntu-latest
     name: upload react-core
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: '24.1.0'
           registry-url: 'https://registry.npmjs.org'
@@ -76,9 +76,9 @@ jobs:
     runs-on: ubuntu-latest
     name: upload preact-core
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: '24.1.0'
           registry-url: 'https://registry.npmjs.org'
@@ -106,9 +106,9 @@ jobs:
     runs-on: ubuntu-latest
     name: upload functions
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: '24.1.0'
           registry-url: 'https://registry.npmjs.org'
@@ -131,9 +131,9 @@ jobs:
     runs-on: ubuntu-latest
     name: upload react-dev
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: '24.1.0'
           registry-url: 'https://registry.npmjs.org'
@@ -156,9 +156,9 @@ jobs:
     runs-on: ubuntu-latest
     name: upload vue-core
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: '24.1.0'
           registry-url: 'https://registry.npmjs.org'
