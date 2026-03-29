@@ -1,5 +1,5 @@
 import { RowFunction } from './row';
-import { Sheet, FormulaError, RangeEntity, RefEntity, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, RangeEntity, RefEntity, ValueEntity } from '@gridsheet/core';
 
 describe('row', () => {
   const sheet = new Sheet({});

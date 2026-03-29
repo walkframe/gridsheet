@@ -1,5 +1,5 @@
 import { ConcatenateFunction } from './concatenate';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('concatenate', () => {
   const sheet = new Sheet({});

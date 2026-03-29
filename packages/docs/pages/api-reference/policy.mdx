@@ -35,11 +35,11 @@ function MySheet() {
 }
 ```
 
-Use `useSpellbook` from `@gridsheet/functions` to create a book with all extended formula functions pre-loaded:
+Use `useSpellbook` from `@gridsheet/react-core/spellbook` to create a book with all extended formula functions pre-loaded:
 
 ```tsx
 import { GridSheet, Policy, ThousandSeparatorPolicyMixin } from '@gridsheet/react-core';
-import { useSpellbook } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 
 function MySheet() {
   const book = useSpellbook({

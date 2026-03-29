@@ -15,7 +15,7 @@ export default defineConfig(() => ({
     },
     outDir: 'dist',
     rollupOptions: {
-      external: [/^react/, /^@?react-dom/, "@gridsheet/react-core"],
+      external: [/^react/, /^@?react-dom/, /^@gridsheet\/core/],
       output: {
         preserveModules: false,
       },

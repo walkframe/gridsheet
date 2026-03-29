@@ -1,5 +1,5 @@
 import { RankEqFunction } from './rank_eq';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/core';
 
 describe('rank.eq', () => {
   const sheet = new Sheet({});

@@ -1,5 +1,5 @@
 import { ModFunction } from './mod';
-import { Sheet, FormulaError, RefEntity, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, RefEntity, ValueEntity } from '@gridsheet/core';
 
 describe('mod', () => {
   const sheet = new Sheet({});

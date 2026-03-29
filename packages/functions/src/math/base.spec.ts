@@ -1,5 +1,5 @@
 import { BaseConvFunction } from './base';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('base', () => {
   const sheet = new Sheet({});

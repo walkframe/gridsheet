@@ -11,7 +11,8 @@ import {
   PointType,
   toCellObject,
 } from '@gridsheet/react-core';
-import { useSpellbook } from '@gridsheet/functions';
+
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 import CodeMirror from '@uiw/react-codemirror';
 import { lineNumbers } from '@codemirror/view';
 import { oneDark } from '@codemirror/theme-one-dark';

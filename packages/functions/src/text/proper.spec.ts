@@ -1,5 +1,5 @@
 import { ProperFunction } from './proper';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('proper', () => {
   const sheet = new Sheet({});

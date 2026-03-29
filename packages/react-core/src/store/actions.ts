@@ -13,15 +13,23 @@ import {
   OperatorType,
   FilterConfig,
 } from '../types';
-import { zoneToArea, superposeArea, matrixShape, areaShape, areaDiff, areaToZone, restrictZone } from '../lib/spatial';
-import { Sheet } from '../lib/sheet';
+import {
+  zoneToArea,
+  superposeArea,
+  matrixShape,
+  areaShape,
+  areaDiff,
+  areaToZone,
+  restrictZone,
+} from '@gridsheet/core/lib/spatial';
+import { Sheet } from '@gridsheet/core/lib/sheet';
 
-import { p2a, a2p } from '../lib/coords';
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '../constants';
+import { p2a, a2p } from '@gridsheet/core/lib/coords';
+import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '@gridsheet/core/constants';
 import { initSearchStatement, restrictPoints, flashSheet, flashWithCallback, compactReflection } from './helpers';
-import { smartScroll } from '../lib/virtualization';
-import * as prevention from '../lib/operation';
-import { Autofill } from '../lib/autofill';
+import { smartScroll } from '@gridsheet/core/lib/virtualization';
+import * as prevention from '@gridsheet/core/lib/operation';
+import { Autofill } from '@gridsheet/core/lib/autofill';
 
 const resetZone: ZoneType = { startY: -1, startX: -1, endY: -1, endX: -1 };
 

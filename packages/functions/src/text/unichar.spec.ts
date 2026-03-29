@@ -1,5 +1,5 @@
 import { UnicharFunction } from './unichar';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('unichar', () => {
   const sheet = new Sheet({});

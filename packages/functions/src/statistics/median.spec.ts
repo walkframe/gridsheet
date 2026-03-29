@@ -1,5 +1,5 @@
 import { MedianFunction } from './median';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/core';
 
 describe('median', () => {
   const sheet = new Sheet({});

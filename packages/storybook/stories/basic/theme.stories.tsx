@@ -1,7 +1,8 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { buildInitialCells, GridSheet, ModeType } from '@gridsheet/react-core';
-import { useSpellbook } from '@gridsheet/functions';
+
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 
 type Props = {
   mode: ModeType;

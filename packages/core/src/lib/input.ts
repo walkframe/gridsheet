@@ -111,7 +111,7 @@ export const isFocus = (input: HTMLTextAreaElement | null): boolean => {
  * Returns true if the event was handled (caller should preventDefault), false otherwise.
  */
 export const handleFormulaQuoteAutoClose = (
-  e: React.KeyboardEvent<HTMLTextAreaElement>,
+  e: { key: string; preventDefault(): void; currentTarget: HTMLTextAreaElement },
   inputting: string,
 ): boolean => {
   const input = e.currentTarget;

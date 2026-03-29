@@ -1,5 +1,5 @@
 import { IserrFunction } from './iserr';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('iserr', () => {
   const sheet = new Sheet({});

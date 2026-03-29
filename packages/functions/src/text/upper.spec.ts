@@ -1,5 +1,5 @@
 import { UpperFunction } from './upper';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('upper', () => {
   const sheet = new Sheet({});

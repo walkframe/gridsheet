@@ -1,11 +1,15 @@
 import dayjs from 'dayjs';
-import type { AreaType, CellsByAddressType, CellType, PointType, StoreType } from '../types';
+import type { AreaType, CellsByAddressType, CellType, CSSPropertiesLike, PointType, RefLike, ZoneType } from '../types';
 import { Sheet } from './sheet';
 import { areaShape, areaToZone, complementSelectingArea, concatAreas, zoneToArea, createMatrix } from './spatial';
 import { p2a } from './coords';
-
 import { Time } from './time';
-import { CSSProperties } from 'react';
+
+type AutofillStore = {
+  sheetReactive: RefLike<Sheet>;
+  choosing: PointType;
+  selectingZone: ZoneType;
+};
 
 const BORDER_AUTOFILL_DRAGGING = 'dashed 1px #888888';
 
@@ -26,7 +30,7 @@ export class Autofill {
   private readonly dst: AreaType;
   private readonly direction: Direction;
   private readonly sheet: Sheet;
-  constructor(store: StoreType, draggingTo: PointType) {
+  constructor(store: AutofillStore, draggingTo: PointType) {
     const { sheetReactive: sheetRef, choosing, selectingZone } = store;
     const sheet = sheetRef.current;
     if (!sheet) {
@@ -111,7 +115,7 @@ export class Autofill {
 
   public getCellStyle(target: PointType) {
     const { x, y } = target;
-    const style: CSSProperties = {};
+    const style: CSSPropertiesLike = {};
     const { top, left, bottom, right } = this.src;
 
     switch (this.direction) {

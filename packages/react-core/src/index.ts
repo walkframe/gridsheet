@@ -1,5 +1,6 @@
-export { GridSheet, createSheetRef, useSheetRef, createStoreRef, useStoreRef } from './components/GridSheet';
+// --- Re-export everything from @gridsheet/core ---
 export {
+  // Spatial
   oa2aa,
   aa2oa,
   buildInitialCells,
@@ -11,14 +12,64 @@ export {
   addressesToAreas,
   addressesToCols,
   addressesToRows,
-} from './lib/spatial';
+  // Time
+  Time,
+  // Coords
+  x2c,
+  c2x,
+  y2r,
+  r2y,
+  p2a,
+  a2p,
+  rh,
+  ch,
+  // Book / Registry
+  Registry,
+  createBook,
+  createRegistry,
+  // Sheet
+  Sheet,
+  toValueMatrix,
+  toValueObject,
+  toValueRows,
+  toValueCols,
+  toCellMatrix,
+  toCellObject,
+  toCellRows,
+  toCellCols,
+  // Formula
+  BaseFunction,
+  BaseFunctionAsync,
+  Lexer,
+  FormulaParser,
+  RefEntity,
+  ValueEntity,
+  RangeEntity,
+  FormulaError,
+  ensureString,
+  ensureNumber,
+  ensureBoolean,
+  ensureDate,
+  check,
+  eachMatrix,
+  createBooleanMask,
+  conditionArg,
+  stripMatrix,
+  // Policy
+  Policy,
+  ThousandSeparatorPolicyMixin,
+  // Operations
+  operations,
+  // Constants & Sentinels
+  DEFAULT_HISTORY_LIMIT,
+  Pending,
+  Spilling,
+} from '@gridsheet/core';
 
-export { Time } from './lib/time';
-export { x2c, c2x, y2r, r2y, p2a, a2p, rh, ch } from './lib/coords';
-export { updateSheet } from './store/actions';
-export { PluginBase, useInitialPluginContext, usePluginContext } from './components/PluginBase';
-export { MenuItem, MenuDivider } from './components/MenuItem';
 export type {
+  // Types from core
+  CSSPropertiesLike,
+  RefLike,
   MatrixType,
   CellType,
   System,
@@ -28,7 +79,6 @@ export type {
   FilterConditionMethod,
   FilterConfig,
   FeedbackType,
-  OptionsType,
   WriterType,
   CellsByAddressType,
   CellsByIdType,
@@ -37,52 +87,35 @@ export type {
   HeadersType,
   HistoryType,
   HistorySortRowsType,
-  StoreType,
   PointType,
   AreaType,
   ZoneType,
-  Props,
-  SheetHandle,
-  StoreHandle,
   EditorEvent,
   CursorStateType,
-} from './types';
-
-export type { BookType, BookProps, RegistryProps, TransmitProps } from './lib/book';
-export { Registry, useBook, createBook } from './lib/book';
-export type { Dispatcher } from './store';
-export { ThousandSeparatorPolicyMixin } from './policy/thousand_separator';
-export { CheckboxPolicyMixin } from './policy/checkbox';
-export { BaseFunction, BaseFunctionAsync } from './formula/functions/__base';
-export type {
+  // Book types
+  BookType,
+  BookProps,
+  RegistryProps,
+  TransmitProps,
+  // Sheet types
+  UserSheet,
+  SheetLimits,
+  ToValueMatrixProps,
+  ToValueObjectProps,
+  ToValueRowsProps,
+  ToValueColsProps,
+  ToCellMatrixProps,
+  ToCellObjectProps,
+  ToCellRowsProps,
+  ToCellColsProps,
+  // Formula types
   FunctionProps,
-  FunctionArgumentDefinition as FunctionArgumentDefinition,
+  FunctionArgumentDefinition,
   FunctionCategory,
   FunctionMapping,
-} from './formula/functions/__base';
-export { Lexer, FormulaParser, RefEntity, ValueEntity, RangeEntity } from './formula/evaluator';
-export { FormulaError } from './formula/formula-error';
-export { Sheet, type UserSheet, type SheetLimits } from './lib/sheet';
-export {
-  toValueMatrix,
-  toValueObject,
-  toValueRows,
-  toValueCols,
-  toCellMatrix,
-  toCellObject,
-  toCellRows,
-  toCellCols,
-  type ToValueMatrixProps,
-  type ToValueObjectProps,
-  type ToValueRowsProps,
-  type ToValueColsProps,
-  type ToCellMatrixProps,
-  type ToCellObjectProps,
-  type ToCellRowsProps,
-  type ToCellColsProps,
-} from './lib/sheet_utils';
-export { Policy } from './policy/core';
-export type {
+  EnsureNumberOptions,
+  EnsureBooleanOptions,
+  // Policy types
   PolicyType,
   AutocompleteOption,
   PolicyMixinType,
@@ -91,17 +124,24 @@ export type {
   SelectProps,
   SelectFallbackProps,
   SerializeForClipboardProps,
-} from './policy/core';
+} from '@gridsheet/core';
 
-export * as operations from './lib/operation';
-export { DEFAULT_HISTORY_LIMIT } from './constants';
-export { Pending, Spilling } from './sentinels';
+// --- React-specific exports ---
+export { GridSheet, createSheetRef, useSheetRef, createStoreRef, useStoreRef } from './components/GridSheet';
+export { updateSheet } from './store/actions';
+export { PluginBase, useInitialPluginContext, usePluginContext } from './components/PluginBase';
+export { MenuItem, MenuDivider } from './components/MenuItem';
+export { useBook } from './lib/hooks';
+export type { Dispatcher } from './store';
+export { CheckboxPolicyMixin } from './policy/checkbox';
+
+export type { Props, StoreType, SheetHandle, StoreHandle, OptionsType } from './types';
 
 export { userActions } from './store/actions';
 export { clip, sheet2csv } from './lib/clipboard';
 
-export { makeBorder } from './styles/utils';
-export { applyers } from './store/dispatchers';
+export { applyers } from './store/applyers';
+export { makeBorder } from './lib/style';
 
 export type {
   MenuContext,
@@ -121,14 +161,3 @@ export {
   defaultColMenuDescriptors,
   registerMenuComponent,
 } from './lib/menu';
-
-export {
-  ensureString,
-  ensureNumber,
-  ensureBoolean,
-  check,
-  eachMatrix,
-  createBooleanMask,
-} from './formula/functions/__utils';
-export type { EnsureNumberOptions, EnsureBooleanOptions } from './formula/functions/__utils';
-export { conditionArg, stripMatrix } from './formula/functions/__base';

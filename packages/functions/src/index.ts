@@ -1,5 +1,5 @@
-import type { FunctionMapping, RegistryProps } from '@gridsheet/react-core';
-import { useBook, createBook } from '@gridsheet/react-core';
+import type { FunctionMapping, RegistryProps } from '@gridsheet/core';
+import { createBook } from '@gridsheet/core';
 import { mathFunctions } from './math';
 import { statisticsFunctions } from './statistics';
 import { textFunctions } from './text';
@@ -18,10 +18,6 @@ export const allFunctions: FunctionMapping = {
   ...logicalFunctions,
   ...informationFunctions,
 };
-
-/** useBook with all extended functions pre-loaded. User-supplied additionalFunctions are merged on top. */
-export const useSpellbook = ({ additionalFunctions, ...rest }: RegistryProps = {}) =>
-  useBook({ ...rest, additionalFunctions: { ...allFunctions, ...additionalFunctions } });
 
 /** createBook with all extended functions pre-loaded. User-supplied additionalFunctions are merged on top. */
 export const createSpellbook = ({ additionalFunctions, ...rest }: RegistryProps = {}) =>

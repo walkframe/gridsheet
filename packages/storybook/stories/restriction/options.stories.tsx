@@ -2,7 +2,8 @@ import React, { type CSSProperties } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { GridSheet, Policy, AutocompleteOption, buildInitialCells, type SelectProps } from '@gridsheet/react-core';
 import { Debugger } from '@gridsheet/react-dev';
-import { useSpellbook } from '@gridsheet/functions';
+
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 
 const meta: Meta = {
   title: 'Restriction/Options',

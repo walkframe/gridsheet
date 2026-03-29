@@ -1,5 +1,5 @@
 import { ModeSnglFunction } from './mode_sngl';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/core';
 
 describe('mode.sngl', () => {
   const sheet = new Sheet({});

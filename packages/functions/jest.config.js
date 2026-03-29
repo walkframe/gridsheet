@@ -19,7 +19,8 @@ module.exports = {
     ]
   },
   "moduleNameMapper": {
-    "^@gridsheet/react-core$": "<rootDir>/../react-core/src"
+    "^@gridsheet/core$": "<rootDir>/../core/src",
+    "^@gridsheet/core/(.*)$": "<rootDir>/../core/src/$1"
   },
   testEnvironment: 'jest-environment-jsdom'
 };

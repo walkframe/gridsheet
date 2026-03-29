@@ -1,5 +1,5 @@
 import { IsblankFunction } from './isblank';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('isblank', () => {
   const sheet = new Sheet({});

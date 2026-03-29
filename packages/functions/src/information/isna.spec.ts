@@ -1,5 +1,5 @@
 import { IsnaFunction } from './isna';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('isna', () => {
   const sheet = new Sheet({});

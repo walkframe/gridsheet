@@ -1,5 +1,5 @@
 import { AtanFunction } from './atan';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('atan', () => {
   const sheet = new Sheet({});

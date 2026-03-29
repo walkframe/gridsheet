@@ -2,7 +2,8 @@ import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import ReactMarkdown from 'react-markdown';
 import { buildInitialCells, GridSheet, Policy } from '@gridsheet/react-core';
-import { useSpellbook } from '@gridsheet/functions';
+
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 import { Debugger } from '@gridsheet/react-dev';
 
 const meta: Meta = {

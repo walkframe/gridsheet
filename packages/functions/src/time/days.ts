@@ -1,6 +1,6 @@
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import type { FunctionCategory } from '@gridsheet/react-core';
-import { ensureDate } from './__utils';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/core';
+import type { FunctionCategory } from '@gridsheet/core';
+import { ensureDate } from '@gridsheet/core';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 

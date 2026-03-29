@@ -1,4 +1,4 @@
-import type { FunctionMapping } from '@gridsheet/react-core';
+import type { FunctionMapping } from '@gridsheet/core';
 import { ConcatenateFunction } from './concatenate';
 import { LenbFunction } from './lenb';
 import { ExactFunction } from './exact';

@@ -2,7 +2,8 @@ import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { BaseFunction, FunctionArgumentDefinition } from '@gridsheet/react-core';
 import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
-import { useSpellbook } from '@gridsheet/functions';
+
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 
 const meta: Meta = {
   title: 'Formula/Custom',

@@ -7,7 +7,7 @@ import { Fixed } from './Fixed';
 import type { ContextMenuItemDescriptor } from '../lib/menu';
 import { buildMenuContext } from '../lib/menu';
 import { MenuItem, MenuDivider } from './MenuItem';
-import { clampPopup } from '../lib/popup';
+import { clampPopup } from '@gridsheet/core/lib/popup';
 
 export const ContextMenu = () => {
   const { store, dispatch } = useContext(Context);

@@ -9,7 +9,7 @@ import {
   SHEET_WIDTH,
   DEFAULT_COL_KEY,
   DEFAULT_ROW_KEY,
-} from '../constants';
+} from '@gridsheet/core/constants';
 import { Context } from '../store';
 import { reducer as defaultReducer } from '../store/actions';
 import { Editor } from './Editor';
@@ -19,14 +19,14 @@ import { Emitter } from './Emitter';
 import { ContextMenu } from './ContextMenu';
 import { ColumnMenu } from './ColumnMenu';
 import { RowMenu } from './RowMenu';
-import { Sheet } from '../lib/sheet';
+import { Sheet } from '@gridsheet/core/lib/sheet';
 import { Tabular } from './Tabular';
-import { getMaxSizesFromCells } from '../lib/spatial';
-import { x2c, y2r } from '../lib/coords';
-import { embedStyle } from '../styles/embedder';
+import { getMaxSizesFromCells } from '@gridsheet/core/lib/spatial';
+import { x2c, y2r } from '@gridsheet/core/lib/coords';
+import { embedStyle } from '@gridsheet/core/styles/embedder';
 import { FormulaBar } from './FormulaBar';
 import { SearchBar } from './SearchBar';
-import { useBook } from '../lib/book';
+import { useBook } from '../lib/hooks';
 import { ScrollHandle } from './ScrollHandle';
 import { defaultContextMenuDescriptors, defaultRowMenuDescriptors, defaultColMenuDescriptors } from '../lib/menu';
 

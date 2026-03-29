@@ -240,11 +240,11 @@ protected validate(args: any[]): any[] {
 
 **Providing Built-in Functions**
 
-If you want to use the standard suite of spreadsheet functions (like `SUM`, `VLOOKUP`, etc.), we highly recommend using the `useSpellbook()` hook from the `@gridsheet/functions` package to provide them to your `book`:
+If you want to use the standard suite of spreadsheet functions (like `SUM`, `VLOOKUP`, etc.), we highly recommend using the `useSpellbook()` hook from `@gridsheet/react-core/spellbook` to provide them to your `book`. This requires `@gridsheet/functions` to be installed:
 
 ```tsx
 import { useBook } from '@gridsheet/react-core';
-import { useSpellbook } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 
 function App() {
   const spellbook = useSpellbook();

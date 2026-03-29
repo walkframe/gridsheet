@@ -1,7 +1,8 @@
 import React, { type CSSProperties } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { GridSheet, Policy, buildInitialCells } from '@gridsheet/react-core';
-import { useSpellbook } from '@gridsheet/functions';
+
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 
 const meta: Meta = {
   title: 'Restriction/SerializeForClipboard',

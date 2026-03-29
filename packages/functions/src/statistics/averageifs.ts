@@ -1,7 +1,7 @@
-import { FormulaError } from '@gridsheet/react-core';
-import { BaseFunction, type FunctionArgumentDefinition, conditionArg } from '@gridsheet/react-core';
-import { Sheet, eachMatrix, stripMatrix, createBooleanMask, ensureString } from '@gridsheet/react-core';
-import type { FunctionCategory, PointType } from '@gridsheet/react-core';
+import { FormulaError } from '@gridsheet/core';
+import { BaseFunction, type FunctionArgumentDefinition, conditionArg } from '@gridsheet/core';
+import { Sheet, eachMatrix, stripMatrix, createBooleanMask, ensureString } from '@gridsheet/core';
+import type { FunctionCategory, PointType } from '@gridsheet/core';
 
 const description = `Returns the average of a range depending on multiple criteria.`;
 

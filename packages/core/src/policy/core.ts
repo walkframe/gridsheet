@@ -1,4 +1,3 @@
-import type { FC, ReactNode } from 'react';
 import type { CellPatchType, CellType, OperationType, PointType } from '../types';
 import type { Sheet, UserSheet } from '../lib/sheet';
 import { isSheet } from '../formula/functions/__base';
@@ -12,7 +11,7 @@ export type AutocompleteOption = {
   value: any;
   label?: any;
   keywords?: string[];
-  tooltip?: ReactNode | FC<{ value?: any }>;
+  tooltip?: any;
 };
 
 export type SelectProps = {

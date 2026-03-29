@@ -4,11 +4,11 @@ import type { MouseEvent } from 'react';
 import { Context } from '../store';
 import { setResizingPositionY, setResizingPositionX, updateSheet, setStore } from '../store/actions';
 
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH, MIN_WIDTH, MIN_HEIGHT } from '../constants';
-import { zoneToArea, makeSequence, between } from '../lib/spatial';
+import { DEFAULT_HEIGHT, DEFAULT_WIDTH, MIN_WIDTH, MIN_HEIGHT } from '@gridsheet/core/constants';
+import { zoneToArea, makeSequence, between } from '@gridsheet/core/lib/spatial';
 import type { CellsByAddressType } from '../types';
-import { p2a } from '../lib/coords';
-import { focus } from '../lib/dom';
+import { p2a } from '@gridsheet/core/lib/coords';
+import { focus } from '@gridsheet/core/lib/dom';
 
 export const Resizer = () => {
   const { store, dispatch } = useContext(Context);

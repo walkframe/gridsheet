@@ -11,7 +11,7 @@ import {
   UserSheet,
   toValueMatrix,
 } from '@gridsheet/react-core';
-import { useSpellbook } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 import {
   Chart as ChartJS,
   CategoryScale,

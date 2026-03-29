@@ -1,6 +1,6 @@
-import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/react-core';
-import { ensureNumber } from '@gridsheet/react-core';
-import type { FunctionCategory } from '@gridsheet/react-core';
+import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/core';
+import { ensureNumber } from '@gridsheet/core';
+import type { FunctionCategory } from '@gridsheet/core';
 
 const description = `Returns the sum of the squares of a series of numbers or cells.`;
 

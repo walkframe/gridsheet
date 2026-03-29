@@ -1,5 +1,5 @@
 import { TruncFunction } from './trunc';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('trunc', () => {
   const sheet = new Sheet({});

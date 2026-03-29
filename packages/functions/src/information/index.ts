@@ -1,4 +1,4 @@
-import type { FunctionMapping } from '@gridsheet/react-core';
+import type { FunctionMapping } from '@gridsheet/core';
 import { IsformulaFunction } from './isformula';
 import { IsblankFunction } from './isblank';
 import { IserrFunction } from './iserr';

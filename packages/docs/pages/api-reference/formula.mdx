@@ -192,10 +192,12 @@ const book = useBook({
 });
 ```
 
-If you also want the full set of built-in extended functions (from `@gridsheet/functions`), use `useSpellbook` instead — it wraps `useBook` with all extended functions pre-loaded:
+If you also want the full set of built-in extended functions, use `useSpellbook` instead — it wraps `useBook` with all extended functions pre-loaded.
+
+> **Note:** `useSpellbook` requires `@gridsheet/functions` to be installed. It is an optional peer dependency of `@gridsheet/react-core`.
 
 ```tsx
-import { useSpellbook } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 
 const book = useSpellbook({
   additionalFunctions: {

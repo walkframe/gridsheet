@@ -1,5 +1,5 @@
 import { JoinFunction } from './join';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/core';
 
 describe('join', () => {
   const sheet = new Sheet({});

@@ -7,7 +7,7 @@ import { Context } from '../store';
 import { setStore, updateSheet } from '../store/actions';
 
 import { usePluginContext } from './PluginBase';
-import { Sheet } from '../lib/sheet';
+import { Sheet } from '@gridsheet/core/lib/sheet';
 
 type StoreObserverProps = OptionsType & {
   sheetName?: string;

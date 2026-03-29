@@ -1,5 +1,5 @@
 import { RsqFunction } from './rsq';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/core';
 
 describe('rsq', () => {
   const sheet = new Sheet({});

@@ -1,5 +1,5 @@
 import { QuartileIncFunction } from './quartile_inc';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/core';
 
 describe('quartile.inc', () => {
   const sheet = new Sheet({});

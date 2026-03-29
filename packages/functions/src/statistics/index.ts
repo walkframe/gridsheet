@@ -1,4 +1,4 @@
-import type { FunctionMapping } from '@gridsheet/react-core';
+import type { FunctionMapping } from '@gridsheet/core';
 import { AverageifFunction } from './averageif';
 import { AverageifsFunction } from './averageifs';
 import { MedianFunction } from './median';

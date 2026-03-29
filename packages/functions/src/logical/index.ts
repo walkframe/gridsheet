@@ -1,4 +1,4 @@
-import type { FunctionMapping } from '@gridsheet/react-core';
+import type { FunctionMapping } from '@gridsheet/core';
 import { XorFunction } from './xor';
 import { IfnaFunction } from './ifna';
 import { IfsFunction } from './ifs';

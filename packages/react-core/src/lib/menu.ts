@@ -5,12 +5,12 @@
 // ---- types ----------------------------------------------------------------
 
 import type { PointType, ZoneType, FilterConfig } from '../types';
-import type { UserSheet } from './sheet';
+import type { UserSheet } from '@gridsheet/core/lib/sheet';
 import type { StoreType } from '../types';
 import type { Dispatcher } from '../store';
-import * as prevention from './operation';
-import { zoneShape } from './spatial';
-import { p2a } from './coords';
+import * as prevention from '@gridsheet/core/lib/operation';
+import { zoneShape } from '@gridsheet/core/lib/spatial';
+import { p2a } from '@gridsheet/core/lib/coords';
 import {
   copier,
   cutter,
@@ -24,7 +24,7 @@ import {
   rowSortFixedToggler,
   rowFilterFixedToggler,
   searcher,
-} from '../store/dispatchers';
+} from '../store/applyers';
 import {
   insertRowsAbove as _insertRowsAbove,
   insertRowsBelow as _insertRowsBelow,

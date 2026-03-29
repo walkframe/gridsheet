@@ -1,6 +1,6 @@
-import { Time } from '@gridsheet/react-core';
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import type { FunctionCategory } from '@gridsheet/react-core';
+import { Time } from '@gridsheet/core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/core';
+import type { FunctionCategory } from '@gridsheet/core';
 
 const description = `Returns a Date value representing the specified hour, minute, and second (on the base date 1899-12-30).`;
 

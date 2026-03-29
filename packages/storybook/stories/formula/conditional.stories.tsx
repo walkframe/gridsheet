@@ -7,7 +7,8 @@ import {
   FormulaError,
   type FunctionArgumentDefinition,
 } from '@gridsheet/react-core';
-import { useSpellbook } from '@gridsheet/functions';
+
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 
 class DelayNaFunction extends BaseFunctionAsync {
   example = 'DELAY_NA()';

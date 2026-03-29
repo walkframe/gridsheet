@@ -1,5 +1,5 @@
 import { LnFunction } from './ln';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('ln', () => {
   const sheet = new Sheet({});

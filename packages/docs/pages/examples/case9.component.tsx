@@ -1,6 +1,6 @@
 import React from 'react';
 import { GridSheet, Policy, buildInitialCells, BaseFunction, makeBorder, ensureString } from '@gridsheet/react-core';
-import { useSpellbook } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 import { FunctionArgumentDefinition } from '@gridsheet/react-core';
 
 export default function Case9Component() {

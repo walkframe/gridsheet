@@ -2,10 +2,10 @@ import type { CSSProperties } from 'react';
 import { useEffect, useRef, useContext, useCallback } from 'react';
 import { Context } from '../store';
 import { drag, setAutofillDraggingTo, setDragging, submitAutofill } from '../store/actions';
-import { getAreaInTabular } from '../lib/virtualization';
-import { insertRef, isFocus } from '../lib/input';
-import { focus } from '../lib/dom';
-import { areaToRange, zoneToArea } from '../lib/spatial';
+import { getAreaInTabular } from '@gridsheet/core/lib/virtualization';
+import { insertRef, isFocus } from '@gridsheet/core/lib/input';
+import { focus } from '@gridsheet/core/lib/dom';
+import { areaToRange, zoneToArea } from '@gridsheet/core/lib/spatial';
 import { isXSheetFocused } from '../store/helpers';
 
 type Props = {

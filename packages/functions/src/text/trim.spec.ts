@@ -1,5 +1,5 @@
 import { TrimFunction } from './trim';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('trim', () => {
   const sheet = new Sheet({});

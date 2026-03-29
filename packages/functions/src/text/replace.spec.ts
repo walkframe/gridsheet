@@ -1,5 +1,5 @@
 import { ReplaceFunction } from './replace';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/react-core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
 
 describe('replace', () => {
   const sheet = new Sheet({});

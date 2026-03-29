@@ -15,6 +15,7 @@
   "packageManager": "pnpm@10.6.5",
   "devDependencies": {
     "@chromatic-com/storybook": "^3",
+    "@gridsheet/core": "workspace:^",
     "@gridsheet/functions": "workspace:^",
     "@gridsheet/preact-core": "workspace:^",
     "@gridsheet/react-core": "workspace:^",

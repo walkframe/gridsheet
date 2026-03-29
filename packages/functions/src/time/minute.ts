@@ -1,6 +1,6 @@
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/react-core';
-import type { FunctionCategory } from '@gridsheet/react-core';
-import { ensureDate } from './__utils';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/core';
+import type { FunctionCategory } from '@gridsheet/core';
+import { ensureDate } from '@gridsheet/core';
 
 const description = `Returns the minute component of a given time/date value (0–59).`;
 

@@ -10,7 +10,7 @@ import {
   p2a,
   CellsByAddressType,
 } from '@gridsheet/react-core';
-import { useSpellbook } from '@gridsheet/functions';
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 
 // Color palette
 const COLORS = [

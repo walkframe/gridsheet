@@ -1,5 +1,5 @@
-import { a2p, x2c, y2r } from '../lib/coords';
-import { Sheet } from '../lib/sheet';
+import { a2p, x2c, y2r } from '@gridsheet/core/lib/coords';
+import { Sheet } from '@gridsheet/core/lib/sheet';
 import type { Address, PointType, StorePatchType, StoreType } from '../types';
 
 /**
@@ -68,24 +68,6 @@ export const flashWithCallback = (
     flashSheet(store.flashRef.current);
   },
 });
-
-export const shouldTracking = (operation: string) => {
-  switch (operation) {
-    case 'INSERT_ROWS':
-      return true;
-    case 'INSERT_COLS':
-      return true;
-    case 'REMOVE_ROWS':
-      return true;
-    case 'REMOVE_COLS':
-      return true;
-    case 'MOVE':
-      return true;
-    case 'SORT_ROWS':
-      return true;
-  }
-  return false;
-};
 
 export const initSearchStatement = (sheet: Sheet, store: StoreType) => {
   const { searchQuery, searchCaseSensitive, searchRegex, searchRange } = store;
