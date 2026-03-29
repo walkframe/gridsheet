@@ -1,6 +1,6 @@
 {
   "name": "@gridsheet/core",
-  "version": "3.0.0-rc.10",
+  "version": "3.0.0-rc.11",
   "description": "Framework-agnostic core for gridsheet (Sheet, Registry, formula engine, etc.)",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -10,10 +10,6 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
-    },
-    "./*": {
-      "types": "./dist/*.d.ts",
-      "import": "./dist/*.js"
     }
   },
   "scripts": {
@@ -50,7 +46,7 @@
     "vite": "^6.2.2",
     "vite-plugin-dts": "^4.5.3"
   },
-  "peerDependencies": {
+  "dependencies": {
     "dayjs": "^1.11.13"
   },
   "publishConfig": {

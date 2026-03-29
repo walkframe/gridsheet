@@ -1,6 +1,6 @@
 {
   "name": "@gridsheet/preact-core",
-  "version": "3.0.0-rc.10",
+  "version": "3.0.0-rc.11",
   "description": "Spreadsheet component for Preact",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -31,7 +31,6 @@
     }
   },
   "peerDependencies": {
-    "dayjs": "^1.11.13",
     "preact": "^10.26.6"
   },
   "devDependencies": {

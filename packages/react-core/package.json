@@ -1,6 +1,6 @@
 {
   "name": "@gridsheet/react-core",
-  "version": "3.0.0-rc.10",
+  "version": "3.0.0-rc.11",
   "description": "Spreadsheet component for React",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -72,7 +72,6 @@
     "@gridsheet/core": "workspace:*"
   },
   "peerDependencies": {
-    "dayjs": "^1.11.13",
     "react": ">=16.9.0",
     "react-dom": ">=16.9.0"
   },

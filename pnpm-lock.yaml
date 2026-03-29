@@ -116,10 +116,6 @@ importers:
         version: 5.8.3
 
   packages/functions:
-    dependencies:
-      dayjs:
-        specifier: ^1.11.13
-        version: 1.11.13
     devDependencies:
       '@gridsheet/core':
         specifier: workspace:*
@@ -145,9 +141,6 @@ importers:
       '@gridsheet/core':
         specifier: workspace:*
         version: link:../core
-      dayjs:
-        specifier: ^1.11.13
-        version: 1.11.13
       preact:
         specifier: ^10.26.6
         version: 10.26.6
