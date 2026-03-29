@@ -13,7 +13,45 @@
 ## Installation
 
 ```sh
-$ npm install @gridsheet/react-core --save
+npm install @gridsheet/react-core @gridsheet/functions
+```
+
+## Usage
+
+```tsx
+import { GridSheet } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/react-core/spellbook'; // requires @gridsheet/functions
+
+function App() {
+  const book = useSpellbook();
+  return (
+    <>
+      <GridSheet
+        book={book}
+        initialCells={{
+          A1: { value: 'Hello' },
+          B1: { value: 'React', style: { backgroundColor: '#61DBFB' } },
+          A2: { value: 123 },
+          B2: { value: 456 },
+          A3: { value: 789 },
+          C6: { value: '=SUM(A2:B2)' },
+        }}
+        options={{
+          mode: 'dark',
+        }}
+        sheetName="Sheet1"
+      />
+      <GridSheet
+        book={book}
+        initialCells={{
+          C3: { value: '=SUM(Sheet1!A2:B3)' },
+        }}
+        options={{}}
+        sheetName="Sheet2"
+      />
+    </>
+  );
+}
 ```
 
 ## Docs

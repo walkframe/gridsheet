@@ -5,7 +5,7 @@ Spreadsheet component for Preact
 ## Installation
 
 ```bash
-npm install @gridsheet/preact-core
+npm install @gridsheet/preact-core @gridsheet/functions
 ```
 
 ### Peer Dependencies
@@ -17,46 +17,40 @@ This package requires the following peer dependencies:
 
 ## Usage
 
-### Basic Preact Component
-
 ```tsx
 import { GridSheet } from '@gridsheet/preact-core';
+import { useSpellbook } from '@gridsheet/preact-core/spellbook'; // requires @gridsheet/functions
 
-// Your Preact component
 function App() {
+  const book = useSpellbook();
   return (
-    <GridSheet />
+    <>
+      <GridSheet
+        book={book}
+        initialCells={{
+          A1: { value: 'Hello' },
+          B1: { value: 'Preact', style: { backgroundColor: '#448888' } },
+          A2: { value: 123 },
+          B2: { value: 456 },
+          A3: { value: 789 },
+          C6: { value: '=SUM(A2:B2)' },
+        }}
+        options={{
+          mode: 'dark',
+        }}
+        sheetName="Sheet1"
+      />
+      <GridSheet
+        book={book}
+        initialCells={{
+          C3: { value: '=SUM(Sheet1!A2:B3)' },
+        }}
+        options={{}}
+        sheetName="Sheet2"
+      />
+    </>
   );
 }
-
-render(<App />, document.getElementById('app'));
-```
-
-### Vanilla JavaScript Integration
-
-```javascript
-import { GridSheet, h, render } from '@gridsheet/preact-core';
-
-// Create a container element
-const container = document.getElementById('gridsheet');
-
-// Render GridSheet directly
-render(
-  h(GridSheet, {
-    initialCells: {
-      A1: { value: 'Hello' },
-      B1: { value: 'Vanilla JS', style: { backgroundColor: '#448888'} },
-      A2: { value: 123 },
-      B2: { value: 456 },
-      C10: { value: '=SUM(A2:B2)' },
-    },
-    options: {
-      mode: 'dark',
-    },
-    sheetName: 'Sheet1'
-  }),
-  container
-);
 ```
 
 ## Exports

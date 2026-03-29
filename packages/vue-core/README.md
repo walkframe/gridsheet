@@ -5,7 +5,7 @@ Spreadsheet component for Vue 3
 ## Installation
 
 ```bash
-npm install @gridsheet/vue-core
+npm install @gridsheet/vue-core @gridsheet/functions
 ```
 
 ### Peer Dependencies
@@ -47,17 +47,8 @@ This package requires the following peer dependency:
 </template>
 
 <script setup>
-import { GridSheet, useBook } from '@gridsheet/vue-core';
-const book = useBook();
-</script>
-```
-
-### With Extended Functions (Spellbook)
-
-```vue
-<script setup>
 import { GridSheet } from '@gridsheet/vue-core';
-import { useSpellbook } from '@gridsheet/vue-core/spellbook';
+import { useSpellbook } from '@gridsheet/vue-core/spellbook'; // requires @gridsheet/functions
 const book = useSpellbook();
 </script>
 ```
@@ -78,22 +69,22 @@ The main spreadsheet component for Vue 3 applications.
 - `className` - CSS class name
 - `style` - Inline styles
 
+### useSpellbook
+
+Creates a reactive book with all extended functions (`@gridsheet/functions`) pre-loaded. Returns a `shallowRef<BookType>`.
+
+```js
+import { useSpellbook } from '@gridsheet/vue-core/spellbook'; // requires @gridsheet/functions
+const book = useSpellbook({ /* RegistryProps */ });
+```
+
 ### useBook
 
-A Vue 3-specific composable for creating a reactive book. Returns a `shallowRef<BookType>`.
+Same as `useSpellbook` but without extended functions.
 
 ```js
 import { useBook } from '@gridsheet/vue-core';
 const book = useBook({ /* RegistryProps */ });
-```
-
-### useSpellbook
-
-Same as `useBook` but with all extended functions (`@gridsheet/functions`) pre-loaded.
-
-```js
-import { useSpellbook } from '@gridsheet/vue-core/spellbook';
-const book = useSpellbook({ /* RegistryProps */ });
 ```
 
 ## Exports

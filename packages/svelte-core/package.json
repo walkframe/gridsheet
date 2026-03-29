@@ -1,6 +1,6 @@
 {
   "name": "@gridsheet/svelte-core",
-  "version": "3.0.0-rc.11",
+  "version": "3.0.0-rc.12",
   "description": "Spreadsheet component for Svelte 5",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -19,7 +19,9 @@
       "default": "./dist/spellbook.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "vite example",
     "build": "rm -rf ./dist || true && vite build"

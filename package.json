@@ -61,7 +61,8 @@
     "install:vue-core": "cd packages/vue-core && pnpm install",
     "install:svelte-core": "cd packages/svelte-core && pnpm install",
     "install:all": "pnpm install:core && pnpm install:react-core && pnpm install:react-dev && pnpm install:preact-core && pnpm install:functions && pnpm install:storybook && pnpm install:docs && pnpm install:vue-core && pnpm install:svelte-core",
-    "reset:all": "pnpm remove:all && pnpm install:all && pnpm build:all && pnpm clean:cache"
+    "reset:all": "pnpm remove:all && pnpm install:all && pnpm build:all && pnpm clean:cache",
+    "set-version": "node scripts/set-version.mjs"
   },
   "resolutions": {
     "react": "18.2.0",
