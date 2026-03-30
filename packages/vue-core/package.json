@@ -1,6 +1,6 @@
 {
   "name": "@gridsheet/vue-core",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "Spreadsheet component for Vue 3",
   "main": "dist/index.js",
   "module": "dist/index.js",
