@@ -12,8 +12,12 @@
 
 ## Docs
 
-- [Gridsheet document](https://gridsheet.walkframe.com/)
-  - [v1 document](https://docs.walkframe.com/gridsheet/react)
+- [v3+ document](https://gridsheet.walkframe.com/)
+- [v2 document](https://github.com/walkframe/gridsheet/tree/v2.2.0/packages/docs/pages/api-reference)
+  - [props](https://github.com/walkframe/gridsheet/blob/v2.2.0/packages/docs/pages/api-reference/props.mdx)
+  - [table](https://github.com/walkframe/gridsheet/blob/v2.2.0/packages/docs/pages/api-reference/table.mdx)
+  - [utilities](https://github.com/walkframe/gridsheet/blob/v2.2.0/packages/docs/pages/api-reference/utility-functions.mdx)
+- [v1 document](https://docs.walkframe.com/gridsheet/react)
 
 
 ## License

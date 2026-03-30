@@ -1,0 +1,12 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "npm"
+    directory: "/packages/docs"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "npm"
+    directory: "/packages/storybook"
+    open-pull-requests-limit: 0

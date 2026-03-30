@@ -62,7 +62,7 @@ for (const dir of pkgDirs) {
   const pkgPath = join(root, 'packages', dir, 'package.json');
   const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
   const shortName = pkg.name.split('/').pop();
-  const tag = `${shortName}/${version}`;
+  const tag = `v${version}/${shortName}`;
   execSync(`git tag "${tag}"`, { cwd: root, stdio: 'pipe' });
   console.log(`  tagged: ${tag}`);
 }

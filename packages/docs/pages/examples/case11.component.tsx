@@ -145,8 +145,12 @@ export default function Case11() {
         }}
       />
 
-      <h3>Debugger:</h3>
-      <Debugger book={book} />
+      <details style={{ marginTop: '12px' }}>
+        <summary style={{ cursor: 'pointer', fontSize: '14px', color: '#aaa' }}>Debugger (inspect async evaluation & caching)</summary>
+        <div className="gs-debugger-wrap">
+          <Debugger book={book} />
+        </div>
+      </details>
       <p style={{ marginTop: '12px', fontSize: '13px', color: '#888' }}>
         💡 Data is fetched live from the GitHub API with 1-minute caching. <code>GH_REPO(repo)</code> makes{' '}
         <strong>one API call per row</strong> and spills <code>[[stars, forks, issues, size, subscribers]]</code> across

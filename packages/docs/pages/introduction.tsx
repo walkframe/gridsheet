@@ -24,19 +24,6 @@ export default function IntroductionPage() {
           color: 'white',
         }}
       >
-        <p
-          style={{
-            fontSize: '0.85rem',
-            textTransform: 'uppercase' as const,
-            letterSpacing: '2px',
-            color: '#67e8f9',
-            margin: '0 0 12px',
-            fontWeight: 600,
-          }}
-        >
-          React Spreadsheet Component
-        </p>
-
         <h1
           style={{
             fontSize: 'clamp(1.8rem, 5vw, 3rem)',
@@ -48,10 +35,15 @@ export default function IntroductionPage() {
             WebkitTextFillColor: 'transparent',
           }}
         >
-          Build spreadsheets
+          Build programmable spreadsheets
           <br />
-          your users will love
+          for web apps
         </h1>
+
+        {/* Live demo */}
+        <div style={{ maxWidth: '960px', margin: '0 auto', padding: '24px 0 32px', textAlign: 'initial' }}>
+          <IntroductionExample />
+        </div>
 
         <p
           style={{
@@ -62,7 +54,7 @@ export default function IntroductionPage() {
             color: '#cbd5e1',
           }}
         >
-          A powerful, extensible grid with formulas, custom renderers, and async data — all in a single React component.
+          A powerful, extensible grid with formulas, custom renderers, and async data — ready to drop into any web app.
         </p>
 
         {/* CTA buttons */}
@@ -105,7 +97,7 @@ export default function IntroductionPage() {
               transition: 'background 0.15s',
             }}
           >
-            View Examples
+            More Examples
           </a>
         </div>
 
@@ -117,7 +109,7 @@ export default function IntroductionPage() {
             justifyContent: 'center',
             gap: '10px',
             maxWidth: '600px',
-            margin: '0 auto',
+            margin: '32px auto 0',
           }}
         >
           {featureBadges.map((f) => (
@@ -139,39 +131,6 @@ export default function IntroductionPage() {
               <span>{f.icon}</span> {f.label}
             </span>
           ))}
-        </div>
-      </div>
-
-      {/* ── Live demo section ─────────────────────────────────────────────── */}
-      <div
-        style={{
-          padding: '48px 20px 60px',
-          background: 'linear-gradient(180deg, #1e3a5f 0%, #0f172a 100%)',
-        }}
-      >
-        <div style={{ maxWidth: '960px', margin: '0 auto' }}>
-          <h2
-            style={{
-              textAlign: 'center',
-              fontSize: '1.4rem',
-              fontWeight: 700,
-              margin: '0 0 8px',
-              color: '#e2e8f0',
-            }}
-          >
-            Try it — it&apos;s fully interactive
-          </h2>
-          <p
-            style={{
-              textAlign: 'center',
-              fontSize: '0.95rem',
-              color: '#94a3b8',
-              margin: '0 0 32px',
-            }}
-          >
-            Edit cells, drag sliders, change statuses. Everything below is a live GridSheet.
-          </p>
-          <IntroductionExample />{' '}
         </div>
       </div>
     </div>

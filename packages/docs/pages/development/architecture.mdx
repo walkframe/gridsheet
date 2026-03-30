@@ -369,20 +369,20 @@ GridSheet stores filtering information in the header cells using special methods
 
 ### Filter Information Storage
 
-- **Filter Conditions**: Stored in column header cells `(0, x)` via `cell.filter()`
+- **Filter Conditions**: Stored in column header cells `(0, x)` via `cell.filter`
   - Contains the filter predicate and configuration for that column
   - Used to determine which rows should be visible
 
-- **Filtered Row Tracking**: Stored in row header cells `(y, 0)` via `cell.filtered()`
-  - Indicates whether a row passes all active filters
-  - `true` = row is visible, `false` = row is hidden by filter
+- **Filtered Row Tracking**: Stored in row header cells `(y, 0)` via `cell.filtered`
+  - Indicates whether a row is hidden by filters
+  - `true` = row is hidden by filter, `undefined` = row is visible
 
 ```typescript
 // Column header (0, x) stores filter condition
-columnHeaderCell.filter()  // Returns filter config for column x
+columnHeaderCell.filter  // Returns FilterConfig for column x
 
-// Row header (y, 0) tracks if row is visible
-rowHeaderCell.filtered()   // Returns true if row passes filters, false if hidden
+// Row header (y, 0) tracks if row is hidden
+rowHeaderCell.filtered   // true if row is hidden by filter, undefined if visible
 ```
 
 ### Filter Behavior
