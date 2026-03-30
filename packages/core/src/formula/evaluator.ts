@@ -326,6 +326,7 @@ export class Token {
   entity: any;
   precedence: number;
   closed: boolean;
+  raw?: string;
   private at?: Id;
 
   constructor(type: TokenType, entity: any, precedence = 0, at?: Id, closed = true) {
@@ -350,6 +351,9 @@ export class Token {
       }
       if (typeof this.entity === 'boolean') {
         return this.entity ? 'TRUE' : 'FALSE';
+      }
+      if (this.raw != null) {
+        return this.raw;
       }
     }
     return this.entity as string;
@@ -524,7 +528,7 @@ export class Lexer {
         switch (t.type) {
           case 'VALUE':
             if (typeof t.entity === 'number' || typeof t.entity === 'boolean') {
-              return t.entity;
+              return t.raw ?? t.entity;
             }
             return t.closed ? `"${t.entity}"` : `"${t.entity}`;
           case 'ID':
@@ -653,7 +657,9 @@ export class Lexer {
             break;
           }
           if (buf.match(/^[+-]?(\d*[.])?\d+$/)) {
-            this.tokens.push(new Token('VALUE', parseFloat(buf), 0, this.at));
+            const tok = new Token('VALUE', parseFloat(buf), 0, this.at);
+            tok.raw = buf;
+            this.tokens.push(tok);
           } else {
             const bool = BOOLS[buf.toLowerCase()];
             if (bool != null) {
