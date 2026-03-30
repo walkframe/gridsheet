@@ -227,9 +227,7 @@ export default function SalesDashboard() {
       <section>
         <div style={labelStyle}>
           Dashboard
-          <span style={hintStyle}>
-            — cross-sheet formulas + ARRAYFORMULA / IF spill status &amp; gap columns
-          </span>
+          <span style={hintStyle}>— cross-sheet formulas + ARRAYFORMULA / IF spill status &amp; gap columns</span>
         </div>
         <GridSheet
           book={book}
@@ -237,22 +235,22 @@ export default function SalesDashboard() {
           initialCells={buildInitialCells({
             matrices: {
               A1: [
-                ['Total Revenue',  '=SUM(metrics!C1:H1)',                      350],
-                ['Total New Users','=SUM(metrics!C2:H2)',                      1500],
-                ['Avg Churn Rate', '=ROUND(AVERAGE(metrics!C3:H3),1)',        4.0],
-                ['Avg NPS',        '=ROUND(AVERAGE(metrics!C4:H4),0)',        45],
-                ['Total MRR (k)',  '=SUM(metrics!C5:H5)',                      170],
+                ['Total Revenue', '=SUM(metrics!C1:H1)', 350],
+                ['Total New Users', '=SUM(metrics!C2:H2)', 1500],
+                ['Avg Churn Rate', '=ROUND(AVERAGE(metrics!C3:H3),1)', 4.0],
+                ['Avg NPS', '=ROUND(AVERAGE(metrics!C4:H4),0)', 45],
+                ['Total MRR (k)', '=SUM(metrics!C5:H5)', 170],
               ],
             },
             cells: {
               //defaultRow: { height: 36 },
 
               // ── Header row ──
-              A0: { label: 'KPI',     width: 150 },
-              B0: { label: 'Value',   width: 90 },
-              C0: { label: 'Target',  width: 80 },
-              D0: { label: 'Status',  width: 110 },
-              E0: { label: 'Gap',     width: 80 },
+              A0: { label: 'KPI', width: 150 },
+              B0: { label: 'Value', width: 90 },
+              C0: { label: 'Target', width: 80 },
+              D0: { label: 'Status', width: 110 },
+              E0: { label: 'Gap', width: 80 },
 
               // ── Column styles ──
 
