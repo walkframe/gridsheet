@@ -233,6 +233,66 @@ const book = useBook({
 
 This architecture ensures that GridSheet can handle complex, non-serializable objects while maintaining the ability to persist and restore cell data reliably.
 
+## Formula Resolution and Caching
+
+### Resolution Modes
+
+`solveFormula` supports multiple resolution modes that control how formula results are returned:
+
+- **`RESOLVED`**: Unwraps Sheet objects to scalar values (top-left cell). Used by `getCell()` for display and by `getSerializedValue()` for clipboard.
+- **`EVALUATED`**: Keeps Sheet objects intact. Used by the render path when custom policies (e.g., sparkline) need access to the full range result.
+- **`RAW`**: Returns the formula string with addresses resolved for display, without evaluating.
+- **`SYSTEM`**: Returns the raw internal formula string as-is.
+
+### Two-Layer Cache Architecture
+
+GridSheet uses a two-layer caching strategy to efficiently serve both `RESOLVED` and `EVALUATED` callers without redundant computation:
+
+```mermaid
+graph LR
+    SF["solveFormula()"] -->|cache hit| SC["solvedCaches\n(Map on Registry)"]
+    SC -->|Sheet object| STRIP["sheet.strip()"]
+    STRIP -->|cache hit| ST["Sheet._stripped\n(private field)"]
+    ST -->|scalar| CALLER["RESOLVED caller"]
+    SC -->|Sheet object| EVAL["EVALUATED caller"]
+
+    style SC fill:#e8f5e8,color:#2e7d32
+    style ST fill:#e3f2fd,color:#1565c0
+    style STRIP fill:#fff3e0,color:#e65100
+```
+
+**Layer 1 — `solvedCaches` (Registry-level Map)**
+
+Stores the raw evaluation result keyed by cell ID. For range formulas like `=C1:H1`, this is a `Sheet` object. The cache is written **before** any RESOLVED unwrapping, so it always retains the Sheet.
+
+**Layer 2 — `Sheet._stripped` (instance-level field)**
+
+Each Sheet instance caches its stripped scalar result. When `strip()` is called, it checks `_stripped` first. If it's `NONE` (a sentinel meaning "not yet stripped"), it evaluates via `solveSheet` and stores the result. Subsequent calls return the cached value in O(1).
+
+### Why Two Layers?
+
+**Background**: Originally, `solveFormula` cached the final result regardless of resolution mode. When called with `RESOLVED`, it would strip a Sheet to a scalar and cache that scalar. This caused a bug: if a cell's formula produced a Sheet (e.g., `=C1:H1` for a sparkline), a `RESOLVED` caller (such as clipboard serialization) would overwrite the cached Sheet with a scalar. Subsequent `EVALUATED` callers (such as the render path with a sparkline policy) would then receive the scalar instead of the Sheet, breaking the rendering.
+
+Preserving the Sheet object in the cache is essential for GridSheet's expressiveness. Custom policies like sparklines rely on receiving the full range result (a Sheet) to render complex visualizations from multiple cell values. If the cache only stored scalars, these multi-value views would be impossible — every formula result would be reduced to a single number, losing the range information that makes rich cell rendering possible.
+
+**Solution**: The cache write was moved **before** the RESOLVED strip step, so `solvedCaches` always stores the Sheet. The strip result is cached separately on the Sheet instance itself (`_stripped`), giving RESOLVED callers O(1) access without polluting the shared cache.
+
+### Cache Lifecycle
+
+- `solvedCaches` is cleared in `clearSolvedCaches()` during `refresh()`, which runs on every state change (edit, undo, structural change).
+- When `solvedCaches` is cleared, all Sheet references are released, and their `_stripped` values are garbage-collected along with them.
+- `Sheet._stripped` is reset to `NONE` in `trim()`, `clone()`, and `refresh()` as a defensive measure.
+- Both layers are populated lazily on first access and remain valid for the duration of a render cycle.
+
+### Performance Characteristics
+
+For a RESOLVED call on a cached formula:
+
+1. `solveFormula` → `solvedCaches.get(id)` → **O(1)** (returns Sheet)
+2. `stripSheet` → `sheet.strip()` → `_stripped` check → **O(1)** (returns cached scalar)
+
+No formula re-parsing, no REF chain traversal, no `solveSheet` invocation. Two Map/field lookups total.
+
 ## Matrix Data Evaluation
 
 GridSheet uses a matrix-based data structure where each cell is identified by its row and column coordinates. The evaluation process considers both header information and cell data:

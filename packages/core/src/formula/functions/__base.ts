@@ -19,6 +19,7 @@ import {
   asyncCacheMiss,
 } from './__async';
 import { Time } from '../../lib/time';
+import { isNumeric, isPercentage } from './__utils';
 
 export type FunctionCategory =
   | 'math'
@@ -87,7 +88,7 @@ const matchesType = (
       case 'any':
         return true;
       case 'number':
-        if (typeof value === 'number') {
+        if (isNumeric(value)) {
           return true;
         }
         break;
@@ -314,6 +315,9 @@ export class BaseFunction {
         if (!def.takesMatrix) {
           value = stripMatrix(value, this.at);
         }
+      }
+      if (isPercentage(value)) {
+        value = parseFloat(value.slice(0, -1)) / 100;
       }
       if (!matchesType(value, def)) {
         throw new FormulaError(

@@ -1,5 +1,5 @@
 import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/core';
-import { ensureNumber } from '@gridsheet/core';
+import { ensureNumber, isNumeric } from '@gridsheet/core';
 import type { FunctionCategory } from '@gridsheet/core';
 
 const description = `Returns the product of a series of numbers.`;
@@ -24,7 +24,7 @@ export class ProductFunction extends BaseFunction {
       eachMatrix(
         val,
         (v: any) => {
-          if (v == null || typeof v === 'string') {
+          if (!isNumeric(v)) {
             return;
           }
           product *= ensureNumber(v);

@@ -1,6 +1,6 @@
 import { FormulaError } from '../formula-error';
 import { BaseFunction, FunctionCategory, FunctionArgumentDefinition, isMatrix } from './__base';
-import { ensureNumber, eachMatrix } from './__utils';
+import { ensureNumber, isNumeric, eachMatrix } from './__utils';
 
 const description = `Returns the average of a series of numbers or cells.`;
 
@@ -26,8 +26,8 @@ export class AverageFunction extends BaseFunction {
         eachMatrix(
           val,
           (v) => {
-            if (typeof v === 'number') {
-              sum += v;
+            if (isNumeric(v)) {
+              sum += ensureNumber(v);
               count++;
             }
           },

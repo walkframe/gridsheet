@@ -55,6 +55,26 @@ export type EnsureBooleanOptions = {
   ignore?: boolean;
 };
 
+export const isPercentage = (value: any): value is string => {
+  if (typeof value !== 'string' || !value.endsWith('%')) {
+    return false;
+  }
+  return !isNaN(parseFloat(value.slice(0, -1)));
+};
+
+export const isNumeric = (value: any): boolean => {
+  if (typeof value === 'number') {
+    return true;
+  }
+  if (isPercentage(value)) {
+    return true;
+  }
+  if (typeof value === 'string') {
+    return !isNaN(parseFloat(value)) && isFinite(Number(value));
+  }
+  return false;
+};
+
 export const ensureNumber = (value: any, options?: EnsureNumberOptions): number => {
   const { alternative, ignore } = options || {};
   if (Pending.is(value)) {
@@ -78,11 +98,8 @@ export const ensureNumber = (value: any, options?: EnsureNumberOptions): number 
     return value.days;
   }
 
-  if (typeof value === 'string' && value.endsWith('%')) {
-    const num = parseFloat(value.slice(0, -1));
-    if (!isNaN(num)) {
-      return num / 100;
-    }
+  if (isPercentage(value)) {
+    return parseFloat(value.slice(0, -1)) / 100;
   }
 
   const num = parseFloat(value as string);

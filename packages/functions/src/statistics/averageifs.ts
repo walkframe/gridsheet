@@ -1,6 +1,14 @@
 import { FormulaError } from '@gridsheet/core';
 import { BaseFunction, type FunctionArgumentDefinition, conditionArg } from '@gridsheet/core';
-import { Sheet, eachMatrix, stripMatrix, createBooleanMask, ensureString } from '@gridsheet/core';
+import {
+  Sheet,
+  eachMatrix,
+  stripMatrix,
+  createBooleanMask,
+  ensureString,
+  ensureNumber,
+  isNumeric,
+} from '@gridsheet/core';
 import type { FunctionCategory, PointType } from '@gridsheet/core';
 
 const description = `Returns the average of a range depending on multiple criteria.`;
@@ -60,8 +68,8 @@ export class AverageifsFunction extends BaseFunction {
       (v: any, pt: PointType) => {
         if (pt && mask[pt.y][pt.x]) {
           const num = stripMatrix(v ?? 0, this.at);
-          if (typeof num === 'number') {
-            total += num;
+          if (isNumeric(num)) {
+            total += ensureNumber(num);
             count++;
           }
         }

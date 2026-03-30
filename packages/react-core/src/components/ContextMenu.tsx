@@ -1,4 +1,4 @@
-import { useContext, useRef, useLayoutEffect } from 'react';
+import { useContext, useRef, useEffect } from 'react';
 
 import { setContextMenuPosition } from '../store/actions';
 
@@ -15,7 +15,7 @@ export const ContextMenu = () => {
   const { y: top, x: left } = contextMenuPosition;
   const menuRef = useRef<HTMLDivElement>(null);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (menuRef.current) {
       clampPopup(menuRef.current);
     }

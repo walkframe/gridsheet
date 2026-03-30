@@ -1,6 +1,15 @@
 import { FormulaError } from '@gridsheet/core';
 import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/core';
-import { Sheet, eachMatrix, stripMatrix, check, conditionArg, ensureString } from '@gridsheet/core';
+import {
+  Sheet,
+  eachMatrix,
+  stripMatrix,
+  check,
+  conditionArg,
+  ensureString,
+  ensureNumber,
+  isNumeric,
+} from '@gridsheet/core';
 import type { FunctionCategory } from '@gridsheet/core';
 
 const description = `Returns the average of a series of cells that meet a condition.`;
@@ -47,8 +56,8 @@ export class AverageifFunction extends BaseFunction {
     let count = 0;
     condArr.forEach((c, i) => {
       const s = stripMatrix((avgRange ? avgArr[i] : c) ?? 0, this.at);
-      if (typeof s === 'number' && check(c, conditionStr)) {
-        total += s;
+      if (isNumeric(s) && check(c, conditionStr)) {
+        total += ensureNumber(s);
         count++;
       }
     });

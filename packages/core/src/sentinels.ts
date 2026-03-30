@@ -16,6 +16,7 @@ export class Sentinel {
 }
 
 export const SOLVING = new Sentinel('solving');
+export const NONE = new Sentinel('none');
 
 /**
  * Sentinel value representing an in-flight async formula computation.

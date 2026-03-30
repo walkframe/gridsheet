@@ -1,5 +1,5 @@
 import { BaseFunction, FunctionCategory, FunctionArgumentDefinition, isMatrix } from './__base';
-import { ensureNumber, eachMatrix } from './__utils';
+import { ensureNumber, isNumeric, eachMatrix } from './__utils';
 
 const description = `Returns the max in a series of numbers or cells.`;
 
@@ -25,9 +25,10 @@ export class MaxFunction extends BaseFunction {
         eachMatrix(
           val,
           (v) => {
-            if (typeof v === 'number') {
-              if (v > max) {
-                max = v;
+            if (isNumeric(v)) {
+              const num = ensureNumber(v);
+              if (num > max) {
+                max = num;
               }
               hasValues = true;
             }

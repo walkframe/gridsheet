@@ -134,7 +134,7 @@ export class Policy implements PolicyMixinType {
   public datetimeFormat: string = 'YYYY-MM-DD HH:mm:ss';
   public dateFormat: string = 'YYYY-MM-DD';
   public timeFormat: string = 'HH:mm:ss';
-  public decimalPrecision: number = 15;
+  public decimalPrecision: number = 14;
 
   public deserializeFunctions: ((value: string, cell?: CellType) => CellPatchType<any>)[] = [];
   public deserializeCallback?: (parsed: any, cell?: CellType) => CellType;
