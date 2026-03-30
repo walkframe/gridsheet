@@ -1,33 +1,30 @@
 import Case1 from './case1.component';
 
-# 📊 Sales Dashboard with Data Visualization
+# Sales Dashboard with Sparkline & Cross-Sheet Formulas
 
-This demo showcases data visualization and chart functionality in GridSheet.
+This demo showcases a two-sheet sales dashboard built with GridSheet.
 
-It demonstrates a sales dashboard with formula-based calculations, custom chart rendering, and statistical analysis.
-
-The grid includes custom chart renderers, dynamic calculations, and trend analysis using formulas.
+The first sheet holds monthly metrics with sparkline charts rendered via a custom policy. The second sheet pulls KPIs from the first using cross-sheet formulas and uses `ARRAYFORMULA` with `IF` to spill status and gap values across multiple rows.
 
 <Case1 />
 
 ## Implementation Guide
 
-<a href="https://github.com/walkframe/gridsheet/tree/master/packages/docs/pages/examples/case1.component.tsx" target="_blank" rel="noopener noreferrer" style={{display: 'inline-block', background: '#007bff', color: 'white', padding: '8px 16px', textDecoration: 'none', borderRadius: '4px', fontWeight: '500', margin: '10px 0'}}>📄 View Source Code</a>
+<a href="https://github.com/walkframe/gridsheet/tree/master/packages/docs/pages/examples/case1.component.tsx" target="_blank" rel="noopener noreferrer" style={{display: 'inline-block', background: '#007bff', color: 'white', padding: '8px 16px', textDecoration: 'none', borderRadius: '4px', fontWeight: '500', margin: '10px 0'}}>View Source Code</a>
 
-### Receiving a Range Reference with `renderSheet`
+### Rendering Sparklines with `renderSheet`
 
-The `renderSheet` method on `PolicyMixinType` is called when a cell's resolved value is a `Sheet` object — that is, when a formula that returns a range (e.g. `=C1:F1`) has been evaluated.
+The `renderSheet` method on `PolicyMixinType` is called when a cell's resolved value is a `Sheet` object — that is, when a formula that returns a range (e.g. `=C1:H1`) has been evaluated.
 
 By setting a range formula on a cell and implementing `renderSheet` on that cell's policy, you can visualize multiple columns of data within a single cell.
 
 ```tsx
-const LineChartPolicyMixin: PolicyMixinType = {
+const SparklinePolicyMixin: PolicyMixinType = {
   renderSheet({ value }: RenderProps<UserSheet>) {
     const matrix = toValueMatrix(value);
     const values: number[] = matrix.flatMap(
       (row) => row.filter((v): v is number => typeof v === 'number')
     );
-    // values will be something like [30, 50, 78, 95] for Q1–Q4
     return <Line data={...} options={...} />;
   },
 };
@@ -37,28 +34,28 @@ const LineChartPolicyMixin: PolicyMixinType = {
 
 ### Pairing a Range Formula with a Policy
 
-On the cell definition side, set a range formula such as `=C1:F1` on column B cells and assign a custom policy to that column.
+On the cell definition side, set a range formula such as `=C1:H1` on column B cells and assign a custom policy to that column.
 
 ```tsx
 matrices: {
   A1: [
-    ['Widget A', '=C1:F1', 30, 50, 78, 95, '=SUM(C1:F1)', ...],
+    ['Revenue', '=C1:H1', 42, 51, 48, 67, 73, 89, '=ROUND((H1-C1)/C1,3)'],
     ...
   ],
 },
 cells: {
-  B: { policy: 'lineChart', style: { backgroundColor: '#f8f9fa' } },
+  B: { policy: 'sparkline', style: { backgroundColor: '#fafbfc' } },
 }
 ```
 
-The resolved result of `=C1:F1` is passed to `renderSheet` as a `Sheet`, letting you build a Chart.js data source directly from it.
+The resolved result of `=C1:H1` is passed to `renderSheet` as a `Sheet`, letting you build a Chart.js data source directly from it.
 
 ### Sharing the Same `book` Across Multiple `GridSheet` Instances
 
 The `book` returned by `useSpellbook` can be passed to multiple `GridSheet` components. Sharing the same `book` enables cross-sheet formula references between them.
 
 ```tsx
-const book = useSpellbook({ policies: { lineChart: new Policy({ mixins: [...] }) } });
+const book = useSpellbook({ policies: { sparkline: new Policy({ mixins: [...] }) } });
 
 <GridSheet book={book} sheetName={sheetName1} initialCells={...} />
 <GridSheet book={book} sheetName={sheetName2} initialCells={...} />
@@ -68,26 +65,25 @@ By giving each component a different `sheetName`, multiple sheets coexist inside
 
 ### Cross-Sheet Formula References
 
-To reference data from the `sales` sheet inside the `summary` sheet, use the `SheetName!Range` syntax.
+To reference data from the `metrics` sheet inside the `dashboard` sheet, use the `SheetName!Range` syntax.
 
 ```
-=SUM(sales!G1:G4)
-=INDEX(sales!A1:A4, MATCH(MAX(sales!G1:G4), sales!G1:G4, 0))
+=SUM(metrics!C1:H1)
+=ROUND(AVERAGE(metrics!C3:H3),1)
 ```
 
 When `sheetName` changes, these references update automatically. Try editing the sheet name inputs in the demo to see this in action.
 
-### Write Protection with `prevention`
+### Spilling with ARRAYFORMULA + IF
 
-Setting `operations.Write` on `prevention` prevents users from editing that cell, column, or row.
+The dashboard sheet uses `ARRAYFORMULA` to compute values that spill across multiple rows from a single formula cell.
 
-```tsx
-cells: {
-  H: { prevention: operations.Write },
-}
+```
+=ARRAYFORMULA(IF(B1:B5>=C1:C5,"✓ On Track","✗ Behind"))
+=ARRAYFORMULA(B1:B5-C1:C5)
 ```
 
-In this example, the Trend column (H) is formula-driven, so writes are blocked to keep the calculations intact.
+The first formula compares each KPI value against its target and spills a status label into D1:D5. The second computes the gap between value and target, spilling into E1:E5. Only the origin cell (D1, E1) holds the formula — the remaining cells are filled automatically.
 
 ### Bulk Data Entry with `matrices` in `buildInitialCells`
 
@@ -97,24 +93,16 @@ Use the `matrices` key to set data in matrix form. The key is the address of the
 buildInitialCells({
   matrices: {
     A1: [
-      ['Widget A', '=C1:F1', 30, 50, 78, 95, '=SUM(C1:F1)', '=IF(...)'],
-      ['Widget B', '=C2:F2', 90, 88, 91, 64, ...],
+      ['Revenue', '=C1:H1', 42, 51, 48, 67, 73, 89, '=ROUND((H1-C1)/C1,3)'],
+      ['New Users', '=C2:H2', 120, 185, 210, 340, 295, 410, '=ROUND((H2-C2)/C2,3)'],
     ],
   },
   cells: {
-    defaultCol: { width: 120 },
-    defaultRow: { height: 60 },
-    'C:F': { alignItems: 'center', justifyContent: 'right' },
+    defaultCol: { width: 55 },
+    defaultRow: { height: 50 },
+    'C:H': { style: numStyle, alignItems: 'center' },
   },
 })
 ```
 
-`defaultCol` / `defaultRow` set the default width and height for all columns and rows. A range key like `'C:F'` applies styles to multiple columns at once.
-
-### Dynamic Trend Display with IF
-
-```
-=IF((F1-E1)/E1>0.1,"📈 Up",IF((F1-E1)/E1<-0.1,"📉 Down","➡️ Stable"))
-```
-
-This formula evaluates the quarter-over-quarter change as a percentage and displays an emoji for the trend. Excel-style conditional logic like this works natively in GridSheet's formula engine.
+`defaultCol` / `defaultRow` set the default width and height for all columns and rows. A range key like `'C:H'` applies styles to multiple columns at once.

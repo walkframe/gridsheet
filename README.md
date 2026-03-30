@@ -8,6 +8,8 @@
 
 - [@gridsheet/preact-core](https://github.com/walkframe/gridsheet/tree/master/packages/preact-core)
 - [@gridsheet/vue-core](https://github.com/walkframe/gridsheet/tree/master/packages/vue-core)
+- [@gridsheet/svelte-core](https://github.com/walkframe/gridsheet/tree/master/packages/svelte-core)
+
 ## Docs
 
 - [Gridsheet document](https://gridsheet.walkframe.com/)
