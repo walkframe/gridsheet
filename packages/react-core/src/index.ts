@@ -58,6 +58,7 @@ export {
   // Policy
   Policy,
   ThousandSeparatorPolicyMixin,
+  PercentagePolicyMixin,
   // Operations
   operations,
   // Constants & Sentinels

@@ -1,8 +1,8 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
-
 import { useSpellbook } from '@gridsheet/react-core/spellbook';
+import { Debugger } from '@gridsheet/react-dev';
 
 const meta: Meta = {
   title: 'Formula/Simple',
@@ -65,6 +65,19 @@ const FORMULAS = [
   '0123',
   // Quote prefix: "'0123" is kept as text → preserves leading zero
   "'0123",
+  // Percentage: direct value "5%" in A36 (via cells override below)
+  '',
+  // Percentage: reference to a percentage cell
+  '=A36 + 5',
+  '=A36 * 200',
+  // Percentage: formula producing a percentage number
+  '=50%',
+  '=150%',
+  // Percentage: concatenation producing a percentage string
+  '=50 & "%"',
+  '=50 & "%" + 5',
+  // SUM percentages
+  '=SUM(B36:B42, 33%)',
 ];
 
 const matrix = FORMULAS.map((f) => [f, f]);
@@ -72,21 +85,26 @@ const matrix = FORMULAS.map((f) => [f, f]);
 const SimpleCalculationSheet = () => {
   const book = useSpellbook();
   return (
-    <GridSheet
-      book={book}
-      initialCells={buildInitialCells({
-        matrices: { A1: matrix },
-        cells: {
-          A: { width: 200, formulaEnabled: false, label: 'formula (text)' },
-          B: { width: 280, label: 'result' },
-        },
-        ensured: { numRows: 100, numCols: 10 },
-        flattenAs: undefined,
-      })}
-      options={{
-        sheetHeight: 600,
-      }}
-    />
+    <>
+      <GridSheet
+        book={book}
+        initialCells={buildInitialCells({
+          matrices: { A1: matrix },
+          cells: {
+            A: { width: 200, formulaEnabled: false, label: 'formula (text)' },
+            B: { width: 280, label: 'result' },
+            A36: { value: '5%' },
+            B36: { value: '5%' },
+          },
+          ensured: { numRows: 100, numCols: 10 },
+          flattenAs: undefined,
+        })}
+        options={{
+          sheetHeight: 600,
+        }}
+      />
+      <Debugger book={book} />
+    </>
   );
 };
 

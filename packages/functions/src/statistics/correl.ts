@@ -1,6 +1,6 @@
 import { FormulaError } from '@gridsheet/core';
 import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/core';
-import { ensureNumber } from '@gridsheet/core';
+import { ensureNumber, isNumeric } from '@gridsheet/core';
 import type { FunctionCategory } from '@gridsheet/core';
 
 const description = `Returns the correlation coefficient of two datasets.`;
@@ -33,7 +33,7 @@ export class CorrelFunction extends BaseFunction {
         if (v == null || v === '' || typeof v === 'boolean') {
           return;
         }
-        if (typeof v === 'number' || (typeof v === 'string' && !isNaN(Number(v)))) {
+        if (isNumeric(v)) {
           ys.push(ensureNumber(v));
         }
       },
@@ -45,7 +45,7 @@ export class CorrelFunction extends BaseFunction {
         if (v == null || v === '' || typeof v === 'boolean') {
           return;
         }
-        if (typeof v === 'number' || (typeof v === 'string' && !isNaN(Number(v)))) {
+        if (isNumeric(v)) {
           xs.push(ensureNumber(v));
         }
       },

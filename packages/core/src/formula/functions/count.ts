@@ -1,5 +1,5 @@
 import { BaseFunction, FunctionCategory, FunctionArgumentDefinition, isMatrix } from './__base';
-import { ensureNumber, eachMatrix } from './__utils';
+import { ensureNumber, isNumeric, eachMatrix } from './__utils';
 
 const description = `Returns the count of a series of numbers or cells.`;
 
@@ -24,7 +24,7 @@ export class CountFunction extends BaseFunction {
         eachMatrix(
           val,
           (v) => {
-            if (typeof v === 'number') {
+            if (isNumeric(v)) {
               count++;
             }
           },

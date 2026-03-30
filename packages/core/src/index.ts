@@ -135,6 +135,8 @@ export {
   ensureNumber,
   ensureBoolean,
   ensureDate,
+  isPercentage,
+  isNumeric,
   check,
   eachMatrix,
   createBooleanMask,
@@ -156,6 +158,7 @@ export type {
   SerializeForClipboardProps,
 } from './policy/core';
 export { ThousandSeparatorPolicyMixin } from './policy/thousand_separator';
+export { PercentagePolicyMixin } from './policy/percentage';
 
 // --- Operations ---
 export * as operations from './lib/operation';

@@ -67,20 +67,14 @@ export const solveFormula = ({ value, sheet, point, raise = true, resolution = '
     }
   }
 
-  if (resolution === 'RESOLVED' && solved instanceof Sheet) {
-    // Unwrap to scalar (top-left cell of the sheet's area).
-    // NOTE: We intentionally call solveSheet directly here instead of stripSheet,
-    // to avoid a three-way cycle: solveFormula → stripSheet → solveSheet → solveFormula.
-    // The mutual recursion between solveFormula and solveSheet is unavoidable by design,
-    // but routing through stripSheet would make the call graph harder to follow and reason about.
-    solved = solveSheet({ sheet: solved, raise, at })[0]?.[0];
-  }
-  // 'EVALUATED' resolution: keep Sheet objects intact (range formulas return Sheet, not scalar).
-
   if (Spilling.is(solved)) {
     solved = sheet.spill(point, solved.matrix);
   } else {
     sheet.finishSolvedCache(point, solved);
+  }
+
+  if (resolution === 'RESOLVED' && solved instanceof Sheet) {
+    solved = stripSheet({ value: solved, raise, at });
   }
   if (Pending.is(solved)) {
     sheet.finishSolvedCache(point, solved);
@@ -140,8 +134,8 @@ export type StripSheetProps = {
 };
 
 export const stripSheet = ({ value, at, raise = true }: StripSheetProps): any => {
-  while (value instanceof Sheet) {
-    value = solveSheet({ sheet: value, raise, at })[0]?.[0];
+  if (value instanceof Sheet) {
+    return value.strip({ raise, at });
   }
   return value;
 };

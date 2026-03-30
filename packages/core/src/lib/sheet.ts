@@ -46,7 +46,7 @@ import {
   DEFAULT_COL_KEY,
   DEFAULT_ROW_KEY,
 } from '../constants';
-import { Pending, SOLVING, Spilling } from '../sentinels';
+import { Pending, SOLVING, NONE, Spilling } from '../sentinels';
 import * as operation from './operation';
 
 const shouldTracking = (op: string) => {
@@ -193,6 +193,8 @@ type InternalToValueMatrixProps = {
 export class Sheet implements UserSheet {
   /** @internal */
   public __gsType = 'Sheet';
+  /** Cached result of strip (NONE = not yet stripped). */
+  private _stripped: any = NONE;
   public changedTime: number;
   public lastChangedTime?: number;
   public area: AreaType = { top: 0, left: 0, bottom: 0, right: 0 };
@@ -261,7 +263,7 @@ export class Sheet implements UserSheet {
   }
 
   toString() {
-    return `Sheet(name=${escapeSheetName(this.name)}, size=${this.numRows}x${this.numCols})`;
+    return `Sheet(name=${escapeSheetName(this.name)}, top=${this.top}, left=${this.left}, bottom=${this.bottom}, right=${this.right})`;
   }
 
   get headerHeight() {
@@ -615,27 +617,20 @@ export class Sheet implements UserSheet {
 
   /** @internal */
   private _sortRowMapping(sortedRowMapping: { [beforeY: number]: number }, inverse = false) {
-    // Convert mapping to array and apply the sort order
-    const numRows = this.numRows;
-    const newOrder: number[] = new Array(numRows);
+    const newOrder: number[] = new Array(this.numRows);
 
     if (inverse) {
-      // Undo: reverse the mapping
-      // If sortedRowMapping says "oldY -> newY", then to undo we put "newY -> oldY"
       for (const [oldYStr, newY] of Object.entries(sortedRowMapping)) {
         const oldY = Number(oldYStr);
         newOrder[oldY - 1] = newY;
       }
     } else {
-      // Redo: apply the mapping
-      // sortedRowMapping[oldY] = newY means row oldY goes to position newY
       for (const [oldYStr, newY] of Object.entries(sortedRowMapping)) {
         const oldY = Number(oldYStr);
         newOrder[newY - 1] = oldY;
       }
     }
 
-    // Apply the sort order: newOrder[i] = original row index that should end up at position i+1
     const savedRows: Ids[] = [];
     for (let i = 0; i < newOrder.length; i++) {
       savedRows.push(this.idMatrix[newOrder[i]]);
@@ -939,6 +934,9 @@ export class Sheet implements UserSheet {
     this.changedTime = Date.now();
 
     this.clearSolvedCaches();
+    // Reset strip cache. Normally unnecessary since child Sheets in solvedCaches
+    // are discarded above, but defensive against stale references.
+    this._stripped = NONE;
 
     if (relocate) {
       // force reset
@@ -953,6 +951,7 @@ export class Sheet implements UserSheet {
   /** @internal */
   public clone(relocate = false): Sheet {
     const copied: Sheet = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
+    copied._stripped = NONE;
     return copied.refresh(relocate);
   }
 
@@ -2237,7 +2236,7 @@ export class Sheet implements UserSheet {
       if (resolution === 'SYSTEM') {
         return raw; // do not evaluate system references
       }
-      if (resolution === 'RAW') {
+      if (resolution === 'RAW' || cell?.formulaEnabled === false) {
         const lexer = new Lexer(raw.substring(1));
         lexer.tokenize();
         return '=' + lexer.display({ sheet: this });
@@ -2258,8 +2257,7 @@ export class Sheet implements UserSheet {
   public trim(area: AreaType): Sheet {
     const copied: Sheet = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     copied.area = area;
-    // this causes RangeError on circular reference(maximum call stack size exceeded)
-    // copied.solvedCaches = {};
+    copied._stripped = NONE;
     return copied;
   }
 
@@ -2276,7 +2274,15 @@ export class Sheet implements UserSheet {
    * @internal
    */
   public strip({ raise = false, at }: { raise?: boolean; at?: Id }): any {
-    return stripSheet({ value: this, raise, at });
+    if (!NONE.is(this._stripped)) {
+      return this._stripped;
+    }
+    let value: any = this;
+    while (value instanceof Sheet) {
+      value = solveSheet({ sheet: value, raise, at })[0]?.[0];
+    }
+    this._stripped = value;
+    return this._stripped;
   }
 
   /** @internal */

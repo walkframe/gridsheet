@@ -388,6 +388,14 @@ test('simple calculation', async ({ page }) => {
   await go(page, 'formula-simple--simple-calculation');
   const largeEditor = page.locator('.gs-formula-bar textarea');
 
+  // Verify A1 formula bar shows raw formula (formulaEnabled: false active)
+  await page.locator("[data-address='A1']").click();
+  expect(await largeEditor.inputValue()).toBe('=100 + 5');
+
+  // Verify that A-column cell containing an address reference is NOT converted to an internal ID
+  // A2 has value "=B1 - 60" with formulaEnabled:false — it must render the literal string, not e.g. "=#3- 60"
+  expect(await page.locator('[data-address="A2"] .gs-cell-rendered').textContent()).toBe('=B1 - 60');
+
   // Column A: formulaEnabled: false — formula is displayed as raw text, not evaluated
   // Column B: formula is evaluated normally
 
@@ -451,17 +459,13 @@ test('simple calculation', async ({ page }) => {
   expect(await page.locator('[data-address="B34"] .gs-cell-rendered').textContent()).toBe('123');
   expect(await page.locator('[data-address="B35"] .gs-cell-rendered').textContent()).toBe('0123');
 
-  // Verify that none of the B-column results are #VALUE!
-  for (let row = 1; row <= 35; row++) {
-    const text = await page.locator(`[data-address="B${row}"] .gs-cell-rendered`).textContent();
-    expect(text).not.toBe('#VALUE!');
-  }
-
-  // Verify A1 formula bar shows raw formula (formulaEnabled: false active)
-  await page.locator("[data-address='A1']").click();
-  expect(await largeEditor.inputValue()).toBe('=100 + 5');
-
-  // Verify that A-column cell containing an address reference is NOT converted to an internal ID
-  // A2 has value "=B1 - 60" with formulaEnabled:false — it must render the literal string, not e.g. "=#3- 60"
-  expect(await page.locator('[data-address="A2"] .gs-cell-rendered').textContent()).toBe('=B1 - 60');
+  // Percentage handling — scroll into view first (virtualized rows may not be rendered)
+  await page.locator('[data-address="A36"]').scrollIntoViewIfNeeded();
+  expect(await page.locator('[data-address="B37"] .gs-cell-rendered').textContent()).toBe('5.05');
+  expect(await page.locator('[data-address="B38"] .gs-cell-rendered').textContent()).toBe('10');
+  expect(await page.locator('[data-address="B39"] .gs-cell-rendered').textContent()).toBe('0.5');
+  expect(await page.locator('[data-address="B40"] .gs-cell-rendered').textContent()).toBe('1.5');
+  expect(await page.locator('[data-address="B41"] .gs-cell-rendered').textContent()).toBe('50%');
+  expect(await page.locator('[data-address="B42"] .gs-cell-rendered').textContent()).toBe('5.5');
+  expect(await page.locator('[data-address="B43"] .gs-cell-rendered').textContent()).toBe('23.43');
 });

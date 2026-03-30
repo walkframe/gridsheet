@@ -1,6 +1,6 @@
 import { FormulaError } from '@gridsheet/core';
 import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/core';
-import { ensureNumber } from '@gridsheet/core';
+import { ensureNumber, isNumeric } from '@gridsheet/core';
 import type { FunctionCategory } from '@gridsheet/core';
 
 const description = `Returns the quartile of a dataset, based on percentile values from 0 to 1, inclusive.`;
@@ -35,7 +35,7 @@ export class QuartileIncFunction extends BaseFunction {
         if (v == null || v === '' || typeof v === 'boolean') {
           return;
         }
-        if (typeof v === 'number' || (typeof v === 'string' && !isNaN(Number(v)))) {
+        if (isNumeric(v)) {
           nums.push(ensureNumber(v));
         }
       },

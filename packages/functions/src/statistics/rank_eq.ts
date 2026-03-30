@@ -1,6 +1,6 @@
 import { FormulaError } from '@gridsheet/core';
 import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/core';
-import { ensureNumber } from '@gridsheet/core';
+import { ensureNumber, isNumeric } from '@gridsheet/core';
 import type { FunctionCategory } from '@gridsheet/core';
 
 const description = `Returns the rank of a number in a list of numbers. If more than one value has the same rank, the top rank of that set of values is returned.`;
@@ -34,7 +34,7 @@ export class RankEqFunction extends BaseFunction {
         if (n == null || n === '' || typeof n === 'boolean') {
           return;
         }
-        if (typeof n === 'number' || (typeof n === 'string' && !isNaN(Number(n)))) {
+        if (isNumeric(n)) {
           nums.push(ensureNumber(n));
         }
       },

@@ -1,6 +1,6 @@
 import { FormulaError } from '@gridsheet/core';
 import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/core';
-import { ensureNumber } from '@gridsheet/core';
+import { ensureNumber, isNumeric } from '@gridsheet/core';
 import type { FunctionCategory } from '@gridsheet/core';
 
 const description = `Returns the standard deviation based on a sample.`;
@@ -28,7 +28,7 @@ export class StdevSFunction extends BaseFunction {
           if (v == null || v === '' || typeof v === 'boolean') {
             return;
           }
-          if (typeof v === 'number' || (typeof v === 'string' && !isNaN(Number(v)))) {
+          if (isNumeric(v)) {
             nums.push(ensureNumber(v));
           }
         },
