@@ -1666,7 +1666,7 @@ export class Sheet implements UserSheet {
 
       let next: Record<string, any> = { ...diff[address] };
 
-      if (formulaIdentify) {
+      if (formulaIdentify && 'value' in next) {
         const formulaEnabled = next.formulaEnabled ?? current?.formulaEnabled ?? true;
         if (formulaEnabled) {
           this.clearDependencies(id);
