@@ -1,6 +1,6 @@
 {
   "name": "@gridsheet/svelte-core",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "Spreadsheet component for Svelte 5",
   "main": "dist/index.js",
   "module": "dist/index.js",
