@@ -61,14 +61,14 @@ Each **Sheet** instance corresponds one-to-one with a rendered `<GridSheet>` com
 
 GridSheet uses an internal ID-based reference system for formulas:
 
-- **Internal References**: Formulas use IDs like `#f1`, `#f2` instead of addresses like `A1`
+- **Internal References**: Formulas use IDs like `#0`, `#1` instead of addresses like `A1`
 - **Address Mapping**: The system converts IDs to addresses for display
 - **Stable References**: This ensures formulas don't break when rows/columns are added/removed
 
 For example:
 ```tsx
 // Internal formula storage
-"=SUM(#2!#f1:#f5)"  // Uses internal IDs
+"=SUM(#2!#0:#4)"  // Uses internal IDs (sheet ID + cell IDs)
 
 // Display conversion
 "=SUM('Sheet2'!A1:A5)"    // Converted to addresses for display
@@ -134,11 +134,7 @@ GridSheet is designed with persistence in mind, ensuring that cell values are se
 
 ### Serialization Design
 
-Cell values are designed to be **serializable** and contain only **persistable data**. This means:
-
-- **Serializable Values**: All cell values can be converted to JSON and back without loss
-- **Persistable Data**: Values can be safely stored in databases, local storage, or transmitted over networks
-- **Non-Serializable Objects**: Event handlers, class instances, and other non-serializable objects are not stored directly in cells
+All cell fields are designed to be **JSON-serializable**. GridSheet's system-managed fields (`policy`, `style`, `label`, `prevention`, etc.) always hold JSON-serializable values. This is also why policies are specified as string identifiers (e.g., `policy: "userPolicy"`) rather than class instances — the actual instance is resolved at runtime from the Registry. The exceptions are `value`, `custom`, and the `value` field inside `asyncCaches` entries — these are not controlled by GridSheet, so their serializability depends on user code. Keeping them JSON-serializable is recommended for persistence.
 
 ### Hub-Based Architecture for Non-Serializable Data
 
@@ -295,12 +291,28 @@ No formula re-parsing, no REF chain traversal, no `solveSheet` invocation. Two M
 
 ## Matrix Data Evaluation
 
-GridSheet uses a matrix-based data structure where each cell is identified by its row and column coordinates. The evaluation process considers both header information and cell data:
+GridSheet uses a matrix-based data structure where each cell is identified by its row and column coordinates `(y, x)`. Row 0 and column 0 are **header cells** that store metadata (filter conditions, sort state, column width, row height, etc.) rather than user data. Data cells start at `(1, 1)`.
 
-| Header Column & Header Row (0,0) | A Column Info (0,1) | B Column Info (0,2) |
-|----------------------------------|---------------------|---------------------|
-| 1st Row Info (1,0) | A1 Cell Info (1,1) | B1 Cell Info (1,2) |
-| 2nd Row Info (2,0) | A2 Cell Info (2,1) | B2 Cell Info (2,2) |
+### Address System
+
+Header cells use `0` in place of the normal letter or number component:
+
+- **Column headers** `(0, x)`: addressed as `A0`, `B0`, `C0`, ... — the row part becomes `0`
+- **Row headers** `(y, 0)`: addressed as `01`, `02`, `03`, ... — the column part becomes `0`
+- **Origin** `(0, 0)`: addressed as `0`
+
+Helper functions `ch()` and `rh()` generate these addresses:
+- `ch('A')` → `'A0'`, `ch(1)` → `'A0'` (column header)
+- `rh(1)` → `'01'`, `rh(6)` → `'06'` (row header)
+
+### Matrix Layout
+
+| `0` — Origin (0,0) | `A0` — Column A Header (0,1) | `B0` — Column B Header (0,2) |
+|----------------------|-------------------------------|-------------------------------|
+| `01` — Row 1 Header (1,0) | `A1` — Data Cell (1,1) | `B1` — Data Cell (1,2) |
+| `02` — Row 2 Header (2,0) | `A2` — Data Cell (2,1) | `B2` — Data Cell (2,2) |
+
+Column header cells store column-level metadata such as `filter` conditions and `prevention` flags. Row header cells store row-level metadata such as `filtered`, `sortFixed`, `filterFixed`, and `height`.
 
 ## Async Formula Caching
 
@@ -334,8 +346,8 @@ The cache key is generated using:
 While an async formula is being evaluated, GridSheet tracks pending promises per-cell:
 
 ```typescript
-// In Wire instance
-wire.asyncPending.set(cellId, pendingValue);
+// In Registry instance
+registry.asyncPending.set(compositeKey, pendingValue);
 ```
 
 This prevents duplicate requests when the same cell is evaluated multiple times during a single render cycle.

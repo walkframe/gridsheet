@@ -287,7 +287,6 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
                   dispatch(setColumnMenu({ x, position: { y: rect.bottom, x: rect.left } }));
                 }
               }}
-              title="Sort & Filter"
             >
               ⋮
             </button>

@@ -68,36 +68,36 @@ export default function IntroductionExample() {
       }}
     >
       <GridSheet
-          book={book}
-          sheetName="github-stats"
-          initialCells={buildInitialCells({
-            cells: {
-              default: { style: cellBase },
-              defaultCol: { width: 90 },
-              defaultRow: { height: 34 },
+        book={book}
+        sheetName="github-stats"
+        initialCells={buildInitialCells({
+          cells: {
+            default: { style: cellBase },
+            defaultCol: { width: 90 },
+            defaultRow: { height: 34 },
 
-              // Column labels
-              A0: { label: 'Repo', style: ghLabelStyle, width: 150 },
-              B0: { label: '⭐ Stars', style: ghLabelStyle },
-              C0: { label: '🍴 Forks', style: ghLabelStyle },
-              D0: { label: '🐛 Issues / PRs', style: ghLabelStyle },
+            // Column labels
+            A0: { label: 'Repo', style: ghLabelStyle, width: 150 },
+            B0: { label: '⭐ Stars', style: ghLabelStyle },
+            C0: { label: '🍴 Forks', style: ghLabelStyle },
+            D0: { label: '🐛 Issues / PRs', style: ghLabelStyle },
 
-              // Data rows — formula in B spills into C, D
-              A1: {
-                value: 'walkframe/gridsheet',
-                style: { ...cellBase, color: '#0369a1', fontWeight: '600', fontSize: '11px' },
-              },
-              B1: { value: '=GH_REPO(A1)' },
-              A2: {
-                value: 'walkframe/covertable',
-                style: { ...cellBase, color: '#0369a1', fontWeight: '600', fontSize: '11px' },
-              },
-              B2: { value: '=GH_REPO(A2)' },
+            // Data rows — formula in B spills into C, D
+            A1: {
+              value: 'walkframe/gridsheet',
+              style: { ...cellBase, color: '#0369a1', fontWeight: '600', fontSize: '11px' },
             },
-            ensured: { numRows: 2, numCols: 4 },
-          })}
-          options={{ sheetHeight: 150, sheetWidth: 500, sheetResize: 'both' }}
-        />
+            B1: { value: '=GH_REPO(A1)' },
+            A2: {
+              value: 'walkframe/covertable',
+              style: { ...cellBase, color: '#0369a1', fontWeight: '600', fontSize: '11px' },
+            },
+            B2: { value: '=GH_REPO(A2)' },
+          },
+          ensured: { numRows: 2, numCols: 4 },
+        })}
+        options={{ sheetHeight: 150, sheetWidth: 500, sheetResize: 'both' }}
+      />
     </div>
   );
 }

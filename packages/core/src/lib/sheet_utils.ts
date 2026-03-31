@@ -15,6 +15,7 @@ type ToProps = {
   raise?: boolean;
   filter?: CellFilter;
   asScalar?: boolean;
+  area?: AreaType;
 };
 
 type ToCellProps = ToProps & {
@@ -25,13 +26,9 @@ type ToCellProps = ToProps & {
  * @internal — used by Sheet._toValueMatrix and solver.ts; keeps resolution for internal wiring.
  */
 
-export type ToValueMatrixProps = ToProps & {
-  area?: AreaType;
-};
+export type ToValueMatrixProps = ToProps;
 
-export type ToCellMatrixProps = ToCellProps & {
-  area?: AreaType;
-};
+export type ToCellMatrixProps = ToCellProps;
 
 export type ToValueObjectProps = ToProps & {
   addresses?: Address[];
@@ -75,7 +72,14 @@ export const toValueMatrix = (
 
 export const toValueObject = (
   sheet: UserSheet,
-  { resolution = 'RESOLVED', raise = false, filter = noFilter, addresses, asScalar = false }: ToValueObjectProps = {},
+  {
+    resolution = 'RESOLVED',
+    raise = false,
+    filter = noFilter,
+    addresses,
+    area,
+    asScalar = false,
+  }: ToValueObjectProps = {},
 ): { [address: Address]: any } => {
   const result: { [Address: Address]: any } = {};
   if (addresses) {
@@ -93,7 +97,7 @@ export const toValueObject = (
     }
     return result;
   }
-  const { top, left, bottom, right } = sheet.area;
+  const { top, left, bottom, right } = area ?? sheet.area;
   for (let y = top; y <= bottom; y++) {
     for (let x = left; x <= right; x++) {
       const cell = sheet.getCell({ y, x }, { resolution, raise }) ?? {};
@@ -112,10 +116,10 @@ export const toValueObject = (
 
 export const toValueRows = (
   sheet: UserSheet,
-  { resolution = 'RESOLVED', raise = false, filter = noFilter, rows, asScalar = false }: ToValueRowsProps = {},
+  { resolution = 'RESOLVED', raise = false, filter = noFilter, rows, area, asScalar = false }: ToValueRowsProps = {},
 ): CellsByAddressType[] => {
   const result: CellsByAddressType[] = [];
-  const { top, left, bottom, right } = sheet.area;
+  const { top, left, bottom, right } = area ?? sheet.area;
   const ys = rows ?? Array.from({ length: sheet.numRows }, (_, i) => top + i);
   for (const y of ys) {
     const row: CellsByAddressType = {};
@@ -137,10 +141,10 @@ export const toValueRows = (
 
 export const toValueCols = (
   sheet: UserSheet,
-  { resolution = 'RESOLVED', raise = false, filter = noFilter, cols, asScalar = false }: ToValueColsProps = {},
+  { resolution = 'RESOLVED', raise = false, filter = noFilter, cols, area, asScalar = false }: ToValueColsProps = {},
 ): CellsByAddressType[] => {
   const result: CellsByAddressType[] = [];
-  const { top, left, bottom, right } = sheet.area;
+  const { top, left, bottom, right } = area ?? sheet.area;
   const xs = cols
     ? cols.map((c) => (typeof c === 'string' ? c2x(c) : c))
     : Array.from({ length: sheet.numCols }, (_, i) => left + i);
@@ -166,12 +170,7 @@ export const toCellMatrix = (
   sheet: UserSheet,
   { area, resolution = 'RESOLVED', raise = false, filter = noFilter, ignoreFields = [] }: ToCellMatrixProps = {},
 ): (CellType | null)[][] => {
-  const { top, left, bottom, right } = area ?? {
-    top: 1,
-    left: 1,
-    bottom: sheet.area.bottom,
-    right: sheet.area.right,
-  };
+  const { top, left, bottom, right } = area ?? sheet.area;
   const matrix = createMatrix(bottom - top + 1, right - left + 1);
   for (let y = top; y <= bottom; y++) {
     for (let x = left; x <= right; x++) {
@@ -187,7 +186,14 @@ export const toCellMatrix = (
 
 export const toCellObject = (
   sheet: UserSheet,
-  { resolution = 'RESOLVED', raise = false, filter = noFilter, addresses, ignoreFields = [] }: ToCellObjectProps = {},
+  {
+    resolution = 'RESOLVED',
+    raise = false,
+    filter = noFilter,
+    addresses,
+    area,
+    ignoreFields = [],
+  }: ToCellObjectProps = {},
 ): CellsByAddressType => {
   const result: CellsByAddressType = {};
   if (addresses) {
@@ -199,9 +205,9 @@ export const toCellObject = (
     }
     return result;
   }
-  const { bottom, right } = sheet.area;
-  for (let y = 1; y <= bottom; y++) {
-    for (let x = 1; x <= right; x++) {
+  const { top, left, bottom, right } = area ?? sheet.area;
+  for (let y = top; y <= bottom; y++) {
+    for (let x = left; x <= right; x++) {
       const cell = sheet.getCell({ y, x }, { resolution, raise }) ?? {};
       if (filter(cell)) {
         result[p2a({ y, x })] = filterCellFields(cell, ignoreFields);
@@ -213,10 +219,10 @@ export const toCellObject = (
 
 export const toCellRows = (
   sheet: UserSheet,
-  { resolution = 'RESOLVED', raise = false, filter = noFilter, rows, ignoreFields = [] }: ToCellRowsProps = {},
+  { resolution = 'RESOLVED', raise = false, filter = noFilter, rows, area, ignoreFields = [] }: ToCellRowsProps = {},
 ): CellsByAddressType[] => {
   const result: CellsByAddressType[] = [];
-  const { top, left, bottom, right } = sheet.area;
+  const { top, left, bottom, right } = area ?? sheet.area;
   const ys = rows ?? Array.from({ length: sheet.numRows }, (_, i) => top + i);
   for (const y of ys) {
     const row: CellsByAddressType = {};
@@ -245,10 +251,10 @@ export const toSheetPrefix = (name?: string): string => {
 
 export const toCellCols = (
   sheet: UserSheet,
-  { resolution = 'RESOLVED', raise = false, filter = noFilter, cols, ignoreFields = [] }: ToCellColsProps = {},
+  { resolution = 'RESOLVED', raise = false, filter = noFilter, cols, area, ignoreFields = [] }: ToCellColsProps = {},
 ): CellsByAddressType[] => {
   const result: CellsByAddressType[] = [];
-  const { top, left, bottom, right } = sheet.area;
+  const { top, left, bottom, right } = area ?? sheet.area;
   const xs = cols
     ? cols.map((c) => (typeof c === 'string' ? c2x(c) : c))
     : Array.from({ length: sheet.numCols }, (_, i) => left + i);

@@ -272,7 +272,6 @@ export const HeaderCellLeft: FC<Props> = memo(({ y }) => {
                   dispatch(setRowMenu({ y, position: { y: rect.bottom, x: rect.right } }));
                 }
               }}
-              title="Row menu"
             >
               ⋮
             </button>

@@ -4,6 +4,9 @@ import * as React from 'react';
 import {
   GridSheet,
   buildInitialCells,
+  toCellObject,
+  zoneToArea,
+  p2a,
   operations,
   useSheetRef,
   useStoreRef,
@@ -33,13 +36,6 @@ const MENU_ITEMS = [
     items: [
       { label: 'Save (<u>S</u>)', icon: '💾', action: 'save' },
       { label: 'Reset', icon: '🔄', action: 'reset' },
-    ] as MenuItem[],
-  },
-  {
-    name: 'History',
-    items: [
-      { label: 'Undo (<u>Z</u>)', icon: '↶', action: 'undo' },
-      { label: 'Redo (Shift+<u>Z</u>)', icon: '↷', action: 'redo' },
     ] as MenuItem[],
   },
   {
@@ -93,8 +89,6 @@ export default function AdvancedFeatures() {
   const [activeSheet, setActiveSheet] = React.useState('Sales');
   const [sheets, setSheets] = React.useState(['Sales', 'Budget', 'Inventory']);
   const [activeMenuGroup, setActiveMenuGroup] = React.useState<'File' | 'History' | 'Edit' | null>(null);
-  const loadedSheetsRef = React.useRef<Set<string>>(new Set());
-
   // Create sheetRefs and storeRefs for all possible sheets at component level
   const salesSheetRef = useSheetRef();
   const salesStoreRef = useStoreRef();
@@ -233,96 +227,72 @@ export default function AdvancedFeatures() {
 
     allPossibleSheets.forEach((sheetName) => {
       const currentSheet = sheetName;
-      let data: any[][] = [];
-      let savedCells: any = {};
-      let loadedFromStorage = false;
 
-      // Only process if the sheet is in the current sheets array
+      // Try to restore from localStorage
+      let savedCells: any = null;
       if (sheets.includes(sheetName)) {
         try {
           if (typeof window !== 'undefined') {
             const savedData = localStorage.getItem(`gridsheet_demo5.${currentSheet}`);
             if (savedData) {
               const parsedData = JSON.parse(savedData);
-              if (parsedData.matrixData && parsedData.matrixData.length > 0) {
-                data = parsedData.matrixData.map((row: any[], rowIndex: number) =>
-                  row.map((cell: any, colIndex: number) => {
-                    if (cell && typeof cell === 'object') {
-                      const { value, style, ...otherProps } = cell;
-                      const address = `${String.fromCharCode(65 + colIndex)}${rowIndex + 1}`;
-                      if (style || Object.keys(otherProps).length > 0) {
-                        savedCells[address] = { style, ...otherProps };
-                      }
-                      return value || '';
-                    }
-                    return cell || '';
-                  }),
-                );
-                loadedFromStorage = true;
-              } else {
-                data = SHEET_DATA[currentSheet as keyof typeof SHEET_DATA] || SHEET_DATA['Sales'];
+              if (parsedData.cells) {
+                savedCells = parsedData.cells;
               }
-            } else {
-              data = SHEET_DATA[currentSheet as keyof typeof SHEET_DATA] || SHEET_DATA['Sales'];
             }
-          } else {
-            data = SHEET_DATA[currentSheet as keyof typeof SHEET_DATA] || SHEET_DATA['Sales'];
           }
-        } catch {
-          data = SHEET_DATA[currentSheet as keyof typeof SHEET_DATA] || SHEET_DATA['Sales'];
-        }
-
-        if (loadedFromStorage && typeof window !== 'undefined' && !loadedSheetsRef.current.has(currentSheet)) {
-          loadedSheetsRef.current.add(currentSheet);
-        }
-      } else {
-        // Use default data for sheets that aren't currently active
-        data = SHEET_DATA[currentSheet as keyof typeof SHEET_DATA] || SHEET_DATA['Sales'];
+        } catch {}
       }
 
-      cellsMap[sheetName] = buildInitialCells({
-        matrices: {
-          A1: data,
-        },
-        cells: {
-          default: {
-            style: {
-              borderBottom: '1px solid #e0e0e0',
-              borderRight: '1px solid #e0e0e0',
-            },
+      if (savedCells) {
+        // Restore directly from saved cells
+        cellsMap[sheetName] = savedCells;
+      } else {
+        // Build from default data
+        const data = SHEET_DATA[currentSheet as keyof typeof SHEET_DATA] || SHEET_DATA['Sales'];
+        cellsMap[sheetName] = buildInitialCells({
+          matrices: {
+            A1: data,
           },
-          A0: { width: 150, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['A'] },
-          B0: { width: 100, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['B'] },
-          B: { policy: 'thousand_separator' },
-          C0: { width: 100, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['C'] },
-          C: { policy: 'thousand_separator' },
-          D0: { width: 100, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['D'] },
-          D: { policy: 'thousand_separator' },
-          E0: { width: 100, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['E'] },
-          E: { policy: 'thousand_separator' },
-          F0: { width: 100, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['F'] },
-          F: {
-            policy: 'thousand_separator',
-            ...(currentSheet === 'Sales' && {
+          cells: {
+            default: {
               style: {
-                borderLeft: '3px double #000',
+                borderBottom: '1px solid #e0e0e0',
+                borderRight: '1px solid #e0e0e0',
               },
+            },
+            A0: { width: 150, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['A'] },
+            B0: { width: 100, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['B'] },
+            B: { policy: 'thousand_separator' },
+            C0: { width: 100, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['C'] },
+            C: { policy: 'thousand_separator' },
+            D0: { width: 100, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['D'] },
+            D: { policy: 'thousand_separator' },
+            E0: { width: 100, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['E'] },
+            E: { policy: 'thousand_separator' },
+            F0: { width: 100, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['F'] },
+            F: {
+              policy: 'thousand_separator',
+              ...(currentSheet === 'Sales' && {
+                style: {
+                  borderLeft: '3px double #000',
+                },
+              }),
+            },
+            ...(currentSheet === 'Sales' && {
+              '6': {
+                style: {
+                  backgroundColor: '#f8f9fa',
+                  color: '#495057',
+                  fontWeight: 'bold',
+                  borderTop: '3px double #000',
+                },
+              },
+              '06': { sortFixed: true, filterFixed: true },
             }),
           },
-          ...(currentSheet === 'Sales' && {
-            '6': {
-              style: {
-                backgroundColor: '#f8f9fa',
-                color: '#495057',
-                fontWeight: 'bold',
-                borderTop: '3px double #000',
-              },
-            },
-            '06': { sortFixed: true, filterFixed: true },
-          }),
-          ...savedCells,
-        },
-      });
+        });
+      }
     });
 
     return cellsMap;
@@ -353,6 +323,45 @@ export default function AdvancedFeatures() {
     }, 2000);
   };
 
+  const applyStyleToSelection = (style: React.CSSProperties) => {
+    const sheetHandle = sheetRefs[activeSheet]?.current;
+    const storeHandle = storeRefs[activeSheet]?.current;
+    if (!sheetHandle || !storeHandle) {
+      return;
+    }
+    const { sheet, apply } = sheetHandle;
+    const { store } = storeHandle;
+    const { selectingZone, choosing } = store;
+    const hasSelection = selectingZone.endY >= 0 && selectingZone.endX >= 0;
+    const area = hasSelection
+      ? zoneToArea(selectingZone)
+      : { top: choosing.y, left: choosing.x, bottom: choosing.y, right: choosing.x };
+    const diff: Record<string, { style: React.CSSProperties }> = {};
+    for (let y = area.top; y <= area.bottom; y++) {
+      for (let x = area.left; x <= area.right; x++) {
+        const current = sheet.getCell({ y, x });
+        diff[p2a({ y, x })] = { style: { ...current?.style, ...style } };
+      }
+    }
+    apply(sheet.update({ diff }));
+  };
+
+  const toggleStyle = (prop: keyof React.CSSProperties, on: string, off: string = '') => {
+    const sheetHandle = sheetRefs[activeSheet]?.current;
+    const storeHandle = storeRefs[activeSheet]?.current;
+    if (!sheetHandle || !storeHandle) {
+      return;
+    }
+    const { sheet } = sheetHandle;
+    const { store } = storeHandle;
+    const { selectingZone, choosing } = store;
+    const hasSelection = selectingZone.endY >= 0 && selectingZone.endX >= 0;
+    const point = hasSelection ? { y: selectingZone.startY, x: selectingZone.startX } : choosing;
+    const current = sheet.getCell(point);
+    const isOn = (current?.style as any)?.[prop] === on;
+    applyStyleToSelection({ [prop]: isOn ? off : on } as any);
+  };
+
   const handleMenuAction = (action: string) => {
     switch (action) {
       case 'insertSheet': {
@@ -360,23 +369,6 @@ export default function AdvancedFeatures() {
         const updatedSheets = [...sheets, newSheetName];
         setSheets(updatedSheets);
         setActiveSheet(newSheetName);
-        const newSheetData = {
-          matrixData: [
-            ['New Sheet', '', '', '', ''],
-            ['', '', '', '', ''],
-            ['', '', '', '', ''],
-            ['', '', '', '', ''],
-            ['', '', '', '', ''],
-          ],
-          activeSheet: newSheetName,
-          sheets: updatedSheets,
-          timestamp: new Date().toISOString(),
-        };
-        try {
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(`gridsheet_demo5.${newSheetName}`, JSON.stringify(newSheetData));
-          }
-        } catch {}
         showNotification(`New sheet "${newSheetName}" created`);
         break;
       }
@@ -384,23 +376,13 @@ export default function AdvancedFeatures() {
         const sheetHandle = sheetRefs[activeSheet]?.current;
         if (sheetHandle) {
           const { sheet } = sheetHandle;
-          // Build matrixData from current sheet cells
-          const matrixData: any[][] = [];
-          for (let row = sheet.top; row <= sheet.bottom; row++) {
-            const rowData: any[] = [];
-            for (let col = sheet.left; col <= sheet.right; col++) {
-              const cell = sheet.getCell({ y: row, x: col });
-              if (cell) {
-                const { value, style } = cell;
-                rowData.push({ value, style });
-              } else {
-                rowData.push('');
-              }
-            }
-            matrixData.push(rowData);
-          }
+          const cells = toCellObject(sheet, {
+            resolution: 'SYSTEM',
+            ignoreFields: ['asyncCaches'],
+            area: { top: 0, left: 0, bottom: sheet.bottom, right: sheet.right },
+          });
           const saveData = {
-            matrixData,
+            cells,
             activeSheet,
             sheets,
             timestamp: new Date().toISOString(),
@@ -492,7 +474,8 @@ export default function AdvancedFeatures() {
     <div
       style={{
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        backgroundColor: '#f8f9fa',
+        color: '#000',
+        backgroundColor: '#fff',
         maxWidth: 'calc(100vw - 40px)',
         minWidth: '320px',
         margin: '0 auto',
@@ -627,6 +610,183 @@ export default function AdvancedFeatures() {
             </div>
           ))}
         </div>
+      </div>
+      {/* Toolbar */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '4px 12px',
+          backgroundColor: '#f8f9fa',
+          borderBottom: '1px solid #e0e0e0',
+          flexWrap: 'wrap',
+        }}
+      >
+        {/* Undo */}
+        <button
+          onClick={() => handleMenuAction('undo')}
+          style={{
+            width: '28px',
+            height: '28px',
+            border: '1px solid #999',
+            borderRadius: '4px',
+            backgroundColor: 'white',
+            cursor: 'pointer',
+            fontSize: '16px',
+            color: '#333',
+          }}
+        >
+          ↶
+        </button>
+        {/* Redo */}
+        <button
+          onClick={() => handleMenuAction('redo')}
+          style={{
+            width: '28px',
+            height: '28px',
+            border: '1px solid #999',
+            borderRadius: '4px',
+            backgroundColor: 'white',
+            cursor: 'pointer',
+            fontSize: '16px',
+            color: '#333',
+          }}
+        >
+          ↷
+        </button>
+
+        <div style={{ width: '1px', height: '20px', backgroundColor: '#ccc' }} />
+
+        {/* Bold */}
+        <button
+          onClick={() => toggleStyle('fontWeight', 'bold', 'normal')}
+          style={{
+            width: '28px',
+            height: '28px',
+            border: '1px solid #999',
+            borderRadius: '4px',
+            backgroundColor: 'white',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            color: '#333',
+          }}
+        >
+          B
+        </button>
+        {/* Italic */}
+        <button
+          onClick={() => toggleStyle('fontStyle', 'italic', 'normal')}
+          style={{
+            width: '28px',
+            height: '28px',
+            border: '1px solid #999',
+            borderRadius: '4px',
+            backgroundColor: 'white',
+            cursor: 'pointer',
+            fontStyle: 'italic',
+            fontSize: '14px',
+            color: '#333',
+          }}
+        >
+          I
+        </button>
+
+        <div style={{ width: '1px', height: '20px', backgroundColor: '#ccc' }} />
+
+        {/* Font Size */}
+        <select
+          onChange={(e) => applyStyleToSelection({ fontSize: e.target.value })}
+          defaultValue=""
+          style={{
+            height: '28px',
+            border: '1px solid #999',
+            borderRadius: '4px',
+            backgroundColor: 'white',
+            fontSize: '13px',
+            color: '#333',
+            cursor: 'pointer',
+          }}
+        >
+          <option value="" disabled>
+            Size
+          </option>
+          {[10, 12, 14, 16, 18, 20, 24, 28, 32].map((size) => (
+            <option key={size} value={`${size}px`}>
+              {size}
+            </option>
+          ))}
+        </select>
+
+        <div style={{ width: '1px', height: '20px', backgroundColor: '#ccc' }} />
+
+        {/* Text Alignment */}
+        {[
+          { align: 'left' as const, label: '\u25C0' },
+          { align: 'center' as const, label: '\u25C6' },
+          { align: 'right' as const, label: '\u25B6' },
+        ].map(({ align, label }) => (
+          <button
+            key={align}
+            onClick={() => applyStyleToSelection({ textAlign: align })}
+            style={{
+              width: '28px',
+              height: '28px',
+              border: '1px solid #999',
+              borderRadius: '4px',
+              backgroundColor: 'white',
+              cursor: 'pointer',
+              fontSize: '10px',
+              color: '#333',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {label}
+          </button>
+        ))}
+
+        <div style={{ width: '1px', height: '20px', backgroundColor: '#ccc' }} />
+
+        {/* Text Color */}
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '2px',
+            fontSize: '13px',
+            cursor: 'pointer',
+          }}
+        >
+          <span style={{ fontSize: '12px' }}>Text</span>
+          <input
+            type="color"
+            defaultValue="#000000"
+            onChange={(e) => applyStyleToSelection({ color: e.target.value })}
+            style={{ width: '24px', height: '24px', border: 'none', cursor: 'pointer', padding: 0 }}
+          />
+        </label>
+
+        {/* Background Color */}
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '2px',
+            fontSize: '13px',
+            cursor: 'pointer',
+          }}
+        >
+          <span style={{ fontSize: '12px' }}>Fill</span>
+          <input
+            type="color"
+            defaultValue="#ffffff"
+            onChange={(e) => applyStyleToSelection({ backgroundColor: e.target.value })}
+            style={{ width: '24px', height: '24px', border: 'none', cursor: 'pointer', padding: 0 }}
+          />
+        </label>
       </div>
       {/* Main Content */}
       <div

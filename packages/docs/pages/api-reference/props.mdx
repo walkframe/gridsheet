@@ -19,6 +19,8 @@ The GridSheet component accepts the following props to configure its behavior an
 
 The `initialCells` prop defines the starting data and configuration for your spreadsheet. This is where you specify cell values, styles, renderers, policies, and other cell-specific settings.
 
+Cell data is designed to be JSON-serializable (see [Serialization Design](/development/architecture#serialization-design)), so you can persist the cells to a database or `localStorage` and restore them later by passing them back as `initialCells`. See [Example 5 — Multi-sheet Excel clone](/examples/case5) for a working example with `localStorage` persistence.
+
 **Important**: This is the initial value given to the sheet. Changes made after initialization will not be reflected, so please be careful.
 
 ### Address Format

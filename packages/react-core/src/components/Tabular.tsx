@@ -180,7 +180,6 @@ export const Tabular = () => {
                     {contextMenu.length > 0 && (
                       <button
                         className="gs-menu-btn gs-corner-menu-btn"
-                        title="Menu"
                         onClick={(e) => e.stopPropagation()}
                         onMouseDown={(e) => {
                           e.preventDefault();

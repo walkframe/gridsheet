@@ -146,7 +146,9 @@ export default function Case11() {
       />
 
       <details style={{ marginTop: '12px' }}>
-        <summary style={{ cursor: 'pointer', fontSize: '14px', color: '#aaa' }}>Debugger (inspect async evaluation & caching)</summary>
+        <summary style={{ cursor: 'pointer', fontSize: '14px', color: '#aaa' }}>
+          Debugger (inspect async evaluation & caching)
+        </summary>
         <div className="gs-debugger-wrap">
           <Debugger book={book} />
         </div>
