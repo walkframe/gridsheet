@@ -816,20 +816,18 @@ export default function AdvancedFeatures() {
                   display: activeSheet === sheet ? 'block' : 'none',
                 }}
               >
-                {activeSheet === sheet && (
-                  <GridSheet
-                    sheetRef={sheetRefs[sheet]}
-                    storeRef={storeRefs[sheet]}
-                    book={book}
-                    sheetName={sheet}
-                    initialCells={initialCellsForSheets[sheet]}
-                    style={{
-                      width: '100%',
-                      fontSize: '14px',
-                    }}
-                    options={{}}
-                  />
-                )}
+                <GridSheet
+                  sheetRef={sheetRefs[sheet]}
+                  storeRef={storeRefs[sheet]}
+                  book={book}
+                  sheetName={sheet}
+                  initialCells={initialCellsForSheets[sheet]}
+                  style={{
+                    width: '100%',
+                    fontSize: '14px',
+                  }}
+                  options={{}}
+                />
               </div>
             ))}
           </div>
