@@ -121,12 +121,12 @@ export default function Case11() {
             ['Total', '=SUM(B1:B3)', '=SUM(C1:C3)', '=SUM(D1:D3)', '=SUM(E1:E3)', '=SUM(F1:F3)'],
           ],
           cells: {
-            A: { label: 'Repository', width: 200 },
-            B: { label: '⭐ Stars', width: 120, policy: 'number' },
-            C: { label: '🍴 Forks', width: 120, policy: 'number' },
-            D: { label: '🐛 Issues', width: 120, policy: 'number' },
-            E: { label: '📦 Size (KB)', width: 120, policy: 'number' },
-            F: { label: '👁 Subscribers', width: 120, policy: 'number' },
+            A: { label: 'Repository', width: 150 },
+            B: { label: '⭐ Stars', width: 90, policy: 'number' },
+            C: { label: '🍴 Forks', width: 90, policy: 'number' },
+            D: { label: '🐛 Issues', width: 90, policy: 'number' },
+            E: { label: '📦 Size (KB)', width: 90, policy: 'number' },
+            F: { label: '👁 Subscribers', width: 90, policy: 'number' },
             A1: { policy: 'repo' },
             A2: { policy: 'repo' },
             A3: { policy: 'repo' },
@@ -140,8 +140,6 @@ export default function Case11() {
           ensured: { numRows: 4, numCols: 6 },
         })}
         options={{
-          sheetHeight: 160,
-          sheetWidth: 860,
           mode: 'dark',
         }}
       />
