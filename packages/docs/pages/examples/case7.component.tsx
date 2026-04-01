@@ -274,6 +274,7 @@ export default function RealTimeCollaboration() {
                   C: { width: 120, label: 'Due Date' },
                   D: { width: 80, label: 'Progress' },
                   E: { width: 100, label: 'Priority' },
+                  'A:E': { alignItems: 'center' },
                   'E1:E5': {
                     style: {
                       textAlign: 'center',

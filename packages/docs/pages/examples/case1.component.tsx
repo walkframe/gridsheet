@@ -230,56 +230,56 @@ export default function SalesDashboard() {
           <span style={hintStyle}>— cross-sheet formulas + ARRAYFORMULA / IF spill status &amp; gap columns</span>
         </div>
         <div className="dashboard-striped">
-        <style>{`
+          <style>{`
           .dashboard-striped .gs-row-even .gs-cell { background-color: #2d2024; }
         `}</style>
-        <GridSheet
-          book={book}
-          sheetName={sheetName2}
-          initialCells={buildInitialCells({
-            matrices: {
-              A1: [
-                ['Total Revenue', '=SUM(metrics!C1:H1)', 350],
-                ['Total New Users', '=SUM(metrics!C2:H2)', 1500],
-                ['Avg Churn Rate', '=ROUND(AVERAGE(metrics!C3:H3),1)', 4.0],
-                ['Avg NPS', '=ROUND(AVERAGE(metrics!C4:H4),0)', 45],
-                ['Total MRR (k)', '=SUM(metrics!C5:H5)', 170],
-              ],
-            },
-            cells: {
-              //defaultRow: { height: 36 },
-
-              // ── Header row ──
-              A0: { label: 'KPI', width: 150 },
-              B0: { label: 'Value', width: 90 },
-              C0: { label: 'Target', width: 80 },
-              D0: { label: 'Status', width: 110 },
-              E0: { label: 'Gap', width: 80 },
-
-              // ── Column styles ──
-
-              'B1:B5': {
-                alignItems: 'center',
+          <GridSheet
+            book={book}
+            sheetName={sheetName2}
+            initialCells={buildInitialCells({
+              matrices: {
+                A1: [
+                  ['Total Revenue', '=SUM(metrics!C1:H1)', 350],
+                  ['Total New Users', '=SUM(metrics!C2:H2)', 1500],
+                  ['Avg Churn Rate', '=ROUND(AVERAGE(metrics!C3:H3),1)', 4.0],
+                  ['Avg NPS', '=ROUND(AVERAGE(metrics!C4:H4),0)', 45],
+                  ['Total MRR (k)', '=SUM(metrics!C5:H5)', 170],
+                ],
               },
-              C: {
-                style: { ...metricValueStyle, color: 'blue' },
-                alignItems: 'center',
-              },
+              cells: {
+                //defaultRow: { height: 36 },
 
-              // ── Spill: ARRAYFORMULA + IF for Status ──
-              D1: {
-                value: '=ARRAYFORMULA(IF(B1:B5>=C1:C5,"✓ On Track","✗ Behind"))',
-              },
+                // ── Header row ──
+                A0: { label: 'KPI', width: 150 },
+                B0: { label: 'Value', width: 90 },
+                C0: { label: 'Target', width: 80 },
+                D0: { label: 'Status', width: 110 },
+                E0: { label: 'Gap', width: 80 },
 
-              // ── Spill: ARRAYFORMULA for Gap ──
-              E1: {
-                value: '=ARRAYFORMULA(B1:B5-C1:C5)',
+                // ── Column styles ──
+
+                'B1:B5': {
+                  alignItems: 'center',
+                },
+                C: {
+                  style: { ...metricValueStyle, color: 'blue' },
+                  alignItems: 'center',
+                },
+
+                // ── Spill: ARRAYFORMULA + IF for Status ──
+                D1: {
+                  value: '=ARRAYFORMULA(IF(B1:B5>=C1:C5,"✓ On Track","✗ Behind"))',
+                },
+
+                // ── Spill: ARRAYFORMULA for Gap ──
+                E1: {
+                  value: '=ARRAYFORMULA(B1:B5-C1:C5)',
+                },
               },
-            },
-            ensured: { numRows: 5, numCols: 5 },
-          })}
-          options={{ sheetHeight: 340, sheetWidth: 580, sheetResize: 'both', mode: 'dark' }}
-        />
+              ensured: { numRows: 5, numCols: 5 },
+            })}
+            options={{ sheetHeight: 340, sheetWidth: 580, sheetResize: 'both', mode: 'dark' }}
+          />
         </div>
         <div style={sheetNameStyle}>
           sheet:

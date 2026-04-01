@@ -56,9 +56,13 @@ export default function Case9Component() {
           return '*'.repeat(cellValue.length);
         },
         renderString({ value }: any) {
-          if (value == null || value === '') return '';
+          if (value == null || value === '') {
+            return '';
+          }
           const str = String(value);
-          if (str.length <= 2) return str;
+          if (str.length <= 2) {
+            return str;
+          }
           return `${str.substring(0, 2)}${'*'.repeat(str.length - 2)}`;
         },
       },

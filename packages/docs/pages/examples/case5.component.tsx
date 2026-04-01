@@ -260,19 +260,22 @@ export default function AdvancedFeatures() {
                 borderBottom: '1px solid #e0e0e0',
                 borderRight: '1px solid #e0e0e0',
               },
+              ...(currentSheet === 'Sales' && { alignItems: 'center' }),
             },
+            ...(currentSheet === 'Sales' && { defaultRow: { height: 36 } }),
             A0: { width: 150, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['A'] },
             B0: { width: 100, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['B'] },
-            B: { policy: 'thousand_separator' },
+            B: { policy: 'thousand_separator', justifyContent: 'right' },
             C0: { width: 100, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['C'] },
-            C: { policy: 'thousand_separator' },
+            C: { policy: 'thousand_separator', justifyContent: 'right' },
             D0: { width: 100, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['D'] },
-            D: { policy: 'thousand_separator' },
+            D: { policy: 'thousand_separator', justifyContent: 'right' },
             E0: { width: 100, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['E'] },
-            E: { policy: 'thousand_separator' },
+            E: { policy: 'thousand_separator', justifyContent: 'right' },
             F0: { width: 100, label: (SHEET_LABELS[currentSheet] || SHEET_LABELS['Sales'])['F'] },
             F: {
               policy: 'thousand_separator',
+              justifyContent: 'right',
               ...(currentSheet === 'Sales' && {
                 style: {
                   borderLeft: '3px double #000',
@@ -341,6 +344,28 @@ export default function AdvancedFeatures() {
       for (let x = area.left; x <= area.right; x++) {
         const current = sheet.getCell({ y, x });
         diff[p2a({ y, x })] = { style: { ...current?.style, ...style } };
+      }
+    }
+    apply(sheet.update({ diff }));
+  };
+
+  const applyCellPropToSelection = (props: Record<string, any>) => {
+    const sheetHandle = sheetRefs[activeSheet]?.current;
+    const storeHandle = storeRefs[activeSheet]?.current;
+    if (!sheetHandle || !storeHandle) {
+      return;
+    }
+    const { sheet, apply } = sheetHandle;
+    const { store } = storeHandle;
+    const { selectingZone, choosing } = store;
+    const hasSelection = selectingZone.endY >= 0 && selectingZone.endX >= 0;
+    const area = hasSelection
+      ? zoneToArea(selectingZone)
+      : { top: choosing.y, left: choosing.x, bottom: choosing.y, right: choosing.x };
+    const diff: Record<string, any> = {};
+    for (let y = area.top; y <= area.bottom; y++) {
+      for (let x = area.left; x <= area.right; x++) {
+        diff[p2a({ y, x })] = { ...props };
       }
     }
     apply(sheet.update({ diff }));
@@ -730,6 +755,36 @@ export default function AdvancedFeatures() {
           <button
             key={align}
             onClick={() => applyStyleToSelection({ textAlign: align })}
+            style={{
+              width: '28px',
+              height: '28px',
+              border: '1px solid #999',
+              borderRadius: '4px',
+              backgroundColor: 'white',
+              cursor: 'pointer',
+              fontSize: '10px',
+              color: '#333',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {label}
+          </button>
+        ))}
+
+        <div style={{ width: '1px', height: '20px', backgroundColor: '#ccc' }} />
+
+        {/* Vertical Alignment */}
+        {[
+          { align: 'start', label: '⬆', title: 'Top' },
+          { align: 'center', label: '⬌', title: 'Middle' },
+          { align: 'end', label: '⬇', title: 'Bottom' },
+        ].map(({ align, label, title }) => (
+          <button
+            key={`v-${align}`}
+            onClick={() => applyCellPropToSelection({ alignItems: align })}
+            title={title}
             style={{
               width: '28px',
               height: '28px',

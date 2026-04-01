@@ -140,7 +140,8 @@ export default function Case11() {
           ensured: { numRows: 4, numCols: 6 },
         })}
         options={{
-          sheetHeight: 450,
+          sheetHeight: 160,
+          sheetWidth: 860,
           mode: 'dark',
         }}
       />
