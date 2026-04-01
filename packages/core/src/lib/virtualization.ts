@@ -24,8 +24,8 @@ export const getCellRectPositions = (sheet: Sheet, { y, x }: PointType) => {
 export const getScreenRect = (e: HTMLDivElement) => {
   const top = e.scrollTop,
     left = e.scrollLeft;
-  const height = e.offsetHeight,
-    width = e.offsetWidth;
+  const height = e.clientHeight,
+    width = e.clientWidth;
   const bottom = top + height,
     right = left + width;
   return { top, left, bottom, right, height, width };

@@ -347,10 +347,13 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
       return;
     }
     container.addEventListener('scroll', handleScroll);
+    const ro = new ResizeObserver(() => drawCanvas());
+    ro.observe(container);
     return () => {
       container.removeEventListener('scroll', handleScroll);
+      ro.disconnect();
     };
-  }, [tabularRef, handleScroll]);
+  }, [tabularRef, handleScroll, drawCanvas]);
 
   return (
     <div

@@ -159,7 +159,7 @@ export const Tabular = () => {
           style={{
             width: sheet.totalWidth,
             height: sheet.totalHeight,
-            overflow: 'hidden',
+            overflow: 'clip',
           }}
         >
           <CellStateOverlay refs={mergedRefs} />
