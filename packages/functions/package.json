@@ -1,6 +1,6 @@
 {
   "name": "@gridsheet/functions",
-  "version": "3.0.4",
+  "version": "3.0.5",
   "description": "Extended formula functions for @gridsheet/react-core",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -81,7 +81,7 @@
     "vite-plugin-dts": "^4.5.3"
   },
   "peerDependencies": {
-    "@gridsheet/core": "3.0.4"
+    "@gridsheet/core": "3.0.5"
   },
   "publishConfig": {
     "access": "public"
