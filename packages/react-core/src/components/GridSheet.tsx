@@ -198,7 +198,6 @@ export function GridSheet({
             //width: '100%',
             maxWidth: (store.sheetReactive.current?.totalWidth || 0) + 2,
             maxHeight: (store.sheetReactive.current?.fullHeight || 0) + 2,
-            overflow: 'auto',
             resize: sheetResize,
             ...style,
           }}

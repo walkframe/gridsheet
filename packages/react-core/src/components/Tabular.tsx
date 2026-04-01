@@ -157,8 +157,9 @@ export const Tabular = () => {
         <div
           className={'gs-tabular-inner'}
           style={{
-            width: sheet.totalWidth + 1,
-            height: sheet.totalHeight + 1,
+            width: sheet.totalWidth,
+            height: sheet.totalHeight,
+            overflow: 'hidden',
           }}
         >
           <CellStateOverlay refs={mergedRefs} />
