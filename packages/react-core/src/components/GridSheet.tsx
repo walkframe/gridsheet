@@ -154,11 +154,21 @@ export function GridSheet({
   const [sheetHeight, setSheetHeight] = useState(options?.sheetHeight || estimateSheetHeight(initialCells));
   const [sheetWidth, setSheetWidth] = useState(options?.sheetWidth || estimateSheetWidth(initialCells));
   useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      setSheetHeight(mainRef.current?.clientHeight || 0);
-      setSheetWidth(mainRef.current?.clientWidth || 0);
-    }, 1000);
-    return () => window.clearInterval(intervalId);
+    const el = mainRef.current;
+    if (!el) {
+      return;
+    }
+    let first = true;
+    const ro = new ResizeObserver(() => {
+      if (first) {
+        first = false;
+        return;
+      }
+      setSheetHeight(el.clientHeight);
+      setSheetWidth(el.clientWidth);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
   useEffect(() => {
     if (options.sheetHeight) {
