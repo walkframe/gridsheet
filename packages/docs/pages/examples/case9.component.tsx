@@ -1,22 +1,20 @@
 import React from 'react';
-import { GridSheet, Policy, buildInitialCells, BaseFunction, makeBorder, ensureString } from '@gridsheet/react-core';
+import { GridSheet, Policy, buildInitialCells, BaseFunction, makeBorder } from '@gridsheet/react-core';
 import { useSpellbook } from '@gridsheet/react-core/spellbook';
 import { FunctionArgumentDefinition } from '@gridsheet/react-core';
 
 export default function Case9Component() {
-  // Custom security functions
   const SecureHashFunction = class extends BaseFunction {
     example = 'SECURE_HASH("password123")';
     helpText = ['Creates a secure hash of the input text'];
     defs: FunctionArgumentDefinition[] = [{ name: 'text', description: 'Text to hash', acceptedTypes: ['string'] }];
 
     protected main(text: string) {
-      // Simple hash function for demonstration
       let hash = 0;
       for (let i = 0; i < text.length; i++) {
         const char = text.charCodeAt(i);
         hash = (hash << 5) - hash + char;
-        hash = hash & hash; // Convert to 32-bit integer
+        hash = hash & hash;
       }
       return Math.abs(hash).toString(16);
     }
@@ -24,73 +22,59 @@ export default function Case9Component() {
 
   const ValidateEmailFunction = class extends BaseFunction {
     example = 'VALIDATE_EMAIL("user@example.com")';
-    helpText = ['Validates email format and returns security status'];
+    helpText = ['Validates email format'];
     defs: FunctionArgumentDefinition[] = [
       { name: 'email', description: 'Email to validate', acceptedTypes: ['string'] },
     ];
 
     protected main(email: string) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      const isValid = emailRegex.test(email);
-      return isValid ? 'VALID' : 'INVALID';
+      return emailRegex.test(email) ? 'VALID' : 'INVALID';
     }
   };
 
   const EncryptLevelFunction = class extends BaseFunction {
-    example = 'ENCRYPT_LEVEL("sensitive_data", 3)';
-    helpText = ['Applies encryption level to sensitive data'];
+    example = 'ENCRYPT_LEVEL("data", 3)';
+    helpText = ['Returns encryption level label'];
     defs: FunctionArgumentDefinition[] = [
       { name: 'value', description: 'Value to encrypt', acceptedTypes: ['string'] },
       { name: 'level', description: 'Encryption level (1-5)', acceptedTypes: ['number'] },
     ];
 
-    protected main(value: string, level: number) {
-      const levels = ['LOW', 'MEDIUM', 'HIGH', 'VERY_HIGH', 'MAXIMUM'];
-      const levelIndex = Math.min(Math.max(Math.floor(level) - 1, 0), 4);
-      return `[${levels[levelIndex]}_ENCRYPTED]${value}`;
+    protected main(_value: string, level: number) {
+      const levels = ['LOW', 'MEDIUM', 'HIGH', 'VERY HIGH', 'MAXIMUM'];
+      const idx = Math.min(Math.max(Math.floor(level) - 1, 0), 4);
+      return levels[idx];
     }
   };
 
-  // Security policy: clipboard protection + display masking
   const securityPolicy = new Policy({
     mixins: [
       {
         serializeForClipboard({ point, sheet }) {
           const cellValue = sheet.getSerializedValue({ point }) ?? '';
-          // Return asterisks for clipboard copy
           return '*'.repeat(cellValue.length);
         },
         renderString({ value }: any) {
-          if (value == null || value === '') {
-            return '';
-          }
+          if (value == null || value === '') return '';
           const str = String(value);
-          // Show first 2 characters, mask the rest
-          if (str.length <= 2) {
-            return str;
-          }
+          if (str.length <= 2) return str;
           return `${str.substring(0, 2)}${'*'.repeat(str.length - 2)}`;
         },
       },
     ],
   });
 
-  // ID policy to ensure text interpretation
   const idPolicy = new Policy({
     mixins: [
       {
         renderString({ value }: any) {
-          if (value == null || value === '') {
-            return '';
-          }
-          // Force text interpretation by ensuring it's always a string
-          return String(value);
+          return String(value ?? '');
         },
       },
     ],
   });
 
-  // Hub with security functions and components
   const book = useSpellbook({
     additionalFunctions: {
       secure_hash: SecureHashFunction,
@@ -102,6 +86,14 @@ export default function Case9Component() {
       id: idPolicy,
     },
   });
+
+  const headerStyle = {
+    backgroundColor: '#1a1a2e',
+    color: '#e0e0e0',
+    fontWeight: 'bold' as const,
+    fontSize: '11px',
+    letterSpacing: '0.5px',
+  };
 
   return (
     <div
@@ -119,168 +111,73 @@ export default function Case9Component() {
         book={book}
         options={{
           showFormulaBar: false,
+          sheetWidth: 920,
+          sheetHeight: 300,
         }}
         initialCells={buildInitialCells({
-          cells: {
-            default: {
-              style: {
-                fontSize: '14px',
-              },
-            },
-            defaultCol: { width: 160 },
-            defaultRow: { height: 45 },
-            A0: {
-              width: 80,
-              label: 'ID',
-            },
-            B0: {
-              label: 'Username',
-            },
-            C0: {
-              label: '🔐 Password',
-            },
-            D0: {
-              label: '🔑 Hash',
-            },
-
-            // Data rows with alternating colors
-            A1: {
-              value: '001',
-              policy: 'id',
-              style: {
-                textAlign: 'center',
-                fontWeight: '500',
-                ...makeBorder({ all: '1px solid #e1e5e9' }),
-              },
-            },
-            B1: {
-              value: 'john_doe',
-              style: {
-                fontWeight: '500',
-                ...makeBorder({ all: '1px solid #e1e5e9' }),
-              },
-            },
-            C1: {
-              value: 'super_secret_password_123',
-              policy: 'security',
-              style: {
-                ...makeBorder({ all: '2px solid #e74c3c' }),
-                fontWeight: '500',
-              },
-            },
-            D1: {
-              value: '=SECURE_HASH(C1)',
-              style: {
-                ...makeBorder({ all: '2px solid #9b59b6' }),
-                fontWeight: '500',
-                fontFamily: 'monospace',
-                fontSize: '12px',
-              },
-            },
-
-            A2: {
-              value: '002',
-              policy: 'id',
-              style: {
-                textAlign: 'center',
-                fontWeight: '500',
-                ...makeBorder({ all: '1px solid #e1e5e9' }),
-              },
-            },
-            B2: {
-              value: 'jane_smith',
-              style: {
-                fontWeight: '500',
-                ...makeBorder({ all: '1px solid #e1e5e9' }),
-              },
-            },
-            C2: {
-              value: 'another_secure_password',
-              policy: 'security',
-              style: {
-                ...makeBorder({ all: '2px solid #e74c3c' }),
-                fontWeight: '500',
-              },
-            },
-            D2: {
-              value: '=SECURE_HASH(C2)',
-              style: {
-                ...makeBorder({ all: '2px solid #9b59b6' }),
-                fontWeight: '500',
-                fontFamily: 'monospace',
-                fontSize: '12px',
-              },
-            },
-
-            A3: {
-              value: '003',
-              policy: 'id',
-              style: {
-                textAlign: 'center',
-                fontWeight: '500',
-                ...makeBorder({ all: '1px solid #e1e5e9' }),
-              },
-            },
-            B3: {
-              value: 'admin_user',
-              style: {
-                fontWeight: '500',
-                ...makeBorder({ all: '1px solid #e1e5e9' }),
-              },
-            },
-            C3: {
-              value: 'admin_password_2024',
-              policy: 'security',
-              style: {
-                ...makeBorder({ all: '2px solid #e74c3c' }),
-                fontWeight: '500',
-              },
-            },
-            D3: {
-              value: '=SECURE_HASH(C3)',
-              style: {
-                ...makeBorder({ all: '2px solid #9b59b6' }),
-                fontWeight: '500',
-                fontFamily: 'monospace',
-                fontSize: '12px',
-              },
-            },
-
-            A4: {
-              value: '004',
-              policy: 'id',
-              style: {
-                textAlign: 'center',
-                fontWeight: '500',
-                ...makeBorder({ all: '1px solid #e1e5e9' }),
-              },
-            },
-            B4: {
-              value: 'guest_user',
-              style: {
-                fontWeight: '500',
-                ...makeBorder({ all: '1px solid #e1e5e9' }),
-              },
-            },
-            C4: {
-              value: 'guest_password',
-              policy: 'security',
-              style: {
-                ...makeBorder({ all: '2px solid #e74c3c' }),
-                fontWeight: '500',
-              },
-            },
-            D4: {
-              value: '=SECURE_HASH(C4)',
-              style: {
-                ...makeBorder({ all: '2px solid #9b59b6' }),
-                fontWeight: '500',
-                fontFamily: 'monospace',
-                fontSize: '12px',
-              },
-            },
+          matrices: {
+            A1: [
+              ['001', 'john_doe', 'john@example.com', 'super_secret_123', '=SECURE_HASH(D1)', '=VALIDATE_EMAIL(C1)'],
+              ['002', 'jane_smith', 'jane@company.org', 'secure_pass_456', '=SECURE_HASH(D2)', '=VALIDATE_EMAIL(C2)'],
+              ['003', 'admin_user', 'admin@internal', 'admin_pw_2024', '=SECURE_HASH(D3)', '=VALIDATE_EMAIL(C3)'],
+              ['004', 'guest_user', 'guest@example.com', 'guest_pass', '=SECURE_HASH(D4)', '=VALIDATE_EMAIL(C4)'],
+              ['005', 'dev_ops', 'devops@company.org', 'infra_key_789', '=SECURE_HASH(D5)', '=VALIDATE_EMAIL(C5)'],
+            ],
           },
-          ensured: { numRows: 5, numCols: 4 },
+          cells: {
+            default: { style: { fontSize: '13px', ...makeBorder({ all: '1px solid #e1e5e9' }) } },
+            defaultRow: { height: 38 },
+
+            // Header
+            A0: { width: 55, label: 'ID', style: headerStyle },
+            B0: { width: 110, label: 'Username', style: headerStyle },
+            C0: { width: 160, label: 'Email', style: headerStyle },
+            D0: { width: 110, label: '🔐 Password', style: headerStyle },
+            E0: { width: 110, label: '🔑 Hash', style: headerStyle },
+            F0: { width: 80, label: 'Email OK', style: headerStyle },
+            G0: { width: 80, label: 'Access', style: headerStyle },
+
+            // Column policies & styles
+            A: {
+              policy: 'id',
+              alignItems: 'center',
+              style: { textAlign: 'center', fontWeight: '500' },
+            },
+            B: {
+              alignItems: 'center',
+              style: { fontWeight: '500' },
+            },
+            C: {
+              alignItems: 'center',
+              style: { color: '#2980b9' },
+            },
+            D: {
+              policy: 'security',
+              alignItems: 'center',
+              style: { ...makeBorder({ all: '2px solid #e74c3c' }), fontWeight: '500' },
+            },
+            E: {
+              alignItems: 'center',
+              style: { ...makeBorder({ all: '2px solid #9b59b6' }), fontFamily: 'monospace', fontSize: '11px' },
+            },
+            F: {
+              alignItems: 'center',
+              style: { textAlign: 'center', fontWeight: '600' },
+            },
+            G: {
+              alignItems: 'center',
+              style: { textAlign: 'center', fontWeight: '600', fontSize: '12px' },
+            },
+
+            // Access level: matrices provides the numeric level (1-5),
+            // ENCRYPT_LEVEL renders it as a label
+            G1: { value: '=ENCRYPT_LEVEL(B1, 3)' },
+            G2: { value: '=ENCRYPT_LEVEL(B2, 5)' },
+            G3: { value: '=ENCRYPT_LEVEL(B3, 5)' },
+            G4: { value: '=ENCRYPT_LEVEL(B4, 1)' },
+            G5: { value: '=ENCRYPT_LEVEL(B5, 4)' },
+          },
+          ensured: { numRows: 6, numCols: 7 },
         })}
       />
     </div>

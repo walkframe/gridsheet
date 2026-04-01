@@ -10,7 +10,6 @@ import {
   MatrixType,
   buildInitialCells,
   buildInitialCellsFromOrigin,
-  ThousandSeparatorPolicyMixin,
   p2a,
   type RenderProps,
 } from '@gridsheet/react-core';
@@ -77,34 +76,44 @@ const ImagePolicyMixin: PolicyMixinType = {
   },
 };
 
-const LinkPolicyMixin: PolicyMixinType = {
+const ContributionsBarMixin: PolicyMixinType = {
+  renderNumber({ value }: RenderProps<number>) {
+    const LOG_MAX = Math.log(15000 + 1);
+    const ratio = Math.log((value || 0) + 1) / LOG_MAX;
+    const pct = Math.min(ratio * 100, 100);
+    const formatted = (value || 0).toLocaleString();
+    return (
+      <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center' }}>
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 2,
+            bottom: 2,
+            width: `${pct}%`,
+            backgroundColor: 'rgba(46, 204, 113, 0.3)',
+            borderRadius: '2px',
+          }}
+        />
+        <span style={{ position: 'relative', marginLeft: 'auto', paddingRight: 4 }}>{formatted}</span>
+      </div>
+    );
+  },
+};
+
+const UserLinkMixin: PolicyMixinType = {
   renderString({ value }: RenderProps<string>) {
     if (value == null || value === '') {
-      return <span style={{ color: '#999', fontStyle: 'italic' }}>No URL</span>;
+      return <span style={{ color: '#999', fontStyle: 'italic' }}>-</span>;
     }
     return (
       <a
         target="_blank"
-        href={value}
+        href={`https://github.com/${value}`}
         style={{
           color: '#3498db',
           textDecoration: 'none',
           fontWeight: '500',
-          transition: 'all 0.3s ease',
-          padding: '4px 8px',
-          borderRadius: '4px',
-          backgroundColor: 'rgba(52, 152, 219, 0.1)',
-          border: '1px solid rgba(52, 152, 219, 0.2)',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = 'rgba(52, 152, 219, 0.2)';
-          e.currentTarget.style.transform = 'translateY(-1px)';
-          e.currentTarget.style.boxShadow = '0 2px 8px rgba(52, 152, 219, 0.3)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'rgba(52, 152, 219, 0.1)';
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = 'none';
         }}
       >
         {value}
@@ -114,7 +123,7 @@ const LinkPolicyMixin: PolicyMixinType = {
 };
 
 export default function GitHubContributors() {
-  const fields = ['id', 'avatar_url', 'login', 'html_url', 'contributions'];
+  const fields = ['id', 'avatar_url', 'login', 'contributions'];
   const [data, setData] = React.useState<MatrixType>([]);
   const [loading, setLoading] = React.useState(true);
 
@@ -137,15 +146,11 @@ export default function GitHubContributors() {
 
   const book = useSpellbook({
     policies: {
-      thousand_separator: new Policy({ mixins: [ThousandSeparatorPolicyMixin] }),
-      image: new Policy({ mixins: [ImagePolicyMixin] }),
-      link: new Policy({ mixins: [LinkPolicyMixin] }),
       id: new Policy({ mixins: [{ renderColHeaderLabel: () => 'ID' }, AddressOverlayMixin] }),
       avatar: new Policy({ mixins: [ImagePolicyMixin, { renderColHeaderLabel: () => 'Avatar' }, AddressOverlayMixin] }),
-      user: new Policy({ mixins: [{ renderColHeaderLabel: () => 'user' }, AddressOverlayMixin] }),
-      url: new Policy({ mixins: [LinkPolicyMixin, { renderColHeaderLabel: () => 'URL' }, AddressOverlayMixin] }),
+      user: new Policy({ mixins: [UserLinkMixin, { renderColHeaderLabel: () => 'User' }, AddressOverlayMixin] }),
       contributions: new Policy({
-        mixins: [ThousandSeparatorPolicyMixin, { renderColHeaderLabel: () => 'Contributions' }, AddressOverlayMixin],
+        mixins: [ContributionsBarMixin, { renderColHeaderLabel: () => 'Contributions' }, AddressOverlayMixin],
       }),
     },
   });
@@ -221,7 +226,8 @@ export default function GitHubContributors() {
                   backgroundColor: 'rgba(52, 152, 219, 0.05)',
                 },
               },
-              C0: { width: 150 },
+              B0: { width: 70 },
+              C0: { width: 120 },
               C: {
                 policy: 'user',
                 alignItems: 'center',
@@ -231,15 +237,8 @@ export default function GitHubContributors() {
                   color: '#ffffff',
                 },
               },
-              D0: { width: 230 },
+              D0: { width: 250 },
               D: {
-                policy: 'url',
-                alignItems: 'center',
-                style: {
-                  backgroundColor: 'rgba(52, 152, 219, 0.05)',
-                },
-              },
-              E: {
                 policy: 'contributions',
                 alignItems: 'center',
                 justifyContent: 'right',
@@ -255,7 +254,7 @@ export default function GitHubContributors() {
             mode: 'dark',
             sheetHeight: 500,
             sheetWidth: 1000,
-            limits: { minCols: 5, maxCols: 5 },
+            limits: { minCols: 4, maxCols: 4 },
           }}
         />
       )}

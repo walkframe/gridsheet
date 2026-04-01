@@ -229,6 +229,10 @@ export default function SalesDashboard() {
           Dashboard
           <span style={hintStyle}>— cross-sheet formulas + ARRAYFORMULA / IF spill status &amp; gap columns</span>
         </div>
+        <div className="dashboard-striped">
+        <style>{`
+          .dashboard-striped .gs-row-even .gs-cell { background-color: #2d2024; }
+        `}</style>
         <GridSheet
           book={book}
           sheetName={sheetName2}
@@ -276,6 +280,7 @@ export default function SalesDashboard() {
           })}
           options={{ sheetHeight: 340, sheetWidth: 580, sheetResize: 'both', mode: 'dark' }}
         />
+        </div>
         <div style={sheetNameStyle}>
           sheet:
           <input value={sheetName2} onChange={(e) => setSheetName2(e.target.value)} style={sheetNameInputStyle} />
