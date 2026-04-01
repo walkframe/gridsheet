@@ -164,8 +164,12 @@ export function GridSheet({
         first = false;
         return;
       }
-      setSheetHeight(el.clientHeight);
-      setSheetWidth(el.clientWidth);
+      if (!options.sheetHeight) {
+        setSheetHeight(el.clientHeight);
+      }
+      if (!options.sheetWidth) {
+        setSheetWidth(el.clientWidth);
+      }
     });
     ro.observe(el);
     return () => ro.disconnect();

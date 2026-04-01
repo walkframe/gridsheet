@@ -363,7 +363,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
           className={'gs-cell-inner'}
           style={{
             ...cell?.style,
-            justifyContent: cell?.justifyContent || 'left',
+            textAlign: cell?.style?.textAlign || cell?.justifyContent || 'left',
             alignItems: cell?.alignItems || 'start',
           }}
         >
@@ -374,7 +374,21 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
               onMouseLeave={handleErrorTriangleLeave}
             />
           )}
-          <div className="gs-cell-rendered">{rendered}</div>
+          <div
+            className="gs-cell-rendered"
+            style={
+              cell?.alignItems
+                ? {
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent:
+                      cell.alignItems === 'center' ? 'center' : cell.alignItems === 'end' ? 'flex-end' : undefined,
+                  }
+                : undefined
+            }
+          >
+            {rendered}
+          </div>
         </div>
         {errorMessage && errorTooltipPos && (
           <div
