@@ -219,8 +219,8 @@ export default function LargeDatasetDemo() {
         sheetName="large-dataset"
         initialCells={initialCells}
         options={{
-          sheetHeight: 600,
-          sheetWidth: typeof window !== 'undefined' ? Math.min(1200, window.innerWidth - 60) : 1200,
+          sheetHeight: 400,
+          sheetWidth: typeof window !== 'undefined' ? Math.min(800, window.innerWidth - 60) : 800,
           sheetResize: 'both',
         }}
       />

@@ -164,12 +164,8 @@ export function GridSheet({
         first = false;
         return;
       }
-      if (!options.sheetHeight) {
-        setSheetHeight(el.clientHeight);
-      }
-      if (!options.sheetWidth) {
-        setSheetWidth(el.clientWidth);
-      }
+      setSheetHeight(options.sheetHeight ? Math.min(options.sheetHeight, el.clientHeight) : el.clientHeight);
+      setSheetWidth(options.sheetWidth ? Math.min(options.sheetWidth, el.clientWidth) : el.clientWidth);
     });
     ro.observe(el);
     return () => ro.disconnect();

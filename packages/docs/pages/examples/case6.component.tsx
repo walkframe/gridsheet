@@ -83,7 +83,7 @@ const CalendarCellPolicyMixin: PolicyMixinType = {
         <div
           style={{
             fontWeight: 700,
-            fontSize: 14,
+            fontSize: 11,
             marginBottom: 4,
           }}
         >
@@ -182,7 +182,7 @@ const CalendarCellPolicyMixin: PolicyMixinType = {
 
 // Generate 4 weeks of calendar data
 const weeks: ValueType[][] = [];
-for (let w = 0; w < 4; w++) {
+for (let w = 0; w < 5; w++) {
   const week: ValueType[] = [];
   for (let d = 0; d < 7; d++) {
     // Sample events (only for some days)
@@ -234,8 +234,8 @@ export default function CustomRendering() {
             default: {
               policy: 'calendar',
             },
-            defaultCol: { width: 120 },
-            defaultRow: { height: 100 },
+            defaultCol: { width: 100 },
+            defaultRow: { height: 80 },
             A0: { label: 'Mon' },
             B0: { label: 'Tue' },
             C0: { label: 'Wed' },
