@@ -846,13 +846,13 @@ export default function AdvancedFeatures() {
       {/* Main Content */}
       <div
         style={{
-          padding: '0 20px 20px 20px',
+          backgroundColor: '#ddd',
         }}
       >
         {/* Sheet Container */}
         <div
           style={{
-            backgroundColor: 'white',
+            backgroundColor: '#ddd',
             borderRadius: '0',
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
             overflow: 'hidden',
@@ -881,7 +881,7 @@ export default function AdvancedFeatures() {
                     width: '100%',
                     fontSize: '14px',
                   }}
-                  options={{}}
+                  options={{ sheetResize: 'both' }}
                 />
               </div>
             ))}
