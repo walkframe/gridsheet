@@ -154,8 +154,8 @@ export const Tabular = () => {
       <div
         className="gs-tabular"
         style={{
-          width: sheetWidth === -1 ? undefined : sheetWidth,
-          height: sheetHeight === -1 ? undefined : sheetHeight,
+          width: sheetWidth === -1 ? undefined : Math.min(sheetWidth, sheet.totalWidth),
+          height: sheetHeight === -1 ? undefined : Math.min(sheetHeight, sheet.totalHeight),
         }}
         ref={tabularRef}
         onMouseMove={handleMouseMove}
