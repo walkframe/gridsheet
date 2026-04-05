@@ -181,9 +181,9 @@ export const getAreaInTabular = (tabularElement: HTMLDivElement): AreaType => {
   const cols = Array.from(tabularElement.querySelectorAll('.gs-th-top')) as HTMLTableHeaderCellElement[];
 
   const top = findVisibleElement(rows, (rect) => rect.top, topPosition, 'y');
-  const bottom = findVisibleElement(rows, (rect) => rect.bottom, bottomPosition, 'y');
+  const bottom = findVisibleElement(rows, (rect) => rect.bottom, bottomPosition + 1, 'y');
   const left = findVisibleElement(cols, (rect) => rect.left, leftPosition, 'x');
-  const right = findVisibleElement(cols, (rect) => rect.right, rightPosition, 'x');
+  const right = findVisibleElement(cols, (rect) => rect.right, rightPosition + 1, 'x');
 
   return { top, left, bottom, right };
 };
