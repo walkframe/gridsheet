@@ -4,11 +4,10 @@ import { Sheet } from './sheet';
 import type { AreaType, PointType, Virtualization } from '../types';
 
 export const getCellRectPositions = (sheet: Sheet, { y, x }: PointType) => {
-  // Use System.offsetLeft / offsetTop stored on header cells for O(1) lookup
   const colCell = sheet.getCell({ y: 0, x }, { resolution: 'SYSTEM' });
   const rowCell = sheet.getCell({ y, x: 0 }, { resolution: 'SYSTEM' });
   const left = sheet.getSystem({ y: 0, x })?.offsetLeft ?? 0;
-  const top = sheet.getSystem({ y, x: 0 })?.offsetTop ?? 0;
+  const top = sheet.getOffsetTop(y);
   const w = colCell?.width || DEFAULT_WIDTH;
   const h = rowCell?.filtered ? 0 : rowCell?.height || DEFAULT_HEIGHT;
   return {
@@ -54,6 +53,7 @@ export const virtualize = (sheet: Sheet, e: HTMLDivElement | null): Virtualizati
       break;
     }
   }
+  // This loop breaks early once visible bottom is found — O(visible_rows), not O(numRows).
   for (let y = 1; y <= sheet.numRows; y++) {
     if (sheet.isRowFiltered(y)) {
       continue;

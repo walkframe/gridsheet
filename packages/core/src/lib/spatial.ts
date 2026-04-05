@@ -224,17 +224,29 @@ export const buildCells = <T>({
   Object.keys(matrices).forEach((baseAddress) => {
     const matrix = matrices[baseAddress];
     const { y: baseY, x: baseX } = a2p(baseAddress);
-    matrix.forEach((row, y) => {
-      row.forEach((e, x) => {
-        const id = p2a({ y: baseY + y, x: baseX + x });
+    const colLetters: string[] = [];
+    for (let y = 0; y < matrix.length; y++) {
+      const row = matrix[y];
+      const rowStr = String(baseY + y);
+      for (let x = 0; x < row.length; x++) {
+        if (colLetters[x] == null) {
+          colLetters[x] = x2c(baseX + x);
+        }
+        const id = colLetters[x] + rowStr;
         if (flattenAs) {
           const cell = cells[id];
-          cells[id] = { [flattenAs]: e, ...cell };
+          if (cell) {
+            if (!(flattenAs in cell)) {
+              cell[flattenAs] = row[x];
+            }
+          } else {
+            cells[id] = { [flattenAs]: row[x] };
+          }
         } else {
-          cells[id] = e as CellType;
+          cells[id] = row[x] as CellType;
         }
-      });
-    });
+      }
+    }
   });
   return cells;
 };
