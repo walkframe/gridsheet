@@ -251,6 +251,14 @@ export class Sheet implements UserSheet {
   private _commonCol: CellType | undefined;
   /** @internal — default row config from cells['defaultRow'] / cells['*R'] */
   private _commonRow: CellType | undefined;
+  /** @internal — deferred matrices from buildInitialCells (large datasets) */
+  private _initMatrices: { [baseAddress: string]: any[][] } | null = null;
+  /** @internal — flattenAs key for deferred matrices */
+  private _initFlattenAs: string | undefined;
+  /** @internal — parsed base points for each matrix key, cached once */
+  private _matrixBases: { baseY: number; baseX: number; rows: number; cols: number }[] = [];
+  /** @internal — raw matrix references keyed by base address for O(1) lookup */
+  private _matrixByBase: { baseY: number; baseX: number; matrix: any[][] }[] = [];
   /** @internal — precomputed column letters for lazy ID row creation */
   private _colLetters: string[] = [];
   /** @internal — tracks custom row heights (row y → height) for arithmetic offset computation */
@@ -737,7 +745,7 @@ export class Sheet implements UserSheet {
     if (cells[0] == null) {
       cells[0] = { width: HEADER_WIDTH, height: HEADER_HEIGHT };
     }
-    const auto = getMaxSizesFromCells(cells);
+    const auto = getMaxSizesFromCells(cells, (cells as any).__userKeys);
     this.area = {
       top: 1,
       left: 1,
@@ -754,8 +762,11 @@ export class Sheet implements UserSheet {
       this._colLetters[x] = x2c(x);
     }
 
-    // Expand range addresses (e.g. 'A1:C3') into individual cells
-    Object.keys(cells).forEach((address) => {
+    // Expand range addresses (e.g. 'A1:C3') into individual cells.
+    // Use __userKeys (set by buildInitialCells) to iterate only user-provided
+    // addresses, avoiding an O(matrixCells) scan of the entire cells object.
+    const addressKeys: string[] = (cells as any).__userKeys ?? Object.keys(cells);
+    addressKeys.forEach((address) => {
       if (address === DEFAULT_KEY || address === DEFAULT_COL_KEY || address === DEFAULT_ROW_KEY) {
         return;
       }
@@ -777,6 +788,18 @@ export class Sheet implements UserSheet {
     this._commonCol = cells?.[DEFAULT_COL_KEY];
     this._commonRow = cells?.[DEFAULT_ROW_KEY];
     this._initCells = cells;
+
+    // Store deferred matrices for lazy cell value lookup
+    const deferredMatrices = (cells as any).__matrices;
+    if (deferredMatrices) {
+      this._initMatrices = deferredMatrices;
+      this._initFlattenAs = (cells as any).__flattenAs;
+      this._matrixByBase = [];
+      for (const baseAddress of Object.keys(deferredMatrices)) {
+        const { y: baseY, x: baseX } = a2p(baseAddress);
+        this._matrixByBase.push({ baseY, baseX, matrix: deferredMatrices[baseAddress] });
+      }
+    }
     if (this._commonCol?.width != null) {
       this.defaultColWidth = this._commonCol.width;
     }
@@ -794,7 +817,7 @@ export class Sheet implements UserSheet {
 
     // Eagerly populate cells that have explicit data or formulas in the input.
     // This ensures formulas are identified for resolveFormulas().
-    const explicitAddresses = Object.keys(cells);
+    const explicitAddresses = addressKeys;
     for (const address of explicitAddresses) {
       if (address === DEFAULT_KEY || address === DEFAULT_COL_KEY || address === DEFAULT_ROW_KEY) {
         continue;
@@ -917,7 +940,25 @@ export class Sheet implements UserSheet {
       const address = `${colId}${rowId}`;
       const rowDefault = cells?.[rowId];
       const colDefault = cells?.[colId];
-      const cell = cells?.[address];
+      let cell = cells?.[address];
+      // Resolve value from deferred matrices if cell has no explicit value
+      if ((cell == null || !('value' in cell)) && this._matrixByBase.length > 0) {
+        for (const { baseY, baseX, matrix } of this._matrixByBase) {
+          const my = y - baseY;
+          const mx = x - baseX;
+          if (my >= 0 && my < matrix.length && mx >= 0 && mx < matrix[my].length) {
+            const val = matrix[my][mx];
+            let matrixCell: CellType;
+            if (this._initFlattenAs) {
+              matrixCell = { [this._initFlattenAs]: val };
+            } else {
+              matrixCell = val as CellType;
+            }
+            cell = cell ? { ...matrixCell, ...cell } : matrixCell;
+            break;
+          }
+        }
+      }
       stacked = {
         ...this._common,
         ...rowDefault,

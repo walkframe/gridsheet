@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useReducer, createRef, useCallback } from 'react';
+import { flushSync } from 'react-dom';
 import type { CellsByAddressType, SheetHandle, StoreHandle, OptionsType, Props, StoreType } from '../types';
 import {
   DEFAULT_HEIGHT,
@@ -191,16 +192,9 @@ export function GridSheet({
         (dispatch as any)(action);
         return;
       }
-      setLoading(true);
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          try {
-            (dispatch as any)(action);
-          } finally {
-            setLoading(false);
-          }
-        }, 0);
-      });
+      flushSync(() => setLoading(true));
+      (dispatch as any)(action);
+      setLoading(false);
     }) as typeof dispatch,
     [dispatch],
   );
