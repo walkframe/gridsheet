@@ -23,6 +23,8 @@ Cell data is designed to be JSON-serializable (see [Serialization Design](/devel
 
 **Important**: This is the initial value given to the sheet. Changes made after initialization will not be reflected, so please be careful.
 
+> **Performance guideline:** For smooth performance, we recommend keeping the total number of cells at around 2,000,000 or fewer (e.g. 200,000 rows × 10 columns). Beyond that threshold, initial data generation and memory consumption may start to degrade the user experience. See [Example 8 — Large Dataset](/examples/case8) for a working demo at this scale.
+
 ### Address Format
 
 The format uses cell addresses as keys for cell configuration objects. For example, to set the text color of D3 to green, use `{D3: {style: {color: "#00FF00"}}}`.
