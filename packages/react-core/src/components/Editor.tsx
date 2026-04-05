@@ -533,7 +533,6 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
               const area = clip(store);
               dispatch(cut(areaToZone(area)));
               focus(input); // refocus
-
               return false;
             }
           }
@@ -544,7 +543,6 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
               e.preventDefault();
               if (e.shiftKey) {
                 dispatch(redo(null));
-                //window.setTimeout(() => apply(setInputting('')), 100); // resetting textarea
               } else {
                 dispatch(undo(null));
               }

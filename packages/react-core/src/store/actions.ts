@@ -70,6 +70,8 @@ export const reducer = <T>(store: StoreType, action: { type: number; value: T })
 export class CoreAction<T> {
   static head = 1;
   private actionId: number = 1;
+  /** Whether this action mutates sheet data (triggers loading indicator). */
+  public mutation = false;
 
   public reduce(store: StoreType, payload: T): StoreWithCallback {
     return store;
@@ -86,6 +88,11 @@ export class CoreAction<T> {
     return this.call.bind(this);
   }
 }
+
+/** Returns true if the given action type is a mutation (heavy operation). */
+export const isMutationAction = (type: number): boolean => {
+  return actions[type]?.mutation === true;
+};
 
 class SetSearchQueryAction<T extends string | undefined> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
@@ -295,6 +302,7 @@ class CopyAction<T extends ZoneType> extends CoreAction<T> {
 export const copy = new CopyAction().bind();
 
 class CutAction<T extends ZoneType> extends CoreAction<T> {
+  mutation = true;
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { sheetReactive: sheetRef } = store;
     const sheet = sheetRef.current;
@@ -316,6 +324,7 @@ class CutAction<T extends ZoneType> extends CoreAction<T> {
 export const cut = new CutAction().bind();
 
 class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> extends CoreAction<T> {
+  mutation = true;
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { choosing, selectingZone, sheetReactive: dstSheetRef } = store;
     const dstSheet = dstSheetRef.current;
@@ -651,6 +660,7 @@ class WriteAction<T extends { value: string; point?: PointType }> extends CoreAc
 export const write = new WriteAction().bind();
 
 class ClearAction<T extends null> extends CoreAction<T> {
+  mutation = true;
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { choosing, selectingZone, sheetReactive: sheetRef } = store;
     const sheet = sheetRef.current;
@@ -716,6 +726,7 @@ class ClearAction<T extends null> extends CoreAction<T> {
 export const clear = new ClearAction().bind();
 
 class UndoAction<T extends null> extends CoreAction<T> {
+  mutation = true;
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { sheetReactive: sheetRef } = store;
     const sheet = sheetRef.current;
@@ -759,6 +770,7 @@ class UndoAction<T extends null> extends CoreAction<T> {
 export const undo = new UndoAction().bind();
 
 class RedoAction<T extends null> extends CoreAction<T> {
+  mutation = true;
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { sheetReactive: sheetRef } = store;
     const sheet = sheetRef.current;
@@ -1014,6 +1026,7 @@ class SetInputtingAction<T extends string> extends CoreAction<T> {
 export const setInputting = new SetInputtingAction().bind();
 
 class InsertRowsAboveAction<T extends { numRows: number; y: number; operator?: OperatorType }> extends CoreAction<T> {
+  mutation = true;
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { numRows, y, operator } = payload;
     const { sheetReactive: sheetRef, selectingZone, choosing } = store;
@@ -1046,6 +1059,7 @@ class InsertRowsAboveAction<T extends { numRows: number; y: number; operator?: O
 export const insertRowsAbove = new InsertRowsAboveAction().bind();
 
 class InsertRowsBelowAction<T extends { numRows: number; y: number; operator?: OperatorType }> extends CoreAction<T> {
+  mutation = true;
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { numRows, y, operator } = payload;
     const { sheetReactive: sheetRef, selectingZone, choosing, editorRef } = store;
@@ -1087,6 +1101,7 @@ class InsertRowsBelowAction<T extends { numRows: number; y: number; operator?: O
 export const insertRowsBelow = new InsertRowsBelowAction().bind();
 
 class InsertColsLeftAction<T extends { numCols: number; x: number; operator?: OperatorType }> extends CoreAction<T> {
+  mutation = true;
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { numCols, x, operator } = payload;
     const { sheetReactive: sheetRef, selectingZone, choosing, editorRef } = store;
@@ -1120,6 +1135,7 @@ class InsertColsLeftAction<T extends { numCols: number; x: number; operator?: Op
 export const insertColsLeft = new InsertColsLeftAction().bind();
 
 class InsertColsRightAction<T extends { numCols: number; x: number; operator?: OperatorType }> extends CoreAction<T> {
+  mutation = true;
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { numCols, x, operator } = payload;
     const { sheetReactive: sheetRef, selectingZone, choosing } = store;
@@ -1164,6 +1180,7 @@ class InsertColsRightAction<T extends { numCols: number; x: number; operator?: O
 export const insertColsRight = new InsertColsRightAction().bind();
 
 class RemoveRowsAction<T extends { numRows: number; y: number; operator?: OperatorType }> extends CoreAction<T> {
+  mutation = true;
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { numRows, y, operator } = payload;
     const { sheetReactive: sheetRef, selectingZone, choosing, editorRef } = store;
@@ -1198,6 +1215,7 @@ class RemoveRowsAction<T extends { numRows: number; y: number; operator?: Operat
 export const removeRows = new RemoveRowsAction().bind();
 
 class RemoveColsAction<T extends { numCols: number; x: number; operator?: OperatorType }> extends CoreAction<T> {
+  mutation = true;
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { numCols, x, operator } = payload;
     const { sheetReactive: sheetRef, selectingZone, choosing, editorRef } = store;
@@ -1232,6 +1250,7 @@ class RemoveColsAction<T extends { numCols: number; x: number; operator?: Operat
 export const removeCols = new RemoveColsAction().bind();
 
 class SortRowsAction<T extends { x: number; direction: 'asc' | 'desc' }> extends CoreAction<T> {
+  mutation = true;
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { x, direction } = payload;
     const { sheetReactive: sheetRef, selectingZone, choosing } = store;
@@ -1254,6 +1273,7 @@ class SortRowsAction<T extends { x: number; direction: 'asc' | 'desc' }> extends
 export const sortRows = new SortRowsAction().bind();
 
 class FilterRowsAction<T extends { x?: number; filter?: FilterConfig }> extends CoreAction<T> {
+  mutation = true;
   reduce(store: StoreType, payload: T): StoreWithCallback {
     const { x, filter } = payload;
     const { sheetReactive: sheetRef, selectingZone, choosing } = store;

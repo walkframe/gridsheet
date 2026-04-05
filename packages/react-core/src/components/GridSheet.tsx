@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useReducer, createRef } from 'react';
+import { useEffect, useState, useRef, useReducer, createRef, useCallback } from 'react';
 import type { CellsByAddressType, SheetHandle, StoreHandle, OptionsType, Props, StoreType } from '../types';
 import {
   DEFAULT_HEIGHT,
@@ -11,7 +11,7 @@ import {
   DEFAULT_ROW_KEY,
 } from '@gridsheet/core';
 import { Context } from '../store';
-import { reducer as defaultReducer } from '../store/actions';
+import { reducer as defaultReducer, isMutationAction } from '../store/actions';
 import { Editor } from './Editor';
 import { StoreObserver } from './StoreObserver';
 import { Resizer } from './Resizer';
@@ -181,8 +181,32 @@ export function GridSheet({
     }
   }, [options.sheetWidth]);
 
+  const [loading, setLoading] = useState(false);
+
+  // Wrap dispatch: mutation actions show a loading overlay and yield to the
+  // browser before running; non-mutation actions dispatch synchronously.
+  const wrappedDispatch = useCallback(
+    ((action: { type: number; value: any }) => {
+      if (!isMutationAction(action.type)) {
+        (dispatch as any)(action);
+        return;
+      }
+      setLoading(true);
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          try {
+            (dispatch as any)(action);
+          } finally {
+            setLoading(false);
+          }
+        }, 0);
+      });
+    }) as typeof dispatch,
+    [dispatch],
+  );
+
   return (
-    <Context.Provider value={{ store, dispatch }}>
+    <Context.Provider value={{ store, dispatch: wrappedDispatch }}>
       <div
         className={`gs-root1 ${registry.ready ? 'gs-initialized' : ''}`}
         ref={rootRef}
@@ -220,6 +244,11 @@ export function GridSheet({
           <RowMenu />
           <Resizer />
           <Emitter />
+          {loading && (
+            <div className="gs-loading-overlay">
+              <div className="gs-loading-spinner" />
+            </div>
+          )}
         </div>
       </div>
     </Context.Provider>
