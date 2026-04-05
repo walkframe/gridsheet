@@ -123,7 +123,14 @@ export const Tabular = () => {
       return;
     }
     setVirtualized(virtualize(sheet, tabularRef.current));
-  }, [tabularRef.current, sheetReactive, mainRef.current?.clientHeight, mainRef.current?.clientWidth]);
+  }, [
+    tabularRef.current,
+    sheetReactive,
+    mainRef.current?.clientHeight,
+    mainRef.current?.clientWidth,
+    sheetHeight,
+    sheetWidth,
+  ]);
 
   useEffect(() => {
     const el = tabularRef.current;

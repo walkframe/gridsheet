@@ -207,10 +207,7 @@ export const buildInitialCells = ({
   // Only eagerly build cells for small matrices. For large ones, defer to
   // Sheet._ensureCellPopulated via __matrices so we avoid creating millions
   // of dictionary entries up front.
-  const totalMatrixCells = Object.values(matrices).reduce(
-    (sum, m) => sum + m.length * (m[0]?.length ?? 0),
-    0,
-  );
+  const totalMatrixCells = Object.values(matrices).reduce((sum, m) => sum + m.length * (m[0]?.length ?? 0), 0);
   const EAGER_THRESHOLD = 100_000;
   const deferred = totalMatrixCells > EAGER_THRESHOLD;
   if (!deferred) {

@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef, useReducer, createRef, useCallback } from 'react';
-import { flushSync } from 'react-dom';
 import type { CellsByAddressType, SheetHandle, StoreHandle, OptionsType, Props, StoreType } from '../types';
 import {
   DEFAULT_HEIGHT,
@@ -165,8 +164,9 @@ export function GridSheet({
         first = false;
         return;
       }
-      setSheetHeight(options.sheetHeight ? Math.min(options.sheetHeight, el.clientHeight) : el.clientHeight);
-      setSheetWidth(options.sheetWidth ? Math.min(options.sheetWidth, el.clientWidth) : el.clientWidth);
+      const root = rootRef.current;
+      setSheetHeight(root ? Math.min(el.clientHeight, root.clientHeight) : el.clientHeight);
+      setSheetWidth(root ? Math.min(el.clientWidth, root.clientWidth) : el.clientWidth);
     });
     ro.observe(el);
     return () => ro.disconnect();
@@ -184,17 +184,24 @@ export function GridSheet({
 
   const [loading, setLoading] = useState(false);
 
-  // Wrap dispatch: mutation actions show a loading overlay and yield to the
-  // browser before running; non-mutation actions dispatch synchronously.
+  // Remove loading after React re-render completes
+  useEffect(() => {
+    if (loading) {
+      setLoading(false);
+    }
+  });
+
   const wrappedDispatch = useCallback(
     ((action: { type: number; value: any }) => {
       if (!isMutationAction(action.type)) {
         (dispatch as any)(action);
         return;
       }
-      flushSync(() => setLoading(true));
-      (dispatch as any)(action);
-      setLoading(false);
+      setLoading(true);
+      // Defer dispatch to next frame so the loading overlay can paint first
+      requestAnimationFrame(() => {
+        (dispatch as any)(action);
+      });
     }) as typeof dispatch,
     [dispatch],
   );
@@ -224,8 +231,10 @@ export function GridSheet({
           ref={mainRef}
           style={{
             //width: '100%',
-            maxWidth: (store.sheetReactive.current?.totalWidth || 0) + 2,
-            maxHeight: (store.sheetReactive.current?.fullHeight || 0) + 2,
+            maxWidth: '100%',
+            maxHeight: mainRef.current
+              ? window.innerHeight - mainRef.current.getBoundingClientRect().top
+              : (store.sheetReactive.current?.fullHeight || 0) + 2,
             resize: sheetResize,
             ...style,
           }}
