@@ -123,7 +123,14 @@ export const Tabular = () => {
       return;
     }
     setVirtualized(virtualize(sheet, tabularRef.current));
-  }, [tabularRef.current, sheetReactive, mainRef.current?.clientHeight, mainRef.current?.clientWidth]);
+  }, [
+    tabularRef.current,
+    sheetReactive,
+    mainRef.current?.clientHeight,
+    mainRef.current?.clientWidth,
+    sheetHeight,
+    sheetWidth,
+  ]);
 
   useEffect(() => {
     const el = tabularRef.current;
@@ -147,8 +154,8 @@ export const Tabular = () => {
       <div
         className="gs-tabular"
         style={{
-          width: sheetWidth === -1 ? undefined : sheetWidth,
-          height: sheetHeight === -1 ? undefined : sheetHeight,
+          width: sheetWidth === -1 ? undefined : Math.min(sheetWidth, sheet.totalWidth),
+          height: sheetHeight === -1 ? undefined : Math.min(sheetHeight, sheet.totalHeight),
         }}
         ref={tabularRef}
         onMouseMove={handleMouseMove}

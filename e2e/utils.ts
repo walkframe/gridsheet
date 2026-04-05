@@ -26,6 +26,13 @@ export const drag = async (locator: any, startAddress: string, endAddress: strin
   await page.mouse.up();
 };
 
+/** Wait for deferred mutation dispatch + React re-render to complete */
+const waitForMutation = async (page: any) => {
+  // Mutation dispatch runs in the next animation frame.
+  // Wait 2 frames: 1st for dispatch, 2nd for React re-render + paint.
+  await page.waitForTimeout(100);
+};
+
 export const ctrl = async (page: any, key: string, shift = false) => {
   await page.keyboard.down('Control');
   if (shift) {
@@ -36,6 +43,7 @@ export const ctrl = async (page: any, key: string, shift = false) => {
     await page.keyboard.up('Shift');
   }
   await page.keyboard.up('Control');
+  await waitForMutation(page);
 };
 
 export const paste = async (page: any) => {
@@ -49,6 +57,7 @@ export const paste = async (page: any) => {
     });
     document.activeElement?.dispatchEvent(pasteEvent);
   });
+  await waitForMutation(page);
 };
 
 export const dragAutofill = async (page: any, startAddress: string, endAddress: string) => {

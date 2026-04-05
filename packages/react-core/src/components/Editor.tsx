@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useContext, useEffect, useState, useCallback, memo } from 'react';
+import { useContext, useEffect, useState, useCallback, useRef, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { FunctionGuide } from './FunctionGuide';
 import { EditorOptions } from './EditorOptions';
@@ -54,6 +54,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
   const [shiftKey, setShiftKey] = useState(false);
   const [selectionStart, setSelectionStart] = useState(0);
   const [isFocused, setIsFocused] = useState(false);
+  const composingRef = useRef(false);
   const {
     choosing,
     inputting,
@@ -241,6 +242,9 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
   const handleKeyDown = useCallback(
     (e: EditorEventWithNativeEvent) => {
       if (!sheet) {
+        return;
+      }
+      if (e.nativeEvent.isComposing || composingRef.current) {
         return;
       }
       if (isKeyDown) {
@@ -533,7 +537,6 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
               const area = clip(store);
               dispatch(cut(areaToZone(area)));
               focus(input); // refocus
-
               return false;
             }
           }
@@ -544,7 +547,6 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
               e.preventDefault();
               if (e.shiftKey) {
                 dispatch(redo(null));
-                //window.setTimeout(() => apply(setInputting('')), 100); // resetting textarea
               } else {
                 dispatch(undo(null));
               }
@@ -749,6 +751,17 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
           onPaste={handlePaste}
           onKeyDown={handleKeyDown}
           onKeyUp={handleKeyUpInternal}
+          onCompositionStart={() => {
+            composingRef.current = true;
+            if (!editing) {
+              dispatch(setEditingAddress(address));
+              dispatch(setInputting(''));
+            }
+          }}
+          onCompositionEnd={(e) => {
+            composingRef.current = false;
+            dispatch(setInputting(e.currentTarget.value));
+          }}
           onMouseEnter={() => {
             dispatch(setEditorHovering(true));
           }}

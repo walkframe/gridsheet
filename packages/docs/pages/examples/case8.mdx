@@ -1,104 +1,50 @@
 import Case8 from './case8.component';
 
-# 📊 Large Dataset Performance Demo
+# Large Dataset Performance Demo
 
-This demo showcases GridSheet's performance capabilities with a large dataset of 10,000 rows and 100 columns.
-
-The example demonstrates efficient rendering and data handling for massive spreadsheets.
+This demo renders a grid with 200,000 rows and 10 columns (2,000,000 cells in total). GridSheet uses lazy initialization and deferred cell expansion internally, so the grid becomes interactive without processing all cells upfront.
 
 <Case8 />
 
 ## Implementation Guide
 
-<a href="https://github.com/walkframe/gridsheet/tree/master/packages/docs/pages/examples/case8.component.tsx" target="_blank" rel="noopener noreferrer" style={{display: 'inline-block', background: '#007bff', color: 'white', padding: '8px 16px', textDecoration: 'none', borderRadius: '4px', fontWeight: '500', margin: '10px 0'}}>📄 View Source Code</a>
+<a href="https://github.com/walkframe/gridsheet/tree/master/packages/docs/pages/examples/case8.component.tsx" target="_blank" rel="noopener noreferrer" style={{display: 'inline-block', background: '#007bff', color: 'white', padding: '8px 16px', textDecoration: 'none', borderRadius: '4px', fontWeight: '500', margin: '10px 0'}}>View Source Code</a>
 
-### Batched Data Generation with `setTimeout`
+### Loading Overlay Until Initialization Completes
 
-Generating 10,000 × 100 = 1,000,000 cell definitions synchronously would block the main thread and freeze the UI. The solution is to split the work into batches and yield control back to the browser between each batch using `setTimeout(..., 0)`.
-
-```tsx
-const batchSize = 1000;
-const totalBatches = Math.ceil(rows / batchSize);
-
-const generateBatch = (batchIndex: number) => {
-  const startRow = batchIndex * batchSize + 1;
-  const endRow = Math.min(startRow + batchSize - 1, rows);
-
-  for (let row = startRow; row <= endRow; row++) {
-    for (let col = 1; col <= cols; col++) {
-      cells[address] = { value, style };
-    }
-  }
-
-  setProgress(Math.round(((batchIndex + 1) / totalBatches) * 100));
-
-  if (batchIndex + 1 < totalBatches) {
-    setTimeout(() => generateBatch(batchIndex + 1), 0); // yield to browser
-  } else {
-    setIsLoading(false);
-  }
-};
-
-generateBatch(0);
-```
-
-Calling `setProgress` after each batch keeps the progress bar reactive without adding extra overhead.
-
-### Showing a Progress Bar During Generation
-
-Use a `loading` state and a `progress` percentage to display a progress bar. The grid itself is not mounted until generation completes, preventing `initialCells` from being passed before it is ready.
+GridSheet adds the `gs-initialized` class to its root element once it is ready. By watching for this class with a `MutationObserver`, you can overlay a spinner on the sheet area and remove it only when the grid is fully interactive.
 
 ```tsx
-const [isLoading, setIsLoading] = React.useState(true);
-const [progress, setProgress] = React.useState(0);
-
-if (isLoading) {
-  return (
-    <div>
-      <div style={{ width: `${progress}%`, height: '20px', backgroundColor: '#3b82f6' }} />
-      <span>{progress}% Complete</span>
-    </div>
-  );
-}
-
-return <GridSheet book={book} initialCells={initialCells} ... />;
-```
-
-### Multi-letter Column Address Generation
-
-Excel-style column addresses beyond `Z` (i.e., `AA`, `AB`, ...) require a custom converter. With 100 columns this covers through `CV`.
-
-```tsx
-const getColumnLetter = (colNum: number): string => {
-  let result = '';
-  while (colNum > 0) {
-    colNum--;
-    result = String.fromCharCode(65 + (colNum % 26)) + result;
-    colNum = Math.floor(colNum / 26);
-  }
-  return result;
-};
-// getColumnLetter(1)  → 'A'
-// getColumnLetter(27) → 'AA'
-```
-
-### `buildInitialCellsFromOrigin` vs Flat `cells` Object
-
-This demo builds a plain `{ [address: string]: CellType }` object directly and passes it to `GridSheet` as `initialCells`. This avoids calling `buildInitialCells` on an already-generated flat structure and removes the overhead of the matrix-to-address conversion that `buildInitialCells` performs internally.
-
-```tsx
-const [initialCells, setInitialCells] = React.useState<{ [address: string]: any }>({
-  defaultCol: { width: 80 },
-  defaultRow: { height: 20 },
-});
+const containerRef = React.useRef<HTMLDivElement>(null);
+const [ready, setReady] = React.useState(false);
 
 React.useEffect(() => {
-  const cells = generateLargeDataset();
-  setInitialCells(cells);
-}, [generateLargeDataset]);
-```
+  const el = containerRef.current;
+  if (!el) return;
+  const observer = new MutationObserver(() => {
+    if (el.querySelector('.gs-initialized')) {
+      setReady(true);
+      observer.disconnect();
+    }
+  });
+  observer.observe(el, { attributes: true, subtree: true, attributeFilter: ['class'] });
+  if (el.querySelector('.gs-initialized')) {
+    setReady(true);
+  }
+  return () => observer.disconnect();
+}, []);
 
-Setting `defaultCol` and `defaultRow` in the initial state means the grid renders immediately with reasonable dimensions, even while data generation is in progress.
+return (
+  <div ref={containerRef} style={{ position: 'relative' }}>
+    <GridSheet ... />
+    {!ready && (
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="gs-loading-spinner" />
+      </div>
+    )}
+  </div>
+);
+```
 
 ### `sheetResize: 'both'` for Resizable Grid
 
@@ -106,24 +52,21 @@ The `sheetResize` option exposes a resize handle so users can adjust the grid di
 
 ```tsx
 options={{
-  sheetHeight: 600,
-  sheetWidth: Math.min(1200, window.innerWidth - 60),
+  sheetHeight: 400,
+  sheetWidth: Math.min(800, window.innerWidth - 60),
   sheetResize: 'both',
 }}
 ```
 
 ### Applying Row Stripes with CSS
 
-GridSheet automatically adds `gs-row-odd` and `gs-row-even` classes to each `<tr>` element based on the row's position (`y`). You can use these classes in a `<style>` tag to apply alternating row background colors without touching cell data:
+GridSheet automatically adds `gs-row-odd` and `gs-row-even` classes to each `<tr>` element based on the row's position. You can use these classes to apply alternating row background colors without touching cell data:
 
 ```tsx
-<>
-  <GridSheet ... />
-  <style>{`
-    .gs-row-odd .gs-cell  { background-color: #ffffff; }
-    .gs-row-even .gs-cell { background-color: #f0f4f8; }
-  `}</style>
-</>
+<style>{`
+  .gs-row-odd .gs-cell  { background-color: #ffffff; }
+  .gs-row-even .gs-cell { background-color: #f0f4f8; }
+`}</style>
 ```
 
 Because these are CSS rules (not inline styles), any `style.backgroundColor` set directly on a cell object will take priority and override the stripe color for that specific cell.

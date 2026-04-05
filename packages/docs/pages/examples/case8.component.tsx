@@ -1,207 +1,78 @@
 'use client';
 
 import * as React from 'react';
-import { GridSheet, buildInitialCellsFromOrigin, makeBorder } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells } from '@gridsheet/react-core';
 import { useSpellbook } from '@gridsheet/react-core/spellbook';
 
+const NUM_ROWS = 200000;
+const NUM_COLS = 10;
+
+const generateHugeData = () => {
+  const data: any[][] = [];
+  for (let i = 1; i <= NUM_ROWS; i++) {
+    data.push([
+      i,
+      `Row ${i}`,
+      Math.floor(Math.random() * 10000),
+      Math.floor(Math.random() * 10000),
+      Math.floor(Math.random() * 10000),
+      Math.floor(Math.random() * 10000),
+      Math.floor(Math.random() * 10000),
+      ['Alpha', 'Beta', 'Gamma', 'Delta'][Math.floor(Math.random() * 4)],
+      ['Active', 'Inactive', 'Pending'][Math.floor(Math.random() * 3)],
+      `Note ${i}`,
+    ]);
+  }
+  return data;
+};
+
 export default function LargeDatasetDemo() {
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [progress, setProgress] = React.useState(0);
-
   const book = useSpellbook();
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [ready, setReady] = React.useState(false);
 
-  // Generate large dataset efficiently
-  const generateLargeDataset = React.useCallback(() => {
-    const rows = 10000;
-    const cols = 100;
-    const cells: { [address: string]: any } = {};
+  const sheetHeight = 400;
+  const sheetWidth = typeof window !== 'undefined' ? Math.min(800, window.innerWidth - 60) : 800;
 
-    // Helper function to convert column number to letter(s)
-    const getColumnLetter = (colNum: number): string => {
-      let result = '';
-      while (colNum > 0) {
-        colNum--;
-        result = String.fromCharCode(65 + (colNum % 26)) + result;
-        colNum = Math.floor(colNum / 26);
-      }
-      return result;
-    };
-
-    // Generate column labels
-    for (let col = 1; col <= cols; col++) {
-      const colLetter = getColumnLetter(col);
-      cells[colLetter] = {
-        label: `Column ${col}`,
-      };
-    }
-
-    // Generate data rows efficiently
-    const batchSize = 1000;
-    const totalBatches = Math.ceil(rows / batchSize);
-
-    const generateBatch = (batchIndex: number) => {
-      const startRow = batchIndex * batchSize + 1;
-      const endRow = Math.min(startRow + batchSize - 1, rows);
-
-      for (let row = startRow; row <= endRow; row++) {
-        for (let col = 1; col <= cols; col++) {
-          const colLetter = getColumnLetter(col);
-          const address = `${colLetter}${row}`;
-
-          // Generate different types of data based on column
-          let value: string | number;
-          let style: any = {
-            fontSize: '11px',
-            padding: '2px',
-            ...makeBorder({ all: '1px solid #e5e7eb' }),
-          };
-
-          if (col === 1) {
-            // ID column
-            value = row;
-            style = {
-              ...style,
-              fontWeight: 'bold',
-              textAlign: 'center',
-            };
-          } else if (col === 2) {
-            // Name column
-            const names = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry', 'Ivy', 'Jack'];
-            value = `${names[(row - 1) % names.length]} ${Math.floor((row - 1) / names.length) + 1}`;
-            style = {
-              ...style,
-              fontWeight: '500',
-            };
-          } else if (col === 3) {
-            // Department column
-            const departments = [
-              'Engineering',
-              'Marketing',
-              'Sales',
-              'HR',
-              'Finance',
-              'Operations',
-              'Product',
-              'Support',
-            ];
-            value = departments[(row - 1) % departments.length];
-            style = {
-              ...style,
-              textAlign: 'center',
-              fontSize: '10px',
-            };
-          } else if (col === 4) {
-            // Salary column
-            value = Math.floor(Math.random() * 50000) + 30000;
-            style = {
-              ...style,
-              textAlign: 'right',
-              fontWeight: '500',
-            };
-          } else if (col === 5) {
-            // Status column
-            const statuses = ['Active', 'Inactive', 'Pending', 'Terminated'];
-            value = statuses[(row - 1) % statuses.length];
-            style = {
-              ...style,
-              textAlign: 'center',
-              fontSize: '10px',
-            };
-          } else if (col <= 10) {
-            // Additional data columns
-            value = Math.floor(Math.random() * 1000);
-            style = {
-              ...style,
-              textAlign: 'right',
-            };
-          } else {
-            // Generic data for remaining columns
-            value = Math.floor(Math.random() * 100);
-            style = {
-              ...style,
-              textAlign: 'center',
-            };
-          }
-
-          cells[address] = {
-            value,
-            style,
-          };
-        }
-      }
-
-      // Update progress
-      const newProgress = Math.round(((batchIndex + 1) / totalBatches) * 100);
-      setProgress(newProgress);
-
-      // Schedule next batch
-      if (batchIndex + 1 < totalBatches) {
-        setTimeout(() => generateBatch(batchIndex + 1), 0);
-      } else {
-        setIsLoading(false);
-      }
-    };
-
-    // Start batch generation
-    generateBatch(0);
-    return cells;
-  }, []);
-
-  const [initialCells, setInitialCells] = React.useState<{ [address: string]: any }>({
-    defaultCol: { width: 80 },
-    defaultRow: { height: 20 },
-  });
+  const initialCells = React.useMemo(
+    () =>
+      buildInitialCells({
+        matrices: { A1: generateHugeData() },
+        cells: {
+          A0: { label: 'ID' },
+          B0: { label: 'Name' },
+          C0: { label: 'Value1' },
+          D0: { label: 'Value2' },
+          E0: { label: 'Value3' },
+          F0: { label: 'Value4' },
+          G0: { label: 'Value5' },
+          H0: { label: 'Group' },
+          I0: { label: 'Status' },
+          J0: { label: 'Notes' },
+        },
+        ensured: { numRows: NUM_ROWS, numCols: NUM_COLS },
+      }),
+    [],
+  );
 
   React.useEffect(() => {
-    const cells = generateLargeDataset();
-    setInitialCells(cells);
-  }, [generateLargeDataset]);
-
-  if (isLoading) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '400px',
-          backgroundColor: '#f8fafc',
-          borderRadius: '8px',
-          border: '1px solid #e5e7eb',
-        }}
-      >
-        <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', color: '#374151' }}>
-          Generating Large Dataset...
-        </div>
-        <div
-          style={{
-            width: '300px',
-            height: '20px',
-            backgroundColor: '#e5e7eb',
-            borderRadius: '10px',
-            overflow: 'hidden',
-          }}
-        >
-          <div
-            style={{
-              width: `${progress}%`,
-              height: '100%',
-              backgroundColor: '#3b82f6',
-              transition: 'width 0.3s ease',
-              borderRadius: '10px',
-            }}
-          />
-        </div>
-        <div style={{ marginTop: '10px', fontSize: '14px', color: '#6b7280' }}>{progress}% Complete</div>
-        <div style={{ marginTop: '20px', fontSize: '12px', color: '#9ca3af', textAlign: 'center' }}>
-          Creating 10,000 rows × 100 columns
-          <br />
-          Total: 1,000,000 cells
-        </div>
-      </div>
-    );
-  }
+    const el = containerRef.current;
+    if (!el) {
+      return;
+    }
+    const observer = new MutationObserver(() => {
+      if (el.querySelector('.gs-initialized')) {
+        setReady(true);
+        observer.disconnect();
+      }
+    });
+    observer.observe(el, { attributes: true, subtree: true, attributeFilter: ['class'] });
+    // Check immediately in case already initialized
+    if (el.querySelector('.gs-initialized')) {
+      setReady(true);
+    }
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div
@@ -214,17 +85,44 @@ export default function LargeDatasetDemo() {
         padding: '20px',
       }}
     >
-      <GridSheet
-        book={book}
-        sheetName="large-dataset"
-        initialCells={initialCells}
-        options={{
-          sheetHeight: 400,
-          sheetWidth: typeof window !== 'undefined' ? Math.min(800, window.innerWidth - 60) : 800,
-          sheetResize: 'both',
-        }}
-      />
+      <div ref={containerRef} style={{ position: 'relative', width: sheetWidth, height: sheetHeight }}>
+        <GridSheet
+          book={book}
+          sheetName="large-dataset"
+          initialCells={initialCells}
+          options={{
+            sheetHeight,
+            sheetWidth,
+            sheetResize: 'both',
+          }}
+        />
+        {!ready && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(255, 255, 255, 0.8)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 200,
+            }}
+          >
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                border: '3px solid #e0e0e0',
+                borderTopColor: '#0077ff',
+                borderRadius: '50%',
+                animation: 'case8-spin 0.8s linear infinite',
+              }}
+            />
+          </div>
+        )}
+      </div>
       <style>{`
+        @keyframes case8-spin { to { transform: rotate(360deg); } }
         .gs-row-odd .gs-cell { background-color: #ffffff; }
         .gs-row-even .gs-cell { background-color: #f0f4f8; }
       `}</style>

@@ -124,6 +124,68 @@ test('enter key with alt and escape key revert', async ({ page }) => {
   expect(await largeEditor.inputValue()).toBe('Change1');
 });
 
+test('IME composition input', async ({ page }) => {
+  await go(page, 'basic-simple--sheet');
+  const a1 = page.locator("[data-address='A1']");
+  const editor = page.locator('.gs-editor textarea');
+  const largeEditor = page.locator('.gs-formula-bar textarea');
+  const address = page.locator('.gs-selecting-address');
+
+  // ---- IME composition in cell editor ----
+  // Clicking a cell and starting composition should enter edit mode
+  await a1.click();
+  await page.evaluate(() => {
+    const el = document.querySelector('.gs-editor textarea')!;
+    el.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+  });
+  // Simulate typing "かな" during composition
+  await page.evaluate(() => {
+    const el = document.querySelector('.gs-editor textarea') as HTMLTextAreaElement;
+    el.value = 'かな';
+    el.dispatchEvent(new InputEvent('input', { bubbles: true, data: 'かな', isComposing: true }));
+  });
+  // Enter during composition should NOT commit the cell
+  await page.keyboard.press('Enter');
+  // Still composing — address should stay at A1 (not move to A2)
+  expect(await address.textContent()).toBe('A1');
+
+  // End composition and commit
+  await page.evaluate(() => {
+    const el = document.querySelector('.gs-editor textarea') as HTMLTextAreaElement;
+    el.value = '漢字';
+    el.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, data: '漢字' }));
+    el.dispatchEvent(new InputEvent('input', { bubbles: true, data: '漢字' }));
+  });
+  await page.keyboard.press('Enter');
+  expect(await a1.locator('.gs-cell-rendered').textContent()).toBe('漢字');
+
+  // ---- IME composition in formula bar ----
+  const b2 = page.locator("[data-address='B2']");
+  await b2.click();
+  await largeEditor.click();
+  await page.evaluate(() => {
+    const el = document.querySelector('.gs-formula-bar textarea')!;
+    el.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+  });
+  await page.evaluate(() => {
+    const el = document.querySelector('.gs-formula-bar textarea') as HTMLTextAreaElement;
+    el.value = 'にほんご';
+    el.dispatchEvent(new InputEvent('input', { bubbles: true, data: 'にほんご', isComposing: true }));
+  });
+  // Enter during composition should NOT commit
+  await page.keyboard.press('Enter');
+  expect(await address.textContent()).toBe('B2');
+
+  await page.evaluate(() => {
+    const el = document.querySelector('.gs-formula-bar textarea') as HTMLTextAreaElement;
+    el.value = '日本語';
+    el.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, data: '日本語' }));
+    el.dispatchEvent(new InputEvent('input', { bubbles: true, data: '日本語' }));
+  });
+  await page.keyboard.press('Enter');
+  expect(await b2.locator('.gs-cell-rendered').textContent()).toBe('日本語');
+});
+
 test('rendered cell', async ({ page }) => {
   const largeEditor = page.locator('.gs-formula-bar textarea');
   await go(page, 'basic-renderer--render-to-kanji');

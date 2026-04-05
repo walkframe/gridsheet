@@ -243,6 +243,28 @@ export class Sheet implements UserSheet {
   private addressCaches: Map<Id, Address> = new Map();
   /** @internal */
   private lastChangedAddresses: Address[] = [];
+  /** @internal — stored cell defaults from initialize() for lazy cell resolution */
+  private _initCells: CellsByAddressType | null = null;
+  /** @internal — default cell config from cells['default'] / cells['*'] */
+  private _common: CellType | undefined;
+  /** @internal — default column config from cells['defaultCol'] / cells['*C'] */
+  private _commonCol: CellType | undefined;
+  /** @internal — default row config from cells['defaultRow'] / cells['*R'] */
+  private _commonRow: CellType | undefined;
+  /** @internal — deferred matrices from buildInitialCells (large datasets) */
+  private _initMatrices: { [baseAddress: string]: any[][] } | null = null;
+  /** @internal — flattenAs key for deferred matrices */
+  private _initFlattenAs: string | undefined;
+  /** @internal — parsed base points for each matrix key, cached once */
+  private _matrixBases: { baseY: number; baseX: number; rows: number; cols: number }[] = [];
+  /** @internal — raw matrix references keyed by base address for O(1) lookup */
+  private _matrixByBase: { baseY: number; baseX: number; matrix: any[][] }[] = [];
+  /** @internal — precomputed column letters for lazy ID row creation */
+  private _colLetters: string[] = [];
+  /** @internal — tracks custom row heights (row y → height) for arithmetic offset computation */
+  private _rowHeightOverrides: Map<number, number> = new Map();
+  /** @internal — tracks filtered rows for offset computation */
+  private _filteredRows: Set<number> = new Set();
 
   constructor({ limits = {}, name, registry = createRegistry({}) }: Props) {
     this.idMatrix = [];
@@ -295,10 +317,11 @@ export class Sheet implements UserSheet {
    * @internal
    */
   private _pointToRawCell({ y, x }: PointType): CellType | undefined {
-    const id = this.idMatrix[y]?.[x];
+    const id = this.getId({ y, x });
     if (id == null) {
       return undefined;
     }
+    this._ensureCellPopulated(y, x, id);
     return this.registry.data[id];
   }
 
@@ -322,14 +345,11 @@ export class Sheet implements UserSheet {
    * (i.e. an async formula that hasn't resolved yet).
    */
   public hasPendingCells(): boolean {
-    const numRows = this.numRows;
-    const numCols = this.numCols;
-    for (let y = 1; y <= numRows; y++) {
-      for (let x = 1; x <= numCols; x++) {
-        const cell = this.getCell({ y, x }, { resolution: 'RESOLVED' });
-        if (Pending.is(cell?.value)) {
-          return true;
-        }
+    // Only check materialized cells — unmaterialized cells can't have Pending values
+    for (const id of Object.keys(this.registry.data)) {
+      const cell = this.registry.data[id];
+      if (Pending.is(cell?.value)) {
+        return true;
       }
     }
     return false;
@@ -391,7 +411,7 @@ export class Sheet implements UserSheet {
     // (undefined is stripped by JSON.stringify, causing undo to silently no-op in environments
     // that serialize/deserialize state such as StackBlitz hot-reload).
     for (let col = 1; col <= numCols; col++) {
-      const id = this.idMatrix[0]?.[col];
+      const id = this.getId({ y: 0, x: col });
       if (id != null) {
         snapshot[id] = { filter: this.registry.data[id]?.filter ?? null };
       }
@@ -401,7 +421,7 @@ export class Sheet implements UserSheet {
     // (undefined is stripped by JSON.stringify, causing undo to silently no-op in environments
     // that serialize/deserialize state such as StackBlitz hot-reload).
     for (let y = 1; y <= numRows; y++) {
-      const id = this.idMatrix[y]?.[0];
+      const id = this.getId({ y, x: 0 });
       if (id != null) {
         snapshot[id] = { filtered: this.registry.data[id]?.filtered ?? false };
       }
@@ -504,8 +524,10 @@ export class Sheet implements UserSheet {
       const wasFiltered = !!rowCell.filtered;
       if (shouldFilter) {
         rowCell.filtered = true;
+        this._filteredRows.add(y);
       } else {
         delete rowCell.filtered;
+        this._filteredRows.delete(y);
       }
       if (wasFiltered !== shouldFilter) {
         changedAddresses.push(p2a({ y, x: 0 }));
@@ -593,6 +615,7 @@ export class Sheet implements UserSheet {
     }
 
     // Save row references before rearranging (rows are re-slotted, not mutated).
+    this._materializeIdMatrix();
     const matrixSnapshot = this.idMatrix.slice();
 
     for (const [oldY, newY] of Object.entries(sortedRowMapping)) {
@@ -631,6 +654,7 @@ export class Sheet implements UserSheet {
       }
     }
 
+    this._materializeIdMatrix();
     const savedRows: Ids[] = [];
     for (let i = 0; i < newOrder.length; i++) {
       savedRows.push(this.idMatrix[newOrder[i]]);
@@ -721,8 +745,7 @@ export class Sheet implements UserSheet {
     if (cells[0] == null) {
       cells[0] = { width: HEADER_WIDTH, height: HEADER_HEIGHT };
     }
-    const auto = getMaxSizesFromCells(cells);
-    const changedTime = Date.now();
+    const auto = getMaxSizesFromCells(cells, (cells as any).__userKeys);
     this.area = {
       top: 1,
       left: 1,
@@ -730,18 +753,20 @@ export class Sheet implements UserSheet {
       right: auto.numCols,
     };
 
-    // make idMatrix beforehand
-    for (let y = 0; y < auto.numRows + 1; y++) {
-      const ids: Ids = [];
-      this.idMatrix.push(ids);
-      for (let x = 0; x < auto.numCols + 1; x++) {
-        const id = this._generateId();
-        ids.push(id);
-        const address = p2a({ y, x });
-        this.addressCaches.set(id, address);
-      }
+    // Pre-allocate idMatrix with undefined slots (O(1) — no ID generation)
+    this.idMatrix = new Array(auto.numRows + 1);
+
+    // Precompute column letters for lazy row creation
+    this._colLetters = [];
+    for (let x = 0; x <= auto.numCols; x++) {
+      this._colLetters[x] = x2c(x);
     }
-    Object.keys(cells).forEach((address) => {
+
+    // Expand range addresses (e.g. 'A1:C3') into individual cells.
+    // Use __userKeys (set by buildInitialCells) to iterate only user-provided
+    // addresses, avoiding an O(matrixCells) scan of the entire cells object.
+    const addressKeys: string[] = (cells as any).__userKeys ?? Object.keys(cells);
+    addressKeys.forEach((address) => {
       if (address === DEFAULT_KEY || address === DEFAULT_COL_KEY || address === DEFAULT_ROW_KEY) {
         return;
       }
@@ -758,87 +783,65 @@ export class Sheet implements UserSheet {
       });
     });
 
-    const common = cells?.[DEFAULT_KEY];
-    const commonCol = cells?.[DEFAULT_COL_KEY];
-    const commonRow = cells?.[DEFAULT_ROW_KEY];
-    if (commonCol?.width != null) {
-      this.defaultColWidth = commonCol.width;
-    }
-    if (commonRow?.height != null) {
-      this.defaultRowHeight = commonRow.height;
-    }
-    for (let y = 0; y < auto.numRows + 1; y++) {
-      const rowId = y2r(y);
-      for (let x = 0; x < auto.numCols + 1; x++) {
-        const id = this.getId({ y, x });
-        const colId = x2c(x);
-        let stacked: CellType;
-        if (y === 0 && x > 0) {
-          // Column header: defaultCol as base (width, style, etc.),
-          // then 'A' layout props (width, label, no style), then 'A0' overrides.
-          const colDefault = cells?.[colId];
-          const { style: _cs, ...colDefaultLayout } = colDefault ?? {};
-          const headerCell = cells?.[colId + '0'];
-          stacked = {
-            ...commonCol,
-            ...colDefaultLayout,
-            ...headerCell,
-            ...Sheet._stack(commonCol, headerCell),
-          } as CellType;
-        } else if (x === 0 && y > 0) {
-          // Row header: defaultRow as base (height, style, etc.),
-          // then '1' layout props (height, no style), then '01' overrides.
-          const rowDefault = cells?.[rowId];
-          const { style: _rs, ...rowDefaultLayout } = rowDefault ?? {};
-          const headerCell = cells?.['0' + rowId];
-          stacked = {
-            ...commonRow,
-            ...rowDefaultLayout,
-            ...headerCell,
-            ...Sheet._stack(commonRow, headerCell),
-          } as CellType;
-        } else if (y === 0 && x === 0) {
-          // Corner cell (y=0, x=0): excluded from all defaults to keep headerHeight correct.
-          const cell = cells?.['0'];
-          stacked = { ...cell, ...Sheet._stack(cell) } as CellType;
-        } else {
-          // Data cell: 'A' applies to all column-A cells, '1' to all row-1 cells.
-          const address = p2a({ y, x });
-          const rowDefault = cells?.[rowId];
-          const colDefault = cells?.[colId];
-          const cell = cells?.[address];
-          stacked = {
-            ...common,
-            ...rowDefault,
-            ...colDefault,
-            ...cell,
-            ...Sheet._stack(common, rowDefault, colDefault, cell),
-          } as CellType;
-        }
+    // Store defaults for lazy cell resolution
+    this._common = cells?.[DEFAULT_KEY];
+    this._commonCol = cells?.[DEFAULT_COL_KEY];
+    this._commonRow = cells?.[DEFAULT_ROW_KEY];
+    this._initCells = cells;
 
-        if (stacked?.value?.startsWith?.('=') && (stacked?.formulaEnabled ?? true)) {
-          this.idsToBeIdentified.push(id);
-        }
-        if (y === 0) {
-          if (stacked.width == null) {
-            stacked.width = DEFAULT_WIDTH;
-          }
-        } else if (x === 0) {
-          if (stacked.height == null) {
-            stacked.height = DEFAULT_HEIGHT;
-          }
-        } else {
-          delete stacked.height;
-          delete stacked.width;
-          delete stacked.label;
-        }
-
-        const policy = this.policies[stacked.policy ?? ''] ?? this.defaultPolicy;
-        stacked = policy.deserializeValue(stacked.value, stacked) ?? {};
-        this.registry.systems[id] = { id, changedTime, sheetId: this.id };
-        this.registry.data[id] = stacked;
+    // Store deferred matrices for lazy cell value lookup
+    const deferredMatrices = (cells as any).__matrices;
+    if (deferredMatrices) {
+      this._initMatrices = deferredMatrices;
+      this._initFlattenAs = (cells as any).__flattenAs;
+      this._matrixByBase = [];
+      for (const baseAddress of Object.keys(deferredMatrices)) {
+        const { y: baseY, x: baseX } = a2p(baseAddress);
+        this._matrixByBase.push({ baseY, baseX, matrix: deferredMatrices[baseAddress] });
       }
     }
+    if (this._commonCol?.width != null) {
+      this.defaultColWidth = this._commonCol.width;
+    }
+    if (this._commonRow?.height != null) {
+      this.defaultRowHeight = this._commonRow.height;
+    }
+
+    // Eagerly populate header row (y=0) and header column (x=0) only.
+    // All data cells are lazily populated on first access.
+    this._ensureIdRow(0);
+    for (let x = 0; x <= auto.numCols; x++) {
+      const id = this.idMatrix[0][x];
+      this._ensureCellPopulated(0, x, id);
+    }
+
+    // Eagerly populate cells that have explicit data or formulas in the input.
+    // This ensures formulas are identified for resolveFormulas().
+    const explicitAddresses = addressKeys;
+    for (const address of explicitAddresses) {
+      if (address === DEFAULT_KEY || address === DEFAULT_COL_KEY || address === DEFAULT_ROW_KEY) {
+        continue;
+      }
+      const point = a2p(address);
+      const { y, x } = point;
+      // Skip headers (already done), skip column/row-level defaults (like 'A' or '1')
+      if ((y === 0 && x === 0) || y === 0 || x === 0) {
+        continue;
+      }
+      // Skip column-only or row-only addresses (e.g. 'A' has x>0,y=0 or '1' has y>0,x=0)
+      if (y <= 0 || x <= 0) {
+        continue;
+      }
+      if (y > auto.numRows || x > auto.numCols) {
+        continue;
+      }
+      const row = this._ensureIdRow(y);
+      const id = row[x];
+      if (id != null) {
+        this._ensureCellPopulated(y, x, id);
+      }
+    }
+
     this.status = 1; // initialized
     this.registry.sheetIdsByName[this.name] = this.id;
   }
@@ -871,17 +874,179 @@ export class Sheet implements UserSheet {
     return (this.registry.cellHead++).toString();
   }
 
+  /**
+   * Lazily generate the ID row for the given y-coordinate.
+   * If the row already exists, returns it immediately.
+   * @internal
+   */
+  private _ensureIdRow(y: number): Ids {
+    let row = this.idMatrix[y];
+    if (row != null) {
+      return row;
+    }
+    const numCols = this.area.right;
+    row = [];
+    for (let x = 0; x <= numCols; x++) {
+      const id = this._generateId();
+      row.push(id);
+      const colLetter = this._colLetters[x] || x2c(x);
+      this.addressCaches.set(id, y === 0 ? `${colLetter}0` : x === 0 ? `0${y}` : `${colLetter}${y}`);
+    }
+    this.idMatrix[y] = row;
+    return row;
+  }
+
+  /**
+   * Ensure that registry.data and registry.systems exist for a given cell.
+   * Performs lazy cell stacking using stored initialization defaults.
+   * @internal
+   */
+  private _ensureCellPopulated(y: number, x: number, id: Id): void {
+    if (this.registry.data[id] != null) {
+      return;
+    }
+    const cells = this._initCells;
+    const changedTime = Date.now();
+    let stacked: CellType;
+
+    if (y === 0 && x > 0) {
+      const colId = this._colLetters[x] || x2c(x);
+      const colDefault = cells?.[colId];
+      const { style: _cs, ...colDefaultLayout } = colDefault ?? {};
+      const headerCell = cells?.[colId + '0'];
+      stacked = {
+        ...this._commonCol,
+        ...colDefaultLayout,
+        ...headerCell,
+        ...Sheet._stack(this._commonCol, headerCell),
+      } as CellType;
+    } else if (x === 0 && y > 0) {
+      const rowId = y2r(y);
+      const rowDefault = cells?.[rowId];
+      const { style: _rs, ...rowDefaultLayout } = rowDefault ?? {};
+      const headerCell = cells?.['0' + rowId];
+      stacked = {
+        ...this._commonRow,
+        ...rowDefaultLayout,
+        ...headerCell,
+        ...Sheet._stack(this._commonRow, headerCell),
+      } as CellType;
+    } else if (y === 0 && x === 0) {
+      const cell = cells?.['0'];
+      stacked = { ...cell, ...Sheet._stack(cell) } as CellType;
+    } else {
+      const colId = this._colLetters[x] || x2c(x);
+      const rowId = y2r(y);
+      const address = `${colId}${rowId}`;
+      const rowDefault = cells?.[rowId];
+      const colDefault = cells?.[colId];
+      let cell = cells?.[address];
+      // Resolve value from deferred matrices if cell has no explicit value
+      if ((cell == null || !('value' in cell)) && this._matrixByBase.length > 0) {
+        for (const { baseY, baseX, matrix } of this._matrixByBase) {
+          const my = y - baseY;
+          const mx = x - baseX;
+          if (my >= 0 && my < matrix.length && mx >= 0 && mx < matrix[my].length) {
+            const val = matrix[my][mx];
+            let matrixCell: CellType;
+            if (this._initFlattenAs) {
+              matrixCell = { [this._initFlattenAs]: val };
+            } else {
+              matrixCell = val as CellType;
+            }
+            cell = cell ? { ...matrixCell, ...cell } : matrixCell;
+            break;
+          }
+        }
+      }
+      stacked = {
+        ...this._common,
+        ...rowDefault,
+        ...colDefault,
+        ...cell,
+        ...Sheet._stack(this._common, rowDefault, colDefault, cell),
+      } as CellType;
+    }
+
+    if (stacked?.value?.startsWith?.('=') && (stacked?.formulaEnabled ?? true)) {
+      this.idsToBeIdentified.push(id);
+    }
+    if (y === 0) {
+      if (stacked.width == null) {
+        stacked.width = DEFAULT_WIDTH;
+      }
+    } else if (x === 0) {
+      if (stacked.height == null) {
+        stacked.height = DEFAULT_HEIGHT;
+      }
+      // Track non-default row heights for arithmetic offset computation
+      if (stacked.height !== (this.defaultRowHeight || DEFAULT_HEIGHT)) {
+        this._rowHeightOverrides.set(y, stacked.height);
+      }
+      if (stacked.filtered) {
+        this._filteredRows.add(y);
+      }
+    } else {
+      delete stacked.height;
+      delete stacked.width;
+      delete stacked.label;
+    }
+
+    const policy = this.policies[stacked.policy ?? ''] ?? this.defaultPolicy;
+    stacked = policy.deserializeValue(stacked.value, stacked) ?? {};
+    this.registry.systems[id] = { id, changedTime, sheetId: this.id };
+    this.registry.data[id] = stacked;
+  }
+
+  /**
+   * Materialize all lazy ID rows. Call this before operations that need the full
+   * idMatrix (e.g. .flat(), .map(), .slice() for sort/move/undo/redo).
+   * @internal
+   */
+  private _materializeIdMatrix(): void {
+    for (let y = 0; y < this.idMatrix.length; y++) {
+      if (this.idMatrix[y] == null) {
+        this._ensureIdRow(y);
+      }
+    }
+  }
+
+  /**
+   * Compute the absolute top offset for a given row using arithmetic + overrides.
+   * Avoids iterating all rows — O(overrides) instead of O(numRows).
+   * @internal
+   */
+  public getOffsetTop(y: number): number {
+    const headerH = this.headerHeight;
+    const defaultH = this.defaultRowHeight || DEFAULT_HEIGHT;
+    // Base offset assuming all rows have default height
+    let offset = headerH + (y - 1) * defaultH;
+    // Apply overrides for rows before y
+    for (const [oy, h] of this._rowHeightOverrides) {
+      if (oy < y) {
+        offset += h - defaultH;
+      }
+    }
+    // Subtract filtered rows before y
+    for (const fy of this._filteredRows) {
+      if (fy < y) {
+        const h = this._rowHeightOverrides.get(fy) ?? defaultH;
+        offset -= h;
+      }
+    }
+    return offset;
+  }
+
   public getRectSize({ top, left, bottom, right }: AreaType): RectType {
-    // Use System.offsetLeft / System.offsetTop stored on header cells for O(1) lookup.
-    // offsetLeft on (y=0, x) = absolute left of column x
-    // offsetTop on (y, x=0) = absolute top of row y
     const l = left || 1;
     const t = top || 1;
 
+    // Column offsets: read from pre-computed offsetLeft on header cells
     const rw = this.registry.systems[this.getId({ y: 0, x: right })]?.offsetLeft ?? 0;
     const lw = this.registry.systems[this.getId({ y: 0, x: l })]?.offsetLeft ?? 0;
-    const rh = this.registry.systems[this.getId({ y: bottom, x: 0 })]?.offsetTop ?? 0;
-    const th = this.registry.systems[this.getId({ y: t, x: 0 })]?.offsetTop ?? 0;
+    // Row offsets: compute arithmetically
+    const rh = this.getOffsetTop(bottom);
+    const th = this.getOffsetTop(t);
 
     const width = Math.max(0, rw - lw);
     const height = Math.max(0, rh - th);
@@ -894,8 +1059,9 @@ export class Sheet implements UserSheet {
     const numRows = this.numRows;
     const headerW = this.headerWidth;
     const headerH = this.headerHeight;
+    const defaultH = this.defaultRowHeight || DEFAULT_HEIGHT;
 
-    // Write offsetLeft into column-header cells (y=0, x=1..numCols)
+    // Write offsetLeft into column-header cells (y=0, x=1..numCols) — small loop
     let accW = 0;
     for (let x = 1; x <= numCols; x++) {
       const cell = this.getCell({ y: 0, x }, { resolution: 'SYSTEM' });
@@ -908,22 +1074,22 @@ export class Sheet implements UserSheet {
     }
     this.totalWidth = headerW + accW;
 
-    // Write offsetTop into row-header cells (y=1..numRows, x=0)
-    let accH = 0;
-    let fullH = 0;
-    for (let y = 1; y <= numRows; y++) {
-      const cell = this.getCell({ y, x: 0 }, { resolution: 'SYSTEM' });
-      const h = cell?.height || this.defaultRowHeight || DEFAULT_HEIGHT;
-      const rowSys = this.registry.systems[this.getId({ y, x: 0 })];
-      if (rowSys != null) {
-        rowSys.offsetTop = headerH + accH;
+    // Compute totalHeight arithmetically — O(overrides) instead of O(numRows)
+    let totalOverrideDiff = 0;
+    let filteredHeightSum = 0;
+    for (const [y, h] of this._rowHeightOverrides) {
+      if (y >= 1 && y <= numRows) {
+        totalOverrideDiff += h - defaultH;
       }
-      if (!cell?.filtered) {
-        accH += h;
-      }
-      fullH += h;
     }
-    this.totalHeight = headerH + accH;
+    for (const fy of this._filteredRows) {
+      if (fy >= 1 && fy <= numRows) {
+        const h = this._rowHeightOverrides.get(fy) ?? defaultH;
+        filteredHeightSum += h;
+      }
+    }
+    const fullH = numRows * defaultH + totalOverrideDiff;
+    this.totalHeight = headerH + fullH - filteredHeightSum;
     this.fullHeight = headerH + fullH;
   }
 
@@ -980,6 +1146,7 @@ export class Sheet implements UserSheet {
       return { y: p.y + slideY, x: p.x + slideX, absCol, absRow };
     }
 
+    this._materializeIdMatrix();
     for (let y = 0; y < this.idMatrix.length; y++) {
       const ids = this.idMatrix[y];
       for (let x = 0; x < ids.length; x++) {
@@ -1012,6 +1179,7 @@ export class Sheet implements UserSheet {
 
   /** @internal */
   private _warmAddressCaches() {
+    this._materializeIdMatrix();
     for (let y = 0; y < this.idMatrix.length; y++) {
       const row = this.idMatrix[y];
       for (let x = 0; x < row.length; x++) {
@@ -1023,6 +1191,10 @@ export class Sheet implements UserSheet {
   /** @internal */
   public getId(point: PointType) {
     const { y, x } = point;
+    if (y >= 0 && x >= 0 && y <= this.area.bottom && x <= this.area.right) {
+      return this._ensureIdRow(y)[x];
+    }
+    // Out-of-bounds: return from raw array (undefined at runtime, preserves original type)
     return this.idMatrix[y]?.[x];
   }
 
@@ -1032,10 +1204,12 @@ export class Sheet implements UserSheet {
     if (y === -1 || x === -1) {
       return undefined;
     }
-    const id = this.idMatrix[y]?.[x];
+    const id = this.getId(point);
     if (id == null) {
       return undefined;
     }
+    // Lazy cell population
+    this._ensureCellPopulated(y, x, id);
     const cell = this.registry.data[id];
     if (cell == null) {
       return undefined;
@@ -1494,6 +1668,12 @@ export class Sheet implements UserSheet {
     }
 
     // Snapshot idMatrix before flush
+    if (!reverse) {
+      srcSheet._materializeIdMatrix();
+      if (srcSheet !== dstSheet) {
+        dstSheet._materializeIdMatrix();
+      }
+    }
     const srcSnapshot = !reverse ? srcSheet.idMatrix.flat() : null;
     const dstSnapshot = !reverse && srcSheet !== dstSheet ? dstSheet.idMatrix.flat() : null;
 
@@ -1501,10 +1681,10 @@ export class Sheet implements UserSheet {
     Object.assign(this.registry.data, wireWrites);
     // Then flush idMatrix writes
     for (const { y, x, id } of idWritesSrc) {
-      srcSheet.idMatrix[y][x] = id;
+      srcSheet._ensureIdRow(y)[x] = id;
     }
     for (const { y, x, id } of idWritesDst) {
-      dstSheet.idMatrix[y][x] = id;
+      dstSheet._ensureIdRow(y)[x] = id;
     }
 
     // Update lastChangedAddresses
@@ -1974,6 +2154,7 @@ export class Sheet implements UserSheet {
 
     const preserver = new ReferencePreserver(this);
     const ys: number[] = [];
+    this._materializeIdMatrix();
     const backup = this.idMatrix.map((ids) => [...ids]); // backup before deletion
 
     for (let yi = y; yi < y + numRows; yi++) {
@@ -2063,7 +2244,7 @@ export class Sheet implements UserSheet {
         row.push(id);
         const cell = this.getCell({ y: i, x: baseX }, { resolution: 'SYSTEM' });
         const copied = this._copyCellLayout(cell);
-        this.idMatrix[i].splice(x, 0, id);
+        this._ensureIdRow(i).splice(x, 0, id);
         this.registry.data[id] = { ...copied };
         this.registry.systems[id] = { id, sheetId: this.id, changedTime };
       }
@@ -2122,6 +2303,7 @@ export class Sheet implements UserSheet {
 
     const preserver = new ReferencePreserver(this);
     const xs: number[] = [];
+    this._materializeIdMatrix();
     const backup = this.idMatrix.map((ids) => [...ids]); // backup before deletion
 
     for (let xi = x; xi < x + numCols; xi++) {
@@ -2223,7 +2405,7 @@ export class Sheet implements UserSheet {
     if (cell == null) {
       // Use raw cell from registry so cell.value is the original formula string.
       // getCell(raise=false) would replace cell.value with undefined, losing the formula.
-      const id = this.idMatrix[point.y]?.[point.x];
+      const id = this.getId(point);
       cell = id != null ? this.registry.data[id] : undefined;
     }
     if (cell == null) {
@@ -2242,7 +2424,7 @@ export class Sheet implements UserSheet {
         return '=' + lexer.display({ sheet: this });
       }
       try {
-        const id = this.idMatrix[point.y]?.[point.x];
+        const id = this.getId(point);
         const solved = solveFormula({ value: raw, sheet: this, point, raise: true, resolution, at: id });
         const value = stripSheet({ value: solved, raise: false });
         return policy.serialize({ value, cell, sheet: this, point });
@@ -2310,6 +2492,26 @@ export class Sheet implements UserSheet {
       this.registry.data[id] = merged;
       this.clearDependencies(id);
       this.processFormula(merged.value, { dependency: id });
+
+      // Track row height overrides and filtered state
+      const address = this.addressCaches.get(id);
+      if (address) {
+        const p = a2p(address);
+        if (p.x === 0 && p.y > 0) {
+          const defaultH = this.defaultRowHeight || DEFAULT_HEIGHT;
+          const h = merged.height ?? defaultH;
+          if (h !== defaultH) {
+            this._rowHeightOverrides.set(p.y, h);
+          } else {
+            this._rowHeightOverrides.delete(p.y);
+          }
+          if (merged.filtered) {
+            this._filteredRows.add(p.y);
+          } else {
+            this._filteredRows.delete(p.y);
+          }
+        }
+      }
     });
     this._warmAddressCaches();
     const addresses: Address[] = [];
@@ -2346,6 +2548,7 @@ export class Sheet implements UserSheet {
           dstSheet._applyDiff(history.diffBefore, false);
         }
         const { rows } = matrixShape({ matrix: history.idMatrix });
+        dstSheet._materializeIdMatrix();
         dstSheet.idMatrix.splice(history.y, rows);
         dstSheet.area.bottom -= rows;
         break;
@@ -2355,6 +2558,7 @@ export class Sheet implements UserSheet {
           dstSheet._applyDiff(history.diffBefore, false);
         }
         const { cols } = matrixShape({ matrix: history.idMatrix });
+        dstSheet._materializeIdMatrix();
         dstSheet.idMatrix.forEach((row: string[]) => {
           row.splice(history.x, cols);
         });
@@ -2363,6 +2567,7 @@ export class Sheet implements UserSheet {
       }
       case 'REMOVE_ROWS': {
         const { ys, deleted } = history;
+        dstSheet._materializeIdMatrix();
         ys.forEach((y, i) => {
           dstSheet.idMatrix.splice(y, 0, deleted[i]);
         });
@@ -2372,6 +2577,7 @@ export class Sheet implements UserSheet {
       }
       case 'REMOVE_COLS': {
         const { xs, deleted } = history;
+        dstSheet._materializeIdMatrix();
         dstSheet.idMatrix.forEach((row: string[], i: number) => {
           for (let j = 0; j < xs.length; j++) {
             row.splice(xs[j], 0, deleted[i][j]);
@@ -2391,6 +2597,7 @@ export class Sheet implements UserSheet {
         break;
       }
       case 'SORT_ROWS': {
+        dstSheet._materializeIdMatrix();
         const snapshotIds = dstSheet.idMatrix.flat();
         dstSheet._sortRowMapping(history.sortedRowMapping, true);
         const preserver = new ReferencePreserver(dstSheet);
@@ -2440,6 +2647,7 @@ export class Sheet implements UserSheet {
           dstSheet._applyDiff(history.diffAfter, false);
         }
         const { rows } = matrixShape({ matrix: history.idMatrix });
+        dstSheet._materializeIdMatrix();
         dstSheet.idMatrix.splice(history.y, 0, ...history.idMatrix);
         dstSheet.area.bottom += rows;
         break;
@@ -2449,6 +2657,7 @@ export class Sheet implements UserSheet {
           dstSheet._applyDiff(history.diffAfter, false);
         }
         const { cols } = matrixShape({ matrix: history.idMatrix });
+        dstSheet._materializeIdMatrix();
         dstSheet.idMatrix.map((row: string[], i: number) => {
           row.splice(history.x, 0, ...history.idMatrix[i]);
         });
@@ -2482,6 +2691,7 @@ export class Sheet implements UserSheet {
         break;
       }
       case 'SORT_ROWS': {
+        dstSheet._materializeIdMatrix();
         const snapshotIds = dstSheet.idMatrix.flat();
         dstSheet._sortRowMapping(history.sortedRowMapping, false);
         const preserver = new ReferencePreserver(dstSheet);

@@ -182,7 +182,6 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
       const store = choosingContext.store;
       if (sheet) {
         const rawTable = (sheet as any).__raw__ || sheet;
-        const idMatrix = rawTable.idMatrix;
 
         // When a header cell is selected, use y=0 (top header) or x=0 (left header)
         const isTopHeaderSelecting = store.topHeaderSelecting;
@@ -199,8 +198,8 @@ export const Debugger: React.FC<DebuggerProps> = ({ book, intervalMs = 500 }) =>
           registryCellAddress = `header:${store.choosing.y}`;
         }
 
-        if (pos && idMatrix[pos.y]) {
-          const id = idMatrix[pos.y][pos.x];
+        if (pos) {
+          const id = rawTable.getId(pos);
           if (id) {
             registryCellData = registry.data[id];
             registrySystemData = registry.systems[id] ?? null;

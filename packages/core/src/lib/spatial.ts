@@ -203,11 +203,30 @@ export const buildInitialCells = ({
   flattenAs?: keyof CellType;
   matrices?: MatricesByAddress<any>;
 } = {}) => {
-  buildCells({ cells, flattenAs, matrices });
+  const userKeys = Object.keys(cells);
+  // Only eagerly build cells for small matrices. For large ones, defer to
+  // Sheet._ensureCellPopulated via __matrices so we avoid creating millions
+  // of dictionary entries up front.
+  const totalMatrixCells = Object.values(matrices).reduce((sum, m) => sum + m.length * (m[0]?.length ?? 0), 0);
+  const EAGER_THRESHOLD = 100_000;
+  const deferred = totalMatrixCells > EAGER_THRESHOLD;
+  if (!deferred) {
+    buildCells({ cells, flattenAs, matrices });
+  } else {
+    // Attach matrices for lazy resolution in Sheet.initialize()
+    Object.defineProperty(cells, '__matrices', { value: matrices, configurable: true });
+    Object.defineProperty(cells, '__flattenAs', { value: flattenAs, configurable: true });
+  }
   const { numRows, numCols } = Object.assign({ numRows: 1, numCols: 1 }, ensured);
   const rightBottom = p2a({ y: numRows, x: numCols });
   if (cells[rightBottom] == null) {
     cells[rightBottom] = {};
+  }
+  // Only attach __userKeys for deferred matrices. When buildCells ran eagerly,
+  // all keys are already in cells so Object.keys(cells) is correct.
+  if (deferred) {
+    userKeys.push(rightBottom);
+    Object.defineProperty(cells, '__userKeys', { value: userKeys, configurable: true });
   }
   return cells;
 };
@@ -224,24 +243,36 @@ export const buildCells = <T>({
   Object.keys(matrices).forEach((baseAddress) => {
     const matrix = matrices[baseAddress];
     const { y: baseY, x: baseX } = a2p(baseAddress);
-    matrix.forEach((row, y) => {
-      row.forEach((e, x) => {
-        const id = p2a({ y: baseY + y, x: baseX + x });
+    const colLetters: string[] = [];
+    for (let y = 0; y < matrix.length; y++) {
+      const row = matrix[y];
+      const rowStr = String(baseY + y);
+      for (let x = 0; x < row.length; x++) {
+        if (colLetters[x] == null) {
+          colLetters[x] = x2c(baseX + x);
+        }
+        const id = colLetters[x] + rowStr;
         if (flattenAs) {
           const cell = cells[id];
-          cells[id] = { [flattenAs]: e, ...cell };
+          if (cell) {
+            if (!(flattenAs in cell)) {
+              cell[flattenAs] = row[x];
+            }
+          } else {
+            cells[id] = { [flattenAs]: row[x] };
+          }
         } else {
-          cells[id] = e as CellType;
+          cells[id] = row[x] as CellType;
         }
-      });
-    });
+      }
+    }
   });
   return cells;
 };
 
-export const getMaxSizesFromCells = (cells: CellsByAddressType = {}) => {
+export const getMaxSizesFromCells = (cells: CellsByAddressType = {}, keys?: string[]) => {
   let [lastY, lastX] = [0, 0];
-  Object.keys(cells).forEach((address) => {
+  (keys ?? Object.keys(cells)).forEach((address) => {
     if (address === DEFAULT_KEY || address === DEFAULT_COL_KEY || address === DEFAULT_ROW_KEY) {
       return;
     }

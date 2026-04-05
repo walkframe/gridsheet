@@ -109,6 +109,29 @@
   100% { transform: rotate(360deg); }
 }
 
+/* Grid-wide loading overlay — appended to .gs-main via DOM during heavy operations */
+.gs-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  pointer-events: all;
+}
+.gs-loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e0e0e0;
+  border-top-color: #0077ff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
 @keyframes gs-pending-slide {
   0% { left: -40%; }
   100% { left: 100%; }

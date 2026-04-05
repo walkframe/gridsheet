@@ -39,7 +39,7 @@ module.exports = {
       { find: /^@gridsheet\/core\/(.*)$/, replacement: path.resolve(__dirname, '../../core/src/$1') },
       { find: '@gridsheet/core', replacement: path.resolve(__dirname, '../../core/src/index.ts') },
       { find: '@gridsheet/preact-core', replacement: path.resolve(__dirname, '../../preact-core/dist/index.js') },
-      { find: '@gridsheet/functions', replacement: path.resolve(__dirname, '../../functions/dist/index.js') },
+      { find: '@gridsheet/functions', replacement: path.resolve(__dirname, '../../functions/src/index.ts') },
     ];
     return config;
   },

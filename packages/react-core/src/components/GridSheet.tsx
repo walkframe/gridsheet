@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useReducer, createRef } from 'react';
+import { useEffect, useState, useRef, useReducer, createRef, useCallback } from 'react';
 import type { CellsByAddressType, SheetHandle, StoreHandle, OptionsType, Props, StoreType } from '../types';
 import {
   DEFAULT_HEIGHT,
@@ -11,7 +11,7 @@ import {
   DEFAULT_ROW_KEY,
 } from '@gridsheet/core';
 import { Context } from '../store';
-import { reducer as defaultReducer } from '../store/actions';
+import { reducer as defaultReducer, isMutationAction } from '../store/actions';
 import { Editor } from './Editor';
 import { StoreObserver } from './StoreObserver';
 import { Resizer } from './Resizer';
@@ -164,8 +164,9 @@ export function GridSheet({
         first = false;
         return;
       }
-      setSheetHeight(options.sheetHeight ? Math.min(options.sheetHeight, el.clientHeight) : el.clientHeight);
-      setSheetWidth(options.sheetWidth ? Math.min(options.sheetWidth, el.clientWidth) : el.clientWidth);
+      const root = rootRef.current;
+      setSheetHeight(root ? Math.min(el.clientHeight, root.clientHeight) : el.clientHeight);
+      setSheetWidth(root ? Math.min(el.clientWidth, root.clientWidth) : el.clientWidth);
     });
     ro.observe(el);
     return () => ro.disconnect();
@@ -181,8 +182,32 @@ export function GridSheet({
     }
   }, [options.sheetWidth]);
 
+  const [loading, setLoading] = useState(false);
+
+  // Remove loading after React re-render completes
+  useEffect(() => {
+    if (loading) {
+      setLoading(false);
+    }
+  });
+
+  const wrappedDispatch = useCallback(
+    ((action: { type: number; value: any }) => {
+      if (!isMutationAction(action.type)) {
+        (dispatch as any)(action);
+        return;
+      }
+      setLoading(true);
+      // Defer dispatch to next frame so the loading overlay can paint first
+      requestAnimationFrame(() => {
+        (dispatch as any)(action);
+      });
+    }) as typeof dispatch,
+    [dispatch],
+  );
+
   return (
-    <Context.Provider value={{ store, dispatch }}>
+    <Context.Provider value={{ store, dispatch: wrappedDispatch }}>
       <div
         className={`gs-root1 ${registry.ready ? 'gs-initialized' : ''}`}
         ref={rootRef}
@@ -206,8 +231,10 @@ export function GridSheet({
           ref={mainRef}
           style={{
             //width: '100%',
-            maxWidth: (store.sheetReactive.current?.totalWidth || 0) + 2,
-            maxHeight: (store.sheetReactive.current?.fullHeight || 0) + 2,
+            maxWidth: '100%',
+            maxHeight: mainRef.current
+              ? window.innerHeight - mainRef.current.getBoundingClientRect().top
+              : (store.sheetReactive.current?.fullHeight || 0) + 2,
             resize: sheetResize,
             ...style,
           }}
@@ -220,6 +247,11 @@ export function GridSheet({
           <RowMenu />
           <Resizer />
           <Emitter />
+          {loading && (
+            <div className="gs-loading-overlay">
+              <div className="gs-loading-spinner" />
+            </div>
+          )}
         </div>
       </div>
     </Context.Provider>

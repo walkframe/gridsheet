@@ -94,6 +94,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
     functions: sheet?.registry.functions,
   });
 
+  const composingRef = useRef(false);
   const largeInput = largeEditorRef.current;
 
   const handleInput = useCallback((e: React.SyntheticEvent<HTMLTextAreaElement>) => {
@@ -142,6 +143,9 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if ((e.nativeEvent as any).isComposing || composingRef.current) {
+        return;
+      }
       if (e.ctrlKey || !sheet) {
         return true;
       }
@@ -388,6 +392,13 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
           }}
           onKeyDown={handleKeyDown}
           onKeyUp={updateScroll}
+          onCompositionStart={() => {
+            composingRef.current = true;
+          }}
+          onCompositionEnd={(e) => {
+            composingRef.current = false;
+            dispatch(setInputting(e.currentTarget.value));
+          }}
           onScroll={updateScroll}
           onMouseEnter={(e) => {
             dispatch(setEditorHovering(true));
