@@ -256,7 +256,7 @@ export const buildCells = <T>({
           const cell = cells[id];
           if (cell) {
             if (!(flattenAs in cell)) {
-              cell[flattenAs] = row[x];
+              (cell as Record<string, unknown>)[flattenAs] = row[x];
             }
           } else {
             cells[id] = { [flattenAs]: row[x] };
