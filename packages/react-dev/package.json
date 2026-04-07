@@ -50,7 +50,7 @@
     "@types/react-dom": "^16.9.24",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.8.2",
-    "vite": "^6.2.2",
+    "vite": "^6.4.2",
     "vite-plugin-dts": "^4.5.3"
   },
   "dependencies": {
