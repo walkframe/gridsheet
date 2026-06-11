@@ -9,7 +9,10 @@ import { setStore, updateSheet } from '../store/actions';
 import { usePluginContext } from './PluginBase';
 import { Sheet } from '@gridsheet/core';
 
-type StoreObserverProps = OptionsType & {
+type StoreObserverProps = Omit<OptionsType, 'sheetHeight' | 'sheetWidth'> & {
+  // GridSheet always passes the resolved pixel size here, even in string-based fill mode.
+  sheetHeight?: number;
+  sheetWidth?: number;
   sheetName?: string;
   sheetRef?: MutableRefObject<SheetHandle | null>;
   storeRef?: MutableRefObject<StoreHandle | null>;

@@ -312,6 +312,10 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
     }
   }, [
     sheet,
+    // The Sheet instance is mutated in place, so its identity stays stable across structural
+    // changes (insert/remove rows & cols, resize, sort, filter). Depend on its monotonic version
+    // so the overlay redraws when the grid layout shifts; otherwise the old box stays misaligned.
+    sheet?.currentVersion,
     tabularRef,
     choosing,
     selectingZone,

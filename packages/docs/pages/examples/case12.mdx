@@ -1,0 +1,57 @@
+import Case12 from './case12.component';
+
+# Filling the Parent Element (Responsive Sizing)
+
+By default `GridSheet` sizes itself to its content (capped at sensible defaults). To make it
+**fill its parent element** instead, pass a CSS string — most commonly `'100%'` — to
+`sheetWidth` / `sheetHeight`. The sheet then stretches to the parent and re-measures its pixel
+size automatically via a `ResizeObserver`, so it stays responsive when the parent changes size.
+
+<Case12 />
+
+## Implementation Guide
+
+<a href="https://github.com/walkframe/gridsheet/tree/master/packages/docs/pages/examples/case12.component.tsx" target="_blank" rel="noopener noreferrer" style={{display: 'inline-block', background: '#007bff', color: 'white', padding: '8px 16px', textDecoration: 'none', borderRadius: '4px', fontWeight: '500', margin: '10px 0'}}>📄 View Source Code</a>
+
+### `sheetWidth` / `sheetHeight` accept numbers or CSS strings
+
+| Value type | Behavior |
+| --- | --- |
+| `number` | Fixed pixel size (e.g. `sheetHeight: 350`). |
+| `string` | Passed through as a CSS dimension and the sheet fills its parent (e.g. `'100%'`, `'80vh'`, `'calc(100% - 40px)'`). The rendered pixel size is measured automatically. |
+
+```tsx
+<GridSheet
+  initialCells={initialCells}
+  options={{
+    sheetWidth: '100%',
+    sheetHeight: '100%',
+  }}
+/>
+```
+
+### Give the parent a height
+
+Width usually resolves on its own, but a percentage **height** only works when the parent has a
+resolved height. Wrap the sheet in a container with an explicit (or flex/grid-derived) height:
+
+```tsx
+<div style={{ width: '100%', height: 320 }}>
+  <GridSheet
+    initialCells={initialCells}
+    options={{ sheetWidth: '100%', sheetHeight: '100%' }}
+  />
+</div>
+```
+
+Use `100vh` (or `calc(100vh - <header>)`) for a full-viewport layout, or place the sheet inside a
+flex/grid cell that already has a height.
+
+### How it works
+
+In string (fill) mode the root container becomes a flex column, the inner sheet area takes the
+remaining space below the formula bar, and a `ResizeObserver` feeds the measured pixel size back to
+the table. No CSS overrides or `!important` rules are required — when the parent in the demo above
+is resized, the sheet recomputes its visible rows and columns on the fly.
+
+When a numeric size is provided instead, the sheet keeps that fixed pixel size as before.

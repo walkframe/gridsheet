@@ -151,8 +151,16 @@ export function GridSheet({
     embedStyle();
   }, []);
 
-  const [sheetHeight, setSheetHeight] = useState(options?.sheetHeight || estimateSheetHeight(initialCells));
-  const [sheetWidth, setSheetWidth] = useState(options?.sheetWidth || estimateSheetWidth(initialCells));
+  // When sheetWidth/sheetHeight is a string, the sheet stretches to its parent (fill mode)
+  // and the rendered pixel size is measured via ResizeObserver instead of being fixed.
+  const fillWidth = typeof options.sheetWidth === 'string';
+  const fillHeight = typeof options.sheetHeight === 'string';
+  const [sheetHeight, setSheetHeight] = useState(
+    typeof options?.sheetHeight === 'number' ? options.sheetHeight : estimateSheetHeight(initialCells),
+  );
+  const [sheetWidth, setSheetWidth] = useState(
+    typeof options?.sheetWidth === 'number' ? options.sheetWidth : estimateSheetWidth(initialCells),
+  );
   useEffect(() => {
     const el = mainRef.current;
     if (!el) {
@@ -162,7 +170,10 @@ export function GridSheet({
     const ro = new ResizeObserver(() => {
       if (first) {
         first = false;
-        return;
+        // In fill mode we want the initial measurement; otherwise keep the provided/estimated size.
+        if (!fillWidth && !fillHeight) {
+          return;
+        }
       }
       const root = rootRef.current;
       setSheetHeight(root ? Math.min(el.clientHeight, root.clientHeight) : el.clientHeight);
@@ -170,14 +181,14 @@ export function GridSheet({
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [fillWidth, fillHeight]);
   useEffect(() => {
-    if (options.sheetHeight) {
+    if (typeof options.sheetHeight === 'number') {
       setSheetHeight(options.sheetHeight);
     }
   }, [options.sheetHeight]);
   useEffect(() => {
-    if (options.sheetWidth) {
+    if (typeof options.sheetWidth === 'number') {
       setSheetWidth(options.sheetWidth);
     }
   }, [options.sheetWidth]);
@@ -215,6 +226,17 @@ export function GridSheet({
         data-mode={mode}
         data-rows={store.sheetReactive.current?.numRows ?? 0}
         data-cols={store.sheetReactive.current?.numCols ?? 0}
+        style={
+          fillWidth || fillHeight
+            ? {
+                // inline-flex (when width isn't filled) keeps the prior shrink-to-content width.
+                display: fillWidth ? 'flex' : 'inline-flex',
+                flexDirection: 'column',
+                ...(fillWidth ? { width: options.sheetWidth as string } : null),
+                ...(fillHeight ? { height: options.sheetHeight as string } : null),
+              }
+            : undefined
+        }
       >
         <div className="gs-flash-overlay" ref={flashRef} />
         <ScrollHandle style={{ position: 'fixed', top: 0, left: 0 }} />
@@ -230,11 +252,17 @@ export function GridSheet({
           className={`gs-main ${className || ''}`}
           ref={mainRef}
           style={{
-            //width: '100%',
+            ...(fillWidth ? { width: '100%' } : null),
             maxWidth: '100%',
-            maxHeight: mainRef.current
-              ? window.innerHeight - mainRef.current.getBoundingClientRect().top
-              : (store.sheetReactive.current?.fullHeight || 0) + 2,
+            // In fill-height mode the parent's height is the limit (flex:1 fills the remaining
+            // space below the formula bar); otherwise cap at the viewport bottom as before.
+            ...(fillHeight
+              ? { flex: 1, minHeight: 0, maxHeight: '100%' }
+              : {
+                  maxHeight: mainRef.current
+                    ? window.innerHeight - mainRef.current.getBoundingClientRect().top
+                    : (store.sheetReactive.current?.fullHeight || 0) + 2,
+                }),
             resize: sheetResize,
             ...style,
           }}

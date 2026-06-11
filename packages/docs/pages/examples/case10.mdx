@@ -2,7 +2,7 @@ import Case10 from './case10.component';
 
 # Inventory Management (Advanced Events)
 
-This example demonstrates a real-world inventory management dashboard built with GridSheet. It highlights how to use event handlers—such as `onChange`, `onRemoveRows`, `onRemoveCols`, `onInsertRows`, and `onInsertCols`—to track user-driven edits, manage inventory changes, and log detailed activity. The sheet's current state is also shown as a TSV dump, making it easy to export or inspect the data.
+This example demonstrates a real-world inventory management dashboard built with GridSheet. It combines event-driven activity logging, custom cell renderers (stock indicators, category badges, currency formatting), formula-based calculations, and a fixed summary row — all in a single interactive sheet.
 
 <Case10 />
 
@@ -61,7 +61,6 @@ const convertToTSV = (sheet: UserSheet): string => {
         .map((cell) => {
           if (cell === null || cell === undefined) return '';
           const s = String(cell);
-          // Escape tabs and newlines within cell values
           return s.replace(/\t/g, ' ').replace(/\n/g, ' ');
         })
         .join('\t'),
@@ -71,6 +70,64 @@ const convertToTSV = (sheet: UserSheet): string => {
 ```
 
 Call this inside `onInit` and `onChange` and store it in state to keep the TSV display populated initially and in sync with every edit.
+
+### Formula-based Calculations and Read-only Columns
+
+Each product row computes its total value via a formula (`=D1*E1`). Summary rows use `SUM`, `COUNTA`, and `COUNTIF` to aggregate totals, item counts, and low-stock alerts.
+
+```tsx
+matrices: {
+  A1: [
+    [null, 'Laptop Pro X1', 'Electronics', 15, 1299.99, '=D1*E1'],
+    // ...
+  ],
+  B22: [['TOTAL', '', '=SUM(D1:D21)', '', '=SUM(F1:F21)']],
+  B23: [['Items', '', '=COUNTA(B1:B21)']],
+  B24: [['Low Stock', '', '=COUNTIF(D1:D21,"<=10")']],
+},
+```
+
+Formula columns are made read-only with `prevention: operations.Write`, so users cannot accidentally overwrite computed values.
+
+### Styled Headers and Fixed Summary Rows with `makeBorder`
+
+`makeBorder` generates individual CSS border properties. Combine it with background colors for professional header and summary styling.
+
+```tsx
+const summaryBorder = makeBorder({ top: '3px double #34495e' });
+
+const headerStyle = {
+  backgroundColor: '#2c3e50',
+  color: '#ffffff',
+  fontWeight: 'bold',
+  fontSize: '11px',
+};
+```
+
+Summary rows use `sortFixed` and `filterFixed` to stay visible regardless of sorting or filtering:
+
+```tsx
+'022': { sortFixed: true, filterFixed: true },
+```
+
+### Currency Formatting with `ThousandSeparatorPolicyMixin`
+
+Combine a custom `CurrencyPolicyMixin` with the built-in `ThousandSeparatorPolicyMixin` for formatted currency display:
+
+```tsx
+const CurrencyPolicyMixin: PolicyMixinType = {
+  renderNumber({ value }: RenderProps<number>) {
+    return (
+      <span style={{ fontFamily: 'monospace', fontSize: '11px' }}>
+        ${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      </span>
+    );
+  },
+};
+
+// In useSpellbook:
+currency: new Policy({ mixins: [CurrencyPolicyMixin, ThousandSeparatorPolicyMixin] }),
+```
 
 ### `renderNumber` for Color-coded Stock Indicators
 
@@ -99,7 +156,7 @@ const StockPolicyMixin: PolicyMixinType = {
 ```tsx
 const DeleteButtonPolicyMixin: PolicyMixinType = {
   renderNull({ value, point, apply, sheet }: RenderProps<null | undefined>) {
-    if (point.y < 1) return null; // Skip the header row
+    if (point.y < 1) return null;
     return (
       <button
         onClick={(e) => {
@@ -177,11 +234,9 @@ const CategoryPolicyMixin: PolicyMixinType = {
 };
 ```
 
-The fallback `'#95a5a6'` (grey) handles any category not present in the map, so new categories degrade gracefully.
-
 ### Composing Multiple Mixins with Named Policies
 
-Each column gets its own `Policy` composed from a single mixin. Pass all named policies to `useSpellbook` under the `policies` key:
+Each column gets its own `Policy` composed from one or more mixins. Pass all named policies to `useSpellbook` under the `policies` key:
 
 ```tsx
 const book = useSpellbook({
@@ -189,6 +244,7 @@ const book = useSpellbook({
     stock:    new Policy({ mixins: [StockPolicyMixin] }),
     category: new Policy({ mixins: [CategoryPolicyMixin] }),
     delete:   new Policy({ mixins: [DeleteButtonPolicyMixin] }),
+    currency: new Policy({ mixins: [CurrencyPolicyMixin, ThousandSeparatorPolicyMixin] }),
   },
   onChange: ({ sheet }) => { ... },
   onRemoveRows: ({ sheet, ys }) => { ... },

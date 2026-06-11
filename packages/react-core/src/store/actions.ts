@@ -1206,9 +1206,39 @@ class RemoveRowsAction<T extends { numRows: number; y: number; operator?: Operat
       }),
     });
 
+    // Move the selection to the adjacent row that shifted into the deleted position
+    // (clamped to the last row), skipping filtered rows so it stays visible.
+    const numRows2 = sheet.numRows;
+    const numCols2 = sheet.numCols;
+    let adjY = Math.max(1, Math.min(y, numRows2));
+    if (sheet.isRowFiltered(adjY)) {
+      let found = -1;
+      for (let yy = adjY; yy <= numRows2; yy++) {
+        if (!sheet.isRowFiltered(yy)) {
+          found = yy;
+          break;
+        }
+      }
+      if (found === -1) {
+        for (let yy = adjY; yy >= 1; yy--) {
+          if (!sheet.isRowFiltered(yy)) {
+            found = yy;
+            break;
+          }
+        }
+      }
+      if (found !== -1) {
+        adjY = found;
+      }
+    }
+
     return {
       ...store,
       sheetReactive: { current: sheet },
+      selectingZone: { startY: adjY, startX: 1, endY: adjY, endX: numCols2 },
+      choosing: { y: adjY, x: 1 },
+      leftHeaderSelecting: true,
+      topHeaderSelecting: false,
     };
   }
 }
@@ -1241,9 +1271,26 @@ class RemoveColsAction<T extends { numCols: number; x: number; operator?: Operat
       }),
     });
 
+    // Move the selection to the adjacent column that shifted into the deleted position
+    // (clamped to the last column). choosing.y lands on the first visible row.
+    const numCols2 = sheet.numCols;
+    const numRows2 = sheet.numRows;
+    const adjX = Math.max(1, Math.min(x, numCols2));
+    let choosingY = 1;
+    for (let yy = 1; yy <= numRows2; yy++) {
+      if (!sheet.isRowFiltered(yy)) {
+        choosingY = yy;
+        break;
+      }
+    }
+
     return {
       ...store,
       sheetReactive: { current: sheet },
+      selectingZone: { startY: 1, startX: adjX, endY: numRows2, endX: adjX },
+      choosing: { y: choosingY, x: adjX },
+      leftHeaderSelecting: false,
+      topHeaderSelecting: true,
     };
   }
 }

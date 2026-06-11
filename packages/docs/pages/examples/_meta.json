@@ -27,9 +27,12 @@
     "title": "Case 9: Security & Data Protection"
   },
   "case10": {
-    "title": "Case 10: Project Management with Event Handlers"
+    "title": "Case 10: Inventory Management with Events & Formulas"
   },
   "case11": {
     "title": "Case 11: GitHub Repo Comparison (Async)"
+  },
+  "case12": {
+    "title": "Case 12: Filling the Parent Element (Responsive Sizing)"
   }
 }

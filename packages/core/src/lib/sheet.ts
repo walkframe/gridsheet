@@ -1037,6 +1037,77 @@ export class Sheet implements UserSheet {
     return offset;
   }
 
+  /**
+   * Re-key the row-metadata caches after rows are removed at [y, y+numRows).
+   * These maps are keyed by absolute row number, so deletions must drop the removed
+   * keys and shift later keys down — otherwise stale entries corrupt getOffsetTop().
+   * @internal
+   */
+  private _shiftRowMetaForRemove(y: number, numRows: number): void {
+    const heights = new Map<number, number>();
+    for (const [k, v] of this._rowHeightOverrides) {
+      if (k < y) {
+        heights.set(k, v);
+      } else if (k >= y + numRows) {
+        heights.set(k - numRows, v);
+      }
+    }
+    this._rowHeightOverrides = heights;
+
+    const filtered = new Set<number>();
+    for (const k of this._filteredRows) {
+      if (k < y) {
+        filtered.add(k);
+      } else if (k >= y + numRows) {
+        filtered.add(k - numRows);
+      }
+    }
+    this._filteredRows = filtered;
+  }
+
+  /**
+   * Re-key the row-metadata caches after numRows are inserted at y, shifting keys >= y up.
+   * @internal
+   */
+  private _shiftRowMetaForInsert(y: number, numRows: number): void {
+    const heights = new Map<number, number>();
+    for (const [k, v] of this._rowHeightOverrides) {
+      heights.set(k < y ? k : k + numRows, v);
+    }
+    this._rowHeightOverrides = heights;
+
+    const filtered = new Set<number>();
+    for (const k of this._filteredRows) {
+      filtered.add(k < y ? k : k + numRows);
+    }
+    this._filteredRows = filtered;
+  }
+
+  /**
+   * (Re)seed row-metadata for the rows at [y, y+numRows) from their current header cells.
+   * Used after rows are added (insert / undo-remove / redo-insert) so non-default heights
+   * and filtered state are reflected immediately rather than only on the next lazy read.
+   * @internal
+   */
+  private _seedRowMeta(y: number, numRows: number): void {
+    const defaultH = this.defaultRowHeight || DEFAULT_HEIGHT;
+    for (let i = 0; i < numRows; i++) {
+      const yy = y + i;
+      const id = this.getId({ y: yy, x: 0 });
+      const cell = id ? this.registry.data[id] : undefined;
+      if (cell?.height != null && cell.height !== defaultH) {
+        this._rowHeightOverrides.set(yy, cell.height);
+      } else {
+        this._rowHeightOverrides.delete(yy);
+      }
+      if (cell?.filtered) {
+        this._filteredRows.add(yy);
+      } else {
+        this._filteredRows.delete(yy);
+      }
+    }
+  }
+
   public getRectSize({ top, left, bottom, right }: AreaType): RectType {
     const l = left || 1;
     const t = top || 1;
@@ -2102,6 +2173,10 @@ export class Sheet implements UserSheet {
     }
     this.idMatrix.splice(y, 0, ...rows);
     this.area.bottom += numRows;
+    // Shift existing row-metadata up, then seed the inserted rows from their copied layout
+    // so non-default heights / filtered state are reflected immediately (not just on next read).
+    this._shiftRowMetaForInsert(y, numRows);
+    this._seedRowMeta(y, numRows);
 
     this._pushHistory({
       applyed: true,
@@ -2179,6 +2254,8 @@ export class Sheet implements UserSheet {
       deleted.unshift(row[0]);
     });
     this.area.bottom -= ys.length;
+    // Keep row-metadata caches (keyed by absolute row number) aligned with the new layout.
+    this._shiftRowMetaForRemove(y, numRows);
 
     const diffBefore = preserver.resolveDependents('removeRows');
 
@@ -2551,6 +2628,7 @@ export class Sheet implements UserSheet {
         dstSheet._materializeIdMatrix();
         dstSheet.idMatrix.splice(history.y, rows);
         dstSheet.area.bottom -= rows;
+        dstSheet._shiftRowMetaForRemove(history.y, rows);
         break;
       }
       case 'INSERT_COLS': {
@@ -2572,6 +2650,9 @@ export class Sheet implements UserSheet {
           dstSheet.idMatrix.splice(y, 0, deleted[i]);
         });
         dstSheet.area.bottom += ys.length;
+        const y0 = Math.min(...ys);
+        dstSheet._shiftRowMetaForInsert(y0, ys.length);
+        dstSheet._seedRowMeta(y0, ys.length);
         this._applyDiff(history.diffBefore, false);
         break;
       }
@@ -2650,6 +2731,8 @@ export class Sheet implements UserSheet {
         dstSheet._materializeIdMatrix();
         dstSheet.idMatrix.splice(history.y, 0, ...history.idMatrix);
         dstSheet.area.bottom += rows;
+        dstSheet._shiftRowMetaForInsert(history.y, rows);
+        dstSheet._seedRowMeta(history.y, rows);
         break;
       }
       case 'INSERT_COLS': {

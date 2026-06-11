@@ -135,6 +135,7 @@ Each cell can be configured with the following properties:
 **Important Notes:**
 - **Serialization**: Cell values (except `system` field) are designed to be serializable. Avoid storing non-serializable objects like class instances.
 - **System Field**: The `system` field contains values used by the system to display correct values. Do not modify this field manually.
+- **Header cell borders**: Do not set `border-width` on header cells (row 0 / column 0). Header cell dimensions are used to calculate the editor overlay position, so adding border width causes the overlay to shift out of alignment.
 
 ### Fixed Rows (`sortFixed` / `filterFixed`)
 

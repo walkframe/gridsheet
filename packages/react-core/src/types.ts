@@ -71,8 +71,11 @@ import type { SheetLimits } from '@gridsheet/core';
 export type Policies = { [s: string]: PolicyType };
 
 export type OptionsType = {
-  sheetHeight?: number;
-  sheetWidth?: number;
+  // A number is treated as a fixed pixel size.
+  // A string is passed through as a CSS dimension (e.g. '100%', '80vh', 'calc(100% - 40px)'),
+  // letting the sheet fill its parent; the actual pixel size is measured via ResizeObserver.
+  sheetHeight?: number | string;
+  sheetWidth?: number | string;
   sheetResize?: CSSProperties['resize'];
   editingOnEnter?: boolean;
   showFormulaBar?: boolean;
