@@ -80,6 +80,8 @@ type Props = {
   functions?: FunctionMapping;
   name?: string;
   registry?: Registry;
+  /** Opt into eager resolution for this sheet (see {@link Sheet.eager}). */
+  eager?: boolean;
 };
 
 const noFilter: CellFilter = () => true;
@@ -177,6 +179,7 @@ export interface UserSheet {
   hasActiveFilters(): boolean;
   hasPendingCells(): boolean;
   waitForPending(): Promise<void>;
+  resolveAll(): number;
   getLastChangedAddresses(): Address[];
   getSerializedValue(props: { point: PointType; cell?: CellType; resolution?: Resolution }): string;
 }
@@ -216,6 +219,18 @@ export class Sheet implements UserSheet {
   /** @internal */
   public id: number = 0;
   public name: string = '';
+  /**
+   * Opt into eager resolution for this sheet. When enabled, every formula cell
+   * is solved regardless of the visible range, so off-screen async formulas fire
+   * and fill in instead of staying unevaluated until scrolled into view (see
+   * {@link Sheet.resolveAll}).
+   *
+   * OFF by default to preserve virtualization. Whether to resolve everything is a
+   * property of the dataset (how many rows, how costly the async side effects),
+   * not of any individual function — so it is scoped per sheet and opted into
+   * explicitly rather than inferred from the formulas a sheet happens to contain.
+   */
+  public eager: boolean = false;
   /** @internal */
   public prevName: string = '';
   /** @internal */
@@ -266,9 +281,10 @@ export class Sheet implements UserSheet {
   /** @internal — tracks filtered rows for offset computation */
   private _filteredRows: Set<number> = new Set();
 
-  constructor({ limits = {}, name, registry = createRegistry({}) }: Props) {
+  constructor({ limits = {}, name, registry = createRegistry({}), eager = false }: Props) {
     this.idMatrix = [];
     this.changedTime = Date.now();
+    this.eager = eager;
     this._limits = {
       minRows: limits.minRows ?? 1,
       maxRows: limits.maxRows ?? -1,
@@ -396,6 +412,60 @@ export class Sheet implements UserSheet {
    */
   public getLastChangedAddresses(): Address[] {
     return this.lastChangedAddresses;
+  }
+
+  /**
+   * Eagerly fire every async formula cell in this sheet, ignoring the visible
+   * range.
+   *
+   * GridSheet is virtualized: normally only cells the UI renders get solved, so
+   * an off-screen `=…` formula that calls an async function never fires. Only
+   * async cells need this — sync formulas have no side effects and resolve when
+   * read (e.g. by serialization), whereas an async cell must be *fired* and given
+   * time to settle before its value can be read. `resolveAll()` therefore walks
+   * the async-formula index ({@link Registry.asyncFormulaCells}) and solves each
+   * one, which fires it through the usual machinery: it resolves, populates the
+   * per-cell async cache, and triggers a re-render via `transmit()`. Sync cells
+   * that depend on those results resolve normally on the next read.
+   *
+   * Cells already resolved (async-cache hit) or in flight (Pending) are not
+   * re-fired — solving is a cache hit for them — so repeated calls converge and
+   * are cheap. After awaiting {@link waitForPending}, serialization helpers such
+   * as `toValueMatrix` return resolved values for off-screen cells too.
+   *
+   * This is the building block behind the opt-in `eager` sheet option; call it
+   * directly to resolve on demand without enabling eager mode.
+   *
+   * @returns the number of async formula cells visited (for diagnostics/tests).
+   */
+  public resolveAll(): number {
+    const registry = this.registry;
+    let visited = 0;
+    // Snapshot: solving a cell may add new async cells (e.g. spilled formulas)
+    // to the index, and we prune stale ids while iterating.
+    for (const id of Array.from(registry.asyncFormulaCells)) {
+      const cell = registry.data[id];
+      // Prune ids that are gone or no longer hold a formula.
+      if (cell == null || typeof cell.value !== 'string' || cell.value.charAt(0) !== '=') {
+        registry.asyncFormulaCells.delete(id);
+        continue;
+      }
+      // The index is registry-wide; only resolve cells owned by this sheet.
+      if (registry.systems[id]?.sheetId !== this.id) {
+        continue;
+      }
+      const { y, x } = this.getPointById(id);
+      if (y < 0 || x < 0) {
+        // Detached id (e.g. removed row/col not yet pruned from the index).
+        registry.asyncFormulaCells.delete(id);
+        continue;
+      }
+      // getCell(RESOLVED) fires main()/awaitAndSave on a cache miss and yields
+      // the cached value / Pending otherwise, so resolved cells are not re-fired.
+      this.getCell({ y, x }, { resolution: 'RESOLVED', raise: false });
+      visited++;
+    }
+    return visited;
   }
 
   /**
@@ -690,10 +760,42 @@ export class Sheet implements UserSheet {
         lexer.tokenize(idMap);
         lexer.identify({ ...props, sheet: this });
         lexer.dependencyIds.forEach((id) => this.addDependency(id, props.dependency));
+        // Index this cell only if its formula calls an async function: those are
+        // the cells eager resolution must fire (sync formulas resolve on read).
+        if (props.dependency != null) {
+          if (this._formulaHasAsync(lexer)) {
+            this.registry.asyncFormulaCells.add(props.dependency);
+          } else {
+            this.registry.asyncFormulaCells.delete(props.dependency);
+          }
+        }
         return '=' + lexer.identifiedFormula;
       }
     }
+    // No longer a formula (e.g. a formula cell overwritten with a literal): drop
+    // it from the index so resolveAll() stops visiting it.
+    if (props.dependency != null) {
+      this.registry.asyncFormulaCells.delete(props.dependency);
+    }
     return value;
+  }
+
+  /**
+   * Whether a tokenized formula calls at least one async function, decided via
+   * the function class's static `isAsync` flag (no instantiation). Drives the
+   * async-formula index that {@link resolveAll} walks.
+   * @internal
+   */
+  private _formulaHasAsync(lexer: Lexer): boolean {
+    for (const token of lexer.tokens) {
+      if (token.type === 'FUNCTION') {
+        const fn = this.registry.functions[String(token.entity).toLowerCase()];
+        if ((fn as unknown as { isAsync?: boolean })?.isAsync) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /** @internal */

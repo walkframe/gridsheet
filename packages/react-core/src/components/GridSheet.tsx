@@ -83,11 +83,12 @@ export function GridSheet({
       sheetName = `Sheet${sheetId}`;
       console.debug('GridSheet: sheetName is not provided, using default name:', sheetName);
     }
-    const { limits, contextMenu, rowMenu, colMenu } = options;
+    const { limits, contextMenu, rowMenu, colMenu, eager } = options;
     const sheet = new Sheet({
       limits,
       name: sheetName,
       registry,
+      eager,
     });
     sheet.id = sheetId;
     registry.sheetIdsByName[sheetName] = sheetId;

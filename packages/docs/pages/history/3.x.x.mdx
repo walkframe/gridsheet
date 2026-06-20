@@ -2,6 +2,18 @@
 
 The latest major version of GridSheet introducing comprehensive async/await support and enhanced filtering capabilities.
 
+## 3.1.0 - Eager Resolution
+
+### 🚀 Opt-in Eager Resolution
+- **`options.eager` / `Sheet.eager`**: Opt into resolving every async formula cell regardless of the visible range. Because GridSheet is virtualized, off-screen async cells normally do not fire until scrolled into view; eager resolution fires them after each update so off-screen rows fill in automatically. Off by default to preserve virtualization, and scoped per sheet (one shared book can drive both eager and lazy sheets).
+- **`Sheet.resolveAll(): number`**: New public method to fire all off-screen async cells on demand (e.g. right before saving) and return the number of async cells visited. Pair with `waitForPending()` to await settlement, after which serialization (`toValueMatrix`, etc.) returns resolved values for off-screen rows too.
+- **Targets only async cells**: Sync formulas resolve on read and are skipped; already-resolved cells are not re-fired, so repeated resolution converges and stays cheap. Async cells are tracked via an incremental index, so cost scales with the number of async cells, not the total cell count.
+
+### 🔧 Technical Improvements
+- **`BaseFunction.isAsync` (static)**: A static async marker readable from the function class without instantiating it, used to detect which formulas need eager resolution.
+
+This release is fully backward compatible: all new behavior is opt-in and off by default.
+
 ## 3.0.0 - Major Release
 
 ### 🚀 Async Function Support

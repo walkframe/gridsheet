@@ -79,6 +79,13 @@ export type OptionsType = {
   sheetResize?: CSSProperties['resize'];
   editingOnEnter?: boolean;
   showFormulaBar?: boolean;
+  /**
+   * Opt into eager resolution for this sheet: solve every formula cell
+   * regardless of the visible range, so off-screen async formulas fire instead
+   * of waiting to be scrolled into view. OFF by default to preserve
+   * virtualization. See `Sheet.eager` / `Sheet.resolveAll()`.
+   */
+  eager?: boolean;
   limits?: SheetLimits;
   mode?: ModeType;
   contextMenu?: ContextMenuItemDescriptor[];

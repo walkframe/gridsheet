@@ -140,6 +140,18 @@ export const Tabular = () => {
     return preventSafariBounce(el);
   }, [sheetReactive]);
 
+  // Eager resolution: virtualization only renders/solves visible cells, so
+  // off-screen async formulas would never fire. When the sheet opts in via
+  // `eager`, fire every off-screen async cell after each update. resolveAll()
+  // is idempotent — resolved/pending cells are cache hits — so it converges
+  // once all async formulas have settled.
+  useEffect(() => {
+    if (!sheet || !sheet.eager || !sheet.registry.ready) {
+      return;
+    }
+    sheet.resolveAll();
+  }, [sheet, sheetReactive]);
+
   const mergedRefs: RefPaletteType = {
     ...palette,
     ...(sheet ? sheet.registry.paletteBySheetName[sheet.name] : {}),

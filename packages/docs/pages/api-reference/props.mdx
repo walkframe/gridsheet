@@ -15,6 +15,44 @@ The GridSheet component accepts the following props to configure its behavior an
 | `className` | `string` | No | CSS class name for styling |
 | `style` | `CSSProperties` | No | Inline styles for the component |
 
+## Options (`OptionsType`)
+
+`options` configures per-sheet behavior. Common fields include:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `sheetHeight` | `number \| string` | auto | Viewport height. A number is pixels; a string is a CSS dimension (e.g. `'80vh'`). |
+| `sheetWidth` | `number \| string` | auto | Viewport width. |
+| `sheetResize` | `CSSProperties['resize']` | – | Whether the user can resize the sheet. |
+| `editingOnEnter` | `boolean` | – | Enter edits the focused cell. |
+| `showFormulaBar` | `boolean` | `true` | Show the formula bar. |
+| `mode` | `'light' \| 'dark'` | `'light'` | Color mode. |
+| `eager` | `boolean` | `false` | Opt into eager resolution for this sheet (see below). |
+
+### `eager`
+
+GridSheet is virtualized, so only cells in the visible range are solved. An **off-screen** cell whose formula calls an async function therefore does not fire until scrolled into view. Set `eager: true` to solve every async formula cell after each update regardless of the visible range, so off-screen rows fill in automatically.
+
+It is off by default to preserve virtualization — eager resolution of async cells can be expensive (side effects, API cost), so committing to "resolve everything" is an explicit, per-sheet decision. The flag is scoped to the sheet (not the book), so one shared book can drive both eager and lazy sheets.
+
+#### Usage
+
+**1. Auto-fill the live grid — just set the flag.** No extra code: off-screen async cells fire in the background as the sheet mounts and changes, so scrolling to them shows resolved values without a loading flash.
+
+```tsx
+<GridSheet book={book} initialCells={cells} options={{ eager: true }} />
+```
+
+**2. Read every resolved value (e.g. to save/export) — await first.** Resolution is asynchronous, so to read off-screen values back you await [`waitForPending()`](/api-reference/sheet) before serializing. This is the one extra step async inherently requires; it is independent of the `eager` flag.
+
+```tsx
+const { sheet } = sheetRef.current;
+await sheet.waitForPending();      // wait until async cells settle
+const all = toValueMatrix(sheet);  // off-screen rows come back resolved too
+```
+
+If you only need full resolution occasionally (e.g. right before saving) rather than continuously, skip the option and call [`sheet.resolveAll()`](/api-reference/sheet) followed by `await sheet.waitForPending()` on demand — that keeps interactive editing fully virtualized and pays the cost only when you ask for it.
+
 ## Initial Cells
 
 The `initialCells` prop defines the starting data and configuration for your spreadsheet. This is where you specify cell values, styles, renderers, policies, and other cell-specific settings.

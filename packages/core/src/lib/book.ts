@@ -54,6 +54,16 @@ export class Registry {
   solvedCaches: Map<Id, any> = new Map();
   /** IDs of non-origin cells that received spilled values (populated in spill(), cleared in clearSolvedCaches()). */
   lastSpilledTargetIds: Set<Id> = new Set();
+  /**
+   * Index of every cell whose formula contains at least one async function call,
+   * maintained by `Sheet.processFormula`. These are the only cells eager
+   * resolution must fire: sync formulas have no side effects and resolve on read,
+   * so `Sheet.resolveAll()` visits just this set instead of scanning the whole
+   * (possibly virtualized) matrix. Registry-wide; each entry's owning sheet is
+   * recoverable via `systems[id].sheetId`. Pruned lazily in `resolveAll()` when a
+   * cell is no longer an async formula.
+   */
+  asyncFormulaCells: Set<Id> = new Set();
   /** Currently in-flight async formula Pending sentinels (keyed by cell ID). */
   asyncPending: Map<string, Pending> = new Map();
   /** In-flight async formulas shared by cache key (for useInflight). */

@@ -147,6 +147,15 @@ When async formulas are used in the spreadsheet:
 - Implement timeout logic for long-running operations
 - Handle errors gracefully to provide better user experience
 
+### Virtualization and Off-Screen Cells
+
+GridSheet is virtualized: only the cells in the visible range are solved. This keeps large sheets fast, but it means an **off-screen** async cell does not fire until you scroll it into view. When you need every row resolved (for example to serialize the whole sheet, or to drive an export), use eager resolution:
+
+- Set [`options.eager`](/api-reference/props) to `true` on a `<GridSheet>` to fire every async cell after each update, regardless of the visible range.
+- Or call [`sheet.resolveAll()`](/api-reference/sheet) on demand (e.g. right before saving), then `await sheet.waitForPending()`.
+
+Only cells that call an async function are fired — sync formulas resolve on read — and already-resolved cells are not re-fired, so it stays cheap. Eager resolution is opt-in because firing every off-screen async cell can be expensive (side effects, API cost).
+
 ## Error Handling
 
 Proper error handling is important for both sync and async formulas:

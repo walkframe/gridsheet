@@ -224,6 +224,13 @@ export class BaseFunction {
   public sheet: Sheet;
   public at: Id;
   static __name = '';
+  /**
+   * Static async marker, readable from the class without instantiating it
+   * (e.g. `registry.functions[name].isAsync`). Lets the formula indexer decide
+   * whether a cell needs eager resolution. Kept in sync with the instance
+   * `isAsync`; `BaseFunctionAsync` flips both to true.
+   */
+  static isAsync = false;
 
   constructor({ args, sheet, at }: FunctionProps) {
     this.args = args.map((a) => {
@@ -545,6 +552,7 @@ export class BaseFunction {
  */
 export class BaseFunctionAsync extends BaseFunction {
   protected isAsync: boolean = true;
+  static isAsync = true;
 }
 
 export type FunctionMapping = { [functionName: string]: typeof BaseFunction };

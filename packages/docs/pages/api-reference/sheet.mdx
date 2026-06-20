@@ -646,6 +646,34 @@ if (sheet.hasActiveFilters()) {
 }
 ```
 
+## Async Resolution
+
+GridSheet is virtualized: normally only the cells the UI renders are solved. That keeps large sheets fast, but it means an **off-screen** cell whose formula calls an async function never fires until you scroll it into view. These methods let you resolve async cells regardless of the visible range.
+
+#### `resolveAll(): number`
+Fires every off-screen async formula cell in this sheet, ignoring the visible range, and returns the number of async cells visited.
+
+Only cells whose formula calls an async function are visited — sync formulas have no side effects and resolve on read, so they are skipped. Cells already resolved (cache hit) or in flight are not re-fired, so repeated calls converge and are cheap. To read the resolved values, await `waitForPending()` afterwards.
+
+```tsx
+if (!sheetRef.current) return;
+const { sheet } = sheetRef.current;
+
+sheet.resolveAll();            // fire all off-screen async cells
+await sheet.waitForPending();  // wait until they settle
+
+// Now serialization returns resolved values for off-screen rows too.
+const matrix = toValueMatrix(sheet);
+```
+
+This is the on-demand building block behind the [`eager`](/api-reference/props) sheet option. Use the option to resolve continuously as the sheet changes, or call `resolveAll()` yourself (e.g. right before saving) to pay the cost only when you need every row materialized.
+
+#### `waitForPending(): Promise<void>`
+Resolves once all in-flight async formula computations have completed and no cell holds a pending value. Resolves immediately if nothing is pending. Useful before reading values, sorting, or filtering so that async results are fully settled.
+
+#### `hasPendingCells(): boolean`
+Returns `true` if any cell currently holds a pending (unresolved) async value.
+
 ## History (Undo/Redo)
 
 #### `undo(): { history: HistoryType | null }`
