@@ -2,6 +2,7 @@
 @light_text_color_selecting: #ffffff;
 @light_border_color: #dddddd;
 @light_cell_color: #f7f7f7;
+@light_canvas_color: #e2e2e2;
 @light_bg_color: #e2e2e2;
 @light_header_color: #efefef;
 @light_header_text_color: #666666;
@@ -10,53 +11,75 @@
 @light_header_choosing_color: #bbbbbb;
 @light_formulabar_bg_color: #efefef;
 @light_formulabar_text_color: #555555;
+@light_accent_color: #0077ff;
+
+// Design tokens for light mode. Emitted as CSS custom properties so consumers can
+// retheme by overriding e.g. `.gs-root1 { --gs-accent: #f97316 }`. The defaults are
+// wrapped in :where() so they carry zero specificity: any consumer selector wins,
+// regardless of stylesheet load order, avoiding specificity wars. Default values
+// below reproduce the historical light palette exactly.
+.gs-tokens-light() {
+  --gs-fg: @light_text_color;
+  --gs-muted-fg: @light_formulabar_text_color;
+  --gs-border: @light_border_color;
+  --gs-bg: @light_bg_color;
+  --gs-canvas: @light_canvas_color;
+  --gs-surface: @light_cell_color;
+  --gs-header-bg: @light_header_color;
+  --gs-header-fg: @light_header_text_color;
+  --gs-accent: @light_accent_color;
+}
+
+:where(.gs-root1[data-mode="light"], .gs-editor[data-mode="light"]) {
+  .gs-tokens-light();
+}
 
 .gs-root1[data-mode="light"] {
-  background-color: @light_bg_color;
-  color: @light_text_color;
+  background-color: var(--gs-bg);
+  color: var(--gs-fg);
 
   .gs-main {
-    background-color: @light_bg_color;
-    border-right: solid 1px @light_border_color;
-    border-bottom: solid 1px @light_border_color;
+    background-color: var(--gs-canvas);
+    border-right: solid 1px var(--gs-border);
+    border-bottom: solid 1px var(--gs-border);
   }
   .gs-tabular {
-    background-color: @light_bg_color;
+    background-color: var(--gs-canvas);
   }
   .gs-sheet-body-data {
-    background-color: @light_cell_color;
+    background-color: var(--gs-surface);
   }
   .gs-formula-bar {
-    background-color: @light_formulabar_bg_color;
+    background-color: var(--gs-header-bg);
   }
   .gs-formula-bar-editor-inner {
-    color: @light_formulabar_text_color;
+    color: var(--gs-muted-fg);
   }
   .gs-cell {
-    border: solid 1px @light_border_color;
+    border: solid 1px var(--gs-border);
   }
   .gs-adjuster {
-    background-color: @light_border_color;
+    background-color: var(--gs-border);
   }
   .gs-tabular-inner {
-    background-color: @light_border_color;
+    background-color: var(--gs-border);
   }
 
   .gs-th {
-    background-color: @light_header_color;
-    color: @light_header_text_color;
+    background-color: var(--gs-header-bg);
+    color: var(--gs-header-fg);
   }
   .gs-th-top {
     .gs-th-inner {
-      border-top: solid 1px @light_border_color;
+      border-top: solid 1px var(--gs-border);
     }
-    border-left: solid 1px @light_border_color;
+    border-left: solid 1px var(--gs-border);
   }
   .gs-th-left {
     .gs-th-inner {
-      border-left: solid 1px @light_border_color;
+      border-left: solid 1px var(--gs-border);
     }
-    border-top: solid 1px @light_border_color;
+    border-top: solid 1px var(--gs-border);
   }
   .gs-search-bar {
     color: rgba(0, 0, 0, 0.3);
@@ -66,16 +89,16 @@
 .gs-editor[data-mode="light"] {
   &.gs-editing {
     textarea {
-      caret-color: @light_text_color;
+      caret-color: var(--gs-fg);
     }
     .gs-editor-hl {
-      background-color: @light_cell_color;
-      color: @light_text_color;
+      background-color: var(--gs-surface);
+      color: var(--gs-fg);
     }
   }
   .gs-editor-options {
-    color: @light_text_color;
-    background-color: @light_cell_color;
-    border: solid 1px @light_border_color;
+    color: var(--gs-fg);
+    background-color: var(--gs-surface);
+    border: solid 1px var(--gs-border);
   }
 }
