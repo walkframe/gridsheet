@@ -166,5 +166,19 @@ test.describe('Spill — blocked cases (#REF!)', () => {
     await expect(sheet.locator("[data-address='B2'] .gs-cell-rendered")).toHaveText('2');
     // B3 = spill of B1: A3 is "BLOCK" (string) → "BLOCK"+2 = #VALUE!
     await expect(sheet.locator("[data-address='B3'] .gs-cell-rendered")).toHaveText('#VALUE!');
+
+    // Regression: an empty spill target (D2, never present in initialCells) must be
+    // recognised as spilled even though it is populated lazily *after* spill() runs.
+    // Previously the lazy cell population overwrote the system entry, wiping the
+    // spilledFrom marker — the cell showed its value (3) but the formula bar kept
+    // showing its own address (D2) and stayed editable.
+    await expect(sheet.locator("[data-address='D2'] .gs-cell-rendered")).toHaveText('3');
+    await sheet.locator("[data-address='D2']").click();
+    // Address bar shows the origin (D1), not the spilled cell's own address.
+    await expect(sheet.locator('.gs-selecting-address')).toContainText('D1');
+    // Formula bar is flagged as spilled and shows the spilled value read-only.
+    await expect(sheet.locator('.gs-formula-bar')).toHaveAttribute('data-spill', 'true');
+    await expect(sheet.locator('.gs-formula-bar textarea')).toHaveValue('3');
+    await expect(sheet.locator('.gs-formula-bar textarea')).toHaveAttribute('readonly', '');
   });
 });

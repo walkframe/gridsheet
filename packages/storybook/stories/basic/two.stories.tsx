@@ -17,6 +17,7 @@ const TwoSheet = () => {
     <GridSheet
       book={book}
       options={{
+        matrixAlignment: 'both',
         sheetResize: 'both',
       }}
       initialCells={buildInitialCells({

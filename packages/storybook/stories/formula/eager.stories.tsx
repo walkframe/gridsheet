@@ -104,7 +104,11 @@ const EagerSheets = () => {
             sheetRef={lazyRef}
             sheetName="EagerLazy"
             initialCells={makeCells()}
-            options={{ sheetHeight: VIEWPORT_HEIGHT, sheetWidth: 300 }}
+            options={{
+              matrixAlignment: 'both',
+              sheetHeight: VIEWPORT_HEIGHT,
+              sheetWidth: 300,
+            }}
           />
           <button style={{ marginTop: 8 }} onClick={resolveLazyOnDemand}>
             resolveAll() + waitForPending() → dump
@@ -118,7 +122,12 @@ const EagerSheets = () => {
             book={book}
             sheetName="EagerOn"
             initialCells={makeCells()}
-            options={{ eager: true, sheetHeight: VIEWPORT_HEIGHT, sheetWidth: 300 }}
+            options={{
+              matrixAlignment: 'both',
+              eager: true,
+              sheetHeight: VIEWPORT_HEIGHT,
+              sheetWidth: 300,
+            }}
           />
         </div>
 

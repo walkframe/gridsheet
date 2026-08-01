@@ -124,7 +124,10 @@ const SpillSideBySide: React.FC = () => {
           book={book}
           sheetName="SpillSync"
           initialCells={makeInitialCells('SEQUENCE')}
-          options={{ sheetHeight: 300 }}
+          options={{
+            matrixAlignment: 'both',
+            sheetHeight: 300,
+          }}
         />
       </div>
       <div>
@@ -133,7 +136,10 @@ const SpillSideBySide: React.FC = () => {
           book={book}
           sheetName="SpillAsync"
           initialCells={makeInitialCells('DELAY_SEQUENCE')}
-          options={{ sheetHeight: 300 }}
+          options={{
+            matrixAlignment: 'both',
+            sheetHeight: 300,
+          }}
         />
       </div>
       <Debugger book={book} />
@@ -174,7 +180,10 @@ const SpillBlockedSheet: React.FC = () => {
           },
           ensured: { numRows: 8, numCols: 8 },
         })}
-        options={{ sheetHeight: 300 }}
+        options={{
+          matrixAlignment: 'both',
+          sheetHeight: 300,
+        }}
       />
       <Debugger book={book} />
     </>

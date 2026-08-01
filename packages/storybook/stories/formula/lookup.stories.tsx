@@ -62,7 +62,9 @@ const LookUpSheet = () => {
             ],
           },
         })}
-        options={{}}
+        options={{
+          matrixAlignment: 'both',
+        }}
       />
       <h1>VLOOKUP</h1>
       <div style={{ display: 'flex', flexDirection: 'row', gap: 10, width: '100%' }}>

@@ -322,7 +322,7 @@ export default function BudgetManagement() {
             },
           })}
           options={{
-            sheetHeight: 500,
+            matrixAlignment: 'both',
             sheetWidth: typeof window !== 'undefined' ? Math.min(700, window.innerWidth - 60) : 700,
           }}
         />

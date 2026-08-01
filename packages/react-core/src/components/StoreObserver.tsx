@@ -13,6 +13,8 @@ type StoreObserverProps = Omit<OptionsType, 'sheetHeight' | 'sheetWidth'> & {
   // GridSheet always passes the resolved pixel size here, even in string-based fill mode.
   sheetHeight?: number;
   sheetWidth?: number;
+  fixedWidth?: boolean;
+  fixedHeight?: boolean;
   sheetName?: string;
   sheetRef?: MutableRefObject<SheetHandle | null>;
   storeRef?: MutableRefObject<StoreHandle | null>;
@@ -26,6 +28,8 @@ export const StoreObserver: FC<StoreObserverProps> = ({
   sheetName,
   sheetHeight,
   sheetWidth,
+  fixedWidth,
+  fixedHeight,
   sheetRef,
   storeRef,
   editingOnEnter,
@@ -86,6 +90,9 @@ export const StoreObserver: FC<StoreObserverProps> = ({
       dispatch(setStore({ sheetWidth }));
     }
   }, [sheetWidth]);
+  useEffect(() => {
+    dispatch(setStore({ fixedWidth: !!fixedWidth, fixedHeight: !!fixedHeight }));
+  }, [fixedWidth, fixedHeight]);
   useEffect(() => {
     if (typeof editingOnEnter !== 'undefined') {
       dispatch(setStore({ editingOnEnter }));

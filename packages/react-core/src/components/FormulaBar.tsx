@@ -302,7 +302,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
     return (
       <label className="gs-formula-bar gs-hidden" style={style}>
         <div className="gs-selecting-address"></div>
-        <div className="gs-fx">Fx</div>
+        <div className="gs-fx">fx</div>
         <div className="gs-formula-bar-editor-inner">
           <textarea />
         </div>
@@ -360,7 +360,7 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
     >
       <ScrollHandle style={{ position: 'absolute', left: 0, top: 0, zIndex: 2 }} vertical={-1} />
       <div className="gs-selecting-address">{originAddress != null ? originAddress : address}</div>
-      <div className="gs-fx">Fx</div>
+      <div className="gs-fx">fx</div>
       <div className="gs-formula-bar-editor-inner">
         <div
           className="gs-editor-hl"

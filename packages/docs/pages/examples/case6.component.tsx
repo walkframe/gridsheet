@@ -248,6 +248,7 @@ export default function CustomRendering() {
           },
         })}
         options={{
+          matrixAlignment: 'both',
           sheetWidth: typeof window !== 'undefined' ? Math.min(900, window.innerWidth - 60) : 900,
           sheetHeight: 450,
           limits: { minCols: 7, maxCols: 7, minRows: 5, maxRows: 5 },

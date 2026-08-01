@@ -42,6 +42,7 @@ const DebuggerSheet = () => {
             book={book}
             sheetName={sheetName1}
             options={{
+              matrixAlignment: 'both',
               sheetResize: 'both',
             }}
             initialCells={buildInitialCells({
@@ -67,6 +68,7 @@ const DebuggerSheet = () => {
             book={book}
             sheetName={sheetName2}
             options={{
+              matrixAlignment: 'both',
               sheetResize: 'both',
               mode: 'dark',
             }}

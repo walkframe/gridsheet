@@ -188,7 +188,21 @@ export function ScrollHandle({ style, horizontal = 0, vertical = 0, className = 
     return stopScroll;
   }, [stopScroll]);
 
-  if (!editorRef.current || (!dragging && !autofillDraggingTo)) {
+  // The directional auto-scroll strips (right/bottom/left/top edges) sit on top of the
+  // grid (zIndex). At an edge where there is nothing left to scroll to, such a strip only
+  // gets in the way — e.g. it covers the rightmost column's cells, so dragging the
+  // autofill handle straight down stays over the strip and never reaches the cells below.
+  // Only render a directional strip while it can actually scroll in that direction; the
+  // beyond-edge catch-all handle (horizontal === 0 && vertical === 0) always renders.
+  const t = tabularRef.current;
+  const cannotScrollHere =
+    !!t &&
+    ((horizontal > 0 && t.scrollLeft + t.clientWidth >= t.scrollWidth - 1) ||
+      (horizontal < 0 && t.scrollLeft <= 0) ||
+      (vertical > 0 && t.scrollTop + t.clientHeight >= t.scrollHeight - 1) ||
+      (vertical < 0 && t.scrollTop <= 0));
+
+  if (!editorRef.current || (!dragging && !autofillDraggingTo) || cannotScrollHere) {
     return <div className={`gs-scroll-handle gs-hidden ${className}`} />;
   }
 

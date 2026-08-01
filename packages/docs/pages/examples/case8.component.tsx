@@ -91,6 +91,7 @@ export default function LargeDatasetDemo() {
           sheetName="large-dataset"
           initialCells={initialCells}
           options={{
+            matrixAlignment: 'both',
             sheetHeight,
             sheetWidth,
             sheetResize: 'both',

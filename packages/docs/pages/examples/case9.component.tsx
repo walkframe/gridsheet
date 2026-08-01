@@ -114,6 +114,7 @@ export default function Case9Component() {
       <GridSheet
         book={book}
         options={{
+          matrixAlignment: 'both',
           showFormulaBar: false,
           sheetWidth: 920,
           sheetHeight: 300,

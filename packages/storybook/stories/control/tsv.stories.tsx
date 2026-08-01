@@ -103,6 +103,7 @@ const SheetTSVComponent: React.FC = () => {
               },
             })}
             options={{
+              matrixAlignment: 'both',
               sheetWidth: 300,
               sheetHeight: 300,
             }}

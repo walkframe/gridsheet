@@ -112,7 +112,9 @@ const HeaderSheet = () => {
           },
           ensured: { numRows: 10, numCols: 8 },
         })}
-        options={{}}
+        options={{
+          matrixAlignment: 'both',
+        }}
       />
     </div>
   );

@@ -1,0 +1,84 @@
+// ---- mode: auto — follow the OS / browser color scheme ----
+:where(.gs-root1[data-mode="auto"], .gs-editor[data-mode="auto"]) {
+  .gs-tokens-light();
+}
+@media (prefers-color-scheme: dark) {
+  :where(.gs-root1[data-mode="auto"], .gs-editor[data-mode="auto"]) {
+    .gs-tokens-dark();
+  }
+}
+
+// ---- mode: inherit-light / inherit-dark — transparent, blends into its placement ----
+// The frame / canvas / cell surfaces are transparent so the host background shows through,
+// but everything else (text, grid lines, headers, and — crucially — the portaled editor
+// and menus, which live outside .gs-root1 and cannot inherit the host's currentColor) uses
+// a concrete light or dark palette. Pick the variant matching the host background's
+// lightness. --gs-editor-surface stays opaque so the editing cell / dropdowns remain
+// readable and cover the selection overlay beneath them.
+:where(.gs-root1[data-mode="inherit-light"], .gs-editor[data-mode="inherit-light"]) {
+  .gs-tokens-light();
+  --gs-bg: transparent;
+  --gs-canvas: transparent;
+  --gs-surface: transparent;
+  // The formula bar is transparent so the chrome blends into the host too. The sticky
+  // grid headers (.gs-th) get a frosted-glass treatment separately below — a fully
+  // transparent header would let cells show through as they scroll under it.
+  --gs-header-bg: transparent;
+}
+:where(.gs-root1[data-mode="inherit-dark"], .gs-editor[data-mode="inherit-dark"]) {
+  .gs-tokens-dark();
+  --gs-bg: transparent;
+  --gs-canvas: transparent;
+  --gs-surface: transparent;
+  --gs-header-bg: transparent;
+}
+
+// The grid-line backing (.gs-tabular-inner / .gs-adjuster use --gs-border) would show
+// through the transparent cells as a solid fill; keep those transparent in the inherit
+// modes so the cells blend into the host background. Grid lines still come from the cell
+// borders.
+.gs-root1[data-mode="inherit-light"],
+.gs-root1[data-mode="inherit-dark"] {
+  .gs-tabular-inner,
+  .gs-adjuster {
+    background-color: transparent;
+  }
+}
+
+// Sticky grid headers must occlude the cells that scroll beneath them. A translucent tint
+// plus a backdrop blur (frosted glass) keeps the header blended into the host background
+// while hiding the scrolling content, so it stays readable during scroll.
+.gs-root1[data-mode="inherit-light"] .gs-th {
+  background-color: rgba(128, 128, 128, 0.1);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.gs-root1[data-mode="inherit-dark"] .gs-th {
+  background-color: rgba(128, 128, 128, 0.1);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+// ---- gridLines option (data-gridlines on .gs-root1) ----
+// Colors are kept transparent (not removed) so cell sizing/alignment never shifts.
+// default = all (every line). horizontal = drop vertical lines. none = borderless.
+.gs-root1[data-gridlines="horizontal"] {
+  .gs-cell {
+    border-left-color: transparent;
+    border-right-color: transparent;
+  }
+}
+.gs-root1[data-gridlines="none"] {
+  .gs-cell {
+    border-color: transparent;
+  }
+}
+
+// ---- density option (data-density on .gs-root1) ----
+// default = compact (current metrics). comfortable = roomier cell padding.
+// Row height is driven by the sheet model; set row heights to enlarge vertically.
+.gs-root1[data-density="comfortable"] {
+  .gs-cell-rendered {
+    padding: 0 10px;
+  }
+}

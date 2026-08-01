@@ -65,10 +65,32 @@ import type { Sheet, UserSheet } from '@gridsheet/core';
 import type { BookType } from '@gridsheet/core';
 import type { PolicyType } from '@gridsheet/core';
 import type { ContextMenuItemDescriptor, RowMenuItemDescriptor, ColMenuItemDescriptor } from './lib/menu';
-import type { ModeType, PointType, ZoneType, RectType, PositionType, CellsByAddressType } from '@gridsheet/core';
+import type {
+  ModeType,
+  DensityType,
+  GridLinesType,
+  MatrixAlignmentType,
+  PointType,
+  ZoneType,
+  RectType,
+  PositionType,
+  CellsByAddressType,
+} from '@gridsheet/core';
 import type { SheetLimits } from '@gridsheet/core';
 
 export type Policies = { [s: string]: PolicyType };
+
+/**
+ * Border visibility per side. `all` sets every side; a specific side overrides `all`.
+ * e.g. { all: true, bottom: false } => every side except bottom.
+ */
+export type BorderSides = {
+  all?: boolean;
+  left?: boolean;
+  top?: boolean;
+  right?: boolean;
+  bottom?: boolean;
+};
 
 export type OptionsType = {
   // A number is treated as a fixed pixel size.
@@ -88,6 +110,19 @@ export type OptionsType = {
   eager?: boolean;
   limits?: SheetLimits;
   mode?: ModeType;
+  /** Cell spacing. 'compact' (default) keeps the current metrics; 'comfortable' roomier. */
+  density?: DensityType;
+  /** Grid line visibility. 'all' (default) | 'horizontal' (no vertical lines) | 'none'. */
+  gridLines?: GridLinesType;
+  /** Which sides of the formula bar draw a border. Default: { all: true }. */
+  formulaBarBorders?: BorderSides;
+  /** Which sides of the matrix (cell grid) draw an outer border. Default: { all: true }. */
+  matrixBorders?: BorderSides;
+  /**
+   * Center the matrix inside the sheet box when the box (explicit sheetWidth/sheetHeight,
+   * or a manual resize) is larger than the content. Default 'none' keeps top-left.
+   */
+  matrixAlignment?: MatrixAlignmentType;
   contextMenu?: ContextMenuItemDescriptor[];
   rowMenu?: RowMenuItemDescriptor[];
   colMenu?: ColMenuItemDescriptor[];
@@ -115,6 +150,11 @@ export type StoreType = {
   dragging: boolean;
   sheetHeight: number;
   sheetWidth: number;
+  // Whether sheetWidth/sheetHeight were explicitly configured (number or fill string).
+  // When true the tabular keeps that box size and centers a smaller grid within it;
+  // when false it shrinks to the content.
+  fixedWidth: boolean;
+  fixedHeight: boolean;
   mode: ModeType;
   searchQuery?: string;
   searchCaseSensitive: boolean;

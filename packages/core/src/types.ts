@@ -45,7 +45,18 @@ export type CursorStateType = {
 
 export type FeedbackType = (args: { sheet: UserSheet; points?: CursorStateType }) => void;
 
-export type ModeType = 'light' | 'dark';
+// 'light' | 'dark' bake a fixed palette. 'auto' follows the OS/browser color scheme
+// (prefers-color-scheme). 'inherit-light' / 'inherit-dark' keep the background transparent
+// so the sheet blends into wherever it is placed, using the light/dark palette for
+// everything else (foreground, borders, and the portaled editor/menus which cannot inherit
+// the host's currentColor) — pick the one matching the host background's lightness.
+export type ModeType = 'light' | 'dark' | 'auto' | 'inherit-light' | 'inherit-dark';
+export type DensityType = 'compact' | 'comfortable';
+export type GridLinesType = 'all' | 'horizontal' | 'none';
+// How the matrix is aligned inside the sheet box when the box (explicit sheetWidth/
+// sheetHeight, or a manual resize) is larger than the content. 'none' (default) keeps the
+// pre-existing top-left behaviour (the box shrinks to the content).
+export type MatrixAlignmentType = 'none' | 'vertical' | 'horizontal' | 'both';
 export type HeadersType = 'both' | 'vertical' | 'horizontal' | 'none';
 
 export type AsyncCache = {

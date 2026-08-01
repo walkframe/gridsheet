@@ -65,7 +65,10 @@ const IfSheet: React.FC = () => {
         },
         ensured: { numRows: 10, numCols: 6 },
       })}
-      options={{ sheetHeight: 300 }}
+      options={{
+        matrixAlignment: 'both',
+        sheetHeight: 300,
+      }}
     />
   );
 };
@@ -93,7 +96,10 @@ const IfsSheet: React.FC = () => {
         },
         ensured: { numRows: 10, numCols: 4 },
       })}
-      options={{ sheetHeight: 300 }}
+      options={{
+        matrixAlignment: 'both',
+        sheetHeight: 300,
+      }}
     />
   );
 };
@@ -134,7 +140,10 @@ const IfnaSheet: React.FC = () => {
         },
         ensured: { numRows: 15, numCols: 4 },
       })}
-      options={{ sheetHeight: 400 }}
+      options={{
+        matrixAlignment: 'both',
+        sheetHeight: 400,
+      }}
     />
   );
 };
@@ -172,7 +181,10 @@ const IfnaDelayNaSheet: React.FC = () => {
         },
         ensured: { numRows: 8, numCols: 4 },
       })}
-      options={{ sheetHeight: 280 }}
+      options={{
+        matrixAlignment: 'both',
+        sheetHeight: 280,
+      }}
     />
   );
 };
@@ -205,7 +217,10 @@ const IferrorIfnaSheet: React.FC = () => {
         },
         ensured: { numRows: 8, numCols: 4 },
       })}
-      options={{ sheetHeight: 260 }}
+      options={{
+        matrixAlignment: 'both',
+        sheetHeight: 260,
+      }}
     />
   );
 };

@@ -140,6 +140,7 @@ export default function Case11() {
           ensured: { numRows: 4, numCols: 6 },
         })}
         options={{
+          matrixAlignment: 'both',
           mode: 'dark',
         }}
       />

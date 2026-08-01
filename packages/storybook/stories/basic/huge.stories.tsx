@@ -79,6 +79,7 @@ const HugeSheet = () => {
         book={book}
         initialCells={initialCells}
         options={{
+          matrixAlignment: 'both',
           sheetHeight: 600,
           sheetWidth: 1200,
           sheetResize: 'both',

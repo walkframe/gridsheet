@@ -26,6 +26,8 @@ export const Tabular = () => {
     mainRef,
     sheetWidth,
     sheetHeight,
+    fixedWidth,
+    fixedHeight,
     inputting,
     leftHeaderSelecting,
     topHeaderSelecting,
@@ -34,6 +36,31 @@ export const Tabular = () => {
   const sheet = sheetReactive.current;
 
   const [virtualized, setVirtualized] = useState<Virtualization | null>(null);
+
+  // Mark on .gs-main whether the grid overflows the viewport per axis, so the matrix outer
+  // border hugs the content when it fits (border on the inner) and switches to a fixed
+  // viewport overlay when it scrolls. Runs after every render (so it always catches the
+  // ready flip, content growth and size changes) but reads layout inside rAF — after paint
+  // — so it never blocks the render/paint the way a synchronous reflow would, and only
+  // writes the attribute when the value actually changes.
+  useEffect(() => {
+    const t = tabularRef.current;
+    const m = mainRef.current;
+    if (!t || !m) {
+      return;
+    }
+    const raf = requestAnimationFrame(() => {
+      const ox = String(t.scrollWidth > t.clientWidth + 1);
+      const oy = String(t.scrollHeight > t.clientHeight + 1);
+      if (m.getAttribute('data-overflow-x') !== ox) {
+        m.setAttribute('data-overflow-x', ox);
+      }
+      if (m.getAttribute('data-overflow-y') !== oy) {
+        m.setAttribute('data-overflow-y', oy);
+      }
+    });
+    return () => cancelAnimationFrame(raf);
+  });
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -166,8 +193,12 @@ export const Tabular = () => {
       <div
         className="gs-tabular"
         style={{
-          width: sheetWidth === -1 ? undefined : Math.min(sheetWidth, sheet.totalWidth),
-          height: sheetHeight === -1 ? undefined : Math.min(sheetHeight, sheet.totalHeight),
+          // When a size is explicitly configured, keep that box so a smaller grid can be
+          // centered within it (see .gs-tabular in tabular.less); otherwise shrink to fit.
+          width:
+            sheetWidth === -1 ? undefined : fixedWidth ? sheetWidth : Math.min(sheetWidth, sheet.totalWidth),
+          height:
+            sheetHeight === -1 ? undefined : fixedHeight ? sheetHeight : Math.min(sheetHeight, sheet.totalHeight),
         }}
         ref={tabularRef}
         onMouseMove={handleMouseMove}

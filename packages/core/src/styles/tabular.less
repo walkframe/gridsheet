@@ -8,19 +8,63 @@
 
 .gs-tabular {
   overflow: auto;
-  display: block;
+  // Flex so the matrix can be centered inside a larger box; default alignment is start
+  // (top-left) unless matrixAlignment opts an axis in below. `safe` falls back to start
+  // when the grid overflows, so scrolling still reaches the top/left rows.
+  display: flex;
   box-sizing: border-box;
   position: relative;
 }
+.gs-root1[data-matrix-align='horizontal'] .gs-tabular,
+.gs-root1[data-matrix-align='both'] .gs-tabular {
+  justify-content: safe center;
+}
+.gs-root1[data-matrix-align='vertical'] .gs-tabular,
+.gs-root1[data-matrix-align='both'] .gs-tabular {
+  align-items: safe center;
+}
 
 .gs-tabular-inner {
+  flex: 0 0 auto;
+  position: relative;
   overflow: hidden;
   overflow: clip;
+  // Matrix right/bottom edge, hugging the (possibly centered) content. Edge cell borders
+  // are cut by overflow:clip, so the outline is drawn here; box-sizing keeps the element
+  // at the content size. Top/left edges come from the sticky header cells.
+  box-sizing: border-box;
+  border-right: solid var(--gs-mx-br, 1px) var(--gs-border, #e3e6ea);
+  border-bottom: solid var(--gs-mx-bb, 1px) var(--gs-border, #e3e6ea);
   &>table {
     table-layout: fixed;
     border-collapse: collapse;
     border-spacing: 0;
   }
+}
+
+// When an axis overflows, the hugging inner border would scroll out of view, so move that
+// side to a viewport overlay on .gs-main (which does not scroll). The overlay sits on top
+// of the content so it covers the edge line instead of doubling it. .gs-main carries
+// data-overflow-x / data-overflow-y set from the measured overflow.
+.gs-main[data-overflow-x='true'] .gs-tabular-inner {
+  border-right-width: 0;
+}
+.gs-main[data-overflow-y='true'] .gs-tabular-inner {
+  border-bottom-width: 0;
+}
+.gs-main::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  border: 0 solid var(--gs-border, #e3e6ea);
+}
+.gs-main[data-overflow-x='true']::after {
+  border-right-width: var(--gs-mx-br, 1px);
+}
+.gs-main[data-overflow-y='true']::after {
+  border-bottom-width: var(--gs-mx-bb, 1px);
 }
 
 .gs-th {
@@ -39,7 +83,7 @@
     z-index: 2;
 
     &:hover {
-      background-color: #0077ff;
+      background-color: var(--gs-accent, #2563eb);
     }
 
     &.gs-protected {
@@ -86,7 +130,7 @@
   left: 0;
   overflow: hidden;
   min-width: 30px;
-  border-top: solid 1px #ddd;
+  border-top: solid 1px var(--gs-border, #e3e6ea);
 
   .gs-resizer {
     left: 0;

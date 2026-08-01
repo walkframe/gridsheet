@@ -211,6 +211,7 @@ const InsertComponent: React.FC = () => {
           ],
         })}
         options={{
+          matrixAlignment: 'both',
           sheetHeight: 200,
           sheetWidth: 250,
           sheetResize: 'both',
