@@ -104,7 +104,9 @@
   }
 
   &[data-spill="true"] {
-    background-color: color-mix(in srgb, var(--gs-accent, #2563eb) 5%, transparent);
+    // A faint accent tint over the (opaque) header background, not over transparent —
+    // otherwise the spilled formula bar shows the page through it.
+    background-color: color-mix(in srgb, var(--gs-accent, #2563eb) 6%, var(--gs-header-bg, #f4f5f7));
 
     .gs-selecting-address {
       color: var(--gs-accent, #2563eb);
