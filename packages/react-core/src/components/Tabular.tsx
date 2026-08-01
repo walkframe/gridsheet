@@ -39,16 +39,34 @@ export const Tabular = () => {
 
   // Mark on .gs-main whether the grid overflows the viewport per axis, so the matrix outer
   // border hugs the content when it fits (border on the inner) and switches to a fixed
-  // viewport overlay when it scrolls. Runs after layout / size / content changes.
+  // viewport overlay when it scrolls. Driven by a ResizeObserver (viewport + content size)
+  // rather than every render, and only writes when the value changes — reading layout on
+  // every render would force a reflow and slow down unrelated updates.
   useEffect(() => {
     const t = tabularRef.current;
     const m = mainRef.current;
     if (!t || !m) {
       return;
     }
-    m.setAttribute('data-overflow-x', String(t.scrollWidth > t.clientWidth + 1));
-    m.setAttribute('data-overflow-y', String(t.scrollHeight > t.clientHeight + 1));
-  });
+    const update = () => {
+      const ox = String(t.scrollWidth > t.clientWidth + 1);
+      const oy = String(t.scrollHeight > t.clientHeight + 1);
+      if (m.getAttribute('data-overflow-x') !== ox) {
+        m.setAttribute('data-overflow-x', ox);
+      }
+      if (m.getAttribute('data-overflow-y') !== oy) {
+        m.setAttribute('data-overflow-y', oy);
+      }
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(t);
+    const inner = t.querySelector('.gs-tabular-inner');
+    if (inner) {
+      ro.observe(inner);
+    }
+    return () => ro.disconnect();
+  }, [sheetWidth, sheetHeight]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
