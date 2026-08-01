@@ -286,7 +286,6 @@ export default function RealTimeCollaboration() {
               })}
               options={{
                 matrixAlignment: 'both',
-                sheetWidth: typeof window !== 'undefined' ? Math.min(1100, window.innerWidth - 300) : 1100,
                 sheetHeight: 300,
               }}
             />

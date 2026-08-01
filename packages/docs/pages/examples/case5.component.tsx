@@ -869,6 +869,7 @@ export default function AdvancedFeatures() {
                 key={sheet}
                 style={{
                   display: activeSheet === sheet ? 'block' : 'none',
+                  textAlign: 'center',
                 }}
               >
                 <GridSheet
