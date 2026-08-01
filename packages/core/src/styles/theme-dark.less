@@ -1,26 +1,23 @@
-@dark_text_color: #eeeeee;
-@dark_border_color: #5a5a5a;
-@dark_cell_color: #212121;
-@dark_canvas_color: #3f3f3f;
-@dark_bg_color: #5a5a5a;
-@dark_header_color: #4f4f4f;
-@dark_header_text_color: #eeeeee;
-@dark_header_selecting_color: #606060;
-@dark_header_selecting_color_rev: #aaaaaa;
-@dark_header_choosing_color: #777777;
-@dark_formulabar_bg_color: #4f4f4f;
-@dark_formulabar_text_color: #bbbbbb;
-@dark_accent_color: #0077ff;
+// ---- Dark palette (modern default) ----
+@dark_text_color: #e4e6e9;
+@dark_muted_text_color: #8b9096;
+@dark_border_color: #2c2f34;
+@dark_frame_color: #1a1b1e;
+@dark_canvas_color: #212327;
+@dark_surface_color: #1c1e21;
+@dark_header_color: #212327;
+@dark_header_text_color: #a6abb2;
+@dark_accent_color: #3b82f6;
 
-// Design tokens for dark mode. See theme-light.less for the rationale. Default values
-// below reproduce the historical dark palette exactly.
+// Design tokens for dark mode. See theme-light.less for the :where() rationale.
 .gs-tokens-dark() {
   --gs-fg: @dark_text_color;
-  --gs-muted-fg: @dark_formulabar_text_color;
+  --gs-muted-fg: @dark_muted_text_color;
   --gs-border: @dark_border_color;
-  --gs-bg: @dark_bg_color;
-  --gs-canvas: @dark_canvas_color;
-  --gs-surface: @dark_cell_color;
+  // Translucent grey frame / canvas; see theme-light.less.
+  --gs-bg: rgba(128, 128, 128, 0.1);
+  --gs-canvas: rgba(128, 128, 128, 0.1);
+  --gs-surface: @dark_surface_color;
   --gs-header-bg: @dark_header_color;
   --gs-header-fg: @dark_header_text_color;
   --gs-accent: @dark_accent_color;
@@ -28,83 +25,4 @@
 
 :where(.gs-root1[data-mode="dark"], .gs-editor[data-mode="dark"]) {
   .gs-tokens-dark();
-}
-
-.gs-root1[data-mode="dark"] {
-  background-color: var(--gs-bg);
-  color: var(--gs-fg);
-  .gs-main {
-    background-color: var(--gs-canvas);
-    border-right: solid 1px var(--gs-border);
-    border-bottom: solid 1px var(--gs-border);
-  }
-  .gs-tabular {
-    background-color: var(--gs-canvas);
-  }
-  .gs-sheet-body-data {
-    background-color: var(--gs-surface);
-  }
-  .gs-formula-bar {
-    background-color: var(--gs-header-bg);
-  }
-  .gs-formula-bar-editor-inner {
-    color: var(--gs-muted-fg);
-  }
-  .gs-cell {
-    border: solid 1px var(--gs-border);
-  }
-  .gs-adjuster {
-    background-color: var(--gs-border);
-  }
-  .gs-tabular-inner {
-    background-color: var(--gs-border);
-  }
-  .gs-large-editor {
-    textarea {
-      color: var(--gs-fg);
-      caret-color: var(--gs-fg);
-    }
-  }
-  .gs-th {
-    background-color: var(--gs-header-bg);
-    color: var(--gs-header-fg);
-  }
-  .gs-th-top {
-    .gs-th-inner {
-      border-top: solid 1px var(--gs-border);
-    }
-    border-left: solid 1px var(--gs-border);
-  }
-  .gs-th-left {
-    .gs-th-inner {
-      border-left: solid 1px var(--gs-border);
-    }
-    border-top: solid 1px var(--gs-border);
-  }
-  .gs-search-bar {
-    textarea {
-      color: var(--gs-fg);
-      caret-color: var(--gs-fg);
-    }
-  }
-  .gs-search-bar {
-    color: rgba(255, 255, 255, 0.3);
-  }
-}
-
-.gs-editor[data-mode="dark"] {
-  &.gs-editing {
-    textarea {
-      caret-color: var(--gs-fg);
-    }
-    .gs-editor-hl {
-      background-color: var(--gs-surface);
-      color: var(--gs-fg);
-    }
-  }
-  .gs-editor-options {
-    color: var(--gs-fg);
-    background-color: var(--gs-bg);
-    border: solid 1px var(--gs-border);
-  }
 }

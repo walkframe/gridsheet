@@ -26,6 +26,8 @@ export const Tabular = () => {
     mainRef,
     sheetWidth,
     sheetHeight,
+    fixedWidth,
+    fixedHeight,
     inputting,
     leftHeaderSelecting,
     topHeaderSelecting,
@@ -34,6 +36,19 @@ export const Tabular = () => {
   const sheet = sheetReactive.current;
 
   const [virtualized, setVirtualized] = useState<Virtualization | null>(null);
+
+  // Mark on .gs-main whether the grid overflows the viewport per axis, so the matrix outer
+  // border hugs the content when it fits (border on the inner) and switches to a fixed
+  // viewport overlay when it scrolls. Runs after layout / size / content changes.
+  useEffect(() => {
+    const t = tabularRef.current;
+    const m = mainRef.current;
+    if (!t || !m) {
+      return;
+    }
+    m.setAttribute('data-overflow-x', String(t.scrollWidth > t.clientWidth + 1));
+    m.setAttribute('data-overflow-y', String(t.scrollHeight > t.clientHeight + 1));
+  });
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -166,8 +181,12 @@ export const Tabular = () => {
       <div
         className="gs-tabular"
         style={{
-          width: sheetWidth === -1 ? undefined : Math.min(sheetWidth, sheet.totalWidth),
-          height: sheetHeight === -1 ? undefined : Math.min(sheetHeight, sheet.totalHeight),
+          // When a size is explicitly configured, keep that box so a smaller grid can be
+          // centered within it (see .gs-tabular in tabular.less); otherwise shrink to fit.
+          width:
+            sheetWidth === -1 ? undefined : fixedWidth ? sheetWidth : Math.min(sheetWidth, sheet.totalWidth),
+          height:
+            sheetHeight === -1 ? undefined : fixedHeight ? sheetHeight : Math.min(sheetHeight, sheet.totalHeight),
         }}
         ref={tabularRef}
         onMouseMove={handleMouseMove}

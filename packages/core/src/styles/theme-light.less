@@ -1,30 +1,27 @@
-@light_text_color: #000000;
-@light_text_color_selecting: #ffffff;
-@light_border_color: #dddddd;
-@light_cell_color: #f7f7f7;
-@light_canvas_color: #e2e2e2;
-@light_bg_color: #e2e2e2;
-@light_header_color: #efefef;
-@light_header_text_color: #666666;
-@light_header_selecting_color: #d2d2d2;
-@light_header_selecting_color_rev: #555555;
-@light_header_choosing_color: #bbbbbb;
-@light_formulabar_bg_color: #efefef;
-@light_formulabar_text_color: #555555;
-@light_accent_color: #0077ff;
+// ---- Light palette (modern default) ----
+@light_text_color: #1f2328;
+@light_muted_text_color: #6b7280;
+@light_border_color: #e3e6ea;
+@light_frame_color: #f4f5f7;
+@light_canvas_color: #eceef1;
+@light_surface_color: #ffffff;
+@light_header_color: #f4f5f7;
+@light_header_text_color: #59616b;
+@light_accent_color: #2563eb;
 
-// Design tokens for light mode. Emitted as CSS custom properties so consumers can
-// retheme by overriding e.g. `.gs-root1 { --gs-accent: #f97316 }`. The defaults are
-// wrapped in :where() so they carry zero specificity: any consumer selector wins,
-// regardless of stylesheet load order, avoiding specificity wars. Default values
-// below reproduce the historical light palette exactly.
+// Design tokens for light mode, emitted as CSS custom properties. Wrapped in :where()
+// so the defaults carry zero specificity — any consumer selector (e.g.
+// `.gs-root1 { --gs-accent: #f97316 }`) wins regardless of stylesheet load order.
 .gs-tokens-light() {
   --gs-fg: @light_text_color;
-  --gs-muted-fg: @light_formulabar_text_color;
+  --gs-muted-fg: @light_muted_text_color;
   --gs-border: @light_border_color;
-  --gs-bg: @light_bg_color;
-  --gs-canvas: @light_canvas_color;
-  --gs-surface: @light_cell_color;
+  // The frame / canvas (the space around and behind the cells) uses a translucent grey so
+  // it stays subtle and adapts to whatever the sheet is placed on. Override --gs-bg /
+  // --gs-canvas (e.g. to `transparent`) to change it.
+  --gs-bg: rgba(128, 128, 128, 0.1);
+  --gs-canvas: rgba(128, 128, 128, 0.1);
+  --gs-surface: @light_surface_color;
   --gs-header-bg: @light_header_color;
   --gs-header-fg: @light_header_text_color;
   --gs-accent: @light_accent_color;
@@ -34,14 +31,17 @@
   .gs-tokens-light();
 }
 
-.gs-root1[data-mode="light"] {
+// ---- Mode-agnostic structural theme ----
+// Every color here resolves through a token, so light / dark / auto / inherit all
+// render from the same rules — only the token values differ per mode. Consumers can
+// retheme by overriding any --gs-* token; the accent literals below are fallbacks for
+// portaled popups that live outside .gs-root1 and cannot see the tokens.
+.gs-root1 {
   background-color: var(--gs-bg);
   color: var(--gs-fg);
 
   .gs-main {
     background-color: var(--gs-canvas);
-    border-right: solid 1px var(--gs-border);
-    border-bottom: solid 1px var(--gs-border);
   }
   .gs-tabular {
     background-color: var(--gs-canvas);
@@ -53,7 +53,7 @@
     background-color: var(--gs-header-bg);
   }
   .gs-formula-bar-editor-inner {
-    color: var(--gs-muted-fg);
+    color: var(--gs-fg);
   }
   .gs-cell {
     border: solid 1px var(--gs-border);
@@ -64,29 +64,38 @@
   .gs-tabular-inner {
     background-color: var(--gs-border);
   }
-
+  .gs-large-editor textarea {
+    color: var(--gs-fg);
+    caret-color: var(--gs-fg);
+  }
   .gs-th {
     background-color: var(--gs-header-bg);
     color: var(--gs-header-fg);
   }
   .gs-th-top {
+    // border-top of the top header row = the matrix top edge (configurable via matrixBorders).
     .gs-th-inner {
-      border-top: solid 1px var(--gs-border);
+      border-top: solid var(--gs-mx-bt, 1px) var(--gs-border);
     }
     border-left: solid 1px var(--gs-border);
   }
   .gs-th-left {
+    // border-left of the left header column = the matrix left edge (configurable).
     .gs-th-inner {
-      border-left: solid 1px var(--gs-border);
+      border-left: solid var(--gs-mx-bl, 1px) var(--gs-border);
     }
     border-top: solid 1px var(--gs-border);
   }
   .gs-search-bar {
-    color: rgba(0, 0, 0, 0.3);
+    color: color-mix(in srgb, var(--gs-fg) 40%, transparent);
+    textarea {
+      color: var(--gs-fg);
+      caret-color: var(--gs-fg);
+    }
   }
 }
 
-.gs-editor[data-mode="light"] {
+.gs-editor {
   &.gs-editing {
     textarea {
       caret-color: var(--gs-fg);

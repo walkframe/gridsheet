@@ -14,11 +14,12 @@
   
   &.gs-copying {
     textarea:focus {
-      outline: solid 1px #0077ff;
+      outline: solid 1px var(--gs-accent, #2563eb);
     }
   }
   &.gs-selecting {
     z-index: 1;
+    background-color: color-mix(in srgb, var(--gs-accent, #2563eb) 7%, transparent);
     .gs-cell-label {
       display: block;
     }
@@ -47,7 +48,7 @@
       height: 4px;
       width: 40%;
       border-radius: 1px;
-      background: rgba(100, 140, 255, 0.6);
+      background: color-mix(in srgb, var(--gs-accent, #2563eb) 65%, transparent);
       animation: gs-pending-slide 1.4s ease-in-out infinite;
     }
   }
@@ -64,21 +65,22 @@
     cursor: help;
   }
   .gs-cell-label {
-    font-size: 8px;
-    font-weight: normal;
+    font-size: 10px;
+    font-weight: 500;
     font-style: normal;
-    font-family: math, monospace, serif;
-    letter-spacing: 1px;
-    line-height: 14px;
+    font-family: inherit;
+    letter-spacing: 0.2px;
+    line-height: 1.4;
 
     position: absolute;
     top: 0;
     right: 0;
-    background-color: rgba(0, 128, 255, 0.6);
-    color: rgba(255, 255, 255, 0.6);
-    padding: 0 2px;
+    background-color: var(--gs-accent, #2563eb);
+    color: #ffffff;
+    padding: 1px 5px;
+    border-bottom-left-radius: 4px;
     display: none;
-    opacity: 0.7;
+    opacity: 0.92;
   }
   .gs-cell-inner-wrap {
     width: 100%;
@@ -102,7 +104,7 @@
     cursor: cell;
     word-wrap: break-word;
     word-break: break-all;
-    padding: 0 2px;
+    padding: 0 6px;
     width: 100%;
     height: 100%;
     & > * {
@@ -113,12 +115,16 @@
     }
   }
   .gs-autofill-drag {
-    background-color: rgb(0, 119, 255);
+    background-color: var(--gs-accent, #2563eb);
     position: absolute;
     width: 7px;
     height: 7px;
-    bottom: -1px;
-    right: -1px;
+    // Sit flush inside the cell's bottom-right corner (not overhanging past the right/
+    // bottom edge). Overhanging put the cursor in a ~1px dead strip outside the column,
+    // so dragging straight down the rightmost column never re-entered the cells below
+    // (targeting is onMouseEnter-based) and the autofill did not respond.
+    bottom: 0;
+    right: 0;
     cursor: crosshair;
     z-index: 1;
   }

@@ -1,0 +1,50 @@
+// ---- mode: auto — follow the OS / browser color scheme ----
+:where(.gs-root1[data-mode="auto"], .gs-editor[data-mode="auto"]) {
+  .gs-tokens-light();
+}
+@media (prefers-color-scheme: dark) {
+  :where(.gs-root1[data-mode="auto"], .gs-editor[data-mode="auto"]) {
+    .gs-tokens-dark();
+  }
+}
+
+// ---- mode: inherit — transparent, blends into wherever the sheet is placed ----
+// Backgrounds are fully transparent so the host background shows through (no forced
+// palette). The foreground follows the surrounding text (currentColor), and every line /
+// muted tone is a translucent tint of currentColor, so the grid sits naturally on any
+// background — light, dark, or colored. Consumers can still set --gs-bg / --gs-accent etc.
+:where(.gs-root1[data-mode="inherit"], .gs-editor[data-mode="inherit"]) {
+  --gs-fg: currentColor;
+  --gs-bg: transparent;
+  --gs-canvas: transparent;
+  --gs-surface: transparent;
+  --gs-border: color-mix(in srgb, currentColor 16%, transparent);
+  --gs-muted-fg: color-mix(in srgb, currentColor 55%, transparent);
+  --gs-header-bg: color-mix(in srgb, currentColor 5%, transparent);
+  --gs-header-fg: color-mix(in srgb, currentColor 70%, transparent);
+  --gs-accent: #2563eb;
+}
+
+// ---- gridLines option (data-gridlines on .gs-root1) ----
+// Colors are kept transparent (not removed) so cell sizing/alignment never shifts.
+// default = all (every line). horizontal = drop vertical lines. none = borderless.
+.gs-root1[data-gridlines="horizontal"] {
+  .gs-cell {
+    border-left-color: transparent;
+    border-right-color: transparent;
+  }
+}
+.gs-root1[data-gridlines="none"] {
+  .gs-cell {
+    border-color: transparent;
+  }
+}
+
+// ---- density option (data-density on .gs-root1) ----
+// default = compact (current metrics). comfortable = roomier cell padding.
+// Row height is driven by the sheet model; set row heights to enlarge vertically.
+.gs-root1[data-density="comfortable"] {
+  .gs-cell-rendered {
+    padding: 0 10px;
+  }
+}

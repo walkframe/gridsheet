@@ -27,6 +27,8 @@ const SimpleSheet = () => {
       book={book}
       options={{
         sheetResize: 'both',
+        sheetWidth: 700,
+        sheetHeight: 250,
       }}
       initialCells={buildInitialCells({
         cells: {

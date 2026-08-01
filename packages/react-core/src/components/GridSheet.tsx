@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useReducer, createRef, useCallback } from 'react';
-import type { CellsByAddressType, SheetHandle, StoreHandle, OptionsType, Props, StoreType } from '../types';
+import type { CSSProperties } from 'react';
+import type { BorderSides, CellsByAddressType, SheetHandle, StoreHandle, OptionsType, Props, StoreType } from '../types';
 import {
   DEFAULT_HEIGHT,
   DEFAULT_WIDTH,
@@ -45,7 +46,30 @@ export function GridSheet({
   style,
   book: initialBook,
 }: Props) {
-  const { sheetResize, showFormulaBar = true, mode = 'light' } = options;
+  const {
+    sheetResize,
+    showFormulaBar = true,
+    mode = 'light',
+    density = 'compact',
+    gridLines = 'all',
+    formulaBarBorders = { all: true },
+    matrixBorders = { all: true },
+  } = options;
+  // Translate the border config objects into CSS custom properties consumed by the
+  // stylesheet (--gs-fb-* for the formula bar, --gs-mx-* for the matrix). A specific side
+  // overrides `all`.
+  const bw = (b: BorderSides, side: 'left' | 'top' | 'right' | 'bottom') =>
+    (b[side] ?? b.all ?? false) ? '1px' : '0';
+  const borderVars = {
+    '--gs-fb-bl': bw(formulaBarBorders, 'left'),
+    '--gs-fb-bt': bw(formulaBarBorders, 'top'),
+    '--gs-fb-br': bw(formulaBarBorders, 'right'),
+    '--gs-fb-bb': bw(formulaBarBorders, 'bottom'),
+    '--gs-mx-bl': bw(matrixBorders, 'left'),
+    '--gs-mx-bt': bw(matrixBorders, 'top'),
+    '--gs-mx-br': bw(matrixBorders, 'right'),
+    '--gs-mx-bb': bw(matrixBorders, 'bottom'),
+  } as CSSProperties;
   const rootRef = useRef<HTMLDivElement>(null);
   const flashRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
@@ -120,6 +144,8 @@ export function GridSheet({
       dragging: false,
       sheetHeight: 0,
       sheetWidth: 0,
+      fixedWidth: false,
+      fixedHeight: false,
       entering: false,
       matchingCells: [],
       matchingCellIndex: 0,
@@ -156,6 +182,9 @@ export function GridSheet({
   // and the rendered pixel size is measured via ResizeObserver instead of being fixed.
   const fillWidth = typeof options.sheetWidth === 'string';
   const fillHeight = typeof options.sheetHeight === 'string';
+  // A size is "fixed" (a box to center a smaller grid within) when explicitly provided.
+  const fixedWidth = options.sheetWidth != null;
+  const fixedHeight = options.sheetHeight != null;
   const [sheetHeight, setSheetHeight] = useState(
     typeof options?.sheetHeight === 'number' ? options.sheetHeight : estimateSheetHeight(initialCells),
   );
@@ -225,18 +254,21 @@ export function GridSheet({
         ref={rootRef}
         data-sheet-name={sheetName}
         data-mode={mode}
+        data-density={density}
+        data-gridlines={gridLines}
         data-rows={store.sheetReactive.current?.numRows ?? 0}
         data-cols={store.sheetReactive.current?.numCols ?? 0}
         style={
           fillWidth || fillHeight
             ? {
+                ...borderVars,
                 // inline-flex (when width isn't filled) keeps the prior shrink-to-content width.
                 display: fillWidth ? 'flex' : 'inline-flex',
                 flexDirection: 'column',
                 ...(fillWidth ? { width: options.sheetWidth as string } : null),
                 ...(fillHeight ? { height: options.sheetHeight as string } : null),
               }
-            : undefined
+            : borderVars
         }
       >
         <div className="gs-flash-overlay" ref={flashRef} />
@@ -270,7 +302,9 @@ export function GridSheet({
         >
           <Editor mode={mode} />
           <Tabular />
-          <StoreObserver {...{ ...options, sheetHeight, sheetWidth, sheetName, sheetRef, storeRef }} />
+          <StoreObserver
+            {...{ ...options, sheetHeight, sheetWidth, fixedWidth, fixedHeight, sheetName, sheetRef, storeRef }}
+          />
           <ContextMenu />
           <ColumnMenu />
           <RowMenu />

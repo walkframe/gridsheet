@@ -36,7 +36,7 @@
     width: 100%;
     height: 100%;
     position: absolute;
-    background-color: rgba(0, 127, 255, 0.08);
+    background-color: color-mix(in srgb, var(--gs-accent, #2563eb) 8%, transparent);
     top: 0;
     left: 0;
     z-index: 2;
@@ -53,13 +53,13 @@
     position: relative;
     top: 0;
     left: 0;
-    border: dotted 1px #0077ff;
+    border: dotted 1px var(--gs-accent, #2563eb);
     box-sizing: border-box;
 
     span {
       font-size: 10px;
       padding: 3px;
-      background-color: #0077ff;
+      background-color: var(--gs-accent, #2563eb);
       color: #ffffff;
       margin: 0;
       position: absolute;
@@ -97,6 +97,7 @@
 
 @import 'theme-light.less';
 @import 'theme-dark.less';
+@import 'theme-modes.less';
 @import 'cell.less';
 @import 'menu.less';
 @import 'editor.less';
@@ -116,7 +117,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.6);
+  background: color-mix(in srgb, var(--gs-surface, #ffffff) 70%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -126,8 +127,8 @@
 .gs-loading-spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid #e0e0e0;
-  border-top-color: #0077ff;
+  border: 3px solid color-mix(in srgb, var(--gs-fg, #1f2328) 12%, transparent);
+  border-top-color: var(--gs-accent, #2563eb);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -154,7 +155,7 @@
   inset: 0;
   pointer-events: none;
   z-index: 9999;
-  background: rgba(0, 119, 255, 0.15);
+  background: color-mix(in srgb, var(--gs-accent, #2563eb) 15%, transparent);
   opacity: 0;
   &--active {
     animation: gs-flash 0.6s ease-out forwards;

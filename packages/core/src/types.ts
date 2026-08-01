@@ -45,7 +45,12 @@ export type CursorStateType = {
 
 export type FeedbackType = (args: { sheet: UserSheet; points?: CursorStateType }) => void;
 
-export type ModeType = 'light' | 'dark';
+// 'light' | 'dark' bake a fixed palette. 'auto' follows the OS/browser color scheme
+// (prefers-color-scheme). 'inherit' derives the palette from the surrounding
+// background/text so the sheet blends into wherever it is placed.
+export type ModeType = 'light' | 'dark' | 'auto' | 'inherit';
+export type DensityType = 'compact' | 'comfortable';
+export type GridLinesType = 'all' | 'horizontal' | 'none';
 export type HeadersType = 'both' | 'vertical' | 'horizontal' | 'none';
 
 export type AsyncCache = {

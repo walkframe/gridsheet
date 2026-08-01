@@ -48,6 +48,8 @@ export type {
   CursorStateType,
   FeedbackType,
   ModeType,
+  DensityType,
+  GridLinesType,
   HeadersType,
   AsyncCache,
   System,
