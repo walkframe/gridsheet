@@ -1096,7 +1096,10 @@ export class Sheet implements UserSheet {
 
     const policy = this.policies[stacked.policy ?? ''] ?? this.defaultPolicy;
     stacked = policy.deserializeValue(stacked.value, stacked) ?? {};
-    this.registry.systems[id] = { id, changedTime, sheetId: this.id };
+    // Preserve any pre-existing system entry (e.g. `spilledFrom` set by spill()
+    // before this empty target cell was lazily populated). Overwriting it would
+    // wipe the spill marker even though the spilled value stays cached.
+    this.registry.systems[id] = { ...this.registry.systems[id], id, changedTime, sheetId: this.id };
     this.registry.data[id] = stacked;
   }
 
@@ -3045,14 +3048,16 @@ export class Sheet implements UserSheet {
         this.finishSolvedCache(targetPoint, matrix[i][j]);
         if (i !== 0 || j !== 0) {
           spilledAddresses.push(p2a(targetPoint));
-          // Mark target cell as spilled from the origin formula cell
+          // Mark target cell as spilled from the origin formula cell.
+          // The spilled value is cached above regardless of whether the target
+          // cell has a data entry yet (empty cells are populated lazily), so the
+          // spilledFrom marker must be set unconditionally too — otherwise an
+          // empty spill target shows its value but is not recognised as spilled
+          // (formula bar shows its own address instead of the origin, stays editable).
           if (originId != null) {
-            const targetCell = this.registry.data[targetId];
-            if (targetCell != null) {
-              const sys = ensureSys(this.registry, targetId, {});
-              sys.spilledFrom = p2a(origin);
-              this.registry.lastSpilledTargetIds.add(targetId);
-            }
+            const sys = ensureSys(this.registry, targetId, {});
+            sys.spilledFrom = p2a(origin);
+            this.registry.lastSpilledTargetIds.add(targetId);
           }
         }
       }
