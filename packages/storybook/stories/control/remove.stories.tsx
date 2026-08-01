@@ -117,6 +117,7 @@ const RemoveComponent: React.FC = () => {
           },
         })}
         options={{
+          matrixAlignment: 'both',
           sheetHeight: 300,
           sheetWidth: 400,
         }}

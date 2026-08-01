@@ -338,6 +338,7 @@ export default function InventoryManagement() {
           initialCells={initialCells}
           style={{ border: '1px solid #ccc' }}
           options={{
+            matrixAlignment: 'both',
             sheetHeight: 350,
             showFormulaBar: true,
           }}

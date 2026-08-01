@@ -135,6 +135,7 @@ const SheetOnEditComponent: React.FC = () => {
                 },
               })}
               options={{
+                matrixAlignment: 'both',
                 sheetWidth: 350,
                 sheetHeight: 200,
               }}
@@ -169,6 +170,7 @@ const SheetOnEditComponent: React.FC = () => {
                 },
               })}
               options={{
+                matrixAlignment: 'both',
                 sheetWidth: 350,
                 sheetHeight: 200,
               }}

@@ -76,6 +76,7 @@ const SheetOnSelectComponent: React.FC = () => {
               },
             })}
             options={{
+              matrixAlignment: 'both',
               sheetWidth: 400,
               sheetHeight: 300,
             }}

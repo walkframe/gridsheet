@@ -60,6 +60,7 @@ const SparklinePolicyMixin: PolicyMixinType = {
             ],
           }}
           options={{
+            matrixAlignment: 'both',
             responsive: true,
             maintainAspectRatio: false,
             plugins: { legend: { display: false }, tooltip: { enabled: true } },
@@ -215,7 +216,12 @@ export default function SalesDashboard() {
               '6': { style: { borderTop: '3px double #000000' } },
             },
           })}
-          options={{ sheetHeight: 360, sheetWidth: 720, sheetResize: 'both' }}
+          options={{
+            matrixAlignment: 'both',
+            sheetHeight: 360,
+            sheetWidth: 720,
+            sheetResize: 'both',
+          }}
         />
         <div style={sheetNameStyle}>
           sheet:
@@ -278,7 +284,13 @@ export default function SalesDashboard() {
               },
               ensured: { numRows: 5, numCols: 5 },
             })}
-            options={{ sheetHeight: 340, sheetWidth: 580, sheetResize: 'both', mode: 'dark' }}
+            options={{
+              matrixAlignment: 'both',
+              sheetHeight: 340,
+              sheetWidth: 580,
+              sheetResize: 'both',
+              mode: 'dark',
+            }}
           />
         </div>
         <div style={sheetNameStyle}>

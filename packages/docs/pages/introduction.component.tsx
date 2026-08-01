@@ -96,7 +96,12 @@ export default function IntroductionExample() {
           },
           ensured: { numRows: 2, numCols: 4 },
         })}
-        options={{ sheetHeight: 150, sheetWidth: 500, sheetResize: 'both' }}
+        options={{
+          matrixAlignment: 'both',
+          sheetHeight: 150,
+          sheetWidth: 500,
+          sheetResize: 'both',
+        }}
       />
     </div>
   );

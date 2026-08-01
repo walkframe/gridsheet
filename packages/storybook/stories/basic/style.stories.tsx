@@ -97,7 +97,9 @@ const StyleSheet = () => {
           },
           ensured: { numRows: 50, numCols: 10 },
         })}
-        options={{}}
+        options={{
+          matrixAlignment: 'both',
+        }}
       />
     </div>
   );

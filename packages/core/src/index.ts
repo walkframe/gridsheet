@@ -50,6 +50,7 @@ export type {
   ModeType,
   DensityType,
   GridLinesType,
+  MatrixAlignmentType,
   HeadersType,
   AsyncCache,
   System,

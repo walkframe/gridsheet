@@ -251,6 +251,7 @@ export default function GitHubContributors() {
             },
           })}
           options={{
+            matrixAlignment: 'both',
             mode: 'dark',
             sheetHeight: 500,
             sheetWidth: 1000,
@@ -308,7 +309,15 @@ export function AddressOverlayExample() {
         Each cell displays its address (e.g. <code>A1</code>) in the top-right corner using a{' '}
         <code>renderCallback</code> policy.
       </p>
-      <GridSheet book={book} initialCells={initialCells} options={{ sheetHeight: 260, sheetWidth: 420 }} />
+      <GridSheet
+        book={book}
+        initialCells={initialCells}
+        options={{
+          matrixAlignment: 'both',
+          sheetHeight: 260,
+          sheetWidth: 420,
+        }}
+      />
     </div>
   );
 }

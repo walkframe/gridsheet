@@ -151,23 +151,63 @@ const MatrixFunctions: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       <div style={sheetStyle}>
         <h3 style={labelStyle}>MMULT — Matrix product</h3>
-        <GridSheet book={book} sheetName="MMULT" initialCells={mmultCells} options={{ sheetHeight: 180 }} />
+        <GridSheet
+          book={book}
+          sheetName="MMULT"
+          initialCells={mmultCells}
+          options={{
+            matrixAlignment: 'both',
+            sheetHeight: 180,
+          }}
+        />
       </div>
       <div style={sheetStyle}>
         <h3 style={labelStyle}>TRANSPOSE — Matrix transpose</h3>
-        <GridSheet book={book} sheetName="TRANSPOSE" initialCells={transposeCells} options={{ sheetHeight: 210 }} />
+        <GridSheet
+          book={book}
+          sheetName="TRANSPOSE"
+          initialCells={transposeCells}
+          options={{
+            matrixAlignment: 'both',
+            sheetHeight: 210,
+          }}
+        />
       </div>
       <div style={sheetStyle}>
         <h3 style={labelStyle}>MINVERSE — Matrix inverse</h3>
-        <GridSheet book={book} sheetName="MINVERSE" initialCells={minverseCells} options={{ sheetHeight: 210 }} />
+        <GridSheet
+          book={book}
+          sheetName="MINVERSE"
+          initialCells={minverseCells}
+          options={{
+            matrixAlignment: 'both',
+            sheetHeight: 210,
+          }}
+        />
       </div>
       <div style={sheetStyle}>
         <h3 style={labelStyle}>MDETERM — Matrix determinant</h3>
-        <GridSheet book={book} sheetName="MDETERM" initialCells={mdetermCells} options={{ sheetHeight: 210 }} />
+        <GridSheet
+          book={book}
+          sheetName="MDETERM"
+          initialCells={mdetermCells}
+          options={{
+            matrixAlignment: 'both',
+            sheetHeight: 210,
+          }}
+        />
       </div>
       <div style={sheetStyle}>
         <h3 style={labelStyle}>SUMPRODUCT — Sum of element-wise products</h3>
-        <GridSheet book={book} sheetName="SUMPRODUCT" initialCells={sumproductCells} options={{ sheetHeight: 210 }} />
+        <GridSheet
+          book={book}
+          sheetName="SUMPRODUCT"
+          initialCells={sumproductCells}
+          options={{
+            matrixAlignment: 'both',
+            sheetHeight: 210,
+          }}
+        />
       </div>
       <Debugger book={book} />
     </div>

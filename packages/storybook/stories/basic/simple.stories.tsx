@@ -26,6 +26,7 @@ const SimpleSheet = () => {
     <GridSheet
       book={book}
       options={{
+        matrixAlignment: 'both',
         sheetResize: 'both',
         sheetWidth: 700,
         sheetHeight: 250,

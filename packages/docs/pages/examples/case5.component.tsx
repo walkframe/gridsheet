@@ -881,7 +881,10 @@ export default function AdvancedFeatures() {
                     width: '100%',
                     fontSize: '14px',
                   }}
-                  options={{ sheetResize: 'both' }}
+                  options={{
+                    matrixAlignment: 'both',
+                    sheetResize: 'both',
+                  }}
                 />
               </div>
             ))}

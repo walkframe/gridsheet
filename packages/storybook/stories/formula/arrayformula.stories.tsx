@@ -52,7 +52,10 @@ const ArrayformulaBasicSheet: React.FC = () => {
           },
           ensured: { numRows: 10, numCols: 6 },
         })}
-        options={{ sheetHeight: 320 }}
+        options={{
+          matrixAlignment: 'both',
+          sheetHeight: 320,
+        }}
       />
       <Debugger book={book} />
     </>
@@ -80,7 +83,10 @@ const ArrayformulaRangeSheet: React.FC = () => {
         },
         ensured: { numRows: 10, numCols: 6 },
       })}
-      options={{ sheetHeight: 320 }}
+      options={{
+        matrixAlignment: 'both',
+        sheetHeight: 320,
+      }}
     />
   );
 };
@@ -106,7 +112,10 @@ const ArrayformulaIfSheet: React.FC = () => {
         },
         ensured: { numRows: 10, numCols: 4 },
       })}
-      options={{ sheetHeight: 320 }}
+      options={{
+        matrixAlignment: 'both',
+        sheetHeight: 320,
+      }}
     />
   );
 };

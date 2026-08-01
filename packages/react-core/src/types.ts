@@ -69,6 +69,7 @@ import type {
   ModeType,
   DensityType,
   GridLinesType,
+  MatrixAlignmentType,
   PointType,
   ZoneType,
   RectType,
@@ -117,6 +118,11 @@ export type OptionsType = {
   formulaBarBorders?: BorderSides;
   /** Which sides of the matrix (cell grid) draw an outer border. Default: { all: true }. */
   matrixBorders?: BorderSides;
+  /**
+   * Center the matrix inside the sheet box when the box (explicit sheetWidth/sheetHeight,
+   * or a manual resize) is larger than the content. Default 'none' keeps top-left.
+   */
+  matrixAlignment?: MatrixAlignmentType;
   contextMenu?: ContextMenuItemDescriptor[];
   rowMenu?: RowMenuItemDescriptor[];
   colMenu?: ColMenuItemDescriptor[];

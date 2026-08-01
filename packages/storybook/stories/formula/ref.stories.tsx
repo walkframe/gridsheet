@@ -81,7 +81,9 @@ const RefsSheet = () => {
           },
           ensured: { numRows: 10, numCols: 10 },
         })}
-        options={{}}
+        options={{
+          matrixAlignment: 'both',
+        }}
       />
       <Debugger book={book} />
     </>

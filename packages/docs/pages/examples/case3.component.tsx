@@ -451,6 +451,7 @@ export default function DataManagement() {
         book={book}
         initialCells={initialCells}
         options={{
+          matrixAlignment: 'both',
           sheetResize: 'both',
           showFormulaBar: false,
         }}

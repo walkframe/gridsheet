@@ -27,6 +27,7 @@ const SortFilterSheet = () => {
     <GridSheet
       book={book}
       options={{
+        matrixAlignment: 'both',
         sheetResize: 'both',
       }}
       initialCells={buildInitialCells({

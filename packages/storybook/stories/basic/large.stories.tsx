@@ -76,6 +76,7 @@ const LargeSheet = () => {
           ensured: { numRows: 2000, numCols: 100 },
         })}
         options={{
+          matrixAlignment: 'both',
           sheetHeight: 400,
           sheetWidth: 1000,
           sheetResize: 'both',

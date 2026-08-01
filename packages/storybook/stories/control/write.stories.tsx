@@ -65,7 +65,9 @@ const WriteComponent: React.FC<Props> = ({ x, y, value }: Props) => {
           numCols: 10,
         },
       })}
-      options={{}}
+      options={{
+        matrixAlignment: 'both',
+      }}
     />
   );
 };

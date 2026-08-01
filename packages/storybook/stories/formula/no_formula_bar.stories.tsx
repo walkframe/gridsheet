@@ -28,6 +28,7 @@ const NoFormulaBarSheet = () => {
         ensured: { numRows: 10, numCols: 10 },
       })}
       options={{
+        matrixAlignment: 'both',
         sheetHeight: 600,
         showFormulaBar: false,
       }}

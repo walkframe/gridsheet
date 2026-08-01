@@ -41,7 +41,9 @@ const ColRowSheet = () => {
         },
         ensured: { numRows: 20, numCols: 15 },
       })}
-      options={{}}
+      options={{
+        matrixAlignment: 'both',
+      }}
     />
   );
 };

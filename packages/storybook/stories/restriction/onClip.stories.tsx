@@ -50,6 +50,7 @@ const SerializeForClipboardComponent: React.FC = () => {
     <GridSheet
       book={book}
       options={{
+        matrixAlignment: 'both',
         showFormulaBar: false,
       }}
       initialCells={buildInitialCells({

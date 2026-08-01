@@ -82,7 +82,9 @@ const DynamicOptionsComponent: React.FC = () => {
           },
           ensured: { numRows: 4, numCols: 3 },
         })}
-        options={{}}
+        options={{
+          matrixAlignment: 'both',
+        }}
       />
       <hr />
 
@@ -103,7 +105,9 @@ const DynamicOptionsComponent: React.FC = () => {
             },
           },
         })}
-        options={{}}
+        options={{
+          matrixAlignment: 'both',
+        }}
       />
     </>
   );

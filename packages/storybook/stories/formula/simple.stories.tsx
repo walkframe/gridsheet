@@ -100,6 +100,7 @@ const SimpleCalculationSheet = () => {
           flattenAs: undefined,
         })}
         options={{
+          matrixAlignment: 'both',
           sheetHeight: 600,
         }}
       />

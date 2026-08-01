@@ -182,9 +182,11 @@ export function GridSheet({
   // and the rendered pixel size is measured via ResizeObserver instead of being fixed.
   const fillWidth = typeof options.sheetWidth === 'string';
   const fillHeight = typeof options.sheetHeight === 'string';
-  // A size is "fixed" (a box to center a smaller grid within) when explicitly provided.
-  const fixedWidth = options.sheetWidth != null;
-  const fixedHeight = options.sheetHeight != null;
+  // matrixAlignment picks which axes keep a fixed box (so a smaller grid can be centered
+  // within it); 'none' (default) shrinks to content on both axes, preserving old behavior.
+  const matrixAlignment = options.matrixAlignment ?? 'none';
+  const fixedWidth = matrixAlignment === 'horizontal' || matrixAlignment === 'both';
+  const fixedHeight = matrixAlignment === 'vertical' || matrixAlignment === 'both';
   const [sheetHeight, setSheetHeight] = useState(
     typeof options?.sheetHeight === 'number' ? options.sheetHeight : estimateSheetHeight(initialCells),
   );
@@ -256,6 +258,7 @@ export function GridSheet({
         data-mode={mode}
         data-density={density}
         data-gridlines={gridLines}
+        data-matrix-align={matrixAlignment}
         data-rows={store.sheetReactive.current?.numRows ?? 0}
         data-cols={store.sheetReactive.current?.numCols ?? 0}
         style={

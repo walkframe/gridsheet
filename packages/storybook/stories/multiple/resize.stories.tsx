@@ -44,6 +44,7 @@ const CompareResizersSheet = () => {
                   ensured: { numRows: 10, numCols: 10 },
                 })}
                 options={{
+                  matrixAlignment: 'both',
                   mode: 'dark',
                   sheetResize: 'none',
                   sheetHeight: 200,
@@ -67,6 +68,7 @@ const CompareResizersSheet = () => {
                   ensured: { numRows: 10, numCols: 10 },
                 })}
                 options={{
+                  matrixAlignment: 'both',
                   sheetResize: 'horizontal',
                   sheetHeight: 200,
                   sheetWidth: 200,
@@ -91,6 +93,7 @@ const CompareResizersSheet = () => {
                   ensured: { numRows: 10, numCols: 10 },
                 })}
                 options={{
+                  matrixAlignment: 'both',
                   sheetResize: 'vertical',
                   sheetHeight: 200,
                   sheetWidth: 200,
@@ -114,6 +117,7 @@ const CompareResizersSheet = () => {
                   ensured: { numRows: 10, numCols: 10 },
                 })}
                 options={{
+                  matrixAlignment: 'both',
                   sheetResize: 'both',
                   sheetHeight: 200,
                   sheetWidth: 200,

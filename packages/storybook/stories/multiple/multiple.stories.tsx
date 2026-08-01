@@ -87,6 +87,7 @@ const SheetsSheet = () => {
                   ensured: { numRows: 5, numCols: 3 },
                 })}
                 options={{
+                  matrixAlignment: 'both',
                   sheetResize: 'both',
                 }}
               />
@@ -123,6 +124,7 @@ const SheetsSheet = () => {
                   ensured: { numRows: 5, numCols: 3 },
                 })}
                 options={{
+                  matrixAlignment: 'both',
                   mode: 'dark',
                 }}
               />

@@ -16,7 +16,10 @@ const Sheet = ({ mode }: Props) => {
       initialCells={buildInitialCells({
         ensured: { numRows: 10, numCols: 10 },
       })}
-      options={{ mode }}
+      options={{
+        matrixAlignment: 'both',
+        mode,
+      }}
     />
   );
 };

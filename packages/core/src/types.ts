@@ -51,6 +51,10 @@ export type FeedbackType = (args: { sheet: UserSheet; points?: CursorStateType }
 export type ModeType = 'light' | 'dark' | 'auto' | 'inherit';
 export type DensityType = 'compact' | 'comfortable';
 export type GridLinesType = 'all' | 'horizontal' | 'none';
+// How the matrix is aligned inside the sheet box when the box (explicit sheetWidth/
+// sheetHeight, or a manual resize) is larger than the content. 'none' (default) keeps the
+// pre-existing top-left behaviour (the box shrinks to the content).
+export type MatrixAlignmentType = 'none' | 'vertical' | 'horizontal' | 'both';
 export type HeadersType = 'both' | 'vertical' | 'horizontal' | 'none';
 
 export type AsyncCache = {

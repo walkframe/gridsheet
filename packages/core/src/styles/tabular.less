@@ -8,14 +8,20 @@
 
 .gs-tabular {
   overflow: auto;
-  // Center the grid when it is smaller than the configured sheetWidth/sheetHeight box;
-  // `safe` falls back to start (top-left) when it overflows, so scrolling still reaches
-  // the top/left rows.
+  // Flex so the matrix can be centered inside a larger box; default alignment is start
+  // (top-left) unless matrixAlignment opts an axis in below. `safe` falls back to start
+  // when the grid overflows, so scrolling still reaches the top/left rows.
   display: flex;
-  justify-content: safe center;
-  align-items: safe center;
   box-sizing: border-box;
   position: relative;
+}
+.gs-root1[data-matrix-align='horizontal'] .gs-tabular,
+.gs-root1[data-matrix-align='both'] .gs-tabular {
+  justify-content: safe center;
+}
+.gs-root1[data-matrix-align='vertical'] .gs-tabular,
+.gs-root1[data-matrix-align='both'] .gs-tabular {
+  align-items: safe center;
 }
 
 .gs-tabular-inner {
