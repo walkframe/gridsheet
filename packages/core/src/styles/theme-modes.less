@@ -20,9 +20,9 @@
   --gs-bg: transparent;
   --gs-canvas: transparent;
   --gs-surface: transparent;
-  // Header row/column and the formula bar are transparent too, so the whole sheet — chrome
-  // included — blends into the host background. The header text (--gs-header-fg) and grid
-  // lines still distinguish them.
+  // The formula bar is transparent so the chrome blends into the host too. The sticky
+  // grid headers (.gs-th) get a frosted-glass treatment separately below — a fully
+  // transparent header would let cells show through as they scroll under it.
   --gs-header-bg: transparent;
 }
 :where(.gs-root1[data-mode="inherit-dark"], .gs-editor[data-mode="inherit-dark"]) {
@@ -43,6 +43,20 @@
   .gs-adjuster {
     background-color: transparent;
   }
+}
+
+// Sticky grid headers must occlude the cells that scroll beneath them. A translucent tint
+// plus a backdrop blur (frosted glass) keeps the header blended into the host background
+// while hiding the scrolling content, so it stays readable during scroll.
+.gs-root1[data-mode="inherit-light"] .gs-th {
+  background-color: rgba(128, 128, 128, 0.1);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.gs-root1[data-mode="inherit-dark"] .gs-th {
+  background-color: rgba(128, 128, 128, 0.1);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 
 // ---- gridLines option (data-gridlines on .gs-root1) ----
