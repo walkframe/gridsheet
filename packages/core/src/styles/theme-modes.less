@@ -8,21 +8,41 @@
   }
 }
 
-// ---- mode: inherit — transparent, blends into wherever the sheet is placed ----
-// Backgrounds are fully transparent so the host background shows through (no forced
-// palette). The foreground follows the surrounding text (currentColor), and every line /
-// muted tone is a translucent tint of currentColor, so the grid sits naturally on any
-// background — light, dark, or colored. Consumers can still set --gs-bg / --gs-accent etc.
-:where(.gs-root1[data-mode="inherit"], .gs-editor[data-mode="inherit"]) {
-  --gs-fg: currentColor;
+// ---- mode: inherit-light / inherit-dark — transparent, blends into its placement ----
+// The frame / canvas / cell surfaces are transparent so the host background shows through,
+// but everything else (text, grid lines, headers, and — crucially — the portaled editor
+// and menus, which live outside .gs-root1 and cannot inherit the host's currentColor) uses
+// a concrete light or dark palette. Pick the variant matching the host background's
+// lightness. --gs-editor-surface stays opaque so the editing cell / dropdowns remain
+// readable and cover the selection overlay beneath them.
+:where(.gs-root1[data-mode="inherit-light"], .gs-editor[data-mode="inherit-light"]) {
+  .gs-tokens-light();
   --gs-bg: transparent;
   --gs-canvas: transparent;
   --gs-surface: transparent;
-  --gs-border: color-mix(in srgb, currentColor 16%, transparent);
-  --gs-muted-fg: color-mix(in srgb, currentColor 55%, transparent);
-  --gs-header-bg: color-mix(in srgb, currentColor 5%, transparent);
-  --gs-header-fg: color-mix(in srgb, currentColor 70%, transparent);
-  --gs-accent: #2563eb;
+  // Header row/column and the formula bar are transparent too, so the whole sheet — chrome
+  // included — blends into the host background. The header text (--gs-header-fg) and grid
+  // lines still distinguish them.
+  --gs-header-bg: transparent;
+}
+:where(.gs-root1[data-mode="inherit-dark"], .gs-editor[data-mode="inherit-dark"]) {
+  .gs-tokens-dark();
+  --gs-bg: transparent;
+  --gs-canvas: transparent;
+  --gs-surface: transparent;
+  --gs-header-bg: transparent;
+}
+
+// The grid-line backing (.gs-tabular-inner / .gs-adjuster use --gs-border) would show
+// through the transparent cells as a solid fill; keep those transparent in the inherit
+// modes so the cells blend into the host background. Grid lines still come from the cell
+// borders.
+.gs-root1[data-mode="inherit-light"],
+.gs-root1[data-mode="inherit-dark"] {
+  .gs-tabular-inner,
+  .gs-adjuster {
+    background-color: transparent;
+  }
 }
 
 // ---- gridLines option (data-gridlines on .gs-root1) ----

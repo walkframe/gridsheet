@@ -22,6 +22,10 @@
   --gs-bg: rgba(128, 128, 128, 0.07);
   --gs-canvas: transparent;
   --gs-surface: @light_surface_color;
+  // Opaque surface for portaled/floating editors and menus. Kept opaque even in the
+  // inherit modes (where --gs-surface goes transparent so cells blend) so the editing
+  // cell and dropdowns stay readable and cover the selection overlay beneath them.
+  --gs-editor-surface: @light_surface_color;
   --gs-header-bg: @light_header_color;
   --gs-header-fg: @light_header_text_color;
   --gs-accent: @light_accent_color;
@@ -101,13 +105,13 @@
       caret-color: var(--gs-fg);
     }
     .gs-editor-hl {
-      background-color: var(--gs-surface);
+      background-color: var(--gs-editor-surface);
       color: var(--gs-fg);
     }
   }
   .gs-editor-options {
     color: var(--gs-fg);
-    background-color: var(--gs-surface);
+    background-color: var(--gs-editor-surface);
     border: solid 1px var(--gs-border);
   }
 }

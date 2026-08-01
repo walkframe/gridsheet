@@ -46,9 +46,11 @@ export type CursorStateType = {
 export type FeedbackType = (args: { sheet: UserSheet; points?: CursorStateType }) => void;
 
 // 'light' | 'dark' bake a fixed palette. 'auto' follows the OS/browser color scheme
-// (prefers-color-scheme). 'inherit' derives the palette from the surrounding
-// background/text so the sheet blends into wherever it is placed.
-export type ModeType = 'light' | 'dark' | 'auto' | 'inherit';
+// (prefers-color-scheme). 'inherit-light' / 'inherit-dark' keep the background transparent
+// so the sheet blends into wherever it is placed, using the light/dark palette for
+// everything else (foreground, borders, and the portaled editor/menus which cannot inherit
+// the host's currentColor) — pick the one matching the host background's lightness.
+export type ModeType = 'light' | 'dark' | 'auto' | 'inherit-light' | 'inherit-dark';
 export type DensityType = 'compact' | 'comfortable';
 export type GridLinesType = 'all' | 'horizontal' | 'none';
 // How the matrix is aligned inside the sheet box when the box (explicit sheetWidth/
