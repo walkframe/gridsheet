@@ -182,11 +182,18 @@ export function GridSheet({
   // and the rendered pixel size is measured via ResizeObserver instead of being fixed.
   const fillWidth = typeof options.sheetWidth === 'string';
   const fillHeight = typeof options.sheetHeight === 'string';
-  // matrixAlignment picks which axes keep a fixed box (so a smaller grid can be centered
-  // within it); 'none' (default) shrinks to content on both axes, preserving old behavior.
+  // matrixAlignment picks which axes may center. A fixed box (that a smaller grid centers
+  // within) only exists when the size is *intentionally* larger than the content — an
+  // explicit sheetWidth/sheetHeight, or a manual resize — never from the content estimate
+  // or the formula-bar width, so nothing but those produces an empty gap. 'none' keeps the
+  // old shrink-to-content behavior.
   const matrixAlignment = options.matrixAlignment ?? 'none';
-  const fixedWidth = matrixAlignment === 'horizontal' || matrixAlignment === 'both';
-  const fixedHeight = matrixAlignment === 'vertical' || matrixAlignment === 'both';
+  const centersWidth = matrixAlignment === 'horizontal' || matrixAlignment === 'both';
+  const centersHeight = matrixAlignment === 'vertical' || matrixAlignment === 'both';
+  const [resizedWidth, setResizedWidth] = useState(false);
+  const [resizedHeight, setResizedHeight] = useState(false);
+  const fixedWidth = centersWidth && (options.sheetWidth != null || resizedWidth);
+  const fixedHeight = centersHeight && (options.sheetHeight != null || resizedHeight);
   const [sheetHeight, setSheetHeight] = useState(
     typeof options?.sheetHeight === 'number' ? options.sheetHeight : estimateSheetHeight(initialCells),
   );
@@ -200,6 +207,14 @@ export function GridSheet({
     }
     let first = true;
     const ro = new ResizeObserver(() => {
+      // CSS `resize` writes an inline width/height when the user drags the handle; that is
+      // the signal that the box was intentionally sized, so a smaller grid may now center.
+      if (el.style.width) {
+        setResizedWidth(true);
+      }
+      if (el.style.height) {
+        setResizedHeight(true);
+      }
       if (first) {
         first = false;
         // In fill mode we want the initial measurement; otherwise keep the provided/estimated size.
