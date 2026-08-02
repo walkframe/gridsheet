@@ -60,7 +60,6 @@ const SparklinePolicyMixin: PolicyMixinType = {
             ],
           }}
           options={{
-            matrixAlignment: 'both',
             responsive: true,
             maintainAspectRatio: false,
             plugins: { legend: { display: false }, tooltip: { enabled: true } },
