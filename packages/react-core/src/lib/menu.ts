@@ -386,6 +386,8 @@ export const defaultRowMenuDescriptors: RowMenuItemDescriptor[] = [
 // The col menu composes registered section components (filter, sort, label) and
 // simple menu items. Use `registerMenuComponent` to override built-in sections.
 export const defaultColMenuDescriptors: ColMenuItemDescriptor[] = [
+  { type: 'component', componentId: 'col-label' },
+  { type: 'divider' },
   { type: 'component', componentId: 'col-filter' },
   { type: 'divider' },
   { type: 'component', componentId: 'col-sort' },
@@ -473,8 +475,6 @@ export const defaultColMenuDescriptors: ColMenuItemDescriptor[] = [
     shortcuts: ['F'],
     onClick: (ctx) => ctx.search(),
   },
-  { type: 'divider' },
-  { type: 'component', componentId: 'col-label' },
 ];
 
 // ---- buildMenuContext -------------------------------------------------------

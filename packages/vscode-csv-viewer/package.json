@@ -1,0 +1,77 @@
+{
+  "name": "gridsheet-csv-viewer",
+  "displayName": "GridSheet CSV/TSV Viewer",
+  "description": "Open CSV and TSV files in an interactive GridSheet grid.",
+  "version": "0.1.0",
+  "publisher": "walkframe",
+  "private": true,
+  "license": "Apache-2.0",
+  "engines": {
+    "vscode": "^1.84.0"
+  },
+  "categories": [
+    "Visualization",
+    "Data Science",
+    "Other"
+  ],
+  "keywords": [
+    "csv",
+    "tsv",
+    "viewer",
+    "grid",
+    "spreadsheet",
+    "gridsheet"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "gridsheet.csv",
+        "displayName": "GridSheet CSV Viewer",
+        "selector": [
+          { "filenamePattern": "*.csv" }
+        ],
+        "priority": "option"
+      },
+      {
+        "viewType": "gridsheet.tsv",
+        "displayName": "GridSheet TSV Viewer",
+        "selector": [
+          { "filenamePattern": "*.tsv" },
+          { "filenamePattern": "*.tab" }
+        ],
+        "priority": "option"
+      }
+    ],
+    "commands": [
+      {
+        "command": "gridsheet.openCsvViewer",
+        "title": "Open with GridSheet CSV/TSV Viewer",
+        "category": "GridSheet",
+        "icon": "$(table)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "gridsheet.openCsvViewer",
+          "group": "navigation",
+          "when": "resourceExtname =~ /\\.(csv|tsv|tab)$/ && activeEditor == 'workbench.editors.files.textFileEditor'"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@gridsheet/preact-core": "workspace:*",
+    "@gridsheet/functions": "workspace:*",
+    "dayjs": "^1.11.13",
+    "esbuild": "^0.25.2",
+    "preact": "^10.26.6"
+  }
+}

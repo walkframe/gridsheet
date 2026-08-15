@@ -19,6 +19,22 @@ const LabelSection: FC<ColMenuSectionProps> = ({ x, close }) => {
       const colCell = sheet.getCell({ y: 0, x }, { resolution: 'SYSTEM' });
       setLabel(colCell?.label ?? '');
     }
+    // When the menu was opened by double-clicking the header, jump straight into
+    // renaming: focus the label input and select its text so a keystroke replaces
+    // it. Double rAF so the controlled value has committed to the DOM before we
+    // set the selection (otherwise React moves the caret to the end afterwards).
+    if (store.columnMenuState?.focusLabel) {
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          const input = labelInputRef.current;
+          if (input) {
+            input.focus();
+            input.setSelectionRange(0, input.value.length);
+          }
+        }),
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [x, sheet]);
 
   const handleApplyLabel = useCallback(() => {

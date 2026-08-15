@@ -1,0 +1,11 @@
+id,label,value,note
+1,empty next,,trailing empty ok
+2,"quoted, comma","1,234","has ""escaped"" quotes"
+3,"multi
+line","spans
+two rows",embedded newline
+4,  spaced  ,42,leading/trailing spaces
+5,unicode 日本語,🎉,emoji + CJK
+6,ragged short,7
+7,ragged long,8,extra,extra2,extra3
+8,crlf line,9,ends with CRLF

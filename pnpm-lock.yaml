@@ -395,21 +395,18 @@ importers:
       '@gridsheet/functions':
         specifier: workspace:*
         version: link:../functions
-      '@gridsheet/react-core':
+      '@gridsheet/preact-core':
         specifier: workspace:*
-        version: link:../react-core
+        version: link:../preact-core
       dayjs:
         specifier: ^1.11.13
         version: 1.11.13
       esbuild:
         specifier: ^0.25.2
         version: 0.25.2
-      react:
-        specifier: 18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: 18.2.0
-        version: 18.2.0(react@18.2.0)
+      preact:
+        specifier: ^10.26.6
+        version: 10.26.6
 
   packages/vue-core:
     dependencies:
@@ -4733,11 +4730,6 @@ packages:
   react-docgen@7.1.1:
     resolution: {integrity: sha512-hlSJDQ2synMPKFZOsKo9Hi8WWZTC7POR8EmWvTSjow+VDgKzkmjQvFm2fk0tmRw+f0vTOIYKlarR0iL4996pdg==}
     engines: {node: '>=16.14.0'}
-
-  react-dom@18.2.0:
-    resolution: {integrity: sha512-6IMTriUmvsjHUjNtEDudZfuDQUoWXVxKHhlEGSk81n4YFS+r/Kl99wXiwlVXtPBtJenozv2P+hxDsw9eA7Xo6g==}
-    peerDependencies:
-      react: 18.2.0
 
   react-dom@18.3.1:
     resolution: {integrity: sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==}
@@ -11444,12 +11436,6 @@ snapshots:
       strip-indent: 4.0.0
     transitivePeerDependencies:
       - supports-color
-
-  react-dom@18.2.0(react@18.2.0):
-    dependencies:
-      loose-envify: 1.4.0
-      react: 18.2.0
-      scheduler: 0.23.2
 
   react-dom@18.3.1(react@18.2.0):
     dependencies:

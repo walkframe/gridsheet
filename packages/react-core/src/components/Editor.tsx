@@ -90,7 +90,10 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
     const { bottom: top, left } = rect;
 
     return createPortal(
-      <>
+      // Portaled to <body>, outside .gs-root1 / .gs-editor, so carry data-mode
+      // here too — otherwise the theme-specific styles (e.g. the dark function
+      // guide) never match and the help renders with the light palette.
+      <div className="gs-editor-portal" data-mode={mode}>
         {activeFunctionHelp &&
           filteredOptions.length === 0 &&
           (!selectingZone || (selectingZone.endY === -1 && selectingZone.endX === -1)) && (
@@ -110,7 +113,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
             onOptionMouseDown={handleOptionMouseDown}
           />
         )}
-      </>,
+      </div>,
       document.body,
     );
   };

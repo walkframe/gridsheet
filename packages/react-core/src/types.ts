@@ -169,7 +169,7 @@ export type StoreType = {
   colMenu: ColMenuItemDescriptor[];
   resizingPositionY: [number, number, number]; // indexY, startY, endY
   resizingPositionX: [number, number, number]; // indexX, startX, endX
-  columnMenuState: { x: number; position: PositionType } | null;
+  columnMenuState: { x: number; position: PositionType; focusLabel?: boolean } | null;
   rowMenuState: { y: number; position: PositionType } | null;
   editorHovering: boolean;
 };

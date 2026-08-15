@@ -1362,7 +1362,9 @@ class FilterRowsAction<T extends { x?: number; filter?: FilterConfig }> extends 
 }
 export const filterRows = new FilterRowsAction().bind();
 
-class SetColumnMenuAction<T extends { x: number; position: { y: number; x: number } } | null> extends CoreAction<T> {
+class SetColumnMenuAction<
+  T extends { x: number; position: { y: number; x: number }; focusLabel?: boolean } | null,
+> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     return {
       ...store,
