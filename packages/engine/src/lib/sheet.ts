@@ -2071,6 +2071,21 @@ export class Sheet implements UserSheet {
         this.registry.data[id] = next;
         diffAfter[id] = next;
       }
+      // Keep the row-height override cache in sync when a row header's height
+      // changes (e.g. a resize goes through this partial-update path, not the
+      // stacking path that seeds the cache). getOffsetTop() / setTotalSize() read
+      // this cache for vertical positioning, so a stale entry leaves the
+      // selection/editor overlay drifting from the actual (correctly sized) cells.
+      // Columns are unaffected: setTotalSize reads column widths directly.
+      if (point.x === 0 && point.y >= 1) {
+        const finalH = this.registry.data[id]?.height;
+        const defaultH = this.defaultRowHeight || DEFAULT_HEIGHT;
+        if (finalH != null && finalH !== defaultH) {
+          this._rowHeightOverrides.set(point.y, finalH);
+        } else {
+          this._rowHeightOverrides.delete(point.y);
+        }
+      }
       changedAddresses.push(address);
     });
 
