@@ -19,22 +19,33 @@ export class CsvEditorProvider implements vscode.CustomTextEditorProvider {
     };
     webview.html = this.getHtml(webview);
 
+    // Compare documents ignoring trailing whitespace/newlines, so the grid's
+    // serialization (no final newline) and save-time tweaks
+    // (files.insertFinalNewline / trimTrailingWhitespace) are treated as equal.
+    const normalize = (s: string) => s.replace(/\s+$/, '');
+
+    // The document text the webview currently reflects — updated whenever we push
+    // data to it or apply a grid edit. A change that matches this is one the grid
+    // already shows, so it must NOT trigger a remount (which would drop transient
+    // state: selection, scroll, and row/column resizes — none of which are stored
+    // in the CSV/TSV file).
+    let lastKnownText = document.getText();
+
     const postData = () => {
+      lastKnownText = document.getText();
       const rows = parseDelimited(document.getText(), this.delimiter);
       webview.postMessage({ type: 'data', rows, delimiter: this.delimiter === '\t' ? 'TSV' : 'CSV' });
     };
 
-    // Text we last wrote into the document from a webview edit. Used to tell our
-    // own change apart from an external one (file edited elsewhere, git, etc.).
-    let lastAppliedText: string | null = null;
-
     // Apply a grid edit back into the TextDocument. This marks the document dirty
-    // (tab shows ●) and Ctrl+S then saves it through VS Code's normal flow.
+    // (tab shows ●) and Ctrl+S then saves it through VS Code's normal flow. A
+    // no-op serialization (e.g. after a pure resize) or a trailing-newline-only
+    // delta is skipped so it doesn't needlessly dirty the file.
     const updateDocument = async (text: string) => {
-      if (text === document.getText()) {
+      if (normalize(text) === normalize(document.getText())) {
         return;
       }
-      lastAppliedText = text;
+      lastKnownText = text;
       const edit = new vscode.WorkspaceEdit();
       const fullRange = new vscode.Range(new vscode.Position(0, 0), new vscode.Position(document.lineCount, 0));
       edit.replace(document.uri, fullRange, text);
@@ -50,10 +61,10 @@ export class CsvEditorProvider implements vscode.CustomTextEditorProvider {
       if (e.document.uri.toString() !== document.uri.toString()) {
         return;
       }
-      // Our own edit round-tripped through the document: the webview already
-      // shows this state, so don't push it back (which would remount the grid
-      // and drop the caret/selection mid-edit). Only re-sync on external changes.
-      if (e.document.getText() === lastAppliedText) {
+      // The webview already reflects this content (its own edit, or a save-time
+      // trailing-whitespace/newline tweak) — don't remount. Only re-sync on a
+      // real external change.
+      if (normalize(e.document.getText()) === normalize(lastKnownText)) {
         return;
       }
       if (!webviewPanel.active) {
