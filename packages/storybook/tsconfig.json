@@ -27,6 +27,12 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "paths": {
+      "@gridsheet/engine": [
+        "../engine/src"
+      ],
+      "@gridsheet/engine/*": [
+        "../engine/src/*"
+      ],
       "@gridsheet/web": [
         "../web/src"
       ],

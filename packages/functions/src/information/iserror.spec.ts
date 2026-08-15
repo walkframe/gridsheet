@@ -1,5 +1,5 @@
 import { IserrorFunction } from './iserror';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/engine';
 
 describe('iserror', () => {
   const sheet = new Sheet({});

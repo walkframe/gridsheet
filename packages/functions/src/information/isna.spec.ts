@@ -1,5 +1,5 @@
 import { IsnaFunction } from './isna';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/engine';
 
 describe('isna', () => {
   const sheet = new Sheet({});

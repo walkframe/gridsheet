@@ -1,5 +1,5 @@
 import { IsemailFunction } from './isemail';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/engine';
 
 describe('isemail', () => {
   const sheet = new Sheet({});

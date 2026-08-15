@@ -1,4 +1,4 @@
-import type { FunctionMapping } from '@gridsheet/web';
+import type { FunctionMapping } from '@gridsheet/engine';
 import { TodayFunction } from './today';
 import { DateFunction } from './date';
 import { TimeFunction } from './time';

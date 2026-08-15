@@ -18,7 +18,7 @@ export default defineConfig(() => ({
     },
     outDir: "dist",
     rollupOptions: {
-      external: [/^@gridsheet\/core/, /^dayjs/],
+      external: [/^@gridsheet\//, /^dayjs/],
       output: {
         preserveModules: false,
       },

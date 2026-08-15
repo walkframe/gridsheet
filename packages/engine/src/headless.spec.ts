@@ -2,10 +2,41 @@ import {
   Sheet,
   createRegistry,
   toValueMatrix,
+  Lexer,
   BaseFunctionAsync,
   type FunctionArgumentDefinition,
   type FunctionCategory,
 } from './index';
+
+// A quoted sheet name may contain dots (a file path like 'sub/data.csv'). The
+// tokenizer must treat 'name'!A1 as a cross-sheet REF, not mistake the dot for a
+// partial function name (which produced #NAME? and broke path-based references).
+describe('sheet-reference tokenization', () => {
+  const typesOf = (formula: string) => {
+    const lexer = new Lexer(formula);
+    lexer.tokenize();
+    return lexer.tokens.map((t) => t.type);
+  };
+
+  it("tokenizes 'a.csv'!A1 as a REF (not INVALID_REF)", () => {
+    const types = typesOf("'a.csv'!A1");
+    expect(types).toContain('REF');
+    expect(types).not.toContain('INVALID_REF');
+  });
+
+  it("tokenizes 'sub/data.csv'!B2 as a REF", () => {
+    const types = typesOf("'sub/data.csv'!B2");
+    expect(types).toContain('REF');
+    expect(types).not.toContain('INVALID_REF');
+  });
+
+  it('still treats a dotted bareword before "(" as a function, not a ref', () => {
+    // e.g. a namespaced function call shouldn't be misread as a reference.
+    const types = typesOf('NS.FN(1)');
+    expect(types).toContain('FUNCTION');
+    expect(types).not.toContain('REF');
+  });
+});
 
 /**
  * Headless resolution — no UI, no DOM.

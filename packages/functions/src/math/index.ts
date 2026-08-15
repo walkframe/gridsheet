@@ -1,4 +1,4 @@
-import type { FunctionMapping } from '@gridsheet/web';
+import type { FunctionMapping } from '@gridsheet/engine';
 import { ModFunction } from './mod';
 import { SqrtFunction } from './sqrt';
 import { ProductFunction } from './product';

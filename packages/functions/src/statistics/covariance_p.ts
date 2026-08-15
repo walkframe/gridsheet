@@ -1,7 +1,7 @@
-import { FormulaError } from '@gridsheet/web';
-import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/web';
-import { ensureNumber, isNumeric } from '@gridsheet/web';
-import type { FunctionCategory } from '@gridsheet/web';
+import { FormulaError } from '@gridsheet/engine';
+import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/engine';
+import { ensureNumber, isNumeric } from '@gridsheet/engine';
+import type { FunctionCategory } from '@gridsheet/engine';
 
 const description = `Returns the population covariance, the average of the products of deviations for each data point pair in two datasets.`;
 

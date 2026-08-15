@@ -1,5 +1,5 @@
-import type { FunctionMapping, RegistryProps } from '@gridsheet/web';
-import { createBook } from '@gridsheet/web';
+import type { FunctionMapping, RegistryProps } from '@gridsheet/engine';
+import { createBook } from '@gridsheet/engine';
 import { mathFunctions } from './math';
 import { statisticsFunctions } from './statistics';
 import { textFunctions } from './text';

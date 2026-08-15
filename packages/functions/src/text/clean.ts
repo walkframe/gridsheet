@@ -1,7 +1,7 @@
-import { FormulaError } from '@gridsheet/web';
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/web';
-import { ensureString } from '@gridsheet/web';
-import type { FunctionCategory } from '@gridsheet/web';
+import { FormulaError } from '@gridsheet/engine';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/engine';
+import { ensureString } from '@gridsheet/engine';
+import type { FunctionCategory } from '@gridsheet/engine';
 
 const description = `Removes all non-printable ASCII characters (code points 0–31) from text.`;
 

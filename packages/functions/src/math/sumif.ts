@@ -1,4 +1,4 @@
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/web';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/engine';
 import {
   Sheet,
   eachMatrix,
@@ -8,8 +8,8 @@ import {
   ensureString,
   ensureNumber,
   isNumeric,
-} from '@gridsheet/web';
-import type { FunctionCategory } from '@gridsheet/web';
+} from '@gridsheet/engine';
+import type { FunctionCategory } from '@gridsheet/engine';
 
 const description = `Returns the sum of a series of cells.`;
 

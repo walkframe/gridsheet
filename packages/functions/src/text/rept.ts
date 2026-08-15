@@ -1,7 +1,7 @@
-import { FormulaError } from '@gridsheet/web';
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/web';
-import { ensureString, ensureNumber } from '@gridsheet/web';
-import type { FunctionCategory } from '@gridsheet/web';
+import { FormulaError } from '@gridsheet/engine';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/engine';
+import { ensureString, ensureNumber } from '@gridsheet/engine';
+import type { FunctionCategory } from '@gridsheet/engine';
 
 const description = `Repeats text a specified number of times.`;
 

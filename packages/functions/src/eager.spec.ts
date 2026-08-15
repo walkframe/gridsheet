@@ -5,7 +5,7 @@ import {
   BaseFunctionAsync,
   type FunctionArgumentDefinition,
   type FunctionCategory,
-} from '@gridsheet/web';
+} from '@gridsheet/engine';
 
 /**
  * Tests for opt-in eager resolution (`Sheet.resolveAll()` / the `eager` book

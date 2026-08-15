@@ -1,5 +1,5 @@
 import { OddFunction } from './odd';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/engine';
 
 describe('odd', () => {
   const sheet = new Sheet({});

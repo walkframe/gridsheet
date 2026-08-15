@@ -1,5 +1,5 @@
 import { ExactFunction } from './exact';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/engine';
 
 describe('exact', () => {
   const sheet = new Sheet({});

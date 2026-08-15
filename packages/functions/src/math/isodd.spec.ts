@@ -1,5 +1,5 @@
 import { IsoddFunction } from './isodd';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/engine';
 
 describe('isodd', () => {
   const sheet = new Sheet({});

@@ -1,5 +1,5 @@
 import { MedianFunction } from './median';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/web';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/engine';
 
 describe('median', () => {
   const sheet = new Sheet({});

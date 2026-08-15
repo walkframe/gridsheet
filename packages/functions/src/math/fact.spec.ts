@@ -1,5 +1,5 @@
 import { FactFunction } from './fact';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/engine';
 
 describe('fact', () => {
   const sheet = new Sheet({});

@@ -1,4 +1,4 @@
-import type { FunctionMapping } from '@gridsheet/web';
+import type { FunctionMapping } from '@gridsheet/engine';
 import { AverageifFunction } from './averageif';
 import { AverageifsFunction } from './averageifs';
 import { MedianFunction } from './median';

@@ -1,5 +1,5 @@
-import { FormulaError } from '@gridsheet/web';
-import type { FunctionArgumentDefinition } from '@gridsheet/web';
+import { FormulaError } from '@gridsheet/engine';
+import type { FunctionArgumentDefinition } from '@gridsheet/engine';
 import { MatrixFunction } from './__matrix_base';
 
 const description = `Returns the matrix product of two matrices.

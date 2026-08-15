@@ -1,5 +1,5 @@
 import { ReptFunction } from './rept';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/engine';
 
 describe('rept', () => {
   const sheet = new Sheet({});

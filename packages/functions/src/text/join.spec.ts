@@ -1,5 +1,5 @@
 import { JoinFunction } from './join';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/web';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/engine';
 
 describe('join', () => {
   const sheet = new Sheet({});

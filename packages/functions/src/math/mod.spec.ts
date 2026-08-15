@@ -1,5 +1,5 @@
 import { ModFunction } from './mod';
-import { Sheet, FormulaError, RefEntity, ValueEntity } from '@gridsheet/web';
+import { Sheet, FormulaError, RefEntity, ValueEntity } from '@gridsheet/engine';
 
 describe('mod', () => {
   const sheet = new Sheet({});

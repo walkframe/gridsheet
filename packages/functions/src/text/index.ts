@@ -1,4 +1,4 @@
-import type { FunctionMapping } from '@gridsheet/web';
+import type { FunctionMapping } from '@gridsheet/engine';
 import { ConcatenateFunction } from './concatenate';
 import { LenbFunction } from './lenb';
 import { ExactFunction } from './exact';

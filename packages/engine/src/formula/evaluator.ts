@@ -677,7 +677,11 @@ export class Lexer {
             } else {
               // A token containing '.' alongside letters is a partial function name
               // (e.g. "RANGE.1" before the opening paren), not a cell reference.
-              const looksLikeFunctionName = buf.includes('.') && /[a-zA-Z]/.test(buf);
+              // Sheet-qualified refs are excluded: a quoted sheet name ('a.csv'!A1)
+              // or any '!' means it's a cross-sheet reference, where dots are part
+              // of the sheet/file name — not a function.
+              const looksLikeFunctionName =
+                !buf.startsWith("'") && buf.indexOf('!') === -1 && buf.includes('.') && /[a-zA-Z]/.test(buf);
               if (looksLikeFunctionName || isNaN(buf[buf.length - 1] as unknown as number)) {
                 this.tokens.push(new Token('INVALID_REF', buf, 0, this.at));
               } else {

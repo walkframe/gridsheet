@@ -1,5 +1,5 @@
 import { IserrFunction } from './iserr';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/engine';
 
 describe('iserr', () => {
   const sheet = new Sheet({});

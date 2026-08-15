@@ -1,5 +1,5 @@
-import { FormulaError } from '@gridsheet/web';
-import { BaseFunction, type FunctionArgumentDefinition, conditionArg } from '@gridsheet/web';
+import { FormulaError } from '@gridsheet/engine';
+import { BaseFunction, type FunctionArgumentDefinition, conditionArg } from '@gridsheet/engine';
 import {
   Sheet,
   eachMatrix,
@@ -8,8 +8,8 @@ import {
   ensureString,
   ensureNumber,
   isNumeric,
-} from '@gridsheet/web';
-import type { FunctionCategory, PointType } from '@gridsheet/web';
+} from '@gridsheet/engine';
+import type { FunctionCategory, PointType } from '@gridsheet/engine';
 
 const description = `Returns the average of a range depending on multiple criteria.`;
 

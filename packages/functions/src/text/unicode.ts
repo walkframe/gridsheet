@@ -1,7 +1,7 @@
-import { FormulaError } from '@gridsheet/web';
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/web';
-import { ensureString } from '@gridsheet/web';
-import type { FunctionCategory } from '@gridsheet/web';
+import { FormulaError } from '@gridsheet/engine';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/engine';
+import { ensureString } from '@gridsheet/engine';
+import type { FunctionCategory } from '@gridsheet/engine';
 
 const description = `Returns the Unicode code point (decimal) of the first character of the text.
 Numbers passed as argument are treated as strings.`;

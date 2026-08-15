@@ -1,5 +1,5 @@
 import { VarSFunction } from './var_s';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/web';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/engine';
 
 describe('var.s', () => {
   const sheet = new Sheet({});

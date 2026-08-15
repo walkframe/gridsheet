@@ -1,7 +1,7 @@
-import { FormulaError } from '@gridsheet/web';
-import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/web';
-import { ensureNumber } from '@gridsheet/web';
-import type { FunctionCategory } from '@gridsheet/web';
+import { FormulaError } from '@gridsheet/engine';
+import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/engine';
+import { ensureNumber } from '@gridsheet/engine';
+import type { FunctionCategory } from '@gridsheet/engine';
 
 const description = `Returns the probability associated with a Student's t-test.
 tails: 1 (one-tailed) or 2 (two-tailed).
