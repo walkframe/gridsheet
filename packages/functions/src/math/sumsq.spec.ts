@@ -1,5 +1,5 @@
 import { SumsqFunction } from './sumsq';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/web';
 
 describe('sumsq', () => {
   const sheet = new Sheet({});

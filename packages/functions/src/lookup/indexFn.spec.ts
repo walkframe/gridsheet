@@ -1,6 +1,6 @@
 import { IndexFunction } from './indexFn';
-import { Sheet, FormulaError } from '@gridsheet/core';
-import type { AreaType } from '@gridsheet/core';
+import { Sheet, FormulaError } from '@gridsheet/web';
+import type { AreaType } from '@gridsheet/web';
 
 describe('IndexFunction', () => {
   const indexFunction = (args: any[]) => {

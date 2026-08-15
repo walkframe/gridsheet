@@ -1,9 +1,9 @@
 import { type FC, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { Context } from '../store';
 import { setStore } from '../store/actions';
-import { operations as prevention } from '@gridsheet/core';
-import { x2c, p2a } from '@gridsheet/core';
-import { getLabel } from '@gridsheet/core';
+import { operations as prevention } from '@gridsheet/web';
+import { x2c, p2a } from '@gridsheet/web';
+import { getLabel } from '@gridsheet/web';
 import { registerMenuComponent, type ColMenuSectionProps } from '../lib/menu';
 
 const LabelSection: FC<ColMenuSectionProps> = ({ x, close }) => {

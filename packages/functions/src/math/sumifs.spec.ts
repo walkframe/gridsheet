@@ -1,5 +1,5 @@
 import { SumifsFunction } from './sumifs';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/web';
 
 describe('sumifs', () => {
   const sheet = new Sheet({});

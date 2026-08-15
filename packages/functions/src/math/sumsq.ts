@@ -1,6 +1,6 @@
-import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/core';
-import { ensureNumber } from '@gridsheet/core';
-import type { FunctionCategory } from '@gridsheet/core';
+import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/web';
+import { ensureNumber } from '@gridsheet/web';
+import type { FunctionCategory } from '@gridsheet/web';
 
 const description = `Returns the sum of the squares of a series of numbers or cells.`;
 

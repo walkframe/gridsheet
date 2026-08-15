@@ -1,15 +1,15 @@
-import { defineConfig } from "vite";
-import dts from "vite-plugin-dts";
+import { defineConfig } from 'vite';
+import dts from 'vite-plugin-dts';
 
 export default defineConfig(() => ({
-  plugins: [dts({ insertTypesEntry: true })],
+  plugins: [dts({ insertTypesEntry: true, exclude: ['**/*.spec.ts', '**/*.test.ts'] })],
   build: {
     lib: {
       entry: {
-        index: "./src/index.ts",
+        index: './src/index.ts',
       },
-      name: "GridSheetCore",
-      formats: ["es"],
+      name: 'GridSheetEngine',
+      formats: ['es'],
       fileName: (format, entryName) => `${entryName}.js`,
     },
     outDir: 'dist',
@@ -20,6 +20,6 @@ export default defineConfig(() => ({
       },
     },
     sourcemap: true,
-    minify: "esbuild",
+    minify: 'esbuild',
   },
 }));

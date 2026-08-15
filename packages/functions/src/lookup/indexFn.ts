@@ -1,7 +1,7 @@
-import { FormulaError } from '@gridsheet/core';
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/core';
-import { Sheet, ensureNumber } from '@gridsheet/core';
-import type { FunctionCategory } from '@gridsheet/core';
+import { FormulaError } from '@gridsheet/web';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/web';
+import { Sheet, ensureNumber } from '@gridsheet/web';
+import type { FunctionCategory } from '@gridsheet/web';
 
 const description = `Returns a trimmed sheet based on row and column indices.
 If row or column is 0 or omitted, returns all rows or columns.`;

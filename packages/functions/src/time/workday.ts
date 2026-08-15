@@ -1,6 +1,6 @@
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/core';
-import type { FunctionCategory } from '@gridsheet/core';
-import { ensureDate } from '@gridsheet/core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/web';
+import type { FunctionCategory } from '@gridsheet/web';
+import { ensureDate } from '@gridsheet/web';
 
 function dateKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;

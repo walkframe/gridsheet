@@ -1,7 +1,16 @@
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH, OVERSCAN_X, OVERSCAN_Y } from '../constants';
-import { range, binarySearch, type BinarySearchPredicate } from './spatial';
-import { Sheet } from './sheet';
-import type { AreaType, PointType, Virtualization } from '../types';
+import {
+  DEFAULT_HEIGHT,
+  DEFAULT_WIDTH,
+  OVERSCAN_X,
+  OVERSCAN_Y,
+  range,
+  binarySearch,
+  type BinarySearchPredicate,
+  Sheet,
+  type AreaType,
+  type PointType,
+  type Virtualization,
+} from '@gridsheet/engine';
 
 export const getCellRectPositions = (sheet: Sheet, { y, x }: PointType) => {
   const colCell = sheet.getCell({ y: 0, x }, { resolution: 'SYSTEM' });

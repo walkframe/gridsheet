@@ -1,6 +1,6 @@
-import { BaseFunction } from '@gridsheet/core';
-import { FormulaError, eachMatrix, ensureNumber } from '@gridsheet/core';
-import type { FunctionCategory } from '@gridsheet/core';
+import { BaseFunction } from '@gridsheet/web';
+import { FormulaError, eachMatrix, ensureNumber } from '@gridsheet/web';
+import type { FunctionCategory } from '@gridsheet/web';
 
 /**
  * Common base class for matrix functions (MMULT, TRANSPOSE, MINVERSE, MDETERM).

@@ -10,7 +10,7 @@ import {
   SHEET_WIDTH,
   DEFAULT_COL_KEY,
   DEFAULT_ROW_KEY,
-} from '@gridsheet/core';
+} from '@gridsheet/web';
 import { Context } from '../store';
 import { reducer as defaultReducer, isMutationAction } from '../store/actions';
 import { Editor } from './Editor';
@@ -20,11 +20,11 @@ import { Emitter } from './Emitter';
 import { ContextMenu } from './ContextMenu';
 import { ColumnMenu } from './ColumnMenu';
 import { RowMenu } from './RowMenu';
-import { Sheet } from '@gridsheet/core';
+import { Sheet } from '@gridsheet/web';
 import { Tabular } from './Tabular';
-import { getMaxSizesFromCells } from '@gridsheet/core';
-import { x2c, y2r } from '@gridsheet/core';
-import { embedStyle } from '@gridsheet/core';
+import { getMaxSizesFromCells } from '@gridsheet/web';
+import { x2c, y2r } from '@gridsheet/web';
+import { embedStyle } from '@gridsheet/web';
 import { FormulaBar } from './FormulaBar';
 import { SearchBar } from './SearchBar';
 import { useBook } from '../lib/hooks';

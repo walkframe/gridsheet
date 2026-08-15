@@ -1,5 +1,5 @@
 import { NaFunction } from './na';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
 
 describe('na', () => {
   const sheet = new Sheet({});

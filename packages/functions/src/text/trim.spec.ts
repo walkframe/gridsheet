@@ -1,5 +1,5 @@
 import { TrimFunction } from './trim';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
 
 describe('trim', () => {
   const sheet = new Sheet({});

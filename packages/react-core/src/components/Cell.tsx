@@ -1,6 +1,6 @@
 import { useContext, useRef, useCallback, useEffect, memo, useMemo, useState } from 'react';
-import { x2c, y2r } from '@gridsheet/core';
-import { zoneToArea, among, areaToRange } from '@gridsheet/core';
+import { x2c, y2r } from '@gridsheet/web';
+import { zoneToArea, among, areaToRange } from '@gridsheet/web';
 import {
   choose,
   select,
@@ -16,15 +16,15 @@ import {
 } from '../store/actions';
 
 import { Context } from '../store';
-import { FormulaError } from '@gridsheet/core';
-import { Pending } from '@gridsheet/core';
-import { insertRef, isRefInsertable } from '@gridsheet/core';
-import { focus } from '@gridsheet/core';
+import { FormulaError } from '@gridsheet/web';
+import { Pending } from '@gridsheet/web';
+import { insertRef, isRefInsertable } from '@gridsheet/web';
+import { focus } from '@gridsheet/web';
 import { isXSheetFocused } from '../store/helpers';
 import type { FC, RefObject } from 'react';
 import { isTouching, safePreventDefault } from '../lib/events';
-import type { UserSheet } from '@gridsheet/core';
-import { calcBelowPosition, hAlignTransform, type PopupPosition } from '@gridsheet/core';
+import type { UserSheet } from '@gridsheet/web';
+import { calcBelowPosition, hAlignTransform, type PopupPosition } from '@gridsheet/web';
 
 type Props = {
   y: number;

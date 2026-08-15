@@ -1,5 +1,5 @@
 import { SinFunction } from './sin';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
 
 describe('sin', () => {
   const sheet = new Sheet({});

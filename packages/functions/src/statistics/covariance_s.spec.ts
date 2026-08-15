@@ -1,5 +1,5 @@
 import { CovarianceSFunction } from './covariance_s';
-import { Sheet, FormulaError, RangeEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, RangeEntity } from '@gridsheet/web';
 
 describe('covariance.s', () => {
   const sheet = new Sheet({});

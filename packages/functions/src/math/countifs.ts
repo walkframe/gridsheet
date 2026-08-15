@@ -1,7 +1,7 @@
-import { FormulaError } from '@gridsheet/core';
-import { BaseFunction, type FunctionArgumentDefinition, conditionArg } from '@gridsheet/core';
-import { Sheet, createBooleanMask, ensureString } from '@gridsheet/core';
-import type { FunctionCategory } from '@gridsheet/core';
+import { FormulaError } from '@gridsheet/web';
+import { BaseFunction, type FunctionArgumentDefinition, conditionArg } from '@gridsheet/web';
+import { Sheet, createBooleanMask, ensureString } from '@gridsheet/web';
+import type { FunctionCategory } from '@gridsheet/web';
 
 const description = `Returns the count of a range depending on multiple criteria.`;
 

@@ -1,5 +1,5 @@
 import { TTestFunction } from './t_test';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/web';
 
 describe('t.test', () => {
   const sheet = new Sheet({});

@@ -1,7 +1,7 @@
-import { FormulaError } from '@gridsheet/core';
-import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/core';
-import { ensureNumber, isNumeric } from '@gridsheet/core';
-import type { FunctionCategory } from '@gridsheet/core';
+import { FormulaError } from '@gridsheet/web';
+import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/web';
+import { ensureNumber, isNumeric } from '@gridsheet/web';
+import type { FunctionCategory } from '@gridsheet/web';
 
 const description = `Returns the quartile of a dataset, based on percentile values from 0 to 1, inclusive.`;
 

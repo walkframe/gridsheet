@@ -1,5 +1,5 @@
 import { RounddownFunction } from './rounddown';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
 
 describe('rounddown', () => {
   const sheet = new Sheet({});

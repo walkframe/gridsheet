@@ -1,4 +1,4 @@
-import type { PolicyMixinType, RenderProps } from '@gridsheet/core';
+import type { PolicyMixinType, RenderProps } from '@gridsheet/web';
 
 export const CheckboxPolicyMixin: PolicyMixinType = {
   renderBool({ value, apply, sheet, point }: RenderProps<boolean>): any {

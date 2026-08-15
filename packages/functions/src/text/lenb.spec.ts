@@ -1,5 +1,5 @@
 import { LenbFunction } from './lenb';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
 
 describe('lenb', () => {
   const sheet = new Sheet({});

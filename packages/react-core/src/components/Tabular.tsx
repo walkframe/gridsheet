@@ -9,11 +9,11 @@ import { Context } from '../store';
 import { choose, select, setContextMenuPosition } from '../store/actions';
 
 import type { RefPaletteType, Virtualization } from '../types';
-import { virtualize } from '@gridsheet/core';
-import { p2a, stripAddressAbsolute } from '@gridsheet/core';
-import { Lexer, stripSheetName } from '@gridsheet/core';
+import { virtualize } from '@gridsheet/web';
+import { p2a, stripAddressAbsolute } from '@gridsheet/web';
+import { Lexer, stripSheetName } from '@gridsheet/web';
 import { ScrollHandle } from './ScrollHandle';
-import { preventSafariBounce } from '@gridsheet/core';
+import { preventSafariBounce } from '@gridsheet/web';
 
 export const Tabular = () => {
   const [palette, setPalette] = useState<RefPaletteType>({});

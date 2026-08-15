@@ -1,5 +1,5 @@
-import { BaseFunction, FormulaError } from '@gridsheet/core';
-import { type FunctionArgumentDefinition } from '@gridsheet/core';
+import { BaseFunction, FormulaError } from '@gridsheet/web';
+import { type FunctionArgumentDefinition } from '@gridsheet/web';
 
 const description = `Returns the first argument if it is not a #N/A error, otherwise returns the second argument.`;
 

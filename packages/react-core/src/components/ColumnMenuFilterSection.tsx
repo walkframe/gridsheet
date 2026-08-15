@@ -2,7 +2,7 @@ import { type FC, useContext, useState, useCallback, useEffect } from 'react';
 import { Context } from '../store';
 import { filterRows } from '../store/actions';
 import type { FilterCondition, FilterConditionMethod } from '../types';
-import { operations as prevention } from '@gridsheet/core';
+import { operations as prevention } from '@gridsheet/web';
 import { registerMenuComponent, type ColMenuSectionProps } from '../lib/menu';
 
 const METHOD_LABELS: Record<FilterConditionMethod, string> = {

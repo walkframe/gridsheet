@@ -1,5 +1,5 @@
 import { RsqFunction } from './rsq';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/web';
 
 describe('rsq', () => {
   const sheet = new Sheet({});

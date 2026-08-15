@@ -1,5 +1,5 @@
 import { RowsFunction } from './rows';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/web';
 
 describe('rows', () => {
   const sheet = new Sheet({});

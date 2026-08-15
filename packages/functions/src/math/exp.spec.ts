@@ -1,5 +1,5 @@
 import { ExpFunction } from './exp';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
 
 describe('exp', () => {
   const sheet = new Sheet({});

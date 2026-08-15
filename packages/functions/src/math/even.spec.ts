@@ -1,5 +1,5 @@
 import { EvenFunction } from './even';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
 
 describe('even', () => {
   const sheet = new Sheet({});

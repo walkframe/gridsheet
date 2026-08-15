@@ -1,5 +1,5 @@
 import { SqrtFunction } from './sqrt';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
 
 describe('sqrt', () => {
   const sheet = new Sheet({});

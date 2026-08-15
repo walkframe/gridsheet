@@ -1,5 +1,5 @@
 import { SheetFunction } from './sheet';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
 
 describe('sheet', () => {
   const sheet = new Sheet({});

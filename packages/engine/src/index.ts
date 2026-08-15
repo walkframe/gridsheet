@@ -1,3 +1,6 @@
+// @gridsheet/engine — the headless spreadsheet model + formula resolution engine.
+// Zero DOM/React dependency; usable from CLI, extension hosts, and backends.
+
 // --- Spatial ---
 export {
   oa2aa,
@@ -182,27 +185,6 @@ export {
 } from './constants';
 export { Pending, Spilling } from './sentinels';
 
-// --- DOM ---
-export { focus, preventSafariBounce } from './lib/dom';
-
-// --- Input ---
-export {
-  handleFormulaQuoteAutoClose,
-  insertTextAtCursor,
-  isFocus,
-  insertRef,
-  isRefInsertable,
-  expandInput,
-  resetInput,
-} from './lib/input';
-
-// --- Virtualization ---
-export { smartScroll, virtualize, getAreaInTabular, getCellRectPositions } from './lib/virtualization';
-
-// --- Popup ---
-export { calcBelowPosition, clampLeft, calcSideStyle, clampPopup, hAlignTransform } from './lib/popup';
-export type { HAlign, VAlign, PopupPosition, SideStyle } from './lib/popup';
-
 // --- Label ---
 export { getLabel } from './lib/label';
 
@@ -212,5 +194,8 @@ export { COLOR_PALETTE } from './lib/palette';
 // --- Autofill ---
 export { Autofill } from './lib/autofill';
 
-// --- Styles ---
-export { embedStyle } from './styles/embedder';
+// --- Internals consumed by the @gridsheet/web DOM layer (input/virtualization) ---
+export { splitRef } from './formula/evaluator';
+export { toSheetPrefix } from './lib/sheet_utils';
+export { range, binarySearch, type BinarySearchPredicate } from './lib/spatial';
+export { OVERSCAN_X, OVERSCAN_Y } from './constants';

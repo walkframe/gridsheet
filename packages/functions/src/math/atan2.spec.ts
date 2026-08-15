@@ -1,5 +1,5 @@
 import { Atan2Function } from './atan2';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
 
 describe('atan2', () => {
   const sheet = new Sheet({});

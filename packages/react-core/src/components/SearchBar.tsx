@@ -1,14 +1,14 @@
 import { useContext, useEffect, useRef, useCallback, useMemo } from 'react';
 
-import { a2p, x2c, y2r } from '@gridsheet/core';
-import { isZoneNotSelected } from '@gridsheet/core';
+import { a2p, x2c, y2r } from '@gridsheet/web';
+import { isZoneNotSelected } from '@gridsheet/web';
 
 import { Context } from '../store';
 import { setSearchQuery, search, setSearchCaseSensitive, setSearchRegex, setSearchRange } from '../store/actions';
-import { smartScroll } from '@gridsheet/core';
+import { smartScroll } from '@gridsheet/web';
 import { SearchIcon } from './svg/SearchIcon';
 import { CloseIcon } from './svg/CloseIcon';
-import { focus } from '@gridsheet/core';
+import { focus } from '@gridsheet/web';
 
 export const SearchBar = () => {
   const { store, dispatch } = useContext(Context);

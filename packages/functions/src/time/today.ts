@@ -1,5 +1,5 @@
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/core';
-import type { FunctionCategory } from '@gridsheet/core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/web';
+import type { FunctionCategory } from '@gridsheet/web';
 
 const description = `Returns the current date as a Date value.`;
 

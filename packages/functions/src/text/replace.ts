@@ -1,6 +1,6 @@
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/core';
-import { ensureString, ensureNumber } from '@gridsheet/core';
-import type { FunctionCategory } from '@gridsheet/core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/web';
+import { ensureString, ensureNumber } from '@gridsheet/web';
+import type { FunctionCategory } from '@gridsheet/web';
 
 const description = `Replaces part of a text string with a different text string.
 position is 1-based.`;

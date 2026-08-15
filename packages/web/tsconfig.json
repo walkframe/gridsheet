@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2015",
+    "module": "ES2015",
+    "moduleResolution": "bundler",
+    "lib": ["DOM", "ESNext", "DOM.Iterable", "ScriptHost", "ES2016.Array.Include"],
+    "declaration": true,
+    "declarationMap": true,
+    "allowJs": true,
+    "sourceMap": true,
+    "outDir": "./dist/",
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": "./src/",
+    "forceConsistentCasingInFileNames": true
+  },
+  "exclude": ["node_modules", "dist"],
+  "include": ["**/*.ts"]
+}

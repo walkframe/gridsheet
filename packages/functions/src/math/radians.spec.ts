@@ -1,5 +1,5 @@
 import { RadiansFunction } from './radians';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
 
 describe('radians', () => {
   const sheet = new Sheet({});

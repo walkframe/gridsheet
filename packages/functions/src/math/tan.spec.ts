@@ -1,5 +1,5 @@
 import { TanFunction } from './tan';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
 
 describe('tan', () => {
   const sheet = new Sheet({});

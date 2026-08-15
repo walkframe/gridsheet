@@ -1,7 +1,7 @@
 {
-  "name": "@gridsheet/core",
+  "name": "@gridsheet/web",
   "version": "3.2.0",
-  "description": "Framework-agnostic core for gridsheet (Sheet, Registry, formula engine, etc.)",
+  "description": "Web/DOM rendering layer for gridsheet, built on @gridsheet/engine (DOM, input, popup, virtualization, styles); re-exports the full engine API.",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -51,7 +51,7 @@
     "vite-plugin-dts": "^4.5.3"
   },
   "dependencies": {
-    "dayjs": "^1.11.13"
+    "@gridsheet/engine": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

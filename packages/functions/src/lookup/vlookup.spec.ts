@@ -1,5 +1,5 @@
 import { VlookupFunction } from './vlookup';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/web';
 
 describe('vlookup', () => {
   const sheet = new Sheet({});

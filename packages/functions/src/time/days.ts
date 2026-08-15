@@ -1,6 +1,6 @@
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/core';
-import type { FunctionCategory } from '@gridsheet/core';
-import { ensureDate } from '@gridsheet/core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/web';
+import type { FunctionCategory } from '@gridsheet/web';
+import { ensureDate } from '@gridsheet/web';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 

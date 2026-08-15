@@ -1,7 +1,7 @@
-import { FormulaError } from '@gridsheet/core';
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/core';
-import { stripMatrix, ensureString } from '@gridsheet/core';
-import type { FunctionCategory } from '@gridsheet/core';
+import { FormulaError } from '@gridsheet/web';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/web';
+import { stripMatrix, ensureString } from '@gridsheet/web';
+import type { FunctionCategory } from '@gridsheet/web';
 
 const description = `Joins the elements of one or more 1D arrays or values using a delimiter.
 If the delimiter is omitted the result is similar to CONCATENATE.`;

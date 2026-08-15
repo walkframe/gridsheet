@@ -1,5 +1,5 @@
 import { IstextFunction } from './istext';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
 
 describe('istext', () => {
   const sheet = new Sheet({});

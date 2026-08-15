@@ -1,5 +1,5 @@
 import { LowerFunction } from './lower';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
 
 describe('lower', () => {
   const sheet = new Sheet({});

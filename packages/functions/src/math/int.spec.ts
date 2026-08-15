@@ -1,5 +1,5 @@
 import { IntFunction } from './int';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
 
 describe('int', () => {
   const sheet = new Sheet({});

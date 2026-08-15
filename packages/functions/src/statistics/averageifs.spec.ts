@@ -1,5 +1,5 @@
 import { AverageifsFunction } from './averageifs';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/web';
 
 describe('averageifs', () => {
   const sheet = new Sheet({});

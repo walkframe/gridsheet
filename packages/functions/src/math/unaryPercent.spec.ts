@@ -1,5 +1,5 @@
 import { UnaryPercentFunction } from './unaryPercent';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/web';
 
 describe('unaryPercent', () => {
   const sheet = new Sheet({});

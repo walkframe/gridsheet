@@ -3,7 +3,7 @@ import { useContext, useEffect, useState, useCallback, useRef, memo } from 'reac
 import { createPortal } from 'react-dom';
 import { FunctionGuide } from './FunctionGuide';
 import { EditorOptions } from './EditorOptions';
-import { x2c, y2r } from '@gridsheet/core';
+import { x2c, y2r } from '@gridsheet/web';
 import { clip } from '../lib/clipboard';
 import {
   clear,
@@ -26,8 +26,8 @@ import {
 } from '../store/actions';
 
 import { Context } from '../store';
-import { areaToZone, zoneToArea } from '@gridsheet/core';
-import { operations as prevention } from '@gridsheet/core';
+import { areaToZone, zoneToArea } from '@gridsheet/web';
+import { operations as prevention } from '@gridsheet/web';
 import {
   expandInput,
   handleFormulaQuoteAutoClose,
@@ -35,10 +35,10 @@ import {
   isFocus,
   isRefInsertable,
   resetInput,
-} from '@gridsheet/core';
-import { focus } from '@gridsheet/core';
-import { Lexer } from '@gridsheet/core';
-import { COLOR_PALETTE } from '@gridsheet/core';
+} from '@gridsheet/web';
+import { focus } from '@gridsheet/web';
+import { Lexer } from '@gridsheet/web';
+import { COLOR_PALETTE } from '@gridsheet/web';
 import { useAutocomplete } from './useAutocomplete';
 import { EditorEventWithNativeEvent, FeedbackType, ModeType } from '../types';
 import { Fixed } from './Fixed';

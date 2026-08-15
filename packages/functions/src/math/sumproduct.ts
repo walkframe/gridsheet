@@ -1,5 +1,5 @@
-import { FormulaError } from '@gridsheet/core';
-import type { FunctionArgumentDefinition } from '@gridsheet/core';
+import { FormulaError } from '@gridsheet/web';
+import type { FunctionArgumentDefinition } from '@gridsheet/web';
 import { MatrixFunction } from './__matrix_base';
 
 const description = `Returns the sum of the products of corresponding array elements.

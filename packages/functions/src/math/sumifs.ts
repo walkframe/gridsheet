@@ -1,5 +1,5 @@
-import { FormulaError } from '@gridsheet/core';
-import { BaseFunction, type FunctionArgumentDefinition, conditionArg } from '@gridsheet/core';
+import { FormulaError } from '@gridsheet/web';
+import { BaseFunction, type FunctionArgumentDefinition, conditionArg } from '@gridsheet/web';
 import {
   Sheet,
   eachMatrix,
@@ -8,9 +8,9 @@ import {
   ensureString,
   ensureNumber,
   isNumeric,
-} from '@gridsheet/core';
-import type { PointType } from '@gridsheet/core';
-import type { FunctionCategory } from '@gridsheet/core';
+} from '@gridsheet/web';
+import type { PointType } from '@gridsheet/web';
+import type { FunctionCategory } from '@gridsheet/web';
 
 const description = `Returns the sum of a range depending on multiple criteria.`;
 

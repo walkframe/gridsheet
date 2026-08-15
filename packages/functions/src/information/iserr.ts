@@ -1,7 +1,7 @@
-import { BaseFunction, FormulaError } from '@gridsheet/core';
-import type { FunctionArgumentDefinition, FunctionProps } from '@gridsheet/core';
-import type { FunctionCategory } from '@gridsheet/core';
-import { Sheet } from '@gridsheet/core';
+import { BaseFunction, FormulaError } from '@gridsheet/web';
+import type { FunctionArgumentDefinition, FunctionProps } from '@gridsheet/web';
+import type { FunctionCategory } from '@gridsheet/web';
+import { Sheet } from '@gridsheet/web';
 
 const description = `Returns TRUE if the value is any error other than #N/A.`;
 

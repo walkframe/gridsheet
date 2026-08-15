@@ -1,8 +1,8 @@
 import React, { useContext, useLayoutEffect, useRef } from 'react';
-import type { FunctionHelp } from '@gridsheet/core';
-import type { AutocompleteOption } from '@gridsheet/core';
+import type { FunctionHelp } from '@gridsheet/web';
+import type { AutocompleteOption } from '@gridsheet/web';
 import { Context } from '../store';
-import { calcSideStyle, clampPopup } from '@gridsheet/core';
+import { calcSideStyle, clampPopup } from '@gridsheet/web';
 
 type OptionWithGuide = AutocompleteOption & {
   isFunction?: boolean;

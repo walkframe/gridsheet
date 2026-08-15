@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { createBook, type BookType, type RegistryProps, type TransmitProps } from '@gridsheet/core';
+import { createBook, type BookType, type RegistryProps, type TransmitProps } from '@gridsheet/web';
 import { updateSheet } from '../store/actions';
 
 // Return the document object with SSR.

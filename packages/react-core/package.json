@@ -73,7 +73,7 @@
     "@gridsheet/functions": "workspace:*"
   },
   "dependencies": {
-    "@gridsheet/core": "workspace:*"
+    "@gridsheet/web": "workspace:*"
   },
   "peerDependencies": {
     "react": ">=16.9.0",
