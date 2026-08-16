@@ -17,6 +17,7 @@ export {
   isRefInsertable,
   expandInput,
   resetInput,
+  handleFormulaQuoteAutoClose,
 } from './lib/input';
 
 // --- Virtualization ---

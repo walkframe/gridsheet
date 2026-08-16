@@ -73,27 +73,45 @@ test('autofill with edge auto-scroll can be released and cleared', async ({ page
   await go(page, 'basic-large--sheet');
 
   const tabular = page.locator('.gs-tabular');
+  // Pre-scroll to just above the bottom so the auto-scroll only has a couple of rows left
+  // to travel — fast and deterministic (driving all 2000 rows is too slow under CI slowMo).
+  const maxScroll = await tabular.evaluate((el) => {
+    el.scrollTop = el.scrollHeight - el.clientHeight - 50;
+    return el.scrollHeight - el.clientHeight;
+  });
+  await page.waitForTimeout(100);
   const tb = (await tabular.boundingBox())!;
-  const maxScroll = await tabular.evaluate((el) => el.scrollHeight - el.clientHeight);
 
-  // Start an autofill from a visible cell in column A (deterministic IDs 1..2000).
-  const a3 = page.locator("[data-address='A3']");
-  await a3.click();
-  const handle = a3.locator('.gs-autofill-drag');
+  // Grab the autofill handle of a column-A cell that is fully inside the viewport now.
+  const startAddr = await page.evaluate(() => {
+    const tab = document.querySelector('.gs-tabular')!;
+    const r = tab.getBoundingClientRect();
+    for (const c of Array.from(tab.querySelectorAll('[data-address^="A"]'))) {
+      const b = c.getBoundingClientRect();
+      if (b.top > r.top + 40 && b.bottom < r.bottom - 60) {
+        return c.getAttribute('data-address');
+      }
+    }
+    return null;
+  });
+  expect(startAddr).not.toBeNull();
+
+  const start = page.locator(`[data-address='${startAddr}']`);
+  await start.click();
+  const handle = start.locator('.gs-autofill-drag');
   const hb = (await handle.boundingBox())!;
   const gx = Math.round(hb.x + hb.width / 2);
   await page.mouse.move(gx, Math.round(hb.y + hb.height / 2));
   await page.mouse.down();
 
-  // Park the cursor on the 5px bottom auto-scroll strip and let it run all the way to the
-  // very bottom. There the bottom strip hides (cannotScrollHere) and drops its mouse
-  // handlers, so it can no longer stop itself — the exact state that used to orphan the
-  // rAF loop. The loop self-reschedules, so one move onto the strip is enough.
+  // Park the cursor on the 5px bottom auto-scroll strip and let it run to the very bottom.
+  // There the bottom strip hides (cannotScrollHere) and drops its mouse handlers, so it can
+  // no longer stop itself — the exact state that used to orphan the rAF loop. The loop
+  // self-reschedules, so one move onto the strip is enough.
   await page.mouse.move(gx, Math.round(tb.y + tb.height - 3));
-  for (let i = 0; i < 40; i++) {
-    await page.waitForTimeout(150);
-    const top = await tabular.evaluate((el) => (el as HTMLElement).scrollTop);
-    if (top >= maxScroll - 1) {
+  for (let i = 0; i < 20; i++) {
+    await page.waitForTimeout(100);
+    if ((await tabular.evaluate((el) => (el as HTMLElement).scrollTop)) >= maxScroll - 1) {
       break;
     }
   }
