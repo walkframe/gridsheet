@@ -151,6 +151,9 @@ importers:
       '@gridsheet/functions':
         specifier: workspace:*
         version: link:../functions
+      '@gridsheet/react-core':
+        specifier: workspace:*
+        version: link:../react-core
       '@preact/preset-vite':
         specifier: ^2.10.1
         version: 2.10.1(@babel/core@7.26.10)(preact@10.26.6)(vite@6.2.5(@types/node@22.14.0)(jiti@1.21.7)(less@4.3.0)(terser@5.40.0)(yaml@2.8.0))

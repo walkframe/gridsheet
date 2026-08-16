@@ -41,7 +41,8 @@
     "vite": "^6.2.2",
     "vite-plugin-dts": "^4.5.3",
     "@preact/preset-vite": "^2.10.1",
-    "@gridsheet/functions": "workspace:*"
+    "@gridsheet/functions": "workspace:*",
+    "@gridsheet/react-core": "workspace:*"
   },
   "bugs": {
     "url": "https://github.com/walkframe/gridsheet/issues"
