@@ -30,7 +30,6 @@ import { areaToZone, zoneToArea } from '@gridsheet/web';
 import { operations as prevention } from '@gridsheet/web';
 import {
   expandInput,
-  handleFormulaQuoteAutoClose,
   insertTextAtCursor,
   isFocus,
   isRefInsertable,
@@ -262,11 +261,6 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
       }
       const input = e.currentTarget;
 
-      // Auto-close double quotes in formula mode
-      if (handleFormulaQuoteAutoClose(e, inputting)) {
-        dispatch(setInputting(input.value));
-        return false;
-      }
 
       const shiftKey = e.shiftKey;
       switch (e.key) {

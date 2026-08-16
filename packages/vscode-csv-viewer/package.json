@@ -60,6 +60,128 @@
           "when": "resourceExtname =~ /\\.(csv|tsv|tab)$/ && activeEditor == 'workbench.editors.files.textFileEditor'"
         }
       ]
+    },
+    "configuration": {
+      "title": "GridSheet",
+      "properties": {
+        "gridsheet.viewer.eol": {
+          "type": "string",
+          "enum": ["auto", "LF", "CRLF"],
+          "default": "auto",
+          "markdownDescription": "Line ending used when the grid saves this file. `auto` keeps each file's existing EOL; `LF`/`CRLF` normalize on the next grid edit."
+        },
+        "gridsheet.viewer.readOnly": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "**Default** read-only state for newly opened grids — flip it per file from the **Read-only** toggle in the grid's footer. When on: cell edits, row/column insert/remove, sorting and label changes are blocked and nothing is written back to the file; selecting, copying, scrolling and resizing columns still work. Formulas already in the file (including `=CLAUDE()` / `=CODEX()`) still evaluate for display, but their results are never saved."
+        },
+        "gridsheet.viewer.evaluateFormulas": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "When the grid saves, write formula **results** (`=A1+B1` → `30`) instead of the formula source. On (default) bakes computed values — including resolved `=CLAUDE()` / `=CODEX()` answers — into the file; off keeps the formula text so it recomputes on reopen. Only affects files that contain formulas. (Applies to grids opened after the change.)"
+        },
+        "gridsheet.ai.workingDirectory": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Working directory for the AI CLIs. Empty = the edited file's workspace folder, which lets the CLI pick up project context (`CLAUDE.md` / `AGENTS.md`) and read repository files with relative paths — **only** when file reads are allowed (see `#gridsheet.ai.claude.tools.read#` / `#gridsheet.ai.codex.sandbox#`)."
+        },
+        "gridsheet.ai.batchSize": {
+          "type": "integer",
+          "default": 100,
+          "minimum": 0,
+          "markdownDescription": "Maximum number of cells resolved per CLI call. Cells that evaluate together are grouped by provider + kind, then split into chunks of this size (run sequentially). Larger = fewer calls but bigger prompts (risk of context limits, and one failure affects more cells); smaller = more calls but better isolation. `0` = no limit (one call per group)."
+        },
+        "gridsheet.ai.claude.path": {
+          "type": "string",
+          "default": "claude",
+          "markdownDescription": "Path to the `claude` CLI used by `=CLAUDE()`. Reuses your existing `claude login` (Pro/Max subscription); no API key required. Leave as `claude` if it is on your PATH."
+        },
+        "gridsheet.ai.claude.model": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Optional model for `=CLAUDE()` (e.g. `sonnet`). Empty uses the CLI default."
+        },
+        "gridsheet.ai.claude.permissionMode": {
+          "type": "string",
+          "default": "dontAsk",
+          "markdownDescription": "`--permission-mode` for `claude -p`. `dontAsk` runs unattended and allows only read-only tools. Change if you enable more tools."
+        },
+        "gridsheet.ai.claude.tools.read": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "**Let `=CLAUDE()` read repository files** (the `Read` tool). This is the switch that decides whether a formula can see your files: OFF (default) sandboxes it to the prompt text only; turn it **ON** so prompts can pull in file contents and project context (`CLAUDE.md` / `AGENTS.md`), resolving relative paths under `#gridsheet.ai.workingDirectory#`. Note: enabling any tool makes each call agentic — slower, more usage, and typed `.BOOL` / `.NUMBER` output can weaken."
+        },
+        "gridsheet.ai.claude.tools.webSearch": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Let `=CLAUDE()` search the web (the `WebSearch` tool). OFF by default. Enabling makes each call agentic (slower, more usage)."
+        },
+        "gridsheet.ai.claude.tools.webFetch": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Let `=CLAUDE()` fetch URLs (the `WebFetch` tool). OFF by default. Enabling makes each call agentic (slower, more usage)."
+        },
+        "gridsheet.ai.claude.tools.bash": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "⚠️ Let `=CLAUDE()` run shell commands (the `Bash` tool). OFF by default. Enabling lets cell evaluation **execute arbitrary commands** in `#gridsheet.ai.workingDirectory#` — only turn on if you trust the prompts."
+        },
+        "gridsheet.ai.claude.tools.edit": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "⚠️ Let `=CLAUDE()` modify files (the `Edit` tool). OFF by default. Enabling lets cell evaluation **change files on disk**."
+        },
+        "gridsheet.ai.claude.tools.write": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "⚠️ Let `=CLAUDE()` create files (the `Write` tool). OFF by default. Enabling lets cell evaluation **write new files to disk**."
+        },
+        "gridsheet.ai.claude.extraArgs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "markdownDescription": "Extra flags **appended** to `claude -p` (e.g. `--add-dir`, `--append-system-prompt`, `--allowedTools`). To **remove** a flag we add by default, use `#gridsheet.ai.claude.omitArgs#`."
+        },
+        "gridsheet.ai.claude.omitArgs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "markdownDescription": "Flags to **remove** from the auto-built `claude -p` command (each token is dropped together with its value) — the escape hatch for a CLI version that rejects a flag we pass. The command builds: `-p --no-session-persistence --output-format json --permission-mode <mode> [--disallowedTools …] --json-schema <schema> [--model …]`. Example: `[\"--json-schema\"]` disables typed output and falls back to prompt-only JSON. `-p` cannot be removed. To ADD flags, use `#gridsheet.ai.claude.extraArgs#`."
+        },
+        "gridsheet.ai.codex.path": {
+          "type": "string",
+          "default": "codex",
+          "markdownDescription": "Path to the `codex` CLI used by `=CODEX()`. Reuses your existing `codex login` (ChatGPT subscription); no API key required. Leave as `codex` if it is on your PATH."
+        },
+        "gridsheet.ai.codex.model": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Optional model for `=CODEX()`. Empty uses the CLI default."
+        },
+        "gridsheet.ai.codex.sandbox": {
+          "type": "string",
+          "enum": ["read-only", "workspace-write", "danger-full-access"],
+          "default": "read-only",
+          "markdownDescription": "`--sandbox` for `codex exec`. `read-only` already lets it read repository files under the working directory; raise only if you need writes."
+        },
+        "gridsheet.ai.codex.ignoreUserConfig": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Pass `--ignore-user-config` so your personal `~/.codex/config.toml` (custom models, MCP servers) doesn't leak into cell resolution. Turn OFF to use it — but note active MCP/tools can break the typed `--output-schema` output."
+        },
+        "gridsheet.ai.codex.extraArgs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "markdownDescription": "Extra flags **appended** to `codex exec` (e.g. `--add-dir`). To **remove** a flag we add by default, use `#gridsheet.ai.codex.omitArgs#`."
+        },
+        "gridsheet.ai.codex.omitArgs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "markdownDescription": "Flags to **remove** from the auto-built `codex exec` command (each token is dropped together with its value) — the escape hatch for a CLI version that rejects a flag we pass. The command builds: `exec - --ephemeral --sandbox <mode> --skip-git-repo-check [--ignore-user-config] --output-schema <file> -o <file> [--model …]`. Example: `[\"--output-schema\"]` drops the strict typed schema and relies on the prompt instructions instead. `exec`/`-`/`-o` cannot be removed. To ADD flags, use `#gridsheet.ai.codex.extraArgs#`."
+        }
+      }
     }
   },
   "scripts": {

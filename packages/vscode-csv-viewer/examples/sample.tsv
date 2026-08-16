@@ -1,5 +1,9 @@
-quarter	revenue	cost	profit
-Q1	1200	800	400
-Q2	1500	900	600
-Q3	1700	1100	600
-Q4	2100	1300	800
+sku	item	description	course	vegetarian	est_calories
+A01	Margherita Pizza	Thin crust with tomato, fresh mozzarella and basil
+A02	Double Beef Burger	Two grilled patties, cheddar, bacon, brioche bun
+A03	Caesar Salad	Romaine, croutons, parmesan, anchovy dressing
+A04	Tonkotsu Ramen	Pork bone broth, chashu, soft egg, corn, scallion
+A05	Falafel Wrap	Chickpea fritters, hummus, tahini, pickled veg
+A06	Chocolate Lava Cake	Warm sponge with a molten dark-chocolate center
+A07	Garden Minestrone	Seasonal vegetables, beans and pasta in tomato broth
+A08	Grilled Salmon Bowl	Salmon fillet, brown rice, edamame, avocado

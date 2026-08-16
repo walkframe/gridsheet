@@ -63,6 +63,57 @@ test('autofill drag straight down the rightmost column', async ({ page }) => {
   expect(await j9.locator('.gs-cell-rendered').textContent()).toBe('0');
 });
 
+test('autofill with edge auto-scroll can be released and cleared', async ({ page }) => {
+  // Regression: dragging the autofill handle past the bottom edge starts the built-in
+  // edge auto-scroll (ScrollHandle). Its rAF loop re-dispatched setAutofillDraggingTo
+  // every frame from a stale closure, so when the drag ended off the strip (release on a
+  // cell, or the strip hid at the very bottom) the loop kept running: the selection could
+  // never be cleared and the grid could not be scrolled back up. The loop must stop once
+  // the drag ends (no dragging / no autofillDraggingTo in the live store).
+  await go(page, 'basic-large--sheet');
+
+  const tabular = page.locator('.gs-tabular');
+  const tb = (await tabular.boundingBox())!;
+  const maxScroll = await tabular.evaluate((el) => el.scrollHeight - el.clientHeight);
+
+  // Start an autofill from a visible cell in column A (deterministic IDs 1..2000).
+  const a3 = page.locator("[data-address='A3']");
+  await a3.click();
+  const handle = a3.locator('.gs-autofill-drag');
+  const hb = (await handle.boundingBox())!;
+  const gx = Math.round(hb.x + hb.width / 2);
+  await page.mouse.move(gx, Math.round(hb.y + hb.height / 2));
+  await page.mouse.down();
+
+  // Park the cursor on the 5px bottom auto-scroll strip and let it run all the way to the
+  // very bottom. There the bottom strip hides (cannotScrollHere) and drops its mouse
+  // handlers, so it can no longer stop itself — the exact state that used to orphan the
+  // rAF loop. The loop self-reschedules, so one move onto the strip is enough.
+  await page.mouse.move(gx, Math.round(tb.y + tb.height - 3));
+  for (let i = 0; i < 40; i++) {
+    await page.waitForTimeout(150);
+    const top = await tabular.evaluate((el) => (el as HTMLElement).scrollTop);
+    if (top >= maxScroll - 1) {
+      break;
+    }
+  }
+  expect(await tabular.evaluate((el) => (el as HTMLElement).scrollTop)).toBeGreaterThanOrEqual(maxScroll - 1);
+
+  // Release (the strip is hidden here now, so this lands on the cell underneath).
+  await page.mouse.up();
+
+  // The grid must scroll back up and STAY there — pre-fix the orphaned loop kept
+  // scrolling it back down every frame (and re-arming the autofill), so this bounced.
+  await tabular.evaluate((el) => ((el as HTMLElement).scrollTop = 0));
+  await page.waitForTimeout(500);
+  expect(await tabular.evaluate((el) => (el as HTMLElement).scrollTop)).toBe(0);
+
+  // And a plain click selects another cell (autofillDraggingTo is cleared, not blocking).
+  const a2 = page.locator("[data-address='A2']");
+  await a2.click();
+  expect(await a2.getAttribute('class')).toContain('gs-choosing');
+});
+
 test('autofill range D9:D10 to D13', async ({ page }) => {
   await go(page, 'formula-ref--refs');
   await dragAutofillRange(page, 'D9', 'D10', 'D13');

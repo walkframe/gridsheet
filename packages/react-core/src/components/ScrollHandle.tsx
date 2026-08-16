@@ -36,6 +36,13 @@ export function ScrollHandle({ style, horizontal = 0, vertical = 0, className = 
   } = store;
   const sheet = sheetRef.current;
 
+  // The rAF scroll loop below closes over one render's props. When it dispatches
+  // (re-render), the running loop keeps the OLD closure — including a stale, still-truthy
+  // autofillDraggingTo — so it re-arms the autofill every frame. Read the LIVE store
+  // through a ref instead, so the loop sees the drag end and stops.
+  const storeRef = useRef(store);
+  storeRef.current = store;
+
   let isScrolling = false;
   const xSheetFocused = isXSheetFocused(store);
   const editingAnywhere = !!(sheet?.registry.editingAddress || editingAddress);
@@ -70,6 +77,19 @@ export function ScrollHandle({ style, horizontal = 0, vertical = 0, className = 
       if (!isScrolling || tabularRef.current === null || !sheet) {
         return;
       }
+      // The drag has ended (the mouseup landed off this strip, e.g. on a cell, or the
+      // strip hid at the edge so its onMouseUp/onMouseLeave never fired). Stop now —
+      // otherwise this loop keeps scrolling and re-dispatching setAutofillDraggingTo
+      // forever, so the autofill can never be cleared and the grid can't be scrolled.
+      const live = storeRef.current;
+      if (!live.dragging && !live.autofillDraggingTo) {
+        if (scrollRef.current !== null) {
+          cancelAnimationFrame(scrollRef.current);
+          scrollRef.current = null;
+        }
+        isScrolling = false;
+        return;
+      }
       const now = new Date().getTime();
       if (now - lastScrollTime > 1000) {
         currentSpeed = 0;
@@ -83,8 +103,8 @@ export function ScrollHandle({ style, horizontal = 0, vertical = 0, className = 
       focus(editorRef.current);
 
       const { x, y } = getDestEdge(e);
-      if (autofillDraggingTo) {
-        const { y: curY, x: curX } = autofillDraggingTo;
+      if (live.autofillDraggingTo) {
+        const { y: curY, x: curX } = live.autofillDraggingTo;
         dispatch(setAutofillDraggingTo({ y: y === -1 ? curY : y, x: x === -1 ? curX : x }));
       } else {
         if (editingAnywhere) {

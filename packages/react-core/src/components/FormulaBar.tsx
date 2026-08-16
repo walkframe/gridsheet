@@ -7,7 +7,7 @@ import { Context } from '../store';
 import { p2a, a2p } from '@gridsheet/web';
 import { setEditingAddress, setInputting, setEditorHovering, walk, write, updateSheet } from '../store/actions';
 import { operations as prevention } from '@gridsheet/web';
-import { handleFormulaQuoteAutoClose, insertTextAtCursor, isFocus } from '@gridsheet/web';
+import { insertTextAtCursor, isFocus } from '@gridsheet/web';
 import { focus } from '@gridsheet/web';
 import { editorStyle } from './Editor';
 import { ScrollHandle } from './ScrollHandle';
@@ -150,12 +150,6 @@ export const FormulaBar = ({ ready }: FormulaBarProps) => {
         return true;
       }
       const input = e.currentTarget;
-
-      // Auto-close double quotes in formula mode
-      if (handleFormulaQuoteAutoClose(e, inputting)) {
-        dispatch(setInputting(input.value));
-        return false;
-      }
 
       switch (e.key) {
         case 'Tab': // TAB

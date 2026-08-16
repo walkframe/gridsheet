@@ -11,7 +11,6 @@ export { focus, preventSafariBounce } from './lib/dom';
 
 // --- Input ---
 export {
-  handleFormulaQuoteAutoClose,
   insertTextAtCursor,
   isFocus,
   insertRef,

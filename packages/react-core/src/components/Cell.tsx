@@ -11,7 +11,6 @@ import {
   setAutofillDraggingTo,
   setEditingAddress,
   setDragging,
-  submitAutofill,
   setStore,
 } from '../store/actions';
 
@@ -193,16 +192,15 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
 
       safePreventDefault(e);
       dispatch(setDragging(false));
-      if (autofillDraggingTo) {
-        dispatch(submitAutofill(autofillDraggingTo));
-        focus(input);
-        return false;
-      }
+      // Autofill submit/clear is owned by StoreObserver's capture-phase window mouseup
+      // (onUp) — the reliable place that always fires. Doing it here too would double-fill
+      // (this bubble handler runs after onUp already cleared the store, with a stale
+      // autofillDraggingTo closure). We only handle the formula-range-drag end.
       if (editingAnywhere) {
         dispatch(drag({ y: -1, x: -1 }));
       }
     },
-    [autofillDraggingTo, editingAnywhere, input],
+    [editingAnywhere],
   );
 
   const handleDragging = useCallback(

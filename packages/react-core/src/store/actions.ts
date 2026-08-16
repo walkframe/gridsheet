@@ -180,20 +180,30 @@ export const setAutofillDraggingTo = new SetAutofillDraggingToAction().bind();
 
 class SubmitAutofillAction<T extends PointType> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
-    const autofill = new Autofill(store, payload);
-    const sheet = autofill.applied;
-    const selectingZone = areaToZone(autofill.wholeArea);
+    try {
+      const autofill = new Autofill(store, payload);
+      const sheet = autofill.applied;
+      const selectingZone = areaToZone(autofill.wholeArea);
 
-    return {
-      ...store,
-      sheetReactive: { current: sheet },
-      ...initSearchStatement(sheet, store),
-      ...restrictPoints(store, sheet),
-      selectingZone,
-      leftHeaderSelecting: false,
-      topHeaderSelecting: false,
-      autofillDraggingTo: null,
-    };
+      const result = {
+        ...store,
+        sheetReactive: { current: sheet },
+        ...initSearchStatement(sheet, store),
+        ...restrictPoints(store, sheet),
+        selectingZone,
+        leftHeaderSelecting: false,
+        topHeaderSelecting: false,
+        autofillDraggingTo: null,
+      };
+      return result;
+    } catch (e) {
+      // The fill may fail (e.g. a target beyond the sheet). Never leave
+      // autofillDraggingTo set — a stuck value blocks all future clicks
+      // (handleDragStart early-returns while it is set).
+      // eslint-disable-next-line no-console
+      console.error('[gridsheet] autofill failed:', e);
+      return { ...store, autofillDraggingTo: null };
+    }
   }
 }
 export const submitAutofill = new SubmitAutofillAction().bind();
