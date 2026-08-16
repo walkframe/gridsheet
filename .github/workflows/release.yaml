@@ -10,10 +10,10 @@ permissions:
   contents: read
 
 jobs:
-  upload-core:
+  upload-engine:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
-    name: upload core
+    name: upload engine
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v5
@@ -26,30 +26,30 @@ jobs:
         run: |
           NPM_RC=$(npm config get userconfig)
           sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
-      - name: publish core
+      - name: publish engine
         run: |
-          cd packages/core
           pnpm install
-          pnpm build
+          pnpm --filter "@gridsheet/engine..." build
+          cd packages/engine
           VERSION=$(node -p "require('./package.json').version")
           TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
           pnpm publish --access public --provenance $TAG --no-git-checks || true
-      - name: wait for core on npm
+      - name: wait for engine on npm
         run: |
-          VERSION=$(node -p "require('./packages/core/package.json').version")
+          VERSION=$(node -p "require('./packages/engine/package.json').version")
           for i in $(seq 1 30); do
-            if npm view "@gridsheet/core@$VERSION" version 2>/dev/null; then
-              echo "core@$VERSION is available"
+            if npm view "@gridsheet/engine@$VERSION" version 2>/dev/null; then
+              echo "engine@$VERSION is available"
               break
             fi
-            echo "Waiting for core@$VERSION... ($i/30)"
+            echo "Waiting for engine@$VERSION... ($i/30)"
             sleep 5
           done
 
-  upload-react-core:
-    needs: upload-core
+  upload-web:
+    needs: upload-engine
     runs-on: ubuntu-latest
-    name: upload react-core
+    name: upload web
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v5
@@ -62,51 +62,28 @@ jobs:
         run: |
           NPM_RC=$(npm config get userconfig)
           sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
-      - name: build core
+      - name: publish web
         run: |
-          cd packages/core
           pnpm install
-          pnpm build
-      - name: publish react-core
-        run: |
-          cd packages/react-core
-          pnpm install
-          pnpm build
+          pnpm --filter "@gridsheet/web..." build
+          cd packages/web
           VERSION=$(node -p "require('./package.json').version")
           TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
           pnpm publish --access public --provenance $TAG --no-git-checks || true
-
-  upload-preact-core:
-    needs: upload-core
-    runs-on: ubuntu-latest
-    name: upload preact-core
-    steps:
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v5
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
-      - run: npm install -g npm@11
-      - name: remove authToken from .npmrc
+      - name: wait for web on npm
         run: |
-          NPM_RC=$(npm config get userconfig)
-          sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
-      - name: build dependencies (core, react-core)
-        run: |
-          cd packages/core && pnpm install && pnpm build && cd ../..
-          cd packages/react-core && pnpm install && pnpm build && cd ../..
-      - name: publish preact-core
-        run: |
-          cd packages/preact-core
-          pnpm install
-          pnpm build
-          VERSION=$(node -p "require('./package.json').version")
-          TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
-          pnpm publish --access public --provenance $TAG --no-git-checks || true
+          VERSION=$(node -p "require('./packages/web/package.json').version")
+          for i in $(seq 1 30); do
+            if npm view "@gridsheet/web@$VERSION" version 2>/dev/null; then
+              echo "web@$VERSION is available"
+              break
+            fi
+            echo "Waiting for web@$VERSION... ($i/30)"
+            sleep 5
+          done
 
   upload-functions:
-    needs: upload-core
+    needs: upload-engine
     runs-on: ubuntu-latest
     name: upload functions
     steps:
@@ -121,22 +98,78 @@ jobs:
         run: |
           NPM_RC=$(npm config get userconfig)
           sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
-      - name: build core
-        run: |
-          cd packages/core
-          pnpm install
-          pnpm build
       - name: publish functions
         run: |
-          cd packages/functions
           pnpm install
-          pnpm build
+          pnpm --filter "@gridsheet/functions..." build
+          cd packages/functions
           VERSION=$(node -p "require('./package.json').version")
           TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
           pnpm publish --access public --provenance $TAG --no-git-checks || true
 
+  upload-react-core:
+    needs: upload-web
+    runs-on: ubuntu-latest
+    name: upload react-core
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm install -g npm@11
+      - name: remove authToken from .npmrc
+        run: |
+          NPM_RC=$(npm config get userconfig)
+          sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
+      - name: publish react-core
+        run: |
+          pnpm install
+          pnpm --filter "@gridsheet/react-core..." build
+          cd packages/react-core
+          VERSION=$(node -p "require('./package.json').version")
+          TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
+          pnpm publish --access public --provenance $TAG --no-git-checks || true
+
+  upload-preact-core:
+    needs: upload-web
+    runs-on: ubuntu-latest
+    name: upload preact-core
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm install -g npm@11
+      - name: remove authToken from .npmrc
+        run: |
+          NPM_RC=$(npm config get userconfig)
+          sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
+      - name: publish preact-core
+        run: |
+          pnpm install
+          pnpm --filter "@gridsheet/preact-core..." build
+          cd packages/preact-core
+          VERSION=$(node -p "require('./package.json').version")
+          TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
+          pnpm publish --access public --provenance $TAG --no-git-checks || true
+      - name: wait for preact-core on npm
+        run: |
+          VERSION=$(node -p "require('./packages/preact-core/package.json').version")
+          for i in $(seq 1 30); do
+            if npm view "@gridsheet/preact-core@$VERSION" version 2>/dev/null; then
+              echo "preact-core@$VERSION is available"
+              break
+            fi
+            echo "Waiting for preact-core@$VERSION... ($i/30)"
+            sleep 5
+          done
+
   upload-react-dev:
-    needs: upload-core
+    needs: upload-web
     runs-on: ubuntu-latest
     name: upload react-dev
     steps:
@@ -153,9 +186,9 @@ jobs:
           sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
       - name: publish react-dev
         run: |
-          cd packages/react-dev
           pnpm install
-          pnpm build
+          pnpm --filter "@gridsheet/react-dev..." build
+          cd packages/react-dev
           VERSION=$(node -p "require('./package.json').version")
           TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
           pnpm publish --access public --provenance $TAG --no-git-checks || true
@@ -176,16 +209,11 @@ jobs:
         run: |
           NPM_RC=$(npm config get userconfig)
           sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
-      - name: build dependencies (preact-core, functions)
-        run: |
-          cd packages/react-core && pnpm install && pnpm build && cd ../..
-          cd packages/preact-core && pnpm install && pnpm build && cd ../..
-          cd packages/functions && pnpm install && pnpm build && cd ../..
       - name: publish vue-core
         run: |
-          cd packages/vue-core
           pnpm install
-          pnpm build
+          pnpm --filter "@gridsheet/vue-core..." build
+          cd packages/vue-core
           VERSION=$(node -p "require('./package.json').version")
           TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
           pnpm publish --access public --provenance $TAG --no-git-checks || true
@@ -206,16 +234,11 @@ jobs:
         run: |
           NPM_RC=$(npm config get userconfig)
           sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
-      - name: build dependencies (react-core, preact-core, functions)
-        run: |
-          cd packages/react-core && pnpm install && pnpm build && cd ../..
-          cd packages/preact-core && pnpm install && pnpm build && cd ../..
-          cd packages/functions && pnpm install && pnpm build && cd ../..
       - name: publish svelte-core
         run: |
-          cd packages/svelte-core
           pnpm install
-          pnpm build
+          pnpm --filter "@gridsheet/svelte-core..." build
+          cd packages/svelte-core
           VERSION=$(node -p "require('./package.json').version")
           TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
           pnpm publish --access public --provenance $TAG --no-git-checks || true
