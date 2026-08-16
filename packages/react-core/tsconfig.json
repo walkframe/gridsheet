@@ -21,7 +21,9 @@
     "paths": {
       "@gridsheet/web": ["../../web/src"],
       "@gridsheet/web/*": ["../../web/src/*"],
-      "@gridsheet/functions": ["../../functions/src"]
+      "@gridsheet/functions": ["../../functions/src"],
+      "@gridsheet/engine": ["../../engine/src"],
+      "@gridsheet/engine/*": ["../../engine/src/*"]
     },
     "forceConsistentCasingInFileNames": true
   },
