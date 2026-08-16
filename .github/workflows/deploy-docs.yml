@@ -23,6 +23,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Build workspace dependencies
+        run: pnpm --filter "@gridsheet/docs^..." build
+
       - name: Build Next.js app
         run: pnpm build
 
