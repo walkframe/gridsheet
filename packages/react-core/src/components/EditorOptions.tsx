@@ -1,6 +1,6 @@
 import React, { useRef, useLayoutEffect, useState } from 'react';
 import { FunctionGuide } from './FunctionGuide';
-import { clampLeft } from '@gridsheet/core';
+import { clampLeft } from '@gridsheet/web';
 
 interface EditorOptionsProps {
   filteredOptions: any[];

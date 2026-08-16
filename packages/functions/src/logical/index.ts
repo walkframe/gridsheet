@@ -1,4 +1,4 @@
-import type { FunctionMapping } from '@gridsheet/core';
+import type { FunctionMapping } from '@gridsheet/engine';
 import { XorFunction } from './xor';
 import { IfnaFunction } from './ifna';
 import { IfsFunction } from './ifs';

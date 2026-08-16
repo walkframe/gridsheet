@@ -1,5 +1,5 @@
 import { StdevSFunction } from './stdev_s';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/engine';
 
 describe('stdev.s', () => {
   const sheet = new Sheet({});

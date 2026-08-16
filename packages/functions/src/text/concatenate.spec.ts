@@ -1,5 +1,5 @@
 import { ConcatenateFunction } from './concatenate';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/engine';
 
 describe('concatenate', () => {
   const sheet = new Sheet({});

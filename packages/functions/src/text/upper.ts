@@ -1,6 +1,6 @@
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/core';
-import { ensureString } from '@gridsheet/core';
-import type { FunctionCategory } from '@gridsheet/core';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/engine';
+import { ensureString } from '@gridsheet/engine';
+import type { FunctionCategory } from '@gridsheet/engine';
 
 const description = `Converts all characters in a string to uppercase.`;
 

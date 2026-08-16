@@ -1,8 +1,8 @@
 import type { StoreType, AreaType, PointType } from '../types';
 
-import { zoneToArea } from '@gridsheet/core';
-import type { Sheet, UserSheet } from '@gridsheet/core';
-import { focus } from '@gridsheet/core';
+import { zoneToArea } from '@gridsheet/web';
+import type { Sheet, UserSheet } from '@gridsheet/web';
+import { focus } from '@gridsheet/web';
 
 export const clip = (store: StoreType) => {
   const { selectingZone, choosing, editorRef, sheetReactive: sheetRef } = store;

@@ -1,7 +1,7 @@
-import { FormulaError } from '@gridsheet/core';
-import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/core';
-import { ensureNumber, isNumeric } from '@gridsheet/core';
-import type { FunctionCategory } from '@gridsheet/core';
+import { FormulaError } from '@gridsheet/engine';
+import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/engine';
+import { ensureNumber, isNumeric } from '@gridsheet/engine';
+import type { FunctionCategory } from '@gridsheet/engine';
 
 const description = `Returns the variance based on a sample.`;
 

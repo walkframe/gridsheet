@@ -5,12 +5,12 @@
 // ---- types ----------------------------------------------------------------
 
 import type { PointType, ZoneType, FilterConfig } from '../types';
-import type { UserSheet } from '@gridsheet/core';
+import type { UserSheet } from '@gridsheet/web';
 import type { StoreType } from '../types';
 import type { Dispatcher } from '../store';
-import { operations as prevention } from '@gridsheet/core';
-import { zoneShape } from '@gridsheet/core';
-import { p2a } from '@gridsheet/core';
+import { operations as prevention } from '@gridsheet/web';
+import { zoneShape } from '@gridsheet/web';
+import { p2a } from '@gridsheet/web';
 import {
   copier,
   cutter,
@@ -386,6 +386,8 @@ export const defaultRowMenuDescriptors: RowMenuItemDescriptor[] = [
 // The col menu composes registered section components (filter, sort, label) and
 // simple menu items. Use `registerMenuComponent` to override built-in sections.
 export const defaultColMenuDescriptors: ColMenuItemDescriptor[] = [
+  { type: 'component', componentId: 'col-label' },
+  { type: 'divider' },
   { type: 'component', componentId: 'col-filter' },
   { type: 'divider' },
   { type: 'component', componentId: 'col-sort' },
@@ -473,8 +475,6 @@ export const defaultColMenuDescriptors: ColMenuItemDescriptor[] = [
     shortcuts: ['F'],
     onClick: (ctx) => ctx.search(),
   },
-  { type: 'divider' },
-  { type: 'component', componentId: 'col-label' },
 ];
 
 // ---- buildMenuContext -------------------------------------------------------

@@ -1,5 +1,5 @@
 import { CountifsFunction } from './countifs';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/engine';
 
 describe('countifs', () => {
   const sheet = new Sheet({});

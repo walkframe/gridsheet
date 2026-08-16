@@ -1,5 +1,5 @@
 import { MatchFunction } from './match';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/engine';
 
 describe('match', () => {
   const sheet = new Sheet({});

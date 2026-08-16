@@ -40,12 +40,12 @@
   "homepage": "https://gridsheet.walkframe.com/",
   "packageManager": "pnpm@10.6.5",
   "peerDependencies": {
-    "@gridsheet/core": "3.2.0",
+    "@gridsheet/web": "3.2.0",
     "react": ">=16.9.0",
     "react-dom": ">=16.9.0"
   },
   "devDependencies": {
-    "@gridsheet/core": "workspace:*",
+    "@gridsheet/web": "workspace:*",
     "@types/react": "^16.9.24",
     "@types/react-dom": "^16.9.24",
     "@vitejs/plugin-react": "^4.3.4",

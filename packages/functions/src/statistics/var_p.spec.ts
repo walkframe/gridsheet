@@ -1,6 +1,6 @@
 import { VarPFunction } from './var_p';
 import { VarSFunction } from './var_s';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/engine';
 
 describe('var.p', () => {
   const sheet = new Sheet({});

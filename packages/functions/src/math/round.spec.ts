@@ -1,5 +1,5 @@
 import { RoundFunction } from './round';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/engine';
 
 describe('round', () => {
   const sheet = new Sheet({});

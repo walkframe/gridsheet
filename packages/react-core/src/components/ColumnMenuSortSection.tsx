@@ -1,7 +1,7 @@
 import { type FC, useContext, useState, useCallback, useEffect } from 'react';
 import { Context } from '../store';
 import { sortRows } from '../store/actions';
-import { operations as prevention } from '@gridsheet/core';
+import { operations as prevention } from '@gridsheet/web';
 import { registerMenuComponent, type ColMenuSectionProps } from '../lib/menu';
 
 type PendingSort = {

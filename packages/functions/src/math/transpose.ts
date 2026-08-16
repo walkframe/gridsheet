@@ -1,5 +1,5 @@
-import { FormulaError } from '@gridsheet/core';
-import type { FunctionArgumentDefinition } from '@gridsheet/core';
+import { FormulaError } from '@gridsheet/engine';
+import type { FunctionArgumentDefinition } from '@gridsheet/engine';
 import { MatrixFunction } from './__matrix_base';
 
 const description = `Returns the transpose of a matrix.

@@ -19,8 +19,10 @@ module.exports = {
     ]
   },
   "moduleNameMapper": {
-    "^@gridsheet/core$": "<rootDir>/../core/src",
-    "^@gridsheet/core/(.*)$": "<rootDir>/../core/src/$1"
+    "^@gridsheet/engine$": "<rootDir>/../engine/src",
+    "^@gridsheet/engine/(.*)$": "<rootDir>/../engine/src/$1",
+    "^@gridsheet/web$": "<rootDir>/../web/src",
+    "^@gridsheet/web/(.*)$": "<rootDir>/../web/src/$1"
   },
   testEnvironment: 'jest-environment-jsdom'
 };

@@ -1,5 +1,5 @@
 import { UnicodeFunction } from './unicode';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/engine';
 
 describe('unicode', () => {
   const sheet = new Sheet({});

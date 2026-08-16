@@ -1,5 +1,5 @@
 import { CorrelFunction } from './correl';
-import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity, RangeEntity } from '@gridsheet/engine';
 
 describe('correl', () => {
   const sheet = new Sheet({});

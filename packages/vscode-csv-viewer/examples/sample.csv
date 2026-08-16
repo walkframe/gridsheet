@@ -1,0 +1,11 @@
+id,customer,channel,message,sentiment,topic,priority,needs_reply
+1,Alice Tan,email,"I was charged twice at checkout and the second order never arrived. Third time this month — I want a refund.",,,,
+2,Bob Ito,twitter,"Just tried the new dark mode and it's gorgeous. Been asking for this for ages 🙏",,,,
+3,Chen Wei,chat,"How do I export a board to CSV? I can't find the button anywhere in the new UI.",,,,
+4,Dana López,email,"The reports tab crashes every time I open it on my Pixel 8. Logs attached, happy to help debug.",,,,
+5,Emil Novak,phone,"Cancel my subscription. I've been trying to reach a human for a week with no reply.",,,,
+6,Fatima Reza,email,"Minor thing — the invoice PDF still shows last year's billing address. Otherwise everything's great!",,,,
+7,Grace Kim,twitter,"Do you offer a student discount? Deciding between you and a competitor this weekend.",,,,
+8,Hiro Tanaka,chat,"The 2FA code email never arrives so I'm locked out. Urgent — I have a client demo in an hour.",,,,
+9,Ivan Petrov,email,"Feature request: recurring reminders. Not a blocker, but it'd save me a lot of time.",,,,
+10,Julia Sato,email,"Whole team can't log in since this morning's update. This is costing us real money.",,,,

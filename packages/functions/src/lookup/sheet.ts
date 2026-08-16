@@ -1,7 +1,7 @@
-import { FormulaError } from '@gridsheet/core';
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/core';
-import { Sheet } from '@gridsheet/core';
-import type { FunctionCategory } from '@gridsheet/core';
+import { FormulaError } from '@gridsheet/engine';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/engine';
+import { Sheet } from '@gridsheet/engine';
+import type { FunctionCategory } from '@gridsheet/engine';
 
 const description = `Returns the sheet number of the specified sheet or reference.`;
 

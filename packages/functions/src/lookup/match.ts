@@ -1,7 +1,7 @@
-import { FormulaError } from '@gridsheet/core';
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/core';
-import { stripMatrix, matrixShape } from '@gridsheet/core';
-import type { FunctionCategory } from '@gridsheet/core';
+import { FormulaError } from '@gridsheet/engine';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/engine';
+import { stripMatrix, matrixShape } from '@gridsheet/engine';
+import type { FunctionCategory } from '@gridsheet/engine';
 
 const description = `Searches for a value in a sheet and returns its position.
 Returns the position of the matched value (1-based index).`;

@@ -1,4 +1,4 @@
-import type { FunctionMapping } from '@gridsheet/core';
+import type { FunctionMapping } from '@gridsheet/engine';
 import { VlookupFunction } from './vlookup';
 import { HlookupFunction } from './hlookup';
 import { IndexFunction } from './indexFn';

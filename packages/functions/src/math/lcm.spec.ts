@@ -1,5 +1,5 @@
 import { LcmFunction } from './lcm';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/engine';
 
 describe('lcm', () => {
   const sheet = new Sheet({});

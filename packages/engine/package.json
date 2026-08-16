@@ -1,0 +1,63 @@
+{
+  "name": "@gridsheet/engine",
+  "version": "3.2.0",
+  "type": "module",
+  "description": "Headless spreadsheet model + formula resolution engine for gridsheet (React/DOM-free; usable from CLI, extension hosts, and backends).",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "rm -rf ./dist || true && vite build",
+    "typecheck": "tsc --noEmit",
+    "jest": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/walkframe/gridsheet.git"
+  },
+  "keywords": [
+    "spreadsheet",
+    "spread-sheet",
+    "excel",
+    "gridsheet",
+    "formula",
+    "engine",
+    "headless",
+    "cell",
+    "grid"
+  ],
+  "author": "righ",
+  "license": "Apache-2.0",
+  "files": [
+    "dist/",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "bugs": {
+    "url": "https://github.com/walkframe/gridsheet/issues"
+  },
+  "homepage": "https://gridsheet.walkframe.com/",
+  "packageManager": "pnpm@10.6.5",
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "jest": "^29.4.3",
+    "ts-jest": "^29.0.5",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.2",
+    "vite-plugin-dts": "^4.5.3"
+  },
+  "dependencies": {
+    "dayjs": "^1.11.13"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

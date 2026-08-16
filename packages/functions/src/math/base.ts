@@ -1,7 +1,7 @@
-import { FormulaError } from '@gridsheet/core';
-import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/core';
-import { ensureNumber } from '@gridsheet/core';
-import type { FunctionCategory } from '@gridsheet/core';
+import { FormulaError } from '@gridsheet/engine';
+import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/engine';
+import { ensureNumber } from '@gridsheet/engine';
+import type { FunctionCategory } from '@gridsheet/engine';
 
 const description = `Converts a number into a text representation in another base, e.g. base 2 for binary.`;
 

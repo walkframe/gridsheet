@@ -1,5 +1,5 @@
 import { UpperFunction } from './upper';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/engine';
 
 describe('upper', () => {
   const sheet = new Sheet({});

@@ -1,5 +1,5 @@
 import { SequenceFunction } from './sequence';
-import { Sheet, FormulaError, ValueEntity, Spilling } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity, Spilling } from '@gridsheet/engine';
 
 describe('sequence', () => {
   const sheet = new Sheet({});

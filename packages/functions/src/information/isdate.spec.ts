@@ -1,5 +1,5 @@
 import { IsdateFunction } from './isdate';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/engine';
 
 describe('isdate', () => {
   const sheet = new Sheet({});

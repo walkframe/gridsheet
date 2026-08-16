@@ -57,13 +57,13 @@ export type {
   ContextsBySheetId,
   SheetIdsByName,
   RefPaletteType,
-} from '@gridsheet/core';
+} from '@gridsheet/web';
 
 // React-specific types
 import type { RefObject, CSSProperties, KeyboardEvent } from 'react';
-import type { Sheet, UserSheet } from '@gridsheet/core';
-import type { BookType } from '@gridsheet/core';
-import type { PolicyType } from '@gridsheet/core';
+import type { Sheet, UserSheet } from '@gridsheet/web';
+import type { BookType } from '@gridsheet/web';
+import type { PolicyType } from '@gridsheet/web';
 import type { ContextMenuItemDescriptor, RowMenuItemDescriptor, ColMenuItemDescriptor } from './lib/menu';
 import type {
   ModeType,
@@ -75,8 +75,8 @@ import type {
   RectType,
   PositionType,
   CellsByAddressType,
-} from '@gridsheet/core';
-import type { SheetLimits } from '@gridsheet/core';
+} from '@gridsheet/web';
+import type { SheetLimits } from '@gridsheet/web';
 
 export type Policies = { [s: string]: PolicyType };
 
@@ -169,7 +169,7 @@ export type StoreType = {
   colMenu: ColMenuItemDescriptor[];
   resizingPositionY: [number, number, number]; // indexY, startY, endY
   resizingPositionX: [number, number, number]; // indexX, startX, endX
-  columnMenuState: { x: number; position: PositionType } | null;
+  columnMenuState: { x: number; position: PositionType; focusLabel?: boolean } | null;
   rowMenuState: { y: number; position: PositionType } | null;
   editorHovering: boolean;
 };

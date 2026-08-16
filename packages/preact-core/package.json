@@ -16,7 +16,7 @@
     "url": "git+https://github.com/walkframe/gridsheet.git"
   },
   "dependencies": {
-    "@gridsheet/core": "workspace:*"
+    "@gridsheet/web": "workspace:*"
   },
   "exports": {
     ".": {

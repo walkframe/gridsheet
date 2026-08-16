@@ -1,5 +1,5 @@
 import { NFunction } from './n';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/engine';
 
 describe('n', () => {
   const sheet = new Sheet({});

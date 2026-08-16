@@ -1,6 +1,6 @@
 import { useContext, useRef, useCallback, useEffect, memo, useMemo, useState } from 'react';
-import { x2c, y2r } from '@gridsheet/core';
-import { zoneToArea, among, areaToRange } from '@gridsheet/core';
+import { x2c, y2r } from '@gridsheet/web';
+import { zoneToArea, among, areaToRange } from '@gridsheet/web';
 import {
   choose,
   select,
@@ -11,20 +11,19 @@ import {
   setAutofillDraggingTo,
   setEditingAddress,
   setDragging,
-  submitAutofill,
   setStore,
 } from '../store/actions';
 
 import { Context } from '../store';
-import { FormulaError } from '@gridsheet/core';
-import { Pending } from '@gridsheet/core';
-import { insertRef, isRefInsertable } from '@gridsheet/core';
-import { focus } from '@gridsheet/core';
+import { FormulaError } from '@gridsheet/web';
+import { Pending } from '@gridsheet/web';
+import { insertRef, isRefInsertable } from '@gridsheet/web';
+import { focus } from '@gridsheet/web';
 import { isXSheetFocused } from '../store/helpers';
 import type { FC, RefObject } from 'react';
 import { isTouching, safePreventDefault } from '../lib/events';
-import type { UserSheet } from '@gridsheet/core';
-import { calcBelowPosition, hAlignTransform, type PopupPosition } from '@gridsheet/core';
+import type { UserSheet } from '@gridsheet/web';
+import { calcBelowPosition, hAlignTransform, type PopupPosition } from '@gridsheet/web';
 
 type Props = {
   y: number;
@@ -193,16 +192,15 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
 
       safePreventDefault(e);
       dispatch(setDragging(false));
-      if (autofillDraggingTo) {
-        dispatch(submitAutofill(autofillDraggingTo));
-        focus(input);
-        return false;
-      }
+      // Autofill submit/clear is owned by StoreObserver's capture-phase window mouseup
+      // (onUp) — the reliable place that always fires. Doing it here too would double-fill
+      // (this bubble handler runs after onUp already cleared the store, with a stale
+      // autofillDraggingTo closure). We only handle the formula-range-drag end.
       if (editingAnywhere) {
         dispatch(drag({ y: -1, x: -1 }));
       }
     },
-    [autofillDraggingTo, editingAnywhere, input],
+    [editingAnywhere],
   );
 
   const handleDragging = useCallback(

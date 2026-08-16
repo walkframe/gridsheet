@@ -1,5 +1,5 @@
 import { IsrefFunction } from './isref';
-import { Sheet, FormulaError, ValueEntity, RefEntity, RangeEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity, RefEntity, RangeEntity } from '@gridsheet/engine';
 
 describe('isref', () => {
   const sheet = new Sheet({});

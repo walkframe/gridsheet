@@ -1,4 +1,4 @@
-// --- Re-export everything from @gridsheet/core ---
+// --- Re-export everything from @gridsheet/web ---
 export {
   // Spatial
   oa2aa,
@@ -65,7 +65,7 @@ export {
   DEFAULT_HISTORY_LIMIT,
   Pending,
   Spilling,
-} from '@gridsheet/core';
+} from '@gridsheet/web';
 
 export type {
   // Types from core
@@ -125,7 +125,7 @@ export type {
   SelectProps,
   SelectFallbackProps,
   SerializeForClipboardProps,
-} from '@gridsheet/core';
+} from '@gridsheet/web';
 
 // --- React-specific exports ---
 export { GridSheet, createSheetRef, useSheetRef, createStoreRef, useStoreRef } from './components/GridSheet';

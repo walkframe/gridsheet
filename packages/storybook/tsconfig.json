@@ -27,11 +27,17 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "paths": {
-      "@gridsheet/core": [
-        "../core/src"
+      "@gridsheet/engine": [
+        "../engine/src"
       ],
-      "@gridsheet/core/*": [
-        "../core/src/*"
+      "@gridsheet/engine/*": [
+        "../engine/src/*"
+      ],
+      "@gridsheet/web": [
+        "../web/src"
+      ],
+      "@gridsheet/web/*": [
+        "../web/src/*"
       ],
       "@gridsheet/react-core": [
         "../react-core/src"

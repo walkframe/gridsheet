@@ -1,6 +1,6 @@
-import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/core';
-import { ensureNumber, isNumeric } from '@gridsheet/core';
-import type { FunctionCategory } from '@gridsheet/core';
+import { BaseFunction, type FunctionArgumentDefinition, eachMatrix } from '@gridsheet/engine';
+import { ensureNumber, isNumeric } from '@gridsheet/engine';
+import type { FunctionCategory } from '@gridsheet/engine';
 
 const description = `Returns the product of a series of numbers.`;
 

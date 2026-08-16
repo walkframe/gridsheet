@@ -1,5 +1,5 @@
 import { ReplaceFunction } from './replace';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/engine';
 
 describe('replace', () => {
   const sheet = new Sheet({});

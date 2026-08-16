@@ -1,5 +1,5 @@
 import { Log10Function } from './log10';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/engine';
 
 describe('log10', () => {
   const sheet = new Sheet({});

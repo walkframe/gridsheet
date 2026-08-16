@@ -3,7 +3,7 @@ import { useContext, useEffect, useState, useCallback, useRef, memo } from 'reac
 import { createPortal } from 'react-dom';
 import { FunctionGuide } from './FunctionGuide';
 import { EditorOptions } from './EditorOptions';
-import { x2c, y2r } from '@gridsheet/core';
+import { x2c, y2r } from '@gridsheet/web';
 import { clip } from '../lib/clipboard';
 import {
   clear,
@@ -26,19 +26,19 @@ import {
 } from '../store/actions';
 
 import { Context } from '../store';
-import { areaToZone, zoneToArea } from '@gridsheet/core';
-import { operations as prevention } from '@gridsheet/core';
+import { areaToZone, zoneToArea } from '@gridsheet/web';
+import { operations as prevention } from '@gridsheet/web';
 import {
   expandInput,
-  handleFormulaQuoteAutoClose,
   insertTextAtCursor,
   isFocus,
   isRefInsertable,
   resetInput,
-} from '@gridsheet/core';
-import { focus } from '@gridsheet/core';
-import { Lexer } from '@gridsheet/core';
-import { COLOR_PALETTE } from '@gridsheet/core';
+  handleFormulaQuoteAutoClose,
+} from '@gridsheet/web';
+import { focus } from '@gridsheet/web';
+import { Lexer } from '@gridsheet/web';
+import { COLOR_PALETTE } from '@gridsheet/web';
 import { useAutocomplete } from './useAutocomplete';
 import { EditorEventWithNativeEvent, FeedbackType, ModeType } from '../types';
 import { Fixed } from './Fixed';
@@ -90,7 +90,10 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
     const { bottom: top, left } = rect;
 
     return createPortal(
-      <>
+      // Portaled to <body>, outside .gs-root1 / .gs-editor, so carry data-mode
+      // here too — otherwise the theme-specific styles (e.g. the dark function
+      // guide) never match and the help renders with the light palette.
+      <div className="gs-editor-portal" data-mode={mode}>
         {activeFunctionHelp &&
           filteredOptions.length === 0 &&
           (!selectingZone || (selectingZone.endY === -1 && selectingZone.endX === -1)) && (
@@ -110,7 +113,7 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
             onOptionMouseDown={handleOptionMouseDown}
           />
         )}
-      </>,
+      </div>,
       document.body,
     );
   };

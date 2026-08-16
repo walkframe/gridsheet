@@ -1,5 +1,5 @@
 import { RandFunction } from './rand';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/engine';
 
 describe('rand', () => {
   const sheet = new Sheet({});

@@ -1,0 +1,4 @@
+id,os,eol
+1,windows,crlf
+2,unix,also fine
+3,last,no trailing newline

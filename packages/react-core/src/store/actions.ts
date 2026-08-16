@@ -13,15 +13,15 @@ import {
   OperatorType,
   FilterConfig,
 } from '../types';
-import { zoneToArea, superposeArea, matrixShape, areaShape, areaDiff, areaToZone, restrictZone } from '@gridsheet/core';
-import { Sheet } from '@gridsheet/core';
+import { zoneToArea, superposeArea, matrixShape, areaShape, areaDiff, areaToZone, restrictZone } from '@gridsheet/web';
+import { Sheet } from '@gridsheet/web';
 
-import { p2a, a2p } from '@gridsheet/core';
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '@gridsheet/core';
+import { p2a, a2p } from '@gridsheet/web';
+import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '@gridsheet/web';
 import { initSearchStatement, restrictPoints, flashSheet, flashWithCallback, compactReflection } from './helpers';
-import { smartScroll } from '@gridsheet/core';
-import { operations as prevention } from '@gridsheet/core';
-import { Autofill } from '@gridsheet/core';
+import { smartScroll } from '@gridsheet/web';
+import { operations as prevention } from '@gridsheet/web';
+import { Autofill } from '@gridsheet/web';
 
 const resetZone: ZoneType = { startY: -1, startX: -1, endY: -1, endX: -1 };
 
@@ -180,20 +180,30 @@ export const setAutofillDraggingTo = new SetAutofillDraggingToAction().bind();
 
 class SubmitAutofillAction<T extends PointType> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
-    const autofill = new Autofill(store, payload);
-    const sheet = autofill.applied;
-    const selectingZone = areaToZone(autofill.wholeArea);
+    try {
+      const autofill = new Autofill(store, payload);
+      const sheet = autofill.applied;
+      const selectingZone = areaToZone(autofill.wholeArea);
 
-    return {
-      ...store,
-      sheetReactive: { current: sheet },
-      ...initSearchStatement(sheet, store),
-      ...restrictPoints(store, sheet),
-      selectingZone,
-      leftHeaderSelecting: false,
-      topHeaderSelecting: false,
-      autofillDraggingTo: null,
-    };
+      const result = {
+        ...store,
+        sheetReactive: { current: sheet },
+        ...initSearchStatement(sheet, store),
+        ...restrictPoints(store, sheet),
+        selectingZone,
+        leftHeaderSelecting: false,
+        topHeaderSelecting: false,
+        autofillDraggingTo: null,
+      };
+      return result;
+    } catch (e) {
+      // The fill may fail (e.g. a target beyond the sheet). Never leave
+      // autofillDraggingTo set — a stuck value blocks all future clicks
+      // (handleDragStart early-returns while it is set).
+      // eslint-disable-next-line no-console
+      console.error('[gridsheet] autofill failed:', e);
+      return { ...store, autofillDraggingTo: null };
+    }
   }
 }
 export const submitAutofill = new SubmitAutofillAction().bind();
@@ -1362,7 +1372,9 @@ class FilterRowsAction<T extends { x?: number; filter?: FilterConfig }> extends 
 }
 export const filterRows = new FilterRowsAction().bind();
 
-class SetColumnMenuAction<T extends { x: number; position: { y: number; x: number } } | null> extends CoreAction<T> {
+class SetColumnMenuAction<
+  T extends { x: number; position: { y: number; x: number }; focusLabel?: boolean } | null,
+> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     return {
       ...store,

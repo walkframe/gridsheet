@@ -1,5 +1,5 @@
 import { CleanFunction } from './clean';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/engine';
 
 describe('clean', () => {
   const sheet = new Sheet({});

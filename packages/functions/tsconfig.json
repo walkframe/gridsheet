@@ -15,8 +15,8 @@
     "skipLibCheck": true,
     "baseUrl": "./src/",
     "paths": {
-      "@gridsheet/core": ["../../core/src"],
-      "@gridsheet/core/*": ["../../core/src/*"]
+      "@gridsheet/engine": ["../../engine/src"],
+      "@gridsheet/engine/*": ["../../engine/src/*"]
     },
     "forceConsistentCasingInFileNames": true
   },

@@ -1,5 +1,5 @@
 import { IslogicalFunction } from './islogical';
-import { Sheet, FormulaError, ValueEntity } from '@gridsheet/core';
+import { Sheet, FormulaError, ValueEntity } from '@gridsheet/engine';
 
 describe('islogical', () => {
   const sheet = new Sheet({});
