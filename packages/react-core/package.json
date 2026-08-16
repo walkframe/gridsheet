@@ -1,6 +1,6 @@
 {
   "name": "@gridsheet/react-core",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "Spreadsheet component for React",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
