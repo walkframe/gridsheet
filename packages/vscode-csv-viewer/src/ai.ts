@@ -9,7 +9,10 @@
 //    so the CLI falls back to its cached OAuth login (not metered API billing).
 //  - Output is parsed defensively (CLI JSON envelopes vary across versions).
 
-import { spawn } from 'child_process';
+// cross-spawn (not child_process.spawn) so a Windows `.cmd`/`.bat` shim — how npm installs
+// `claude` / `codex` there — actually launches, with correct arg escaping for the big
+// inline `--json-schema '{…}'`. It's a drop-in for spawn on macOS/Linux.
+import spawn from 'cross-spawn';
 import { mkdtemp, readFile, rm, writeFile } from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
@@ -238,7 +241,10 @@ function spawnCapture(bin: string, args: string[], stdin: string, provider: AiPr
     } else {
       delete env.OPENAI_API_KEY;
     }
-    env.PATH = augmentPath(env.PATH);
+    // Windows env keys are case-insensitive (`Path` vs `PATH`); update the real key in
+    // place so the augmented PATH actually reaches the child.
+    const pathKey = Object.keys(env).find((k) => k.toLowerCase() === 'path') ?? 'PATH';
+    env[pathKey] = augmentPath(env[pathKey]);
 
     try {
       const child = spawn(bin, args, { env, cwd: cwd || undefined });
@@ -297,15 +303,27 @@ function cliErrorDetail(err: string, out: string): string {
 // locations for the CLIs are appended.
 function augmentPath(current?: string): string {
   const home = os.homedir();
-  const extra = [
-    path.join(home, '.local', 'bin'),
-    '/usr/local/bin',
-    '/opt/homebrew/bin',
-    path.join(home, '.npm-global', 'bin'),
-  ];
+  const extra =
+    process.platform === 'win32'
+      ? [
+          // npm global bin (claude.cmd / codex.cmd live here) + winget/Store shims.
+          path.join(process.env.APPDATA ?? path.join(home, 'AppData', 'Roaming'), 'npm'),
+          path.join(
+            process.env.LOCALAPPDATA ?? path.join(home, 'AppData', 'Local'),
+            'Microsoft',
+            'WindowsApps',
+          ),
+          path.join(home, '.local', 'bin'),
+        ]
+      : [
+          path.join(home, '.local', 'bin'),
+          '/usr/local/bin',
+          '/opt/homebrew/bin',
+          path.join(home, '.npm-global', 'bin'),
+        ];
   const parts = (current ?? '').split(path.delimiter).filter(Boolean);
   for (const dir of extra) {
-    if (!parts.includes(dir)) {
+    if (dir && !parts.includes(dir)) {
       parts.push(dir);
     }
   }
