@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { parseDelimited } from './parse';
+import { parseDelimited, parseDelimitedChunked } from './parse';
 import { resolveAiBatch } from './ai';
 import type { AiTask } from './aiTypes';
 
@@ -10,6 +10,21 @@ export interface GridModeSink {
 }
 
 export class CsvEditorProvider implements vscode.CustomTextEditorProvider {
+  // The currently-focused grid's "ask the webview to serialize + save" trigger.
+  // Cmd+S is intercepted (see the `gridsheet.save` keybinding) and routed here so a
+  // large sheet serializes only on save — never on every edit. Null when no grid is
+  // focused, in which case the save command falls back to the default save.
+  private static activeSave: (() => void) | null = null;
+
+  /** Invoked by the `gridsheet.save` command. Returns false if no grid is focused. */
+  public static saveActiveGrid(): boolean {
+    if (CsvEditorProvider.activeSave == null) {
+      return false;
+    }
+    CsvEditorProvider.activeSave();
+    return true;
+  }
+
   constructor(
     private readonly context: vscode.ExtensionContext,
     private readonly delimiter: string,
@@ -71,9 +86,16 @@ export class CsvEditorProvider implements vscode.CustomTextEditorProvider {
 
     const viewerCfg = () => vscode.workspace.getConfiguration('gridsheet.viewer');
 
-    const postData = () => {
+    const postData = async () => {
       lastKnownText = document.getText();
-      const rows = parseDelimited(document.getText(), this.delimiter);
+      // Parse in chunks so a large file (~0.5s at 60MB) doesn't block the extension
+      // host and the webview can show a load progress bar instead of a frozen "Loading…".
+      const rows = await parseDelimitedChunked(
+        lastKnownText,
+        this.delimiter,
+        (ratio) => webview.postMessage({ type: 'loadProgress', ratio }),
+        () => new Promise<void>((r) => setImmediate(r)),
+      );
       webview.postMessage({
         type: 'data',
         rows,
@@ -82,6 +104,11 @@ export class CsvEditorProvider implements vscode.CustomTextEditorProvider {
         // toggle, and evaluateFormulas is a settings-only save policy.
         readOnly: viewerCfg().get<boolean>('readOnly', false),
         evaluate: viewerCfg().get<boolean>('evaluateFormulas', true),
+        dateFormats: viewerCfg().get<string[]>('dateFormats', []),
+        parseNumber: viewerCfg().get<boolean>('parseNumber', true),
+        parseDate: viewerCfg().get<boolean>('parseDate', false),
+        parseTime: viewerCfg().get<boolean>('parseTime', false),
+        parseBool: viewerCfg().get<boolean>('parseBool', false),
       });
     };
 
@@ -118,6 +145,19 @@ export class CsvEditorProvider implements vscode.CustomTextEditorProvider {
       await applyEolSetting();
     };
 
+    // Route Cmd+S for THIS grid: ask the webview to serialize the current sheet and
+    // post it back as a 'save' message. Registered as the active handler while this
+    // panel is focused (below), so the global `gridsheet.save` command reaches it.
+    const requestSave = () => webview.postMessage({ type: 'requestSave' });
+    const setActive = (active: boolean) => {
+      this.mode?.setGridActive(active, document.uri);
+      if (active) {
+        CsvEditorProvider.activeSave = requestSave;
+      } else if (CsvEditorProvider.activeSave === requestSave) {
+        CsvEditorProvider.activeSave = null;
+      }
+    };
+
     // When the grid isn't the active editor (e.g. after "Open as text"), defer
     // external re-syncs. Otherwise remounting the grid re-runs the cell editor's
     // autoFocus and steals focus from whatever editor the user is typing in. We
@@ -140,7 +180,7 @@ export class CsvEditorProvider implements vscode.CustomTextEditorProvider {
       postData();
     });
     const viewSub = webviewPanel.onDidChangeViewState(() => {
-      this.mode?.setGridActive(webviewPanel.active, document.uri);
+      setActive(webviewPanel.active);
       if (webviewPanel.active && needsSync) {
         needsSync = false;
         postData();
@@ -155,9 +195,9 @@ export class CsvEditorProvider implements vscode.CustomTextEditorProvider {
       // open, so a settings change does not disturb (or remount) an already-open grid.
     });
     // The panel is active the moment it resolves.
-    this.mode?.setGridActive(webviewPanel.active, document.uri);
+    setActive(webviewPanel.active);
     webviewPanel.onDidDispose(() => {
-      this.mode?.setGridActive(false, document.uri);
+      setActive(false);
       changeSub.dispose();
       viewSub.dispose();
       cfgSub.dispose();
@@ -171,6 +211,13 @@ export class CsvEditorProvider implements vscode.CustomTextEditorProvider {
           // The webview only posts edits when its (per-file, footer-controlled) read-only
           // toggle is off, so trust it here.
           void updateDocument(msg.text);
+        } else if (msg?.type === 'save' && typeof msg.text === 'string') {
+          // Save-only flow: the webview serialized the sheet in response to Cmd+S.
+          // Apply the fresh text (dirties the doc iff cell content actually changed),
+          // then persist. updateDocument no-ops when the signature matches, so an
+          // unchanged grid just saves whatever is already on disk.
+          await updateDocument(msg.text);
+          await vscode.workspace.save(document.uri);
         } else if (msg?.type === 'requestPaste') {
           // Webview clipboard events arrive empty; read the OS clipboard host-side.
           const text = await vscode.env.clipboard.readText();
@@ -218,6 +265,46 @@ export class CsvEditorProvider implements vscode.CustomTextEditorProvider {
   <style>
     html, body, #root { height: 100%; margin: 0; padding: 0; }
     body { background: var(--vscode-editor-background); color: var(--vscode-editor-foreground); }
+    /* Saving overlay (shown while the sheet is serialized on Cmd+S). The spinner
+       animates via a compositor-driven transform, so it keeps turning even when a
+       serialize chunk briefly holds the main thread between progress ticks. */
+    .gridsheet-saving-overlay {
+      position: fixed; inset: 0; z-index: 99999;
+      display: flex; align-items: center; justify-content: center;
+      background: color-mix(in srgb, var(--vscode-editor-background, #1e1e1e) 55%, transparent);
+      font-family: sans-serif;
+    }
+    .gridsheet-saving-box {
+      min-width: 240px; padding: 18px 20px; border-radius: 8px;
+      background: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+      border: 1px solid var(--vscode-widget-border, rgba(128,128,128,0.35));
+      box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .gridsheet-saving-head {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; color: var(--vscode-foreground, #ccc);
+    }
+    .gridsheet-saving-spinner {
+      width: 15px; height: 15px; border-radius: 50%;
+      border: 2px solid color-mix(in srgb, var(--vscode-foreground, #ccc) 25%, transparent);
+      border-top-color: var(--vscode-progressBar-background, #3794ff);
+      animation: gridsheet-spin 0.8s linear infinite;
+    }
+    @keyframes gridsheet-spin { to { transform: rotate(360deg); } }
+    .gridsheet-saving-track {
+      height: 6px; border-radius: 3px; overflow: hidden;
+      background: color-mix(in srgb, var(--vscode-foreground, #ccc) 15%, transparent);
+    }
+    .gridsheet-saving-fill {
+      height: 100%; border-radius: 3px;
+      background: var(--vscode-progressBar-background, #3794ff);
+      transition: width 0.1s linear;
+    }
+    .gridsheet-saving-pct {
+      font-size: 11px; text-align: right; opacity: 0.7;
+      color: var(--vscode-foreground, #ccc);
+    }
   </style>
   <title>GridSheet CSV/TSV Viewer</title>
 </head>

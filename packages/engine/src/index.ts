@@ -109,6 +109,7 @@ export { Registry, createBook, createRegistry, createBinding } from './lib/book'
 export { Sheet, type UserSheet, type SheetLimits } from './lib/sheet';
 export {
   toValueMatrix,
+  toValueMatrixAsync,
   toValueObject,
   toValueRows,
   toValueCols,
@@ -117,6 +118,7 @@ export {
   toCellRows,
   toCellCols,
   type ToValueMatrixProps,
+  type ToValueMatrixAsyncProps,
   type ToValueObjectProps,
   type ToValueRowsProps,
   type ToValueColsProps,

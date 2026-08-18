@@ -56,6 +56,19 @@
         "title": "Open with GridSheet CSV/TSV Viewer",
         "category": "GridSheet",
         "icon": "$(table)"
+      },
+      {
+        "command": "gridsheet.save",
+        "title": "Save Grid",
+        "category": "GridSheet"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "gridsheet.save",
+        "key": "ctrl+s",
+        "mac": "cmd+s",
+        "when": "activeCustomEditorId == 'gridsheet.csv' || activeCustomEditorId == 'gridsheet.tsv'"
       }
     ],
     "menus": {
@@ -89,6 +102,34 @@
           "type": "boolean",
           "default": true,
           "markdownDescription": "When the grid saves, write formula **results** (`=A1+B1` → `30`) instead of the formula source. On (default) bakes computed values — including resolved `=CLAUDE()` / `=CODEX()` answers — into the file; off keeps the formula text so it recomputes on reopen. Only affects files that contain formulas. (Applies to grids opened after the change.)"
+        },
+        "gridsheet.viewer.dateFormats": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Extra **date display formats** added to a column's **Format → Date** submenu, on top of the built-ins. Each entry is a [Day.js format pattern](https://day.js.org/docs/en/display/format) (e.g. `YYYY.MM.DD`, `D MMM YYYY`, `ddd, MMM D`). Formatting is display-only — the value written back to the file stays as the original text. (Applies to grids opened after the change.)"
+        },
+        "gridsheet.viewer.parseNumber": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Interpret numeric-looking cells as **numbers** (enables numeric sort/filter). Round-trip-safe: a cell is only treated as a number when it serializes back identically, so `1234`/`12.5` become numbers while `007`, `12.50`, `1e3` and oversized integers stay as text. Never changes what's written on save. (Applies to grids opened after the change.)"
+        },
+        "gridsheet.viewer.parseDate": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Interpret date-looking cells as **dates** (enables chronological sort/filter). ⚠️ Coercing a date changes how it is written back on save (e.g. normalized to an ISO date), so this is **off by default** — leave it off to keep the file's date text byte-for-byte, and use a column's **Format → Date** for display only. (Applies to grids opened after the change.)"
+        },
+        "gridsheet.viewer.parseTime": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Interpret time-looking cells as **times**. ⚠️ Like `#gridsheet.viewer.parseDate#`, coercing changes the value written back on save, so it is **off by default**. (Applies to grids opened after the change.)"
+        },
+        "gridsheet.viewer.parseBool": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Interpret `true`/`false` cells as **booleans**. ⚠️ Coercing normalizes the text (e.g. `true` → `TRUE`) when written back on save, so it is **off by default**. (Applies to grids opened after the change.)"
         },
         "gridsheet.ai.workingDirectory": {
           "type": "string",

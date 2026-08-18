@@ -70,6 +70,47 @@ export const toValueMatrix = (
   return sheet.__raw__._toValueMatrix({ area, resolution, raise, filter, asScalar });
 };
 
+export type ToValueMatrixAsyncProps = ToValueMatrixProps & {
+  /** Wall-clock budget (ms) to spend before yielding a chunk. Default 12 (≈one frame). */
+  frameBudgetMs?: number;
+  /** Called after each chunk with row-granular progress (and once at 0 and at 100%). */
+  onProgress?: (progress: { done: number; total: number }) => void;
+  /** How to yield between chunks. Pass a macrotask/rAF yielder so the UI can paint. */
+  yieldControl?: () => Promise<void> | void;
+};
+
+/**
+ * Async, progress-reporting, non-blocking counterpart to {@link toValueMatrix}.
+ * Materializing every cell (lazy population + formula solve) is O(cells) and
+ * blocks the thread; this time-slices the scan, reports progress, and yields so
+ * the host stays responsive and can render a progress bar. Returns the same
+ * matrix as toValueMatrix.
+ */
+export const toValueMatrixAsync = (
+  sheet: UserSheet,
+  {
+    area,
+    resolution = 'RESOLVED',
+    raise = false,
+    filter = noFilter,
+    asScalar = false,
+    frameBudgetMs,
+    onProgress,
+    yieldControl,
+  }: ToValueMatrixAsyncProps = {},
+): Promise<any[][]> => {
+  return sheet.__raw__._toValueMatrixAsync({
+    area,
+    resolution,
+    raise,
+    filter,
+    asScalar,
+    frameBudgetMs,
+    onProgress,
+    yieldControl,
+  });
+};
+
 export const toValueObject = (
   sheet: UserSheet,
   {

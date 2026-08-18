@@ -110,6 +110,30 @@
   }
 }
 
+// Submenu: a parent row whose child list flies out to the right on hover.
+.gs-submenu-parent {
+  position: relative;
+  align-items: center;
+
+  .gs-submenu-arrow {
+    margin-left: 8px;
+    font-size: 11px;
+    opacity: 0.6;
+  }
+}
+
+.gs-submenu-flyout {
+  // .gs-menu-container() gives position:fixed + the panel look; the exact left/top are set
+  // inline in viewport coordinates (see SubmenuNode) so the flyout escapes ancestor clipping
+  // and flips/clamps at the screen edges.
+  .gs-menu-container();
+  min-width: 200px;
+  margin: 0;
+  color: #555555;
+  opacity: 1;
+  list-style-type: none;
+}
+
 .gs-menu-shortcut {
   font-size: 10px;
   line-height: 20px;
@@ -479,22 +503,25 @@
 
 .gs-row-menu {
   .gs-header-menu();
+}
 
-  .gs-row-fixed-toggle {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
+// Checkmark column for toggle/selection menu items (row-fixed toggle, column format, …).
+// Global (not scoped to one menu) so it also styles column-menu items and submenu flyouts;
+// the check is invisible unless active, so only the selected option shows a ✓.
+.gs-row-fixed-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 
-  .gs-row-fixed-check {
-    font-size: 12px;
-    width: 14px;
-    text-align: center;
-    color: color-mix(in srgb, var(--gs-accent, #2563eb) 12%, transparent);
+.gs-row-fixed-check {
+  font-size: 12px;
+  width: 14px;
+  text-align: center;
+  color: transparent;
 
-    &.gs-row-fixed-active {
-      color: var(--gs-accent, #2563eb);
-    }
+  &.gs-row-fixed-active {
+    color: var(--gs-accent, #2563eb);
   }
 }
 

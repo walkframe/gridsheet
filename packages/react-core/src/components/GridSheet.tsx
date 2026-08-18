@@ -12,7 +12,8 @@ import {
   DEFAULT_ROW_KEY,
 } from '@gridsheet/web';
 import { Context } from '../store';
-import { reducer as defaultReducer, isMutationAction } from '../store/actions';
+import { reducer as defaultReducer, isMutationAction, isAsyncMutationAction, commitAsyncOp } from '../store/actions';
+import { AsyncProgressOverlay, type AsyncProgressHandle } from './AsyncProgressOverlay';
 import { Editor } from './Editor';
 import { StoreObserver } from './StoreObserver';
 import { Resizer } from './Resizer';
@@ -162,6 +163,7 @@ export function GridSheet({
       rowMenuState: null,
       editorHovering: true,
       mode: 'light',
+      pendingAsyncOp: null,
     };
     return store;
   });
@@ -242,27 +244,92 @@ export function GridSheet({
 
   const [loading, setLoading] = useState(false);
 
-  // Remove loading after React re-render completes
-  useEffect(() => {
-    if (loading) {
-      setLoading(false);
-    }
-  });
+  // Latest store, so wrappedDispatch (memoized) can read pendingAsyncOp for the lock.
+  const latestStoreRef = useRef(store);
+  latestStoreRef.current = store;
 
   const wrappedDispatch = useCallback(
     ((action: { type: number; value: any }) => {
-      if (!isMutationAction(action.type)) {
+      const async = isAsyncMutationAction(action.type);
+      const mutating = isMutationAction(action.type);
+      // Lock: while a chunked async op is in flight the sheet is mid-mutation, so
+      // reject any other mutation (edit/undo/paste/fill) until it commits. Read-only
+      // actions (selection, scroll) still pass through.
+      if (latestStoreRef.current.pendingAsyncOp != null && (async || mutating)) {
+        return;
+      }
+      if (async) {
+        // Its reduce just sets pendingAsyncOp (cheap); the runner effect drives it.
+        (dispatch as any)(action);
+        return;
+      }
+      if (!mutating) {
         (dispatch as any)(action);
         return;
       }
       setLoading(true);
-      // Defer dispatch to next frame so the loading overlay can paint first
-      requestAnimationFrame(() => {
-        (dispatch as any)(action);
-      });
+      // TWO rAFs before running the (synchronous, possibly multi-second) mutation:
+      // a single rAF fires BEFORE the overlay's first paint, so the overlay never
+      // actually showed during the block. The second rAF runs after that paint, so
+      // the spinner is on screen (and its compositor-driven animation keeps moving)
+      // while the main thread is blocked. Clear right after dispatch — React batches
+      // loading:false with the mutation's own re-render, so the overlay lifts exactly
+      // when the result appears.
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          (dispatch as any)(action);
+          setLoading(false);
+        }),
+      );
     }) as typeof dispatch,
     [dispatch],
   );
+
+  // Runner for chunked async mutations (large fill/paste): when an action sets
+  // store.pendingAsyncOp, run it off the reducer — reporting progress into the store
+  // and committing the mutated sheet when done. Two rAFs first so the progress
+  // overlay paints before the (still-synchronous) diff-build inside run() starts.
+  const overlayRef = useRef<AsyncProgressHandle>(null);
+  const pendingAsyncOp = store.pendingAsyncOp;
+  useEffect(() => {
+    if (pendingAsyncOp == null) {
+      return;
+    }
+    let cancelled = false;
+    const raf = requestAnimationFrame(() =>
+      requestAnimationFrame(async () => {
+        if (cancelled) {
+          return;
+        }
+        try {
+          const nextSheet = await pendingAsyncOp.run((ratio) => {
+            // Imperative — updates only the overlay, never the grid.
+            overlayRef.current?.setProgress(ratio);
+          });
+          if (!cancelled) {
+            (dispatch as any)(
+              commitAsyncOp({
+                sheet: nextSheet,
+                selectingZone: pendingAsyncOp.selectingZone,
+                finalize: pendingAsyncOp.finalize,
+              }),
+            );
+            pendingAsyncOp.postCommit?.();
+          }
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.error('[gridsheet] async op failed:', e);
+          if (!cancelled) {
+            (dispatch as any)(commitAsyncOp({ sheet: latestStoreRef.current.sheetReactive.current!, selectingZone: pendingAsyncOp.selectingZone }));
+          }
+        }
+      }),
+    );
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+    };
+  }, [pendingAsyncOp, dispatch]);
 
   return (
     <Context.Provider value={{ store, dispatch: wrappedDispatch }}>
@@ -328,10 +395,14 @@ export function GridSheet({
           <RowMenu />
           <Resizer />
           <Emitter />
-          {loading && (
-            <div className="gs-loading-overlay">
-              <div className="gs-loading-spinner" />
-            </div>
+          {store.pendingAsyncOp != null ? (
+            <AsyncProgressOverlay ref={overlayRef} label={store.pendingAsyncOp.label} />
+          ) : (
+            loading && (
+              <div className="gs-loading-overlay">
+                <div className="gs-loading-spinner" />
+              </div>
+            )
           )}
         </div>
       </div>

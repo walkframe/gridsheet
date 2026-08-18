@@ -1,7 +1,9 @@
 import {
   Sheet,
   createRegistry,
+  buildInitialCells,
   toValueMatrix,
+  toValueMatrixAsync,
   Lexer,
   BaseFunctionAsync,
   type FunctionArgumentDefinition,
@@ -139,5 +141,60 @@ describe('headless formula resolution (no UI)', () => {
     await sheet.waitForPending();
     const matrix = toValueMatrix(sheet, { area: { top: 1, left: 2, bottom: 1, right: 2 } });
     expect(matrix[0][0]).toBe('(unresolved)');
+  });
+});
+
+describe('toValueMatrixAsync (non-blocking, progress-reporting export)', () => {
+  const makeSheet = (rows: number, cols: number) => {
+    const matrix = Array.from({ length: rows }, (_, y) =>
+      Array.from({ length: cols }, (_, x) => `c${y}_${x}`),
+    );
+    const cells = buildInitialCells({
+      cells: {},
+      matrices: { A1: matrix },
+      flattenAs: 'value',
+      ensured: { numRows: rows, numCols: cols },
+    });
+    const sheet = new Sheet({ name: 'Async', registry: createRegistry(), eager: false });
+    sheet.initialize(cells);
+    sheet.setTotalSize();
+    return sheet;
+  };
+
+  it('returns the same matrix as the synchronous toValueMatrix', async () => {
+    const sync = toValueMatrix(makeSheet(50, 8), { resolution: 'RAW' });
+    const async = await toValueMatrixAsync(makeSheet(50, 8), { resolution: 'RAW' });
+    expect(async).toEqual(sync);
+  });
+
+  it('reports monotonic progress that reaches 100% (done === total)', async () => {
+    const sheet = makeSheet(400, 4);
+    const seen: { done: number; total: number }[] = [];
+    // frameBudgetMs: 0 forces a yield after (almost) every row so progress ticks fire.
+    await toValueMatrixAsync(sheet, {
+      resolution: 'RAW',
+      frameBudgetMs: 0,
+      onProgress: (p) => seen.push(p),
+    });
+    expect(seen.length).toBeGreaterThan(1);
+    for (let i = 1; i < seen.length; i++) {
+      expect(seen[i].done).toBeGreaterThanOrEqual(seen[i - 1].done);
+    }
+    const last = seen[seen.length - 1];
+    expect(last.done).toBe(last.total);
+    expect(last.total).toBe(400);
+  });
+
+  it('yields between chunks via the injected yieldControl', async () => {
+    let yields = 0;
+    await toValueMatrixAsync(makeSheet(200, 4), {
+      resolution: 'RAW',
+      frameBudgetMs: 0,
+      yieldControl: () => {
+        yields++;
+        return Promise.resolve();
+      },
+    });
+    expect(yields).toBeGreaterThan(0);
   });
 });

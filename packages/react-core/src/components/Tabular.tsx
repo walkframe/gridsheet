@@ -9,7 +9,7 @@ import { Context } from '../store';
 import { choose, select, setContextMenuPosition } from '../store/actions';
 
 import type { RefPaletteType, Virtualization } from '../types';
-import { virtualize } from '@gridsheet/web';
+import { virtualize, physicalScrollHeight } from '@gridsheet/web';
 import { p2a, stripAddressAbsolute } from '@gridsheet/web';
 import { Lexer, stripSheetName } from '@gridsheet/web';
 import { ScrollHandle } from './ScrollHandle';
@@ -208,7 +208,9 @@ export const Tabular = () => {
           className={'gs-tabular-inner'}
           style={{
             width: sheet.totalWidth,
-            height: sheet.totalHeight,
+            // Physical scroll height is capped below the browser's ~2^24px precision limit;
+            // virtualize() maps this back to the sheet's full virtual height (see SCROLL_CAP).
+            height: physicalScrollHeight(sheet),
             overflow: 'clip',
           }}
         >

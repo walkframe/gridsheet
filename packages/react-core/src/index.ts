@@ -30,6 +30,7 @@ export {
   // Sheet
   Sheet,
   toValueMatrix,
+  toValueMatrixAsync,
   toValueObject,
   toValueRows,
   toValueCols,

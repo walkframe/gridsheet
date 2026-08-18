@@ -102,9 +102,31 @@ export type MenuComponentItem<Args extends unknown[] = []> = {
   visible?: (ctx: MenuContext, ...args: Args) => boolean;
 };
 
-export type ContextMenuItemDescriptor = MenuDividerItem | MenuItemBase | MenuComponentItem;
-export type RowMenuItemDescriptor = MenuDividerItem | MenuItemBase<[y: number]> | MenuComponentItem<[y: number]>;
-export type ColMenuItemDescriptor = MenuDividerItem | MenuItemBase<[x: number]> | MenuComponentItem<[x: number]>;
+/**
+ * A menu entry that opens a nested flyout of child items on hover. `children` uses the same
+ * descriptor shape (items, dividers, or further submenus), so menus can nest arbitrarily —
+ * useful when a category (e.g. cell "Format") has more options than fit in one flat list.
+ */
+export type MenuSubmenuItem<Args extends unknown[] = []> = {
+  type: 'submenu';
+  id?: string;
+  label: string | ((ctx: MenuContext, ...args: Args) => string);
+  visible?: (ctx: MenuContext, ...args: Args) => boolean;
+  disabled?: (ctx: MenuContext, ...args: Args) => boolean;
+  children: (MenuDividerItem | MenuItemBase<Args> | MenuSubmenuItem<Args>)[];
+};
+
+export type ContextMenuItemDescriptor = MenuDividerItem | MenuItemBase | MenuComponentItem | MenuSubmenuItem;
+export type RowMenuItemDescriptor =
+  | MenuDividerItem
+  | MenuItemBase<[y: number]>
+  | MenuComponentItem<[y: number]>
+  | MenuSubmenuItem<[y: number]>;
+export type ColMenuItemDescriptor =
+  | MenuDividerItem
+  | MenuItemBase<[x: number]>
+  | MenuComponentItem<[x: number]>
+  | MenuSubmenuItem<[x: number]>;
 
 // ---- helpers ---------------------------------------------------------------
 

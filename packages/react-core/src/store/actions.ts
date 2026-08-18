@@ -12,6 +12,7 @@ import {
   RawCellType,
   OperatorType,
   FilterConfig,
+  PendingAsyncOp,
 } from '../types';
 import { zoneToArea, superposeArea, matrixShape, areaShape, areaDiff, areaToZone, restrictZone } from '@gridsheet/web';
 import { Sheet } from '@gridsheet/web';
@@ -24,6 +25,66 @@ import { operations as prevention } from '@gridsheet/web';
 import { Autofill } from '@gridsheet/web';
 
 const resetZone: ZoneType = { startY: -1, startX: -1, endY: -1, endX: -1 };
+
+// Yield between async-mutation chunks. Using rAF for every chunk throttled the whole
+// op to 60fps (each chunk waited a full frame). Instead yield via a MessageChannel
+// macrotask (near-zero overhead, so throughput isn't frame-capped) and only force a
+// real paint via rAF every ~80ms so the progress bar still advances smoothly.
+const rafYield = (() => {
+  let ch: MessageChannel | null = null;
+  let waiting: (() => void) | null = null;
+  let lastPaint = 0;
+  return (): Promise<void> =>
+    new Promise<void>((resolve) => {
+      const now = Date.now();
+      if (now - lastPaint >= 80) {
+        lastPaint = now;
+        requestAnimationFrame(() => resolve());
+        return;
+      }
+      if (ch == null) {
+        ch = new MessageChannel();
+        ch.port1.onmessage = () => {
+          const w = waiting;
+          waiting = null;
+          w?.();
+        };
+      }
+      waiting = resolve;
+      ch.port2.postMessage(null);
+    });
+})();
+
+// Above this many target cells, fill/paste run as a chunked async op with a progress
+// bar instead of a blocking write.
+const ASYNC_MUTATION_THRESHOLD = 20000;
+
+// Build a pending async op that undoes/redoes a large same-sheet UPDATE (paste/fill)
+// in chunks with a progress bar, restoring the selection/cursor from the reflection.
+const makeUndoRedoOp = (sheet: Sheet, history: any, store: StoreType, isRedo: boolean): PendingAsyncOp => {
+  const reflection = isRedo ? history.redoReflection : history.undoReflection;
+  return {
+    run: async (onProgress) => {
+      const opts = {
+        onProgress: (p: { done: number; total: number }) => onProgress(p.total > 0 ? p.done / p.total : 1),
+        yieldControl: rafYield,
+      };
+      if (isRedo) {
+        await sheet.redoAsync(opts);
+      } else {
+        await sheet.undoAsync(opts);
+      }
+      return sheet.__raw__;
+    },
+    selectingZone: reflection?.selectingZone ?? store.selectingZone,
+    label: isRedo ? 'Redoing' : 'Undoing',
+    finalize: reflection?.choosing ? { choosing: reflection.choosing } : {},
+    postCommit: () => {
+      sheet.registry.transmit(reflection?.transmit);
+      flashSheet(store.flashRef.current);
+    },
+  };
+};
 
 const actions: { [s: string]: CoreAction<any> } = {};
 
@@ -72,6 +133,9 @@ export class CoreAction<T> {
   private actionId: number = 1;
   /** Whether this action mutates sheet data (triggers loading indicator). */
   public mutation = false;
+  /** Whether this action kicks off a chunked async mutation (fill/paste): its reduce
+   *  sets `pendingAsyncOp` and GridSheet runs it with a progress bar. Locked while one runs. */
+  public asyncMutation = false;
 
   public reduce(store: StoreType, payload: T): StoreWithCallback {
     return store;
@@ -92,6 +156,11 @@ export class CoreAction<T> {
 /** Returns true if the given action type is a mutation (heavy operation). */
 export const isMutationAction = (type: number): boolean => {
   return actions[type]?.mutation === true;
+};
+
+/** Returns true if the action starts a chunked async mutation (fill/paste). */
+export const isAsyncMutationAction = (type: number): boolean => {
+  return actions[type]?.asyncMutation === true;
 };
 
 class SetSearchQueryAction<T extends string | undefined> extends CoreAction<T> {
@@ -179,6 +248,7 @@ class SetAutofillDraggingToAction<T extends PointType | null> extends CoreAction
 export const setAutofillDraggingTo = new SetAutofillDraggingToAction().bind();
 
 class SubmitAutofillAction<T extends PointType> extends CoreAction<T> {
+  mutation = true;
   reduce(store: StoreType, payload: T): StoreWithCallback {
     try {
       const autofill = new Autofill(store, payload);
@@ -444,12 +514,12 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
         dx = superposed.cols;
       }
       selectingArea = { top: y, left: x, bottom: y + dy, right: x + dx };
-      newSheet = dstSheet.copy({
+      const copyProps = {
         srcSheet,
         src: copyingArea,
         dst: selectingArea,
         onlyValue,
-        operator: 'USER',
+        operator: 'USER' as OperatorType,
         undoReflection: compactReflection({
           sheetId: srcSheet.id,
           transmit: { copyingZone },
@@ -462,7 +532,29 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
           choosing,
           selectingZone: areaToZone(selectingArea),
         }),
-      });
+      };
+      // A large paste writes millions of cells — run it as a chunked async op with a
+      // progress bar (paste doesn't change the sheet's dimensions, so the target
+      // selection is known up front). Small pastes stay synchronous.
+      if ((dy + 1) * (dx + 1) > ASYNC_MUTATION_THRESHOLD) {
+        const nextSelectingZone = restrictZone(areaToZone(selectingArea));
+        nextSelectingZone.endX = Math.min(nextSelectingZone.endX, dstSheet.numCols);
+        nextSelectingZone.endY = Math.min(nextSelectingZone.endY, dstSheet.numRows);
+        return {
+          ...store,
+          pendingAsyncOp: {
+            run: (onProgress) =>
+              dstSheet.copyAsync(copyProps, {
+                onProgress: (p) => onProgress(p.total > 0 ? p.done / p.total : 1),
+                yieldControl: rafYield,
+              }),
+            selectingZone: nextSelectingZone,
+            label: 'Pasting',
+            postCommit: () => registry.transmit({ copyingZone: resetZone }),
+          },
+        };
+      }
+      newSheet = dstSheet.copy(copyProps);
     }
 
     const nextSelectingZone = restrictZone(areaToZone(selectingArea));
@@ -743,6 +835,16 @@ class UndoAction<T extends null> extends CoreAction<T> {
     if (!sheet) {
       return store;
     }
+    // Route a large same-sheet paste/fill undo through the chunked async path (progress bar).
+    const peeked = sheet.peekUndo();
+    if (
+      peeked != null &&
+      peeked.operation === 'UPDATE' &&
+      peeked.dstSheetId === sheet.id &&
+      Object.keys(peeked.diffBefore ?? {}).length > ASYNC_MUTATION_THRESHOLD
+    ) {
+      return { ...store, pendingAsyncOp: makeUndoRedoOp(sheet, peeked, store, false) };
+    }
     const { history, callback } = sheet.undo();
     if (history == null) {
       return store;
@@ -786,6 +888,16 @@ class RedoAction<T extends null> extends CoreAction<T> {
     const sheet = sheetRef.current;
     if (sheet == null) {
       return store;
+    }
+    // Route a large same-sheet paste/fill redo through the chunked async path (progress bar).
+    const peeked = sheet.peekRedo();
+    if (
+      peeked != null &&
+      peeked.operation === 'UPDATE' &&
+      peeked.dstSheetId === sheet.id &&
+      Object.keys(peeked.diffAfter ?? {}).length > ASYNC_MUTATION_THRESHOLD
+    ) {
+      return { ...store, pendingAsyncOp: makeUndoRedoOp(sheet, peeked, store, true) };
     }
     const { history, newSheet, callback } = sheet.redo();
     if (history == null) {
@@ -1414,6 +1526,154 @@ class setStoreAction<T extends Partial<StoreType>> extends CoreAction<T> {
 }
 export const setStore = new setStoreAction().bind();
 
+// The data-block edge reached by scanning from (y, x) in direction (dy, dx) — the
+// Excel Ctrl+(Shift+)arrow semantics, generalized to all four directions: inside a
+// run of filled cells → the run's last filled cell; at a boundary/gap → the next
+// filled cell (skipping blanks), else the grid edge.
+const dataEdge = (sheet: Sheet, y: number, x: number, dy: number, dx: number): PointType => {
+  const numRows = sheet.numRows;
+  const numCols = sheet.numCols;
+  const inBounds = (yy: number, xx: number) => yy >= 1 && yy <= numRows && xx >= 1 && xx <= numCols;
+  const filled = (yy: number, xx: number): boolean => {
+    // peekRawValue avoids materializing each scanned cell — a full-column scan
+    // through getCell populated (and stalled on) the whole column.
+    const v = sheet.peekRawValue({ y: yy, x: xx });
+    return v != null && v !== '';
+  };
+  if (!inBounds(y + dy, x + dx)) {
+    return { y, x }; // already at the grid edge in this direction
+  }
+  if (filled(y, x) && filled(y + dy, x + dx)) {
+    // Inside a run: advance to its last filled cell.
+    let py = y;
+    let px = x;
+    while (inBounds(py + dy, px + dx) && filled(py + dy, px + dx)) {
+      py += dy;
+      px += dx;
+    }
+    return { y: py, x: px };
+  }
+  // At a boundary/gap: skip blanks to the next filled cell, else stop at the edge.
+  let py = y + dy;
+  let px = x + dx;
+  while (!filled(py, px) && inBounds(py + dy, px + dx)) {
+    py += dy;
+    px += dx;
+  }
+  return { y: py, x: px };
+};
+
+// Ctrl+Shift+arrow: extend the selection from the active cell to the data-block
+// edge in the pressed direction — the drag-free way to select a large range.
+class SelectToDataEdgeAction<T extends { deltaY: number; deltaX: number }> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
+    const { deltaY, deltaX } = payload;
+    const { choosing, selectingZone, sheetReactive: sheetRef, tabularRef } = store;
+    const sheet = sheetRef.current;
+    if (sheet == null) {
+      return store;
+    }
+    const curEndY = selectingZone.endY === -1 ? choosing.y : selectingZone.endY;
+    const curEndX = selectingZone.endX === -1 ? choosing.x : selectingZone.endX;
+    const { y: endY, x: endX } = dataEdge(sheet, curEndY, curEndX, deltaY, deltaX);
+    smartScroll(sheet, tabularRef.current, { y: endY, x: endX });
+    return {
+      ...store,
+      selectingZone: { startY: choosing.y, startX: choosing.x, endY, endX },
+    };
+  }
+}
+export const selectToDataEdge = new SelectToDataEdgeAction().bind();
+
+// Ctrl+D: fill the selection's top row down through the rest of the selection.
+// Reuses Autofill (src = top row, dragged down to the selection bottom), so
+// sequences/formulas behave exactly like a manual drag-fill.
+const makeFillOp = (autofill: Autofill, selectingZone: ZoneType, label: string): PendingAsyncOp => ({
+  run: (onProgress) =>
+    autofill.appliedAsync({
+      onProgress: (p) => onProgress(p.total > 0 ? p.done / p.total : 1),
+      yieldControl: rafYield,
+    }),
+  selectingZone,
+  label,
+});
+
+class FillDownAction<T extends null> extends CoreAction<T> {
+  asyncMutation = true;
+  reduce(store: StoreType): StoreWithCallback {
+    const { selectingZone, sheetReactive: sheetRef } = store;
+    const sheet = sheetRef.current;
+    if (sheet == null || selectingZone.endY === -1) {
+      return store;
+    }
+    const area = zoneToArea(selectingZone);
+    if (area.top >= area.bottom) {
+      return store; // single row — nothing below to fill
+    }
+    try {
+      const synthetic: StoreType = {
+        ...store,
+        choosing: { y: area.top, x: area.left },
+        selectingZone: { startY: area.top, startX: area.left, endY: area.top, endX: area.right },
+      };
+      const autofill = new Autofill(synthetic, { y: area.bottom, x: area.right });
+      return { ...store, pendingAsyncOp: makeFillOp(autofill, selectingZone, 'Filling') };
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('[gridsheet] fill down failed:', e);
+      return store;
+    }
+  }
+}
+export const fillDown = new FillDownAction().bind();
+
+// Ctrl+R: fill the selection's left column right through the rest of the selection.
+class FillRightAction<T extends null> extends CoreAction<T> {
+  asyncMutation = true;
+  reduce(store: StoreType): StoreWithCallback {
+    const { selectingZone, sheetReactive: sheetRef } = store;
+    const sheet = sheetRef.current;
+    if (sheet == null || selectingZone.endX === -1) {
+      return store;
+    }
+    const area = zoneToArea(selectingZone);
+    if (area.left >= area.right) {
+      return store; // single column — nothing to the right to fill
+    }
+    try {
+      const synthetic: StoreType = {
+        ...store,
+        choosing: { y: area.top, x: area.left },
+        selectingZone: { startY: area.top, startX: area.left, endY: area.bottom, endX: area.left },
+      };
+      const autofill = new Autofill(synthetic, { y: area.bottom, x: area.right });
+      return { ...store, pendingAsyncOp: makeFillOp(autofill, selectingZone, 'Filling') };
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('[gridsheet] fill right failed:', e);
+      return store;
+    }
+  }
+}
+export const fillRight = new FillRightAction().bind();
+
+// Finalize the async op: adopt the mutated sheet, restore selection, clear the pending state.
+class CommitAsyncOpAction<
+  T extends { sheet: Sheet; selectingZone: ZoneType; finalize?: Partial<StoreType> },
+> extends CoreAction<T> {
+  reduce(store: StoreType, payload: T): StoreWithCallback {
+    const next: StoreType = {
+      ...store,
+      sheetReactive: { current: payload.sheet },
+      selectingZone: payload.selectingZone,
+      pendingAsyncOp: null,
+      ...(payload.finalize ?? {}),
+    };
+    return { ...next, ...initSearchStatement(payload.sheet, next), ...restrictPoints(next, payload.sheet) };
+  }
+}
+export const commitAsyncOp = new CommitAsyncOpAction().bind();
+
 export const userActions = {
   blur,
   copy,
@@ -1440,4 +1700,7 @@ export const userActions = {
   removeCols,
   sortRows,
   filterRows,
+  selectToDataEdge,
+  fillDown,
+  fillRight,
 };

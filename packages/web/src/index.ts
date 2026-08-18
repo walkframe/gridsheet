@@ -21,7 +21,18 @@ export {
 } from './lib/input';
 
 // --- Virtualization ---
-export { smartScroll, virtualize, getAreaInTabular, getCellRectPositions } from './lib/virtualization';
+export {
+  smartScroll,
+  virtualize,
+  getAreaInTabular,
+  getCellRectPositions,
+  getVisibleRowRange,
+  getVisibleColRange,
+  physicalScrollHeight,
+  toVirtualScrollTop,
+  toPhysicalScrollTop,
+  SCROLL_CAP,
+} from './lib/virtualization';
 
 // --- Popup ---
 export { calcBelowPosition, clampLeft, calcSideStyle, clampPopup, hAlignTransform } from './lib/popup';

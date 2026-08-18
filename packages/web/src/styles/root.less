@@ -133,6 +133,64 @@
   animation: spin 0.8s linear infinite;
 }
 
+// Progress overlay for chunked async mutations (large fill/paste). It spans the grid to
+// capture pointer/wheel events (so interaction stays blocked while the mutation runs) but,
+// unlike the indeterminate loading overlay, does NOT dim the grid — the progress card just
+// floats near the bottom so the data stays visible behind it.
+.gs-progress-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  pointer-events: all;
+  display: flex;
+  // Centered and prominent (it blocks interaction, so it should be obvious), but with NO
+  // dimming backdrop so the grid stays visible behind the card.
+  align-items: center;
+  justify-content: center;
+}
+
+// Determinate progress box for chunked async mutations (large fill/paste).
+.gs-progress-box {
+  min-width: 240px;
+  padding: 16px 18px;
+  border-radius: 8px;
+  // Use the editor surface (opaque in every mode) rather than --gs-surface, which goes
+  // transparent in the inherit modes and would let the grid/selection show through the card.
+  background: var(--gs-editor-surface, #ffffff);
+  border: 1px solid var(--gs-border, #e3e6ea);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gs-progress-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--gs-fg, #1f2328);
+  .gs-loading-spinner {
+    width: 15px;
+    height: 15px;
+    border-width: 2px;
+  }
+}
+.gs-progress-track {
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--gs-fg, #1f2328) 12%, transparent);
+}
+.gs-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--gs-accent, #2563eb);
+  transition: width 0.1s linear;
+}
+
 @keyframes gs-pending-slide {
   0% { left: -40%; }
   100% { left: 100%; }

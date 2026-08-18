@@ -8,6 +8,12 @@
 
 .gs-tabular {
   overflow: auto;
+  // The scroll-remap positions the visible rows via a spacer whose height tracks the current
+  // scrollTop (see virtualize/SCROLL_CAP). Browser scroll anchoring would treat that changing
+  // spacer as content growing/shrinking above the viewport and re-adjust scrollTop to
+  // compensate — which feeds back into the spacer and makes the view run away (auto-scroll).
+  // Disable it so scrollTop is driven only by the user.
+  overflow-anchor: none;
   // Flex so the matrix can be centered inside a larger box; default alignment is start
   // (top-left) unless matrixAlignment opts an axis in below. `safe` falls back to start
   // when the grid overflows, so scrolling still reaches the top/left rows.

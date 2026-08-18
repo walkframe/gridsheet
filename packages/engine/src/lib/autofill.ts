@@ -42,7 +42,8 @@ export class Autofill {
     this.sheet = sheet;
   }
 
-  public get applied(): Sheet {
+  /** Build the fill diff without applying it. Shared by the sync/async apply paths. */
+  private buildDiff(): CellsByAddressType {
     const [orientation, sign] = DirectionMapping[this.direction];
     const { top: sTop, left: sLeft, bottom: sBottom, right: sRight } = this.src;
     const matrix = createMatrix(sBottom - sTop + 1, sRight - sLeft + 1) as (CellType | null)[][];
@@ -94,19 +95,26 @@ export class Autofill {
         }
       }
     }
-    const sheet = this.sheet.update({
-      diff,
-      operator: 'USER',
-      undoReflection: {
-        sheetId: this.sheet.id,
-        selectingZone: areaToZone(this.src),
-      },
-      redoReflection: {
-        sheetId: this.sheet.id,
-        selectingZone: areaToZone(this.dst),
-      },
-    });
-    return sheet;
+    return diff;
+  }
+
+  private get reflections() {
+    return {
+      undoReflection: { sheetId: this.sheet.id, selectingZone: areaToZone(this.src) },
+      redoReflection: { sheetId: this.sheet.id, selectingZone: areaToZone(this.dst) },
+    };
+  }
+
+  public get applied(): Sheet {
+    return this.sheet.update({ diff: this.buildDiff(), operator: 'USER', ...this.reflections });
+  }
+
+  /** Async, progress-reporting apply. Same result as `applied` but time-sliced. */
+  public appliedAsync(opts: {
+    onProgress?: (progress: { done: number; total: number }) => void;
+    yieldControl?: () => Promise<void> | void;
+  }): Promise<Sheet> {
+    return this.sheet.updateAsync({ diff: this.buildDiff(), operator: 'USER', ...this.reflections, ...opts });
   }
 
   public get wholeArea() {
