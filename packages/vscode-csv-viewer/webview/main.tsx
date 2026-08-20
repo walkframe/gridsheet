@@ -20,7 +20,7 @@ import {
 } from '@gridsheet/preact-core';
 
 import { makeAiFunctions, type AiEnqueue } from './aiFunctions';
-import type { AiBatchResponse, AiTask } from '../src/aiTypes';
+import type { AiBatchResponse, AiCustomFunction, AiTask } from '../src/aiTypes';
 
 declare function acquireVsCodeApi(): { postMessage(msg: unknown): void };
 
@@ -146,6 +146,7 @@ type DataMessage = {
   parseDate?: boolean;
   parseTime?: boolean;
   parseBool?: boolean;
+  aiCustom?: AiCustomFunction[];
 };
 
 // View-only prevention mask. `operations.ViewOnly` (= ReadOnly | ColumnMenu) already
@@ -248,6 +249,7 @@ const dateFmt = (fmt: string, datetimeFmt = fmt): Policy =>
 // Stable empty default so `data.dateFormats ?? EMPTY` doesn't hand Grid a new array each
 // render (which would rebuild the policy map / book unnecessarily).
 const EMPTY_STRING_ARRAY: string[] = [];
+const EMPTY_AI_CUSTOM: AiCustomFunction[] = [];
 
 type FormatOption = { id: string; label: string };
 type DateFormatDef = { id: string; label: string; fmt: string; datetimeFmt?: string };
@@ -402,6 +404,8 @@ type GridProps = {
   dateFormats: string[];
   // Which value types to coerce from text (gridsheet.viewer.parse*); off types stay as text.
   parseFlags: ParseFlags;
+  // User-defined AI functions (gridsheet.ai.custom) → registered as =NAME(...).
+  aiCustom: AiCustomFunction[];
   // Bumped by App when the user saves (Cmd+S). Serialize the sheet and persist then.
   saveSignal: number;
   onSave: (text: string) => void;
@@ -424,6 +428,7 @@ const Grid = ({
   onSetFormat,
   dateFormats,
   parseFlags,
+  aiCustom,
   saveSignal,
   onSave,
   onDirty,
@@ -444,7 +449,7 @@ const Grid = ({
   const [saving, setSaving] = useState(false);
   const [progress, setProgress] = useState(0); // 0..1
 
-  const additionalFunctions = useMemo(() => makeAiFunctions(enqueueAi), []);
+  const additionalFunctions = useMemo(() => makeAiFunctions(enqueueAi, aiCustom), [aiCustom]);
   // useBook (not createBook) so registry.transmit is wired to a real repaint.
   // GridSheet only wires transmit for a book it owns; with our own createBook the
   // async =CLAUDE/=CODEX results would land in the cache but never render until an
@@ -928,6 +933,7 @@ const App = () => {
   const ro = readOnly ?? !!data.readOnly;
   const evaluate = data.evaluate ?? true;
   const dateFormats = data.dateFormats ?? EMPTY_STRING_ARRAY;
+  const aiCustom = data.aiCustom ?? EMPTY_AI_CUSTOM;
   // Only number parsing defaults on (round-trip-safe); date/time/bool are opt-in because
   // coercing them changes what's written back on save. Grid memoizes on the fields, not this
   // object, so building it inline each render is fine.
@@ -954,6 +960,7 @@ const App = () => {
           onSetFormat={onSetFormat}
           dateFormats={dateFormats}
           parseFlags={parseFlags}
+          aiCustom={aiCustom}
           saveSignal={saveSignal}
           onSave={onSave}
           onDirty={onDirty}

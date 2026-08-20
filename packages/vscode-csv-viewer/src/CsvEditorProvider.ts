@@ -85,6 +85,7 @@ export class CsvEditorProvider implements vscode.CustomTextEditorProvider {
     let lastKnownText = document.getText();
 
     const viewerCfg = () => vscode.workspace.getConfiguration('gridsheet.viewer');
+    const aiCfg = () => vscode.workspace.getConfiguration('gridsheet.ai');
 
     const postData = async () => {
       lastKnownText = document.getText();
@@ -109,6 +110,18 @@ export class CsvEditorProvider implements vscode.CustomTextEditorProvider {
         parseDate: viewerCfg().get<boolean>('parseDate', false),
         parseTime: viewerCfg().get<boolean>('parseTime', false),
         parseBool: viewerCfg().get<boolean>('parseBool', false),
+        // User functions come from two name→string maps: gridsheet.ai.alias (value = built-in
+        // key) and gridsheet.ai.custom (value = command). Flatten both to [{ name, alias|command }].
+        aiCustom: [
+          ...Object.entries((aiCfg().get('alias', {}) ?? {}) as Record<string, string>).map(([name, alias]) => ({
+            name,
+            alias,
+          })),
+          ...Object.entries((aiCfg().get('custom', {}) ?? {}) as Record<string, string>).map(([name, command]) => ({
+            name,
+            command,
+          })),
+        ],
       });
     };
 

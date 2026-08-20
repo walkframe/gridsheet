@@ -70,6 +70,15 @@ async function resolveGroup(provider: AiProvider, kind: AiKind, prompts: string[
 }
 
 async function resolveChunk(provider: AiProvider, kind: AiKind, prompts: string[], cwd?: string): Promise<unknown[]> {
+  // Custom user functions: no shared batch prompt / JSON schema (an arbitrary CLI won't honor
+  // them), so run one process per cell. batchSize caps how many run at once (this chunk).
+  if (provider !== 'claude' && provider !== 'codex') {
+    const command = customCommand(provider);
+    if (!command) {
+      throw new Error(`No command configured for AI function "${provider}". Add it to gridsheet.ai.custom.`);
+    }
+    return Promise.all(prompts.map((p) => runCustom(command, p, cwd)));
+  }
   const prompt = buildBatchPrompt(kind, prompts);
   const schema = batchSchema(kind);
   const raw = provider === 'claude' ? await runClaude(prompt, schema, cwd) : await runCodex(prompt, schema, cwd);
@@ -97,7 +106,8 @@ function buildBatchPrompt(kind: AiKind, prompts: string[]): string {
   const requests = prompts.map((p, i) => `### Request ${i}\n${p}`).join('\n\n');
   return [
     `You are resolving ${prompts.length} independent request(s) taken from spreadsheet cells.`,
-    `Treat each request separately. For each, the answer must be ${typeHint}.`,
+    `Treat each request separately. Each request may have an "Instruction:" line followed by "Data:"; apply the instruction TO the data, and never answer or translate the instruction text itself. A leading (column "x") tags the source column name for context only — do not include it in the answer.`,
+    `For each, the answer must be ${typeHint}.`,
     `Respond with ONLY a JSON object {"results":[{"index":<request number>,"value":<answer>}, ...]} — one entry per request, no extra prose.`,
     '',
     requests,
@@ -130,6 +140,42 @@ function batchSchema(kind: AiKind): Record<string, unknown> {
 
 function config() {
   return vscode.workspace.getConfiguration('gridsheet.ai');
+}
+
+// Look up the shell command for a user-defined function (gridsheet.ai.custom is a name→command
+// map) by its name (matched case-insensitively — the grid registers `=NAME` as a lowercase key).
+function customCommand(name: string): string | undefined {
+  const map = (config().get<Record<string, string>>('custom', {}) ?? {}) as Record<string, string>;
+  for (const key of Object.keys(map)) {
+    if (key.trim().toLowerCase() === name) {
+      const cmd = map[key]?.trim();
+      return cmd ? cmd : undefined;
+    }
+  }
+  return undefined;
+}
+
+// Split a command string into bin + args, honoring single/double quotes (no shell needed).
+function splitCommand(cmd: string): string[] {
+  const tokens: string[] = [];
+  const re = /"([^"]*)"|'([^']*)'|(\S+)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(cmd)) !== null) {
+    tokens.push(m[1] ?? m[2] ?? m[3] ?? '');
+  }
+  return tokens;
+}
+
+// Run a custom function's command for one cell: prompt (with context) on stdin, stdout trimmed
+// as the result. No key stripping — a custom CLI may legitimately need its own API-key env.
+async function runCustom(command: string, prompt: string, cwd?: string): Promise<string> {
+  const tokens = splitCommand(command);
+  if (tokens.length === 0) {
+    throw new Error('Empty command for custom AI function (gridsheet.ai.custom).');
+  }
+  const [bin, ...args] = tokens;
+  const out = await spawnCapture(bin, args, prompt, 'custom', cwd);
+  return out.trim();
 }
 
 // Flags whose NEXT token is a value (so removing the flag must remove the value too),
@@ -238,9 +284,10 @@ function spawnCapture(bin: string, args: string[], stdin: string, provider: AiPr
     // CLI uses its cached OAuth credentials instead of metered API billing.
     if (provider === 'claude') {
       delete env.ANTHROPIC_API_KEY;
-    } else {
+    } else if (provider === 'codex') {
       delete env.OPENAI_API_KEY;
     }
+    // Custom functions keep the env intact — their CLI may need its own API-key variable.
     // Windows env keys are case-insensitive (`Path` vs `PATH`); update the real key in
     // place so the augmented PATH actually reaches the child.
     const pathKey = Object.keys(env).find((k) => k.toLowerCase() === 'path') ?? 'PATH';

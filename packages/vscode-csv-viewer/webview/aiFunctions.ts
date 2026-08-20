@@ -8,7 +8,7 @@
 // calls via the async cache, and re-renders when the Promise resolves.
 
 import { BaseFunctionAsync, type FunctionArgumentDefinition, type FunctionCategory, type FunctionMapping } from '@gridsheet/preact-core';
-import type { AiKind, AiProvider } from '../src/aiTypes';
+import type { AiCustomFunction, AiKind, AiProvider } from '../src/aiTypes';
 
 export type AiEnqueue = (provider: AiProvider, kind: AiKind, prompt: string) => Promise<string | number | boolean>;
 
@@ -55,7 +55,11 @@ const serializeArg = (arg: unknown, toMatrix: (v: unknown) => unknown[][]): stri
     }
     if (single) {
       const v = cell(matrix[0]?.[0]);
-      return headers[0] != null ? `${headers[0]}: ${v}` : v;
+      // Tag the value with its column name as a leading (column "x") marker rather than an
+      // inline `x: value` prefix. The prefix reads as part of the value and gets echoed into
+      // the answer (e.g. translating `note: …` → `注記: …`); the parenthetical marker keeps
+      // the header as pure metadata the model treats as context, not payload.
+      return headers[0] != null ? `(column "${headers[0]}") ${v}` : v;
     }
     const lines: string[] = [];
     if (hasHeader) {
@@ -85,14 +89,27 @@ const defs: FunctionArgumentDefinition[] = [
   },
 ];
 
-const labels: Record<AiProvider, string> = { claude: 'Claude', codex: 'Codex (OpenAI)' };
 const kindDesc: Record<AiKind, string> = { text: 'text', bool: 'a boolean', number: 'a number' };
 
-const makeAiClass = (provider: AiProvider, kind: AiKind, enqueue: AiEnqueue): typeof BaseFunctionAsync => {
+const makeAiClass = (
+  provider: AiProvider,
+  kind: AiKind,
+  enqueue: AiEnqueue,
+  opts: { name: string; description: string },
+): typeof BaseFunctionAsync => {
   const suffix = kind === 'text' ? '' : `.${kind.toUpperCase()}`;
+  const fn = `${opts.name.toUpperCase()}${suffix}`;
+  // A realistic example per kind: a prompt, a per-row range, and a $-locked cell (shared
+  // instruction/criterion pinned so it doesn't shift when the formula is filled down).
+  const example =
+    kind === 'bool'
+      ? `${fn}("Is it urgent?", B2:B100, $C$1)`
+      : kind === 'number'
+        ? `${fn}("Rate urgency 1-5", B2:B100, $C$1)`
+        : `${fn}("Summarize each issue", B2:B100, $C$1)`;
   return class extends BaseFunctionAsync {
-    example = `${provider.toUpperCase()}${suffix}("...")`;
-    description = `Resolve a prompt via the ${labels[provider]} CLI, returning ${kindDesc[kind]}.`;
+    example = example;
+    description = opts.description;
     category: FunctionCategory = 'other';
     defs = defs;
     // Each cell is one independent call — never spill a matrix into many calls.
@@ -101,19 +118,60 @@ const makeAiClass = (provider: AiProvider, kind: AiKind, enqueue: AiEnqueue): ty
     protected main(prompt: unknown, ...context: unknown[]): Promise<unknown> {
       const blocks = context.map((arg) => serializeArg(arg, (v) => this.toMatrix(v))).filter((b) => b !== '');
       const instruction = cell(prompt);
-      const full = blocks.length > 0 ? `${instruction}\n\n${blocks.join('\n\n')}` : instruction;
+      // Label the two parts so the model applies the instruction TO the data instead of
+      // treating the instruction text itself as the payload (e.g. translating "翻訳して"
+      // into "Translate" rather than translating the referenced cell).
+      const full = blocks.length > 0 ? `Instruction: ${instruction}\n\nData:\n${blocks.join('\n\n')}` : instruction;
       return enqueue(provider, kind, full);
     }
   };
 };
 
-/** Build the =CLAUDE / =CODEX function family (× text/.BOOL/.NUMBER). */
-export const makeAiFunctions = (enqueue: AiEnqueue): FunctionMapping => {
+/**
+ * Build the AI function family: the built-in =CLAUDE / =CODEX (× text/.BOOL/.NUMBER), plus any
+ * user-defined =NAME functions (gridsheet.ai.custom) — text-only, since an arbitrary CLI can't
+ * be held to a typed JSON schema. A custom name that collides with a built-in is ignored.
+ */
+export const makeAiFunctions = (enqueue: AiEnqueue, custom: AiCustomFunction[] = []): FunctionMapping => {
   const map: FunctionMapping = {};
-  for (const provider of ['claude', 'codex'] as AiProvider[]) {
-    map[provider] = makeAiClass(provider, 'text', enqueue);
-    map[`${provider}.bool`] = makeAiClass(provider, 'bool', enqueue);
-    map[`${provider}.number`] = makeAiClass(provider, 'number', enqueue);
+  const builtinLabels: Record<string, string> = { claude: 'Claude', codex: 'Codex (OpenAI)' };
+  for (const provider of ['claude', 'codex']) {
+    const label = builtinLabels[provider];
+    for (const kind of ['text', 'bool', 'number'] as AiKind[]) {
+      const key = kind === 'text' ? provider : `${provider}.${kind}`;
+      map[key] = makeAiClass(provider, kind, enqueue, {
+        name: provider,
+        description: `Resolve a prompt via the ${label} CLI, returning ${kindDesc[kind]}.`,
+      });
+    }
+  }
+  for (const def of custom) {
+    const name = def?.name?.trim();
+    if (!name) {
+      continue;
+    }
+    const key = name.toLowerCase();
+    if (map[key]) {
+      continue; // don't shadow a built-in (claude/codex) or a duplicate
+    }
+    if (def.alias) {
+      // Alias a built-in (+ optional .bool/.number kind), so this custom-named function rides
+      // the schema-typed batch path. e.g. alias "claude.bool" → claude/bool.
+      const [base, variant] = def.alias.trim().toLowerCase().split('.');
+      const kind = (variant as AiKind) || 'text';
+      if ((base === 'claude' || base === 'codex') && kind in kindDesc) {
+        map[key] = makeAiClass(base, kind, enqueue, {
+          name,
+          description: `${name} — alias for ${def.alias} (returns ${kindDesc[kind]}).`,
+        });
+      }
+      continue;
+    }
+    if (def.command) {
+      // Custom CLI: text only (an arbitrary CLI can't be held to a JSON schema). Show the
+      // command in the description since there's no per-function description field.
+      map[key] = makeAiClass(key, 'text', enqueue, { name, description: `Runs: ${def.command.trim()}` });
+    }
   }
   return map;
 };
