@@ -1,0 +1,51 @@
+name: release-vscode
+
+on:
+  push:
+    tags:
+      # Matches the repo's per-package tag format, e.g. v0.1.0/csv-gridsheet
+      - 'v*/csv-gridsheet'
+
+permissions:
+  contents: read
+
+jobs:
+  publish-vscode-extension:
+    runs-on: ubuntu-latest
+    name: publish vscode extension
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: verify tag matches package version
+        working-directory: packages/vscode-csv-viewer
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME%%/*}"   # v0.1.0/csv-gridsheet -> v0.1.0
+          TAG_VERSION="${TAG_VERSION#v}"          # v0.1.0 -> 0.1.0
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::tag version ($TAG_VERSION) != package.json version ($PKG_VERSION)"
+            exit 1
+          fi
+          echo "publishing csv-gridsheet@$PKG_VERSION"
+      - name: build extension
+        run: |
+          pnpm install
+          pnpm --filter "@gridsheet/preact-core..." build
+          pnpm --filter "@gridsheet/functions..." build
+          pnpm --filter csv-gridsheet build
+      - name: package
+        working-directory: packages/vscode-csv-viewer
+        run: npx @vscode/vsce package --no-dependencies -o extension.vsix
+      - name: publish to VS Code Marketplace
+        working-directory: packages/vscode-csv-viewer
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: npx @vscode/vsce publish --packagePath extension.vsix
+      - name: publish to Open VSX
+        working-directory: packages/vscode-csv-viewer
+        env:
+          OVSX_TOKEN: ${{ secrets.OVSX_TOKEN }}
+        run: npx ovsx publish extension.vsix -p "$OVSX_TOKEN"
