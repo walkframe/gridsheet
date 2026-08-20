@@ -172,6 +172,24 @@ export type StoreType = {
   columnMenuState: { x: number; position: PositionType; focusLabel?: boolean } | null;
   rowMenuState: { y: number; position: PositionType } | null;
   editorHovering: boolean;
+  // A bulk mutation (large fill/paste) running off the reducer, chunked so it doesn't
+  // freeze the UI and can drive a progress bar. While set, other mutations are locked.
+  // Its progress is driven imperatively into the overlay (not stored here) so ticks
+  // don't re-render the grid.
+  pendingAsyncOp: PendingAsyncOp | null;
+};
+
+export type PendingAsyncOp = {
+  // Runs the chunked apply; calls onProgress(0..1) as it advances; resolves to the sheet.
+  run: (onProgress: (ratio: number) => void) => Promise<Sheet>;
+  // Selection to restore once the op completes.
+  selectingZone: ZoneType;
+  // Shown next to the progress bar (e.g. "Filling…", "Pasting…").
+  label: string;
+  // Extra store fields merged at commit (e.g. undo/redo restoring `choosing`).
+  finalize?: Partial<StoreType>;
+  // Side effect run after the op commits (e.g. clearing the copy marquee / flashing).
+  postCommit?: () => void;
 };
 
 export type Manager<T> = {
@@ -190,6 +208,11 @@ export type StoreHandle = {
   dispatch: React.Dispatch<{ type: number; value: any }>;
 };
 
+/** Consumer-driven loading state: show a progress overlay while data isn't ready yet (e.g.
+ * the app is fetching/parsing initial cells). `true` = indeterminate spinner; an object =
+ * a determinate bar. The consumer decides when loading ends (the grid can't know the source). */
+export type LoadingState = boolean | { progress?: number | null; label?: string };
+
 export type Props = {
   initialCells: CellsByAddressType;
   sheetName?: string;
@@ -199,6 +222,7 @@ export type Props = {
   options?: OptionsType;
   className?: string;
   style?: CSSProperties;
+  loading?: LoadingState;
 };
 
 export type EditorEvent = KeyboardEvent<HTMLTextAreaElement>;

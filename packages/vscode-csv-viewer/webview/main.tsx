@@ -1,12 +1,36 @@
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { GridSheet, buildInitialCells, useBook, toValueMatrix, p2a, render, Pending, userActions, operations, type StoreHandle } from '@gridsheet/preact-core';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import {
+  GridSheet,
+  ProgressOverlay,
+  embedStyle,
+  buildInitialCells,
+  useBook,
+  toValueMatrix,
+  toValueMatrixAsync,
+  p2a,
+  x2c,
+  render,
+  Pending,
+  userActions,
+  operations,
+  Policy,
+  type PolicyMixinType,
+  ThousandSeparatorPolicyMixin,
+  PercentagePolicyMixin,
+  defaultColMenuDescriptors,
+  type StoreHandle,
+} from '@gridsheet/preact-core';
 
 import { makeAiFunctions, type AiEnqueue } from './aiFunctions';
-import type { AiBatchResponse, AiTask } from '../src/aiTypes';
+import type { AiBatchResponse, AiCustomFunction, AiTask } from '../src/aiTypes';
 
 declare function acquireVsCodeApi(): { postMessage(msg: unknown): void };
 
 const vscodeApi = acquireVsCodeApi();
+
+// Inject the grid stylesheet up front (idempotent) so the initial-load ProgressOverlay is
+// styled/centered before any GridSheet mounts; GridSheet's own embedStyle() call is then a no-op.
+embedStyle();
 
 // ── AI batch bridge ────────────────────────────────────────────────────────
 // Each =CLAUDE/=CODEX cell calls enqueueAi(); requests accumulate for one tick
@@ -18,11 +42,6 @@ let aiQueue: AiQueueItem[] = [];
 let aiFlushTimer: ReturnType<typeof setTimeout> | null = null;
 let aiReqCounter = 0;
 const aiPending = new Map<number, AiQueueItem[]>();
-
-// Set by the Grid: re-serialize the sheet and persist resolved values to the file.
-// Invoked ONLY when an AI batch resolves (not on every transmit — doing that per
-// repaint jams drag-select), on the frame after resolution so the cache is filled.
-let aiPersist: (() => void) | null = null;
 
 const flushAi = () => {
   aiFlushTimer = null;
@@ -38,7 +57,7 @@ const flushAi = () => {
 };
 
 const enqueueAi: AiEnqueue = (provider, kind, prompt) =>
-  new Promise<string | number | boolean>((resolve, reject) => {
+  new Promise<string | number | boolean | string[][]>((resolve, reject) => {
     aiQueue.push({ task: { provider, kind, prompt }, resolve: resolve as (v: unknown) => void, reject });
     if (aiFlushTimer == null) {
       aiFlushTimer = setTimeout(flushAi, 60);
@@ -69,9 +88,8 @@ const handleAiResult = (msg: AiBatchResponse) => {
       item.reject(new Error('No result returned for this cell.'));
     }
   });
-  // Resolutions repaint via transmit but don't fire onChange, so persist here.
-  // rAF waits out the engine's microtasks (setAsyncCache) so serialize reads values.
-  requestAnimationFrame(() => aiPersist?.());
+  // The resolved values repaint via the engine's transmit hook. Persistence is
+  // save-only, so they are written to the file on the next Cmd+S (not auto-flushed).
 };
 
 // ── Clipboard paste bridge ─────────────────────────────────────────────────
@@ -102,6 +120,31 @@ document.addEventListener(
   true,
 );
 
+// Ctrl/Cmd+R is "fill right" in the grid (Excel/Sheets). In a VS Code webview it also reloads the
+// view, and the host decides that too early for a DOM preventDefault to stop it (the fill runs,
+// then the page reloads and discards it). So fully SWALLOW the event at capture — preventDefault +
+// stopImmediatePropagation — to block the reload, and run fill-right ourselves via the store. When
+// a cell is being edited, swallow but don't fill (matches react-core: Ctrl+R is a no-op there).
+document.addEventListener(
+  'keydown',
+  (e) => {
+    if (!(e.metaKey || e.ctrlKey) || e.shiftKey || e.altKey || (e.key !== 'r' && e.key !== 'R')) {
+      return;
+    }
+    const handle = gridStoreRef.current;
+    const ta = handle?.store?.editorRef?.current ?? null;
+    if (!handle || !ta || document.activeElement !== ta) {
+      return; // focus is outside the grid — let the host handle reload normally
+    }
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (!handle.store.editingAddress) {
+      handle.dispatch(userActions.fillRight(null));
+    }
+  },
+  true,
+);
+
 const applyPaste = (text: string) => {
   if (!pastePending) {
     return;
@@ -123,7 +166,19 @@ const applyPaste = (text: string) => {
   ta.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));
 };
 
-type DataMessage = { type: 'data'; rows: string[][]; delimiter: 'CSV' | 'TSV'; readOnly?: boolean; evaluate?: boolean };
+type DataMessage = {
+  type: 'data';
+  rows: string[][];
+  delimiter: 'CSV' | 'TSV';
+  readOnly?: boolean;
+  evaluate?: boolean;
+  dateFormats?: string[];
+  parseNumber?: boolean;
+  parseDate?: boolean;
+  parseTime?: boolean;
+  parseBool?: boolean;
+  aiCustom?: AiCustomFunction[];
+};
 
 // View-only prevention mask. `operations.ViewOnly` (= ReadOnly | ColumnMenu) already
 // covers content edits, structural changes, sort/filter, label changes and the column
@@ -131,25 +186,171 @@ type DataMessage = { type: 'data'; rows: string[][]; delimiter: 'CSV' | 'TSV'; r
 // prevention-enforced op, so it keeps working. (ViewOnly does block column resize.)
 const READ_ONLY_PREVENTION = operations.ViewOnly | operations.RowMenu;
 
+// Which value types the viewer coerces from text. CSV cells are TEXT; each parse is opt-in
+// (settings gridsheet.viewer.parse*), off by default except numbers, because coercing changes
+// what gets written back on save. See makeDefaultPolicy.
+type ParseFlags = { number: boolean; date: boolean; time: boolean; bool: boolean };
+
+// Signals "not this type" so the deserialize chain keeps the value as text.
+const disableDeserialize = (): any => ({ value: undefined });
+
+// Parse to a number ONLY when it round-trips exactly (`String(Number(v)) === v`), so a save
+// stays byte-identical: `1234`/`12.5`/`-3` become numbers (numeric sort/filter), while `007`,
+// `12.50`, `1e3`, oversized ints, and non-numbers stay text.
+const roundTripNumberDeserialize = (value: string): any => {
+  if (typeof value !== 'string' || value === '') {
+    return { value: undefined };
+  }
+  const n = Number(value);
+  return Number.isFinite(n) && String(n) === value ? { value: n } : { value: undefined };
+};
+
+// Keep the raw string for every type — used by the display-only format policies so their
+// column's stored value never changes on save (formatting happens in render only).
+const keepRawMixin: PolicyMixinType = { deserializeFirst: (value: any) => ({ value }) };
+
+// The default policy for every data cell. Off types are hard-disabled (stay text); the number
+// parse (when on) is the round-trip-safe one, so enabling it can never rewrite the file.
+const makeDefaultPolicy = (flags: ParseFlags): Policy => {
+  const mixin: PolicyMixinType = {
+    deserializeNumber: flags.number ? roundTripNumberDeserialize : disableDeserialize,
+  };
+  if (!flags.date) {
+    mixin.deserializeDate = disableDeserialize;
+  }
+  if (!flags.time) {
+    mixin.deserializeTime = disableDeserialize;
+  }
+  if (!flags.bool) {
+    mixin.deserializeBool = disableDeserialize;
+  }
+  return new Policy({ mixins: [mixin] });
+};
+
+// Number display format (thousand / percent) for a column. Parses clean numbers (numeric
+// sort/filter, round-trip-safe save) and, for text that stayed a string (e.g. `007`), still
+// parses it for DISPLAY via renderNumber. Date/time/bool are not coerced in a number column.
+const numFmt = (formatMixin: PolicyMixinType): Policy =>
+  new Policy({
+    mixins: [
+      formatMixin,
+      {
+        deserializeNumber: roundTripNumberDeserialize,
+        deserializeDate: disableDeserialize,
+        deserializeTime: disableDeserialize,
+        deserializeBool: disableDeserialize,
+        renderString(this: Policy, props: any) {
+          const value = props?.value;
+          if (typeof value !== 'string' || value.trim() === '') {
+            return value;
+          }
+          const n = Number(value);
+          return isNaN(n) ? value : this.renderNumber({ ...props, value: n });
+        },
+      },
+    ],
+  });
+
+// Date display format. Keeps the raw string; for display, parses date-looking text (has a
+// `- / :` separator or a letter — so bare numbers like `007` are left alone) and formats it
+// with the chosen dayjs pattern. Unparseable text passes through unchanged.
+const dateFmt = (fmt: string, datetimeFmt = fmt): Policy =>
+  new Policy({
+    mixins: [
+      keepRawMixin,
+      {
+        dateFormat: fmt,
+        datetimeFormat: datetimeFmt,
+        renderString(this: Policy, props: any) {
+          const value = props?.value;
+          if (typeof value !== 'string') {
+            return value;
+          }
+          const t = value.trim();
+          if (!t || !/[-/:]|[A-Za-z]/.test(t)) {
+            return value;
+          }
+          const d = new Date(t);
+          return isNaN(d.getTime()) ? value : this.renderDate({ ...props, value: d });
+        },
+      },
+    ],
+  });
+
+// Stable empty default so `data.dateFormats ?? EMPTY` doesn't hand Grid a new array each
+// render (which would rebuild the policy map / book unnecessarily).
+const EMPTY_STRING_ARRAY: string[] = [];
+const EMPTY_AI_CUSTOM: AiCustomFunction[] = [];
+
+type FormatOption = { id: string; label: string };
+type DateFormatDef = { id: string; label: string; fmt: string; datetimeFmt?: string };
+
+// `id` doubles as the policy key ('' = clear). label shows a sample of the format.
+const BUILTIN_DATE_FORMATS: DateFormatDef[] = [
+  { id: 'date_iso', label: '2024-01-15', fmt: 'YYYY-MM-DD' },
+  { id: 'date_us', label: '01/15/2024', fmt: 'MM/DD/YYYY' },
+  { id: 'date_eu', label: '15/01/2024', fmt: 'DD/MM/YYYY' },
+  { id: 'date_long', label: 'Jan 15, 2024', fmt: 'MMM D, YYYY' },
+  { id: 'datetime', label: '2024-01-15 14:30:00', fmt: 'YYYY-MM-DD', datetimeFmt: 'YYYY-MM-DD HH:mm:ss' },
+];
+
+const NUMBER_FORMAT_OPTIONS: FormatOption[] = [
+  { id: 'thousand', label: 'Thousands  (1,234)' },
+  { id: 'percent', label: 'Percent  (0.5 → 50%)' },
+];
+
+// Build the policy map + Date submenu options, merging the built-in date formats with any
+// user-configured dayjs patterns (gridsheet.viewer.dateFormats). Each custom pattern becomes
+// both a registered policy and a Date option, labeled by the pattern itself.
+const buildFormats = (customDateFormats: string[], parseFlags: ParseFlags) => {
+  const dateDefs: DateFormatDef[] = [
+    ...BUILTIN_DATE_FORMATS,
+    ...customDateFormats
+      .map((f) => (typeof f === 'string' ? f.trim() : ''))
+      .filter((f) => f.length > 0)
+      .map((fmt) => ({ id: `date_custom:${fmt}`, label: fmt, fmt })),
+  ];
+  const policies: Record<string, Policy> = {
+    // 'raw' is the default policy for all data cells — coercion limited to the parse flags.
+    raw: makeDefaultPolicy(parseFlags),
+    thousand: numFmt(ThousandSeparatorPolicyMixin),
+    percent: numFmt(PercentagePolicyMixin),
+  };
+  for (const d of dateDefs) {
+    policies[d.id] = dateFmt(d.fmt, d.datetimeFmt);
+  }
+  const dateOptions: FormatOption[] = dateDefs.map((d) => ({ id: d.id, label: d.label }));
+  return { policies, numberOptions: NUMBER_FORMAT_OPTIONS, dateOptions };
+};
+
 const delimiterChar = (d: 'CSV' | 'TSV') => (d === 'TSV' ? '\t' : ',');
+
+// Widest row length. Uses a loop, NOT `Math.max(1, ...rows.map(...))`: spreading a
+// million-element array as function arguments throws "Maximum call stack size
+// exceeded" past ~500k rows, which was making large files fail/stall on open.
+const maxRowLength = (rows: string[][]): number => {
+  let m = 1;
+  for (let i = 0; i < rows.length; i++) {
+    const len = rows[i].length;
+    if (len > m) {
+      m = len;
+    }
+  }
+  return m;
+};
 
 // RFC-4180-ish field quoting (symmetric with src/parse.ts).
 const quoteField = (v: string, delim: string) =>
   v.includes(delim) || v.includes('"') || v.includes('\n') || v.includes('\r') ? `"${v.replace(/"/g, '""')}"` : v;
 
-// Serialize the current sheet back to CSV/TSV text. With `header` on, the column
-// labels (row 0) become the first line, followed by the data rows. Trailing
-// all-empty rows are dropped so "extra" capacity rows don't bloat the file.
-const serialize = (sheet: any, header: boolean, delim: string, evaluate: boolean): string => {
-  // evaluate=true writes formula results (e.g. =A1+B1 -> 30); false keeps the
-  // formula source. Literal cells are identical either way.
-  const matrix: any[][] = toValueMatrix(sheet, { resolution: evaluate ? 'RESOLVED' : 'RAW' });
-  // A still-resolving async cell (=CLAUDE/=CODEX) reads back as a Pending sentinel;
-  // writing its toString() would leak "<Pending #…>" into the file. Fall back to the
-  // raw formula source for those cells until they resolve (their value is written on
-  // the next serialize, once resolution has repainted the grid).
-  const raw: any[][] | null = evaluate ? toValueMatrix(sheet, { resolution: 'RAW' }) : null;
+// Turn the already-materialized value matrix into CSV/TSV text. With `header` on,
+// the column labels (row 0) become the first line, followed by the data rows.
+// Trailing all-empty rows are dropped so "extra" capacity rows don't bloat the file.
+const buildText = (matrix: any[][], raw: any[][] | null, header: boolean, sheet: any, delim: string): string => {
   const cellText = (v: any, y: number, x: number): string => {
+    // A still-resolving async cell (=CLAUDE/=CODEX) reads back as a Pending sentinel;
+    // writing its toString() would leak "<Pending #…>" into the file. Fall back to the
+    // raw formula source for those cells until they resolve.
     if (raw != null && Pending.is(v)) {
       const r = raw[y]?.[x];
       return r == null ? '' : String(r);
@@ -176,6 +377,30 @@ const serialize = (sheet: any, header: boolean, delim: string, evaluate: boolean
   return lines.join('\n');
 };
 
+// Serialize the current sheet to CSV/TSV text WITHOUT blocking the UI. Reading
+// every cell lazily materializes the whole sheet (O(cells), ~hundreds of ms at a
+// million rows), so we use the engine's time-sliced toValueMatrixAsync: it yields
+// between chunks (letting the progress bar paint) and reports row-granular progress.
+// evaluate=true writes formula results (=A1+B1 -> 30); false keeps the formula source.
+const serializeAsync = async (
+  sheet: any,
+  header: boolean,
+  delim: string,
+  evaluate: boolean,
+  onProgress: (done: number, total: number) => void,
+  yieldControl: () => Promise<void>,
+): Promise<string> => {
+  const matrix: any[][] = await toValueMatrixAsync(sheet, {
+    resolution: evaluate ? 'RESOLVED' : 'RAW',
+    onProgress: ({ done, total }) => onProgress(done, total),
+    yieldControl,
+  });
+  // The first pass above materialized every cell, so this fallback pass (only for
+  // Pending async cells under evaluate=true) reads from cache and is cheap.
+  const raw: any[][] | null = evaluate ? toValueMatrix(sheet, { resolution: 'RAW' }) : null;
+  return buildText(matrix, raw, header, sheet, delim);
+};
+
 // VS Code stamps the active theme onto <body> (vscode-light / vscode-dark /
 // vscode-high-contrast[-light]). GridSheet's inherit modes make it blend in.
 const detectMode = (): 'inherit-light' | 'inherit-dark' => {
@@ -194,6 +419,24 @@ const useVscodeMode = () => {
   return mode;
 };
 
+// Grid theme tokens the core ProgressOverlay reads. Supplied on the initial-load container
+// (before GridSheet mounts, where the grid's own gs-root tokens aren't in scope yet) so the
+// "Loading" overlay matches the in-grid save/paste overlays. Values mirror the engine themes.
+const GRID_THEME_TOKENS: Record<'inherit-light' | 'inherit-dark', Record<string, string>> = {
+  'inherit-dark': {
+    '--gs-fg': '#e4e6e9',
+    '--gs-border': '#2c2f34',
+    '--gs-editor-surface': '#1c1e21',
+    '--gs-accent': '#3b82f6',
+  },
+  'inherit-light': {
+    '--gs-fg': '#1f2328',
+    '--gs-border': '#e3e6ea',
+    '--gs-editor-surface': '#ffffff',
+    '--gs-accent': '#2563eb',
+  },
+};
+
 type GridProps = {
   rows: string[][];
   header: boolean;
@@ -203,100 +446,226 @@ type GridProps = {
   delimiter: 'CSV' | 'TSV';
   mode: 'inherit-light' | 'inherit-dark';
   readOnly: boolean;
-  onEdit: (text: string) => void;
+  // Per-column display format: grid column index (1-based) → format policy key.
+  columnFormats: Record<number, string>;
+  onSetFormat: (x: number, id: string) => void;
+  // Extra date output formats (dayjs patterns) from gridsheet.viewer.dateFormats settings.
+  dateFormats: string[];
+  // Which value types to coerce from text (gridsheet.viewer.parse*); off types stay as text.
+  parseFlags: ParseFlags;
+  // User-defined AI functions (gridsheet.ai.custom) → registered as =NAME(...).
+  aiCustom: AiCustomFunction[];
+  // Bumped by App when the user saves (Cmd+S). Serialize the sheet and persist then.
+  saveSignal: number;
+  onSave: (text: string) => void;
+  // Fired on any in-memory grid edit so App can show the footer "unsaved" marker.
+  onDirty: () => void;
 };
 
 // Remounts (via a key in App) whenever fresh data arrives, so it always starts
 // from the authoritative document content plus the current header/extra-rows/cols.
-const Grid = ({ rows, header, extraRows, extraCols, evaluate, delimiter, mode, readOnly, onEdit }: GridProps) => {
+const Grid = ({
+  rows,
+  header,
+  extraRows,
+  extraCols,
+  evaluate,
+  delimiter,
+  mode,
+  readOnly,
+  columnFormats,
+  onSetFormat,
+  dateFormats,
+  parseFlags,
+  aiCustom,
+  saveSignal,
+  onSave,
+  onDirty,
+}: GridProps) => {
   const sheetRef = useRef<any>(null);
   const delim = delimiterChar(delimiter);
+  // Policy map + submenu options, rebuilt when the configured formats / parse flags change.
+  const { policies: formatPolicies, numberOptions, dateOptions } = useMemo(
+    () => buildFormats(dateFormats, parseFlags),
+    // Depend on the flag fields (stable primitives), not the freshly-built parseFlags object.
+    [dateFormats, parseFlags.number, parseFlags.date, parseFlags.time, parseFlags.bool],
+  );
 
-  // Serialize + post an edit, skipping no-op repeats (so an async-resolution
-  // persist doesn't re-post what onChange already sent, and vice versa).
-  const lastPostedRef = useRef<string | null>(null);
-  const post = (sheet: any) => {
-    // Read-only: never write anything back to the file (not even resolved formula values).
-    if (!sheet || readOnly) {
-      return;
-    }
-    const text = serialize(sheet, header, delim, evaluate);
-    if (text === lastPostedRef.current) {
-      return;
-    }
-    lastPostedRef.current = text;
-    onEdit(text);
-  };
+  // Save-only persistence: grid edits stay in-memory (no per-edit serialize — that
+  // walks every cell and used to freeze the UI on large sheets). The file is written
+  // only when the user saves; the serialize runs off the edit path via the engine's
+  // time-sliced async matrix, driving the progress overlay instead of blocking.
+  const [saving, setSaving] = useState(false);
+  const [progress, setProgress] = useState(0); // 0..1
 
-  const additionalFunctions = useMemo(() => makeAiFunctions(enqueueAi), []);
+  const additionalFunctions = useMemo(() => makeAiFunctions(enqueueAi, aiCustom), [aiCustom]);
   // useBook (not createBook) so registry.transmit is wired to a real repaint.
   // GridSheet only wires transmit for a book it owns; with our own createBook the
   // async =CLAUDE/=CODEX results would land in the cache but never render until an
   // unrelated interaction (e.g. a cursor move) forced a paint.
-  const book = useBook({
-    additionalFunctions,
-    onChange: ({ sheet }: any) => post(sheet),
-  });
+  // onChange fires per in-memory edit (cheap — just flags the footer as unsaved; no serialize).
+  const book = useBook({ additionalFunctions, policies: formatPolicies, onChange: () => onDirty() });
 
-  // While pending, serialize() writes the raw formula; once an AI batch resolves,
-  // onChange does NOT fire (the Emitter only reacts to sheetReactive edits), so the
-  // resolved value would never reach the file. Register a persist hook that the AI
-  // result handler calls exactly once per resolved batch. A ref keeps it pointed at
-  // the latest post() (current header/evaluate/delimiter) without re-registering.
-  const postRef = useRef(post);
-  postRef.current = post;
+  // Latest render params, read by the save routine without re-arming its effect.
+  const saveArgsRef = useRef({ header, delim, evaluate, readOnly, onSave });
+  saveArgsRef.current = { header, delim, evaluate, readOnly, onSave };
+
+  // A save was requested (saveSignal changed): show the overlay. The actual
+  // serialize runs in the effect below, after the overlay has painted.
+  const lastSaveSignal = useRef(saveSignal);
   useEffect(() => {
-    // sheetRef.current is a SheetHandle ({ sheet, apply }) — pass the real Sheet.
-    const fn = () => postRef.current(sheetRef.current?.sheet ?? null);
-    aiPersist = fn;
+    if (saveSignal === lastSaveSignal.current) {
+      return;
+    }
+    lastSaveSignal.current = saveSignal;
+    if (saveArgsRef.current.readOnly) {
+      return; // read-only: never write back to the file
+    }
+    setProgress(0);
+    setSaving(true);
+  }, [saveSignal]);
+
+  // Run the async serialize once the overlay is on screen. Two rAFs guarantee the
+  // overlay has actually painted (progress visible from 0%) before the chunked work
+  // starts; a macrotask yield between chunks lets the bar repaint as it advances.
+  useEffect(() => {
+    if (!saving) {
+      return;
+    }
+    let cancelled = false;
+    const yieldControl = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+    const raf1 = requestAnimationFrame(() =>
+      requestAnimationFrame(async () => {
+        if (cancelled) {
+          return;
+        }
+        const { header, delim, evaluate, onSave } = saveArgsRef.current;
+        const sheet = sheetRef.current?.sheet;
+        try {
+          if (sheet) {
+            const text = await serializeAsync(
+              sheet,
+              header,
+              delim,
+              evaluate,
+              (done, total) => {
+                if (!cancelled) {
+                  setProgress(total > 0 ? done / total : 1);
+                }
+              },
+              yieldControl,
+            );
+            if (!cancelled) {
+              onSave(text);
+            }
+          }
+        } finally {
+          if (!cancelled) {
+            setSaving(false);
+          }
+        }
+      }),
+    );
     return () => {
-      if (aiPersist === fn) {
-        aiPersist = null;
-      }
+      cancelled = true;
+      cancelAnimationFrame(raf1);
     };
-  }, []);
+  }, [saving]);
 
   const initialCells = useMemo(() => {
     const headerRow = header ? rows[0] : undefined;
     const dataRows = header ? rows.slice(1) : rows;
-    const numCols = Math.max(1, ...rows.map((r) => r.length), 1) + Math.max(0, extraCols);
-    const cells: Record<string, { value?: string; label?: string; prevention?: number }> = {};
+    const numCols = maxRowLength(rows) + Math.max(0, extraCols);
+    const cells: Record<string, { value?: string; label?: string; prevention?: number; policy?: string }> = {};
+    // Every data cell defaults to the 'raw' policy so values are never coerced from text —
+    // opening and saving a CSV round-trips exactly (see keepRawMixin). Column format policies
+    // below override this per column; formulas still evaluate (formula handling is separate).
+    cells.default = { policy: 'raw' };
+    // Assign each formatted column's policy via its column-default cell (colId, e.g. 'C').
+    for (const [xStr, name] of Object.entries(columnFormats)) {
+      if (name) {
+        const colId = x2c(Number(xStr));
+        cells[colId] = { ...cells[colId], policy: name };
+      }
+    }
     if (readOnly) {
       // Prevention is resolved from a different bucket per cell kind: data cells stack
       // `default`, column headers stack `defaultCol`, row headers stack `defaultRow`. The
       // Sort/Filter/label column menu and the row menu gate on the HEADER cell's
       // prevention, and row/col insert-remove check the header too — so `default` alone
       // leaves all of those editable. Put the mask on all three.
-      cells.default = { prevention: READ_ONLY_PREVENTION };
-      cells.defaultCol = { prevention: READ_ONLY_PREVENTION };
-      cells.defaultRow = { prevention: READ_ONLY_PREVENTION };
+      cells.default = { ...cells.default, prevention: READ_ONLY_PREVENTION };
+      cells.defaultCol = { ...cells.defaultCol, prevention: READ_ONLY_PREVENTION };
+      cells.defaultRow = { ...cells.defaultRow, prevention: READ_ONLY_PREVENTION };
     }
     if (headerRow) {
       headerRow.forEach((value, x) => {
         cells[p2a({ y: 0, x: x + 1 })] = { label: value };
       });
     }
-    dataRows.forEach((row, y) => {
-      row.forEach((value, x) => {
-        cells[p2a({ y: y + 1, x: x + 1 })] = { value };
-      });
-    });
+    // Pass the parsed data rows as a deferred matrix (origin A1) instead of
+    // exploding them into a per-address `cells` object. buildInitialCells only
+    // defers (skips eager population of every cell) when the bulk data arrives
+    // via `matrices`; a raw `cells` map forces Sheet.initialize to materialize
+    // all N cells up front, which is ~1.7s for 1M cells vs ~2ms deferred.
+    // Header labels (y=0) and readOnly defaults stay in `cells`.
     const numRows = Math.max(1, dataRows.length) + Math.max(0, extraRows);
-    return buildInitialCells({ cells, ensured: { numRows, numCols } });
-  }, [rows, header, extraRows, extraCols, readOnly]);
+    return buildInitialCells({
+      cells,
+      matrices: { A1: dataRows },
+      flattenAs: 'value',
+      ensured: { numRows, numCols },
+    });
+  }, [rows, header, extraRows, extraCols, readOnly, columnFormats]);
+
+  // Extend the column-header menu with a nested "Format ▸" submenu. Grouping keeps the
+  // menu compact as formats grow (Number / Date / …); a check marks the column's active
+  // format, and onSetFormat lives in App so the choice survives the grid remount that applies it.
+  const colMenu = useMemo(() => {
+    const item = (opt: FormatOption) => ({
+      id: `gs-format-${opt.id || 'plain'}`,
+      label: opt.label,
+      checked: (_ctx: unknown, x: number) => (columnFormats[x] ?? '') === opt.id,
+      onClick: (_ctx: unknown, x: number) => onSetFormat(x, opt.id),
+    });
+    return [
+      ...defaultColMenuDescriptors,
+      { type: 'divider' as const },
+      {
+        type: 'submenu' as const,
+        id: 'gs-format',
+        label: 'Format',
+        children: [
+          item({ id: '', label: 'Plain (no format)' }),
+          { type: 'divider' as const },
+          {
+            type: 'submenu' as const,
+            id: 'gs-format-number',
+            label: 'Number',
+            children: numberOptions.map(item),
+          },
+          { type: 'submenu' as const, id: 'gs-format-date', label: 'Date', children: dateOptions.map(item) },
+        ],
+      },
+    ];
+  }, [columnFormats, onSetFormat, numberOptions, dateOptions]);
 
   return (
+    // Save progress goes through GridSheet's `loading` prop so its overlay renders INSIDE the
+    // grid root (where the theme tokens live) and is themed correctly. The per-tick re-render
+    // is cheap: the grid is virtualized and static during save (O(visible) cells).
     <GridSheet
       book={book}
       sheetRef={sheetRef}
       storeRef={gridStoreRef}
       initialCells={initialCells}
+      loading={saving ? { progress, label: 'Saving' } : undefined}
       options={{
         mode,
         sheetWidth: '100%',
         sheetHeight: '100%',
         matrixAlignment: 'both',
-        showAddress: true,
+        colMenu,
       }}
     />
   );
@@ -358,6 +727,23 @@ const menuItemStyle = {
   borderRadius: 3,
   padding: '3px 6px',
   cursor: 'pointer',
+};
+// Add popover: a small section label per axis + a row of placement buttons.
+const addSectionLabelStyle = {
+  fontSize: 10,
+  fontWeight: 700 as const,
+  textTransform: 'uppercase' as const,
+  letterSpacing: 0.6,
+  opacity: 0.55,
+  padding: '0 2px 3px',
+};
+const addRowStyle = { display: 'flex', gap: 4 };
+const addBtnStyle = {
+  ...menuItemStyle,
+  flex: 1,
+  textAlign: 'center' as const,
+  border: '1px solid var(--vscode-input-border, rgba(128,128,128,0.4))',
+  padding: '4px 6px',
 };
 const sep = <span style={{ opacity: 0.35 }}>|</span>;
 
@@ -423,7 +809,34 @@ const App = () => {
   // Per-file, footer-controlled. Initialized once from the settings default the host
   // sends in the first 'data' message; the footer toggle owns it afterward.
   const [readOnly, setReadOnly] = useState<boolean | null>(null);
+  // Per-column display formats (session-only): grid column index → policy id.
+  const [columnFormats, setColumnFormats] = useState<Record<number, string>>({});
+  // Bumped each time the host asks us to save (Cmd+S is intercepted extension-side
+  // and routed here as a 'requestSave' message); <Grid> serializes on the change.
+  const [saveSignal, setSaveSignal] = useState(0);
+  // Footer "unsaved" marker: set on any in-memory grid edit, cleared once a save is
+  // serialized+posted. (The native tab ● can't be driven without editing the TextDocument
+  // on every change, which is exactly the freeze we removed — so we show our own marker.)
+  const [dirty, setDirty] = useState(false);
+  const onDirty = useCallback(() => setDirty(true), []);
+  // 0..1 while the host chunk-parses the file on open; null once data has arrived.
+  const [loadProgress, setLoadProgress] = useState<number | null>(null);
   const mode = useVscodeMode();
+
+  // Set/clear a column's display format, then rebuild from the authoritative document
+  // (like the header / read-only toggles) so the new policy is applied on remount.
+  const onSetFormat = useCallback((x: number, id: string) => {
+    setColumnFormats((prev) => {
+      const next = { ...prev };
+      if (id) {
+        next[x] = id;
+      } else {
+        delete next[x];
+      }
+      return next;
+    });
+    vscodeApi.postMessage({ type: 'requestData' });
+  }, []);
 
   // Close the Add popover on an outside click.
   const addRef = useRef<HTMLDivElement>(null);
@@ -464,9 +877,22 @@ const App = () => {
 
   useEffect(() => {
     const handler = (e: MessageEvent) => {
-      const msg = e.data as DataMessage | AiBatchResponse | { type: 'paste'; text?: string };
+      const msg = e.data as
+        | DataMessage
+        | AiBatchResponse
+        | { type: 'paste'; text?: string }
+        | { type: 'requestSave' }
+        | { type: 'loadProgress'; ratio: number };
       if (msg?.type === 'aiBatchResult') {
         handleAiResult(msg);
+        return;
+      }
+      if (msg?.type === 'requestSave') {
+        setSaveSignal((s) => s + 1); // ask the active <Grid> to serialize + persist
+        return;
+      }
+      if (msg?.type === 'loadProgress') {
+        setLoadProgress(msg.ratio); // drives the open-time progress bar
         return;
       }
       if (msg?.type === 'paste') {
@@ -477,6 +903,8 @@ const App = () => {
         setData(msg);
         setRev((r) => r + 1); // remount <Grid> with the fresh, authoritative content
         setReadOnly((prev) => (prev === null ? !!msg.readOnly : prev)); // seed once from the setting
+        setDirty(false); // fresh authoritative content ⇒ nothing unsaved
+        setLoadProgress(null); // parsing done — hide the load bar
       }
     };
     window.addEventListener('message', handler);
@@ -495,16 +923,39 @@ const App = () => {
     vscodeApi.postMessage({ type: 'requestData' });
   }, [header, extraRows, extraCols]);
 
-  const onEdit = (text: string) => vscodeApi.postMessage({ type: 'edit', text });
+  // Save-only: the serialized text is sent (and the file written) just on save.
+  // Clearing dirty here is optimistic (the extension performs the actual write).
+  const onSave = (text: string) => {
+    vscodeApi.postMessage({ type: 'save', text });
+    setDirty(false);
+  };
 
   if (!data) {
-    return <div style={{ padding: 12, fontFamily: 'sans-serif' }}>Loading…</div>;
+    // Same overlay as save/paste (core ProgressOverlay). GridSheet isn't mounted yet, so its
+    // theme tokens aren't in scope here — supply the ones ProgressOverlay needs, per VS Code
+    // theme (mode), on this positioned full-height container.
+    return (
+      <div style={{ position: 'relative', height: '100%', ...GRID_THEME_TOKENS[mode] }}>
+        <ProgressOverlay progress={loadProgress ?? null} label="Loading" />
+      </div>
+    );
   }
 
   const rows = data.rows;
-  const cols = Math.max(1, ...rows.map((r) => r.length), 1);
+  const cols = maxRowLength(rows);
   const ro = readOnly ?? !!data.readOnly;
   const evaluate = data.evaluate ?? true;
+  const dateFormats = data.dateFormats ?? EMPTY_STRING_ARRAY;
+  const aiCustom = data.aiCustom ?? EMPTY_AI_CUSTOM;
+  // Only number parsing defaults on (round-trip-safe); date/time/bool are opt-in because
+  // coercing them changes what's written back on save. Grid memoizes on the fields, not this
+  // object, so building it inline each render is fine.
+  const parseFlags: ParseFlags = {
+    number: data.parseNumber ?? true,
+    date: data.parseDate ?? false,
+    time: data.parseTime ?? false,
+    bool: data.parseBool ?? false,
+  };
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: '1 1 auto', minHeight: 0 }}>
@@ -518,7 +969,14 @@ const App = () => {
           delimiter={data.delimiter}
           mode={mode}
           readOnly={ro}
-          onEdit={onEdit}
+          columnFormats={columnFormats}
+          onSetFormat={onSetFormat}
+          dateFormats={dateFormats}
+          parseFlags={parseFlags}
+          aiCustom={aiCustom}
+          saveSignal={saveSignal}
+          onSave={onSave}
+          onDirty={onDirty}
         />
       </div>
 
@@ -527,6 +985,15 @@ const App = () => {
         <span style={{ opacity: 0.6 }}>
           {data.delimiter} · {rows.length}×{cols}
         </span>
+        {!ro && dirty && (
+          <span
+            title="Unsaved changes — press Cmd/Ctrl+S to write them to the file"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--vscode-gitDecoration-modifiedResourceForeground, #e2c08d)' }}
+          >
+            <span style={{ fontSize: 14, lineHeight: 1 }}>●</span>
+            Unsaved
+          </span>
+        )}
         {sep}
         <Toggle on={header} onClick={() => setHeader((v) => !v)} title="Use the first row as column labels">
           <HeaderIcon />
@@ -560,31 +1027,38 @@ const App = () => {
             ＋ Add ▾
           </button>
           {addOpen && (
-            <div style={popoverStyle}>
+            <div style={{ ...popoverStyle, minWidth: 200 }}>
               <style>{`.gs-add-item:hover{background:var(--vscode-list-hoverBackground, rgba(128,128,128,0.18)) !important}`}</style>
-              <label style={{ ...checkStyle, cursor: 'default', justifyContent: 'space-between', padding: '0 6px 2px' }}>
+              <label style={{ ...checkStyle, cursor: 'default', justifyContent: 'space-between', padding: '0 2px 4px' }}>
                 Count
                 <input
                   type="number"
                   min={1}
                   value={addN}
                   onInput={(e) => setAddN(Math.max(1, Number((e.target as HTMLInputElement).value) || 1))}
-                  style={{ ...fieldStyle, width: 70 }}
+                  style={{ ...fieldStyle, width: 84 }}
                 />
               </label>
-              <div style={{ height: 1, background: 'var(--vscode-widget-border, rgba(128,128,128,0.35))', margin: '2px 0' }} />
-              <button className="gs-add-item" style={menuItemStyle} onClick={() => doAdd('rows', 'end')}>
-                Rows — at end
-              </button>
-              <button className="gs-add-item" style={menuItemStyle} onClick={() => doAdd('cols', 'end')}>
-                Cols — at end
-              </button>
-              <button className="gs-add-item" style={menuItemStyle} onClick={() => doAdd('rows', 'selection')}>
-                Rows — at selection
-              </button>
-              <button className="gs-add-item" style={menuItemStyle} onClick={() => doAdd('cols', 'selection')}>
-                Cols — at selection
-              </button>
+              <div style={{ height: 1, background: 'var(--vscode-widget-border, rgba(128,128,128,0.35))', margin: '2px 0 5px' }} />
+              {/* Rows first — adding rows is the common case. */}
+              <div style={addSectionLabelStyle}>Rows</div>
+              <div style={addRowStyle}>
+                <button className="gs-add-item" style={addBtnStyle} onClick={() => doAdd('rows', 'end')}>
+                  At end
+                </button>
+                <button className="gs-add-item" style={addBtnStyle} onClick={() => doAdd('rows', 'selection')}>
+                  At selection
+                </button>
+              </div>
+              <div style={{ ...addSectionLabelStyle, paddingTop: 8 }}>Columns</div>
+              <div style={addRowStyle}>
+                <button className="gs-add-item" style={addBtnStyle} onClick={() => doAdd('cols', 'end')}>
+                  At end
+                </button>
+                <button className="gs-add-item" style={addBtnStyle} onClick={() => doAdd('cols', 'selection')}>
+                  At selection
+                </button>
+              </div>
             </div>
           )}
         </div>

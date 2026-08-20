@@ -66,7 +66,7 @@ test('policy options: select, autocomplete, invalid and valid cut-paste', async 
     await ctrl(page, 'z');
     expect(await a3.locator('.gs-cell-rendered').textContent()).toBe('red');
     expect(await b3.locator('.gs-cell-rendered').textContent()).toBe('alpaca');
-    await ctrl(page, 'r');
+    await ctrl(page, 'z', true);
     expect(await a3.locator('.gs-cell-rendered').textContent()).toBe('red');
     expect(await b3.locator('.gs-cell-rendered').textContent()).toBe('');
   }
@@ -84,7 +84,7 @@ test('policy options: select, autocomplete, invalid and valid cut-paste', async 
     await ctrl(page, 'z');
     expect(await a8.locator('.gs-cell-rendered').textContent()).toBe('');
     expect(await b8.locator('.gs-cell-rendered').textContent()).toBe('green');
-    await ctrl(page, 'r');
+    await ctrl(page, 'z', true);
     expect(await a8.locator('.gs-cell-rendered').textContent()).toBe('green');
     expect(await b8.locator('.gs-cell-rendered').textContent()).toBe('');
   }

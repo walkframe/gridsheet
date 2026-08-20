@@ -30,6 +30,7 @@ export {
   // Sheet
   Sheet,
   toValueMatrix,
+  toValueMatrixAsync,
   toValueObject,
   toValueRows,
   toValueCols,
@@ -132,11 +133,15 @@ export { GridSheet, createSheetRef, useSheetRef, createStoreRef, useStoreRef } f
 export { updateSheet } from './store/actions';
 export { PluginBase, useInitialPluginContext, usePluginContext } from './components/PluginBase';
 export { MenuItem, MenuDivider } from './components/MenuItem';
+export { ProgressOverlay, type ProgressOverlayProps } from './components/ProgressOverlay';
+// Injects the grid stylesheet (idempotent). GridSheet calls it on mount; export it so an app
+// can inject early — e.g. to style a ProgressOverlay shown before any GridSheet is rendered.
+export { embedStyle } from '@gridsheet/web';
 export { useBook } from './lib/hooks';
 export type { Dispatcher } from './store';
 export { CheckboxPolicyMixin } from './policy/checkbox';
 
-export type { Props, StoreType, SheetHandle, StoreHandle, OptionsType } from './types';
+export type { Props, StoreType, SheetHandle, StoreHandle, OptionsType, LoadingState } from './types';
 
 export { userActions } from './store/actions';
 export { clip, sheet2csv } from './lib/clipboard';

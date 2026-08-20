@@ -1,7 +1,9 @@
 import {
   Sheet,
   createRegistry,
+  buildInitialCells,
   toValueMatrix,
+  toValueMatrixAsync,
   Lexer,
   BaseFunctionAsync,
   type FunctionArgumentDefinition,
@@ -139,5 +141,92 @@ describe('headless formula resolution (no UI)', () => {
     await sheet.waitForPending();
     const matrix = toValueMatrix(sheet, { area: { top: 1, left: 2, bottom: 1, right: 2 } });
     expect(matrix[0][0]).toBe('(unresolved)');
+  });
+
+  // Root fix: an async function with autoSpilling=true returns a plain Promise<matrix>; the engine
+  // must wrap the RESOLVED matrix in a Spilling (see __base.ts _main), NOT the Promise itself.
+  // Before the fix, autoSpilling wrapped the Promise (`new Spilling(promise)`), which never spilled —
+  // async spill functions had to construct the Spilling by hand. This locks in the flag path.
+  it('spills an async autoSpilling function across adjacent cells', async () => {
+    class AsyncSpill extends BaseFunctionAsync {
+      example = 'ASPILL("z")';
+      description = 'Async function that spills a 1x3 row.';
+      category: FunctionCategory = 'other';
+      defs: FunctionArgumentDefinition[] = [{ name: 'seed', description: 'seed', acceptedTypes: ['string'] }];
+      protected broadcastDisabled = true;
+      protected autoSpilling = true;
+      protected async main(seed: any): Promise<any[][]> {
+        return [[`${seed}-a`, `${seed}-b`, `${seed}-c`]];
+      }
+    }
+    const registry = createRegistry({ additionalFunctions: { aspill: AsyncSpill as any } });
+    // Ensure B..D exist so the 1×3 spill has room; otherwise spill targets are out of bounds.
+    const sheet = headlessSheet(
+      registry,
+      buildInitialCells({
+        cells: { A1: { value: 'z' }, B1: { value: '=ASPILL(A1)' } },
+        ensured: { numRows: 1, numCols: 4 },
+      }),
+    );
+    sheet.resolveAll();
+    await sheet.waitForPending();
+    // Reading after the async settles solves B1 from the cached Spilling and spills it into B1:D1.
+    const matrix = toValueMatrix(sheet, { area: { top: 1, left: 2, bottom: 1, right: 4 } });
+    expect(matrix[0]).toEqual(['z-a', 'z-b', 'z-c']);
+  });
+});
+
+describe('toValueMatrixAsync (non-blocking, progress-reporting export)', () => {
+  const makeSheet = (rows: number, cols: number) => {
+    const matrix = Array.from({ length: rows }, (_, y) =>
+      Array.from({ length: cols }, (_, x) => `c${y}_${x}`),
+    );
+    const cells = buildInitialCells({
+      cells: {},
+      matrices: { A1: matrix },
+      flattenAs: 'value',
+      ensured: { numRows: rows, numCols: cols },
+    });
+    const sheet = new Sheet({ name: 'Async', registry: createRegistry(), eager: false });
+    sheet.initialize(cells);
+    sheet.setTotalSize();
+    return sheet;
+  };
+
+  it('returns the same matrix as the synchronous toValueMatrix', async () => {
+    const sync = toValueMatrix(makeSheet(50, 8), { resolution: 'RAW' });
+    const async = await toValueMatrixAsync(makeSheet(50, 8), { resolution: 'RAW' });
+    expect(async).toEqual(sync);
+  });
+
+  it('reports monotonic progress that reaches 100% (done === total)', async () => {
+    const sheet = makeSheet(400, 4);
+    const seen: { done: number; total: number }[] = [];
+    // frameBudgetMs: 0 forces a yield after (almost) every row so progress ticks fire.
+    await toValueMatrixAsync(sheet, {
+      resolution: 'RAW',
+      frameBudgetMs: 0,
+      onProgress: (p) => seen.push(p),
+    });
+    expect(seen.length).toBeGreaterThan(1);
+    for (let i = 1; i < seen.length; i++) {
+      expect(seen[i].done).toBeGreaterThanOrEqual(seen[i - 1].done);
+    }
+    const last = seen[seen.length - 1];
+    expect(last.done).toBe(last.total);
+    expect(last.total).toBe(400);
+  });
+
+  it('yields between chunks via the injected yieldControl', async () => {
+    let yields = 0;
+    await toValueMatrixAsync(makeSheet(200, 4), {
+      resolution: 'RAW',
+      frameBudgetMs: 0,
+      yieldControl: () => {
+        yields++;
+        return Promise.resolve();
+      },
+    });
+    expect(yields).toBeGreaterThan(0);
   });
 });

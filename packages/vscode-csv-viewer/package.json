@@ -1,7 +1,7 @@
 {
-  "name": "gridsheet-csv-viewer",
-  "displayName": "GridSheet CSV/TSV Viewer",
-  "description": "Open CSV and TSV files in an interactive GridSheet grid.",
+  "name": "csv-gridsheet",
+  "displayName": "CSV Spreadsheet — GridSheet",
+  "description": "Open CSV/TSV files as an editable spreadsheet grid with formulas — powered by GridSheet.",
   "version": "0.1.0",
   "publisher": "walkframe",
   "private": true,
@@ -18,8 +18,11 @@
     "csv",
     "tsv",
     "viewer",
+    "editor",
     "grid",
     "spreadsheet",
+    "formula",
+    "excel",
     "gridsheet"
   ],
   "activationEvents": [],
@@ -28,7 +31,7 @@
     "customEditors": [
       {
         "viewType": "gridsheet.csv",
-        "displayName": "GridSheet CSV Viewer",
+        "displayName": "CSV Spreadsheet (GridSheet)",
         "selector": [
           {
             "filenamePattern": "*.csv"
@@ -38,7 +41,7 @@
       },
       {
         "viewType": "gridsheet.tsv",
-        "displayName": "GridSheet TSV Viewer",
+        "displayName": "TSV Spreadsheet (GridSheet)",
         "selector": [
           {
             "filenamePattern": "*.tsv"
@@ -56,6 +59,19 @@
         "title": "Open with GridSheet CSV/TSV Viewer",
         "category": "GridSheet",
         "icon": "$(table)"
+      },
+      {
+        "command": "gridsheet.save",
+        "title": "Save Grid",
+        "category": "GridSheet"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "gridsheet.save",
+        "key": "ctrl+s",
+        "mac": "cmd+s",
+        "when": "activeCustomEditorId == 'gridsheet.csv' || activeCustomEditorId == 'gridsheet.tsv'"
       }
     ],
     "menus": {
@@ -90,6 +106,34 @@
           "default": true,
           "markdownDescription": "When the grid saves, write formula **results** (`=A1+B1` → `30`) instead of the formula source. On (default) bakes computed values — including resolved `=CLAUDE()` / `=CODEX()` answers — into the file; off keeps the formula text so it recomputes on reopen. Only affects files that contain formulas. (Applies to grids opened after the change.)"
         },
+        "gridsheet.viewer.dateFormats": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Extra **date display formats** added to a column's **Format → Date** submenu, on top of the built-ins. Each entry is a [Day.js format pattern](https://day.js.org/docs/en/display/format) (e.g. `YYYY.MM.DD`, `D MMM YYYY`, `ddd, MMM D`). Formatting is display-only — the value written back to the file stays as the original text. (Applies to grids opened after the change.)"
+        },
+        "gridsheet.viewer.parseNumber": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Interpret numeric-looking cells as **numbers** (enables numeric sort/filter). Round-trip-safe: a cell is only treated as a number when it serializes back identically, so `1234`/`12.5` become numbers while `007`, `12.50`, `1e3` and oversized integers stay as text. Never changes what's written on save. (Applies to grids opened after the change.)"
+        },
+        "gridsheet.viewer.parseDate": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Interpret date-looking cells as **dates** (enables chronological sort/filter). ⚠️ Coercing a date changes how it is written back on save (e.g. normalized to an ISO date), so this is **off by default** — leave it off to keep the file's date text byte-for-byte, and use a column's **Format → Date** for display only. (Applies to grids opened after the change.)"
+        },
+        "gridsheet.viewer.parseTime": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Interpret time-looking cells as **times**. ⚠️ Like `#gridsheet.viewer.parseDate#`, coercing changes the value written back on save, so it is **off by default**. (Applies to grids opened after the change.)"
+        },
+        "gridsheet.viewer.parseBool": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Interpret `true`/`false` cells as **booleans**. ⚠️ Coercing normalizes the text (e.g. `true` → `TRUE`) when written back on save, so it is **off by default**. (Applies to grids opened after the change.)"
+        },
         "gridsheet.ai.workingDirectory": {
           "type": "string",
           "default": "",
@@ -99,7 +143,26 @@
           "type": "integer",
           "default": 100,
           "minimum": 0,
-          "markdownDescription": "Maximum number of cells resolved per CLI call. Cells that evaluate together are grouped by provider + kind, then split into chunks of this size (run sequentially). Larger = fewer calls but bigger prompts (risk of context limits, and one failure affects more cells); smaller = more calls but better isolation. `0` = no limit (one call per group)."
+          "markdownDescription": "Maximum number of cells resolved per CLI call. Cells that evaluate together are grouped by provider + kind, then split into chunks of this size (run sequentially). Larger = fewer calls but bigger prompts (risk of context limits, and one failure affects more cells); smaller = more calls but better isolation. `0` = no limit (one call per group). For **custom** functions (`#gridsheet.ai.custom#`) this is the max number run **concurrently**, since each cell is its own process."
+        },
+        "gridsheet.ai.alias": {
+          "type": "object",
+          "default": {},
+          "markdownDescription": "Give a built-in AI a function name of your own, keyed by **function name** → built-in. `\"AI\": \"claude\"` adds `=AI(prompt, context…)` backed by Claude (same arguments and schema-typed output as `=CLAUDE()`). Use a typed variant to get a guaranteed boolean/number under your name: `\"CHECK\": \"claude.bool\"`, `\"SCORE\": \"codex.number\"`. Names are case-insensitive; built-in `=CLAUDE`/`=CODEX` stay available. (Applies to grids opened after the change.)",
+          "additionalProperties": {
+            "type": "string",
+            "enum": ["claude", "codex", "claude.bool", "claude.number", "codex.bool", "codex.number"],
+            "markdownDescription": "The built-in to alias (optionally a typed `.bool`/`.number` variant)."
+          }
+        },
+        "gridsheet.ai.custom": {
+          "type": "object",
+          "default": {},
+          "markdownDescription": "Define AI functions backed by any CLI (Gemini, Ollama, a local script, …), keyed by **function name** → command. `\"GEMINI\": \"gemini -p\"` adds `=GEMINI(prompt, context…)` (same arguments as `=CLAUDE()`). The serialized prompt + context is sent on the command's **stdin**; its **stdout** (trimmed) is the result. Text output only (no schema → for a typed boolean/number, alias a built-in via `#gridsheet.ai.alias#`); one process per cell (`#gridsheet.ai.batchSize#` caps concurrency); runs in `#gridsheet.ai.workingDirectory#` with your environment intact. Names are case-insensitive. (Applies to grids opened after the change.)",
+          "additionalProperties": {
+            "type": "string",
+            "markdownDescription": "Command to run, with its flags (e.g. `gemini -p`, `ollama run llama3`). The prompt is piped to stdin — do not put it here. Quotes are respected."
+          }
         },
         "gridsheet.ai.claude.path": {
           "type": "string",

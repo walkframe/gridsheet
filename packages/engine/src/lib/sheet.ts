@@ -193,6 +193,22 @@ type InternalToValueMatrixProps = {
   at?: Id;
 };
 
+type _UpdateCtx = {
+  partial: boolean;
+  updateChangedTime: boolean;
+  ignoreFields: CellField[];
+  operator: OperatorType;
+  op: OperationType;
+  formulaIdentify: boolean;
+  changedTime: number;
+};
+
+type _UpdateAccum = {
+  diffBefore: CellsByIdType;
+  diffAfter: CellsByIdType;
+  changedAddresses: Address[];
+};
+
 export class Sheet implements UserSheet {
   /** @internal */
   public __gsType = 'Sheet';
@@ -256,10 +272,26 @@ export class Sheet implements UserSheet {
   private idMatrix: IdMatrix;
   /** @internal */
   private addressCaches: Map<Id, Address> = new Map();
+  /**
+   * @internal — scan watermark for getPointById misses: the row index up to which every
+   * materialized row has been scanned through its LAST column and fully seeded into
+   * addressCaches. A miss resumes from here instead of rescanning from 0. Reset to 0
+   * whenever addressCaches is cleared/replaced. The row where a target is found is NOT
+   * counted (its later columns stay unseeded), so it is re-scanned on the next miss.
+   */
+  private _addressCacheWatermark = 0;
   /** @internal */
   private lastChangedAddresses: Address[] = [];
   /** @internal — stored cell defaults from initialize() for lazy cell resolution */
   private _initCells: CellsByAddressType | null = null;
+  /**
+   * @internal — whether _initCells holds any explicit DATA cell (y>=1, x>=1). When false
+   * (e.g. the matrices/large-dataset path, which only carries headers + defaults), the
+   * per-cell _initCells lookup in peekRawValue is skipped entirely — that lookup builds a
+   * fresh address string per scanned cell, and a full-column data-edge scan (Ctrl+Shift+↓)
+   * over a million lazy rows would otherwise churn ~1M throwaway strings on every keypress.
+   */
+  private _hasExplicitCells = false;
   /** @internal — default cell config from cells['default'] / cells['*'] */
   private _common: CellType | undefined;
   /** @internal — default column config from cells['defaultCol'] / cells['*C'] */
@@ -890,6 +922,26 @@ export class Sheet implements UserSheet {
     this._commonCol = cells?.[DEFAULT_COL_KEY];
     this._commonRow = cells?.[DEFAULT_ROW_KEY];
     this._initCells = cells;
+    // Detect explicit data cells once so peekRawValue can skip its per-cell address build
+    // when there are none (see _hasExplicitCells). A range key (contains ':') or any single
+    // address with a row >= 1 counts; DEFAULT/header (row 0) keys do not.
+    const userKeys: string[] = (cells as any)?.__userKeys ?? (cells ? Object.keys(cells) : []);
+    this._hasExplicitCells = userKeys.some((k) => {
+      if (k === DEFAULT_KEY || k === DEFAULT_COL_KEY || k === DEFAULT_ROW_KEY) {
+        return false;
+      }
+      // Only a cell that actually carries a `value` can be returned by peekRawValue; empty
+      // placeholders (e.g. the ensured bottom-right corner buildInitialCells inserts) don't
+      // count and must not force the per-cell address build back on.
+      const c = (cells as any)?.[k];
+      if (c == null || !('value' in c)) {
+        return false;
+      }
+      if (k.includes(':')) {
+        return true;
+      }
+      return /^\$?[A-Z]+\$?[1-9]/.test(k);
+    });
 
     // Store deferred matrices for lazy cell value lookup
     const deferredMatrices = (cells as any).__matrices;
@@ -1322,24 +1374,51 @@ export class Sheet implements UserSheet {
       return { y: p.y + slideY, x: p.x + slideX, absCol, absRow };
     }
 
-    this._materializeIdMatrix();
-    for (let y = 0; y < this.idMatrix.length; y++) {
-      const ids = this.idMatrix[y];
-      for (let x = 0; x < ids.length; x++) {
-        const existing = ids[x];
-        const address = p2a({ y, x });
-        this.addressCaches.set(existing, address);
-        if (existing === id) {
-          return {
-            y: y + slideY,
-            x: x + slideX,
-            absCol,
-            absRow,
-          };
-        }
+    // Cache miss. Resume the scan from the watermark rather than rescanning from 0, and
+    // skip un-materialized rows — a valid Id only ever lives in a materialized row, and
+    // such rows self-seed via _ensureIdRow when they are materialized later.
+    const startWatermark = this._addressCacheWatermark;
+    const hit = this._scanForIdFrom(startWatermark, id);
+    if (hit != null) {
+      return { y: hit.y + slideY, x: hit.x + slideX, absCol, absRow };
+    }
+    // Not found from the watermark. It may have advanced past a row that was inserted /
+    // shifted after the last full seed (structural ops clear the cache only at their
+    // terminal refresh), so fall back to a full rescan from 0 — this also re-seeds and
+    // corrects any stale entries below the old watermark. Skipped when already at 0.
+    if (startWatermark > 0) {
+      const retry = this._scanForIdFrom(0, id);
+      if (retry != null) {
+        return { y: retry.y + slideY, x: retry.x + slideX, absCol, absRow };
       }
     }
     return { y: -1, x: -1, absCol, absRow };
+  }
+
+  /**
+   * Scan materialized rows from `fromY`, seeding addressCaches as it goes. Advances the
+   * watermark past every row scanned through its last column; if `id` is found mid-row,
+   * leaves the watermark at that (still partially seeded) row. Returns the point or null.
+   * @internal
+   */
+  private _scanForIdFrom(fromY: number, id: Id): PointType | null {
+    let y = fromY;
+    for (; y < this.idMatrix.length; y++) {
+      const ids = this.idMatrix[y];
+      if (ids == null) {
+        continue;
+      }
+      for (let x = 0; x < ids.length; x++) {
+        const existing = ids[x];
+        this.addressCaches.set(existing, p2a({ y, x }));
+        if (existing === id) {
+          this._addressCacheWatermark = y;
+          return { y, x };
+        }
+      }
+    }
+    this._addressCacheWatermark = y;
+    return null;
   }
 
   /** @internal */
@@ -1351,6 +1430,7 @@ export class Sheet implements UserSheet {
   /** @internal */
   public clearAddressCaches() {
     this.addressCaches.clear();
+    this._addressCacheWatermark = 0;
   }
 
   /** @internal */
@@ -1362,6 +1442,8 @@ export class Sheet implements UserSheet {
         this.addressCaches.set(row[x], p2a({ y, x }));
       }
     }
+    // Every materialized row is now seeded through its last column.
+    this._addressCacheWatermark = this.idMatrix.length;
   }
 
   /** @internal */
@@ -1397,6 +1479,52 @@ export class Sheet implements UserSheet {
     return { ...cell, value } as CellType;
   }
 
+  /**
+   * Cheap raw-value peek that does NOT materialize the cell. Returns the populated
+   * value if the cell already exists, otherwise reads straight from the deferred
+   * matrix / init cells. Lets a full-column/row scan (e.g. Ctrl+Shift+arrow's
+   * "select to data edge") stay O(1) per cell instead of stacking every cell it
+   * walks over — a million-row scan was ~1.9s (and materialized the whole column)
+   * purely because the empty-check went through getCell.
+   */
+  public peekRawValue({ y, x }: PointType): any {
+    // Already-materialized (or user-edited) cell: registry.data is authoritative.
+    const idRow = this.idMatrix[y];
+    if (idRow != null) {
+      const id = idRow[x];
+      const cell = id != null ? this.registry.data[id] : undefined;
+      if (cell != null) {
+        return cell.value;
+      }
+    }
+    if (y <= 0 || x <= 0) {
+      return undefined;
+    }
+    // An explicit init cell (non-matrix path) wins over the matrix. Skipped entirely when
+    // the sheet has no explicit data cells (the common large-dataset/matrices case), since
+    // building this address string per scanned cell dominates a full-column scan's cost.
+    if (this._hasExplicitCells) {
+      const address = `${this._colLetters[x] || x2c(x)}${y2r(y)}`;
+      const explicit = this._initCells?.[address];
+      if (explicit != null && 'value' in explicit) {
+        return explicit.value;
+      }
+    }
+    // Deferred matrix (large-dataset path).
+    for (const { baseY, baseX, matrix } of this._matrixByBase) {
+      const my = y - baseY;
+      const mx = x - baseX;
+      if (my >= 0 && my < matrix.length) {
+        const row = matrix[my];
+        if (mx >= 0 && mx < row.length) {
+          const val = row[mx];
+          return this._initFlattenAs ? val : (val as any)?.value;
+        }
+      }
+    }
+    return undefined;
+  }
+
   /** @internal */
   public get numRows() {
     const { top, bottom } = this.area;
@@ -1421,6 +1549,43 @@ export class Sheet implements UserSheet {
     return this.area.right;
   }
 
+  /**
+   * Fill one matrix row (y) from cell values. Shared by the sync and async
+   * _toValueMatrix so the two never diverge. Per-row (not per-cell) call, so the
+   * indirection is negligible even at a million cells. @internal
+   */
+  private _fillValueRow(
+    matrix: any[][],
+    y: number,
+    {
+      top,
+      left,
+      right,
+      at,
+      resolution = 'RESOLVED',
+      raise = false,
+      filter = noFilter,
+      asScalar = false,
+    }: InternalToValueMatrixProps & { top: number; left: number; right: number },
+  ) {
+    for (let x = left; x <= right; x++) {
+      const id = this.getId({ y, x });
+      // Only throw a circular-ref if the `at` cell is from this sheet.
+      if (at === id) {
+        throw new FormulaError('#REF!', 'References are circulating.');
+      }
+      const cell = this.getCell({ y, x }, { resolution, raise }) ?? {};
+      if (filter(cell)) {
+        let fieldValue = cell.value;
+        if (asScalar) {
+          const policy = this.getPolicy({ y, x });
+          fieldValue = policy.toScalar({ value: cell.value, cell, sheet: this, point: { y, x } });
+        }
+        matrix[y - top][x - left] = fieldValue;
+      }
+    }
+  }
+
   /** @internal */
   public _toValueMatrix({
     area,
@@ -1432,25 +1597,54 @@ export class Sheet implements UserSheet {
   }: InternalToValueMatrixProps = {}) {
     const { top, left, bottom, right } = area ?? this.area;
     const matrix = createMatrix(bottom - top + 1, right - left + 1);
-
-    // Normalize `at` check to ensure we only throw circular ref if the `at` is from this sheet
     for (let y = top; y <= bottom; y++) {
-      for (let x = left; x <= right; x++) {
-        const id = this.getId({ y, x });
-        if (at === id) {
-          throw new FormulaError('#REF!', 'References are circulating.');
-        }
-        const cell = this.getCell({ y, x }, { resolution, raise }) ?? {};
-        if (filter(cell)) {
-          let fieldValue = cell.value;
-          if (asScalar) {
-            const policy = this.getPolicy({ y, x });
-            fieldValue = policy.toScalar({ value: cell.value, cell, sheet: this, point: { y, x } });
-          }
-          matrix[y - top][x - left] = fieldValue;
-        }
+      this._fillValueRow(matrix, y, { top, left, right, at, resolution, raise, filter, asScalar });
+    }
+    return matrix;
+  }
+
+  /**
+   * Async, time-sliced variant of _toValueMatrix. Reading every cell lazily
+   * materializes the whole sheet (~hundreds of ms at a million cells), so doing
+   * it synchronously freezes the host. This processes rows until `frameBudgetMs`
+   * elapses, then reports progress and yields — leaving the UI responsive and
+   * letting the caller paint a progress indicator. The caller supplies
+   * `yieldControl` (a macrotask/rAF yielder so the host actually paints between
+   * chunks); the default microtask only cooperates, which suffices for headless
+   * callers that just want to avoid monopolizing the loop. @internal
+   */
+  public async _toValueMatrixAsync({
+    area,
+    at,
+    resolution = 'RESOLVED',
+    raise = false,
+    filter = noFilter,
+    asScalar = false,
+    frameBudgetMs = 12,
+    onProgress,
+    yieldControl,
+  }: InternalToValueMatrixProps & {
+    frameBudgetMs?: number;
+    onProgress?: (progress: { done: number; total: number }) => void;
+    yieldControl?: () => Promise<void> | void;
+  } = {}): Promise<any[][]> {
+    const { top, left, bottom, right } = area ?? this.area;
+    const totalRows = Math.max(0, bottom - top + 1);
+    const matrix = createMatrix(totalRows, right - left + 1);
+    const doYield = yieldControl ?? (() => Promise.resolve());
+    onProgress?.({ done: 0, total: totalRows });
+    let lastYield = Date.now();
+    let done = 0;
+    for (let y = top; y <= bottom; y++) {
+      this._fillValueRow(matrix, y, { top, left, right, at, resolution, raise, filter, asScalar });
+      done++;
+      if (Date.now() - lastYield >= frameBudgetMs) {
+        onProgress?.({ done, total: totalRows });
+        await doYield();
+        lastYield = Date.now();
       }
     }
+    onProgress?.({ done: totalRows, total: totalRows });
     return matrix;
   }
 
@@ -1886,15 +2080,8 @@ export class Sheet implements UserSheet {
     return { diffBefore, diffAfter: {} };
   }
 
-  public copy({
-    srcSheet = this,
-    src,
-    dst,
-    onlyValue = false,
-    operator = 'SYSTEM',
-    undoReflection,
-    redoReflection,
-  }: MoveProps & { onlyValue?: boolean }) {
+  /** Build the paste (copy) diff without applying it. Shared by copy()/copyAsync(). @internal */
+  private _buildCopyDiff({ srcSheet = this, src, dst, onlyValue = false }: MoveProps & { onlyValue?: boolean }): CellsByAddressType {
     const isXSheet = srcSheet !== this;
     const { top: topFrom, left: leftFrom, bottom: bottomFrom, right: rightFrom } = src;
     const { top: topTo, left: leftTo, bottom: bottomTo, right: rightTo } = dst;
@@ -1970,14 +2157,174 @@ export class Sheet implements UserSheet {
         diff[address] = { ...cell, value };
       }
     }
+    return diff;
+  }
+
+  public copy(props: MoveProps & { onlyValue?: boolean }) {
+    const { operator = 'SYSTEM', undoReflection, redoReflection } = props;
     return this.update({
-      diff,
+      diff: this._buildCopyDiff(props),
       partial: false,
       operator,
       operation: operation.Copy,
       undoReflection,
       redoReflection,
     });
+  }
+
+  /**
+   * Async, progress-reporting counterpart to {@link copy} (large paste). Builds AND
+   * applies the paste one dst-row-chunk at a time — never materializing the whole
+   * diff — so progress advances throughout and peak memory stays to a chunk (the
+   * full-diff build was what stalled a 2-million-cell paste at 0%). The source region
+   * is snapshotted first so an overlapping paste (e.g. the copied cell is inside the
+   * target) never reads an already-pasted value. @internal
+   */
+  public async copyAsync(
+    props: MoveProps & { onlyValue?: boolean },
+    opts: {
+      onProgress?: (progress: { done: number; total: number }) => void;
+      yieldControl?: () => Promise<void> | void;
+      frameBudgetMs?: number;
+    },
+  ): Promise<Sheet> {
+    const { srcSheet = this, src, dst, onlyValue = false, operator = 'SYSTEM', undoReflection, redoReflection } = props;
+    const { onProgress, yieldControl, frameBudgetMs = 12 } = opts;
+    const doYield = yieldControl ?? (() => Promise.resolve());
+
+    const isXSheet = srcSheet !== this;
+    const { top: topFrom, left: leftFrom, bottom: bottomFrom, right: rightFrom } = src;
+    const { top: topTo, left: leftTo, bottom: bottomTo, right: rightTo } = dst;
+    const changedTime = Date.now();
+
+    const srcVisibleRows: number[] = [];
+    for (let y = topFrom; y <= bottomFrom; y++) {
+      if (!srcSheet.isRowFiltered(y)) {
+        srcVisibleRows.push(y);
+      }
+    }
+    const srcNumVisibleRows = srcVisibleRows.length;
+    const srcNumCols = rightFrom - leftFrom + 1;
+    const dstNumCols = rightTo - leftTo + 1;
+
+    // Snapshot the (small) source region up front — safe against overlapping paste.
+    const srcCells: (CellType | null)[][] = [];
+    const srcPolicies: PolicyType[][] = [];
+    for (let si = 0; si < srcNumVisibleRows; si++) {
+      const fromY = srcVisibleRows[si];
+      const cellRow: (CellType | null)[] = [];
+      const polRow: PolicyType[] = [];
+      for (let sc = 0; sc < srcNumCols; sc++) {
+        const fromX = leftFrom + sc;
+        cellRow.push(srcSheet.getCell({ y: fromY, x: fromX }, { resolution: 'SYSTEM' }) ?? null);
+        polRow.push(srcSheet.getPolicy({ y: fromY, x: fromX }));
+      }
+      srcCells.push(cellRow);
+      srcPolicies.push(polRow);
+    }
+
+    const out: _UpdateAccum = { diffBefore: {}, diffAfter: {}, changedAddresses: [] };
+    const ctx: _UpdateCtx = {
+      partial: false,
+      updateChangedTime: true,
+      ignoreFields: ['label'],
+      operator,
+      op: operation.Copy,
+      formulaIdentify: false, // the formula is already resolved (with slide) in the loop below
+      changedTime: Date.now(),
+    };
+    // Iterate destination rows directly (skipping filtered rows inline) instead of
+    // precomputing a visible-row list — that list-building called isRowFiltered() for
+    // every row, materializing a million row headers synchronously and stalling at 0%.
+    // When nothing is filtered, skip the per-row check entirely.
+    const noFilters = this._filteredRows.size === 0;
+    const dstBottom = Math.min(bottomTo, this.numRows);
+    const total = Math.max(0, dstBottom - topTo + 1);
+    let resized = false;
+    let lastYield = Date.now();
+    let visibleDstIndex = 0;
+    let done = 0;
+    onProgress?.({ done: 0, total });
+
+    for (let toY = topTo; toY <= dstBottom; toY++) {
+      done++;
+      if (!noFilters && this.isRowFiltered(toY)) {
+        if (Date.now() - lastYield >= frameBudgetMs) {
+          onProgress?.({ done, total });
+          await doYield();
+          lastYield = Date.now();
+        }
+        continue;
+      }
+      const si = visibleDstIndex % srcNumVisibleRows;
+      const fromY = srcVisibleRows[si];
+      visibleDstIndex++;
+      for (let j = 0; j <= dstNumCols - 1; j++) {
+        const toX = leftTo + j;
+        if (toX > this.numCols) {
+          continue;
+        }
+        const sc = j % srcNumCols;
+        const fromX = leftFrom + sc;
+        const slideY = isXSheet ? 0 : toY - fromY;
+        const slideX = isXSheet ? 0 : toX - fromX;
+        const srcCell = srcCells[si][sc];
+        const dstPoint = { y: toY, x: toX };
+        const dstId = this.getId(dstPoint);
+        // Fetch the dst cell ONCE and derive its policy from it — getPolicy() would
+        // otherwise getCell() the same point again (a second populate per cell).
+        const dstCell = this.registry.data[dstId] ?? this.getCell(dstPoint, { resolution: 'SYSTEM' });
+        const dstPolicy =
+          dstCell?.policy == null ? this.defaultPolicy : (this.policies[dstCell.policy] ?? this.defaultPolicy);
+        const srcPolicy = srcPolicies[si][sc];
+        const isSrcWinner = srcPolicy.priority > dstPolicy.priority;
+        this.clearDependencies(dstId);
+        // Resolve the formula (with the paste offset) here; ctx.formulaIdentify is off,
+        // so _applyUpdateCell won't re-run processFormula on the already-resolved value.
+        // Skip processFormula entirely for non-formula values (the common bulk case) —
+        // it would only tokenize a literal and hand it straight back.
+        const srcValue = srcCell?.value;
+        const isFormula = typeof srcValue === 'string' && srcValue.charCodeAt(0) === 61; // '='
+        const value =
+          isFormula && (srcCell?.formulaEnabled ?? true)
+            ? this.processFormula(srcValue, { dependency: dstId, slideY, slideX })
+            : srcValue;
+        const dstSys = this.registry.systems[dstId];
+        if (dstSys != null) {
+          dstSys.changedTime = changedTime;
+        }
+        // Build the final cell in one spread (throwaway → _applyUpdateCell owns it).
+        const next: CellType = { ...srcCell, value, policy: isSrcWinner ? srcCell?.policy : dstCell?.policy };
+        if (onlyValue) {
+          next.style = dstCell?.style;
+          next.justifyContent = dstCell?.justifyContent;
+          next.alignItems = dstCell?.alignItems;
+        }
+        if (this._applyUpdateCell(dstPoint, dstId, p2a(dstPoint), next, ctx, out, true)) {
+          resized = true;
+        }
+      }
+      if (Date.now() - lastYield >= frameBudgetMs) {
+        onProgress?.({ done, total });
+        await doYield();
+        lastYield = Date.now();
+      }
+    }
+    this.lastChangedAddresses = out.changedAddresses;
+    onProgress?.({ done: total, total });
+
+    this._pushHistory({
+      applyed: true,
+      operation: 'UPDATE',
+      srcSheetId: this.id,
+      dstSheetId: this.id,
+      undoReflection,
+      redoReflection,
+      diffBefore: out.diffBefore,
+      diffAfter: out.diffAfter,
+      partial: false,
+    });
+    return this.refresh(false, resized);
   }
 
   public getPolicy(point: PointType): PolicyType {
@@ -2006,98 +2353,121 @@ export class Sheet implements UserSheet {
     operation?: OperationType;
     formulaIdentify?: boolean;
   }) {
-    const diffBefore: CellsByIdType = {};
-    const diffAfter: CellsByIdType = {};
-    const changedAddresses: Address[] = [];
-    const changedTime = Date.now();
+    const out: _UpdateAccum = { diffBefore: {}, diffAfter: {}, changedAddresses: [] };
+    const ctx: _UpdateCtx = {
+      partial,
+      updateChangedTime,
+      ignoreFields,
+      operator,
+      op,
+      formulaIdentify,
+      changedTime: Date.now(),
+    };
 
     let resized = false;
-    Object.keys(diff).forEach((address) => {
+    for (const address of Object.keys(diff)) {
       const point = a2p(address);
-      const id = this.getId(point);
-      const current = this.registry.data[id];
-      if (operator === 'USER' && operation.hasOperation(current?.prevention, operation.Update)) {
-        return;
-      }
-
-      let next: Record<string, any> = { ...diff[address] };
-
-      if (formulaIdentify && 'value' in next) {
-        const formulaEnabled = next.formulaEnabled ?? current?.formulaEnabled ?? true;
-        if (formulaEnabled) {
-          this.clearDependencies(id);
-          next.value = this.processFormula(next.value, { dependency: id });
-        }
-      }
-      ignoreFields.forEach((key) => {
-        next[key] = current?.[key];
-      });
-      if (operator === 'USER' && operation.hasOperation(current?.prevention, operation.Write)) {
-        delete next.value;
-      }
-      if (operator === 'USER' && operation.hasOperation(current?.prevention, operation.Style)) {
-        delete next?.style?.justifyContent;
-        delete next?.style?.alignItems;
-      }
-      if (operator === 'USER' && operation.hasOperation(current?.prevention, operation.Resize)) {
-        delete next?.style?.width;
-        delete next?.style?.height;
-      }
-      if (next.width != null || next.height != null) {
+      if (this._applyUpdateCell(point, this.getId(point), address, diff[address], ctx, out)) {
         resized = true;
       }
-      diffBefore[id] = current ?? {};
-
-      const policy = this.policies[current?.policy || DEFAULT_POLICY_NAME] ?? this.defaultPolicy;
-      const p = policy.select({
-        sheet: this,
-        point,
-        next,
-        current,
-        operation: op,
-      });
-      next = { ...p };
-      if (updateChangedTime) {
-        const sys = this.registry.systems[id];
-        if (sys != null) {
-          sys.changedTime = changedTime;
-        }
-      }
-      if (partial) {
-        const merged = { ...current, ...next };
-        this.registry.data[id] = merged;
-        diffAfter[id] = merged;
-      } else {
-        this.registry.data[id] = next;
-        diffAfter[id] = next;
-      }
-      // Keep the row-height override cache in sync when a row header's height
-      // changes (e.g. a resize goes through this partial-update path, not the
-      // stacking path that seeds the cache). getOffsetTop() / setTotalSize() read
-      // this cache for vertical positioning, so a stale entry leaves the
-      // selection/editor overlay drifting from the actual (correctly sized) cells.
-      // Columns are unaffected: setTotalSize reads column widths directly.
-      if (point.x === 0 && point.y >= 1) {
-        const finalH = this.registry.data[id]?.height;
-        const defaultH = this.defaultRowHeight || DEFAULT_HEIGHT;
-        if (finalH != null && finalH !== defaultH) {
-          this._rowHeightOverrides.set(point.y, finalH);
-        } else {
-          this._rowHeightOverrides.delete(point.y);
-        }
-      }
-      changedAddresses.push(address);
-    });
+    }
 
     // Store the changed addresses for retrieval via getLastChangedAddresses()
-    this.lastChangedAddresses = changedAddresses;
+    this.lastChangedAddresses = out.changedAddresses;
 
     //this.clearSolvedCaches();
     return {
-      diffBefore,
-      diffAfter,
+      diffBefore: out.diffBefore,
+      diffAfter: out.diffAfter,
       resized,
     };
+  }
+
+  /**
+   * Apply one diff entry to registry.data, recording undo/redo state into `out`.
+   * Shared by the synchronous `_update` and the chunked `updateAsync` so the two
+   * never diverge. Returns whether this cell triggered a resize. @internal
+   */
+  private _applyUpdateCell(
+    point: PointType,
+    id: Id,
+    address: string,
+    rawNext: any,
+    ctx: _UpdateCtx,
+    out: _UpdateAccum,
+    // When the caller hands us a throwaway object it built, mutate it in place instead
+    // of copying — saves a spread per cell on the bulk paste/fill path.
+    ownNext = false,
+  ): boolean {
+    const current = this.registry.data[id];
+    if (ctx.operator === 'USER' && operation.hasOperation(current?.prevention, operation.Update)) {
+      return false;
+    }
+
+    let next: Record<string, any> = ownNext ? rawNext : { ...rawNext };
+
+    if (ctx.formulaIdentify && 'value' in next) {
+      const formulaEnabled = next.formulaEnabled ?? current?.formulaEnabled ?? true;
+      if (formulaEnabled) {
+        this.clearDependencies(id);
+        next.value = this.processFormula(next.value, { dependency: id });
+      }
+    }
+    ctx.ignoreFields.forEach((key) => {
+      next[key] = current?.[key];
+    });
+    if (ctx.operator === 'USER' && operation.hasOperation(current?.prevention, operation.Write)) {
+      delete next.value;
+    }
+    if (ctx.operator === 'USER' && operation.hasOperation(current?.prevention, operation.Style)) {
+      delete next?.style?.justifyContent;
+      delete next?.style?.alignItems;
+    }
+    if (ctx.operator === 'USER' && operation.hasOperation(current?.prevention, operation.Resize)) {
+      delete next?.style?.width;
+      delete next?.style?.height;
+    }
+    let resized = false;
+    if (next.width != null || next.height != null) {
+      resized = true;
+    }
+    out.diffBefore[id] = current ?? {};
+
+    const policy = this.policies[current?.policy || DEFAULT_POLICY_NAME] ?? this.defaultPolicy;
+    // select() returns `next` unchanged (no select options) or a fresh object; either
+    // is safe to adopt directly — no need to spread-copy it again.
+    next = (policy.select({ sheet: this, point, next, current, operation: ctx.op }) ?? next) as Record<string, any>;
+    if (ctx.updateChangedTime) {
+      const sys = this.registry.systems[id];
+      if (sys != null) {
+        sys.changedTime = ctx.changedTime;
+      }
+    }
+    if (ctx.partial) {
+      const merged = { ...current, ...next };
+      this.registry.data[id] = merged;
+      out.diffAfter[id] = merged;
+    } else {
+      this.registry.data[id] = next;
+      out.diffAfter[id] = next;
+    }
+    // Keep the row-height override cache in sync when a row header's height
+    // changes (e.g. a resize goes through this partial-update path, not the
+    // stacking path that seeds the cache). getOffsetTop() / setTotalSize() read
+    // this cache for vertical positioning, so a stale entry leaves the
+    // selection/editor overlay drifting from the actual (correctly sized) cells.
+    // Columns are unaffected: setTotalSize reads column widths directly.
+    if (point.x === 0 && point.y >= 1) {
+      const finalH = this.registry.data[id]?.height;
+      const defaultH = this.defaultRowHeight || DEFAULT_HEIGHT;
+      if (finalH != null && finalH !== defaultH) {
+        this._rowHeightOverrides.set(point.y, finalH);
+      } else {
+        this._rowHeightOverrides.delete(point.y);
+      }
+    }
+    out.changedAddresses.push(address);
+    return resized;
   }
 
   public update({
@@ -2140,6 +2510,88 @@ export class Sheet implements UserSheet {
         redoReflection,
         diffBefore,
         diffAfter,
+        partial,
+      });
+    }
+    return this.refresh(false, resized);
+  }
+
+  /**
+   * Async, time-sliced counterpart to {@link update}. Applies the diff in chunks,
+   * yielding + reporting progress between them, so a bulk write (fill / paste of
+   * millions of cells) doesn't freeze the host and can drive a progress bar. Pushes
+   * a SINGLE history entry (one undo) and produces the same result as update().
+   * The caller is responsible for blocking other mutations while this runs — the
+   * sheet is in an intermediate state between chunks.
+   */
+  public async updateAsync({
+    diff,
+    partial = true,
+    updateChangedTime = true,
+    historicize = true,
+    operator = 'SYSTEM',
+    operation: op = operation.Update,
+    ignoreFields = ['label'],
+    undoReflection,
+    redoReflection,
+    onProgress,
+    yieldControl,
+    frameBudgetMs = 12,
+  }: {
+    diff: CellsByAddressType;
+    partial?: boolean;
+    updateChangedTime?: boolean;
+    historicize?: boolean;
+    operator?: OperatorType;
+    operation?: OperationType;
+    ignoreFields?: CellField[];
+    undoReflection?: StorePatchType;
+    redoReflection?: StorePatchType;
+    onProgress?: (progress: { done: number; total: number }) => void;
+    yieldControl?: () => Promise<void> | void;
+    frameBudgetMs?: number;
+  }): Promise<Sheet> {
+    const out: _UpdateAccum = { diffBefore: {}, diffAfter: {}, changedAddresses: [] };
+    const ctx: _UpdateCtx = {
+      partial,
+      updateChangedTime,
+      ignoreFields,
+      operator,
+      op,
+      formulaIdentify: true,
+      changedTime: Date.now(),
+    };
+    const keys = Object.keys(diff);
+    const total = keys.length;
+    const doYield = yieldControl ?? (() => Promise.resolve());
+    let resized = false;
+    let lastYield = Date.now();
+    onProgress?.({ done: 0, total });
+    for (let i = 0; i < total; i++) {
+      const address = keys[i];
+      const point = a2p(address);
+      if (this._applyUpdateCell(point, this.getId(point), address, diff[address], ctx, out)) {
+        resized = true;
+      }
+      if (Date.now() - lastYield >= frameBudgetMs) {
+        onProgress?.({ done: i + 1, total });
+        await doYield();
+        lastYield = Date.now();
+      }
+    }
+    this.lastChangedAddresses = out.changedAddresses;
+    onProgress?.({ done: total, total });
+
+    if (historicize) {
+      this._pushHistory({
+        applyed: true,
+        operation: 'UPDATE',
+        srcSheetId: this.id,
+        dstSheetId: this.id,
+        undoReflection,
+        redoReflection,
+        diffBefore: out.diffBefore,
+        diffAfter: out.diffAfter,
         partial,
       });
     }
@@ -2325,6 +2777,7 @@ export class Sheet implements UserSheet {
         right: this.area.right,
       };
       cloned.addressCaches = new Map();
+      cloned._addressCacheWatermark = 0;
       this.registry.onInsertRows({ sheet: cloned, y, numRows });
     }
     return this.refresh(true, true);
@@ -2401,6 +2854,7 @@ export class Sheet implements UserSheet {
         right: this.area.right,
       };
       cloned.addressCaches = new Map();
+      cloned._addressCacheWatermark = 0;
       this.registry.onRemoveRows({ sheet: cloned, ys: ys.reverse() });
     }
     return this.refresh(true, true);
@@ -2476,6 +2930,7 @@ export class Sheet implements UserSheet {
         right: x + numCols - 1,
       };
       cloned.addressCaches = new Map();
+      cloned._addressCacheWatermark = 0;
       this.registry.onInsertCols({ sheet: cloned, x, numCols });
     }
     return this.refresh(true, true);
@@ -2554,6 +3009,7 @@ export class Sheet implements UserSheet {
         right: x + numCols - 1,
       };
       cloned.addressCaches = new Map();
+      cloned._addressCacheWatermark = 0;
       this.registry.onRemoveCols({ sheet: cloned, xs: xs.reverse() });
     }
     return this.refresh(true, true);
@@ -2665,51 +3121,51 @@ export class Sheet implements UserSheet {
   }
 
   /** @internal */
-  private _applyDiff(diff: CellsByIdType = {}, partial = true) {
-    const ids = Object.keys(diff);
-    ids.forEach((id) => {
-      const cell = diff[id] ?? {};
-      let merged: CellType;
-      if (partial) {
-        merged = { ...this.registry.data[id] };
-        (Object.keys(cell) as (keyof CellType)[]).forEach((key) => {
-          if (cell[key] === undefined) {
-            delete merged[key];
-          } else {
-            (merged as any)[key] = cell[key];
-          }
-        });
-      } else {
-        merged = { ...cell };
-      }
-      const sys = this.registry.systems[id];
-      if (sys != null) {
-        sys.changedTime = Date.now();
-      }
-      this.registry.data[id] = merged;
-      this.clearDependencies(id);
-      this.processFormula(merged.value, { dependency: id });
+  /** Apply one undo/redo diff entry to registry.data. Shared by sync/async. @internal */
+  private _applyDiffCell(id: string, cell: CellType, partial: boolean): void {
+    let merged: CellType;
+    if (partial) {
+      merged = { ...this.registry.data[id] };
+      (Object.keys(cell) as (keyof CellType)[]).forEach((key) => {
+        if (cell[key] === undefined) {
+          delete merged[key];
+        } else {
+          (merged as any)[key] = cell[key];
+        }
+      });
+    } else {
+      merged = { ...cell };
+    }
+    const sys = this.registry.systems[id];
+    if (sys != null) {
+      sys.changedTime = Date.now();
+    }
+    this.registry.data[id] = merged;
+    this.clearDependencies(id);
+    this.processFormula(merged.value, { dependency: id });
 
-      // Track row height overrides and filtered state
-      const address = this.addressCaches.get(id);
-      if (address) {
-        const p = a2p(address);
-        if (p.x === 0 && p.y > 0) {
-          const defaultH = this.defaultRowHeight || DEFAULT_HEIGHT;
-          const h = merged.height ?? defaultH;
-          if (h !== defaultH) {
-            this._rowHeightOverrides.set(p.y, h);
-          } else {
-            this._rowHeightOverrides.delete(p.y);
-          }
-          if (merged.filtered) {
-            this._filteredRows.add(p.y);
-          } else {
-            this._filteredRows.delete(p.y);
-          }
+    // Track row height overrides and filtered state
+    const address = this.addressCaches.get(id);
+    if (address) {
+      const p = a2p(address);
+      if (p.x === 0 && p.y > 0) {
+        const defaultH = this.defaultRowHeight || DEFAULT_HEIGHT;
+        const h = merged.height ?? defaultH;
+        if (h !== defaultH) {
+          this._rowHeightOverrides.set(p.y, h);
+        } else {
+          this._rowHeightOverrides.delete(p.y);
+        }
+        if (merged.filtered) {
+          this._filteredRows.add(p.y);
+        } else {
+          this._filteredRows.delete(p.y);
         }
       }
-    });
+    }
+  }
+
+  private _finishApplyDiff(ids: string[]): void {
     this._warmAddressCaches();
     const addresses: Address[] = [];
     for (const id of ids) {
@@ -2719,6 +3175,48 @@ export class Sheet implements UserSheet {
       }
     }
     this.lastChangedAddresses = addresses;
+  }
+
+  private _applyDiff(diff: CellsByIdType = {}, partial = true) {
+    const ids = Object.keys(diff);
+    for (const id of ids) {
+      this._applyDiffCell(id, diff[id] ?? {}, partial);
+    }
+    this._finishApplyDiff(ids);
+  }
+
+  /** Chunked, progress-reporting counterpart to _applyDiff (large undo/redo). @internal */
+  private async _applyDiffAsync(
+    diff: CellsByIdType = {},
+    partial = true,
+    opts: {
+      onProgress?: (progress: { done: number; total: number }) => void;
+      yieldControl?: () => Promise<void> | void;
+      frameBudgetMs?: number;
+    } = {},
+  ): Promise<void> {
+    const ids = Object.keys(diff);
+    const total = ids.length;
+    const doYield = opts.yieldControl ?? (() => Promise.resolve());
+    const budget = opts.frameBudgetMs ?? 12;
+    let lastYield = Date.now();
+    opts.onProgress?.({ done: 0, total });
+    for (let i = 0; i < total; i++) {
+      const id = ids[i];
+      this._applyDiffCell(id, diff[id] ?? {}, partial);
+      if (Date.now() - lastYield >= budget) {
+        opts.onProgress?.({ done: i + 1, total });
+        await doYield();
+        lastYield = Date.now();
+      }
+    }
+    opts.onProgress?.({ done: total, total });
+    // NB: intentionally NOT calling _finishApplyDiff here. This path only runs for a
+    // large UPDATE undo/redo (paste/fill), where (a) cell positions don't change, so the
+    // addressCaches reverse index stays valid — no need to rebuild all ~millions of
+    // entries, and (b) getLastChangedAddresses() has no consumer, so building the address
+    // list per changed id is pure work. Doing both synchronously here re-froze the UI at
+    // 100% after the chunked apply. lastChangedAddresses is left as-is (unused for UPDATE).
   }
 
   public undo() {
@@ -2919,6 +3417,88 @@ export class Sheet implements UserSheet {
       },
     };
   }
+
+  /** @internal The history the next undo would apply (without applying it). */
+  public peekUndo(): HistoryType | null {
+    const idx = this.registry.historyIndex;
+    return idx < 0 ? null : this.registry.histories[idx];
+  }
+  /** @internal The history the next redo would apply. */
+  public peekRedo(): HistoryType | null {
+    const idx = this.registry.historyIndex + 1;
+    return idx >= this.registry.histories.length ? null : this.registry.histories[idx];
+  }
+
+  /**
+   * Async, progress-reporting undo of a large UPDATE (paste/fill). Mirrors the UPDATE
+   * branch of undo() but applies diffBefore in chunks. Only call when peekUndo() is an
+   * UPDATE; other operations must use the synchronous undo(). @internal
+   */
+  public async undoAsync(opts: {
+    onProgress?: (progress: { done: number; total: number }) => void;
+    yieldControl?: () => Promise<void> | void;
+  }): Promise<ReturnType<Sheet['undo']>> {
+    if (this.registry.historyIndex < 0) {
+      return { history: null, newSheet: this.__raw__ };
+    }
+    const history = this.registry.histories[this.registry.historyIndex];
+    if (history.operation !== 'UPDATE') {
+      return this.undo(); // caller only routes UPDATEs here; be safe for anything else
+    }
+    this.registry.historyIndex--;
+    history.applyed = false;
+    this.registry.currentHistory = this.registry.histories[this.registry.historyIndex];
+    const dstSheet = this.getSheetBySheetId(history.dstSheetId);
+    if (!dstSheet) {
+      return { history: null, newSheet: this.__raw__ };
+    }
+    await dstSheet._applyDiffAsync(history.diffBefore, history.partial ?? false, opts);
+    this.refresh(shouldTracking(history.operation), true);
+    if (dstSheet !== this) {
+      dstSheet.addressCaches.clear();
+      dstSheet.setTotalSize();
+    }
+    return {
+      history,
+      callback: ({ sheetReactive: sheetRef }: { sheetReactive: RefLike<Sheet> }) => {
+        sheetRef.current?.registry.transmit(history.undoReflection?.transmit);
+      },
+    };
+  }
+
+  /** Async, progress-reporting redo of a large UPDATE (paste/fill). @internal */
+  public async redoAsync(opts: {
+    onProgress?: (progress: { done: number; total: number }) => void;
+    yieldControl?: () => Promise<void> | void;
+  }): Promise<ReturnType<Sheet['redo']>> {
+    if (this.registry.historyIndex + 1 >= this.registry.histories.length) {
+      return { history: null, newSheet: this.__raw__ };
+    }
+    const history = this.registry.histories[this.registry.historyIndex + 1];
+    if (history.operation !== 'UPDATE') {
+      return this.redo(); // caller only routes UPDATEs here; be safe for anything else
+    }
+    this.registry.historyIndex++;
+    history.applyed = true;
+    this.registry.currentHistory = history;
+    const dstSheet = this.getSheetBySheetId(history.dstSheetId);
+    if (!dstSheet) {
+      return { history: null, newSheet: this.__raw__ };
+    }
+    await dstSheet._applyDiffAsync(history.diffAfter, history.partial ?? false, opts);
+    this.refresh(shouldTracking(history.operation), true);
+    if (dstSheet !== this) {
+      dstSheet.addressCaches.clear();
+      dstSheet.setTotalSize();
+    }
+    return {
+      history,
+      callback: ({ sheetReactive: sheetRef }: { sheetReactive: RefLike<Sheet> }) => {
+        sheetRef.current?.registry.transmit(history.redoReflection?.transmit);
+      },
+    };
+  }
+
   /** @internal */
   public getFunctionByName(name: string) {
     return this.registry.functions[name];

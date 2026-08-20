@@ -1,0 +1,6 @@
+id,title,body,priority
+T-101,Login button unresponsive,The login button does nothing on Safari after the latest update,high
+T-102,Export to PDF missing rows,PDF export drops the last three rows when the table has more than 50 entries,medium
+T-103,Dark mode contrast too low,Text in dark mode is hard to read; several users asked for higher contrast,low
+T-104,Payment fails at checkout,Credit card payments intermittently fail with a generic error at the final step,high
+T-105,Typo on pricing page,The pricing page says "montly" instead of "monthly" in the annual plan box,low

@@ -9,6 +9,9 @@ import {
   clear,
   escape,
   select,
+  selectToDataEdge,
+  fillDown,
+  fillRight,
   setEditingAddress,
   undo,
   redo,
@@ -392,6 +395,11 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
 
         case 'ArrowLeft': // LEFT
           if (!editing) {
+            if ((e.ctrlKey || e.metaKey) && shiftKey) {
+              e.preventDefault();
+              dispatch(selectToDataEdge({ deltaY: 0, deltaX: -1 }));
+              return false;
+            }
             dispatch(
               arrow({
                 shiftKey,
@@ -406,6 +414,11 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
           break;
         case 'ArrowUp': // UP
           if (!editing) {
+            if ((e.ctrlKey || e.metaKey) && shiftKey) {
+              e.preventDefault();
+              dispatch(selectToDataEdge({ deltaY: -1, deltaX: 0 }));
+              return false;
+            }
             dispatch(
               arrow({
                 shiftKey,
@@ -423,6 +436,11 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
           break;
         case 'ArrowRight': // RIGHT
           if (!editing) {
+            if ((e.ctrlKey || e.metaKey) && shiftKey) {
+              e.preventDefault();
+              dispatch(selectToDataEdge({ deltaY: 0, deltaX: 1 }));
+              return false;
+            }
             dispatch(
               arrow({
                 shiftKey,
@@ -437,6 +455,12 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
           break;
         case 'ArrowDown': // DOWN
           if (!editing) {
+            // Ctrl/Cmd+Shift+arrow: extend the selection to the data-block edge (no drag).
+            if ((e.ctrlKey || e.metaKey) && shiftKey) {
+              e.preventDefault();
+              dispatch(selectToDataEdge({ deltaY: 1, deltaX: 0 }));
+              return false;
+            }
             dispatch(
               arrow({
                 shiftKey,
@@ -480,6 +504,16 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
             return true;
           }
           break;
+        case 'd': // D — fill down (Excel/Sheets Ctrl+D). Overrides the browser bookmark.
+          if (e.ctrlKey || e.metaKey) {
+            if (!editing) {
+              e.preventDefault();
+              dispatch(fillDown(null));
+              requestAnimationFrame(() => dispatch(setInputting(''))); // reset the textarea
+              return false;
+            }
+          }
+          break;
         case 'f': // F
           if (e.ctrlKey || e.metaKey) {
             if (!editing) {
@@ -493,8 +527,17 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
             }
           }
           break;
-        case 'r': // R
-        case 'y': // Y
+        case 'r': // R — fill right (Excel/Sheets Ctrl+R). Overrides the browser reload.
+          if (e.ctrlKey || e.metaKey) {
+            if (!editing) {
+              e.preventDefault();
+              dispatch(fillRight(null));
+              requestAnimationFrame(() => dispatch(setInputting(''))); // reset the textarea
+              return false;
+            }
+          }
+          break;
+        case 'y': // Y — redo (Ctrl+Shift+Z also redoes)
           if (e.ctrlKey || e.metaKey) {
             if (!editing) {
               e.preventDefault();

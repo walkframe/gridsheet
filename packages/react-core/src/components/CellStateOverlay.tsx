@@ -5,7 +5,7 @@ import { between } from '@gridsheet/web';
 import { a2p } from '@gridsheet/web';
 import { COLOR_PALETTE } from '@gridsheet/web';
 import { Autofill } from '@gridsheet/web';
-import { getCellRectPositions } from '@gridsheet/web';
+import { getCellRectPositions, getVisibleRowRange, getVisibleColRange, toVirtualScrollTop } from '@gridsheet/web';
 import type { Sheet } from '@gridsheet/web';
 import type { FC } from 'react';
 import type { RefPaletteType, AreaType, ModeType } from '../types';
@@ -149,7 +149,10 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
     ctx.clearRect(0, 0, w, h);
 
     const { registry } = sheet;
-    const scrollTop = container.scrollTop;
+    // Vertical overlay math is all in virtual space (getCellRectPositions.top is virtual),
+    // so map the DOM's capped physical scrollTop into virtual space. Horizontal columns
+    // aren't remapped, so scrollLeft stays physical.
+    const scrollTop = toVirtualScrollTop(sheet, container.scrollTop, container.clientHeight);
     const scrollLeft = container.scrollLeft;
     const headerW = sheet.headerWidth;
     const headerH = sheet.headerHeight;
@@ -230,12 +233,15 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
     // Restore full canvas for header drawing
     ctx.restore();
 
-    // 7. Header highlights (top and left) — draw bottom border for top headers, right border for left headers
-    const numCols = sheet.numCols;
-    const numRows = sheet.numRows;
+    // 7. Header highlights (top and left) — draw bottom border for top headers, right border for left headers.
+    // Only visible rows/cols can produce an on-screen highlight, so bound the scans to the viewport range.
+    // Iterating 1..numRows here made every overlay redraw (e.g. after inserting rows, which bumps the sheet
+    // version) O(numRows) AND materialized every row-header cell via isRowFiltered — ~150ms at a million rows.
+    const [firstCol, lastCol] = getVisibleColRange(sheet, scrollLeft, w);
+    const [firstRow, lastRow] = getVisibleRowRange(sheet, scrollTop, h);
 
     // Top headers - draw bottom border and background
-    for (let x = 1; x <= numCols; x++) {
+    for (let x = firstCol; x <= lastCol; x++) {
       let color: string | null = null;
       let backgroundColor: string | null = null;
       if (between({ start: selectingZone.startX, end: selectingZone.endX }, x)) {
@@ -272,7 +278,7 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
     }
 
     // Left headers - draw right border and background
-    for (let y = 1; y <= numRows; y++) {
+    for (let y = firstRow; y <= lastRow; y++) {
       if (sheet.isRowFiltered(y)) {
         continue;
       }
