@@ -1,12 +1,18 @@
-# GridSheet CSV/TSV Viewer
+# CSV Spreadsheet — GridSheet
 
 A VS Code extension that opens and **edits** **`.csv` / `.tsv`** files in an
 interactive [GridSheet](https://gridsheet.walkframe.com/) grid instead of raw
-text — scrollable, with row/column headers, selection, and copy.
+text — scrollable, with row/column headers, selection, formulas, and copy.
+
+![CSV Spreadsheet — GridSheet: editing a CSV as a spreadsheet with an =CLAUDE.NUMBER formula](https://raw.githubusercontent.com/walkframe/gridsheet/refs/heads/master/packages/vscode-csv-viewer/media/screenshot.png)
+
+Cells take **formulas** (`=A1+B1`), and AI functions like
+`=CLAUDE(…)` / `=CODEX(…)` / `=CLAUDE.NUMBER(…)` resolve right in the grid — see
+[docs/ai-functions.md](docs/ai-functions.md).
 
 ## Usage
 
-- Right-click a `.csv` / `.tsv` file → **Open With…** → **GridSheet CSV/TSV Viewer**, or
+- Right-click a `.csv` / `.tsv` file → **Open With…** → **CSV Spreadsheet (GridSheet)**, or
 - run the command **“Open with GridSheet CSV/TSV Viewer”** from the palette while the file is focused, or
 - click the **table icon** in the editor title bar of an open `.csv`/`.tsv` text file.
 
