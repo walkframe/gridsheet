@@ -10,7 +10,6 @@ import {
   RenderProps,
   ensureString,
   makeBorder,
-  Spilling,
 } from '@gridsheet/react-core';
 import { useSpellbook } from '@gridsheet/react-core/spellbook';
 import { FunctionArgumentDefinition } from '@gridsheet/react-core';
@@ -34,6 +33,10 @@ class GhRepoFunction extends BaseFunctionAsync {
     },
   ];
   ttlMilliseconds = 60 * 1000; // 1 minute cache TTL
+  // autoSpilling wraps main()'s resolved matrix in a Spilling for us (async-aware), so main()
+  // just returns a plain [[...]] row. broadcastDisabled keeps a scalar arg from broadcasting.
+  protected autoSpilling = true;
+  protected broadcastDisabled = true;
 
   async main(repo: string) {
     const r = ensureString(repo).trim();
@@ -50,10 +53,8 @@ class GhRepoFunction extends BaseFunctionAsync {
     }
     const data = await resp.json();
 
-    // Return a 1×6 spill array — fills B, C, D, E, F, G in one call.
-    // NOTE: autoSpilling wraps the Promise itself (not the resolved value), so
-    // we construct Spilling manually from the resolved data instead.
-    return new Spilling([
+    // Return a 1×5 row — autoSpilling spills it across B, C, D, E, F in one call.
+    return [
       [
         data.stargazers_count ?? 0,
         data.forks_count ?? 0,
@@ -61,7 +62,7 @@ class GhRepoFunction extends BaseFunctionAsync {
         data.size ?? 0,
         data.subscribers_count ?? 0,
       ],
-    ]);
+    ];
   }
 }
 

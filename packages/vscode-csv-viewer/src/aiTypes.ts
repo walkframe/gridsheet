@@ -4,7 +4,9 @@
 // 'claude' | 'codex' are built in; any other value is a user-defined custom function name
 // (gridsheet.ai.custom) resolved by running its configured command.
 export type AiProvider = string;
-export type AiKind = 'text' | 'bool' | 'number';
+// 'array' is one request that returns a whole grid (string[][]) via a schema-enforced 2D-array
+// output — used by =CLAUDE.ARRAY when the input has no single fixed shape (AI decides the size).
+export type AiKind = 'text' | 'bool' | 'number' | 'array';
 
 /** User-defined grid functions come from two name→string settings:
  *   gridsheet.ai.alias  — value is a built-in key (`claude`/`codex`, optionally `.bool`/`.number`)
@@ -27,7 +29,7 @@ export type AiBatchRequest = {
 };
 
 export type AiResult =
-  | { index: number; ok: true; value: string | number | boolean }
+  | { index: number; ok: true; value: string | number | boolean | string[][] }
   | { index: number; ok: false; error: string };
 
 export type AiBatchResponse = {

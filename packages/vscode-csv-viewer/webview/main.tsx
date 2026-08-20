@@ -57,7 +57,7 @@ const flushAi = () => {
 };
 
 const enqueueAi: AiEnqueue = (provider, kind, prompt) =>
-  new Promise<string | number | boolean>((resolve, reject) => {
+  new Promise<string | number | boolean | string[][]>((resolve, reject) => {
     aiQueue.push({ task: { provider, kind, prompt }, resolve: resolve as (v: unknown) => void, reject });
     if (aiFlushTimer == null) {
       aiFlushTimer = setTimeout(flushAi, 60);

@@ -142,6 +142,38 @@ describe('headless formula resolution (no UI)', () => {
     const matrix = toValueMatrix(sheet, { area: { top: 1, left: 2, bottom: 1, right: 2 } });
     expect(matrix[0][0]).toBe('(unresolved)');
   });
+
+  // Root fix: an async function with autoSpilling=true returns a plain Promise<matrix>; the engine
+  // must wrap the RESOLVED matrix in a Spilling (see __base.ts _main), NOT the Promise itself.
+  // Before the fix, autoSpilling wrapped the Promise (`new Spilling(promise)`), which never spilled —
+  // async spill functions had to construct the Spilling by hand. This locks in the flag path.
+  it('spills an async autoSpilling function across adjacent cells', async () => {
+    class AsyncSpill extends BaseFunctionAsync {
+      example = 'ASPILL("z")';
+      description = 'Async function that spills a 1x3 row.';
+      category: FunctionCategory = 'other';
+      defs: FunctionArgumentDefinition[] = [{ name: 'seed', description: 'seed', acceptedTypes: ['string'] }];
+      protected broadcastDisabled = true;
+      protected autoSpilling = true;
+      protected async main(seed: any): Promise<any[][]> {
+        return [[`${seed}-a`, `${seed}-b`, `${seed}-c`]];
+      }
+    }
+    const registry = createRegistry({ additionalFunctions: { aspill: AsyncSpill as any } });
+    // Ensure B..D exist so the 1×3 spill has room; otherwise spill targets are out of bounds.
+    const sheet = headlessSheet(
+      registry,
+      buildInitialCells({
+        cells: { A1: { value: 'z' }, B1: { value: '=ASPILL(A1)' } },
+        ensured: { numRows: 1, numCols: 4 },
+      }),
+    );
+    sheet.resolveAll();
+    await sheet.waitForPending();
+    // Reading after the async settles solves B1 from the cached Spilling and spills it into B1:D1.
+    const matrix = toValueMatrix(sheet, { area: { top: 1, left: 2, bottom: 1, right: 4 } });
+    expect(matrix[0]).toEqual(['z-a', 'z-b', 'z-c']);
+  });
 });
 
 describe('toValueMatrixAsync (non-blocking, progress-reporting export)', () => {

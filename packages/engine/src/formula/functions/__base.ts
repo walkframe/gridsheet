@@ -31,7 +31,12 @@ export type FunctionCategory =
   | 'finance'
   | 'engineering'
   | 'logical'
-  | 'other';
+  | 'other'
+  // Open the union: the literals above are built-in autocomplete hints, but plugins may define
+  // their own category (e.g. 'ai' in the CSV viewer). `string & {}` keeps literal suggestions
+  // while allowing any string — category is a display-only label (badge text + CSS class), never
+  // branched on — so no core code needs to know a plugin's categories.
+  | (string & {});
 
 export type FunctionProps = {
   args: Expression[];
@@ -247,7 +252,14 @@ export class BaseFunction {
   private _main(...args: any[]): any {
     if (this.autoSpilling) {
       // @ts-expect-error main is not defined in BaseFunction
-      return new Spilling(this.main(...args));
+      const result = this.main(...args);
+      // Async main() returns a Promise: wrap the RESOLVED matrix, not the Promise itself
+      // (a Spilling holding a Promise never spills). The resolved Spilling then flows through
+      // the async cache and the solver spills it — same as a sync autoSpilling function.
+      if (this.isAsync) {
+        return Promise.resolve(result).then((matrix) => new Spilling(matrix));
+      }
+      return new Spilling(result);
     }
     // @ts-expect-error main is not defined in BaseFunction
     return this.main(...args);

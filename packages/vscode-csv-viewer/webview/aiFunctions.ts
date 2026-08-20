@@ -7,10 +7,20 @@
 // Pending sentinel immediately (cell shows `gs-pending`), dedupes identical
 // calls via the async cache, and re-renders when the Promise resolves.
 
-import { BaseFunctionAsync, type FunctionArgumentDefinition, type FunctionCategory, type FunctionMapping } from '@gridsheet/preact-core';
+import {
+  BaseFunctionAsync,
+  FormulaError,
+  type FunctionArgumentDefinition,
+  type FunctionCategory,
+  type FunctionMapping,
+} from '@gridsheet/preact-core';
 import type { AiCustomFunction, AiKind, AiProvider } from '../src/aiTypes';
 
-export type AiEnqueue = (provider: AiProvider, kind: AiKind, prompt: string) => Promise<string | number | boolean>;
+export type AiEnqueue = (
+  provider: AiProvider,
+  kind: AiKind,
+  prompt: string,
+) => Promise<string | number | boolean | string[][]>;
 
 const cell = (v: unknown): string => (v == null ? '' : String(v));
 // RFC-4180 style quoting — safer than TSV (tabs collapse/mangle silently).
@@ -63,7 +73,11 @@ const serializeArg = (arg: unknown, toMatrix: (v: unknown) => unknown[][]): stri
     }
     const lines: string[] = [];
     if (hasHeader) {
-      lines.push(headers.map((h) => quote(h ?? '')).join(','));
+      // Column names as a leading `(columns: …)` metadata note — NOT a CSV header row — so the
+      // model treats them as context and doesn't echo `item,description` back into the answer
+      // (same reason as the single-cell `(column "x")` marker above). The batch prompt tells
+      // the model these leading `(column…)` lines are context only.
+      lines.push(`(columns: ${headers.map((h) => h ?? '').join(', ')})`);
     }
     for (const row of matrix) {
       lines.push(row.map((v) => quote(cell(v))).join(','));
@@ -89,7 +103,11 @@ const defs: FunctionArgumentDefinition[] = [
   },
 ];
 
-const kindDesc: Record<AiKind, string> = { text: 'text', bool: 'a boolean', number: 'a number' };
+// The scalar kinds (one value per cell). 'array' is NOT here: it returns a whole grid and rides a
+// different path (makeAiArrayClass), so it must never be reachable through the scalar makeAiClass.
+type AiScalarKind = 'text' | 'bool' | 'number';
+const isScalarKind = (k: string): k is AiScalarKind => k === 'text' || k === 'bool' || k === 'number';
+const kindDesc: Record<AiScalarKind, string> = { text: 'text', bool: 'a boolean', number: 'a number' };
 
 const makeAiClass = (
   provider: AiProvider,
@@ -110,7 +128,7 @@ const makeAiClass = (
   return class extends BaseFunctionAsync {
     example = example;
     description = opts.description;
-    category: FunctionCategory = 'other';
+    category: FunctionCategory = 'ai';
     defs = defs;
     // Each cell is one independent call — never spill a matrix into many calls.
     protected broadcastDisabled = true;
@@ -127,6 +145,118 @@ const makeAiClass = (
   };
 };
 
+// Column headers for a sheet-like range arg, indexed by RELATIVE column (0 = leftmost).
+const rangeHeaders = (arg: any): (string | undefined)[] => {
+  const left = arg.left as number;
+  const right = arg.right as number;
+  const headers: (string | undefined)[] = [];
+  for (let x = left; x <= right; x++) {
+    headers.push(headerLabel(arg, x));
+  }
+  return headers;
+};
+
+// Pad ragged rows to a rectangle so the spill footprint is well-defined.
+const rectangularize = (matrix: unknown[][]): unknown[][] => {
+  const cols = matrix.reduce((max, row) => Math.max(max, row.length), 0);
+  return matrix.map((row) => (row.length === cols ? row : [...row, ...Array(cols - row.length).fill('')]));
+};
+
+// =CLAUDE.ARRAY / =CODEX.ARRAY — a spilling AI function with two modes, chosen by the input shape:
+//
+//  • per-cell map (deterministic) — when the multi-cell range args all share one shape. Each cell
+//    position is one independent call (corresponding cells across ranges zipped into one prompt),
+//    and the output spills at exactly that shape. Best for "translate/classify every cell".
+//
+//  • AI-grid (AI decides the size) — when there is no range, or the ranges differ in shape. One
+//    call takes all context, and a schema-enforced string[][] comes back; the spill size is
+//    whatever the model returns (#SPILL! guards obstruction, like a dynamic array). Best for
+//    "split into columns", "build a summary table", "list N items".
+//
+// autoSpilling wraps main()'s resolved matrix in a Spilling (async-aware since __base.ts _main),
+// so main() just returns Promise<matrix>; broadcastDisabled keeps the engine from expanding us.
+const makeAiArrayClass = (
+  provider: AiProvider,
+  enqueue: AiEnqueue,
+  opts: { name: string; description: string },
+): typeof BaseFunctionAsync => {
+  const fn = `${opts.name.toUpperCase()}.ARRAY`;
+  const example = `${fn}("Translate to English", B2:C100)`;
+  return class extends BaseFunctionAsync {
+    example = example;
+    description = opts.description;
+    category: FunctionCategory = 'ai';
+    defs = defs;
+    // We produce one matrix ourselves; autoSpilling turns it into a spill.
+    protected broadcastDisabled = true;
+    protected autoSpilling = true;
+
+    protected async main(prompt: unknown, ...context: unknown[]): Promise<unknown[][]> {
+      const instruction = cell(prompt);
+
+      // Classify context: multi-cell ranges drive the shape; single cells/literals are shared
+      // context appended to every prompt (a $C$1 criterion never forces AI-grid mode).
+      const ranges: { arg: unknown; matrix: unknown[][]; headers: (string | undefined)[] }[] = [];
+      const sharedBlocks: string[] = [];
+      for (const arg of context) {
+        const m = this.toMatrix(arg);
+        if (m && (m.length > 1 || (m[0]?.length ?? 0) > 1)) {
+          ranges.push({ arg, matrix: m, headers: isSheetLike(arg) ? rangeHeaders(arg) : [] });
+        } else {
+          const block = serializeArg(arg, (v) => this.toMatrix(v));
+          if (block !== '') {
+            sharedBlocks.push(block);
+          }
+        }
+      }
+
+      const rows = ranges[0]?.matrix.length ?? 0;
+      const cols = ranges[0]?.matrix[0]?.length ?? 0;
+      const sameShape =
+        ranges.length > 0 &&
+        ranges.every((r) => r.matrix.length === rows && (r.matrix[0]?.length ?? 0) === cols);
+
+      // AI-grid: no range, or ranges disagree on shape → one call, AI-decided size.
+      if (!sameShape) {
+        const blocks = [...ranges.map((r) => serializeArg(r.arg, (v) => this.toMatrix(v))), ...sharedBlocks].filter(
+          (b) => b !== '',
+        );
+        const data = blocks.length > 0 ? `\n\nData:\n${blocks.join('\n\n')}` : '';
+        const full = `Instruction: ${instruction}${data}`;
+        const grid = (await enqueue(provider, 'array', full)) as unknown[][];
+        return Array.isArray(grid) && grid.length > 0 ? rectangularize(grid) : [['']];
+      }
+
+      // per-cell map: one call per cell position, zipping the corresponding cell of each range.
+      // A failed call becomes a #AI! error in that cell (never rejects the whole spill); a position
+      // that is empty across every range resolves to '' without spending a call.
+      const resolveCell = async (r: number, c: number): Promise<unknown> => {
+        const cellBlocks: string[] = [];
+        for (const range of ranges) {
+          const v = cell(range.matrix[r]?.[c]);
+          if (v === '') {
+            continue;
+          }
+          cellBlocks.push(range.headers[c] != null ? `(column "${range.headers[c]}") ${v}` : v);
+        }
+        if (cellBlocks.length === 0) {
+          return '';
+        }
+        const full = `Instruction: ${instruction}\n\nData:\n${[...cellBlocks, ...sharedBlocks].join('\n\n')}`;
+        try {
+          return await enqueue(provider, 'text', full);
+        } catch (e: any) {
+          return new FormulaError('#AI!', e?.message ?? String(e), e instanceof Error ? e : undefined);
+        }
+      };
+
+      return Promise.all(
+        Array.from({ length: rows }, (_, r) => Promise.all(Array.from({ length: cols }, (_, c) => resolveCell(r, c)))),
+      );
+    }
+  };
+};
+
 /**
  * Build the AI function family: the built-in =CLAUDE / =CODEX (× text/.BOOL/.NUMBER), plus any
  * user-defined =NAME functions (gridsheet.ai.custom) — text-only, since an arbitrary CLI can't
@@ -137,13 +267,19 @@ export const makeAiFunctions = (enqueue: AiEnqueue, custom: AiCustomFunction[] =
   const builtinLabels: Record<string, string> = { claude: 'Claude', codex: 'Codex (OpenAI)' };
   for (const provider of ['claude', 'codex']) {
     const label = builtinLabels[provider];
-    for (const kind of ['text', 'bool', 'number'] as AiKind[]) {
+    for (const kind of ['text', 'bool', 'number'] as AiScalarKind[]) {
       const key = kind === 'text' ? provider : `${provider}.${kind}`;
       map[key] = makeAiClass(provider, kind, enqueue, {
         name: provider,
         description: `Resolve a prompt via the ${label} CLI, returning ${kindDesc[kind]}.`,
       });
     }
+    map[`${provider}.array`] = makeAiArrayClass(provider, enqueue, {
+      name: provider,
+      description:
+        `Spill a grid from a prompt via the ${label} CLI. Same-shaped range(s) map cell-by-cell ` +
+        `(same-shape output); otherwise the model returns a grid of its own size.`,
+    });
   }
   for (const def of custom) {
     const name = def?.name?.trim();
@@ -158,8 +294,9 @@ export const makeAiFunctions = (enqueue: AiEnqueue, custom: AiCustomFunction[] =
       // Alias a built-in (+ optional .bool/.number kind), so this custom-named function rides
       // the schema-typed batch path. e.g. alias "claude.bool" → claude/bool.
       const [base, variant] = def.alias.trim().toLowerCase().split('.');
-      const kind = (variant as AiKind) || 'text';
-      if ((base === 'claude' || base === 'codex') && kind in kindDesc) {
+      const kind = variant || 'text';
+      // Only scalar kinds ride the alias path — an alias to `.array` is rejected (isScalarKind).
+      if ((base === 'claude' || base === 'codex') && isScalarKind(kind)) {
         map[key] = makeAiClass(base, kind, enqueue, {
           name,
           description: `${name} — alias for ${def.alias} (returns ${kindDesc[kind]}).`,

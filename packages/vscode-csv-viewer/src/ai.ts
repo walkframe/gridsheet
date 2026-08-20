@@ -102,11 +102,13 @@ function buildBatchPrompt(kind: AiKind, prompts: string[]): string {
       ? 'a JSON boolean (true or false)'
       : kind === 'number'
         ? 'a JSON number'
-        : 'a concise plain-text string';
+        : kind === 'array'
+          ? 'a JSON 2D array of strings — an array of rows, each row an array of cell strings (choose the number of rows and columns that best fits the answer)'
+          : 'a concise plain-text string';
   const requests = prompts.map((p, i) => `### Request ${i}\n${p}`).join('\n\n');
   return [
     `You are resolving ${prompts.length} independent request(s) taken from spreadsheet cells.`,
-    `Treat each request separately. Each request may have an "Instruction:" line followed by "Data:"; apply the instruction TO the data, and never answer or translate the instruction text itself. A leading (column "x") tags the source column name for context only — do not include it in the answer.`,
+    `Treat each request separately. Each request may have an "Instruction:" line followed by "Data:"; apply the instruction TO the data, and never answer or translate the instruction text itself. A leading (column "x") or (columns: a, b, …) line names the source column(s) for context only — never repeat those names or a header row in the answer.`,
     `For each, the answer must be ${typeHint}.`,
     `Respond with ONLY a JSON object {"results":[{"index":<request number>,"value":<answer>}, ...]} — one entry per request, no extra prose.`,
     '',
@@ -115,7 +117,14 @@ function buildBatchPrompt(kind: AiKind, prompts: string[]): string {
 }
 
 function batchSchema(kind: AiKind): Record<string, unknown> {
-  const value = kind === 'bool' ? { type: 'boolean' } : kind === 'number' ? { type: 'number' } : { type: 'string' };
+  const value =
+    kind === 'bool'
+      ? { type: 'boolean' }
+      : kind === 'number'
+        ? { type: 'number' }
+        : kind === 'array'
+          ? { type: 'array', items: { type: 'array', items: { type: 'string' } } }
+          : { type: 'string' };
   // Codex's --output-schema feeds OpenAI strict structured output, which rejects any
   // object schema that omits `additionalProperties: false` (and requires every property
   // to be listed in `required`). Set it on both object levels. Claude's --json-schema
@@ -435,6 +444,17 @@ function coerce(index: number, kind: AiKind, value: unknown): AiResult {
       return { index, ok: false, error: `Expected a number, got: ${String(value).slice(0, 80)}` };
     }
     return { index, ok: true, value: n };
+  }
+  if (kind === 'array') {
+    if (!Array.isArray(value)) {
+      return { index, ok: false, error: `Expected a 2D array, got: ${String(value).slice(0, 80)}` };
+    }
+    // Normalize to string[][]: wrap a flat row, coerce each cell to a string. The webview
+    // rectangularizes (pads ragged rows) before spilling.
+    const rows: string[][] = value.map((row) =>
+      Array.isArray(row) ? row.map((c) => (c == null ? '' : String(c))) : [row == null ? '' : String(row)],
+    );
+    return { index, ok: true, value: rows };
   }
   return { index, ok: true, value: typeof value === 'string' ? value : JSON.stringify(value) };
 }
