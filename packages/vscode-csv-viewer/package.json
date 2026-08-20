@@ -1,7 +1,7 @@
 {
-  "name": "gridsheet-csv-viewer",
-  "displayName": "GridSheet CSV/TSV Viewer",
-  "description": "Open CSV and TSV files in an interactive GridSheet grid.",
+  "name": "csv-gridsheet",
+  "displayName": "CSV Spreadsheet — GridSheet",
+  "description": "Open CSV/TSV files as an editable spreadsheet grid with formulas — powered by GridSheet.",
   "version": "0.1.0",
   "publisher": "walkframe",
   "private": true,
@@ -18,8 +18,11 @@
     "csv",
     "tsv",
     "viewer",
+    "editor",
     "grid",
     "spreadsheet",
+    "formula",
+    "excel",
     "gridsheet"
   ],
   "activationEvents": [],
@@ -28,7 +31,7 @@
     "customEditors": [
       {
         "viewType": "gridsheet.csv",
-        "displayName": "GridSheet CSV Viewer",
+        "displayName": "CSV Spreadsheet (GridSheet)",
         "selector": [
           {
             "filenamePattern": "*.csv"
@@ -38,7 +41,7 @@
       },
       {
         "viewType": "gridsheet.tsv",
-        "displayName": "GridSheet TSV Viewer",
+        "displayName": "TSV Spreadsheet (GridSheet)",
         "selector": [
           {
             "filenamePattern": "*.tsv"
