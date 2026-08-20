@@ -243,7 +243,11 @@ export class IdRangeEntity extends Entity<string> {
     const range = this.display({ sheet, slideY, slideX });
     const { formula, ids } = parseRef(range, props);
     this.ids = ids;
-    return formula ?? '';
+    // When the range can't be resolved (e.g. an autofill slid it off-sheet so display yields
+    // "#REF!:#REF!"), parseRef returns no formula. Fall back to the broken-reference marker
+    // "#?" — matching RefEntity/IdEntity — instead of "" which would DROP the whole argument
+    // (turning =F(a, C2:C6, b) into =F(a, , b) and corrupting the formula's arity).
+    return formula || '#?';
   }
 }
 

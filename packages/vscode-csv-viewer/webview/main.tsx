@@ -120,6 +120,31 @@ document.addEventListener(
   true,
 );
 
+// Ctrl/Cmd+R is "fill right" in the grid (Excel/Sheets). In a VS Code webview it also reloads the
+// view, and the host decides that too early for a DOM preventDefault to stop it (the fill runs,
+// then the page reloads and discards it). So fully SWALLOW the event at capture — preventDefault +
+// stopImmediatePropagation — to block the reload, and run fill-right ourselves via the store. When
+// a cell is being edited, swallow but don't fill (matches react-core: Ctrl+R is a no-op there).
+document.addEventListener(
+  'keydown',
+  (e) => {
+    if (!(e.metaKey || e.ctrlKey) || e.shiftKey || e.altKey || (e.key !== 'r' && e.key !== 'R')) {
+      return;
+    }
+    const handle = gridStoreRef.current;
+    const ta = handle?.store?.editorRef?.current ?? null;
+    if (!handle || !ta || document.activeElement !== ta) {
+      return; // focus is outside the grid — let the host handle reload normally
+    }
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (!handle.store.editingAddress) {
+      handle.dispatch(userActions.fillRight(null));
+    }
+  },
+  true,
+);
+
 const applyPaste = (text: string) => {
   if (!pastePending) {
     return;

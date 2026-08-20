@@ -74,8 +74,8 @@ test('reference resolution after move operation', async ({ page }) => {
   expect(await d10.locator('.gs-cell-rendered').textContent()).toBe('7');
   expect(await e10.locator('.gs-cell-rendered').textContent()).toBe('8');
 
-  // Verify that redo (ctrl+r) returns to 3, 7 again
-  await ctrl(page, 'r');
+  // Verify that redo (ctrl+shift+z) returns to 3, 7 again
+  await ctrl(page, 'z', true);
   expect(await f9.locator('.gs-cell-rendered').textContent()).toBe('3');
   expect(await f10.locator('.gs-cell-rendered').textContent()).toBe('7');
 
@@ -165,8 +165,8 @@ test('reference resolution after move B11:C12 to B9:C10', async ({ page }) => {
   expect(await c11.locator('.gs-cell-rendered').textContent()).toBe('10');
   expect(await c12.locator('.gs-cell-rendered').textContent()).toBe('12');
 
-  // Verify that redo (ctrl+r) returns to 20, 22 again
-  await ctrl(page, 'r');
+  // Verify that redo (ctrl+shift+z) returns to 20, 22 again
+  await ctrl(page, 'z', true);
   expect(await b13.locator('.gs-cell-rendered').textContent()).toBe('20');
   expect(await c13.locator('.gs-cell-rendered').textContent()).toBe('22');
 
