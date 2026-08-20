@@ -117,3 +117,6 @@ test-results/
 # macOS
 .DS_Store
 **/.DS_Store
+
+# VS Code extension build artifacts
+*.vsix
