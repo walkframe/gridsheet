@@ -11,7 +11,7 @@ are not listed here.
 This project adheres to [Semantic Versioning](https://semver.org/) and the format is based on
 [Keep a Changelog](https://keepachangelog.com/).
 
-## [3.4.0] — Unreleased
+## [3.4.0] — 2026-08-21
 
 ### Added
 
