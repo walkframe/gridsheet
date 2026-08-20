@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import {
   GridSheet,
+  ProgressOverlay,
+  embedStyle,
   buildInitialCells,
   useBook,
   toValueMatrix,
@@ -25,6 +27,10 @@ import type { AiBatchResponse, AiCustomFunction, AiTask } from '../src/aiTypes';
 declare function acquireVsCodeApi(): { postMessage(msg: unknown): void };
 
 const vscodeApi = acquireVsCodeApi();
+
+// Inject the grid stylesheet up front (idempotent) so the initial-load ProgressOverlay is
+// styled/centered before any GridSheet mounts; GridSheet's own embedStyle() call is then a no-op.
+embedStyle();
 
 // ── AI batch bridge ────────────────────────────────────────────────────────
 // Each =CLAUDE/=CODEX cell calls enqueueAi(); requests accumulate for one tick
@@ -388,6 +394,24 @@ const useVscodeMode = () => {
   return mode;
 };
 
+// Grid theme tokens the core ProgressOverlay reads. Supplied on the initial-load container
+// (before GridSheet mounts, where the grid's own gs-root tokens aren't in scope yet) so the
+// "Loading" overlay matches the in-grid save/paste overlays. Values mirror the engine themes.
+const GRID_THEME_TOKENS: Record<'inherit-light' | 'inherit-dark', Record<string, string>> = {
+  'inherit-dark': {
+    '--gs-fg': '#e4e6e9',
+    '--gs-border': '#2c2f34',
+    '--gs-editor-surface': '#1c1e21',
+    '--gs-accent': '#3b82f6',
+  },
+  'inherit-light': {
+    '--gs-fg': '#1f2328',
+    '--gs-border': '#e3e6ea',
+    '--gs-editor-surface': '#ffffff',
+    '--gs-accent': '#2563eb',
+  },
+};
+
 type GridProps = {
   rows: string[][];
   header: boolean;
@@ -602,44 +626,23 @@ const Grid = ({
   }, [columnFormats, onSetFormat, numberOptions, dateOptions]);
 
   return (
-    <>
-      <GridSheet
-        book={book}
-        sheetRef={sheetRef}
-        storeRef={gridStoreRef}
-        initialCells={initialCells}
-        options={{
-          mode,
-          sheetWidth: '100%',
-          sheetHeight: '100%',
-          matrixAlignment: 'both',
-          colMenu,
-        }}
-      />
-      {saving && <SavingOverlay progress={progress} />}
-    </>
-  );
-};
-
-// Full-viewport "Saving…" overlay with a determinate progress bar. Shown while the
-// async serialize runs (large sheets take time as every cell is materialized). The
-// spinner uses a compositor-driven transform animation, so it keeps turning even if
-// a single chunk briefly monopolizes the main thread between progress ticks.
-const SavingOverlay = ({ progress }: { progress: number }) => {
-  const pct = Math.max(0, Math.min(100, Math.round(progress * 100)));
-  return (
-    <div className="gridsheet-saving-overlay">
-      <div className="gridsheet-saving-box">
-        <div className="gridsheet-saving-head">
-          <span className="gridsheet-saving-spinner" />
-          <span>Saving…</span>
-        </div>
-        <div className="gridsheet-saving-track">
-          <div className="gridsheet-saving-fill" style={{ width: `${pct}%` }} />
-        </div>
-        <div className="gridsheet-saving-pct">{pct}%</div>
-      </div>
-    </div>
+    // Save progress goes through GridSheet's `loading` prop so its overlay renders INSIDE the
+    // grid root (where the theme tokens live) and is themed correctly. The per-tick re-render
+    // is cheap: the grid is virtualized and static during save (O(visible) cells).
+    <GridSheet
+      book={book}
+      sheetRef={sheetRef}
+      storeRef={gridStoreRef}
+      initialCells={initialCells}
+      loading={saving ? { progress, label: 'Saving' } : undefined}
+      options={{
+        mode,
+        sheetWidth: '100%',
+        sheetHeight: '100%',
+        matrixAlignment: 'both',
+        colMenu,
+      }}
+    />
   );
 };
 
@@ -699,6 +702,23 @@ const menuItemStyle = {
   borderRadius: 3,
   padding: '3px 6px',
   cursor: 'pointer',
+};
+// Add popover: a small section label per axis + a row of placement buttons.
+const addSectionLabelStyle = {
+  fontSize: 10,
+  fontWeight: 700 as const,
+  textTransform: 'uppercase' as const,
+  letterSpacing: 0.6,
+  opacity: 0.55,
+  padding: '0 2px 3px',
+};
+const addRowStyle = { display: 'flex', gap: 4 };
+const addBtnStyle = {
+  ...menuItemStyle,
+  flex: 1,
+  textAlign: 'center' as const,
+  border: '1px solid var(--vscode-input-border, rgba(128,128,128,0.4))',
+  padding: '4px 6px',
 };
 const sep = <span style={{ opacity: 0.35 }}>|</span>;
 
@@ -886,44 +906,12 @@ const App = () => {
   };
 
   if (!data) {
-    const pct = loadProgress == null ? null : Math.round(loadProgress * 100);
+    // Same overlay as save/paste (core ProgressOverlay). GridSheet isn't mounted yet, so its
+    // theme tokens aren't in scope here — supply the ones ProgressOverlay needs, per VS Code
+    // theme (mode), on this positioned full-height container.
     return (
-      <div
-        style={{
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 12,
-          fontFamily: 'sans-serif',
-          fontSize: 13,
-          color: 'var(--vscode-foreground, #ccc)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span className="gridsheet-saving-spinner" />
-          <span>Loading…{pct == null ? '' : ` ${pct}%`}</span>
-        </div>
-        <div
-          style={{
-            width: 220,
-            height: 6,
-            borderRadius: 3,
-            overflow: 'hidden',
-            background: 'color-mix(in srgb, var(--vscode-foreground, #ccc) 15%, transparent)',
-          }}
-        >
-          <div
-            style={{
-              height: '100%',
-              width: `${pct ?? 0}%`,
-              borderRadius: 3,
-              background: 'var(--vscode-progressBar-background, #3794ff)',
-              transition: 'width 0.1s linear',
-            }}
-          />
-        </div>
+      <div style={{ position: 'relative', height: '100%', ...GRID_THEME_TOKENS[mode] }}>
+        <ProgressOverlay progress={loadProgress ?? null} label="Loading" />
       </div>
     );
   }
@@ -1014,31 +1002,38 @@ const App = () => {
             ＋ Add ▾
           </button>
           {addOpen && (
-            <div style={popoverStyle}>
+            <div style={{ ...popoverStyle, minWidth: 200 }}>
               <style>{`.gs-add-item:hover{background:var(--vscode-list-hoverBackground, rgba(128,128,128,0.18)) !important}`}</style>
-              <label style={{ ...checkStyle, cursor: 'default', justifyContent: 'space-between', padding: '0 6px 2px' }}>
+              <label style={{ ...checkStyle, cursor: 'default', justifyContent: 'space-between', padding: '0 2px 4px' }}>
                 Count
                 <input
                   type="number"
                   min={1}
                   value={addN}
                   onInput={(e) => setAddN(Math.max(1, Number((e.target as HTMLInputElement).value) || 1))}
-                  style={{ ...fieldStyle, width: 70 }}
+                  style={{ ...fieldStyle, width: 84 }}
                 />
               </label>
-              <div style={{ height: 1, background: 'var(--vscode-widget-border, rgba(128,128,128,0.35))', margin: '2px 0' }} />
-              <button className="gs-add-item" style={menuItemStyle} onClick={() => doAdd('rows', 'end')}>
-                Rows — at end
-              </button>
-              <button className="gs-add-item" style={menuItemStyle} onClick={() => doAdd('cols', 'end')}>
-                Cols — at end
-              </button>
-              <button className="gs-add-item" style={menuItemStyle} onClick={() => doAdd('rows', 'selection')}>
-                Rows — at selection
-              </button>
-              <button className="gs-add-item" style={menuItemStyle} onClick={() => doAdd('cols', 'selection')}>
-                Cols — at selection
-              </button>
+              <div style={{ height: 1, background: 'var(--vscode-widget-border, rgba(128,128,128,0.35))', margin: '2px 0 5px' }} />
+              {/* Rows first — adding rows is the common case. */}
+              <div style={addSectionLabelStyle}>Rows</div>
+              <div style={addRowStyle}>
+                <button className="gs-add-item" style={addBtnStyle} onClick={() => doAdd('rows', 'end')}>
+                  At end
+                </button>
+                <button className="gs-add-item" style={addBtnStyle} onClick={() => doAdd('rows', 'selection')}>
+                  At selection
+                </button>
+              </div>
+              <div style={{ ...addSectionLabelStyle, paddingTop: 8 }}>Columns</div>
+              <div style={addRowStyle}>
+                <button className="gs-add-item" style={addBtnStyle} onClick={() => doAdd('cols', 'end')}>
+                  At end
+                </button>
+                <button className="gs-add-item" style={addBtnStyle} onClick={() => doAdd('cols', 'selection')}>
+                  At selection
+                </button>
+              </div>
             </div>
           )}
         </div>

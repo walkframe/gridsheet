@@ -14,6 +14,7 @@ import {
 import { Context } from '../store';
 import { reducer as defaultReducer, isMutationAction, isAsyncMutationAction, commitAsyncOp } from '../store/actions';
 import { AsyncProgressOverlay, type AsyncProgressHandle } from './AsyncProgressOverlay';
+import { ProgressOverlay } from './ProgressOverlay';
 import { Editor } from './Editor';
 import { StoreObserver } from './StoreObserver';
 import { Resizer } from './Resizer';
@@ -46,6 +47,7 @@ export function GridSheet({
   className,
   style,
   book: initialBook,
+  loading: loadingProp,
 }: Props) {
   const {
     sheetResize,
@@ -396,14 +398,20 @@ export function GridSheet({
           <Resizer />
           <Emitter />
           {store.pendingAsyncOp != null ? (
+            // Chunked async mutation (large fill/paste): imperative progress, grid not re-rendered.
             <AsyncProgressOverlay ref={overlayRef} label={store.pendingAsyncOp.label} />
-          ) : (
-            loading && (
-              <div className="gs-loading-overlay">
-                <div className="gs-loading-spinner" />
-              </div>
-            )
-          )}
+          ) : loading ? (
+            // Internal sync mutation in flight: brief indeterminate spinner.
+            <div className="gs-loading-overlay">
+              <div className="gs-loading-spinner" />
+            </div>
+          ) : loadingProp ? (
+            // Consumer-driven initial loading (data not ready yet).
+            <ProgressOverlay
+              progress={typeof loadingProp === 'object' ? (loadingProp.progress ?? null) : null}
+              label={typeof loadingProp === 'object' ? loadingProp.label : undefined}
+            />
+          ) : null}
         </div>
       </div>
     </Context.Provider>

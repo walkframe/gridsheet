@@ -21,6 +21,7 @@ import { p2a, a2p } from '@gridsheet/web';
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '@gridsheet/web';
 import { initSearchStatement, restrictPoints, flashSheet, flashWithCallback, compactReflection } from './helpers';
 import { smartScroll } from '@gridsheet/web';
+import { focus } from '@gridsheet/web';
 import { operations as prevention } from '@gridsheet/web';
 import { Autofill } from '@gridsheet/web';
 
@@ -265,7 +266,13 @@ class SubmitAutofillAction<T extends PointType> extends CoreAction<T> {
         topHeaderSelecting: false,
         autofillDraggingTo: null,
       };
-      return result;
+      // A drag-fill starts on the fill handle (mousedown there, not on a cell), so the editor
+      // was blurred and nothing refocuses it — leaving the grid unresponsive to the keyboard
+      // right after a fill. Restore focus after the re-render.
+      return {
+        ...result,
+        callback: (next: StoreType) => requestAnimationFrame(() => focus(next.editorRef.current)),
+      };
     } catch (e) {
       // The fill may fail (e.g. a target beyond the sheet). Never leave
       // autofillDraggingTo set — a stuck value blocks all future clicks
@@ -1669,7 +1676,14 @@ class CommitAsyncOpAction<
       pendingAsyncOp: null,
       ...(payload.finalize ?? {}),
     };
-    return { ...next, ...initSearchStatement(payload.sheet, next), ...restrictPoints(next, payload.sheet) };
+    return {
+      ...next,
+      ...initSearchStatement(payload.sheet, next),
+      ...restrictPoints(next, payload.sheet),
+      // The progress overlay (pointer-events blocking) ran over the grid while the chunked
+      // fill/paste/undo committed; return focus to the editor so the keyboard works right after.
+      callback: (committed: StoreType) => requestAnimationFrame(() => focus(committed.editorRef.current)),
+    };
   }
 }
 export const commitAsyncOp = new CommitAsyncOpAction().bind();

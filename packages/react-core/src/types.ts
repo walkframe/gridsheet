@@ -208,6 +208,11 @@ export type StoreHandle = {
   dispatch: React.Dispatch<{ type: number; value: any }>;
 };
 
+/** Consumer-driven loading state: show a progress overlay while data isn't ready yet (e.g.
+ * the app is fetching/parsing initial cells). `true` = indeterminate spinner; an object =
+ * a determinate bar. The consumer decides when loading ends (the grid can't know the source). */
+export type LoadingState = boolean | { progress?: number | null; label?: string };
+
 export type Props = {
   initialCells: CellsByAddressType;
   sheetName?: string;
@@ -217,6 +222,7 @@ export type Props = {
   options?: OptionsType;
   className?: string;
   style?: CSSProperties;
+  loading?: LoadingState;
 };
 
 export type EditorEvent = KeyboardEvent<HTMLTextAreaElement>;
