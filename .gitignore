@@ -113,3 +113,7 @@ test-results/
 *storybook.log
 
 .vscode/
+
+# macOS
+.DS_Store
+**/.DS_Store
