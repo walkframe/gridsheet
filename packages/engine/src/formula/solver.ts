@@ -73,7 +73,7 @@ export const solveFormula = ({ value, sheet, point, raise = true, resolution = '
     sheet.finishSolvedCache(point, solved);
   }
 
-  if (resolution === 'RESOLVED' && solved instanceof Sheet) {
+  if (resolution === 'RESOLVED' && Sheet.is(solved)) {
     solved = stripSheet({ value: solved, raise, at });
   }
   if (Pending.is(solved)) {
@@ -134,7 +134,7 @@ export type StripSheetProps = {
 };
 
 export const stripSheet = ({ value, at, raise = true }: StripSheetProps): any => {
-  if (value instanceof Sheet) {
+  if (Sheet.is(value)) {
     return value.strip({ raise, at });
   }
   return value;

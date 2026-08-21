@@ -24,7 +24,7 @@ export class ArrayformulaFunction extends BaseFunction {
     if (Spilling.is(value)) {
       return value;
     }
-    if (value instanceof Sheet) {
+    if (Sheet.is(value)) {
       return value._toValueMatrix();
     }
     if (Array.isArray(value)) {

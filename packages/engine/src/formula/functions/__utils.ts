@@ -87,7 +87,7 @@ export const ensureNumber = (value: any, options?: EnsureNumberOptions): number 
     // falsy is 0
     return 0;
   }
-  if (value instanceof Sheet) {
+  if (Sheet.is(value)) {
     const v = stripSheet({ value });
     return ensureNumber(v, { alternative });
   }
@@ -122,7 +122,7 @@ export const ensureString = (value: any): string => {
   if (!value) {
     return '';
   }
-  if (value instanceof Sheet) {
+  if (Sheet.is(value)) {
     const v = stripSheet({ value });
     return ensureString(v);
   }
@@ -147,7 +147,7 @@ export const ensureBoolean = (value: any, options?: EnsureBooleanOptions): boole
   if (value === null) {
     return false;
   }
-  if (value instanceof Sheet) {
+  if (Sheet.is(value)) {
     const v = stripSheet({ value });
     return ensureBoolean(v, options);
   }
@@ -175,7 +175,7 @@ export function ensureDate(value: any): Date {
   if (value instanceof Date) {
     return value;
   }
-  if (value instanceof Sheet) {
+  if (Sheet.is(value)) {
     const v = stripSheet({ value });
     return ensureDate(v);
   }
@@ -233,7 +233,7 @@ export const check = (value: any, condition: string): boolean => {
 };
 
 export const eachMatrix = (value: any, callback: (v: any, relativePoint: PointType) => void, at: Id) => {
-  if (value instanceof Sheet) {
+  if (Sheet.is(value)) {
     const matrix = value.solve({ at });
     for (let y = 0; y < matrix.length; y++) {
       for (let x = 0; x < matrix[y].length; x++) {

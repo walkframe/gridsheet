@@ -3113,7 +3113,7 @@ export class Sheet implements UserSheet {
       return this._stripped;
     }
     let value: any = this;
-    while (value instanceof Sheet) {
+    while (Sheet.is(value)) {
       value = solveSheet({ sheet: value, raise, at })[0]?.[0];
     }
     this._stripped = value;
