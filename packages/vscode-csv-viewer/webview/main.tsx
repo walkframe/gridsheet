@@ -4,7 +4,6 @@ import {
   ProgressOverlay,
   embedStyle,
   buildInitialCells,
-  useBook,
   toValueMatrix,
   toValueMatrixAsync,
   p2a,
@@ -20,6 +19,8 @@ import {
   defaultColMenuDescriptors,
   type StoreHandle,
 } from '@gridsheet/preact-core';
+
+import { useSpellbook } from '@gridsheet/preact-core/spellbook';
 
 import { makeAiFunctions, type AiEnqueue } from './aiFunctions';
 import type { AiBatchResponse, AiCustomFunction, AiTask } from '../src/aiTypes';
@@ -499,12 +500,14 @@ const Grid = ({
   const [progress, setProgress] = useState(0); // 0..1
 
   const additionalFunctions = useMemo(() => makeAiFunctions(enqueueAi, aiCustom), [aiCustom]);
-  // useBook (not createBook) so registry.transmit is wired to a real repaint.
-  // GridSheet only wires transmit for a book it owns; with our own createBook the
+  // useSpellbook (not createSpellbook) so registry.transmit is wired to a real repaint.
+  // GridSheet only wires transmit for a book it owns; with our own createSpellbook the
   // async =CLAUDE/=CODEX results would land in the cache but never render until an
   // unrelated interaction (e.g. a cursor move) forced a paint.
+  // useSpellbook == useBook with @gridsheet/functions' allFunctions pre-loaded; our AI
+  // functions merge on top of the extended set.
   // onChange fires per in-memory edit (cheap — just flags the footer as unsaved; no serialize).
-  const book = useBook({ additionalFunctions, policies: formatPolicies, onChange: () => onDirty() });
+  const book = useSpellbook({ additionalFunctions, policies: formatPolicies, onChange: () => onDirty() });
 
   // Latest render params, read by the save routine without re-arming its effect.
   const saveArgsRef = useRef({ header, delim, evaluate, readOnly, onSave });
