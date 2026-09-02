@@ -1,0 +1,68 @@
+---
+title: GridSheet
+description: Build programmable spreadsheets for web apps — a framework-agnostic grid with a formula engine.
+template: splash
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import IntroductionExample from '../../components/introduction.component';
+
+<div class="gs-hero not-content">
+  <div class="gs-hero__text">
+    <h1 class="gs-hero__title">Build programmable spreadsheets for web apps</h1>
+    <p class="gs-hero__tag">A powerful, extensible grid with formulas, custom renderers, and async data — ready to drop into any web app.</p>
+    <div class="gs-hero__cta">
+      <a class="gs-btn gs-btn--primary" href="/getting-started">Get Started →</a>
+      <a class="gs-btn gs-btn--ghost" href="/examples/case1">View Examples</a>
+    </div>
+  </div>
+  <div class="gs-hero__demo"><IntroductionExample client:visible /></div>
+</div>
+
+## Everything you need in a grid
+
+<CardGrid>
+  <Card title="⚡ Formula engine">
+    Excel-like formulas with `ARRAYFORMULA` spilling, cross-sheet references, and your own custom functions.
+  </Card>
+  <Card title="🎨 Custom renderers">
+    Render anything inside a cell — charts, badges, avatars, inputs — through composable policies.
+  </Card>
+  <Card title="🔌 Async functions">
+    Fetch live data right inside cells, with loading states and built-in result caching.
+  </Card>
+  <Card title="🧩 Framework-agnostic">
+    One core engine with first-class bindings for **React, Vue, Svelte, and Preact**.
+  </Card>
+  <Card title="🚀 Built for scale">
+    Virtualized rendering stays smooth across **millions of cells**.
+  </Card>
+  <Card title="⌨️ Batteries included">
+    Keyboard shortcuts, sort &amp; filter, undo/redo, clipboard, and light/dark theming.
+  </Card>
+</CardGrid>
+
+## Drop it into your app
+
+```tsx
+import { GridSheet, buildInitialCells } from '@gridsheet/react-core';
+
+export default () => (
+  <GridSheet
+    initialCells={buildInitialCells({
+      matrices: {
+        A1: [
+          ['Item', 'Qty', 'Price', 'Total'],
+          ['Apple', 3, 120, '=B2*C2'],
+          ['Banana', 5, 80, '=B3*C3'],
+        ],
+      },
+    })}
+  />
+);
+```
+
+<CardGrid>
+  <LinkCard title="Get Started →" href="/getting-started" description="Install and render your first sheet in minutes." />
+  <LinkCard title="Browse Examples →" href="/examples/case1" description="12 interactive demos, from dashboards to pixel art." />
+</CardGrid>

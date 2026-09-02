@@ -2,45 +2,26 @@
   "name": "@gridsheet/docs",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev -p 5244",
-    "build": "next build",
-    "start": "next start"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/walkframe/gridsheet.git"
+    "dev": "astro dev --port 5244",
+    "build": "astro build",
+    "preview": "astro preview --port 5244"
   },
   "dependencies": {
-    "@gridsheet/react-core": "workspace:*",
-    "@gridsheet/react-dev": "workspace:*",
-    "@gridsheet/functions": "workspace:*",
-    "chart.js": "^4.0.0",
-    "react-chartjs-2": "^5.0.0",
-    "@octokit/request": "^8.0.0",
-    "react-select": "^5.7.0",
-    "next": "^14.0.0",
-    "nextra": "^2.13.2",
-    "nextra-theme-docs": "^2.13.2",
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0"
-  },
-  "bugs": {
-    "url": "https://github.com/walkframe/gridsheet/issues"
-  },
-  "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@types/react": "^18.0.0",
-    "typescript": "^5.0.0"
-  },
-  "homepage": "https://github.com/walkframe/gridsheet#readme",
-  "keywords": [
-    "gridsheet",
-    "spreadsheet",
-    "react",
-    "vue",
-    "preact"
-  ],
-  "author": "GridSheet Team",
-  "license": "Apache-2.0"
+    "@astrojs/markdown-remark": "^7.3.0",
+    "@astrojs/react": "^6.0.5",
+    "@astrojs/starlight": "^0.42.0",
+    "@gridsheet/functions": "workspace:^",
+    "@gridsheet/react-core": "workspace:^",
+    "@gridsheet/react-dev": "workspace:^",
+    "@octokit/request": "^10.0.16",
+    "astro": "^7.2.10",
+    "chart.js": "^4.5.1",
+    "mermaid": "^11.17.2",
+    "react": "^18",
+    "react-chartjs-2": "^5.3.1",
+    "react-dom": "^18",
+    "react-select": "^5.7.0"
+  }
 }

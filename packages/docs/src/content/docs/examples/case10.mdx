@@ -1,0 +1,257 @@
+---
+title: "Case 10: Inventory Management with Events & Formulas"
+---
+
+import Case10 from '../../../components/case10.component';
+
+This example demonstrates a real-world inventory management dashboard built with GridSheet. It combines event-driven activity logging, custom cell renderers (stock indicators, category badges, currency formatting), formula-based calculations, and a fixed summary row — all in a single interactive sheet.
+
+<div class="not-content"><Case10 client:visible /></div>
+
+## Implementation Guide
+
+<a href="https://github.com/walkframe/gridsheet/tree/master/packages/docs-astro/src/components/case10.component.tsx" target="_blank" rel="noopener noreferrer" style={{display: 'inline-block', background: '#007bff', color: 'white', padding: '8px 16px', textDecoration: 'none', borderRadius: '4px', fontWeight: '500', margin: '10px 0'}}>📄 View Source Code</a>
+
+### `onChange` and `getLastChangedAddresses`
+
+`onChange` fires after every cell mutation. The `sheet` object passed to the callback exposes `getLastChangedAddresses()`, which returns the cell addresses (`string[]`) that were modified in the most recent operation.
+
+```tsx
+onChange: ({ sheet }: { sheet: UserSheet }) => {
+  const addresses = sheet.getLastChangedAddresses();
+  if (addresses.length > 0) {
+    addActivityLog(`✏️ Cells changed: ${addresses.join(', ')}`);
+  }
+  setTsv(convertToTSV(sheet));
+},
+```
+
+This is more precise than tracking `points`, because `getLastChangedAddresses()` reflects the actual addresses of written cells, including those affected by formula recalculation.
+
+### Fine-grained Structural Event Callbacks
+
+Besides `onChange`, `useSpellbook` provides dedicated callbacks for row/column insertions and deletions. Each receives the exact positions affected.
+
+```tsx
+onRemoveRows: ({ sheet, ys }) => {
+  addActivityLog(`🗑️ Removed row(s): ${ys.join(', ')}`);
+},
+onInsertRows: ({ sheet, y, numRows }) => {
+  addActivityLog(`➕ Inserted ${numRows} row(s) at row ${y}`);
+},
+onRemoveCols: ({ sheet, xs }) => {
+  const cols = xs.map((x) => String.fromCharCode(65 + x)).join(', ');
+  addActivityLog(`🗑️ Removed column(s): ${cols}`);
+},
+onInsertCols: ({ sheet, x, numCols }) => {
+  addActivityLog(`➕ Inserted ${numCols} col(s) at ${String.fromCharCode(65 + x)}`);
+},
+```
+
+Use these to build audit logs, update summary stats, or sync deleted rows to a backend.
+
+### Exporting Sheet Data as TSV
+
+The `UserSheet` object can be converted to a TSV string by calling `toValueMatrix(sheet, { resolution: 'RESOLVED' })`. This evaluates formulas and returns a 2D array of plain values.
+
+```tsx
+const convertToTSV = (sheet: UserSheet): string => {
+  const matrix = toValueMatrix(sheet, { resolution: 'RESOLVED' });
+  return matrix
+    .map((row) =>
+      row
+        .map((cell) => {
+          if (cell === null || cell === undefined) return '';
+          const s = String(cell);
+          return s.replace(/\t/g, ' ').replace(/\n/g, ' ');
+        })
+        .join('\t'),
+    )
+    .join('\n');
+};
+```
+
+Call this inside `onInit` and `onChange` and store it in state to keep the TSV display populated initially and in sync with every edit.
+
+### Formula-based Calculations and Read-only Columns
+
+Each product row computes its total value via a formula (`=D1*E1`). Summary rows use `SUM`, `COUNTA`, and `COUNTIF` to aggregate totals, item counts, and low-stock alerts.
+
+```tsx
+matrices: {
+  A1: [
+    [null, 'Laptop Pro X1', 'Electronics', 15, 1299.99, '=D1*E1'],
+    // ...
+  ],
+  B22: [['TOTAL', '', '=SUM(D1:D21)', '', '=SUM(F1:F21)']],
+  B23: [['Items', '', '=COUNTA(B1:B21)']],
+  B24: [['Low Stock', '', '=COUNTIF(D1:D21,"<=10")']],
+},
+```
+
+Formula columns are made read-only with `prevention: operations.Write`, so users cannot accidentally overwrite computed values.
+
+### Styled Headers and Fixed Summary Rows with `makeBorder`
+
+`makeBorder` generates individual CSS border properties. Combine it with background colors for professional header and summary styling.
+
+```tsx
+const summaryBorder = makeBorder({ top: '3px double #34495e' });
+
+const headerStyle = {
+  backgroundColor: '#2c3e50',
+  color: '#ffffff',
+  fontWeight: 'bold',
+  fontSize: '11px',
+};
+```
+
+Summary rows use `sortFixed` and `filterFixed` to stay visible regardless of sorting or filtering:
+
+```tsx
+'022': { sortFixed: true, filterFixed: true },
+```
+
+### Currency Formatting with `ThousandSeparatorPolicyMixin`
+
+Combine a custom `CurrencyPolicyMixin` with the built-in `ThousandSeparatorPolicyMixin` for formatted currency display:
+
+```tsx
+const CurrencyPolicyMixin: PolicyMixinType = {
+  renderNumber({ value }: RenderProps<number>) {
+    return (
+      <span style={{ fontFamily: 'monospace', fontSize: '11px' }}>
+        ${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      </span>
+    );
+  },
+};
+
+// In useSpellbook:
+currency: new Policy({ mixins: [CurrencyPolicyMixin, ThousandSeparatorPolicyMixin] }),
+```
+
+### `renderNumber` for Color-coded Stock Indicators
+
+Override `renderNumber` to visualize numeric values with contextual color and a status badge instead of just a number.
+
+```tsx
+const StockPolicyMixin: PolicyMixinType = {
+  renderNumber({ value }: RenderProps<number>) {
+    const color  = value <= 10 ? '#e74c3c' : value <= 50 ? '#f39c12' : '#27ae60';
+    const status = value <= 10 ? 'LOW'     : value <= 50 ? 'MEDIUM'  : 'GOOD';
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px' }}>
+        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: color }} />
+        <span style={{ fontWeight: 'bold', color }}>{value}</span>
+        <span style={{ fontSize: '9px', color: '#666' }}>({status})</span>
+      </div>
+    );
+  },
+};
+```
+
+### `renderNull` for Action Buttons in Cells
+
+`renderNull` is called when a cell has no value (`null` or `undefined`). Use this to render interactive elements — like a delete button — in otherwise empty cells.
+
+```tsx
+const DeleteButtonPolicyMixin: PolicyMixinType = {
+  renderNull({ value, point, apply, sheet }: RenderProps<null | undefined>) {
+    if (point.y < 1) return null;
+    return (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          if (apply) {
+            apply(sheet.removeRows({ y: point.y, numRows: 1 }));
+          }
+        }}
+        style={{
+          backgroundColor: '#e74c3c', color: 'white',
+          border: 'none', borderRadius: '4px',
+          width: '20px', height: '20px', cursor: 'pointer',
+        }}
+      >
+        ×
+      </button>
+    );
+  },
+};
+```
+
+`apply(sheet.removeRows(...))` commits the row deletion imperatively from within the renderer. The `onRemoveRows` callback fires immediately after.
+
+### Communicating Render-side Context to Event Handlers
+
+When a button inside a renderer needs to pass extra context (e.g., the product name) to an event callback, use a `CustomEvent` dispatched on `document`.
+
+```tsx
+// Inside renderNull:
+const deleteEvent = new CustomEvent('productDelete', {
+  detail: { row: point.y, productName },
+});
+document.dispatchEvent(deleteEvent);
+apply(sheet.removeRows({ y: point.y, numRows: 1 }));
+
+// In the component:
+React.useEffect(() => {
+  const handler = (e: CustomEvent) => setPendingDeleteInfo(e.detail);
+  document.addEventListener('productDelete', handler as EventListener);
+  return () => document.removeEventListener('productDelete', handler as EventListener);
+}, []);
+```
+
+The `onRemoveRows` handler then reads `pendingDeleteInfo` to include the product name in the activity log.
+
+### `renderString` for Color-coded Category Badges
+
+`renderString` intercepts rendering of string-valued cells. Use it to turn raw category text into colored badge elements.
+
+```tsx
+const CategoryPolicyMixin: PolicyMixinType = {
+  renderString({ value }: RenderProps<string>) {
+    const colors: Record<string, string> = {
+      Electronics: '#3498db',
+      Clothing:    '#e67e22',
+      Books:       '#9b59b6',
+      Home:        '#1abc9c',
+      Sports:      '#e74c3c',
+    };
+    const color = colors[value] ?? '#95a5a6';
+    return (
+      <span style={{
+        backgroundColor: color,
+        color: 'white',
+        padding: '1px 6px',
+        borderRadius: '8px',
+        fontSize: '9px',
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+      }}>
+        {value}
+      </span>
+    );
+  },
+};
+```
+
+### Composing Multiple Mixins with Named Policies
+
+Each column gets its own `Policy` composed from one or more mixins. Pass all named policies to `useSpellbook` under the `policies` key:
+
+```tsx
+const book = useSpellbook({
+  policies: {
+    stock:    new Policy({ mixins: [StockPolicyMixin] }),
+    category: new Policy({ mixins: [CategoryPolicyMixin] }),
+    delete:   new Policy({ mixins: [DeleteButtonPolicyMixin] }),
+    currency: new Policy({ mixins: [CurrencyPolicyMixin, ThousandSeparatorPolicyMixin] }),
+  },
+  onChange: ({ sheet }) => { ... },
+  onRemoveRows: ({ sheet, ys }) => { ... },
+  // other event handlers ...
+});
+```
+
+Then in `buildInitialCells`, assign the policy name to each cell or column default so the right renderer is applied per column.

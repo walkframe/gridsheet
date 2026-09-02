@@ -1,0 +1,107 @@
+---
+title: "Case 6: Calendar/Scheduler Interface"
+---
+
+import Case6 from '../../../components/case6.component';
+
+This demo showcases a calendar/scheduler UI built with GridSheet.
+
+It demonstrates custom date cell rendering with event management.
+
+Users can input events in "HH:MM Task" format, separated by newlines.
+
+<div class="not-content"><Case6 client:visible /></div>
+
+## Implementation Guide
+
+<a href="https://github.com/walkframe/gridsheet/tree/master/packages/docs-astro/src/components/case6.component.tsx" target="_blank" rel="noopener noreferrer" style={{display: 'inline-block', background: '#007bff', color: 'white', padding: '8px 16px', textDecoration: 'none', borderRadius: '4px', fontWeight: '500', margin: '10px 0'}}>📄 View Source Code</a>
+
+### 🎨 `renderCallback` for Stable Layout
+
+The outer cell layout (padding, flexbox container, date header) is defined in `renderCallback`, which wraps **any** rendered result regardless of the cell's value type.
+This prevents layout inconsistency when the cell holds different types of values (array, null, string, etc.).
+
+```tsx
+renderCallback(rendered, { point }) {
+  const { date } = getDateFromPosition(point.y, point.x);
+  return (
+    <div style={{ width: '100%', height: '100%', padding: 8, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ fontWeight: 700, fontSize: 14 }}>{date}</div>
+      <div style={{ flex: 1, overflow: 'hidden' }}>{rendered}</div>
+    </div>
+  );
+},
+```
+
+### 📋 `renderArray` for Task List Only
+
+`renderArray` focuses solely on rendering the list of event items.
+It does not need to handle layout or the empty state — those are delegated to `renderCallback` and `renderNull` respectively.
+
+```tsx
+renderArray({ value }) {
+  const events = Array.isArray(value) ? value : [];
+  return (
+    <>
+      {events.map((event, i) => (
+        <div key={i} style={{ background: '#3498db', color: '#fff', borderRadius: 3, padding: '2px 4px' }}>
+          {event.time && <span>{event.time}</span>}
+          <span>{event.task}</span>
+        </div>
+      ))}
+    </>
+  );
+},
+```
+
+### 🚫 `renderNull` for Empty State
+
+When a cell has no events, its value is `null`. `renderNull` handles this case and renders the "No events" placeholder.
+This keeps the empty state display separate from the array rendering logic.
+
+```tsx
+renderNull() {
+  return (
+    <span style={{ color: '#aaa', fontSize: 11, fontStyle: 'italic', textAlign: 'center' }}>
+      No events
+    </span>
+  );
+},
+```
+
+### 💾 `deserializeFirst` — Empty String → `null`
+
+When a user clears a cell, the value becomes an empty string.
+`deserializeFirst` converts that to `null` so that `renderNull` (not `renderArray`) is invoked.
+
+```tsx
+deserializeFirst: (value: string) => {
+  if (!value || !value.trim()) {
+    return { value: null };
+  }
+  const events = parseEvents(value);
+  return { value: events };
+},
+```
+
+### 🗂️ Initial Data Uses `null` for Empty Days
+
+Cells with no events are initialized as `null` (not `[]`), ensuring consistent behavior between the initial render and after a user clears a cell.
+
+```tsx
+let events: EventType[] | null = null;
+// only assign if there are events for this day
+if (...) {
+  events = parseEvents('...');
+}
+week.push(events);
+```
+
+### ✅ Summary of Role Division
+
+| Hook | Responsibility |
+|---|---|
+| `renderCallback` | Outer layout (container, date header) — always applied |
+| `renderArray` | Renders event badges when value is an array |
+| `renderNull` | Renders "No events" placeholder when value is null |
+| `deserializeFirst` | Converts empty string input back to `null` |

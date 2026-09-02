@@ -1,0 +1,5 @@
+# Version-history pages were renamed (Astro strips dots from slugs). 301 the
+# old Nextra URLs so existing links keep working.
+/history/1.x.x  /history/v1  301
+/history/2.x.x  /history/v2  301
+/history/3.x.x  /history/v3  301

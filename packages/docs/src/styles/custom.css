@@ -1,0 +1,114 @@
+/* Brand accent (blue) to match the GridSheet identity. Starlight derives its
+   link/accent shades from these. Tuned lightly for now; refine during theming. */
+:root {
+  --sl-color-accent-low: #1e3a5f;
+  --sl-color-accent: #2563eb;
+  --sl-color-accent-high: #bfdbfe;
+}
+:root[data-theme='light'] {
+  --sl-color-accent-low: #dbeafe;
+  --sl-color-accent: #2563eb;
+  --sl-color-accent-high: #1e3a5f;
+}
+
+/* The home renders a custom hero (.gs-hero) with its own <h1>, so hide
+   Starlight's auto page-title + its divider on that page only. */
+main:has(.gs-hero) > .content-panel:first-child {
+  display: none;
+}
+.content-panel:has(.gs-hero) {
+  border-top: 0;
+  padding-top: 0;
+}
+
+/* Embedded demos opt out of Starlight's content styles via .not-content, which
+   also drops the content column's width cap. Keep them inside the column: any
+   demo wider than the column (e.g. the fixed-width large-dataset grid) scrolls
+   horizontally within it instead of overflowing the page. */
+.sl-markdown-content .not-content {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* ── Custom home hero: text + live demo, two columns ─────────────────────── */
+.gs-hero {
+  display: flex;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 1rem 0 2.5rem;
+}
+.gs-hero__text {
+  flex: 1 1 360px;
+  min-width: 300px;
+}
+.gs-hero__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1.1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--sl-color-gray-2);
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
+  background: var(--sl-color-gray-6);
+}
+.gs-hero__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--sl-color-text-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sl-color-text-accent) 22%, transparent);
+}
+.gs-hero__title {
+  font-size: clamp(2.1rem, 4.6vw, 3.25rem);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  margin: 0 0 1.1rem;
+  color: var(--sl-color-white);
+}
+.gs-hero__tag {
+  font-size: 1.12rem;
+  line-height: 1.6;
+  color: var(--sl-color-gray-2);
+  margin: 0 0 1.75rem;
+  max-width: 40ch;
+}
+.gs-hero__cta {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.gs-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.65rem 1.4rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.98rem;
+  text-decoration: none;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+.gs-btn:hover {
+  transform: translateY(-1px);
+}
+.gs-btn--primary {
+  background: var(--sl-color-text-accent);
+  color: var(--sl-color-black);
+}
+.gs-btn--ghost {
+  border: 1px solid var(--sl-color-gray-4);
+  color: var(--sl-color-white);
+}
+.gs-hero__demo {
+  flex: 1 1 480px;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+

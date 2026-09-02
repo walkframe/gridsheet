@@ -1,0 +1,40 @@
+---
+import Default from '@astrojs/starlight/components/Head.astro';
+---
+
+<Default><slot /></Default>
+
+<script>
+  // Client-side mermaid rendering. mermaid is dynamically imported only when a
+  // page actually contains a <pre class="mermaid"> block, so non-diagram pages
+  // pay nothing. Re-renders on theme toggle and after Starlight navigations.
+  const sources = new WeakMap<Element, string>();
+  let mermaidMod: any;
+
+  async function renderMermaid() {
+    const nodes = Array.from(document.querySelectorAll('pre.mermaid')) as HTMLElement[];
+    if (!nodes.length) return;
+    if (!mermaidMod) {
+      mermaidMod = (await import('mermaid')).default;
+    }
+    const dark = document.documentElement.dataset.theme === 'dark';
+    mermaidMod.initialize({ startOnLoad: false, theme: dark ? 'dark' : 'default' });
+    for (const el of nodes) {
+      if (!sources.has(el)) sources.set(el, el.textContent || '');
+      el.removeAttribute('data-processed');
+      el.innerHTML = sources.get(el) || '';
+    }
+    try {
+      await mermaidMod.run({ nodes });
+    } catch (e) {
+      console.error('mermaid render failed', e);
+    }
+  }
+
+  renderMermaid();
+  document.addEventListener('astro:page-load', renderMermaid);
+  new MutationObserver(renderMermaid).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme'],
+  });
+</script>
