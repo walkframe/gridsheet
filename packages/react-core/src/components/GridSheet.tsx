@@ -227,7 +227,14 @@ export function GridSheet({
         }
       }
       const root = rootRef.current;
-      setSheetHeight(root ? Math.min(el.clientHeight, root.clientHeight) : el.clientHeight);
+      // Height is re-measured only when it is genuinely container-driven: fill mode,
+      // or after the user dragged the resize handle. Otherwise `Math.min` would
+      // ratchet a fixed-height grid smaller on every layout change (e.g. content
+      // updates) and never recover, collapsing it over time. Width keeps auto-
+      // fitting the container so wide grids stay responsive.
+      if (fillHeight || el.style.height) {
+        setSheetHeight(root ? Math.min(el.clientHeight, root.clientHeight) : el.clientHeight);
+      }
       setSheetWidth(root ? Math.min(el.clientWidth, root.clientWidth) : el.clientWidth);
     });
     ro.observe(el);
@@ -375,14 +382,19 @@ export function GridSheet({
             ...(fillWidth ? { width: '100%' } : null),
             maxWidth: '100%',
             // In fill-height mode the parent's height is the limit (flex:1 fills the remaining
-            // space below the formula bar); otherwise cap at the viewport bottom as before.
+            // space below the formula bar). With an explicit fixed height, honor it exactly
+            // (never shrink to the viewport — otherwise a grid placed low on a page or in a
+            // short viewport collapses). Only the shrink-to-content case caps at the viewport
+            // bottom so a very tall grid stays usable within the current view.
             ...(fillHeight
               ? { flex: 1, minHeight: 0, maxHeight: '100%' }
-              : {
-                  maxHeight: mainRef.current
-                    ? window.innerHeight - mainRef.current.getBoundingClientRect().top
-                    : (store.sheetReactive.current?.fullHeight || 0) + 2,
-                }),
+              : fixedHeight
+                ? { maxHeight: sheetHeight }
+                : {
+                    maxHeight: mainRef.current
+                      ? window.innerHeight - mainRef.current.getBoundingClientRect().top
+                      : (store.sheetReactive.current?.fullHeight || 0) + 2,
+                  }),
             resize: sheetResize,
             ...style,
           }}
