@@ -8,7 +8,7 @@ text — scrollable, with row/column headers, selection, formulas, and copy.
 
 Cells take **formulas** (`=A1+B1`), and AI functions like
 `=CLAUDE(…)` / `=CODEX(…)` / `=CLAUDE.NUMBER(…)` resolve right in the grid — see
-[docs/ai-functions.md](docs/ai-functions.md).
+[docs/ai-functions.md](https://github.com/walkframe/gridsheet/blob/master/packages/vscode-csv-viewer/docs/ai-functions.md).
 
 ## Usage
 

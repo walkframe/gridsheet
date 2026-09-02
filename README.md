@@ -10,6 +10,10 @@
 - [@gridsheet/vue-core](https://github.com/walkframe/gridsheet/tree/master/packages/vue-core)
 - [@gridsheet/svelte-core](https://github.com/walkframe/gridsheet/tree/master/packages/svelte-core)
 
+## VSCode Extension
+
+- [CSV Spreadsheet — GridSheet](https://marketplace.visualstudio.com/items?itemName=walkframe.csv-gridsheet) — edit CSV/TSV files as a spreadsheet in VSCode ([source](https://github.com/walkframe/gridsheet/tree/master/packages/vscode-csv-viewer))
+
 ## Docs
 
 - [v3+ document](https://gridsheet.walkframe.com/)
