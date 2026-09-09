@@ -71,7 +71,8 @@ async function resolveGroup(provider: AiProvider, kind: AiKind, prompts: string[
 
 async function resolveChunk(provider: AiProvider, kind: AiKind, prompts: string[], cwd?: string): Promise<unknown[]> {
   // Custom user functions: no shared batch prompt / JSON schema (an arbitrary CLI won't honor
-  // them), so run one process per cell. batchSize caps how many run at once (this chunk).
+  // them), so run one process per cell. batchSize sizes this chunk; withSpawnLimit (in
+  // spawnCapture) then caps how many of these per-cell processes actually run at once.
   if (provider !== 'claude' && provider !== 'codex') {
     const command = customCommand(provider);
     if (!command) {
@@ -149,6 +150,43 @@ function batchSchema(kind: AiKind): Record<string, unknown> {
 
 function config() {
   return vscode.workspace.getConfiguration('gridsheet.ai');
+}
+
+// ── Concurrency limiter ──────────────────────────────────────────────────────
+// Cap the number of CLI processes running at once across the whole extension.
+// resolveAiBatch fans out groups with Promise.all, and custom functions spawn one
+// process per cell — so with eager evaluation (every cell fires on open) a big file
+// would launch a burst of processes and hit provider rate limits. Every real spawn
+// goes through spawnCapture, so gating it here bounds concurrency uniformly, no
+// matter how many resolve promises are outstanding. gridsheet.ai.concurrency
+// (default 10); 0 = unlimited. The limit is a shared module-level semaphore, so it
+// also throttles across grids opened at the same time.
+let activeSpawns = 0;
+const spawnWaiters: Array<() => void> = [];
+
+function concurrencyLimit(): number {
+  const n = config().get<number>('concurrency');
+  return n != null && n > 0 ? n : Infinity;
+}
+
+// Wake the next queued spawn if a slot is free. Called on each release.
+function releaseSpawnSlot() {
+  activeSpawns--;
+  if (spawnWaiters.length > 0 && activeSpawns < concurrencyLimit()) {
+    spawnWaiters.shift()!();
+  }
+}
+
+async function withSpawnLimit<T>(fn: () => Promise<T>): Promise<T> {
+  if (activeSpawns >= concurrencyLimit()) {
+    await new Promise<void>((resolve) => spawnWaiters.push(resolve));
+  }
+  activeSpawns++;
+  try {
+    return await fn();
+  } finally {
+    releaseSpawnSlot();
+  }
 }
 
 // Look up the shell command for a user-defined function (gridsheet.ai.custom is a name→command
@@ -286,7 +324,12 @@ async function runCodex(prompt: string, schema: Record<string, unknown>, cwd?: s
   }
 }
 
+// Bounded by withSpawnLimit so at most gridsheet.ai.concurrency processes run at once.
 function spawnCapture(bin: string, args: string[], stdin: string, provider: AiProvider, cwd?: string): Promise<string> {
+  return withSpawnLimit(() => spawnCaptureRaw(bin, args, stdin, provider, cwd));
+}
+
+function spawnCaptureRaw(bin: string, args: string[], stdin: string, provider: AiProvider, cwd?: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const env = { ...process.env } as NodeJS.ProcessEnv;
     // Reuse the user's subscription login: without an API key in the env, the

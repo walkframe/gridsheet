@@ -114,6 +114,15 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.onDidChangeActiveTextEditor(() => status.render()),
   );
   status.render();
+
+  // Public API for other extensions (e.g. the PICT generator): report whether a
+  // file open in a grid has unsaved changes, so they can confirm before an
+  // overwrite. Undefined when the file isn't open in a grid.
+  return {
+    getUnsavedState(uri: string): { dirty: boolean; evalDirty: boolean } | undefined {
+      return CsvEditorProvider.getUnsavedState(uri);
+    },
+  };
 }
 
 export function deactivate() {}

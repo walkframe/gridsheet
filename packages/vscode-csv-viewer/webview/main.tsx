@@ -173,6 +173,7 @@ type DataMessage = {
   delimiter: 'CSV' | 'TSV';
   readOnly?: boolean;
   evaluate?: boolean;
+  eager?: boolean;
   dateFormats?: string[];
   parseNumber?: boolean;
   parseDate?: boolean;
@@ -444,6 +445,9 @@ type GridProps = {
   extraRows: number;
   extraCols: number;
   evaluate: boolean;
+  // Force eager evaluation of every formula cell (fires off-screen async cells too),
+  // instead of the virtualized scroll-to-evaluate default. gridsheet.viewer.eager.
+  eager: boolean;
   delimiter: 'CSV' | 'TSV';
   mode: 'inherit-light' | 'inherit-dark';
   readOnly: boolean;
@@ -471,6 +475,7 @@ const Grid = ({
   extraRows,
   extraCols,
   evaluate,
+  eager,
   delimiter,
   mode,
   readOnly,
@@ -669,6 +674,7 @@ const Grid = ({
         sheetHeight: '100%',
         matrixAlignment: 'both',
         colMenu,
+        eager,
       }}
     />
   );
@@ -822,6 +828,13 @@ const App = () => {
   // on every change, which is exactly the freeze we removed — so we show our own marker.)
   const [dirty, setDirty] = useState(false);
   const onDirty = useCallback(() => setDirty(true), []);
+  // Distinct from the user-edit `dirty` above: set when function/AI *evaluation*
+  // produces values not yet written to the file (baked on save when
+  // evaluateFormulas is on). Shown as its own footer marker so a user can tell
+  // "I typed this" apart from "a formula / AI computed this".
+  const [evalDirty, setEvalDirty] = useState(false);
+  // Latest `evaluate` flag, readable from the mount-time message handler closure.
+  const evaluateRef = useRef(true);
   // 0..1 while the host chunk-parses the file on open; null once data has arrived.
   const [loadProgress, setLoadProgress] = useState<number | null>(null);
   const mode = useVscodeMode();
@@ -888,6 +901,12 @@ const App = () => {
         | { type: 'loadProgress'; ratio: number };
       if (msg?.type === 'aiBatchResult') {
         handleAiResult(msg);
+        // Resolved formula/AI values are new content that a save will bake in
+        // (evaluateFormulas on) — flag it as evaluation-dirty, kept separate from
+        // the user-edit marker so the footer can show the two distinctly.
+        if (evaluateRef.current) {
+          setEvalDirty(true);
+        }
         return;
       }
       if (msg?.type === 'requestSave') {
@@ -907,6 +926,7 @@ const App = () => {
         setRev((r) => r + 1); // remount <Grid> with the fresh, authoritative content
         setReadOnly((prev) => (prev === null ? !!msg.readOnly : prev)); // seed once from the setting
         setDirty(false); // fresh authoritative content ⇒ nothing unsaved
+        setEvalDirty(false); // …and nothing pending from evaluation
         setLoadProgress(null); // parsing done — hide the load bar
       }
     };
@@ -926,11 +946,18 @@ const App = () => {
     vscodeApi.postMessage({ type: 'requestData' });
   }, [header, extraRows, extraCols]);
 
+  // Report unsaved state to the host whenever it changes, so other extensions can
+  // check it (via the extension API) before overwriting the file.
+  useEffect(() => {
+    vscodeApi.postMessage({ type: 'dirtyState', dirty, evalDirty });
+  }, [dirty, evalDirty]);
+
   // Save-only: the serialized text is sent (and the file written) just on save.
   // Clearing dirty here is optimistic (the extension performs the actual write).
   const onSave = (text: string) => {
     vscodeApi.postMessage({ type: 'save', text });
     setDirty(false);
+    setEvalDirty(false); // save serializes evaluated values too, so both clear
   };
 
   if (!data) {
@@ -948,6 +975,8 @@ const App = () => {
   const cols = maxRowLength(rows);
   const ro = readOnly ?? !!data.readOnly;
   const evaluate = data.evaluate ?? true;
+  evaluateRef.current = evaluate; // keep the handler closure's view current
+  const eager = data.eager ?? true;
   const dateFormats = data.dateFormats ?? EMPTY_STRING_ARRAY;
   const aiCustom = data.aiCustom ?? EMPTY_AI_CUSTOM;
   // Only number parsing defaults on (round-trip-safe); date/time/bool are opt-in because
@@ -969,6 +998,7 @@ const App = () => {
           extraRows={extraRows}
           extraCols={extraCols}
           evaluate={evaluate}
+          eager={eager}
           delimiter={data.delimiter}
           mode={mode}
           readOnly={ro}
@@ -990,11 +1020,20 @@ const App = () => {
         </span>
         {!ro && dirty && (
           <span
-            title="Unsaved changes — press Cmd/Ctrl+S to write them to the file"
+            title="Unsaved edits — press Cmd/Ctrl+S to write them to the file"
             style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--vscode-gitDecoration-modifiedResourceForeground, #e2c08d)' }}
           >
             <span style={{ fontSize: 14, lineHeight: 1 }}>●</span>
             Unsaved
+          </span>
+        )}
+        {!ro && evalDirty && (
+          <span
+            title="Computed values (formulas / AI) not yet written — press Cmd/Ctrl+S to bake them into the file"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--vscode-charts-blue, #3794ff)' }}
+          >
+            <span style={{ fontSize: 13, lineHeight: 1, fontStyle: 'italic', fontWeight: 700 }}>ƒ</span>
+            Computed
           </span>
         )}
         {sep}

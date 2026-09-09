@@ -2,7 +2,7 @@
   "name": "csv-gridsheet",
   "displayName": "CSV Spreadsheet — GridSheet",
   "description": "Open CSV/TSV files as an editable spreadsheet grid with formulas — powered by GridSheet.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "walkframe",
   "private": true,
   "license": "Apache-2.0",
@@ -112,6 +112,11 @@
           "default": true,
           "markdownDescription": "When the grid saves, write formula **results** (`=A1+B1` → `30`) instead of the formula source. On (default) bakes computed values — including resolved `=CLAUDE()` / `=CODEX()` answers — into the file; off keeps the formula text so it recomputes on reopen. Only affects files that contain formulas. (Applies to grids opened after the change.)"
         },
+        "gridsheet.viewer.eager": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Evaluate **every** formula cell on open, not just the ones scrolled into view. The grid is virtualized, so by default an off-screen async formula (`=CLAUDE()` / `=CODEX()` / custom AI functions) doesn't fire until you scroll to it. On (default) fires them all up front, so the whole file computes without scrolling — at the cost of running all AI calls immediately on open (⚠️ for large files with many AI cells this can trigger a burst of CLI calls). Off keeps the lazy, scroll-to-evaluate behavior. Sync formulas (`=A1+B1`) are unaffected — they always evaluate on read. (Applies to grids opened after the change.)"
+        },
         "gridsheet.viewer.dateFormats": {
           "type": "array",
           "items": {
@@ -150,6 +155,12 @@
           "default": 100,
           "minimum": 0,
           "markdownDescription": "Maximum number of cells resolved per CLI call. Cells that evaluate together are grouped by provider + kind, then split into chunks of this size (run sequentially). Larger = fewer calls but bigger prompts (risk of context limits, and one failure affects more cells); smaller = more calls but better isolation. `0` = no limit (one call per group). For **custom** functions (`#gridsheet.ai.custom#`) this is the max number run **concurrently**, since each cell is its own process."
+        },
+        "gridsheet.ai.concurrency": {
+          "type": "integer",
+          "default": 10,
+          "minimum": 0,
+          "markdownDescription": "Maximum number of AI CLI processes running **at once**, across every grid. Requests that don't share a batch (different provider/kind groups, `#gridsheet.ai.custom#` cells each spawning their own process, or chunks split by `#gridsheet.ai.batchSize#`) are queued and dispatched up to this many in parallel — so opening a file (especially with `#gridsheet.viewer.eager#` on, which fires every cell up front) doesn't launch a burst of processes and hit provider rate limits. `0` = no limit. Note: this caps *processes*, not cells — one batched call still resolves up to `#gridsheet.ai.batchSize#` cells."
         },
         "gridsheet.ai.alias": {
           "type": "object",

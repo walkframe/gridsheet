@@ -25,6 +25,23 @@ export class CsvEditorProvider implements vscode.CustomTextEditorProvider {
     return true;
   }
 
+  // Latest per-document unsaved state reported by each open grid's webview. The
+  // grid keeps edits (and computed values) in memory until the user saves, so the
+  // TextDocument itself stays clean — this map is the only signal of pending
+  // changes. Keyed by document URI string; entries are removed when the grid
+  // closes. Read via `getUnsavedState` by other extensions (e.g. the PICT
+  // generator) before they overwrite the file.
+  private static unsavedState = new Map<string, { dirty: boolean; evalDirty: boolean }>();
+
+  /**
+   * Whether the grid showing `uri` has unsaved changes. `dirty` = manual edits,
+   * `evalDirty` = computed (formula/function) values not yet written. Returns
+   * undefined when the file isn't open in a grid.
+   */
+  public static getUnsavedState(uri: string): { dirty: boolean; evalDirty: boolean } | undefined {
+    return CsvEditorProvider.unsavedState.get(uri);
+  }
+
   constructor(
     private readonly context: vscode.ExtensionContext,
     private readonly delimiter: string,
@@ -105,6 +122,7 @@ export class CsvEditorProvider implements vscode.CustomTextEditorProvider {
         // toggle, and evaluateFormulas is a settings-only save policy.
         readOnly: viewerCfg().get<boolean>('readOnly', false),
         evaluate: viewerCfg().get<boolean>('evaluateFormulas', true),
+        eager: viewerCfg().get<boolean>('eager', true),
         dateFormats: viewerCfg().get<string[]>('dateFormats', []),
         parseNumber: viewerCfg().get<boolean>('parseNumber', true),
         parseDate: viewerCfg().get<boolean>('parseDate', false),
@@ -214,12 +232,27 @@ export class CsvEditorProvider implements vscode.CustomTextEditorProvider {
       changeSub.dispose();
       viewSub.dispose();
       cfgSub.dispose();
+      CsvEditorProvider.unsavedState.delete(document.uri.toString());
     });
 
     webview.onDidReceiveMessage(
-      async (msg: { type?: string; text?: string; id?: number; tasks?: AiTask[] }) => {
+      async (msg: {
+        type?: string;
+        text?: string;
+        id?: number;
+        tasks?: AiTask[];
+        dirty?: boolean;
+        evalDirty?: boolean;
+      }) => {
         if (msg?.type === 'ready' || msg?.type === 'requestData') {
           postData();
+        } else if (msg?.type === 'dirtyState') {
+          // The webview reports its unsaved state (edits / computed values) so the
+          // host can expose it to other extensions before they overwrite the file.
+          CsvEditorProvider.unsavedState.set(document.uri.toString(), {
+            dirty: !!msg.dirty,
+            evalDirty: !!msg.evalDirty,
+          });
         } else if (msg?.type === 'edit' && typeof msg.text === 'string') {
           // The webview only posts edits when its (per-file, footer-controlled) read-only
           // toggle is off, so trust it here.
