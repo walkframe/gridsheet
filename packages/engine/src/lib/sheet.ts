@@ -800,6 +800,9 @@ export class Sheet implements UserSheet {
           } else {
             this.registry.asyncFormulaCells.delete(props.dependency);
           }
+          // A formula cell was registered (reference / operator / function alike).
+          // Cheap no-arg signal so a host can flag that a save would bake results in.
+          this.registry.onFormula?.();
         }
         return '=' + lexer.identifiedFormula;
       }

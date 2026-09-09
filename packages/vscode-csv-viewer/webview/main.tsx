@@ -465,6 +465,9 @@ type GridProps = {
   onSave: (text: string) => void;
   // Fired on any in-memory grid edit so App can show the footer "unsaved" marker.
   onDirty: () => void;
+  // Fired when a formula cell is registered (via the engine's onFormula hook) so App
+  // can show the "computed" marker — results a save would bake into the file.
+  onComputed: () => void;
 };
 
 // Remounts (via a key in App) whenever fresh data arrives, so it always starts
@@ -487,6 +490,7 @@ const Grid = ({
   saveSignal,
   onSave,
   onDirty,
+  onComputed,
 }: GridProps) => {
   const sheetRef = useRef<any>(null);
   const delim = delimiterChar(delimiter);
@@ -504,6 +508,28 @@ const Grid = ({
   const [saving, setSaving] = useState(false);
   const [progress, setProgress] = useState(0); // 0..1
 
+  // Bridge the engine's onFormula hook to the footer "Computed" marker. It fires from
+  // Sheet.processFormula when a formula cell is registered — any `=…` cell, reference /
+  // operator / function alike — at parse/set time (on open and on edit), NOT on solve
+  // and NOT during the save serialize, so a save that bakes results (turning formulas
+  // into literals) doesn't re-flag it afterwards. Guard + defer + dedupe:
+  //   - evaluate off  → results aren't baked on save, so nothing to flag.
+  //   - queueMicrotask → processFormula runs inside sheet.initialize() during the
+  //                      initial render, so never setState synchronously from it.
+  //   - computedPendingRef → a file with N formulas fires N times on open; collapse
+  //                      the batch to a single onComputed().
+  const computedPendingRef = useRef(false);
+  const notifyComputed = useCallback(() => {
+    if (!evaluate || computedPendingRef.current) {
+      return;
+    }
+    computedPendingRef.current = true;
+    queueMicrotask(() => {
+      computedPendingRef.current = false;
+      onComputed();
+    });
+  }, [evaluate, onComputed]);
+
   const additionalFunctions = useMemo(() => makeAiFunctions(enqueueAi, aiCustom), [aiCustom]);
   // useSpellbook (not createSpellbook) so registry.transmit is wired to a real repaint.
   // GridSheet only wires transmit for a book it owns; with our own createSpellbook the
@@ -512,7 +538,12 @@ const Grid = ({
   // useSpellbook == useBook with @gridsheet/functions' allFunctions pre-loaded; our AI
   // functions merge on top of the extended set.
   // onChange fires per in-memory edit (cheap — just flags the footer as unsaved; no serialize).
-  const book = useSpellbook({ additionalFunctions, policies: formatPolicies, onChange: () => onDirty() });
+  const book = useSpellbook({
+    additionalFunctions,
+    policies: formatPolicies,
+    onChange: () => onDirty(),
+    onFormula: notifyComputed,
+  });
 
   // Latest render params, read by the save routine without re-arming its effect.
   const saveArgsRef = useRef({ header, delim, evaluate, readOnly, onSave });
@@ -833,6 +864,7 @@ const App = () => {
   // evaluateFormulas is on). Shown as its own footer marker so a user can tell
   // "I typed this" apart from "a formula / AI computed this".
   const [evalDirty, setEvalDirty] = useState(false);
+  const onComputed = useCallback(() => setEvalDirty(true), []);
   // Latest `evaluate` flag, readable from the mount-time message handler closure.
   const evaluateRef = useRef(true);
   // 0..1 while the host chunk-parses the file on open; null once data has arrived.
@@ -1010,6 +1042,7 @@ const App = () => {
           saveSignal={saveSignal}
           onSave={onSave}
           onDirty={onDirty}
+          onComputed={onComputed}
         />
       </div>
 
@@ -1030,7 +1063,7 @@ const App = () => {
         {!ro && evalDirty && (
           <span
             title="Computed values (formulas / AI) not yet written — press Cmd/Ctrl+S to bake them into the file"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--vscode-charts-blue, #3794ff)' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--vscode-charts-purple, #b180d7)' }}
           >
             <span style={{ fontSize: 13, lineHeight: 1, fontStyle: 'italic', fontWeight: 700 }}>ƒ</span>
             Computed

@@ -34,6 +34,16 @@ export type RegistryProps = {
   onSelect?: FeedbackType;
   onKeyUp?: (args: { e: EditorEvent; points: CursorStateType }) => void;
   onInit?: (args: { sheet: UserSheet }) => void;
+  /**
+   * Fired from {@link Sheet.processFormula} whenever a FORMULA cell is registered —
+   * i.e. a cell whose value starts with `=`, covering references (`=A1`), operators
+   * (`=A1+B1`) and function calls (`=SUM(...)`, `=CLAUDE(...)`) alike. It fires at
+   * parse/set time (on open and on edit), NOT on every (re)solve, and carries no
+   * arguments, so it is a cheap "this sheet holds a formula" signal; consumers must
+   * dedupe. The CSV viewer uses it to flag that saving would bake formula results
+   * into the file (the footer "Computed" marker).
+   */
+  onFormula?: () => void;
 };
 
 export type BookProps = RegistryProps;
@@ -94,6 +104,7 @@ export class Registry {
   onSelect?: FeedbackType;
   onKeyUp?: (args: { e: EditorEvent; points: CursorStateType }) => void;
   onInit?: (args: { sheet: UserSheet }) => void;
+  onFormula?: () => void;
 
   transmit: (newBook?: TransmitProps) => void = (newBook?: TransmitProps) => {
     // This method will be overridden by useBook
@@ -142,6 +153,7 @@ export class Registry {
     onSelect,
     onKeyUp,
     onInit,
+    onFormula,
   }: RegistryProps = {}) {
     if (historyLimit != null) {
       this.historyLimit = historyLimit;
@@ -164,6 +176,7 @@ export class Registry {
     this.onSelect = onSelect;
     this.onKeyUp = onKeyUp;
     this.onInit = onInit;
+    this.onFormula = onFormula;
   }
 }
 

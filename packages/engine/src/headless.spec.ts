@@ -104,6 +104,26 @@ describe('headless formula resolution (no UI)', () => {
     expect(matrix[1][0]).toBe(60); // B2
   });
 
+  it('fires onFormula for any formula cell (reference / operator / function), not for a literal', () => {
+    // A bare `=A1` reference is still a formula — the hook must fire for it.
+    let refCalls = 0;
+    const r1 = createRegistry({ onFormula: () => refCalls++ });
+    headlessSheet(r1, { A1: { value: 10 }, B1: { value: '=A1' } });
+    expect(refCalls).toBeGreaterThan(0);
+
+    // A `=SUM(...)` function fires it too.
+    let fnCalls = 0;
+    const r2 = createRegistry({ onFormula: () => fnCalls++ });
+    headlessSheet(r2, { A1: { value: 10 }, A2: { value: 20 }, B1: { value: '=SUM(A1:A2)' } });
+    expect(fnCalls).toBeGreaterThan(0);
+
+    // A sheet of plain literals has no formula — the hook must stay silent.
+    let litCalls = 0;
+    const r3 = createRegistry({ onFormula: () => litCalls++ });
+    headlessSheet(r3, { A1: { value: 10 }, B1: { value: 20 } });
+    expect(litCalls).toBe(0);
+  });
+
   it('resolves an async =AI() formula via an injected resolver, then materializes it', async () => {
     const calls: any[] = [];
     const resolver = async (prompt: any) => {
