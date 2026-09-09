@@ -1,6 +1,6 @@
 {
   "name": "@gridsheet/web",
-  "version": "3.4.1",
+  "version": "3.4.2",
   "description": "Web/DOM rendering layer for gridsheet, built on @gridsheet/engine (DOM, input, popup, virtualization, styles); re-exports the full engine API.",
   "main": "./dist/index.js",
   "module": "./dist/index.js",

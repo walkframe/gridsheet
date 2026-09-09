@@ -1,6 +1,6 @@
 {
   "name": "@gridsheet/functions",
-  "version": "3.4.1",
+  "version": "3.4.2",
   "description": "Extended formula functions for @gridsheet/react-core",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
