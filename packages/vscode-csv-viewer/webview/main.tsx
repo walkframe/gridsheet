@@ -17,6 +17,7 @@ import {
   ThousandSeparatorPolicyMixin,
   PercentagePolicyMixin,
   defaultColMenuDescriptors,
+  updateSheet,
   type StoreHandle,
 } from '@gridsheet/preact-core';
 
@@ -213,7 +214,7 @@ const keepRawMixin: PolicyMixinType = { deserializeFirst: (value: any) => ({ val
 
 // The default policy for every data cell. Off types are hard-disabled (stay text); the number
 // parse (when on) is the round-trip-safe one, so enabling it can never rewrite the file.
-const makeDefaultPolicy = (flags: ParseFlags): Policy => {
+const makeDefaultPolicy = (flags: ParseFlags, extra: PolicyMixinType[] = []): Policy => {
   const mixin: PolicyMixinType = {
     deserializeNumber: flags.number ? roundTripNumberDeserialize : disableDeserialize,
   };
@@ -226,13 +227,13 @@ const makeDefaultPolicy = (flags: ParseFlags): Policy => {
   if (!flags.bool) {
     mixin.deserializeBool = disableDeserialize;
   }
-  return new Policy({ mixins: [mixin] });
+  return new Policy({ mixins: [mixin, ...extra] });
 };
 
 // Number display format (thousand / percent) for a column. Parses clean numbers (numeric
 // sort/filter, round-trip-safe save) and, for text that stayed a string (e.g. `007`), still
 // parses it for DISPLAY via renderNumber. Date/time/bool are not coerced in a number column.
-const numFmt = (formatMixin: PolicyMixinType): Policy =>
+const numFmt = (formatMixin: PolicyMixinType, extra: PolicyMixinType[] = []): Policy =>
   new Policy({
     mixins: [
       formatMixin,
@@ -250,13 +251,14 @@ const numFmt = (formatMixin: PolicyMixinType): Policy =>
           return isNaN(n) ? value : this.renderNumber({ ...props, value: n });
         },
       },
+      ...extra,
     ],
   });
 
 // Date display format. Keeps the raw string; for display, parses date-looking text (has a
 // `- / :` separator or a letter — so bare numbers like `007` are left alone) and formats it
 // with the chosen dayjs pattern. Unparseable text passes through unchanged.
-const dateFmt = (fmt: string, datetimeFmt = fmt): Policy =>
+const dateFmt = (fmt: string, datetimeFmt = fmt, extra: PolicyMixinType[] = []): Policy =>
   new Policy({
     mixins: [
       keepRawMixin,
@@ -276,6 +278,7 @@ const dateFmt = (fmt: string, datetimeFmt = fmt): Policy =>
           return isNaN(d.getTime()) ? value : this.renderDate({ ...props, value: d });
         },
       },
+      ...extra,
     ],
   });
 
@@ -304,7 +307,7 @@ const NUMBER_FORMAT_OPTIONS: FormatOption[] = [
 // Build the policy map + Date submenu options, merging the built-in date formats with any
 // user-configured dayjs patterns (gridsheet.viewer.dateFormats). Each custom pattern becomes
 // both a registered policy and a Date option, labeled by the pattern itself.
-const buildFormats = (customDateFormats: string[], parseFlags: ParseFlags) => {
+const buildFormats = (customDateFormats: string[], parseFlags: ParseFlags, extraMixins: PolicyMixinType[] = []) => {
   const dateDefs: DateFormatDef[] = [
     ...BUILTIN_DATE_FORMATS,
     ...customDateFormats
@@ -314,12 +317,12 @@ const buildFormats = (customDateFormats: string[], parseFlags: ParseFlags) => {
   ];
   const policies: Record<string, Policy> = {
     // 'raw' is the default policy for all data cells — coercion limited to the parse flags.
-    raw: makeDefaultPolicy(parseFlags),
-    thousand: numFmt(ThousandSeparatorPolicyMixin),
-    percent: numFmt(PercentagePolicyMixin),
+    raw: makeDefaultPolicy(parseFlags, extraMixins),
+    thousand: numFmt(ThousandSeparatorPolicyMixin, extraMixins),
+    percent: numFmt(PercentagePolicyMixin, extraMixins),
   };
   for (const d of dateDefs) {
-    policies[d.id] = dateFmt(d.fmt, d.datetimeFmt);
+    policies[d.id] = dateFmt(d.fmt, d.datetimeFmt, extraMixins);
   }
   const dateOptions: FormatOption[] = dateDefs.map((d) => ({ id: d.id, label: d.label }));
   return { policies, numberOptions: NUMBER_FORMAT_OPTIONS, dateOptions };
@@ -494,11 +497,107 @@ const Grid = ({
 }: GridProps) => {
   const sheetRef = useRef<any>(null);
   const delim = delimiterChar(delimiter);
+
+  // ── Per-cell highlight (computed / changed) ────────────────────────────────
+  // A single renderCallback mixin, appended to every format policy, paints a
+  // full-bleed `.backface` layer behind the value when the cell is a formula
+  // ("computed", purple) or was edited since load/last save ("changed", amber).
+  //
+  // `changed` has no reliable per-cell engine flag (getSystem().changedTime is
+  // stamped even on lazy population, so scrolling a cell into view would look
+  // edited). Instead we accumulate the engine's per-operation
+  // getLastChangedAddresses() into editedRef, gated by the sheet version so a
+  // given op is only folded in once, and cleared on save. All cells re-render on
+  // every store update (they consume the grid Context), so folding in the last
+  // op during render lights the just-edited cell in the same frame.
+  const editedRef = useRef<Set<string>>(new Set()); // cumulative edited addresses (p2a form)
+  const lastAccVersionRef = useRef(-1); // highest sheet version already folded into editedRef
+  // The engine's onChange also fires on our own repaint nudge (updateSheet), which must
+  // NOT re-flag the footer "Unsaved". A real edit advances the sheet version; the nudge
+  // doesn't — so only mark dirty when the version actually moved. Starts at 0 (the
+  // opened, unedited version) so opening never marks dirty.
+  const lastDirtyVersionRef = useRef(0);
+  // Sheet version at the last save. Both markers gate on it: a manual edit stays in
+  // editedRef only while the sheet has advanced past this, and a formula counts as
+  // "computed" only while there are unsaved changes (version > this). Saving bakes
+  // formula results into the file, so on save this jumps to the current version and
+  // BOTH markers go quiet until the next edit. Starts at -1 so a freshly opened file
+  // (version 0, nothing saved yet) already shows its formulas as computed.
+  const clearedVersionRef = useRef(-1);
+
+  const highlightMixin = useMemo<PolicyMixinType>(
+    () => ({
+      renderCallback: (rendered: any, props: any) => {
+        const sheet = sheetRef.current?.sheet;
+        if (!sheet) {
+          return rendered;
+        }
+        // Fold the newest operation's changed cells into the cumulative set, once
+        // per version (the first cell rendered at a new version does it; the rest
+        // skip). Skip ops at/behind the last save so a saved sheet stays clean.
+        const version = sheet.currentVersion ?? 0;
+        if (version > lastAccVersionRef.current) {
+          lastAccVersionRef.current = version;
+          if (version > clearedVersionRef.current) {
+            for (const a of sheet.getLastChangedAddresses?.() ?? []) {
+              editedRef.current.add(a);
+            }
+          }
+        }
+        const address = p2a(props.point);
+        const changed = editedRef.current.has(address);
+        // A formula counts as "computed" only while there are unsaved changes — its
+        // baked result isn't in the file yet. After a save (clearedVersion caught up)
+        // it goes quiet until the next edit bumps the version again.
+        const raw = sheet.getCell?.(props.point, { resolution: 'SYSTEM' })?.value;
+        const computed = typeof raw === 'string' && raw.charAt(0) === '=' && version > clearedVersionRef.current;
+        if (!changed && !computed) {
+          return rendered;
+        }
+        // changed wins over computed (a formula you just edited reads as an edit).
+        const bg = changed
+          ? 'color-mix(in srgb, var(--vscode-gitDecoration-modifiedResourceForeground, #e2c08d) 20%, transparent)'
+          : 'color-mix(in srgb, var(--vscode-charts-purple, #b180d7) 16%, transparent)';
+        return [
+          // .backface is z-index:0 via the grid CSS; inset:0 fills the whole cell
+          // through the positioned gs-cell-inner-wrap ancestor.
+          <div
+            key="gs-hl"
+            className="backface"
+            style={{ position: 'absolute', inset: 0, background: bg, pointerEvents: 'none' }}
+          />,
+          // Wrap the value in a positioned span so it always paints ABOVE the
+          // backface — a bare string would be a text node the absolute backface
+          // would cover.
+          <span key="gs-val" style={{ position: 'relative' }}>
+            {rendered}
+          </span>,
+        ];
+      },
+    }),
+    [],
+  );
+
+  // Clear both markers after a save: drop the edited set and pin the cleared version
+  // to the current one so neither already-folded edits nor still-present formulas
+  // re-light (the file now holds the baked results). A save doesn't bump the sheet
+  // version on its own, so nudge the grid store to repaint the cells.
+  const clearHighlights = useCallback(() => {
+    const handle = gridStoreRef.current;
+    const sheet = sheetRef.current?.sheet;
+    editedRef.current = new Set();
+    lastAccVersionRef.current = sheet?.currentVersion ?? 0;
+    clearedVersionRef.current = sheet?.currentVersion ?? 0;
+    if (handle && sheet) {
+      handle.dispatch(updateSheet(sheet));
+    }
+  }, []);
+
   // Policy map + submenu options, rebuilt when the configured formats / parse flags change.
   const { policies: formatPolicies, numberOptions, dateOptions } = useMemo(
-    () => buildFormats(dateFormats, parseFlags),
+    () => buildFormats(dateFormats, parseFlags, [highlightMixin]),
     // Depend on the flag fields (stable primitives), not the freshly-built parseFlags object.
-    [dateFormats, parseFlags.number, parseFlags.date, parseFlags.time, parseFlags.bool],
+    [dateFormats, parseFlags.number, parseFlags.date, parseFlags.time, parseFlags.bool, highlightMixin],
   );
 
   // Save-only persistence: grid edits stay in-memory (no per-edit serialize — that
@@ -538,10 +637,21 @@ const Grid = ({
   // useSpellbook == useBook with @gridsheet/functions' allFunctions pre-loaded; our AI
   // functions merge on top of the extended set.
   // onChange fires per in-memory edit (cheap — just flags the footer as unsaved; no serialize).
+  // Gate on the version so our own repaint nudge (which fires onChange without advancing the
+  // version) doesn't re-flag "Unsaved" right after a save cleared it.
+  const handleChange = useCallback(() => {
+    const version = sheetRef.current?.sheet?.currentVersion ?? 0;
+    if (version === lastDirtyVersionRef.current) {
+      return; // no real edit (e.g. the clearHighlights repaint nudge)
+    }
+    lastDirtyVersionRef.current = version;
+    onDirty();
+  }, [onDirty]);
+
   const book = useSpellbook({
     additionalFunctions,
     policies: formatPolicies,
-    onChange: () => onDirty(),
+    onChange: handleChange,
     onFormula: notifyComputed,
   });
 
@@ -596,6 +706,7 @@ const Grid = ({
             );
             if (!cancelled) {
               onSave(text);
+              clearHighlights(); // saved → nothing is "changed" or unsaved-"computed" anymore
             }
           }
         } finally {

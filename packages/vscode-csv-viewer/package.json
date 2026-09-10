@@ -2,7 +2,7 @@
   "name": "csv-gridsheet",
   "displayName": "CSV Spreadsheet — GridSheet",
   "description": "Open CSV/TSV files as an editable spreadsheet grid with formulas — powered by GridSheet.",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "publisher": "walkframe",
   "private": true,
   "license": "Apache-2.0",
