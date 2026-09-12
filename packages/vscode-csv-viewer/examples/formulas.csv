@@ -1,0 +1,7 @@
+item,qty,price,subtotal,tax,total
+Widget,3,10,=B1*C1,=ROUND(D1*0.08,2),=D1+E1
+Gadget,5,20,=B2*C2,=ROUND(D2*0.08,2),=D2+E2
+Gizmo,2,50,=B3*C3,=ROUND(D3*0.08,2),=D3+E3
+Doohickey,7,15,=B4*C4,=ROUND(D4*0.08,2),=D4+E4
+Total,=SUM(B1:B4),,=SUM(D1:D4),=SUM(E1:E4),=SUM(F1:F4)
+Average,=ROUND(AVERAGE(B1:B4),2),,=ROUND(AVERAGE(D1:D4),2),,
