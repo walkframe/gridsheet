@@ -83,18 +83,6 @@ export function activate(context: vscode.ExtensionContext) {
     }),
   );
 
-  // Command: save the active grid. Bound to Ctrl/Cmd+S while a grid is focused
-  // (see the keybinding in package.json). Routes the save into the webview so the
-  // sheet is serialized only now — never on every edit — with a progress overlay.
-  // Falls back to the built-in save if, somehow, no grid is the active handler.
-  context.subscriptions.push(
-    vscode.commands.registerCommand('gridsheet.save', async () => {
-      if (!CsvEditorProvider.saveActiveGrid()) {
-        await vscode.commands.executeCommand('workbench.action.files.save');
-      }
-    }),
-  );
-
   // Command: reopen the active grid's file in the plain text editor. Mirrors the
   // grid footer's "Open as text ⇄", but reachable from the status-bar indicator.
   context.subscriptions.push(

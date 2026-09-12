@@ -2,7 +2,7 @@
   "name": "csv-gridsheet",
   "displayName": "CSV Spreadsheet — GridSheet",
   "description": "Open CSV/TSV files as an editable spreadsheet grid with formulas — powered by GridSheet.",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "publisher": "walkframe",
   "private": true,
   "license": "Apache-2.0",
@@ -65,19 +65,6 @@
         "title": "Open with GridSheet CSV/TSV Viewer",
         "category": "GridSheet",
         "icon": "$(table)"
-      },
-      {
-        "command": "gridsheet.save",
-        "title": "Save Grid",
-        "category": "GridSheet"
-      }
-    ],
-    "keybindings": [
-      {
-        "command": "gridsheet.save",
-        "key": "ctrl+s",
-        "mac": "cmd+s",
-        "when": "activeCustomEditorId == 'gridsheet.csv' || activeCustomEditorId == 'gridsheet.tsv'"
       }
     ],
     "menus": {
@@ -107,10 +94,10 @@
           "default": false,
           "markdownDescription": "**Default** read-only state for newly opened grids — flip it per file from the **Read-only** toggle in the grid's footer. When on: cell edits, row/column insert/remove, sorting and label changes are blocked and nothing is written back to the file; selecting, copying, scrolling and resizing columns still work. Formulas already in the file (including `=CLAUDE()` / `=CODEX()`) still evaluate for display, but their results are never saved."
         },
-        "gridsheet.viewer.evaluateFormulas": {
+        "gridsheet.viewer.saveEvaluated": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "When the grid saves, write formula **results** (`=A1+B1` → `30`) instead of the formula source. On (default) bakes computed values — including resolved `=CLAUDE()` / `=CODEX()` answers — into the file; off keeps the formula text so it recomputes on reopen. Only affects files that contain formulas. (Applies to grids opened after the change.)"
+          "markdownDescription": "When the grid saves, write formula **results** (`=A1+B1` → `30`) instead of the formula source. On (default) bakes computed values — including resolved `=CLAUDE()` / `=CODEX()` answers — into the file; off keeps the formula text so it recomputes on reopen. Because on means those results aren't in the file yet, unbaked formula cells are treated as **unsaved**: they get a tinted background, the footer shows **● Evaluated**, and closing prompts you to save. Off saves the formula source verbatim, so formulas are no diff and none of that shows. Only affects files that contain formulas. (Applies to grids opened after the change.)"
         },
         "gridsheet.viewer.eager": {
           "type": "boolean",

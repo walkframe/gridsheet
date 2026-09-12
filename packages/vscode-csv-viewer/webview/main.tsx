@@ -471,6 +471,9 @@ type GridProps = {
   // Fired when a formula cell is registered (via the engine's onFormula hook) so App
   // can show the "computed" marker — results a save would bake into the file.
   onComputed: () => void;
+  // App-owned ref the Grid fills with a SILENT serialize (no overlay, no dirty/
+  // highlight clearing). Used for hot-exit backup, which must not look like a save.
+  serializeRef: { current: null | (() => Promise<string | null>) };
 };
 
 // Remounts (via a key in App) whenever fresh data arrives, so it always starts
@@ -494,6 +497,7 @@ const Grid = ({
   onSave,
   onDirty,
   onComputed,
+  serializeRef,
 }: GridProps) => {
   const sheetRef = useRef<any>(null);
   const delim = delimiterChar(delimiter);
@@ -524,6 +528,12 @@ const Grid = ({
   // BOTH markers go quiet until the next edit. Starts at -1 so a freshly opened file
   // (version 0, nothing saved yet) already shows its formulas as computed.
   const clearedVersionRef = useRef(-1);
+  // Read the current Save Evaluated flag from renderCallback (which closes over
+  // nothing reactive). The purple "evaluated" tint means "this result will be baked
+  // into the file on save" — only true when evaluate is on; off saves the formula
+  // source verbatim, so a formula cell is no diff and must not be tinted.
+  const evaluateHlRef = useRef(evaluate);
+  evaluateHlRef.current = evaluate;
 
   const highlightMixin = useMemo<PolicyMixinType>(
     () => ({
@@ -550,7 +560,11 @@ const Grid = ({
         // baked result isn't in the file yet. After a save (clearedVersion caught up)
         // it goes quiet until the next edit bumps the version again.
         const raw = sheet.getCell?.(props.point, { resolution: 'SYSTEM' })?.value;
-        const computed = typeof raw === 'string' && raw.charAt(0) === '=' && version > clearedVersionRef.current;
+        const computed =
+          evaluateHlRef.current &&
+          typeof raw === 'string' &&
+          raw.charAt(0) === '=' &&
+          version > clearedVersionRef.current;
         if (!changed && !computed) {
           return rendered;
         }
@@ -658,6 +672,27 @@ const Grid = ({
   // Latest render params, read by the save routine without re-arming its effect.
   const saveArgsRef = useRef({ header, delim, evaluate, readOnly, onSave });
   saveArgsRef.current = { header, delim, evaluate, readOnly, onSave };
+
+  // Publish a SILENT serialize for the host's hot-exit backup: serialize the sheet
+  // without touching the "saving" overlay or the dirty/highlight state (a backup is
+  // not a save). Returns null when the sheet isn't mounted.
+  //
+  // ALWAYS serialize with evaluate=false — a backup must preserve the in-memory
+  // EDITING state, i.e. the formula source. Baking (evaluate=true, as a real save
+  // does) would restore a formula-free file on hot-exit, so the grid would come back
+  // with plain values and no formulas (and no "Computed" highlight).
+  serializeRef.current = async () => {
+    const sheet = sheetRef.current?.sheet;
+    if (!sheet) {
+      return null;
+    }
+    const { header, delim } = saveArgsRef.current;
+    const yieldControl = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+    return serializeAsync(sheet, header, delim, false, () => {}, yieldControl);
+  };
+  useEffect(() => () => {
+    serializeRef.current = null;
+  }, []);
 
   // A save was requested (saveSignal changed): show the overlay. The actual
   // serialize runs in the effect below, after the overlay has painted.
@@ -972,12 +1007,20 @@ const App = () => {
   const onDirty = useCallback(() => setDirty(true), []);
   // Distinct from the user-edit `dirty` above: set when function/AI *evaluation*
   // produces values not yet written to the file (baked on save when
-  // evaluateFormulas is on). Shown as its own footer marker so a user can tell
+  // Save Evaluated is on). Shown as its own footer marker so a user can tell
   // "I typed this" apart from "a formula / AI computed this".
   const [evalDirty, setEvalDirty] = useState(false);
   const onComputed = useCallback(() => setEvalDirty(true), []);
   // Latest `evaluate` flag, readable from the mount-time message handler closure.
   const evaluateRef = useRef(true);
+  // Latest read-only flag + the id of the save the host is currently awaiting, both
+  // read from the mount-time message handler / onSave closures (host drives saves via
+  // 'requestSave' now that native Cmd+S routes to saveCustomDocument).
+  const roRef = useRef(false);
+  const pendingSaveIdRef = useRef<number | undefined>(undefined);
+  // Filled by <Grid> with a silent serialize (no overlay / no state clearing) for the
+  // host's hot-exit backup.
+  const serializeRef = useRef<null | (() => Promise<string | null>)>(null);
   // 0..1 while the host chunk-parses the file on open; null once data has arrived.
   const [loadProgress, setLoadProgress] = useState<number | null>(null);
   const mode = useVscodeMode();
@@ -1040,12 +1083,13 @@ const App = () => {
         | DataMessage
         | AiBatchResponse
         | { type: 'paste'; text?: string }
-        | { type: 'requestSave' }
+        | { type: 'requestSave'; saveId?: number }
+        | { type: 'requestSerialize'; saveId?: number }
         | { type: 'loadProgress'; ratio: number };
       if (msg?.type === 'aiBatchResult') {
         handleAiResult(msg);
         // Resolved formula/AI values are new content that a save will bake in
-        // (evaluateFormulas on) — flag it as evaluation-dirty, kept separate from
+        // (Save Evaluated on) — flag it as evaluation-dirty, kept separate from
         // the user-edit marker so the footer can show the two distinctly.
         if (evaluateRef.current) {
           setEvalDirty(true);
@@ -1053,7 +1097,32 @@ const App = () => {
         return;
       }
       if (msg?.type === 'requestSave') {
-        setSaveSignal((s) => s + 1); // ask the active <Grid> to serialize + persist
+        // Real save (native Cmd+S): the host awaits a 'save' echoing this id. In
+        // read-only mode there's nothing to write, so answer immediately as skipped;
+        // otherwise remember the id and ask the active <Grid> to serialize (with the
+        // overlay; onSave then clears the dirty/highlight state).
+        if (roRef.current) {
+          vscodeApi.postMessage({ type: 'save', saveId: msg.saveId, skipped: true });
+        } else {
+          pendingSaveIdRef.current = msg.saveId;
+          setSaveSignal((s) => s + 1);
+        }
+        return;
+      }
+      if (msg?.type === 'requestSerialize') {
+        // Hot-exit backup: serialize SILENTLY and answer with the text. Must not show
+        // the overlay or clear dirty/highlights — it isn't a save.
+        const saveId = (msg as { saveId?: number }).saveId;
+        const fn = serializeRef.current;
+        if (roRef.current || !fn) {
+          vscodeApi.postMessage({ type: 'save', saveId, skipped: true });
+        } else {
+          void fn().then((text) =>
+            vscodeApi.postMessage(
+              text == null ? { type: 'save', saveId, skipped: true } : { type: 'save', saveId, text },
+            ),
+          );
+        }
         return;
       }
       if (msg?.type === 'loadProgress') {
@@ -1089,16 +1158,20 @@ const App = () => {
     vscodeApi.postMessage({ type: 'requestData' });
   }, [header, extraRows, extraCols]);
 
-  // Report unsaved state to the host whenever it changes, so other extensions can
-  // check it (via the extension API) before overwriting the file.
+  // Report unsaved state to the host whenever it changes, so it can drive VS Code's
+  // dirty state (close warning) and other extensions can query it. `evaluate` lets
+  // the host warn about unbaked computed values ONLY when Save Evaluated is on
+  // (off = the formula source is saved verbatim, so a computed value is no diff).
   useEffect(() => {
-    vscodeApi.postMessage({ type: 'dirtyState', dirty, evalDirty });
+    vscodeApi.postMessage({ type: 'dirtyState', dirty, evalDirty, evaluate: evaluateRef.current });
   }, [dirty, evalDirty]);
 
-  // Save-only: the serialized text is sent (and the file written) just on save.
-  // Clearing dirty here is optimistic (the extension performs the actual write).
+  // The serialized text answers the host's pending 'requestSave' (echoing its id);
+  // the host writes the file. Clearing dirty here is optimistic — the actual write
+  // and VS Code's own dirty state are owned by saveCustomDocument.
   const onSave = (text: string) => {
-    vscodeApi.postMessage({ type: 'save', text });
+    vscodeApi.postMessage({ type: 'save', text, saveId: pendingSaveIdRef.current });
+    pendingSaveIdRef.current = undefined;
     setDirty(false);
     setEvalDirty(false); // save serializes evaluated values too, so both clear
   };
@@ -1117,6 +1190,7 @@ const App = () => {
   const rows = data.rows;
   const cols = maxRowLength(rows);
   const ro = readOnly ?? !!data.readOnly;
+  roRef.current = ro; // keep the save-request handler's view current
   const evaluate = data.evaluate ?? true;
   evaluateRef.current = evaluate; // keep the handler closure's view current
   const eager = data.eager ?? true;
@@ -1154,6 +1228,7 @@ const App = () => {
           onSave={onSave}
           onDirty={onDirty}
           onComputed={onComputed}
+          serializeRef={serializeRef}
         />
       </div>
 
@@ -1162,22 +1237,36 @@ const App = () => {
         <span style={{ opacity: 0.6 }}>
           {data.delimiter} · {rows.length}×{cols}
         </span>
-        {!ro && dirty && (
+        {!ro && (dirty || evalDirty) && (
+          // A single "●" (colored by the leading kind), then the pending kind(s), each
+          // in its own color: Changed (manual edits, amber) and/or Evaluated (formula /
+          // AI results baked on save, purple). Term matches the Save Evaluated setting.
           <span
-            title="Unsaved edits — press Cmd/Ctrl+S to write them to the file"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--vscode-gitDecoration-modifiedResourceForeground, #e2c08d)' }}
+            title={
+              'Unsaved — press Cmd/Ctrl+S to write to the file.' +
+              (dirty ? '\nChanged: your manual edits.' : '') +
+              (evalDirty ? '\nEvaluated: formula / AI results baked in on save (Save Evaluated).' : '')
+            }
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
           >
-            <span style={{ fontSize: 14, lineHeight: 1 }}>●</span>
-            Unsaved
-          </span>
-        )}
-        {!ro && evalDirty && (
-          <span
-            title="Computed values (formulas / AI) not yet written — press Cmd/Ctrl+S to bake them into the file"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--vscode-charts-purple, #b180d7)' }}
-          >
-            <span style={{ fontSize: 13, lineHeight: 1, fontStyle: 'italic', fontWeight: 700 }}>ƒ</span>
-            Computed
+            <span
+              style={{
+                fontSize: 14,
+                lineHeight: 1,
+                // Changes-priority: amber when there are manual edits, else the
+                // Computed purple.
+                color: dirty
+                  ? 'var(--vscode-gitDecoration-modifiedResourceForeground, #e2c08d)'
+                  : 'var(--vscode-charts-purple, #b180d7)',
+              }}
+            >
+              ●
+            </span>
+            {dirty && (
+              <span style={{ color: 'var(--vscode-gitDecoration-modifiedResourceForeground, #e2c08d)' }}>Changed</span>
+            )}
+            {dirty && evalDirty && <span style={{ opacity: 0.5 }}>/</span>}
+            {evalDirty && <span style={{ color: 'var(--vscode-charts-purple, #b180d7)' }}>Evaluated</span>}
           </span>
         )}
         {sep}
