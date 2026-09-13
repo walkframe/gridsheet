@@ -2,6 +2,15 @@
 
 All notable changes to the **CSV Spreadsheet — GridSheet** extension.
 
+## 0.3.5 — 2026-09-13
+
+- Fix: a double quote inside an **unquoted** field is now kept literally instead of
+  being treated as a field-enclosing quote. A cell such as
+  `=CLAUDE.BOOL("Total size is 10KB or more", B1, E1, F1)` in a raw TSV/CSV field
+  previously lost its inner quotes, producing an invalid formula (`#NAME?`). Per
+  RFC 4180 a quote only opens a quoted field at the start of a field.
+- Add a `quoted-formula.tsv` example covering inner quotes in unquoted fields.
+
 ## 0.3.4 — 2026-09-13
 
 - Precise per-cell **Evaluated** highlight: a formula cell now lights only when its

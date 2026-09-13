@@ -36,7 +36,11 @@ export function parseDelimited(text: string, delimiter: string): string[][] {
       }
       continue;
     }
-    if (c === '"') {
+    // A double quote only opens a quoted field at the START of a field (RFC 4180).
+    // A `"` appearing mid-field is a literal character — e.g. a formula argument like
+    // =CLAUDE.BOOL("...", B1) in an unquoted field must keep its inner quotes rather
+    // than have them stripped into an invalid formula.
+    if (c === '"' && field === '') {
       inQuotes = true;
     } else if (c === delimiter) {
       endField();
@@ -108,7 +112,9 @@ export async function parseDelimitedChunked(
       } else {
         field += c;
       }
-    } else if (c === '"') {
+    } else if (c === '"' && field === '') {
+      // Only a leading `"` opens a quoted field (RFC 4180); a mid-field `"` is literal.
+      // See parseDelimited for the rationale (keeps inner quotes in unquoted formulas).
       inQuotes = true;
     } else if (c === delimiter) {
       endField();

@@ -1,0 +1,5 @@
+Type	Size	Format method	File system	Cluster size	Compression	Expected
+Stripe	100	Slow	FAT	1024	On	=CLAUDE.BOOL("Total size is 10KB or more", B1, E1, F1)
+RAID-5	1000	Slow	NTFS	16384	Off	=CLAUDE.BOOL("Total size is 10KB or more", B2, E2, F2)
+Mirror	16	Quick	exFAT	2048	On	=CLAUDE.BOOL("Is the size 50 or more?", B3, E3, F3)
+Single	9000	Slow	NTFS	4096	Off	=IF(B4>=1000,"big","small")
