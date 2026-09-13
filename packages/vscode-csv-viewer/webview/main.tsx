@@ -7,6 +7,7 @@ import {
   toValueMatrix,
   toValueMatrixAsync,
   p2a,
+  a2p,
   x2c,
   render,
   Pending,
@@ -45,6 +46,39 @@ let aiFlushTimer: ReturnType<typeof setTimeout> | null = null;
 let aiReqCounter = 0;
 const aiPending = new Map<number, AiQueueItem[]>();
 
+// Ids of cells whose evaluated result changed since the last save WITHOUT the cell
+// itself being edited: async (=CLAUDE / =CODEX) results that landed (via the engine's
+// onAsyncResolve hook, which fires per cell incl. duplicate-prompt cells that reuse one
+// call), plus the transitive dependents of any edited/resolved cell (a formula whose
+// referenced cell changed — its own value changes but getLastChangedAddresses doesn't
+// list it). Neither bumps the sheet version, so the version gate can't see them.
+// Cleared on save and reload. Module-level (one grid per webview).
+const derivedDirtyIds = new Set<string>();
+
+// Walk the reverse dependency graph (System.dependents) from `startId` and add every
+// transitive dependent's id to `out` — the formula cells whose value changes because a
+// cell they reference changed. The start cell itself is not added (it's tracked directly).
+const collectDependents = (registry: any, startId: string, out: Set<string>) => {
+  const systems = registry?.systems;
+  if (!systems) {
+    return;
+  }
+  const stack: string[] = [startId];
+  while (stack.length > 0) {
+    const cur = stack.pop() as string;
+    const deps: Set<string> | undefined = systems[cur]?.dependents;
+    if (!deps) {
+      continue;
+    }
+    for (const d of deps) {
+      if (!out.has(d)) {
+        out.add(d);
+        stack.push(d);
+      }
+    }
+  }
+};
+
 const flushAi = () => {
   aiFlushTimer = null;
   const batch = aiQueue;
@@ -80,6 +114,8 @@ const handleAiResult = (msg: AiBatchResponse) => {
     }
     settled.add(r.index);
     if (r.ok) {
+      // The per-cell tint is driven by the engine's onAsyncResolve hook (which fires
+      // for every cell that caches this result, duplicates included) — see useSpellbook.
       item.resolve(r.value);
     } else {
       item.reject(new Error(r.error));
@@ -538,40 +574,61 @@ const Grid = ({
   const highlightMixin = useMemo<PolicyMixinType>(
     () => ({
       renderCallback: (rendered: any, props: any) => {
-        const sheet = sheetRef.current?.sheet;
+        // Use props.sheet — the sheet Cell is CURRENTLY rendering — not sheetRef,
+        // which StoreObserver only refreshes in a useEffect (a render behind). After
+        // an autofill the store already holds the new sheet, but sheetRef still points
+        // at the pre-fill one, so its getCell would miss the just-filled formulas
+        // (only the original source cell would read as a formula) and the filled range
+        // wouldn't tint.
+        const sheet = props.sheet;
         if (!sheet) {
           return rendered;
         }
         // Fold the newest operation's changed cells into the cumulative set, once
         // per version (the first cell rendered at a new version does it; the rest
-        // skip). Skip ops at/behind the last save so a saved sheet stays clean.
+        // skip). Skip ops at/behind the last save so a saved sheet stays clean. Also
+        // mark each changed cell's transitive dependents (formulas that reference it)
+        // so a formula re-tints when a cell it depends on changes, even though it isn't
+        // itself in getLastChangedAddresses.
         const version = sheet.currentVersion ?? 0;
         if (version > lastAccVersionRef.current) {
           lastAccVersionRef.current = version;
           if (version > clearedVersionRef.current) {
             for (const a of sheet.getLastChangedAddresses?.() ?? []) {
               editedRef.current.add(a);
+              const cid = sheet.getId?.(a2p(a));
+              if (cid != null) {
+                collectDependents(sheet.registry, cid, derivedDirtyIds);
+              }
             }
           }
         }
         const address = p2a(props.point);
         const changed = editedRef.current.has(address);
-        // A formula counts as "computed" only while there are unsaved changes — its
-        // baked result isn't in the file yet. After a save (clearedVersion caught up)
-        // it goes quiet until the next edit bumps the version again.
+        // Per-cell "unsaved evaluated result", precise so unrelated formulas stay dark:
+        //   - before the first save (clearedVersion < 0) every formula result is unbaked
+        //     → all formulas count;
+        //   - after a save, only cells actually touched since — edited/filled (editedRef),
+        //     an async result cached since the save, or a dependent of such a cell
+        //     (derivedDirtyIds). All reset on save.
         const raw = sheet.getCell?.(props.point, { resolution: 'SYSTEM' })?.value;
+        const id = sheet.getId?.(props.point);
+        const derivedDirty = id != null && derivedDirtyIds.has(id);
+        const neverSaved = clearedVersionRef.current < 0;
         const computed =
           evaluateHlRef.current &&
           typeof raw === 'string' &&
           raw.charAt(0) === '=' &&
-          version > clearedVersionRef.current;
+          (neverSaved || changed || derivedDirty);
         if (!changed && !computed) {
           return rendered;
         }
-        // changed wins over computed (a formula you just edited reads as an edit).
-        const bg = changed
-          ? 'color-mix(in srgb, var(--vscode-gitDecoration-modifiedResourceForeground, #e2c08d) 20%, transparent)'
-          : 'color-mix(in srgb, var(--vscode-charts-purple, #b180d7) 16%, transparent)';
+        // Computed (formula) wins over changed: a formula cell reads as Evaluated
+        // (purple) whether it was just typed or filled down — so an autofilled range
+        // of formulas is all purple, not amber. Only a non-formula edit is Changed (amber).
+        const bg = computed
+          ? 'color-mix(in srgb, var(--vscode-charts-purple, #b180d7) 16%, transparent)'
+          : 'color-mix(in srgb, var(--vscode-gitDecoration-modifiedResourceForeground, #e2c08d) 20%, transparent)';
         return [
           // .backface is z-index:0 via the grid CSS; inset:0 fills the whole cell
           // through the positioned gs-cell-inner-wrap ancestor.
@@ -600,6 +657,7 @@ const Grid = ({
     const handle = gridStoreRef.current;
     const sheet = sheetRef.current?.sheet;
     editedRef.current = new Set();
+    derivedDirtyIds.clear();
     lastAccVersionRef.current = sheet?.currentVersion ?? 0;
     clearedVersionRef.current = sheet?.currentVersion ?? 0;
     if (handle && sheet) {
@@ -667,6 +725,14 @@ const Grid = ({
     policies: formatPolicies,
     onChange: handleChange,
     onFormula: notifyComputed,
+    // Fires per cell when an async result is cached (duplicates included) — record the
+    // id (and its transitive dependents) so the computed tint lights exactly those cells
+    // even after a save (async resolution doesn't bump the sheet version). transmit
+    // repaints on the next frame, by which point every cell for this resolution is in.
+    onAsyncResolve: (id: string) => {
+      derivedDirtyIds.add(id);
+      collectDependents(sheetRef.current?.sheet?.registry, id, derivedDirtyIds);
+    },
   });
 
   // Latest render params, read by the save routine without re-arming its effect.
@@ -1139,6 +1205,7 @@ const App = () => {
         setReadOnly((prev) => (prev === null ? !!msg.readOnly : prev)); // seed once from the setting
         setDirty(false); // fresh authoritative content ⇒ nothing unsaved
         setEvalDirty(false); // …and nothing pending from evaluation
+        derivedDirtyIds.clear(); // …and no async result outstanding vs the file
         setLoadProgress(null); // parsing done — hide the load bar
       }
     };

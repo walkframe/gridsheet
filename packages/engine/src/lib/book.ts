@@ -44,6 +44,15 @@ export type RegistryProps = {
    * into the file (the footer "Computed" marker).
    */
   onFormula?: () => void;
+  /**
+   * Fired when an ASYNC formula cell's result is cached (resolved or errored),
+   * with the cell's id — including cells that reused an in-flight call for a
+   * duplicate prompt (they cache the shared result without re-invoking the
+   * function). Lets a host mark exactly the cells whose computed value just
+   * changed, e.g. to re-tint them after a save (async resolution does not bump
+   * the sheet version).
+   */
+  onAsyncResolve?: (id: string) => void;
 };
 
 export type BookProps = RegistryProps;
@@ -105,6 +114,7 @@ export class Registry {
   onKeyUp?: (args: { e: EditorEvent; points: CursorStateType }) => void;
   onInit?: (args: { sheet: UserSheet }) => void;
   onFormula?: () => void;
+  onAsyncResolve?: (id: string) => void;
 
   transmit: (newBook?: TransmitProps) => void = (newBook?: TransmitProps) => {
     // This method will be overridden by useBook
@@ -154,6 +164,7 @@ export class Registry {
     onKeyUp,
     onInit,
     onFormula,
+    onAsyncResolve,
   }: RegistryProps = {}) {
     if (historyLimit != null) {
       this.historyLimit = historyLimit;
@@ -177,6 +188,7 @@ export class Registry {
     this.onKeyUp = onKeyUp;
     this.onInit = onInit;
     this.onFormula = onFormula;
+    this.onAsyncResolve = onAsyncResolve;
   }
 }
 

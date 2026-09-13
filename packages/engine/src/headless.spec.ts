@@ -152,6 +152,36 @@ describe('headless formula resolution (no UI)', () => {
     expect(matrix[0][1]).toBe('summarize sales'); // C1 (sync)
   });
 
+  it('fires onAsyncResolve per cell, including duplicate-prompt cells that share one call', async () => {
+    // B1/B2/B3 all call =AI(A1) — identical prompt, so useInflight dedupes them to a
+    // single resolver call. onAsyncResolve must still fire for each cell's id (the two
+    // reusing the in-flight result cache it without re-invoking main()).
+    let calls = 0;
+    const resolver = async () => {
+      calls++;
+      return 'ok';
+    };
+    const resolved: string[] = [];
+    const registry = createRegistry({
+      additionalFunctions: { ai: makeAiFunction(resolver) },
+      onAsyncResolve: (id) => resolved.push(id),
+    });
+    const sheet = headlessSheet(registry, {
+      A1: { value: 'x' },
+      B1: { value: '=AI(A1)' },
+      B2: { value: '=AI(A1)' },
+      B3: { value: '=AI(A1)' },
+    });
+    sheet.resolveAll();
+    await sheet.waitForPending();
+    await Promise.resolve();
+    expect(calls).toBe(1); // deduped to a single resolver call
+    const ids = new Set(resolved);
+    expect(ids.has(sheet.getId({ y: 1, x: 2 }))).toBe(true); // B1
+    expect(ids.has(sheet.getId({ y: 2, x: 2 }))).toBe(true); // B2 (shared)
+    expect(ids.has(sheet.getId({ y: 3, x: 2 }))).toBe(true); // B3 (shared)
+  });
+
   it('lets the caller swap resolvers per context (no-op vs real)', async () => {
     // e.g. a CI/no-op context returns a placeholder; a real context calls a backend.
     const noop = async () => '(unresolved)';

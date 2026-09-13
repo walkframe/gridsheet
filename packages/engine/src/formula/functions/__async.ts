@@ -162,6 +162,9 @@ export const getAsyncCache = (
       })
       .finally(() => {
         registry.asyncPending.delete(compositeKey);
+        // This cell cached the shared result (duplicate prompt) without re-invoking
+        // the function — still a resolution for THIS cell, so notify per-cell.
+        registry.onAsyncResolve?.(id);
       });
 
     return inflight.pending;
@@ -238,6 +241,8 @@ export const awaitAndSave = (
           registry.asyncInflight.delete(key);
         }
       }
+      // Notify that THIS cell's async result was cached (before the repaint below).
+      registry.onAsyncResolve?.(id);
       // Clear solvedCaches so dependent formulas re-evaluate
       registry.solvedCaches.clear();
       // Trigger re-render of all sheets
