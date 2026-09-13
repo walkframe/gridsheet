@@ -22,17 +22,35 @@ quotes (`""`) are handled.
 
 ### Editing
 
-- Edit cells directly; changes are written back to the document, so the tab
-  shows the unsaved-changes dot and **Ctrl+S** saves through VS Code's normal flow.
+- Edit cells directly. The grid keeps edits in memory and owns its own document
+  model, so the tab shows the native unsaved-changes dot ●, **Ctrl+S** saves
+  (serializing only then — never on every keystroke), closing an unsaved grid
+  **prompts to save**, and unsaved edits survive a window restart (hot-exit).
 - **First row as header** — promote the first row to editable column labels
   (double-click a header to rename it).
-- **Evaluate formulas on save** (default **on**) — write formula *results*
-  (`=A1+B1` → `30`); turn off to keep the formula source. Literal cells are
-  unaffected.
+- **`gridsheet.viewer.saveEvaluated`** (default **on**) — on save, write formula
+  *results* (`=A1+B1` → `30`, resolved `=CLAUDE()` answers included); turn off to
+  keep the formula source. Literal cells are unaffected.
+- **`gridsheet.viewer.eager`** (default **on**) — evaluate every formula cell on
+  open, not just the ones scrolled into view, so off-screen `=CLAUDE()` /
+  `=CODEX()` cells fire without scrolling. Turn off for lazy, scroll-to-evaluate.
+- **`gridsheet.ai.concurrency`** (default **10**) — cap how many AI CLI processes
+  run at once, so opening a file with many AI cells doesn't burst.
 - **Add N rows at the bottom** — extend the sheet with empty capacity rows
   (trailing empty rows are trimmed on save, so they don't bloat the file).
 - **Open as text ⇄** — one click switches back to the plain text editor; the
   editor-title table icon switches back to the grid.
+
+### Unsaved-state highlights
+
+The footer shows a single **●** followed by what's pending, and cells are tinted
+to match — so you can see *what* would change on save:
+
+- **Changed** (amber) — cells you edited by hand that aren't saved yet.
+- **Evaluated** (purple) — formula cells whose computed result isn't in the file
+  yet (only when `saveEvaluated` is on, since off saves the source verbatim). A
+  formula also lights when a cell it *references* changes, or when its `=CLAUDE()`
+  /`=CODEX()` result lands. Everything clears on save.
 
 It **follows the active VS Code theme**: the webview detects light/dark from the
 `vscode-*` body class and uses GridSheet's `inherit-light` / `inherit-dark`
@@ -55,10 +73,13 @@ Development Host, and open a `.csv`/`.tsv` file with the viewer.
 
 ## How it works
 
-- `src/CsvEditorProvider.ts` — a `CustomTextEditorProvider` that parses the
-  document (`src/parse.ts`) and posts the rows to the webview; it re-posts on
-  every document change.
-- `webview/main.tsx` — a React app that renders the rows with `<GridSheet>`.
+- `src/CsvEditorProvider.ts` — a `CustomEditorProvider` that owns the document
+  model: it reads the file (`src/parse.ts`), posts the rows to the webview, and
+  handles save / save-as / revert / hot-exit backup by asking the webview to
+  serialize the current grid. Dirty state (tab ●, close prompt) is driven by the
+  webview's edit/evaluation reports. A file watcher re-posts on external changes.
+- `webview/main.tsx` — a Preact app that renders the rows with `<GridSheet>`, keeps
+  edits in memory, and serializes back only on save/backup.
 
 ## License
 

@@ -83,7 +83,10 @@ webview (engine)                         extension host
   So `main()` = "enqueue into batch, return a Promise that resolves on host reply".
 - **Batching**: `main()` never fires a request directly; it pushes to a queue and
   a short debounce flushes the whole tick's cells in one message. Grouped by
-  `(provider, kind)` host-side so each group is a homogeneous, schema-typed batch.
+  `(provider, kind)` host-side so each group is a homogeneous, schema-typed batch,
+  split into chunks of `gridsheet.ai.batchSize` cells per CLI call, and at most
+  `gridsheet.ai.concurrency` (default 10) CLI processes run at once (a shared
+  semaphore around every spawn, so `eager` open doesn't burst provider limits).
 - **Cache**: `buildAsyncCacheKey(name, args, ...)` keys on resolved arg values, so
   editing a referenced cell re-fires; unchanged cells never re-spend within a
   session. NOTE: `asyncCaches` are in-memory only → reopening the file re-spends.
