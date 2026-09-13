@@ -31,11 +31,34 @@ export default function LargeDatasetDemo() {
   const book = useSpellbook();
   const inheritMode = useStarlightMode();
   const isDark = inheritMode === 'inherit-dark';
+  const outerRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [ready, setReady] = React.useState(false);
 
   const sheetHeight = 400;
-  const sheetWidth = typeof window !== 'undefined' ? Math.min(800, window.innerWidth - 60) : 800;
+  // Size the grid to its actual container, not to window.innerWidth. The docs content
+  // column is much narrower than the window (the sidebar takes ~300px), so deriving the
+  // width from the window made the 800px grid overflow the column. Because the outer box
+  // centers the grid, that overflow was clipped equally on both sides — hiding the left
+  // row-number header and the bottom horizontal scroll handle. Measuring the box keeps the
+  // grid within it at every viewport width.
+  const [availWidth, setAvailWidth] = React.useState<number | null>(null);
+  React.useEffect(() => {
+    const el = outerRef.current;
+    if (!el) {
+      return;
+    }
+    const measure = () => {
+      const style = getComputedStyle(el);
+      const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+      setAvailWidth(el.clientWidth - padding);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const sheetWidth = availWidth != null ? Math.min(800, Math.max(320, availWidth)) : 800;
 
   const initialCells = React.useMemo(
     () =>
@@ -79,16 +102,16 @@ export default function LargeDatasetDemo() {
 
   return (
     <div
+      ref={outerRef}
       style={{
         display: 'flex',
         justifyContent: 'center',
         maxWidth: 'calc(100vw - 40px)',
-        minWidth: '320px',
         margin: '0 auto',
         padding: '20px',
       }}
     >
-      <div ref={containerRef} style={{ position: 'relative', width: sheetWidth, height: sheetHeight }}>
+      <div ref={containerRef} style={{ position: 'relative', width: sheetWidth }}>
         <GridSheet
           book={book}
           sheetName="large-dataset"
