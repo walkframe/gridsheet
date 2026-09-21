@@ -120,3 +120,6 @@ test-results/
 
 # VS Code extension build artifacts
 *.vsix
+
+# Claude Code personal/local settings
+.claude/settings.local.json
