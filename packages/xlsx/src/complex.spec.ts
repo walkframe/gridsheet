@@ -1,0 +1,44 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fromXlsx } from './index';
+
+// A real workbook written by openpyxl (an independent OOXML writer) with features
+// v0 does NOT support: merged cells, cell styles (fonts/fills/borders/alignment),
+// number formats, frozen panes, column widths. The importer must ignore all of
+// that and still extract values + formulas without throwing.
+const complex = () => readFileSync(join(__dirname, '__fixtures__', 'complex.xlsx'));
+
+describe('fromXlsx on a complex, styled workbook (graceful degradation)', () => {
+  it('reads every sheet without throwing', () => {
+    const parsed = fromXlsx(complex());
+    expect(Object.keys(parsed)).toEqual(['Sales', 'Meta']);
+  });
+
+  it('keeps a merged cell value in its top-left, leaving the rest empty', () => {
+    const sales = fromXlsx(complex()).Sales.matrices.A1;
+    // A1:D1 is merged in the source; the value lives only in A1.
+    expect(sales[0]).toEqual(['Q3 Sales Report', null, null, null]);
+  });
+
+  it('extracts values and formulas through the styling', () => {
+    const sales = fromXlsx(complex()).Sales.matrices.A1;
+    expect(sales[1]).toEqual(['Product', 'Qty', 'Price', 'Total']);
+    expect(sales[2]).toEqual(['Apple', 3, 1.5, '=B3*C3']);
+    expect(sales[3]).toEqual(['Banana', 10, 0.25, '=B4*C4']);
+    expect(sales[4]).toEqual(['Cherry', 5, 2, '=B5*C5']);
+    expect(sales[5]).toEqual(['Sum', null, null, '=SUM(D3:D5)']);
+  });
+
+  it('drops number formats: a formatted date reads as its raw serial number', () => {
+    const meta = fromXlsx(complex()).Meta.matrices.A1;
+    // B1 is a date with a yyyy-mm-dd format; v0 has no numFmt handling, so it is
+    // the underlying Excel serial number (a plain number), not a Date/string.
+    expect(meta[0][0]).toBe('Generated');
+    expect(typeof meta[0][1]).toBe('number');
+    // A boolean stays boolean; a percent-formatted 15.3% is its raw fraction.
+    expect(meta[1]).toEqual(['Active', true]);
+    expect(meta[2]).toEqual(['Rate', 0.153]);
+    // Escaped special characters decode correctly.
+    expect(meta[3]).toEqual(['Note', 'a & b <x> "q"']);
+  });
+});

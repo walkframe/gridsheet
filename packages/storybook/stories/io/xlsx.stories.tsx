@@ -13,8 +13,9 @@ const DESCRIPTION = [
   '## xlsx import / export',
   'Convert between `.xlsx` and GridSheet with `@gridsheet/xlsx`.',
   '',
-  '- **Load sample** fetches a shipped `sample.xlsx` and reads it with `fromXlsx` —',
-  '  formulas survive and re-evaluate in the grid.',
+  '- **Load sample** fetches a shipped `sample.xlsx` (a styled, merged, multi-sheet workbook)',
+  '  and reads it with `fromXlsx`. Styling and merged ranges are dropped; values and formulas',
+  '  survive and re-evaluate in the grid.',
   '- **Import file** reads a real `.xlsx` you pick.',
   '- **Download** reads the current sheet (`toXlsx({ Sheet1: sheet })`) and saves a `.xlsx`.',
 ].join('\n');

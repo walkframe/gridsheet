@@ -12,6 +12,9 @@ exceljs or SheetJS.
 - **Dates**: written as ISO strings (v0 has no number-format support).
 
 Not yet: styles, merged cells, column widths / row heights, number formats, charts/images.
+These are **ignored gracefully** on import — a styled, merged, multi-sheet workbook reads fine;
+you just get values + formulas (a merged range keeps its value in the top-left cell, and a
+number-formatted date comes through as its raw Excel serial number).
 
 ## Install
 
