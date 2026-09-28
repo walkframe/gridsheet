@@ -15,7 +15,7 @@ extension. GitHub org: `walkframe`. Docs site deployed to Cloudflare Pages.
 
 ## Packages (dependency order)
 
-`engine → web → {react-core, preact-core, functions}; preact-core → vue-core; react-core → react-dev`
+`engine → web → {react-core, preact-core, functions}; engine → xlsx; preact-core → vue-core; react-core → react-dev`
 
 | dir | package | what |
 |---|---|---|
@@ -27,6 +27,7 @@ extension. GitHub org: `walkframe`. Docs site deployed to Cloudflare Pages.
 | svelte-core | `@gridsheet/svelte-core` | Svelte implementation. |
 | react-dev | `@gridsheet/react-dev` | Dev tools for React (`Debugger`). peerDep on web. |
 | functions | `@gridsheet/functions` | Extended formula functions. peerDep on web. |
+| xlsx | `@gridsheet/xlsx` | xlsx ⇄ GridSheet converter (values + formulas). Headless. peerDep on engine; deps `fflate`. |
 | docs | `@gridsheet/docs` (private) | Astro + Starlight docs site. |
 | storybook | `@gridsheet/storybook` (private) | Stories; **the e2e target** (served on :5233). |
 | vscode-csv-viewer | `csv-gridsheet` (private) | VSCode extension "CSV Spreadsheet — GridSheet". |
@@ -55,8 +56,9 @@ pnpm test                 # jest + e2e
 - **Playwright (`e2e/`) is the default** for feature/component/interaction tests. Specs drive the
   built Storybook; navigate with `go(page, 'basic-simple--sheet')`, select via `[data-address='A1']`
   / `.gs-cell-rendered`.
-- **Jest is only for `packages/functions` and `packages/engine`.** Every formula function needs a
-  Jest `*.spec.ts` (colocated in `src/`).
+- **Jest is only for `packages/functions`, `packages/engine`, and `packages/xlsx`.** Every formula
+  function needs a Jest `*.spec.ts` (colocated in `src/`); xlsx conversion is likewise headless and
+  Jest-tested (round-trip + interop specs in `src/`).
 
 ## Conventions & gotchas
 
