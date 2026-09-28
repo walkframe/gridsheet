@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
+import { useSpellbook } from '@gridsheet/react-core/spellbook';
 import { fromXlsx, toXlsx } from '@gridsheet/xlsx';
 import sampleUrl from './sample.xlsx?url';
 
@@ -13,14 +14,17 @@ const DESCRIPTION = [
   '## xlsx import / export',
   'Convert between `.xlsx` and GridSheet with `@gridsheet/xlsx`.',
   '',
-  '- **Load sample** fetches a shipped `sample.xlsx` (a styled, merged, multi-sheet workbook)',
-  '  and reads it with `fromXlsx`. Styling and merged ranges are dropped; values and formulas',
-  '  survive and re-evaluate in the grid.',
+  '- **Load sample** fetches a shipped `sample.xlsx` — a styled, merged, multi-sheet workbook',
+  "  whose `Summary` sheet has **cross-sheet formulas** (`=SUM(Sales!D3:D5)`, `=Sales!D6*'Meta Data'!B3`).",
+  '  Styling and merges are dropped; values and formulas import, and the sheets share a `book`',
+  '  so cross-sheet references re-evaluate.',
   '- **Import file** reads a real `.xlsx` you pick.',
-  '- **Download** reads the current sheet (`toXlsx({ Sheet1: sheet })`) and saves a `.xlsx`.',
+  '- **Download** writes every sheet back out with `toXlsx`.',
 ].join('\n');
 
-const EMPTY: (string | number)[][] = [['(click “Load sample” or import a file)']];
+type Sheets = Record<string, any[][]>;
+
+const EMPTY: Sheets = { Sheet1: [['(click “Load sample” or import a file)']] };
 
 const btnStyle: React.CSSProperties = {
   padding: '4px 10px',
@@ -28,26 +32,59 @@ const btnStyle: React.CSSProperties = {
   cursor: 'pointer',
 };
 
+// Renders every sheet of a workbook into one shared book so cross-sheet
+// formulas resolve. Keyed by import version so each load gets a fresh book.
+const Workbook = ({ sheets, refs }: { sheets: Sheets; refs: React.MutableRefObject<Record<string, any>> }) => {
+  const book = useSpellbook({});
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
+      {Object.entries(sheets).map(([name, matrix]) => {
+        const ref = (refs.current[name] ??= { current: null });
+        return (
+          <div key={name} data-testid={`sheet-${name}`}>
+            <h4 style={{ margin: '0 0 4px' }}>{name}</h4>
+            <GridSheet
+              book={book}
+              sheetName={name}
+              sheetRef={ref}
+              options={{ sheetWidth: 480, sheetHeight: 220, showFormulaBar: false }}
+              initialCells={buildInitialCells({
+                matrices: { A1: matrix },
+                cells: { defaultCol: { width: 120 } },
+                ensured: { numRows: 6, numCols: 4 },
+              })}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const XlsxConverter = () => {
-  const sheetRef = React.useRef<any>(null);
-  const [matrix, setMatrix] = React.useState<any[][]>(EMPTY);
-  // Bump to remount the grid: initialCells is initial-only, so importing new data
-  // means mounting a fresh GridSheet keyed by this version.
+  const refs = React.useRef<Record<string, any>>({});
+  const [sheets, setSheets] = React.useState<Sheets>(EMPTY);
+  // Bump to remount: initialCells is initial-only, so a new import means a fresh book + sheets.
   const [version, setVersion] = React.useState(0);
 
-  const load = (next: any[][]) => {
-    setMatrix(next);
+  const load = (next: Sheets) => {
+    refs.current = {};
+    setSheets(next);
     setVersion((v) => v + 1);
   };
 
-  const loadSample = async () => {
-    // Fetch the shipped sample.xlsx (Vite gives us its bundled URL) and parse it.
-    const buf = await (await fetch(sampleUrl)).arrayBuffer();
-    const parsed = fromXlsx(new Uint8Array(buf));
-    const first = Object.values(parsed)[0];
-    if (first) {
-      load(first.matrices.A1 as any[][]);
+  const parseToSheets = (bytes: Uint8Array): Sheets => {
+    const parsed = fromXlsx(bytes);
+    const out: Sheets = {};
+    for (const [name, data] of Object.entries(parsed)) {
+      out[name] = data.matrices.A1 as any[][];
     }
+    return out;
+  };
+
+  const loadSample = async () => {
+    const buf = await (await fetch(sampleUrl)).arrayBuffer();
+    load(parseToSheets(new Uint8Array(buf)));
   };
 
   const importFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,21 +92,22 @@ const XlsxConverter = () => {
     if (!file) {
       return;
     }
-    const parsed = fromXlsx(new Uint8Array(await file.arrayBuffer()));
-    const first = Object.values(parsed)[0];
-    if (first) {
-      load(first.matrices.A1 as any[][]);
-    }
+    load(parseToSheets(new Uint8Array(await file.arrayBuffer())));
     e.target.value = '';
   };
 
   const download = () => {
-    const handle = sheetRef.current;
-    if (!handle) {
+    const out: Record<string, any> = {};
+    for (const name of Object.keys(sheets)) {
+      const handle = refs.current[name]?.current;
+      if (handle) {
+        out[name] = handle.sheet;
+      }
+    }
+    if (Object.keys(out).length === 0) {
       return;
     }
-    const bytes = toXlsx({ Sheet1: handle.sheet });
-    const blob = new Blob([bytes], {
+    const blob = new Blob([toXlsx(out)], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     });
     const url = URL.createObjectURL(blob);
@@ -100,16 +138,7 @@ const XlsxConverter = () => {
           Download
         </button>
       </div>
-      <GridSheet
-        key={version}
-        sheetRef={sheetRef}
-        options={{ sheetWidth: 700, sheetHeight: 250, showFormulaBar: true }}
-        initialCells={buildInitialCells({
-          matrices: { A1: matrix },
-          cells: { defaultCol: { width: 130 } },
-          ensured: { numRows: 8, numCols: 4 },
-        })}
-      />
+      <Workbook key={version} sheets={sheets} refs={refs} />
     </div>
   );
 };

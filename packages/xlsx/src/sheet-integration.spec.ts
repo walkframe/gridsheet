@@ -1,5 +1,8 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { Sheet, createRegistry, buildInitialCells } from '@gridsheet/engine';
 import { fromXlsx, toXlsx } from './index';
+import type { ParsedWorkbook } from './types';
 
 // Wire a bare headless Sheet into its registry, mirroring what a framework store
 // does, so formulas resolve and toCellMatrix can read the sheet outside a UI.
@@ -38,6 +41,33 @@ describe('toXlsx from a live GridSheet sheet', () => {
     expect(m[0][1]).toBe('label'); // B1
     expect(m[1][1]).toBe('=A1+A2'); // B2 stays a formula
     expect(m[2][1]).toBe('=SUM(A1:A2)'); // B3 stays a formula
+  });
+
+  it('resolves cross-sheet references after importing a multi-sheet workbook', () => {
+    // Wire every imported sheet into ONE shared registry (like a spellbook `book`),
+    // giving each a unique id the way <GridSheet> does, so cross-sheet refs resolve.
+    const parsed: ParsedWorkbook = fromXlsx(readFileSync(join(__dirname, '__fixtures__', 'complex.xlsx')));
+    const registry = createRegistry();
+    const sheets: Record<string, Sheet> = {};
+    for (const [name, data] of Object.entries(parsed)) {
+      const sheet = new Sheet({ name, registry, eager: true });
+      sheet.id = ++registry.sheetHead;
+      sheet.initialize(buildInitialCells(data));
+      registry.contextsBySheetId[sheet.id] = {
+        store: { sheetReactive: { current: sheet } },
+        dispatch: () => {},
+      } as any;
+      sheets[name] = sheet;
+    }
+    registry.boot();
+
+    const summary = sheets.Summary;
+    // =SUM(Sales!D3:D5) — Sales' own =B*C formulas resolve first, then this sums them.
+    expect(summary.getCell({ y: 2, x: 2 }, { resolution: 'RESOLVED' })?.value).toBe(17);
+    // =Sales!D3 (=B3*C3 = 3 * 1.5)
+    expect(summary.getCell({ y: 3, x: 2 }, { resolution: 'RESOLVED' })?.value).toBe(4.5);
+    // =Sales!D6 * 'Meta Data'!B3 — quoted spaced sheet name, 17 * 0.153
+    expect(summary.getCell({ y: 4, x: 2 }, { resolution: 'RESOLVED' })?.value).toBeCloseTo(2.601);
   });
 
   it('feeds fromXlsx output back into a new sheet that resolves the formulas', () => {

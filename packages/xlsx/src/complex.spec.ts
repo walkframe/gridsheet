@@ -11,7 +11,7 @@ const complex = () => readFileSync(join(__dirname, '__fixtures__', 'complex.xlsx
 describe('fromXlsx on a complex, styled workbook (graceful degradation)', () => {
   it('reads every sheet without throwing', () => {
     const parsed = fromXlsx(complex());
-    expect(Object.keys(parsed)).toEqual(['Sales', 'Meta']);
+    expect(Object.keys(parsed)).toEqual(['Sales', 'Meta Data', 'Summary']);
   });
 
   it('keeps a merged cell value in its top-left, leaving the rest empty', () => {
@@ -30,7 +30,7 @@ describe('fromXlsx on a complex, styled workbook (graceful degradation)', () => 
   });
 
   it('drops number formats: a formatted date reads as its raw serial number', () => {
-    const meta = fromXlsx(complex()).Meta.matrices.A1;
+    const meta = fromXlsx(complex())['Meta Data'].matrices.A1;
     // B1 is a date with a yyyy-mm-dd format; v0 has no numFmt handling, so it is
     // the underlying Excel serial number (a plain number), not a Date/string.
     expect(meta[0][0]).toBe('Generated');
@@ -40,5 +40,14 @@ describe('fromXlsx on a complex, styled workbook (graceful degradation)', () => 
     expect(meta[2]).toEqual(['Rate', 0.153]);
     // Escaped special characters decode correctly.
     expect(meta[3]).toEqual(['Note', 'a & b <x> "q"']);
+  });
+
+  it('preserves cross-sheet formula references verbatim (incl. quoted sheet names)', () => {
+    const summary = fromXlsx(complex()).Summary.matrices.A1;
+    expect(summary[0]).toEqual(['Cross-sheet Summary', null]); // merged title
+    expect(summary[1]).toEqual(['Grand Total', '=SUM(Sales!D3:D5)']);
+    expect(summary[2]).toEqual(['Top Product', '=Sales!D3']);
+    // A sheet name with a space stays quoted through the round trip.
+    expect(summary[3]).toEqual(['Weighted', "=Sales!D6*'Meta Data'!B3"]);
   });
 });
