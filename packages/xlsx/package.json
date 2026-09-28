@@ -1,6 +1,6 @@
 {
   "name": "@gridsheet/xlsx",
-  "version": "3.4.3",
+  "version": "3.4.4",
   "description": "xlsx ⇄ GridSheet converter for @gridsheet/react-core (values + formulas)",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -58,7 +58,7 @@
     "vite-plugin-dts": "^4.5.3"
   },
   "peerDependencies": {
-    "@gridsheet/engine": "3.4.1"
+    "@gridsheet/engine": "3.4.4"
   },
   "publishConfig": {
     "access": "public"
