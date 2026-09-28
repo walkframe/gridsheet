@@ -1,6 +1,14 @@
-import { useEffect, useState, useRef, useReducer, createRef, useCallback } from 'react';
+import { useEffect, useLayoutEffect, useState, useRef, useReducer, createRef, useCallback } from 'react';
 import type { CSSProperties } from 'react';
-import type { BorderSides, CellsByAddressType, SheetHandle, StoreHandle, OptionsType, Props, StoreType } from '../types';
+import type {
+  BorderSides,
+  CellsByAddressType,
+  SheetHandle,
+  StoreHandle,
+  OptionsType,
+  Props,
+  StoreType,
+} from '../types';
 import {
   DEFAULT_HEIGHT,
   DEFAULT_WIDTH,
@@ -61,8 +69,7 @@ export function GridSheet({
   // Translate the border config objects into CSS custom properties consumed by the
   // stylesheet (--gs-fb-* for the formula bar, --gs-mx-* for the matrix). A specific side
   // overrides `all`.
-  const bw = (b: BorderSides, side: 'left' | 'top' | 'right' | 'bottom') =>
-    (b[side] ?? b.all ?? false) ? '1px' : '0';
+  const bw = (b: BorderSides, side: 'left' | 'top' | 'right' | 'bottom') => ((b[side] ?? b.all ?? false) ? '1px' : '0');
   const borderVars = {
     '--gs-fb-bl': bw(formulaBarBorders, 'left'),
     '--gs-fb-bt': bw(formulaBarBorders, 'top'),
@@ -198,6 +205,7 @@ export function GridSheet({
   const [resizedHeight, setResizedHeight] = useState(false);
   const fixedWidth = centersWidth && (options.sheetWidth != null || resizedWidth);
   const fixedHeight = centersHeight && (options.sheetHeight != null || resizedHeight);
+  const canResizeVertical = sheetResize === 'both' || sheetResize === 'vertical';
   const [sheetHeight, setSheetHeight] = useState(
     typeof options?.sheetHeight === 'number' ? options.sheetHeight : estimateSheetHeight(initialCells),
   );
@@ -233,7 +241,15 @@ export function GridSheet({
       // updates) and never recover, collapsing it over time. Width keeps auto-
       // fitting the container so wide grids stay responsive.
       if (fillHeight || el.style.height) {
-        setSheetHeight(root ? Math.min(el.clientHeight, root.clientHeight) : el.clientHeight);
+        // A manual drag (el.style.height set, not fill mode) owns the size outright — don't
+        // clamp it to the root, or enlarging past the current root height gets ratcheted back.
+        const measured =
+          el.style.height && !fillHeight
+            ? el.clientHeight
+            : root
+              ? Math.min(el.clientHeight, root.clientHeight)
+              : el.clientHeight;
+        setSheetHeight(measured);
       }
       setSheetWidth(root ? Math.min(el.clientWidth, root.clientWidth) : el.clientWidth);
     });
@@ -245,6 +261,20 @@ export function GridSheet({
       setSheetHeight(options.sheetHeight);
     }
   }, [options.sheetHeight]);
+  // For a user-resizable fixed-height box the height is uncontrolled (see the style
+  // block). Seed the initial pixel height imperatively — before paint, so there is no
+  // flash — capped at the content height so a short grid still shrinks to its content.
+  // Keyed off options.sheetHeight only (not the sheetHeight state) so a drag isn't reset.
+  useLayoutEffect(() => {
+    const el = mainRef.current;
+    if (!el || !canResizeVertical || !fixedHeight) {
+      return;
+    }
+    const target = typeof options.sheetHeight === 'number' ? options.sheetHeight : sheetHeight;
+    const content = (store.sheetReactive.current?.fullHeight || 0) + 2;
+    el.style.height = `${Math.min(target, content)}px`;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [options.sheetHeight, canResizeVertical, fixedHeight]);
   useEffect(() => {
     if (typeof options.sheetWidth === 'number') {
       setSheetWidth(options.sheetWidth);
@@ -329,7 +359,12 @@ export function GridSheet({
           // eslint-disable-next-line no-console
           console.error('[gridsheet] async op failed:', e);
           if (!cancelled) {
-            (dispatch as any)(commitAsyncOp({ sheet: latestStoreRef.current.sheetReactive.current!, selectingZone: pendingAsyncOp.selectingZone }));
+            (dispatch as any)(
+              commitAsyncOp({
+                sheet: latestStoreRef.current.sheetReactive.current!,
+                selectingZone: pendingAsyncOp.selectingZone,
+              }),
+            );
           }
         }
       }),
@@ -389,7 +424,14 @@ export function GridSheet({
             ...(fillHeight
               ? { flex: 1, minHeight: 0, maxHeight: '100%' }
               : fixedHeight
-                ? { maxHeight: sheetHeight }
+                ? canResizeVertical
+                  ? // A user-resizable fixed-height box can't be React-controlled: `maxHeight`
+                    // blocks the CSS resize handle from dragging taller, and a controlled `height`
+                    // is overwritten on every render (fighting the drag). So leave the height
+                    // uncontrolled here — the initial pixel height is set imperatively in a layout
+                    // effect and the ResizeObserver syncs drags back into `sheetHeight`.
+                    {}
+                  : { maxHeight: sheetHeight }
                 : {
                     maxHeight: mainRef.current
                       ? window.innerHeight - mainRef.current.getBoundingClientRect().top
