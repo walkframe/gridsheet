@@ -42,6 +42,26 @@ describe('fromXlsx on a complex, styled workbook (graceful degradation)', () => 
     expect(meta[3]).toEqual(['Note', 'a & b <x> "q"']);
   });
 
+  it('imports cell styles as CSS: background, text color, weight, alignment', () => {
+    const sales = fromXlsx(complex()).Sales.cells;
+    // Merged title: white bold text on a dark fill, centered both ways.
+    expect(sales.A1.style).toMatchObject({
+      color: '#FFFFFF',
+      fontWeight: 'bold',
+      backgroundColor: '#203864',
+    });
+    expect(sales.A1.justifyContent).toBe('center');
+    expect(sales.A1.alignItems).toBe('center');
+    // Header cell: bold on a light fill, centered.
+    expect(sales.B2.style).toMatchObject({ fontWeight: 'bold', backgroundColor: '#D9E1F2' });
+    expect(sales.B2.justifyContent).toBe('center');
+    // Zebra-striped data row keeps its fill.
+    expect(sales.A4.style?.backgroundColor).toBe('#F2F2F2');
+    // Right-aligned bold "Sum" label.
+    expect(sales.A6.style?.fontWeight).toBe('bold');
+    expect(sales.A6.justifyContent).toBe('flex-end');
+  });
+
   it('preserves cross-sheet formula references verbatim (incl. quoted sheet names)', () => {
     const summary = fromXlsx(complex()).Summary.matrices.A1;
     expect(summary[0]).toEqual(['Cross-sheet Summary', null]); // merged title

@@ -1,6 +1,8 @@
 import { readZip } from './zip';
 import { parseXml, child, children, gatherText, type XmlNode } from './xml';
-import { parseRef } from './a1';
+import { parseRef, colName } from './a1';
+import { StyleTable } from './styles';
+import type { CellsByAddressType } from '@gridsheet/engine';
 import type { ParsedWorkbook, XlsxCellValue } from './types';
 
 /** Accepted binary inputs for {@link fromXlsx}. Node Buffer is a Uint8Array subclass. */
@@ -74,10 +76,15 @@ const coerceValue = (cell: XmlNode, t: string | undefined, shared: string[]): Xl
   }
 };
 
-const parseSheet = (xml: string, shared: string[]): XlsxCellValue[][] => {
+const parseSheet = (
+  xml: string,
+  shared: string[],
+  styles: StyleTable,
+): { matrix: XlsxCellValue[][]; cells: CellsByAddressType } => {
   const root = parseXml(xml);
   const sheetData = child(root, 'sheetData');
   const entries: { row: number; col: number; value: XlsxCellValue }[] = [];
+  const cells: CellsByAddressType = {};
   let maxRow = 0;
   let maxCol = 0;
 
@@ -95,6 +102,12 @@ const parseSheet = (xml: string, shared: string[]): XlsxCellValue[][] => {
         value = `=${formulaText}`;
       } else {
         value = coerceValue(c, t, shared);
+      }
+      // Cell style (background/color/weight/alignment) is independent of value: a
+      // colored-but-empty cell still carries a style we want to keep.
+      const cellStyle = styles.resolve(c.attrs['s']);
+      if (cellStyle) {
+        cells[`${colName(ref.col)}${ref.row}`] = cellStyle;
       }
       if (value !== null && value !== '') {
         entries.push({ row: ref.row, col: ref.col, value });
@@ -115,7 +128,7 @@ const parseSheet = (xml: string, shared: string[]): XlsxCellValue[][] => {
   for (const { row, col, value } of entries) {
     matrix[row - 1][col - 1] = value;
   }
-  return matrix;
+  return { matrix, cells };
 };
 
 /**
@@ -132,6 +145,7 @@ export const fromXlsx = (data: XlsxInput): ParsedWorkbook => {
   const workbook = parseXml(workbookXml);
   const rels = parseRelationships(files['xl/_rels/workbook.xml.rels']);
   const shared = parseSharedStrings(files['xl/sharedStrings.xml']);
+  const styles = new StyleTable(files['xl/styles.xml']);
 
   const result: ParsedWorkbook = {};
   const sheetsEl = child(workbook, 'sheets');
@@ -148,7 +162,8 @@ export const fromXlsx = (data: XlsxInput): ParsedWorkbook => {
     if (sheetXml == null) {
       continue;
     }
-    result[name] = { matrices: { A1: parseSheet(sheetXml, shared) } };
+    const { matrix, cells } = parseSheet(sheetXml, shared, styles);
+    result[name] = { matrices: { A1: matrix }, cells };
   }
   return result;
 };

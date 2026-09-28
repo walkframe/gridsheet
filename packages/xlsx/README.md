@@ -7,14 +7,18 @@ exceljs or SheetJS.
 ## Scope (v0)
 
 - **Values**: string, number, boolean. Empty cells are dropped; the used range is trimmed.
-- **Formulas**: round-trip as their `=...` text (read via `resolution: 'RAW'`).
-- **Multiple sheets**, in workbook order.
-- **Dates**: written as ISO strings (v0 has no number-format support).
+- **Formulas**: round-trip as their `=...` text (read via `resolution: 'RAW'`), including
+  cross-sheet references like `=SUM(Sales!D3:D5)` (quoted names such as `'Meta Data'!B3` too).
+- **Multiple sheets**, in workbook order. `fromXlsx` returns `{ matrices, cells }` per sheet.
+- **Cell styles on import** → GridSheet's `style`: background color, text color, bold, italic,
+  underline, and horizontal/vertical alignment (`justifyContent`/`alignItems`). `cells` in the
+  result carries these; `buildInitialCells` merges them with the values.
+- **Dates**: written as ISO strings (no number-format support).
 
-Not yet: styles, merged cells, column widths / row heights, number formats, charts/images.
-These are **ignored gracefully** on import — a styled, merged, multi-sheet workbook reads fine;
-you just get values + formulas (a merged range keeps its value in the top-left cell, and a
-number-formatted date comes through as its raw Excel serial number).
+Not yet: **writing** styles back out (`toXlsx` emits values + formulas only), merged cells,
+column widths / row heights, number formats, charts/images. Unsupported features are **ignored
+gracefully** on import — a styled, merged workbook reads fine; a merged range keeps its value in
+the top-left cell, and a number-formatted date comes through as its raw Excel serial number.
 
 ## Install
 

@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { buildInitialCells, GridSheet } from '@gridsheet/react-core';
 import { useSpellbook } from '@gridsheet/react-core/spellbook';
 import { fromXlsx, toXlsx } from '@gridsheet/xlsx';
+import type { XlsxSheetData } from '@gridsheet/xlsx';
 import sampleUrl from './sample.xlsx?url';
 
 const meta: Meta = {
@@ -16,15 +17,18 @@ const DESCRIPTION = [
   '',
   '- **Load sample** fetches a shipped `sample.xlsx` — a styled, merged, multi-sheet workbook',
   "  whose `Summary` sheet has **cross-sheet formulas** (`=SUM(Sales!D3:D5)`, `=Sales!D6*'Meta Data'!B3`).",
-  '  Styling and merges are dropped; values and formulas import, and the sheets share a `book`',
-  '  so cross-sheet references re-evaluate.',
+  '  Cell styles (background, text color, bold, alignment) import too; merges are dropped;',
+  '  the sheets share a `book` so cross-sheet references re-evaluate.',
   '- **Import file** reads a real `.xlsx` you pick.',
   '- **Download** writes every sheet back out with `toXlsx`.',
 ].join('\n');
 
-type Sheets = Record<string, any[][]>;
+// Each sheet is the parsed { matrices, cells } — cells carry imported styles.
+type Sheets = Record<string, XlsxSheetData>;
 
-const EMPTY: Sheets = { Sheet1: [['(click “Load sample” or import a file)']] };
+const EMPTY: Sheets = {
+  Sheet1: { matrices: { A1: [['(click “Load sample” or import a file)']] }, cells: {} },
+};
 
 const btnStyle: React.CSSProperties = {
   padding: '4px 10px',
@@ -38,7 +42,7 @@ const Workbook = ({ sheets, refs }: { sheets: Sheets; refs: React.MutableRefObje
   const book = useSpellbook({});
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
-      {Object.entries(sheets).map(([name, matrix]) => {
+      {Object.entries(sheets).map(([name, data]) => {
         const ref = (refs.current[name] ??= { current: null });
         return (
           <div key={name} data-testid={`sheet-${name}`}>
@@ -49,8 +53,9 @@ const Workbook = ({ sheets, refs }: { sheets: Sheets; refs: React.MutableRefObje
               sheetRef={ref}
               options={{ sheetWidth: 480, sheetHeight: 220, showFormulaBar: true }}
               initialCells={buildInitialCells({
-                matrices: { A1: matrix },
-                cells: { defaultCol: { width: 120 } },
+                matrices: data.matrices,
+                // Imported per-cell styles (background/color/weight/alignment) + a default width.
+                cells: { defaultCol: { width: 120 }, ...data.cells },
                 ensured: { numRows: 6, numCols: 4 },
               })}
             />
@@ -73,18 +78,9 @@ const XlsxConverter = () => {
     setVersion((v) => v + 1);
   };
 
-  const parseToSheets = (bytes: Uint8Array): Sheets => {
-    const parsed = fromXlsx(bytes);
-    const out: Sheets = {};
-    for (const [name, data] of Object.entries(parsed)) {
-      out[name] = data.matrices.A1 as any[][];
-    }
-    return out;
-  };
-
   const loadSample = async () => {
     const buf = await (await fetch(sampleUrl)).arrayBuffer();
-    load(parseToSheets(new Uint8Array(buf)));
+    load(fromXlsx(new Uint8Array(buf)));
   };
 
   const importFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,7 +88,7 @@ const XlsxConverter = () => {
     if (!file) {
       return;
     }
-    load(parseToSheets(new Uint8Array(await file.arrayBuffer())));
+    load(fromXlsx(new Uint8Array(await file.arrayBuffer())));
     e.target.value = '';
   };
 
