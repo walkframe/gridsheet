@@ -76,6 +76,11 @@ const coerceValue = (cell: XmlNode, t: string | undefined, shared: string[]): Xl
   }
 };
 
+// Excel column width is in characters of the default font; approximate the pixel
+// width Excel itself uses. Row height is in points → CSS pixels at 96dpi.
+const colWidthToPx = (chars: number): number => Math.round(chars * 7 + 5);
+const rowHeightToPx = (points: number): number => Math.round((points * 4) / 3);
+
 const parseSheet = (
   xml: string,
   shared: string[],
@@ -88,8 +93,29 @@ const parseSheet = (
   let maxRow = 0;
   let maxCol = 0;
 
+  // Column widths: <cols><col min max width customWidth/></cols>. Only honor explicit
+  // (customWidth) widths, and skip sheet-wide spans so we don't create thousands of headers.
+  for (const col of children(child(root, 'cols'), 'col')) {
+    if (col.attrs['customWidth'] !== '1' || !col.attrs['width']) {
+      continue;
+    }
+    const width = colWidthToPx(parseFloat(col.attrs['width']));
+    const min = parseInt(col.attrs['min'] ?? '0', 10);
+    const max = parseInt(col.attrs['max'] ?? '0', 10);
+    if (!min || !max || max - min > 200) {
+      continue;
+    }
+    for (let x = min; x <= max; x++) {
+      cells[`${colName(x)}0`] = { width }; // column-header cell (ch(col))
+    }
+  }
+
   for (const row of children(sheetData, 'row')) {
     const rowAttr = row.attrs['r'] ? parseInt(row.attrs['r'], 10) : undefined;
+    // Explicit row height → row-header cell (rh(row)).
+    if (row.attrs['customHeight'] === '1' && row.attrs['ht'] && rowAttr) {
+      cells[`0${rowAttr}`] = { height: rowHeightToPx(parseFloat(row.attrs['ht'])) };
+    }
     let autoCol = 0;
     for (const c of children(row, 'c')) {
       const ref = c.attrs['r'] ? parseRef(c.attrs['r']) : { row: rowAttr ?? maxRow + 1, col: ++autoCol };

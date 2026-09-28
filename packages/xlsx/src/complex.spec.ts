@@ -62,6 +62,17 @@ describe('fromXlsx on a complex, styled workbook (graceful degradation)', () => 
     expect(sales.A6.justifyContent).toBe('flex-end');
   });
 
+  it('imports column widths and row heights onto header cells', () => {
+    const sales = fromXlsx(complex()).Sales.cells;
+    // Column widths land on the column-header cell (ch(col) === `${col}0`).
+    expect(sales.A0.width).toBe(159); // wide product column (22 chars)
+    expect(sales.B0.width).toBe(47); // narrow qty column (6 chars)
+    expect(sales.A0.width!).toBeGreaterThan(sales.B0.width!);
+    // Row heights land on the row-header cell (rh(row) === `0${row}`).
+    expect(sales['01'].height).toBe(45); // tall title row (34pt)
+    expect(sales['02'].height).toBe(29); // header row (22pt)
+  });
+
   it('preserves cross-sheet formula references verbatim (incl. quoted sheet names)', () => {
     const summary = fromXlsx(complex()).Summary.matrices.A1;
     expect(summary[0]).toEqual(['Cross-sheet Summary', null]); // merged title

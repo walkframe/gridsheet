@@ -13,12 +13,15 @@ exceljs or SheetJS.
 - **Cell styles on import** → GridSheet's `style`: background color, text color, bold, italic,
   underline, and horizontal/vertical alignment (`justifyContent`/`alignItems`). `cells` in the
   result carries these; `buildInitialCells` merges them with the values.
+- **Column widths / row heights on import**: explicit widths (`<cols customWidth>`) and heights
+  (`<row customHeight>`) map to the column-/row-header cells (`ch(col)` / `rh(row)`), converted
+  to pixels.
 - **Dates**: written as ISO strings (no number-format support).
 
-Not yet: **writing** styles back out (`toXlsx` emits values + formulas only), merged cells,
-column widths / row heights, number formats, charts/images. Unsupported features are **ignored
-gracefully** on import — a styled, merged workbook reads fine; a merged range keeps its value in
-the top-left cell, and a number-formatted date comes through as its raw Excel serial number.
+Not yet: **writing** styles/sizes back out (`toXlsx` emits values + formulas only), merged cells,
+number formats, charts/images. Unsupported features are **ignored gracefully** on import — a
+styled, merged workbook reads fine; a merged range keeps its value in the top-left cell, and a
+number-formatted date comes through as its raw Excel serial number.
 
 ## Install
 
