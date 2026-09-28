@@ -47,7 +47,7 @@ const Workbook = ({ sheets, refs }: { sheets: Sheets; refs: React.MutableRefObje
               book={book}
               sheetName={name}
               sheetRef={ref}
-              options={{ sheetWidth: 480, sheetHeight: 220, showFormulaBar: false }}
+              options={{ sheetWidth: 480, sheetHeight: 220, showFormulaBar: true }}
               initialCells={buildInitialCells({
                 matrices: { A1: matrix },
                 cells: { defaultCol: { width: 120 } },
