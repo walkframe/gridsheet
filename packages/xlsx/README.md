@@ -10,18 +10,19 @@ exceljs or SheetJS.
 - **Formulas**: round-trip as their `=...` text (read via `resolution: 'RAW'`), including
   cross-sheet references like `=SUM(Sales!D3:D5)` (quoted names such as `'Meta Data'!B3` too).
 - **Multiple sheets**, in workbook order. `fromXlsx` returns `{ matrices, cells }` per sheet.
-- **Cell styles on import** → GridSheet's `style`: background color, text color, bold, italic,
-  underline, and horizontal/vertical alignment (`justifyContent`/`alignItems`). `cells` in the
-  result carries these; `buildInitialCells` merges them with the values.
-- **Column widths / row heights on import**: explicit widths (`<cols customWidth>`) and heights
-  (`<row customHeight>`) map to the column-/row-header cells (`ch(col)` / `rh(row)`), converted
-  to pixels.
+- **Cell styles (both directions)** ↔ GridSheet's `style`: background color, text color, bold,
+  italic, underline, and horizontal/vertical alignment (`justifyContent`/`alignItems`). On import,
+  `cells` in the result carries these and `buildInitialCells` merges them with the values; on export,
+  `toXlsx` writes them into `styles.xml`.
+- **Column widths / row heights (both directions)**: explicit widths (`<cols customWidth>`) and
+  heights (`<row customHeight>`) map to the column-/row-header cells (`ch(col)` / `rh(row)`),
+  converted to/from pixels. Sizes are written when the input is a live GridSheet sheet.
 - **Dates**: written as ISO strings (no number-format support).
 
-Not yet: **writing** styles/sizes back out (`toXlsx` emits values + formulas only), merged cells,
-number formats, charts/images. Unsupported features are **ignored gracefully** on import — a
-styled, merged workbook reads fine; a merged range keeps its value in the top-left cell, and a
-number-formatted date comes through as its raw Excel serial number.
+Not yet: merged cells, number formats, charts/images. Unsupported features are **ignored
+gracefully** on import — a merged, number-formatted workbook reads fine; a merged range keeps its
+value in the top-left cell, and a number-formatted date comes through as its raw Excel serial
+number.
 
 ## Install
 
@@ -65,8 +66,11 @@ const bytes = toXlsx({
 // bytes: Uint8Array — write to a file, or trigger a browser download
 ```
 
-Formula cells are written without a cached value; the workbook is marked `fullCalcOnLoad` so Excel /
-LibreOffice / Google Sheets recalculate them on open.
+A live sheet also exports its cell styles (background / color / weight / italic / underline /
+alignment) and column widths / row heights. A cell matrix exports the styles present on its cell
+objects; a plain value matrix exports values only. Formula cells are written without a cached value;
+the workbook is marked `fullCalcOnLoad` so Excel / LibreOffice / Google Sheets recalculate them on
+open.
 
 ## License
 

@@ -70,6 +70,38 @@ describe('toXlsx from a live GridSheet sheet', () => {
     expect(summary.getCell({ y: 4, x: 2 }, { resolution: 'RESOLVED' })?.value).toBeCloseTo(2.601);
   });
 
+  it('round-trips cell styles and header sizes through toXlsx → fromXlsx', () => {
+    const sheet = headlessSheet(
+      buildInitialCells({
+        cells: {
+          A1: {
+            value: 'Title',
+            style: { backgroundColor: '#203864', color: '#FFFFFF', fontWeight: 'bold' },
+            justifyContent: 'center',
+          },
+          A2: { value: 'note', style: { fontStyle: 'italic', textDecoration: 'underline' } },
+          A0: { width: 160 }, // column A header width (px)
+          '01': { height: 40 }, // row 1 header height (px)
+        },
+        ensured: { numRows: 2, numCols: 1 },
+      }),
+    );
+
+    const cells = fromXlsx(toXlsx({ Sheet1: sheet })).Sheet1.cells;
+
+    expect(cells.A1.style).toMatchObject({
+      backgroundColor: '#203864',
+      color: '#FFFFFF',
+      fontWeight: 'bold',
+    });
+    expect(cells.A1.justifyContent).toBe('center');
+    expect(cells.A2.style).toMatchObject({ fontStyle: 'italic', textDecoration: 'underline' });
+    // Sizes round-trip through the px↔xlsx-unit conversion (approximately).
+    expect(cells.A0.width).toBeGreaterThanOrEqual(155);
+    expect(cells.A0.width).toBeLessThanOrEqual(165);
+    expect(cells['01'].height).toBe(40);
+  });
+
   it('feeds fromXlsx output back into a new sheet that resolves the formulas', () => {
     const source = headlessSheet(
       buildInitialCells({

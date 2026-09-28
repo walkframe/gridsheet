@@ -2,6 +2,7 @@ import { toCellMatrix, type UserSheet, type CellType } from '@gridsheet/engine';
 import { writeZip } from './zip';
 import { colName } from './a1';
 import { escapeXml, escapeAttr } from './xml';
+import { StyleSheetBuilder } from './style_writer';
 import type { XlsxSheetInput, XlsxCellValue } from './types';
 
 const XML_DECL = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
@@ -9,18 +10,15 @@ const MAIN_NS = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 const REL_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 const PKG_REL_NS = 'http://schemas.openxmlformats.org/package/2006/relationships';
 
-// A minimal-but-valid styles part. v0 writes no per-cell styles; Excel still
-// requires xl/styles.xml to exist and expose xf index 0.
-const STYLES_XML =
-  XML_DECL +
-  `<styleSheet xmlns="${MAIN_NS}">` +
-  '<fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts>' +
-  '<fills count="1"><fill><patternFill patternType="none"/></fill></fills>' +
-  '<borders count="1"><border/></borders>' +
-  '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-  '<cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs>' +
-  '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
-  '</styleSheet>';
+// Inverse of the read-side pixel conversions (read.ts): px → column-width chars, px → points.
+const pxToColWidth = (px: number): number => Math.round(((px - 5) / 7) * 100) / 100;
+const pxToPoints = (px: number): number => Math.round(((px * 3) / 4) * 100) / 100;
+
+type SheetData = {
+  cells: (CellType | null)[][];
+  colWidths: Map<number, number>; // 1-based column index → px
+  rowHeights: Map<number, number>; // 1-based row index → px
+};
 
 const ROOT_RELS =
   XML_DECL +
@@ -31,53 +29,95 @@ const ROOT_RELS =
 const isUserSheet = (input: XlsxSheetInput): input is UserSheet =>
   !Array.isArray(input) && typeof (input as { getCell?: unknown }).getCell === 'function';
 
-const cellEntryToValue = (entry: CellType | XlsxCellValue | null): XlsxCellValue => {
-  if (entry != null && typeof entry === 'object' && !(entry instanceof Date) && 'value' in entry) {
-    return (entry as CellType).value ?? null;
+const normalizeCell = (entry: CellType | XlsxCellValue | null): CellType | null => {
+  if (entry == null) {
+    return null;
   }
-  return (entry as XlsxCellValue) ?? null;
+  if (typeof entry === 'object' && !(entry instanceof Date) && 'value' in entry) {
+    return entry as CellType;
+  }
+  return { value: entry } as CellType; // a raw scalar / Date
 };
 
-const toValueMatrix = (input: XlsxSheetInput): XlsxCellValue[][] => {
+const toSheetData = (input: XlsxSheetInput): SheetData => {
+  const colWidths = new Map<number, number>();
+  const rowHeights = new Map<number, number>();
   if (isUserSheet(input)) {
     const cells = toCellMatrix(input, { resolution: 'RAW' });
-    return cells.map((row) => row.map((cell) => (cell ? (cell.value ?? null) : null)));
+    const rows = cells.length;
+    const cols = cells[0]?.length ?? 0;
+    // Column widths and row heights live on the header cells (y=0 / x=0).
+    for (let x = 1; x <= cols; x++) {
+      const w = input.getCell({ y: 0, x })?.width;
+      if (typeof w === 'number') {
+        colWidths.set(x, w);
+      }
+    }
+    for (let y = 1; y <= rows; y++) {
+      const h = input.getCell({ y, x: 0 })?.height;
+      if (typeof h === 'number') {
+        rowHeights.set(y, h);
+      }
+    }
+    return { cells, colWidths, rowHeights };
   }
-  return (input as (CellType | XlsxCellValue | null)[][]).map((row) => row.map(cellEntryToValue));
+  const cells = (input as (CellType | XlsxCellValue | null)[][]).map((row) => row.map(normalizeCell));
+  return { cells, colWidths, rowHeights };
 };
 
-const buildCellXml = (ref: string, value: XlsxCellValue, intern: (s: string) => number): string => {
+const buildCellXml = (
+  ref: string,
+  cell: CellType,
+  intern: (s: string) => number,
+  styles: StyleSheetBuilder,
+): string => {
+  const s = styles.xfFor(cell);
+  const sAttr = s > 0 ? ` s="${s}"` : '';
+  const value = cell.value as XlsxCellValue;
   if (typeof value === 'string' && value.startsWith('=')) {
-    return `<c r="${ref}"><f>${escapeXml(value.slice(1))}</f></c>`;
+    return `<c r="${ref}"${sAttr}><f>${escapeXml(value.slice(1))}</f></c>`;
   }
   if (typeof value === 'number' && Number.isFinite(value)) {
-    return `<c r="${ref}"><v>${value}</v></c>`;
+    return `<c r="${ref}"${sAttr}><v>${value}</v></c>`;
   }
   if (typeof value === 'boolean') {
-    return `<c r="${ref}" t="b"><v>${value ? 1 : 0}</v></c>`;
+    return `<c r="${ref}"${sAttr} t="b"><v>${value ? 1 : 0}</v></c>`;
   }
-  // Date has no v0 number-format support; round-trip it as an ISO string.
+  if (value === null || value === undefined || value === '') {
+    // Empty but styled → still emit the cell so its background/format survives.
+    return sAttr ? `<c r="${ref}"${sAttr}/>` : '';
+  }
+  // Date has no number-format support yet; round-trip it as an ISO string.
   const text = value instanceof Date ? value.toISOString() : String(value);
-  return `<c r="${ref}" t="s"><v>${intern(text)}</v></c>`;
+  return `<c r="${ref}"${sAttr} t="s"><v>${intern(text)}</v></c>`;
 };
 
-const buildSheetXml = (matrix: XlsxCellValue[][], intern: (s: string) => number): string => {
+const buildSheetXml = (data: SheetData, intern: (s: string) => number, styles: StyleSheetBuilder): string => {
+  const { cells, colWidths, rowHeights } = data;
+  let cols = '';
+  for (const [col, px] of [...colWidths.entries()].sort((a, b) => a[0] - b[0])) {
+    cols += `<col min="${col}" max="${col}" width="${pxToColWidth(px)}" customWidth="1"/>`;
+  }
+  const colsXml = cols ? `<cols>${cols}</cols>` : '';
+
   let rows = '';
-  for (let y = 0; y < matrix.length; y++) {
-    const row = matrix[y];
-    let cells = '';
+  for (let y = 0; y < cells.length; y++) {
+    const row = cells[y];
+    let rowCells = '';
     for (let x = 0; x < row.length; x++) {
-      const value = row[x];
-      if (value === null || value === undefined || value === '') {
+      const cell = row[x];
+      if (cell == null) {
         continue;
       }
-      cells += buildCellXml(`${colName(x + 1)}${y + 1}`, value, intern);
+      rowCells += buildCellXml(`${colName(x + 1)}${y + 1}`, cell, intern, styles);
     }
-    if (cells) {
-      rows += `<row r="${y + 1}">${cells}</row>`;
+    const px = rowHeights.get(y + 1);
+    const heightAttr = typeof px === 'number' ? ` ht="${pxToPoints(px)}" customHeight="1"` : '';
+    if (rowCells || heightAttr) {
+      rows += `<row r="${y + 1}"${heightAttr}>${rowCells}</row>`;
     }
   }
-  return XML_DECL + `<worksheet xmlns="${MAIN_NS}"><sheetData>${rows}</sheetData></worksheet>`;
+  return XML_DECL + `<worksheet xmlns="${MAIN_NS}">${colsXml}<sheetData>${rows}</sheetData></worksheet>`;
 };
 
 const buildSharedStrings = (shared: string[]): string => {
@@ -139,7 +179,9 @@ const buildContentTypes = (count: number): string => {
  * Serialize one or more sheets into an xlsx workbook (a Uint8Array of zip bytes).
  * Each input may be a live GridSheet sheet (read via `toCellMatrix` at RAW
  * resolution so formulas keep their "=..." text), a cell matrix, or a value
- * matrix. v0 writes values + formulas only; styles are not emitted.
+ * matrix. Values, formulas, cell styles (background / color / weight / italic /
+ * underline / alignment), and — for a live sheet — column widths and row heights
+ * are written; merged cells and number formats are not.
  */
 export const toXlsx = (sheets: Record<string, XlsxSheetInput>): Uint8Array => {
   const names = Object.keys(sheets);
@@ -158,16 +200,17 @@ export const toXlsx = (sheets: Record<string, XlsxSheetInput>): Uint8Array => {
     }
     return idx;
   };
+  const styles = new StyleSheetBuilder();
 
   const files: Record<string, string> = {};
   names.forEach((name, i) => {
-    files[`xl/worksheets/sheet${i + 1}.xml`] = buildSheetXml(toValueMatrix(sheets[name]), intern);
+    files[`xl/worksheets/sheet${i + 1}.xml`] = buildSheetXml(toSheetData(sheets[name]), intern, styles);
   });
   files['[Content_Types].xml'] = buildContentTypes(names.length);
   files['_rels/.rels'] = ROOT_RELS;
   files['xl/workbook.xml'] = buildWorkbookXml(names);
   files['xl/_rels/workbook.xml.rels'] = buildWorkbookRels(names.length);
-  files['xl/styles.xml'] = STYLES_XML;
+  files['xl/styles.xml'] = styles.build();
   files['xl/sharedStrings.xml'] = buildSharedStrings(shared);
 
   return writeZip(files);
