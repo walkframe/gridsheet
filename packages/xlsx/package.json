@@ -1,6 +1,6 @@
 {
   "name": "@gridsheet/xlsx",
-  "version": "3.4.4-beta.0",
+  "version": "3.4.4",
   "description": "xlsx ⇄ GridSheet converter for @gridsheet/react-core (values + formulas)",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
