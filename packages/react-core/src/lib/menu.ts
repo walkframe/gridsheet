@@ -151,14 +151,11 @@ const colInsertCount = (ctx: MenuContext, x: number): number => {
   return isFullCol && x >= selStart && x <= selEnd ? selEnd - selStart + 1 : 1;
 };
 
-const intersectsMerge = (ctx: MenuContext): boolean => {
-  const { selectingZone, choosing } = ctx;
-  if (selectingZone.endY === -1) {
-    return ctx.sheet.getMergeAt(choosing) != null;
-  }
-  const { top, left, bottom, right } = zoneToArea(selectingZone);
-  return ctx.sheet.getMerges().some((m) => !(m.bottom < top || m.top > bottom || m.right < left || m.left > right));
-};
+/** The selection, or the chosen cell when nothing is selected. */
+const targetArea = ({ selectingZone, choosing }: MenuContext) =>
+  selectingZone.endY === -1
+    ? { top: choosing.y, left: choosing.x, bottom: choosing.y, right: choosing.x }
+    : zoneToArea(selectingZone);
 
 // ---- default descriptors ---------------------------------------------------
 
@@ -301,14 +298,14 @@ export const defaultContextMenuDescriptors: ContextMenuItemDescriptor[] = [
     id: 'merge-cells',
     label: 'Merge cells',
     visible: (ctx) => !ctx.leftHeaderSelecting && !ctx.topHeaderSelecting,
-    disabled: (ctx) => ctx.selectingZone.endY === -1,
+    disabled: (ctx) => !ctx.sheet.canMerge(targetArea(ctx)),
     onClick: (ctx) => ctx.mergeCells(),
   },
   {
     id: 'unmerge-cells',
     label: 'Unmerge cells',
     visible: (ctx) => !ctx.leftHeaderSelecting && !ctx.topHeaderSelecting,
-    disabled: (ctx) => !intersectsMerge(ctx),
+    disabled: (ctx) => !ctx.sheet.canUnmerge(targetArea(ctx)),
     onClick: (ctx) => ctx.unmergeCells(),
   },
   { type: 'divider' },

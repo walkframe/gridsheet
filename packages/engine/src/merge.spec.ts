@@ -6,6 +6,7 @@ import {
   a2p,
   type AreaType,
   type CellsByAddressType,
+  operations,
 } from './index';
 
 // Cell merge model: the span lives on the anchor (top-left) cell as `merge: { rows, cols }`;
@@ -255,6 +256,69 @@ describe('cell merge', () => {
       dst.undo();
       expect(src.getMerges()).toEqual([area('A1:B1')]);
       expect(dst.getMerges()).toEqual([]);
+    });
+  });
+
+  describe('prevention', () => {
+    const { Merge, Write, ReadOnly, hasOperation } = operations;
+    const quiet = () => jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    it('a Merge-protected cell anywhere in the area blocks a USER merge', () => {
+      const warn = quiet();
+      const sheet = make({ C3: { prevention: Merge } });
+      expect(sheet.canMerge(area('B2:C3'))).toBe(false);
+      sheet.merge({ area: area('B2:C3'), operator: 'USER' });
+      expect(sheet.getMerges()).toEqual([]);
+      expect(warn).toHaveBeenCalled();
+      // SYSTEM (programmatic) merges are not restricted.
+      sheet.merge({ area: area('B2:C3') });
+      expect(sheet.getMerges()).toEqual([area('B2:C3')]);
+      warn.mockRestore();
+    });
+
+    it('checks the merge-expanded area', () => {
+      const sheet = make({ E5: { prevention: Merge } });
+      sheet.merge({ area: area('D4:E5') });
+      // B2:D4 cuts through D4:E5, so it would grow to B2:E5 and reach E5.
+      expect(sheet.canMerge(area('B2:D4'))).toBe(false);
+      expect(sheet.canMerge(area('B2:C3'))).toBe(true);
+    });
+
+    it('honours prevention from column defaults on never-populated cells', () => {
+      const sheet = make({ C: { prevention: Merge } }, 100, 6);
+      expect(sheet.canMerge(area('B50:C60'))).toBe(false);
+      expect(sheet.canMerge(area('A50:B60'))).toBe(true);
+    });
+
+    it('blocks only when a Write-protected cell would lose its value', () => {
+      const sheet = make({
+        A1: { value: 'anchor', prevention: Write },
+        B1: { prevention: Write },
+        A2: { value: 'kept?', prevention: Write },
+      });
+      expect(sheet.canMerge(area('A1:B1'))).toBe(true); // anchor keeps its value, B1 is empty
+      expect(sheet.canMerge(area('A1:A2'))).toBe(false); // A2's value would be discarded
+    });
+
+    it('a single cell is never mergeable', () => {
+      expect(make().canMerge(area('B2'))).toBe(false);
+    });
+
+    it('unmerge is blocked when the anchor is Merge-protected', () => {
+      const warn = quiet();
+      const sheet = make({ B2: { prevention: Merge } });
+      sheet.merge({ area: area('B2:C3') });
+      expect(sheet.canUnmerge(area('C3'))).toBe(false);
+      sheet.unmerge({ area: area('C3'), operator: 'USER' });
+      expect(sheet.getMerges()).toEqual([area('B2:C3')]);
+      sheet.unmerge({ area: area('C3') });
+      expect(sheet.getMerges()).toEqual([]);
+      expect(sheet.canUnmerge(area('C3'))).toBe(false); // nothing left to unmerge
+      warn.mockRestore();
+    });
+
+    it('ReadOnly includes Merge', () => {
+      expect(hasOperation(ReadOnly, Merge)).toBe(true);
     });
   });
 });

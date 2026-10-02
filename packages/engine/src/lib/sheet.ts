@@ -192,6 +192,8 @@ export interface UserSheet {
   getMerges(): AreaType[];
   getMergeAt(point: PointType): AreaType | undefined;
   expandAreaByMerges(area: AreaType): AreaType;
+  canMerge(area: AreaType): boolean;
+  canUnmerge(area: AreaType): boolean;
 
   filterRows(args?: { x?: number; filter?: FilterConfig }): UserSheet;
   isRowFiltered(y: number): boolean;
@@ -3154,11 +3156,19 @@ export class Sheet implements UserSheet {
    * the other cells' values are discarded (undoable).
    */
   public merge({ area, operator = 'SYSTEM', undoReflection, redoReflection }: MergeProps) {
-    const { top, left, bottom, right } = this.expandAreaByMerges(area, this._collectMerges());
+    const target = this.expandAreaByMerges(area, this._collectMerges());
+    const { top, left, bottom, right } = target;
     const rows = bottom - top + 1;
     const cols = right - left + 1;
     if (rows <= 1 && cols <= 1) {
       return this;
+    }
+    if (operator === 'USER') {
+      const blocked = this._findMergeBlocker(target);
+      if (blocked != null) {
+        console.warn(`Cannot merge: ${p2a(blocked)} is protected.`);
+        return this;
+      }
     }
     const diffBefore: CellsByIdType = {};
     const diffAfter: CellsByIdType = {};
@@ -3175,10 +3185,6 @@ export class Sheet implements UserSheet {
         }
         this._ensureCellPopulated(y, x, id);
         const current = this.registry.data[id] ?? {};
-        if (operator === 'USER' && operation.hasOperation(current.prevention, operation.Update)) {
-          console.warn(`Cannot merge ${p2a({ y, x })}.`);
-          return this;
-        }
         let next: CellType;
         if (isAnchor) {
           next = { ...current, merge: { rows, cols } };
@@ -3198,14 +3204,15 @@ export class Sheet implements UserSheet {
   }
 
   /** Dissolve every merge that intersects `area`. The anchor keeps its value; covered cells stay empty. */
-  public unmerge({ area, undoReflection, redoReflection }: MergeProps) {
-    const { top, left, bottom, right } = area;
+  public unmerge({ area, operator = 'SYSTEM', undoReflection, redoReflection }: MergeProps) {
+    const merges = this._mergesIntersecting(area);
+    if (operator === 'USER' && merges.some((m) => this._preventsMerge({ y: m.top, x: m.left }))) {
+      console.warn('Cannot unmerge: the range is protected.');
+      return this;
+    }
     const diffBefore: CellsByIdType = {};
     const diffAfter: CellsByIdType = {};
-    for (const m of this._collectMerges()) {
-      if (m.bottom < top || m.top > bottom || m.right < left || m.left > right) {
-        continue;
-      }
+    for (const m of merges) {
       const id = this.getId({ y: m.top, x: m.left })!;
       const current = this.registry.data[id] ?? {};
       const next = { ...current };
@@ -3217,6 +3224,71 @@ export class Sheet implements UserSheet {
       return this;
     }
     return this._commitMergeDiff(diffBefore, diffAfter, undoReflection, redoReflection);
+  }
+
+  /**
+   * Whether a USER merge of `area` is allowed: no cell in the (merge-expanded) area carries the
+   * `Merge` prevention, and no `Write`-protected cell would lose its value. A single cell is never
+   * mergeable.
+   */
+  public canMerge(area: AreaType): boolean {
+    const target = this.expandAreaByMerges(area);
+    if (target.top === target.bottom && target.left === target.right) {
+      return false;
+    }
+    return this._findMergeBlocker(target) == null;
+  }
+
+  /** Whether a USER unmerge of `area` would dissolve anything (and none of it is protected). */
+  public canUnmerge(area: AreaType): boolean {
+    const merges = this._mergesIntersecting(area);
+    return merges.length > 0 && !merges.some((m) => this._preventsMerge({ y: m.top, x: m.left }));
+  }
+
+  /** @internal */
+  private _mergesIntersecting({ top, left, bottom, right }: AreaType): AreaType[] {
+    return this._collectMerges().filter((m) => !(m.bottom < top || m.top > bottom || m.right < left || m.left > right));
+  }
+
+  /** @internal */
+  private _preventsMerge(point: PointType): boolean {
+    const prevention = this.getCell(point, { resolution: 'SYSTEM' })?.prevention;
+    return operation.hasOperation(prevention, operation.Merge);
+  }
+
+  /** @internal The first cell that forbids merging `area` (already merge-expanded), if any. */
+  private _findMergeBlocker({ top, left, bottom, right }: AreaType): PointType | undefined {
+    for (let y = top; y <= bottom; y++) {
+      for (let x = left; x <= right; x++) {
+        const id = this.getId({ y, x });
+        // A never-materialized cell carries only init-time defaults; read it without populating
+        // when it has no value, so checking a large blank range stays cheap.
+        const cell =
+          id != null && this.registry.data[id] == null && this.peekRawValue({ y, x }) == null
+            ? this._peekInitPrevention({ y, x })
+            : this.getCell({ y, x }, { resolution: 'SYSTEM' });
+        if (operation.hasOperation(cell?.prevention, operation.Merge)) {
+          return { y, x };
+        }
+        const losesValue = !(y === top && x === left) && cell?.value != null && cell.value !== '';
+        if (losesValue && operation.hasOperation(cell?.prevention, operation.Write)) {
+          return { y, x };
+        }
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * The prevention a not-yet-populated cell would get, without populating it (mirrors the
+   * prevention stacking in `_ensureCellPopulated`). @internal
+   */
+  private _peekInitPrevention({ y, x }: PointType): CellType {
+    const cells = this._initCells;
+    const colId = this._colLetters[x] || x2c(x);
+    const rowId = y2r(y);
+    const { prevention } = Sheet._stack(this._common, cells?.[rowId], cells?.[colId], cells?.[`${colId}${rowId}`]);
+    return { prevention };
   }
 
   /** @internal */

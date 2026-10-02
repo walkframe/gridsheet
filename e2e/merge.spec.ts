@@ -134,3 +134,42 @@ test('shift+arrow, mouse drag and Tab respect merges', async ({ page }) => {
   await page.keyboard.press('Shift+Tab');
   await expect(address).toHaveText('B2');
 });
+
+test('Merge prevention disables merging and unmerging', async ({ page }) => {
+  await go(page, 'basic-merge--sheet');
+  const menuItem = (label: string) => page.locator('.gs-menu-item', { hasText: label }).first();
+  // Clicking anywhere outside the menu (on its backdrop) closes it.
+  const closeMenu = async () => {
+    if ((await page.locator('.gs-context-menu').count()) > 0) {
+      await page.mouse.click(5, 5);
+    }
+    await expect(page.locator('.gs-context-menu')).toHaveCount(0);
+  };
+
+  // G2:H3 contains H2 (prevention: Merge).
+  await cell(page, 'G2').click();
+  await page.keyboard.down('Shift');
+  await cell(page, 'H3').click();
+  await page.keyboard.up('Shift');
+  await cell(page, 'H3').click({ button: 'right' });
+  await expect(menuItem('Merge cells')).toHaveClass(/gs-disabled/);
+  await menuItem('Merge cells').click({ force: true });
+  await expect(cell(page, 'G2')).not.toHaveClass(/gs-merged/);
+  await closeMenu();
+
+  // A range without protected cells can still be merged.
+  await cell(page, 'G8').click();
+  await page.keyboard.down('Shift');
+  await cell(page, 'H8').click();
+  await page.keyboard.up('Shift');
+  await cell(page, 'H8').click({ button: 'right' });
+  await expect(menuItem('Merge cells')).toHaveClass(/gs-enabled/);
+  await closeMenu();
+
+  // H5:I6 is anchored on a Merge-protected cell, so it cannot be unmerged.
+  await cell(page, 'H5').click();
+  await cell(page, 'H5').click({ button: 'right' });
+  await expect(menuItem('Unmerge cells')).toHaveClass(/gs-disabled/);
+  await menuItem('Unmerge cells').click({ force: true });
+  await expect(cell(page, 'H5')).toHaveClass(/gs-merged-host/);
+});

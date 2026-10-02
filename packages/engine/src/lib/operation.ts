@@ -16,6 +16,7 @@ export const SetPolicy: operations = 0b00000000000000000000000000000000000000100
 export const Sort: operations = 0b00000000000000000000000000000000000001000000000000000; // 32768
 export const Filter: operations = 0b00000000000000000000000000000000000010000000000000000; // 65536
 export const SetLabel: operations = 0b00000000000000000000000000000000000100000000000000000; // 131072
+export const Merge: operations = 0b00000000000000000000000000000000001000000000000000000; // 262144
 
 export const NoOperation: operations = 0;
 
@@ -31,7 +32,7 @@ export const Add: operations = InsertRows | InsertCols; // 60
 
 export const Delete: operations = RemoveRows | RemoveCols; // 3
 
-export const ReadOnly: operations = Update | Delete | Add | Move;
+export const ReadOnly: operations = Update | Delete | Add | Move | Merge;
 
 export const ColumnMenu: operations = Filter | Sort | SetLabel;
 
@@ -93,6 +94,9 @@ export const debugOperations = (prevention: operations | undefined) => {
   }
   if (hasOperation(prevention, Filter)) {
     operations.push('Filter');
+  }
+  if (hasOperation(prevention, Merge)) {
+    operations.push('Merge');
   }
   return operations;
 };
