@@ -12,6 +12,8 @@ import {
   CellType,
   FilterConfig,
   HistoryType,
+  HistoryInsertRowsType,
+  HistoryInsertColsType,
   HistorySortRowsType,
   StorePatchType,
   ShapeType,
@@ -96,6 +98,18 @@ type MoveProps = {
   historicize?: boolean;
 };
 
+type MergeProps = {
+  area: AreaType;
+  operator?: OperatorType;
+  undoReflection?: StorePatchType;
+  redoReflection?: StorePatchType;
+};
+
+/** A pending change to a merge anchor, as {field: value}; `undefined` deletes the field. @internal */
+type MergePatch = { id: Id; before: CellType; patch: Partial<CellType> };
+
+const MERGE_LAYOUT_FIELDS = ['style', 'justifyContent', 'alignItems'] as const;
+
 export interface UserSheet {
   changedTime: number;
   lastChangedTime?: number;
@@ -173,6 +187,11 @@ export interface UserSheet {
   setHeaderWidth(width: number, historicize?: boolean): UserSheet;
 
   sortRows(args: { x: number; direction: 'asc' | 'desc' }): UserSheet;
+  merge(args: MergeProps): UserSheet;
+  unmerge(args: MergeProps): UserSheet;
+  getMerges(): AreaType[];
+  getMergeAt(point: PointType): AreaType | undefined;
+  expandAreaByMerges(area: AreaType): AreaType;
 
   filterRows(args?: { x?: number; filter?: FilterConfig }): UserSheet;
   isRowFiltered(y: number): boolean;
@@ -312,6 +331,13 @@ export class Sheet implements UserSheet {
   private _rowHeightOverrides: Map<number, number> = new Map();
   /** @internal — tracks filtered rows for offset computation */
   private _filteredRows: Set<number> = new Set();
+  /**
+   * @internal — ids of cells that have carried a `merge` span. May hold stale ids (the merge was
+   * removed, or the cell left this sheet); `_collectMerges` validates and prunes on read.
+   */
+  private _mergeAnchorIds: Set<Id> = new Set();
+  /** @internal — `_collectMerges` result memoized per sheet version */
+  private _mergeCache: { version: number; areas: AreaType[] } | null = null;
 
   constructor({ limits = {}, name, registry = createRegistry({}), eager = false }: Props) {
     this.idMatrix = [];
@@ -642,6 +668,11 @@ export class Sheet implements UserSheet {
   public sortRows({ x, direction }: { x: number; direction: 'asc' | 'desc' }) {
     const numRows = this.numRows;
     if (numRows <= 1) {
+      return this;
+    }
+    // Reordering rows would tear apart a merge spanning several rows (same as Google Sheets).
+    if (this.getMerges().some((m) => m.bottom > m.top)) {
+      console.warn('Cannot sort rows while a merged range spans multiple rows.');
       return this;
     }
 
@@ -1156,6 +1187,7 @@ export class Sheet implements UserSheet {
     // wipe the spill marker even though the spilled value stays cached.
     this.registry.systems[id] = { ...this.registry.systems[id], id, changedTime, sheetId: this.id };
     this.registry.data[id] = stacked;
+    this._noteMerge(id);
   }
 
   /**
@@ -2055,9 +2087,11 @@ export class Sheet implements UserSheet {
     // Then flush idMatrix writes
     for (const { y, x, id } of idWritesSrc) {
       srcSheet._ensureIdRow(y)[x] = id;
+      srcSheet._noteMerge(id);
     }
     for (const { y, x, id } of idWritesDst) {
       dstSheet._ensureIdRow(y)[x] = id;
+      dstSheet._noteMerge(id);
     }
 
     // Update lastChangedAddresses
@@ -2454,6 +2488,7 @@ export class Sheet implements UserSheet {
       this.registry.data[id] = next;
       out.diffAfter[id] = next;
     }
+    this._noteMerge(id);
     // Keep the row-height override cache in sync when a row header's height
     // changes (e.g. a resize goes through this partial-update path, not the
     // stacking path that seeds the cache). getOffsetTop() / setTotalSize() read
@@ -2731,6 +2766,7 @@ export class Sheet implements UserSheet {
       console.error(`Rows are limited to ${this.maxNumRows}.`);
       return this;
     }
+    const mergePatches = this._planMergeInsert('row', y, numRows);
     const numCols = this.numCols;
     const rows: IdMatrix = [];
     const changedTime = Date.now();
@@ -2765,12 +2801,15 @@ export class Sheet implements UserSheet {
       idMatrix: rows,
     });
 
+    const mergeDiff = this._applyMergePatches(mergePatches);
+
     // If diff is provided, update the cells after insertion
     if (diff) {
       Object.assign(this.registry.lastHistory!, this._update({ diff, partial, updateChangedTime, operator }), {
         partial,
       });
     }
+    this._foldMergeDiffIntoHistory(mergeDiff);
     if (this.registry.onInsertRows) {
       const cloned = this.clone();
       cloned.area = {
@@ -2824,6 +2863,7 @@ export class Sheet implements UserSheet {
       }
       ys.unshift(yi);
     }
+    const mergePatches = this._planMergeRemove('row', ys);
     const deleted: MatrixType = [];
     ys.forEach((y) => {
       const row = this.idMatrix.splice(y, 1);
@@ -2833,7 +2873,8 @@ export class Sheet implements UserSheet {
     // Keep row-metadata caches (keyed by absolute row number) aligned with the new layout.
     this._shiftRowMetaForRemove(y, numRows);
 
-    const diffBefore = preserver.resolveDependents('removeRows');
+    const mergeDiff = this._applyMergePatches(mergePatches);
+    const diffBefore = { ...preserver.resolveDependents('removeRows'), ...mergeDiff.diffBefore };
 
     this._pushHistory({
       applyed: true,
@@ -2888,6 +2929,7 @@ export class Sheet implements UserSheet {
       console.error(`Columns are limited to ${this.maxNumCols}.`);
       return this;
     }
+    const mergePatches = this._planMergeInsert('col', x, numCols);
     const numRows = this.numRows;
     const rows: IdMatrix = [];
     const changedTime = Date.now();
@@ -2918,12 +2960,15 @@ export class Sheet implements UserSheet {
       idMatrix: rows,
     });
 
+    const mergeDiff = this._applyMergePatches(mergePatches);
+
     // If diff is provided, update the cells after insertion
     if (diff) {
       Object.assign(this.registry.lastHistory!, this._update({ diff, partial, updateChangedTime, operator }), {
         partial,
       });
     }
+    this._foldMergeDiffIntoHistory(mergeDiff);
     if (this.registry.onInsertCols) {
       const cloned = this.clone();
       cloned.area = {
@@ -2978,6 +3023,7 @@ export class Sheet implements UserSheet {
       xs.unshift(xi);
     }
 
+    const mergePatches = this._planMergeRemove('col', xs);
     const deleted: MatrixType = [];
     this.idMatrix.forEach((row) => {
       const deleting: Ids = [];
@@ -2988,7 +3034,8 @@ export class Sheet implements UserSheet {
       });
     });
     this.area.right -= xs.length;
-    const diffBefore = preserver.resolveDependents('removeCols');
+    const mergeDiff = this._applyMergePatches(mergePatches);
+    const diffBefore = { ...preserver.resolveDependents('removeCols'), ...mergeDiff.diffBefore };
 
     this._pushHistory({
       applyed: true,
@@ -3018,6 +3065,285 @@ export class Sheet implements UserSheet {
     return this.refresh(true, true);
   }
   /** @internal */
+  /** @internal */
+  private _noteMerge(id: Id) {
+    if (this.registry.data[id]?.merge != null) {
+      this._mergeAnchorIds.add(id);
+    }
+  }
+
+  /**
+   * Every merged range on this sheet (anchor = top-left), clamped to the sheet bounds.
+   * Uncached: structural ops call it mid-mutation, before the version bumps. @internal
+   */
+  private _collectMerges(): AreaType[] {
+    const areas: AreaType[] = [];
+    const numRows = this.numRows;
+    const numCols = this.numCols;
+    for (const id of this._mergeAnchorIds) {
+      const span = this.registry.data[id]?.merge;
+      if (span == null) {
+        this._mergeAnchorIds.delete(id);
+        continue;
+      }
+      const { y, x } = this.getPointById(id);
+      if (y < 1 || x < 1) {
+        // No longer on this sheet (row/col removed, moved away). Undo re-notes it via its diff.
+        this._mergeAnchorIds.delete(id);
+        continue;
+      }
+      const bottom = Math.min(y + Math.max(span.rows, 1) - 1, numRows);
+      const right = Math.min(x + Math.max(span.cols, 1) - 1, numCols);
+      if (bottom === y && right === x) {
+        continue;
+      }
+      areas.push({ top: y, left: x, bottom, right });
+    }
+    return areas;
+  }
+
+  /** Every merged range on this sheet. The top-left of each area is the anchor cell. */
+  public getMerges(): AreaType[] {
+    if (this._mergeAnchorIds.size === 0) {
+      return [];
+    }
+    if (this._mergeCache?.version !== this.version) {
+      this._mergeCache = { version: this.version, areas: this._collectMerges() };
+    }
+    return this._mergeCache.areas;
+  }
+
+  /** The merged range covering `point` (anchor included), or undefined when it isn't merged. */
+  public getMergeAt({ y, x }: PointType): AreaType | undefined {
+    for (const m of this.getMerges()) {
+      if (y >= m.top && y <= m.bottom && x >= m.left && x <= m.right) {
+        return m;
+      }
+    }
+    return undefined;
+  }
+
+  /** Grow `area` until no merged range straddles its edge (merges can chain, so it iterates). */
+  public expandAreaByMerges(area: AreaType, merges: AreaType[] = this.getMerges()): AreaType {
+    let top = Math.min(area.top, area.bottom);
+    let bottom = Math.max(area.top, area.bottom);
+    let left = Math.min(area.left, area.right);
+    let right = Math.max(area.left, area.right);
+    let changed = merges.length > 0;
+    while (changed) {
+      changed = false;
+      for (const m of merges) {
+        if (m.bottom < top || m.top > bottom || m.right < left || m.left > right) {
+          continue;
+        }
+        if (m.top < top || m.bottom > bottom || m.left < left || m.right > right) {
+          top = Math.min(top, m.top);
+          bottom = Math.max(bottom, m.bottom);
+          left = Math.min(left, m.left);
+          right = Math.max(right, m.right);
+          changed = true;
+        }
+      }
+    }
+    return { top, left, bottom, right };
+  }
+
+  /**
+   * Merge `area` into one cell anchored at its top-left. The area first grows to absorb any
+   * merge it partially overlaps; merges inside it are dissolved. Only the anchor's value is kept —
+   * the other cells' values are discarded (undoable).
+   */
+  public merge({ area, operator = 'SYSTEM', undoReflection, redoReflection }: MergeProps) {
+    const { top, left, bottom, right } = this.expandAreaByMerges(area, this._collectMerges());
+    const rows = bottom - top + 1;
+    const cols = right - left + 1;
+    if (rows <= 1 && cols <= 1) {
+      return this;
+    }
+    const diffBefore: CellsByIdType = {};
+    const diffAfter: CellsByIdType = {};
+    for (let y = top; y <= bottom; y++) {
+      for (let x = left; x <= right; x++) {
+        const id = this.getId({ y, x });
+        if (id == null) {
+          continue;
+        }
+        const isAnchor = y === top && x === left;
+        // Skip never-materialized empty cells so merging a large blank range stays cheap.
+        if (!isAnchor && this.registry.data[id] == null && this.peekRawValue({ y, x }) == null) {
+          continue;
+        }
+        this._ensureCellPopulated(y, x, id);
+        const current = this.registry.data[id] ?? {};
+        if (operator === 'USER' && operation.hasOperation(current.prevention, operation.Update)) {
+          console.warn(`Cannot merge ${p2a({ y, x })}.`);
+          return this;
+        }
+        let next: CellType;
+        if (isAnchor) {
+          next = { ...current, merge: { rows, cols } };
+        } else {
+          if (!('value' in current) && current.merge == null) {
+            continue;
+          }
+          next = { ...current };
+          delete next.value;
+          delete next.merge;
+        }
+        diffBefore[id] = current;
+        diffAfter[id] = next;
+      }
+    }
+    return this._commitMergeDiff(diffBefore, diffAfter, undoReflection, redoReflection);
+  }
+
+  /** Dissolve every merge that intersects `area`. The anchor keeps its value; covered cells stay empty. */
+  public unmerge({ area, undoReflection, redoReflection }: MergeProps) {
+    const { top, left, bottom, right } = area;
+    const diffBefore: CellsByIdType = {};
+    const diffAfter: CellsByIdType = {};
+    for (const m of this._collectMerges()) {
+      if (m.bottom < top || m.top > bottom || m.right < left || m.left > right) {
+        continue;
+      }
+      const id = this.getId({ y: m.top, x: m.left })!;
+      const current = this.registry.data[id] ?? {};
+      const next = { ...current };
+      delete next.merge;
+      diffBefore[id] = current;
+      diffAfter[id] = next;
+    }
+    if (Object.keys(diffAfter).length === 0) {
+      return this;
+    }
+    return this._commitMergeDiff(diffBefore, diffAfter, undoReflection, redoReflection);
+  }
+
+  /** @internal */
+  private _commitMergeDiff(
+    diffBefore: CellsByIdType,
+    diffAfter: CellsByIdType,
+    undoReflection?: StorePatchType,
+    redoReflection?: StorePatchType,
+  ) {
+    this._applyDiff(diffAfter, false);
+    this._pushHistory({
+      applyed: true,
+      operation: 'UPDATE',
+      srcSheetId: this.id,
+      dstSheetId: this.id,
+      undoReflection,
+      redoReflection,
+      diffBefore,
+      diffAfter,
+      partial: false,
+    });
+    return this.refresh(false, false);
+  }
+
+  /** @internal Anchor patches for inserting `n` rows/cols at `at` (pre-insert coordinates). */
+  private _planMergeInsert(axis: 'row' | 'col', at: number, n: number): MergePatch[] {
+    const patches: MergePatch[] = [];
+    for (const m of this._collectMerges()) {
+      const [start, end] = axis === 'row' ? [m.top, m.bottom] : [m.left, m.right];
+      // Inserting at the anchor's own row/col pushes the whole merge; only strictly-inside grows it.
+      if (!(start < at && at <= end)) {
+        continue;
+      }
+      const id = this.getId({ y: m.top, x: m.left })!;
+      const span = { rows: m.bottom - m.top + 1, cols: m.right - m.left + 1 };
+      if (axis === 'row') {
+        span.rows += n;
+      } else {
+        span.cols += n;
+      }
+      patches.push({ id, before: { ...this.registry.data[id] }, patch: { merge: span } });
+    }
+    return patches;
+  }
+
+  /** @internal Anchor patches for removing the rows/cols `removed` (pre-removal coordinates). */
+  private _planMergeRemove(axis: 'row' | 'col', removed: number[]): MergePatch[] {
+    const patches: MergePatch[] = [];
+    const removedSet = new Set(removed);
+    for (const m of this._collectMerges()) {
+      const [start, end] = axis === 'row' ? [m.top, m.bottom] : [m.left, m.right];
+      let count = 0;
+      let successor = -1;
+      for (let i = start; i <= end; i++) {
+        if (removedSet.has(i)) {
+          count++;
+        } else if (successor === -1) {
+          successor = i;
+        }
+      }
+      if (count === 0) {
+        continue;
+      }
+      const span = { rows: m.bottom - m.top + 1, cols: m.right - m.left + 1 };
+      if (axis === 'row') {
+        span.rows -= count;
+      } else {
+        span.cols -= count;
+      }
+      const nextMerge = span.rows > 0 && span.cols > 0 && (span.rows > 1 || span.cols > 1) ? span : undefined;
+      const anchorId = this.getId({ y: m.top, x: m.left })!;
+      const anchor = this.registry.data[anchorId] ?? {};
+      if (successor === start) {
+        // Anchor survives: shrink, or dissolve once it is down to a single cell.
+        patches.push({ id: anchorId, before: { ...anchor }, patch: { merge: nextMerge } });
+        continue;
+      }
+      // Anchor goes away. Still record it so undo restores (and re-registers) it.
+      patches.push({ id: anchorId, before: { ...anchor }, patch: {} });
+      if (nextMerge == null) {
+        continue;
+      }
+      // The first surviving cell becomes the new anchor and inherits the merge's layout.
+      const p = axis === 'row' ? { y: successor, x: m.left } : { y: m.top, x: successor };
+      const id = this.getId(p)!;
+      this._ensureCellPopulated(p.y, p.x, id);
+      const patch: Partial<CellType> = { merge: nextMerge };
+      for (const f of MERGE_LAYOUT_FIELDS) {
+        (patch as any)[f] = anchor[f];
+      }
+      patches.push({ id, before: { ...this.registry.data[id] }, patch });
+    }
+    return patches;
+  }
+
+  /** @internal */
+  private _applyMergePatches(patches: MergePatch[]) {
+    const diffBefore: CellsByIdType = {};
+    const diffAfter: CellsByIdType = {};
+    for (const { id, before, patch } of patches) {
+      const next: Record<string, any> = { ...this.registry.data[id] };
+      for (const [k, v] of Object.entries(patch)) {
+        if (v === undefined) {
+          delete next[k];
+        } else {
+          next[k] = v;
+        }
+      }
+      this.registry.data[id] = next;
+      this._noteMerge(id);
+      diffBefore[id] = before;
+      diffAfter[id] = next;
+    }
+    return { diffBefore, diffAfter };
+  }
+
+  /** @internal Fold merge-anchor diffs into an INSERT_* history entry (after any `diff` update). */
+  private _foldMergeDiffIntoHistory(mergeDiff: { diffBefore: CellsByIdType; diffAfter: CellsByIdType }) {
+    if (Object.keys(mergeDiff.diffBefore).length === 0) {
+      return;
+    }
+    const h = this.registry.lastHistory as HistoryInsertRowsType | HistoryInsertColsType;
+    // The plan captured the true pre-op state; a later `diff` update holds the final state.
+    h.diffBefore = { ...h.diffBefore, ...mergeDiff.diffBefore };
+    h.diffAfter = { ...mergeDiff.diffAfter, ...h.diffAfter };
+  }
+
   public histories() {
     return [...this.registry.histories];
   }
@@ -3144,6 +3470,7 @@ export class Sheet implements UserSheet {
       sys.changedTime = Date.now();
     }
     this.registry.data[id] = merged;
+    this._noteMerge(id);
     this.clearDependencies(id);
     this.processFormula(merged.value, { dependency: id });
 
