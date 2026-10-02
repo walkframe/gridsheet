@@ -1,6 +1,6 @@
-import { useEffect, useContext, useState, useCallback } from 'react';
+import { useEffect, useContext, useState, useCallback, useMemo } from 'react';
 
-import { Cell } from './Cell';
+import { Cell, type MergeRender } from './Cell';
 import { HeaderCellTop } from './HeaderCellTop';
 import { HeaderCellLeft } from './HeaderCellLeft';
 import { CellStateOverlay } from './CellStateOverlay';
@@ -179,6 +179,37 @@ export const Tabular = () => {
     sheet.resolveAll();
   }, [sheet, sheetReactive]);
 
+  // Which rendered cells belong to a merged range, and which one of them draws it (the host:
+  // the anchor, or the first rendered cell of the range when the anchor is scrolled out).
+  const mergeRenders = useMemo(() => {
+    const map = new Map<string, MergeRender>();
+    const ys = virtualized?.ys ?? [];
+    const xs = virtualized?.xs ?? [];
+    if (!sheet || ys.length === 0 || xs.length === 0) {
+      return map;
+    }
+    const [y0, y1, x0, x1] = [ys[0], ys[ys.length - 1], xs[0], xs[xs.length - 1]];
+    for (const area of sheet.getMerges()) {
+      if (area.bottom < y0 || area.top > y1 || area.right < x0 || area.left > x1) {
+        continue;
+      }
+      const rows = ys.filter((y) => y >= area.top && y <= area.bottom);
+      if (rows.length === 0) {
+        continue;
+      }
+      const host: MergeRender = { area, host: true };
+      const covered: MergeRender = { area, host: false };
+      const left = Math.max(area.left, x0);
+      const right = Math.min(area.right, x1);
+      for (const y of rows) {
+        for (let x = left; x <= right; x++) {
+          map.set(`${y}:${x}`, y === rows[0] && x === left ? host : covered);
+        }
+      }
+    }
+    return map;
+  }, [sheet, sheet?.currentVersion, virtualized]);
+
   const mergedRefs: RefPaletteType = {
     ...palette,
     ...(sheet ? sheet.registry.paletteBySheetName[sheet.name] : {}),
@@ -287,7 +318,7 @@ export const Tabular = () => {
                   <tr key={y} className={`gs-row ${y % 2 === 0 ? 'gs-row-even' : 'gs-row-odd'}`}>
                     <HeaderCellLeft y={y} />
                     <td className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-left" />
-                    {virtualized?.xs?.map((x) => <Cell key={x} y={y} x={x} />)}
+                    {virtualized?.xs?.map((x) => <Cell key={x} y={y} x={x} merge={mergeRenders.get(`${y}:${x}`)} />)}
                     <td className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-right" />
                   </tr>
                 );

@@ -19,7 +19,15 @@ import { Sheet } from '@gridsheet/web';
 
 import { p2a, a2p } from '@gridsheet/web';
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from '@gridsheet/web';
-import { initSearchStatement, restrictPoints, flashSheet, flashWithCallback, compactReflection } from './helpers';
+import {
+  initSearchStatement,
+  restrictPoints,
+  flashSheet,
+  flashWithCallback,
+  compactReflection,
+  fitZoneToMerges,
+  snapToMergeAnchor,
+} from './helpers';
 import { smartScroll } from '@gridsheet/web';
 import { focus } from '@gridsheet/web';
 import { operations as prevention } from '@gridsheet/web';
@@ -604,9 +612,10 @@ export const escape = new EscapeAction().bind();
 
 class ChooseAction<T extends PointType> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
+    const sheet = store.sheetReactive.current;
     return {
       ...store,
-      choosing: payload,
+      choosing: sheet ? snapToMergeAnchor(sheet, payload) : payload,
       entering: true,
     };
   }
@@ -615,9 +624,10 @@ export const choose = new ChooseAction().bind();
 
 class SelectAction<T extends ZoneType> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
+    const sheet = store.sheetReactive.current;
     return {
       ...store,
-      selectingZone: payload,
+      selectingZone: sheet ? fitZoneToMerges(sheet, payload) : payload,
       leftHeaderSelecting: false,
       topHeaderSelecting: false,
     };
@@ -702,6 +712,11 @@ class DragAction<T extends PointType> extends CoreAction<T> {
     if (startY === payload.y && startX === payload.x) {
       selectingZone.endY = -1;
       selectingZone.endX = -1;
+    }
+    const sheet = store.sheetReactive.current;
+    // Header drags select whole rows/cols; growing them over merges would change the row/col count.
+    if (sheet && !store.leftHeaderSelecting && !store.topHeaderSelecting) {
+      return { ...store, selectingZone: fitZoneToMerges(sheet, selectingZone) };
     }
     return { ...store, selectingZone };
   }
@@ -972,13 +987,18 @@ class ArrowAction<
       selectingZone =
         y === nextY && x === nextX
           ? { startY: -1, startX: -1, endY: -1, endX: -1 }
-          : { startY: y, startX: x, endY: nextY, endX: nextX };
+          : fitZoneToMerges(sheet, { startY: y, startX: x, endY: nextY, endX: nextX });
       return {
         ...store,
         selectingZone,
       };
     }
-    const [nextY, nextX] = [y + deltaY, x + deltaX];
+    // Step off a merged range from its far edge, and land on the anchor of any merge we step into.
+    const merge = sheet.getMergeAt(choosing);
+    const fromY = merge == null ? y : deltaY > 0 ? merge.bottom : deltaY < 0 ? merge.top : y;
+    const fromX = merge == null ? x : deltaX > 0 ? merge.right : deltaX < 0 ? merge.left : x;
+    const nextY = fromY + deltaY;
+    let nextX = fromX + deltaX;
     if (nextY < 1 || numRows < nextY || nextX < 1 || numCols < nextX) {
       return store;
     }
@@ -993,6 +1013,7 @@ class ArrowAction<
         return store; // no visible row in that direction
       }
     }
+    ({ y: resolvedY, x: nextX } = snapToMergeAnchor(sheet, { y: resolvedY, x: nextX }));
     let { y: editorTop, x: editorLeft, height, width } = store.editorRect;
     if (deltaY > 0) {
       for (let i = y; i < resolvedY; i++) {
@@ -1036,7 +1057,7 @@ class WalkAction<
     numCols: number;
   },
 > extends CoreAction<T> {
-  reduce(store: StoreType, payload: T): StoreWithCallback {
+  reduce(store: StoreType, payload: T, depth = 0): StoreWithCallback {
     const { numRows, numCols } = payload;
     let { deltaY, deltaX } = payload;
     const { choosing, selectingZone, sheetReactive: sheetRef, tabularRef: gridOuterRef } = store;
@@ -1129,6 +1150,12 @@ class WalkAction<
       for (let i = x - 1; i >= nextX; i--) {
         editorLeft -= sheet.getCell({ y: 0, x: i }, { resolution: 'SYSTEM' })?.width || DEFAULT_WIDTH;
       }
+    }
+    // Walk over the covered part of a merged range (its anchor is a regular stop). The depth cap
+    // only guards against a pathological layout; every walk reaches an anchor or the edge.
+    const merge = sheet.getMergeAt({ y: nextY, x: nextX });
+    if (merge != null && (merge.top !== nextY || merge.left !== nextX) && depth < numRows * numCols) {
+      return this.reduce({ ...store, choosing: { y: nextY, x: nextX } }, payload, depth + 1);
     }
     const cell = sheet.getCell({ y: nextY, x: nextX }, { resolution: 'SYSTEM' });
     height = cell?.height || DEFAULT_HEIGHT;
@@ -1424,6 +1451,36 @@ class RemoveColsAction<T extends { numCols: number; x: number; operator?: Operat
   }
 }
 export const removeCols = new RemoveColsAction().bind();
+
+/** Merge (`merge: true`) or unmerge (`merge: false`) the current selection. */
+class MergeCellsAction<T extends { merge: boolean; operator?: OperatorType }> extends CoreAction<T> {
+  mutation = true;
+  reduce(store: StoreType, payload: T): StoreWithCallback {
+    const { merge, operator } = payload;
+    const { sheetReactive: sheetRef, selectingZone, choosing } = store;
+    const sheet = sheetRef.current;
+    if (sheet == null) {
+      return store;
+    }
+    const area =
+      selectingZone.endY === -1
+        ? { top: choosing.y, left: choosing.x, bottom: choosing.y, right: choosing.x }
+        : zoneToArea(selectingZone);
+    const reflection = compactReflection({ sheetId: sheet.id, selectingZone, choosing });
+    const args = { area, operator, undoReflection: reflection, redoReflection: reflection };
+    if (merge) {
+      sheet.merge(args);
+    } else {
+      sheet.unmerge(args);
+    }
+    return {
+      ...store,
+      sheetReactive: { current: sheet },
+      ...restrictPoints(store, sheet),
+    };
+  }
+}
+export const mergeCells = new MergeCellsAction().bind();
 
 class SortRowsAction<T extends { x: number; direction: 'asc' | 'desc' }> extends CoreAction<T> {
   mutation = true;

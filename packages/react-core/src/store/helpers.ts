@@ -1,6 +1,7 @@
 import { a2p, x2c, y2r } from '@gridsheet/web';
 import { Sheet } from '@gridsheet/web';
-import type { Address, PointType, StorePatchType, StoreType } from '../types';
+import { zoneToArea } from '@gridsheet/web';
+import type { Address, AreaType, PointType, StorePatchType, StoreType, ZoneType } from '../types';
 
 /**
  * Strip redundant fields from a StorePatchType before recording in history.
@@ -38,9 +39,42 @@ export const restrictPoints = (store: StoreType, sheet: Sheet) => {
     x2 = numCols;
   }
   return {
-    choosing: { y, x } as PointType,
-    selectingZone: { startY: y1, startX: x1, endY: y2, endX: x2 },
+    choosing: snapToMergeAnchor(sheet, { y, x }),
+    selectingZone: fitZoneToMerges(sheet, { startY: y1, startX: x1, endY: y2, endX: x2 }),
   };
+};
+
+const NO_ZONE: ZoneType = { startY: -1, startX: -1, endY: -1, endX: -1 };
+
+const sameArea = (a: AreaType, b: AreaType) =>
+  a.top === b.top && a.left === b.left && a.bottom === b.bottom && a.right === b.right;
+
+/** A point inside a merged range resolves to the range's anchor (top-left) cell. */
+export const snapToMergeAnchor = (sheet: Sheet, point: PointType): PointType => {
+  const merge = sheet.getMergeAt(point);
+  if (merge == null || (merge.top === point.y && merge.left === point.x)) {
+    return point;
+  }
+  return { y: merge.top, x: merge.left };
+};
+
+/**
+ * Grow a selection so it never cuts through a merged range, keeping its direction (start
+ * stays on the start side). A selection that collapses to a single merge becomes "no
+ * selection", the same as selecting one plain cell.
+ */
+export const fitZoneToMerges = (sheet: Sheet, zone: ZoneType): ZoneType => {
+  if (zone.startY === -1 || zone.endY === -1 || sheet.getMerges().length === 0) {
+    return zone;
+  }
+  const area = sheet.expandAreaByMerges(zoneToArea(zone));
+  const startMerge = sheet.getMergeAt({ y: zone.startY, x: zone.startX });
+  if (startMerge != null && sameArea(startMerge, area)) {
+    return NO_ZONE;
+  }
+  const [startY, endY] = zone.startY <= zone.endY ? [area.top, area.bottom] : [area.bottom, area.top];
+  const [startX, endX] = zone.startX <= zone.endX ? [area.left, area.right] : [area.right, area.left];
+  return { startY, startX, endY, endX };
 };
 
 const FLASH_CLASS = 'gs-flash-overlay--active';

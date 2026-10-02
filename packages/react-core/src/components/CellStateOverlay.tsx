@@ -173,14 +173,19 @@ export const CellStateOverlay: FC<Props> = ({ refs = {} }) => {
       drawAreaRectViewport(ctx, sheet, scrollTop, scrollLeft, w, h, autofill.wholeArea, COLOR_AUTOFILL, 1, [5, 5]);
     }
 
-    // 3. Choosing (pointed cell)
+    // 3. Choosing (pointed cell — the whole range when it is a merge anchor)
     {
       const { y, x } = choosing;
       if (y !== -1 && x !== -1) {
-        const pos = getCellRectPositions(sheet, { y, x });
-        const vx = pos.left - scrollLeft;
-        const vy = pos.top - scrollTop;
-        drawRect(ctx, vx, vy, pos.width, pos.height, COLOR_POINTED, 2, []);
+        const merge = sheet.getMergeAt({ y, x });
+        if (merge != null) {
+          drawAreaRectViewport(ctx, sheet, scrollTop, scrollLeft, w, h, merge, COLOR_POINTED, 2, []);
+        } else {
+          const pos = getCellRectPositions(sheet, { y, x });
+          const vx = pos.left - scrollLeft;
+          const vy = pos.top - scrollTop;
+          drawRect(ctx, vx, vy, pos.width, pos.height, COLOR_POINTED, 2, []);
+        }
       }
     }
 
