@@ -100,3 +100,37 @@ test('a merge stays drawn after its anchor scrolls out of view', async ({ page }
   const host = page.locator('.gs-merged-host', { hasText: 'Tall F2:F6' });
   await expect(host).toHaveCount(1);
 });
+
+test('shift+arrow, mouse drag and Tab respect merges', async ({ page }) => {
+  await go(page, 'basic-merge--sheet');
+  const address = page.locator('.gs-selecting-address');
+
+  await cell(page, 'A1').click();
+  // The first Shift+arrow right after a click is swallowed (pre-existing, unrelated to merges);
+  // a bare Shift press first makes the following ones register.
+  await page.keyboard.press('Shift');
+  await page.keyboard.press('Shift+ArrowDown');
+  await page.keyboard.press('Shift+ArrowRight');
+  // A1:B2 touches B2:D3 → A1:D3.
+  await expect(cell(page, 'A3')).toHaveClass(/gs-selecting/);
+  await expect(cell(page, 'D1')).toHaveClass(/gs-selecting/);
+  await expect(cell(page, 'E1')).not.toHaveClass(/gs-selecting/);
+
+  // Mouse drag from E4 into the merge grows the selection over the merge.
+  await cell(page, 'E4').hover();
+  await page.mouse.down();
+  await cell(page, 'C3').hover({ force: true });
+  await page.mouse.up();
+  await expect(cell(page, 'B4')).toHaveClass(/gs-selecting/);
+  await expect(cell(page, 'E2')).toHaveClass(/gs-selecting/);
+  await expect(cell(page, 'A4')).not.toHaveClass(/gs-selecting/);
+
+  // Tab walks over the covered columns.
+  await cell(page, 'A2').click();
+  await page.keyboard.press('Tab');
+  await expect(address).toHaveText('B2');
+  await page.keyboard.press('Tab');
+  await expect(address).toHaveText('E2');
+  await page.keyboard.press('Shift+Tab');
+  await expect(address).toHaveText('B2');
+});
