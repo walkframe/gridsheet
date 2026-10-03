@@ -34,6 +34,11 @@ quotes (`""`) are handled.
 - **`gridsheet.viewer.eager`** (default **on**) — evaluate every formula cell on
   open, not just the ones scrolled into view, so off-screen `=CLAUDE()` /
   `=CODEX()` cells fire without scrolling. Turn off for lazy, scroll-to-evaluate.
+- **`gridsheet.viewer.autoExpand`** (default **both**) — a paste or an autofill
+  that runs past the last row/column adds the missing rows/columns instead of
+  dropping the overflow (`vertical` / `horizontal` limit it to one axis, `none`
+  turns it off). The growth undoes together with the write.
+- Merged cells aren't offered — CSV/TSV has no way to store a merge.
 - **`gridsheet.ai.concurrency`** (default **10**) — cap how many AI CLI processes
   run at once, so opening a file with many AI cells doesn't burst.
 - **Add N rows at the bottom** — extend the sheet with empty capacity rows

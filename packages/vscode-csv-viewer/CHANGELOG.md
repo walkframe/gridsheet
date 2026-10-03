@@ -2,6 +2,16 @@
 
 All notable changes to the **CSV Spreadsheet — GridSheet** extension.
 
+## Unreleased
+
+- **Auto-expand** (`gridsheet.viewer.autoExpand`, default `both`): a paste or an
+  autofill that runs past the last row/column now adds the missing rows/columns
+  instead of dropping the overflow. While dragging the fill handle, ghost
+  rows/columns appear past the edge. One undo step reverts both the growth and
+  the write. Off in read-only mode.
+- Merge / Unmerge cells are not offered (removed from the context menu and blocked):
+  CSV/TSV can't store merges, and merging would blank the covered cells on save.
+
 ## 0.3.5 — 2026-09-13
 
 - Fix: a double quote inside an **unquoted** field is now kept literally instead of
