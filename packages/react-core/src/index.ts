@@ -89,6 +89,8 @@ export type {
   HeadersType,
   HistoryType,
   HistorySortRowsType,
+  HistoryBatchType,
+  AutoExpandType,
   PointType,
   AreaType,
   ZoneType,

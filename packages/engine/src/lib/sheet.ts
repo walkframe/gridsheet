@@ -19,6 +19,7 @@ import {
   ShapeType,
   RectType,
   OperatorType,
+  AutoExpandType,
   OperationType,
   RawCellType,
   ExtraPointType,
@@ -59,6 +60,7 @@ const shouldTracking = (op: string) => {
     case 'REMOVE_COLS':
     case 'MOVE':
     case 'SORT_ROWS':
+    case 'BATCH':
       return true;
   }
   return false;
@@ -84,6 +86,8 @@ type Props = {
   registry?: Registry;
   /** Opt into eager resolution for this sheet (see {@link Sheet.eager}). */
   eager?: boolean;
+  /** Grow the sheet when a paste / autofill overflows it (see {@link Sheet.autoExpand}). */
+  autoExpand?: AutoExpandType;
 };
 
 const noFilter: CellFilter = () => true;
@@ -268,6 +272,11 @@ export class Sheet implements UserSheet {
    * explicitly rather than inferred from the formulas a sheet happens to contain.
    */
   public eager: boolean = false;
+  /**
+   * Which way paste (copy / move / writeRawCellMatrix) and autofill may append rows/cols
+   * when they run past the sheet's edge. 'none' (default) clips the overflow.
+   */
+  public autoExpand: AutoExpandType = 'none';
   /** @internal */
   public prevName: string = '';
   /** @internal */
@@ -341,10 +350,11 @@ export class Sheet implements UserSheet {
   /** @internal — `_collectMerges` result memoized per sheet version */
   private _mergeCache: { version: number; areas: AreaType[] } | null = null;
 
-  constructor({ limits = {}, name, registry = createRegistry({}), eager = false }: Props) {
+  constructor({ limits = {}, name, registry = createRegistry({}), eager = false, autoExpand = 'none' }: Props) {
     this.idMatrix = [];
     this.changedTime = Date.now();
     this.eager = eager;
+    this.autoExpand = autoExpand;
     this._limits = {
       minRows: limits.minRows ?? 1,
       maxRows: limits.maxRows ?? -1,
@@ -1688,6 +1698,13 @@ export class Sheet implements UserSheet {
   /** @internal */
   private _pushHistory(history: HistoryType) {
     const book = this.registry;
+    if (book._historyBatch != null) {
+      // Collected into one BATCH by _endHistoryBatch(); lastHistory still points at the
+      // newest child so callers that patch it right after (e.g. insertRows' diff) keep working.
+      book._historyBatch.push(history);
+      book.lastHistory = history;
+      return;
+    }
     const strayedHistories = book.histories.splice(book.historyIndex + 1, book.histories.length);
     strayedHistories.forEach(this._cleanStrayed.bind(this));
     book.histories.push(history);
@@ -1702,6 +1719,10 @@ export class Sheet implements UserSheet {
 
   /** @internal */
   private _cleanObsolete(history: HistoryType) {
+    if (history.operation === 'BATCH') {
+      history.histories.forEach(this._cleanObsolete.bind(this));
+      return;
+    }
     if (history.operation === 'REMOVE_ROWS' || history.operation === 'REMOVE_COLS') {
       history.deleted.forEach((ids) => {
         ids.forEach((id) => {
@@ -1735,12 +1756,148 @@ export class Sheet implements UserSheet {
      * their registry entries must be deleted to avoid memory leaks.
      * @internal
      */
+    if (history.operation === 'BATCH') {
+      history.histories.forEach(this._cleanStrayed.bind(this));
+      return;
+    }
     if (history.operation === 'INSERT_ROWS' || history.operation === 'INSERT_COLS') {
       history.idMatrix.forEach((ids) => {
         ids.forEach((id) => {
           this._deleteOrphanedId(id);
         });
       });
+    }
+  }
+
+  /**
+   * Start collecting pushed histories so they undo/redo as one step. Returns false when a
+   * batch is already open (the outer owner closes it), so nested callers must only close
+   * the batch they opened.
+   * @internal
+   */
+  private _beginHistoryBatch(): boolean {
+    if (this.registry._historyBatch != null) {
+      return false;
+    }
+    this.registry._historyBatch = [];
+    return true;
+  }
+
+  /**
+   * Close the batch opened by _beginHistoryBatch() and push it. A single collected history is
+   * pushed as-is; several become one BATCH carrying the last child's sheet ids / reflections
+   * (the main operation — expansions are pushed before it and carry none).
+   * @internal
+   */
+  private _endHistoryBatch(expansionCount = 0) {
+    const collected = this.registry._historyBatch ?? [];
+    this.registry._historyBatch = null;
+    if (collected.length > 0 && collected.length === expansionCount) {
+      // The operation that needed the room recorded nothing (e.g. refused by a merge or a
+      // prevention): take the growth back instead of leaving a stray expansion in history.
+      for (let i = collected.length - 1; i >= 0; i--) {
+        this._undoHistory(collected[i]);
+        this._cleanStrayed(collected[i]);
+      }
+      this.refresh(true, true);
+      return;
+    }
+    if (collected.length === 0) {
+      return;
+    }
+    if (collected.length === 1) {
+      this._pushHistory(collected[0]);
+      return;
+    }
+    const main = collected[collected.length - 1];
+    this._pushHistory({
+      operation: 'BATCH',
+      srcSheetId: main.srcSheetId,
+      dstSheetId: main.dstSheetId,
+      applyed: true,
+      undoReflection: main.undoReflection,
+      redoReflection: main.redoReflection,
+      histories: collected,
+    });
+  }
+
+  /**
+   * How many rows/cols {@link autoExpand} would append so that `bottom` / `right` fit,
+   * honoring the expand direction and the maxRows / maxCols limits.
+   * @internal
+   */
+  public getAutoExpansion({ bottom, right }: { bottom: number; right: number }): { numRows: number; numCols: number } {
+    const mode = this.autoExpand;
+    let numRows = 0;
+    let numCols = 0;
+    if ((mode === 'vertical' || mode === 'both') && bottom > this.numRows) {
+      const limit = this.maxNumRows === -1 ? Infinity : this.maxNumRows;
+      numRows = Math.max(0, Math.min(bottom, limit) - this.numRows);
+    }
+    if ((mode === 'horizontal' || mode === 'both') && right > this.numCols) {
+      const limit = this.maxNumCols === -1 ? Infinity : this.maxNumCols;
+      numCols = Math.max(0, Math.min(right, limit) - this.numCols);
+    }
+    return { numRows, numCols };
+  }
+
+  /**
+   * Append the rows/cols {@link getAutoExpansion} asks for (copying the last row's / column's
+   * layout, like insertRows/insertCols). Pushes INSERT histories — call inside a history batch
+   * so they undo together with the operation that needed the room. Returns how many it pushed.
+   * @internal
+   */
+  private _autoExpandTo(area: { bottom: number; right: number }): number {
+    const { numRows, numCols } = this.getAutoExpansion(area);
+    let pushed = 0;
+    if (numCols > 0) {
+      this.insertCols({ x: this.numCols + 1, numCols, baseX: this.numCols });
+      pushed++;
+    }
+    if (numRows > 0) {
+      this.insertRows({ y: this.numRows + 1, numRows, baseY: this.numRows });
+      pushed++;
+    }
+    return pushed;
+  }
+
+  /**
+   * Run `fn` with the sheet first grown (per {@link autoExpand}) to fit `area`, recording the
+   * growth and whatever `fn` pushes as a single undo step.
+   * @internal
+   */
+  public withAutoExpand<T>(area: { bottom: number; right: number }, fn: () => T): T {
+    const { numRows, numCols } = this.getAutoExpansion(area);
+    if (numRows === 0 && numCols === 0) {
+      return fn();
+    }
+    const owner = this._beginHistoryBatch();
+    let expansionCount = 0;
+    try {
+      expansionCount = this._autoExpandTo(area);
+      return fn();
+    } finally {
+      if (owner) {
+        this._endHistoryBatch(expansionCount);
+      }
+    }
+  }
+
+  /** Async counterpart to {@link withAutoExpand}. @internal */
+  public async withAutoExpandAsync<T>(area: { bottom: number; right: number }, fn: () => Promise<T>): Promise<T> {
+    const { numRows, numCols } = this.getAutoExpansion(area);
+    if (numRows === 0 && numCols === 0) {
+      return fn();
+    }
+    const owner = this._beginHistoryBatch();
+    let expansionCount = 0;
+    try {
+      expansionCount = this._autoExpandTo(area);
+      return await fn();
+    } finally {
+      if (owner) {
+        this._endHistoryBatch(expansionCount);
+      }
     }
   }
 
@@ -1785,6 +1942,20 @@ export class Sheet implements UserSheet {
   }
 
   public move({
+    srcSheet = this,
+    src,
+    dst,
+    historicize = true,
+    operator = 'SYSTEM',
+    undoReflection,
+    redoReflection,
+  }: MoveProps) {
+    return this.withAutoExpand(dst, () =>
+      this._move({ srcSheet, src, dst, historicize, operator, undoReflection, redoReflection }),
+    );
+  }
+
+  private _move({
     srcSheet = this,
     src,
     dst,
@@ -2145,7 +2316,12 @@ export class Sheet implements UserSheet {
   }
 
   /** Build the paste (copy) diff without applying it. Shared by copy()/copyAsync(). @internal */
-  private _buildCopyDiff({ srcSheet = this, src, dst, onlyValue = false }: MoveProps & { onlyValue?: boolean }): CellsByAddressType {
+  private _buildCopyDiff({
+    srcSheet = this,
+    src,
+    dst,
+    onlyValue = false,
+  }: MoveProps & { onlyValue?: boolean }): CellsByAddressType {
     const isXSheet = srcSheet !== this;
     const { top: topFrom, left: leftFrom, bottom: bottomFrom, right: rightFrom } = src;
     const { top: topTo, left: leftTo, bottom: bottomTo, right: rightTo } = dst;
@@ -2232,20 +2408,23 @@ export class Sheet implements UserSheet {
   public copy(props: MoveProps & { onlyValue?: boolean }) {
     const { operator = 'SYSTEM', undoReflection, redoReflection, dst, onlyValue = false } = props;
     // A normal paste dissolves the merges it cuts through (values-only keeps the layout).
+    // Merges only span existing cells, so this is decided before any autoExpand growth.
     const broken = onlyValue
       ? {}
       : this._dissolveMergesDiff(this._mergesBrokenBy(dst, this._collectMerges()), operator);
     if (broken == null) {
       return this;
     }
-    return this.update({
-      diff: { ...broken, ...this._buildCopyDiff(props) },
-      partial: false,
-      operator,
-      operation: operation.Copy,
-      undoReflection,
-      redoReflection,
-    });
+    return this.withAutoExpand(dst, () =>
+      this.update({
+        diff: { ...broken, ...this._buildCopyDiff(props) },
+        partial: false,
+        operator,
+        operation: operation.Copy,
+        undoReflection,
+        redoReflection,
+      }),
+    );
   }
 
   /**
@@ -2257,6 +2436,17 @@ export class Sheet implements UserSheet {
    * target) never reads an already-pasted value. @internal
    */
   public async copyAsync(
+    props: MoveProps & { onlyValue?: boolean },
+    opts: {
+      onProgress?: (progress: { done: number; total: number }) => void;
+      yieldControl?: () => Promise<void> | void;
+      frameBudgetMs?: number;
+    },
+  ): Promise<Sheet> {
+    return this.withAutoExpandAsync(props.dst, () => this._copyAsync(props, opts));
+  }
+
+  private async _copyAsync(
     props: MoveProps & { onlyValue?: boolean },
     opts: {
       onProgress?: (progress: { done: number; total: number }) => void;
@@ -2706,6 +2896,51 @@ export class Sheet implements UserSheet {
     historicize?: boolean;
     onlyValue?: boolean;
     operator?: OperatorType;
+    undoReflection?: StorePatchType;
+    redoReflection?: StorePatchType;
+  }) {
+    const { y: baseY, x: baseX } = point;
+    // The matrix lands on visible rows only, so the bottom it needs skips filtered rows.
+    let rowsLeft = matrix.length;
+    let neededBottom = baseY - 1;
+    while (rowsLeft > 0 && neededBottom < this.numRows) {
+      neededBottom++;
+      if (!this.isRowFiltered(neededBottom)) {
+        rowsLeft--;
+      }
+    }
+    neededBottom += rowsLeft;
+    const neededRight = baseX + matrix.reduce((max, row) => Math.max(max, row.length), 0) - 1;
+    return this.withAutoExpand({ bottom: neededBottom, right: neededRight }, () =>
+      this._writeRawCellMatrix({
+        point,
+        matrix,
+        updateChangedTime,
+        historicize,
+        onlyValue,
+        operator,
+        undoReflection,
+        redoReflection,
+      }),
+    );
+  }
+
+  private _writeRawCellMatrix({
+    point,
+    matrix,
+    updateChangedTime,
+    historicize,
+    onlyValue,
+    operator,
+    undoReflection,
+    redoReflection,
+  }: {
+    point: PointType;
+    matrix: MatrixType<RawCellType>;
+    updateChangedTime: boolean;
+    historicize: boolean;
+    onlyValue: boolean;
+    operator: OperatorType;
     undoReflection?: StorePatchType;
     redoReflection?: StorePatchType;
   }) {
@@ -3768,14 +4003,35 @@ export class Sheet implements UserSheet {
     history.applyed = false;
     this.registry.currentHistory = this.registry.histories[this.registry.historyIndex];
 
-    const srcSheet = this.getSheetBySheetId(history.srcSheetId);
-    const dstSheet = this.getSheetBySheetId(history.dstSheetId);
-
-    if (!dstSheet) {
+    if (!this.getSheetBySheetId(history.dstSheetId)) {
       return { history: null, newSheet: this.__raw__ };
     }
+    this._undoHistory(history);
+    this.refresh(shouldTracking(history.operation), true);
+    return {
+      history,
+      callback: ({ sheetReactive: sheetRef }: { sheetReactive: RefLike<Sheet> }) => {
+        sheetRef.current?.registry.transmit(history.undoReflection?.transmit);
+      },
+    };
+  }
 
+  /** Revert one history entry (recursing into BATCH children). @internal */
+  private _undoHistory(history: HistoryType) {
+    const srcSheet = this.getSheetBySheetId(history.srcSheetId);
+    const dstSheet = this.getSheetBySheetId(history.dstSheetId);
+    if (!dstSheet) {
+      return;
+    }
     switch (history.operation) {
+      case 'BATCH': {
+        const children = history.histories;
+        for (let i = children.length - 1; i >= 0; i--) {
+          children[i].applyed = false;
+          this._undoHistory(children[i]);
+        }
+        break;
+      }
       case 'UPDATE':
         dstSheet._applyDiff(history.diffBefore, history.partial ?? false);
         break;
@@ -3847,7 +4103,6 @@ export class Sheet implements UserSheet {
         break;
       }
     }
-    this.refresh(shouldTracking(history.operation), true);
     if (dstSheet !== this) {
       dstSheet.addressCaches.clear();
       dstSheet.setTotalSize();
@@ -3855,12 +4110,6 @@ export class Sheet implements UserSheet {
     if (history.operation === 'MOVE' && srcSheet && srcSheet !== dstSheet) {
       this._xsheetDispatch(srcSheet);
     }
-    return {
-      history,
-      callback: ({ sheetReactive: sheetRef }: { sheetReactive: RefLike<Sheet> }) => {
-        sheetRef.current?.registry.transmit(history.undoReflection?.transmit);
-      },
-    };
   }
 
   public redo() {
@@ -3871,14 +4120,35 @@ export class Sheet implements UserSheet {
     history.applyed = true;
     this.registry.currentHistory = history;
 
-    const srcSheet = this.getSheetBySheetId(history.srcSheetId);
-    const dstSheet = this.getSheetBySheetId(history.dstSheetId);
-
-    if (!dstSheet) {
+    if (!this.getSheetBySheetId(history.dstSheetId)) {
       return { history: null, newSheet: this.__raw__ };
     }
+    this._redoHistory(history);
+    this.refresh(shouldTracking(history.operation), true);
+    return {
+      history,
+      callback: ({ sheetReactive: sheetRef }: { sheetReactive: RefLike<Sheet> }) => {
+        sheetRef.current?.registry.transmit(history.redoReflection?.transmit);
+      },
+    };
+  }
 
+  /** Re-apply one history entry (recursing into BATCH children). @internal */
+  private _redoHistory(history: HistoryType) {
+    const srcSheet = this.getSheetBySheetId(history.srcSheetId);
+    const dstSheet = this.getSheetBySheetId(history.dstSheetId);
+    if (!dstSheet) {
+      return;
+    }
     switch (history.operation) {
+      case 'BATCH': {
+        const children = history.histories;
+        for (const child of children) {
+          child.applyed = true;
+          this._redoHistory(child);
+        }
+        break;
+      }
       case 'UPDATE':
         dstSheet._applyDiff(history.diffAfter, history.partial ?? false);
         break;
@@ -3947,7 +4217,6 @@ export class Sheet implements UserSheet {
         break;
       }
     }
-    this.refresh(shouldTracking(history.operation), true);
     if (dstSheet !== this) {
       dstSheet.addressCaches.clear();
       dstSheet.setTotalSize();
@@ -3955,12 +4224,6 @@ export class Sheet implements UserSheet {
     if (history.operation === 'MOVE' && srcSheet && srcSheet !== dstSheet) {
       this._xsheetDispatch(srcSheet);
     }
-    return {
-      history,
-      callback: ({ sheetReactive: sheetRef }: { sheetReactive: RefLike<Sheet> }) => {
-        sheetRef.current?.registry.transmit(history.redoReflection?.transmit);
-      },
-    };
   }
 
   /** @internal The history the next undo would apply (without applying it). */
