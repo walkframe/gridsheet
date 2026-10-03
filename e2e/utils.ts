@@ -1,5 +1,8 @@
+// Override to run against a Storybook on another port (e.g. when 5233 is taken by another checkout).
+const STORYBOOK_URL = process.env.STORYBOOK_URL ?? 'http://localhost:5233';
+
 export const go = async (page: any, storyId: string) => {
-  await page.goto(`http://localhost:5233/iframe.html?id=${storyId}&viewMode=story`);
+  await page.goto(`${STORYBOOK_URL}/iframe.html?id=${storyId}&viewMode=story`);
 };
 
 export const jsonMinify = (json: string) => {

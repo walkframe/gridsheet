@@ -9,7 +9,7 @@ import type { UserSheet } from '@gridsheet/web';
 import type { StoreType } from '../types';
 import type { Dispatcher } from '../store';
 import { operations as prevention } from '@gridsheet/web';
-import { zoneShape } from '@gridsheet/web';
+import { zoneShape, zoneToArea, focus } from '@gridsheet/web';
 import { p2a } from '@gridsheet/web';
 import {
   copier,
@@ -32,6 +32,7 @@ import {
   insertColsLeft as _insertColsLeft,
   insertColsRight as _insertColsRight,
   removeCols as _removeCols,
+  mergeCells as _mergeCells,
   setStore as _setStore,
 } from '../store/actions';
 
@@ -59,6 +60,10 @@ export type MenuContext = {
   insertColsLeft(x: number, numCols: number): void;
   insertColsRight(x: number, numCols: number): void;
   removeCols(x: number, numCols: number): void;
+  /** Merge the selected cells into one (anchored at the top-left). */
+  mergeCells(): void;
+  /** Dissolve every merged range that intersects the selection. */
+  unmergeCells(): void;
   sortRows(x: number, direction: 'asc' | 'desc'): Promise<void>;
   filterRows(x: number, filter?: FilterConfig): Promise<void>;
   clearFilter(x?: number): void;
@@ -145,6 +150,12 @@ const colInsertCount = (ctx: MenuContext, x: number): number => {
   const isFullCol = selectingZone.startY === 1 && selectingZone.endY === ctx.sheet.numRows;
   return isFullCol && x >= selStart && x <= selEnd ? selEnd - selStart + 1 : 1;
 };
+
+/** The selection, or the chosen cell when nothing is selected. */
+const targetArea = ({ selectingZone, choosing }: MenuContext) =>
+  selectingZone.endY === -1
+    ? { top: choosing.y, left: choosing.x, bottom: choosing.y, right: choosing.x }
+    : zoneToArea(selectingZone);
 
 // ---- default descriptors ---------------------------------------------------
 
@@ -281,6 +292,21 @@ export const defaultContextMenuDescriptors: ContextMenuItemDescriptor[] = [
       );
     },
     onClick: (ctx) => ctx.removeCols(ctx.choosing.x, zoneShape(ctx.selectingZone).cols),
+  },
+  { type: 'divider', visible: (ctx) => !ctx.leftHeaderSelecting && !ctx.topHeaderSelecting },
+  {
+    id: 'merge-cells',
+    label: 'Merge cells',
+    visible: (ctx) => !ctx.leftHeaderSelecting && !ctx.topHeaderSelecting,
+    disabled: (ctx) => !ctx.sheet.canMerge(targetArea(ctx)),
+    onClick: (ctx) => ctx.mergeCells(),
+  },
+  {
+    id: 'unmerge-cells',
+    label: 'Unmerge cells',
+    visible: (ctx) => !ctx.leftHeaderSelecting && !ctx.topHeaderSelecting,
+    disabled: (ctx) => !ctx.sheet.canUnmerge(targetArea(ctx)),
+    onClick: (ctx) => ctx.unmergeCells(),
   },
   { type: 'divider' },
   {
@@ -535,6 +561,14 @@ export function buildMenuContext(store: StoreType, dispatch: Dispatcher, close: 
     },
     removeCols: (x, numCols) => {
       dispatch(_removeCols({ numCols, x, operator: 'USER' }));
+    },
+    mergeCells: () => {
+      dispatch(_mergeCells({ merge: true, operator: 'USER' }));
+      focus(store.editorRef.current);
+    },
+    unmergeCells: () => {
+      dispatch(_mergeCells({ merge: false, operator: 'USER' }));
+      focus(store.editorRef.current);
     },
 
     sortRows: async (x, direction) => {

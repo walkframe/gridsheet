@@ -128,6 +128,23 @@
     cursor: crosshair;
     z-index: 1;
   }
+
+  // Merged range (see Cell.tsx): the host cell's wrap is stretched over the whole range, so it
+  // stacks above the covered cells it overlaps. Declared after .gs-selecting / .gs-choosing so
+  // a selected covered cell does not climb back over the host.
+  &.gs-merged-host {
+    z-index: 1;
+    // Tint the whole stretched range, not just the host td.
+    &.gs-selecting {
+      background-color: transparent;
+      .gs-cell-inner-wrap {
+        background-color: color-mix(in srgb, var(--gs-accent, #2563eb) 7%, transparent);
+      }
+    }
+  }
+  &.gs-merged-covered {
+    z-index: 0;
+  }
 }
 
 .gs-th[data-x="1"] {

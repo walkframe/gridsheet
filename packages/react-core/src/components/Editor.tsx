@@ -256,8 +256,9 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
       if (isKeyDown) {
         return;
       }
-      // do not debounce it if control key is down.
-      if (!(e.key === 'Meta' || e.key === 'Control')) {
+      // Never debounce on a bare modifier: a modifier is pressed right before the key it modifies,
+      // so debouncing it would swallow that key (e.g. the arrow of a quick Shift+Arrow).
+      if (!(e.key === 'Meta' || e.key === 'Control' || e.key === 'Shift' || e.key === 'Alt')) {
         setIsKeyDown(true);
         requestAnimationFrame(() => {
           setIsKeyDown(false);

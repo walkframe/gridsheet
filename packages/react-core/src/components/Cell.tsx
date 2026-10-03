@@ -22,15 +22,29 @@ import { focus } from '@gridsheet/web';
 import { isXSheetFocused } from '../store/helpers';
 import type { FC, RefObject } from 'react';
 import { isTouching, safePreventDefault } from '../lib/events';
-import type { UserSheet } from '@gridsheet/web';
+import type { UserSheet, AreaType } from '@gridsheet/web';
+import { getCellRectPositions } from '@gridsheet/web';
 import { calcBelowPosition, hAlignTransform, type PopupPosition } from '@gridsheet/web';
+
+/** How a rendered cell takes part in a merged range (see Tabular). */
+export type MergeRender = {
+  area: AreaType;
+  /** true: this cell draws the whole range. false: covered — drawn by the host, renders nothing. */
+  host: boolean;
+};
 
 type Props = {
   y: number;
   x: number;
+  merge?: MergeRender;
 };
 
-export const Cell: FC<Props> = memo(({ y, x }) => {
+export const Cell: FC<Props> = memo(({ y: rowY, x: colX, merge }) => {
+  // Inside a merged range everything (content, events, editing) acts on the anchor cell; only
+  // the <td>'s own position (rowY / colX) stays this cell's.
+  const y = merge ? merge.area.top : rowY;
+  const x = merge ? merge.area.left : colX;
+  const covered = merge != null && !merge.host;
   const rowId = y2r(y);
   const colId = x2c(x);
   const address = `${colId}${rowId}`;
@@ -38,6 +52,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
   const isFirstPointed = useRef(true);
 
   const cellRef = useRef<HTMLTableCellElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
   const [errorTooltipPos, setErrorTooltipPos] = useState<PopupPosition | null>(null);
   const {
     sheetReactive,
@@ -60,9 +75,10 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
   const selectingArea = zoneToArea(selectingZone); // (top, left) -> (bottom, right)
 
   const editing = editingAddress === address;
-  const pointed = choosing.y === y && choosing.x === x;
+  const pointed = !covered && choosing.y === y && choosing.x === x;
   const _setEditorRect = useCallback(() => {
-    const rect = cellRef.current?.getBoundingClientRect();
+    // A merged host's wrap spans the whole range, so the editor covers all of it.
+    const rect = (merge ? wrapRef.current : cellRef.current)?.getBoundingClientRect();
     if (rect == null) {
       return null;
     }
@@ -74,7 +90,7 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
         width: rect.width,
       }),
     );
-  }, [dispatch]);
+  }, [dispatch, merge]);
 
   useEffect(() => {
     // Avoid setting coordinates on the initial render to account for shifts caused by redrawing due to virtualization.
@@ -310,20 +326,63 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
     if (!editing && pointed && selectingArea.bottom === -1) {
       return 'gs-autofill-drag';
     }
-
-    if (selectingArea.bottom === y && selectingArea.right === x) {
+    // The handle sits at the bottom-right of the selection, which may be the corner of a merge.
+    const [lastY, lastX] = merge ? [merge.area.bottom, merge.area.right] : [y, x];
+    if (selectingArea.bottom === lastY && selectingArea.right === lastX) {
       return 'gs-autofill-drag';
     }
     return 'gs-autofill-drag gs-hidden';
-  }, [editing, pointed, selectingArea]);
+  }, [editing, pointed, selectingArea, merge]);
+
+  // Merged range: hide the grid lines inside it. Under border-collapse a shared edge may be
+  // painted from either neighbour, so both sides of every inner edge are recoloured. Not
+  // `transparent`: the grid lines are the --gs-border backdrop behind the table showing through,
+  // so the inner edges are painted with the cell surface instead.
+  const hidden = 'var(--gs-surface)';
+  const mergeBorderStyle = merge
+    ? {
+        ...(colX > merge.area.left ? { borderLeftColor: hidden } : {}),
+        ...(colX < merge.area.right ? { borderRightColor: hidden } : {}),
+        ...(rowY > merge.area.top ? { borderTopColor: hidden } : {}),
+        ...(rowY < merge.area.bottom ? { borderBottomColor: hidden } : {}),
+      }
+    : undefined;
+  // The host's wrap is stretched from this cell to cover the whole range (the anchor may be
+  // above/left of it when scrolled out).
+  let mergeWrapStyle: React.CSSProperties | undefined;
+  if (merge?.host && sheet) {
+    const self = getCellRectPositions(sheet, { y: rowY, x: colX });
+    const tl = getCellRectPositions(sheet, { y: merge.area.top, x: merge.area.left });
+    const br = getCellRectPositions(sheet, { y: merge.area.bottom, x: merge.area.right });
+    mergeWrapStyle = {
+      top: tl.top - self.top,
+      left: tl.left - self.left,
+      width: `calc(100% + ${br.right - tl.left - self.width}px)`,
+      height: `calc(100% + ${br.bottom - tl.top - self.height}px)`,
+    };
+  }
 
   if (!sheet) {
     return null;
   }
 
+  const ownAddress = merge ? `${x2c(colX)}${y2r(rowY)}` : address;
+
+  if (covered) {
+    return (
+      <td
+        data-x={colX}
+        data-y={rowY}
+        data-address={ownAddress}
+        className="gs-cell gs-merged-covered"
+        style={mergeBorderStyle}
+      />
+    );
+  }
+
   if (!input) {
     return (
-      <td key={x} data-x={x} data-y={y} data-address={address} className="gs-cell gs-hidden">
+      <td key={x} data-x={colX} data-y={rowY} data-address={ownAddress} className="gs-cell gs-hidden">
         <div className="gs-cell-inner-wrap">
           <div className="gs-cell-inner">
             <div className="gs-cell-rendered"></div>
@@ -338,20 +397,25 @@ export const Cell: FC<Props> = memo(({ y, x }) => {
     <td
       key={x}
       ref={cellRef}
-      data-x={x}
-      data-y={y}
-      data-address={address}
+      data-x={colX}
+      data-y={rowY}
+      data-address={ownAddress}
       className={`gs-cell ${among(selectingArea, { y, x }) ? 'gs-selecting' : ''} ${pointed ? 'gs-choosing' : ''} ${
         editing ? 'gs-editing' : ''
-      } ${isPendingCell ? 'gs-pending' : ''}`}
+      } ${isPendingCell ? 'gs-pending' : ''} ${merge ? 'gs-merged-host' : ''}`}
       style={{
         ...cell?.style,
+        // A merged host paints its background on the stretched wrap (via .gs-cell-inner), not the td.
+        ...(merge ? { background: undefined, backgroundColor: undefined } : {}),
+        ...mergeBorderStyle,
       }}
       onContextMenu={onContextMenu}
       onDoubleClick={onDoubleClick}
     >
       <div
+        ref={wrapRef}
         className={`gs-cell-inner-wrap`}
+        style={mergeWrapStyle}
         onMouseDown={handleDragStart}
         onTouchStart={handleDragStart}
         onMouseEnter={handleDragging}

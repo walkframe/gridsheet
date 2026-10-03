@@ -127,7 +127,14 @@ export type CellType<T = any, Custom = any> = {
   sortFixed?: boolean;
   /** If true, this row is always visible regardless of active filters. Set on row-header cells (x=0). */
   filterFixed?: boolean;
+  /**
+   * Merge span. Set only on the top-left (anchor) cell of a merged range; the other cells in the
+   * range are "covered" and derived from it (see `Sheet.getMergeAt`). Absent means not merged.
+   */
+  merge?: MergeSpan;
 };
+
+export type MergeSpan = { rows: number; cols: number };
 
 export type RawCellType = {
   value?: string;

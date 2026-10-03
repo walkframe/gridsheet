@@ -61,6 +61,7 @@ export type {
   FilterCondition,
   FilterConfig,
   CellType,
+  MergeSpan,
   RawCellType,
   CellPatchType,
   CellFilter,
