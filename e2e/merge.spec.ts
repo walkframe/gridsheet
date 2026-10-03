@@ -106,9 +106,6 @@ test('shift+arrow, mouse drag and Tab respect merges', async ({ page }) => {
   const address = page.locator('.gs-selecting-address');
 
   await cell(page, 'A1').click();
-  // The first Shift+arrow right after a click is swallowed (pre-existing, unrelated to merges);
-  // a bare Shift press first makes the following ones register.
-  await page.keyboard.press('Shift');
   await page.keyboard.press('Shift+ArrowDown');
   await page.keyboard.press('Shift+ArrowRight');
   // A1:B2 touches B2:D3 → A1:D3.
