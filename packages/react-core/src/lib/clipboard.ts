@@ -16,7 +16,8 @@ export const clip = (store: StoreType) => {
   const selectingArea = zoneToArea(selectingZone);
   let area = selectingArea;
   if (area.left === -1) {
-    area = { top: y, left: x, bottom: y, right: x };
+    // No selection: the chosen cell, or the whole merge it anchors.
+    area = sheet.getMergeAt({ y, x }) ?? { top: y, left: x, bottom: y, right: x };
   }
   const input = editorRef.current;
   const trimmed = sheet.trim(area);

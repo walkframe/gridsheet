@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { ctrl, go } from './utils';
+import { ctrl, go, paste } from './utils';
 
 const cell = (page: any, address: string) => page.locator(`[data-address='${address}']`);
 const rendered = (page: any, address: string) => cell(page, address).locator('.gs-cell-rendered');
@@ -169,4 +169,57 @@ test('Merge prevention disables merging and unmerging', async ({ page }) => {
   await expect(menuItem('Unmerge cells')).toHaveClass(/gs-disabled/);
   await menuItem('Unmerge cells').click({ force: true });
   await expect(cell(page, 'H5')).toHaveClass(/gs-merged-host/);
+});
+
+test('copy & paste a merge, and paste cutting through one', async ({ page }) => {
+  await go(page, 'basic-merge--sheet');
+
+  // Pointing the anchor (no selection) copies the whole merge.
+  await cell(page, 'C3').click({ force: true });
+  await ctrl(page, 'c');
+  await cell(page, 'B10').click();
+  await paste(page);
+  await expect(cell(page, 'B10')).toHaveClass(/gs-merged-host/);
+  await expect(cell(page, 'D11')).toHaveClass(/gs-merged-covered/);
+  expect(await rendered(page, 'B10').textContent()).toBe('Merged B2:D3');
+  await expect(cell(page, 'B2')).toHaveClass(/gs-merged-host/); // the source stays
+
+  await ctrl(page, 'z');
+  await expect(cell(page, 'B10')).not.toHaveClass(/gs-merged/);
+
+  // A5:B5 pasted at A3 lands on A3:B3; B3 is covered by B2:D3 (anchored outside), so it dissolves.
+  await cell(page, 'A5').click();
+  await page.keyboard.down('Shift');
+  await cell(page, 'B5').click();
+  await page.keyboard.up('Shift');
+  await ctrl(page, 'c');
+  await cell(page, 'A3').click();
+  await paste(page);
+  await expect(cell(page, 'B2')).not.toHaveClass(/gs-merged/);
+  expect(await rendered(page, 'B2').textContent()).toBe('Merged B2:D3');
+  expect(await rendered(page, 'B3').textContent()).toBe('2');
+
+  await ctrl(page, 'z');
+  await expect(cell(page, 'B2')).toHaveClass(/gs-merged-host/);
+});
+
+test('cut & paste moves a merge; undo/redo', async ({ page }) => {
+  await go(page, 'basic-merge--sheet');
+
+  await cell(page, 'B2').click();
+  await ctrl(page, 'x');
+  await cell(page, 'B10').click();
+  await paste(page);
+  await expect(cell(page, 'B10')).toHaveClass(/gs-merged-host/);
+  await expect(cell(page, 'D11')).toHaveClass(/gs-merged-covered/);
+  expect(await rendered(page, 'B10').textContent()).toBe('Merged B2:D3');
+  await expect(cell(page, 'B2')).not.toHaveClass(/gs-merged/);
+  expect(await rendered(page, 'B2').textContent()).toBe('');
+
+  await ctrl(page, 'z');
+  await expect(cell(page, 'B2')).toHaveClass(/gs-merged-host/);
+  await expect(cell(page, 'B10')).not.toHaveClass(/gs-merged/);
+
+  await ctrl(page, 'y');
+  await expect(cell(page, 'B10')).toHaveClass(/gs-merged-host/);
 });

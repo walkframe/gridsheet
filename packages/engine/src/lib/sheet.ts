@@ -1794,8 +1794,33 @@ export class Sheet implements UserSheet {
     redoReflection,
   }: MoveProps) {
     const srcSheetRaw = srcSheet.__raw__;
+    // A merge must move whole: refuse a source that cuts through one.
+    if (srcSheetRaw._cutsThroughMerge(src)) {
+      console.warn('Cannot move part of a merged range.');
+      return this;
+    }
+    // Merges the destination cuts through are dissolved (those moving with the source are kept).
+    const brokenMerges = this._mergesBrokenBy(dst, this._collectMerges(), srcSheetRaw === this ? src : undefined);
+    const broken = this._dissolveMergesDiff(brokenMerges, operator);
+    if (broken == null) {
+      return this;
+    }
+    const brokenIds = Object.keys(broken).map((address) => this.getId(a2p(address)));
+    const brokenBefore: CellsByIdType = {};
+    // Copies: the reference preserver below may rewrite a formula on the live cell object.
+    brokenIds.forEach((id) => (brokenBefore[id] = { ...this.registry.data[id] }));
+
     const moveRelations = this._createMoveRelations(srcSheetRaw, src, this, dst);
     const { diffBefore, diffAfter } = this._moveCells(srcSheetRaw, this, moveRelations, false, operator);
+    // Applied after the move (the anchors lie outside dst and are untouched by it); redo re-applies
+    // diffAfter after replaying the move, undo restores diffBefore.
+    brokenIds.forEach((id) => {
+      const next = { ...this.registry.data[id] };
+      delete next.merge;
+      this.registry.data[id] = next;
+      diffAfter[id] = next;
+    });
+    Object.assign(diffBefore, brokenBefore);
 
     this._xsheetDispatch(srcSheetRaw);
 
@@ -2126,6 +2151,7 @@ export class Sheet implements UserSheet {
     const { top: topTo, left: leftTo, bottom: bottomTo, right: rightTo } = dst;
     const diff: CellsByAddressType = {};
     const changedTime = Date.now();
+    const dstMerges = this._collectMerges();
 
     // Build list of visible (non-filtered) rows for src and dst
     const srcVisibleRows: number[] = [];
@@ -2193,16 +2219,27 @@ export class Sheet implements UserSheet {
           cell.justifyContent = dstCell?.justifyContent;
           cell.alignItems = dstCell?.alignItems;
         }
-        diff[address] = { ...cell, value };
+        const next = { ...cell, value };
+        if (dstMerges.length > 0 || next.merge != null) {
+          this._fitPastedMerge(next, dstCell, dstPoint, dst, onlyValue, dstMerges);
+        }
+        diff[address] = next;
       }
     }
     return diff;
   }
 
   public copy(props: MoveProps & { onlyValue?: boolean }) {
-    const { operator = 'SYSTEM', undoReflection, redoReflection } = props;
+    const { operator = 'SYSTEM', undoReflection, redoReflection, dst, onlyValue = false } = props;
+    // A normal paste dissolves the merges it cuts through (values-only keeps the layout).
+    const broken = onlyValue
+      ? {}
+      : this._dissolveMergesDiff(this._mergesBrokenBy(dst, this._collectMerges()), operator);
+    if (broken == null) {
+      return this;
+    }
     return this.update({
-      diff: this._buildCopyDiff(props),
+      diff: { ...broken, ...this._buildCopyDiff(props) },
       partial: false,
       operator,
       operation: operation.Copy,
@@ -2272,6 +2309,17 @@ export class Sheet implements UserSheet {
       formulaIdentify: false, // the formula is already resolved (with slide) in the loop below
       changedTime: Date.now(),
     };
+    // Same merge handling as copy(): dissolve the merges this paste cuts through, then fit each
+    // pasted cell's merge. The dissolved anchors lie outside dst, so the loop never touches them.
+    const dstMerges = this._collectMerges();
+    const broken = onlyValue ? {} : this._dissolveMergesDiff(this._mergesBrokenBy(dst, dstMerges), operator);
+    if (broken == null) {
+      return this;
+    }
+    for (const address of Object.keys(broken)) {
+      const point = a2p(address);
+      this._applyUpdateCell(point, this.getId(point), address, broken[address], ctx, out, true);
+    }
     // Iterate destination rows directly (skipping filtered rows inline) instead of
     // precomputing a visible-row list — that list-building called isRowFiltered() for
     // every row, materializing a million row headers synchronously and stalling at 0%.
@@ -2338,6 +2386,9 @@ export class Sheet implements UserSheet {
           next.style = dstCell?.style;
           next.justifyContent = dstCell?.justifyContent;
           next.alignItems = dstCell?.alignItems;
+        }
+        if (dstMerges.length > 0 || next.merge != null) {
+          this._fitPastedMerge(next, dstCell, dstPoint, dst, onlyValue, dstMerges);
         }
         if (this._applyUpdateCell(dstPoint, dstId, p2a(dstPoint), next, ctx, out, true)) {
           resized = true;
@@ -3280,6 +3331,94 @@ export class Sheet implements UserSheet {
   }
 
   /**
+   * Merges a write into `dst` would cut through and so must be dissolved: they intersect `dst`
+   * but their anchor lies outside it (an anchor inside `dst` is overwritten anyway). Merges lying
+   * wholly inside `keep` (the source of a same-sheet move, which travel with it) are left alone.
+   * @internal
+   */
+  private _mergesBrokenBy(dst: AreaType, merges: AreaType[], keep?: AreaType): AreaType[] {
+    return merges.filter((m) => {
+      if (m.bottom < dst.top || m.top > dst.bottom || m.right < dst.left || m.left > dst.right) {
+        return false;
+      }
+      if (m.top >= dst.top && m.top <= dst.bottom && m.left >= dst.left && m.left <= dst.right) {
+        return false;
+      }
+      if (keep && m.top >= keep.top && m.bottom <= keep.bottom && m.left >= keep.left && m.right <= keep.right) {
+        return false;
+      }
+      return true;
+    });
+  }
+
+  /** @internal Whether some merge cuts through `area` (intersects it without being contained). */
+  private _cutsThroughMerge(area: AreaType): boolean {
+    const merges = this._collectMerges();
+    const grown = this.expandAreaByMerges(area, merges);
+    return (
+      grown.top !== area.top || grown.left !== area.left || grown.bottom !== area.bottom || grown.right !== area.right
+    );
+  }
+
+  /**
+   * Fit a pasted cell's `merge` to the paste (mutates `next`). A normal paste carries the source
+   * merge, clipped to `dst`; a values-only paste keeps the destination's layout and drops a value
+   * that would land on a covered cell. @internal
+   */
+  private _fitPastedMerge(
+    next: CellType,
+    dstCell: CellType | undefined,
+    dstPoint: PointType,
+    dst: AreaType,
+    onlyValue: boolean,
+    dstMerges: AreaType[],
+  ) {
+    if (onlyValue) {
+      if (dstCell?.merge != null) {
+        next.merge = dstCell.merge;
+      } else {
+        delete next.merge;
+      }
+      const covering = dstMerges.find(
+        (m) => dstPoint.y >= m.top && dstPoint.y <= m.bottom && dstPoint.x >= m.left && dstPoint.x <= m.right,
+      );
+      if (covering != null && (covering.top !== dstPoint.y || covering.left !== dstPoint.x)) {
+        next.value = dstCell?.value;
+      }
+      return;
+    }
+    if (next.merge == null) {
+      return;
+    }
+    const rows = Math.min(next.merge.rows, dst.bottom - dstPoint.y + 1);
+    const cols = Math.min(next.merge.cols, dst.right - dstPoint.x + 1);
+    if (rows > 1 || cols > 1) {
+      next.merge = { rows, cols };
+    } else {
+      delete next.merge;
+    }
+  }
+
+  /**
+   * Full replacement cells (by address) dissolving `merges`, or null when a USER write must be
+   * refused because one of them is Merge-protected. @internal
+   */
+  private _dissolveMergesDiff(merges: AreaType[], operator: OperatorType): CellsByAddressType | null {
+    const diff: CellsByAddressType = {};
+    for (const m of merges) {
+      const point = { y: m.top, x: m.left };
+      if (operator === 'USER' && this._preventsMerge(point)) {
+        console.warn(`Cannot break the merged range at ${p2a(point)}: it is protected.`);
+        return null;
+      }
+      const cell: CellType = { ...this.registry.data[this.getId(point)] };
+      delete cell.merge;
+      diff[p2a(point)] = cell;
+    }
+    return diff;
+  }
+
+  /**
    * The prevention a not-yet-populated cell would get, without populating it (mirrors the
    * prevention stacking in `_ensureCellPopulated`). @internal
    */
@@ -3790,6 +3929,10 @@ export class Sheet implements UserSheet {
       case 'MOVE': {
         if (srcSheet) {
           this._moveCells(srcSheet, dstSheet, history.moveRelations, false);
+        }
+        // Merges dissolved by the move (see move()).
+        if (Object.keys(history.diffAfter).length > 0) {
+          dstSheet._applyDiff(history.diffAfter, false);
         }
         break;
       }

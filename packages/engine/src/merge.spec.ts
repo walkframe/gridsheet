@@ -321,4 +321,128 @@ describe('cell merge', () => {
       expect(hasOperation(ReadOnly, Merge)).toBe(true);
     });
   });
+
+  describe('copy / paste', () => {
+    const quiet = () => jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    it('carries a merge to the destination; undo removes it', () => {
+      const sheet = make({ A1: { value: 'a' } });
+      sheet.merge({ area: area('A1:B2') });
+      sheet.copy({ src: area('A1:B2'), dst: area('D4:E5') });
+      expect(sheet.getMerges()).toEqual([area('A1:B2'), area('D4:E5')]);
+      expect(value(sheet, 'D4')).toBe('a');
+      sheet.undo();
+      expect(sheet.getMerges()).toEqual([area('A1:B2')]);
+      expect(value(sheet, 'D4')).toBeUndefined();
+    });
+
+    it('tiles a merge across a larger destination', () => {
+      const sheet = make({ A1: { value: 'a' } });
+      sheet.merge({ area: area('A1:B1') });
+      sheet.copy({ src: area('A1:B1'), dst: area('C3:F3') });
+      expect(sheet.getMerges()).toEqual([area('A1:B1'), area('C3:D3'), area('E3:F3')]);
+    });
+
+    it('clips a merge to a smaller destination', () => {
+      const sheet = make({ B2: { value: 'x' }, F1: { value: 'kept' } });
+      sheet.merge({ area: area('B2:C3') });
+      // Only the first row of B2:C3 is pasted at E1:F1, so the merge becomes 1x2 there...
+      sheet.copy({ src: area('B2:C2'), dst: area('E1:F1') });
+      expect(sheet.getMergeAt(a2p('E1'))).toEqual(area('E1:F1'));
+      // ...and never spills past the paste over cells it did not write.
+      expect(sheet.getMergeAt(a2p('E2'))).toBeUndefined();
+    });
+
+    it('dissolves a merge the paste cuts through (anchor outside the destination)', () => {
+      const sheet = make({ A1: { value: 'x' }, D1: { value: 'big' } });
+      sheet.merge({ area: area('D1:F3') });
+      sheet.copy({ src: area('A1'), dst: area('E2') });
+      expect(sheet.getMerges()).toEqual([]);
+      expect(value(sheet, 'D1')).toBe('big');
+      expect(value(sheet, 'E2')).toBe('x');
+      sheet.undo();
+      expect(sheet.getMerges()).toEqual([area('D1:F3')]);
+      expect(value(sheet, 'E2')).toBeUndefined();
+    });
+
+    it('overwrites a merge whose anchor is pasted over', () => {
+      const sheet = make({ A1: { value: 'x' }, D1: { value: 'old' } });
+      sheet.merge({ area: area('D1:E2') });
+      sheet.copy({ src: area('A1'), dst: area('D1') });
+      expect(sheet.getMerges()).toEqual([]);
+      expect(value(sheet, 'D1')).toBe('x');
+    });
+
+    it('values-only paste keeps the destination layout and drops values on covered cells', () => {
+      const sheet = make({ A1: { value: 1 }, B1: { value: 2 }, A2: { value: 3 }, B2: { value: 4 } });
+      sheet.merge({ area: area('D1:E2') });
+      sheet.copy({ src: area('A1:B2'), dst: area('D1:E2'), onlyValue: true });
+      expect(sheet.getMerges()).toEqual([area('D1:E2')]);
+      expect(value(sheet, 'D1')).toBe(1);
+      expect(value(sheet, 'E1')).toBeUndefined();
+      expect(value(sheet, 'D2')).toBeUndefined();
+
+      // ...and does not carry the source's merge either.
+      sheet.merge({ area: area('A4:B4') });
+      sheet.copy({ src: area('A4:B4'), dst: area('D5:E5'), onlyValue: true });
+      expect(sheet.getMergeAt(a2p('D5'))).toBeUndefined();
+    });
+
+    it('a USER paste may not break a Merge-protected range', () => {
+      const warn = quiet();
+      const sheet = make({ A1: { value: 'x' }, D1: { prevention: operations.Merge } });
+      sheet.merge({ area: area('D1:E2') });
+      sheet.copy({ src: area('A1'), dst: area('E2'), operator: 'USER' });
+      expect(sheet.getMerges()).toEqual([area('D1:E2')]);
+      expect(value(sheet, 'E2')).toBeUndefined();
+      warn.mockRestore();
+    });
+  });
+
+  describe('cut / paste (move)', () => {
+    const quiet = () => jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    it('refuses to move part of a merge', () => {
+      const warn = quiet();
+      const sheet = make({ A1: { value: 'a' } });
+      sheet.merge({ area: area('A1:B2') });
+      sheet.move({ src: area('A1:A2'), dst: area('D1:D2') });
+      expect(sheet.getMerges()).toEqual([area('A1:B2')]);
+      expect(value(sheet, 'A1')).toBe('a');
+      expect(value(sheet, 'D1')).toBeUndefined();
+      warn.mockRestore();
+    });
+
+    it('dissolves a merge the destination cuts through; undo/redo replay it', () => {
+      const sheet = make({ A1: { value: 'x' }, D1: { value: 'big' } });
+      sheet.merge({ area: area('D1:F3') });
+      sheet.move({ src: area('A1'), dst: area('E2') });
+      expect(sheet.getMerges()).toEqual([]);
+      expect(value(sheet, 'E2')).toBe('x');
+      sheet.undo();
+      expect(sheet.getMerges()).toEqual([area('D1:F3')]);
+      expect(value(sheet, 'A1')).toBe('x');
+      sheet.redo();
+      expect(sheet.getMerges()).toEqual([]);
+      expect(value(sheet, 'E2')).toBe('x');
+    });
+
+    it('a merge moved onto another merge replaces it', () => {
+      const sheet = make({ A1: { value: 'a' }, D1: { value: 'd' } });
+      sheet.merge({ area: area('A1:B2') });
+      sheet.merge({ area: area('C2:D3') });
+      // A1:B2 → C1:D2 overlaps C2:D3, whose anchor C2 is overwritten.
+      sheet.move({ src: area('A1:B2'), dst: area('C1:D2') });
+      expect(sheet.getMerges()).toEqual([area('C1:D2')]);
+      expect(value(sheet, 'C1')).toBe('a');
+    });
+
+    it('a merge can be shifted onto itself', () => {
+      const sheet = make({ A1: { value: 'a' } });
+      sheet.merge({ area: area('A1:B2') });
+      sheet.move({ src: area('A1:B2'), dst: area('A2:B3') });
+      expect(sheet.getMerges()).toEqual([area('A2:B3')]);
+      expect(value(sheet, 'A2')).toBe('a');
+    });
+  });
 });
