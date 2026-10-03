@@ -117,12 +117,13 @@ export function GridSheet({
       sheetName = `Sheet${sheetId}`;
       console.debug('GridSheet: sheetName is not provided, using default name:', sheetName);
     }
-    const { limits, contextMenu, rowMenu, colMenu, eager } = options;
+    const { limits, contextMenu, rowMenu, colMenu, eager, autoExpand } = options;
     const sheet = new Sheet({
       limits,
       name: sheetName,
       registry,
       eager,
+      autoExpand,
     });
     sheet.id = sheetId;
     registry.sheetIdsByName[sheetName] = sheetId;
@@ -188,6 +189,13 @@ export function GridSheet({
   useEffect(() => {
     embedStyle();
   }, []);
+
+  // autoExpand is read live by paste/autofill, so a changed option applies without a remount.
+  useEffect(() => {
+    if (sheetReactive.current) {
+      sheetReactive.current.autoExpand = options.autoExpand ?? 'none';
+    }
+  }, [options.autoExpand]);
 
   // When sheetWidth/sheetHeight is a string, the sheet stretches to its parent (fill mode)
   // and the rendered pixel size is measured via ResizeObserver instead of being fixed.

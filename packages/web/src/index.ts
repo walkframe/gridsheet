@@ -26,6 +26,7 @@ export {
   virtualize,
   getAreaInTabular,
   getCellRectPositions,
+  getGhostCellSize,
   getVisibleRowRange,
   getVisibleColRange,
   physicalScrollHeight,

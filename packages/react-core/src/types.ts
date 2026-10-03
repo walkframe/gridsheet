@@ -48,9 +48,11 @@ export type {
   HistoryInsertColsType,
   HistoryRemoveColsType,
   HistorySortRowsType,
+  HistoryBatchType,
   HistoryType,
   Virtualization,
   OperatorType,
+  AutoExpandType,
   OperationType,
   Dispatcher,
   StoreDispatchType,
@@ -61,7 +63,7 @@ export type {
 
 // React-specific types
 import type { RefObject, CSSProperties, KeyboardEvent } from 'react';
-import type { Sheet, UserSheet } from '@gridsheet/web';
+import type { Sheet, UserSheet, AutoExpandType } from '@gridsheet/web';
 import type { BookType } from '@gridsheet/web';
 import type { PolicyType } from '@gridsheet/web';
 import type { ContextMenuItemDescriptor, RowMenuItemDescriptor, ColMenuItemDescriptor } from './lib/menu';
@@ -109,6 +111,12 @@ export type OptionsType = {
    */
   eager?: boolean;
   limits?: SheetLimits;
+  /**
+   * Grow the sheet when a paste or autofill runs past the last row/column.
+   * 'none' (default) clips the overflow; 'vertical' appends rows; 'horizontal' appends
+   * columns; 'both' appends either. Capped by `limits.maxRows` / `limits.maxCols`.
+   */
+  autoExpand?: AutoExpandType;
   mode?: ModeType;
   /** Cell spacing. 'compact' (default) keeps the current metrics; 'comfortable' roomier. */
   density?: DensityType;

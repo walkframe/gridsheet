@@ -37,6 +37,13 @@ export class Autofill {
       throw new Error('Sheet is not available');
     }
     this.src = complementSelectingArea(zoneToArea(selectingZone), choosing);
+    // A drag may point past the sheet's edge (into the auto-expand ghost area). Clamp it to
+    // what the sheet can actually grow to, so the fill never targets cells that won't exist.
+    const { numRows, numCols } = sheet.getAutoExpansion({ bottom: draggingTo.y, right: draggingTo.x });
+    draggingTo = {
+      y: Math.min(draggingTo.y, sheet.numRows + numRows),
+      x: Math.min(draggingTo.x, sheet.numCols + numCols),
+    };
     this.direction = this.suggestDirection(draggingTo);
     this.dst = this.getDestinationArea(draggingTo);
     this.sheet = sheet;
@@ -106,7 +113,10 @@ export class Autofill {
   }
 
   public get applied(): Sheet {
-    return this.sheet.update({ diff: this.buildDiff(), operator: 'USER', ...this.reflections });
+    // Grow the sheet first (per sheet.autoExpand) when the fill was dragged past its edge.
+    return this.sheet.withAutoExpand(this.dst, () =>
+      this.sheet.update({ diff: this.buildDiff(), operator: 'USER', ...this.reflections }),
+    );
   }
 
   /** Async, progress-reporting apply. Same result as `applied` but time-sliced. */
@@ -114,7 +124,9 @@ export class Autofill {
     onProgress?: (progress: { done: number; total: number }) => void;
     yieldControl?: () => Promise<void> | void;
   }): Promise<Sheet> {
-    return this.sheet.updateAsync({ diff: this.buildDiff(), operator: 'USER', ...this.reflections, ...opts });
+    return this.sheet.withAutoExpandAsync(this.dst, () =>
+      this.sheet.updateAsync({ diff: this.buildDiff(), operator: 'USER', ...this.reflections, ...opts }),
+    );
   }
 
   public get wholeArea() {

@@ -98,7 +98,10 @@ export const StoreObserver: FC<StoreObserverProps> = ({
         el.scrollLeft += dx;
         const px = Math.min(Math.max(cx, r.left + 1), r.right - 1);
         const py = Math.min(Math.max(cy, r.top + 1), r.bottom - 1);
-        const cell = (document.elementFromPoint(px, py) as HTMLElement | null)?.closest('.gs-cell') as HTMLElement | null;
+        // Ghost cells (autoExpand) past the last row/col carry data-y/x like real cells.
+        const cell = (document.elementFromPoint(px, py) as HTMLElement | null)?.closest(
+          '.gs-cell, .gs-ghost-cell',
+        ) as HTMLElement | null;
         if (cell) {
           const y = Number(cell.dataset.y);
           const x = Number(cell.dataset.x);

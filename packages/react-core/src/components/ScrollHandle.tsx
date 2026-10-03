@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 import { useEffect, useRef, useContext, useCallback } from 'react';
 import { Context } from '../store';
-import { drag, setAutofillDraggingTo, setDragging, submitAutofill } from '../store/actions';
+import { drag, setAutofillDraggingTo, setDragging } from '../store/actions';
 import { getAreaInTabular } from '@gridsheet/web';
 import { insertRef, isFocus } from '@gridsheet/web';
 import { focus } from '@gridsheet/web';
@@ -72,6 +72,29 @@ export function ScrollHandle({ style, horizontal = 0, vertical = 0, className = 
     [sheet, horizontal, vertical, selectingZone],
   );
 
+  // The autoExpand ghost cell just inside the scrolling edge, if any. getDestEdge finds the edge
+  // from header cells, which ghost rows/cols don't have. This strip sits on top of the grid,
+  // so look through it with elementsFromPoint.
+  const getGhostEdgePoint = useCallback(
+    (e: React.MouseEvent) => {
+      const el = tabularRef.current;
+      if (!el) {
+        return null;
+      }
+      const r = el.getBoundingClientRect();
+      const px = horizontal > 0 ? r.right - 2 : Math.min(Math.max(e.clientX, r.left + 1), r.right - 2);
+      const py = vertical > 0 ? r.bottom - 2 : Math.min(Math.max(e.clientY, r.top + 1), r.bottom - 2);
+      const ghost = document
+        .elementsFromPoint(px, py)
+        .find((node) => (node as HTMLElement).classList?.contains('gs-ghost-cell')) as HTMLElement | undefined;
+      if (!ghost) {
+        return null;
+      }
+      return { y: Number(ghost.dataset.y), x: Number(ghost.dataset.x) };
+    },
+    [horizontal, vertical],
+  );
+
   const scrollStep = useCallback(
     (e: React.MouseEvent) => {
       if (!isScrolling || tabularRef.current === null || !sheet) {
@@ -105,7 +128,10 @@ export function ScrollHandle({ style, horizontal = 0, vertical = 0, className = 
       const { x, y } = getDestEdge(e);
       if (live.autofillDraggingTo) {
         const { y: curY, x: curX } = live.autofillDraggingTo;
-        dispatch(setAutofillDraggingTo({ y: y === -1 ? curY : y, x: x === -1 ? curX : x }));
+        // On an auto-expanding sheet the drag scrolls on into ghost rows/cols past the last
+        // row/col, which have no header cells for getDestEdge to find — target that cell instead.
+        const ghostPoint = getGhostEdgePoint(e);
+        dispatch(setAutofillDraggingTo(ghostPoint ?? { y: y === -1 ? curY : y, x: x === -1 ? curX : x }));
       } else {
         if (editingAnywhere) {
           const newArea = zoneToArea({ ...selectingZone, endY: y, endX: x });
@@ -129,6 +155,7 @@ export function ScrollHandle({ style, horizontal = 0, vertical = 0, className = 
       selectingZone,
       xSheetFocused,
       getDestEdge,
+      getGhostEdgePoint,
     ],
   );
 
@@ -176,10 +203,11 @@ export function ScrollHandle({ style, horizontal = 0, vertical = 0, className = 
         return;
       }
 
-      const { x, y } = getDestEdge(e);
       if (autofillDraggingTo) {
-        const { y: curY, x: curX } = autofillDraggingTo;
-        dispatch(submitAutofill({ y: y === -1 ? curY : y, x: x === -1 ? curX : x }));
+        // Don't submit here: StoreObserver's capture-phase window mouseup is the sole authority
+        // for ending a drag and has already submitted the fill. Submitting again (a frame later,
+        // from this render's stale closure) applied the fill twice — two undo steps, and the
+        // second targeted the edge computed from header cells, which may not even exist.
         focus(editorRef.current);
       } else {
         if (editingAnywhere) {
@@ -188,7 +216,7 @@ export function ScrollHandle({ style, horizontal = 0, vertical = 0, className = 
         }
       }
     },
-    [autofillDraggingTo, editingAnywhere, getDestEdge],
+    [autofillDraggingTo, editingAnywhere],
   );
 
   const handleMouseUpWrapper = useCallback(

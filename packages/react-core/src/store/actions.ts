@@ -418,6 +418,17 @@ class CutAction<T extends ZoneType> extends CoreAction<T> {
 }
 export const cut = new CutAction().bind();
 
+// When an autoExpand paste grew the sheet, the new rows/cols land off-screen (the viewport
+// keeps its size), so the growth would be invisible. Scroll the pasted range's far corner
+// into view — after the re-render, so the enlarged scroll area exists.
+const revealGrowth = (store: StoreType, sheet: Sheet, before: { numRows: number; numCols: number }, zone: ZoneType) => {
+  if (sheet.numRows <= before.numRows && sheet.numCols <= before.numCols) {
+    return;
+  }
+  const area = zoneToArea(zone);
+  requestAnimationFrame(() => smartScroll(sheet, store.tabularRef.current, { y: area.bottom, x: area.right }));
+};
+
 class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> extends CoreAction<T> {
   mutation = true;
   reduce(store: StoreType, payload: T): StoreWithCallback {
@@ -428,6 +439,7 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
     }
     const { registry } = dstSheet;
     const { copyingSheetId, copyingZone, cutting } = registry;
+    const sizeBefore = { numRows: dstSheet.numRows, numCols: dstSheet.numCols };
     const srcSheet = dstSheet.getSheetBySheetId(copyingSheetId);
 
     let selectingArea = zoneToArea(selectingZone);
@@ -485,6 +497,7 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
             cutting: false,
             copyingZone: resetZone,
           });
+          revealGrowth(store, newSheet, sizeBefore, nextSelectingZone);
         },
       };
     }
@@ -552,9 +565,11 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
       // progress bar (paste doesn't change the sheet's dimensions, so the target
       // selection is known up front). Small pastes stay synchronous.
       if ((dy + 1) * (dx + 1) > ASYNC_MUTATION_THRESHOLD) {
+        // The sheet only grows (autoExpand) once the op runs, so clamp to its future size.
+        const growth = dstSheet.getAutoExpansion(selectingArea);
         const nextSelectingZone = restrictZone(areaToZone(selectingArea));
-        nextSelectingZone.endX = Math.min(nextSelectingZone.endX, dstSheet.numCols);
-        nextSelectingZone.endY = Math.min(nextSelectingZone.endY, dstSheet.numRows);
+        nextSelectingZone.endX = Math.min(nextSelectingZone.endX, dstSheet.numCols + growth.numCols);
+        nextSelectingZone.endY = Math.min(nextSelectingZone.endY, dstSheet.numRows + growth.numRows);
         return {
           ...store,
           pendingAsyncOp: {
@@ -565,7 +580,10 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
               }),
             selectingZone: nextSelectingZone,
             label: 'Pasting',
-            postCommit: () => registry.transmit({ copyingZone: resetZone }),
+            postCommit: () => {
+              registry.transmit({ copyingZone: resetZone });
+              revealGrowth(store, dstSheet, sizeBefore, nextSelectingZone);
+            },
           },
         };
       }
@@ -585,6 +603,7 @@ class PasteAction<T extends { matrix: RawCellType[][]; onlyValue: boolean }> ext
         registry.transmit({
           copyingZone: resetZone,
         });
+        revealGrowth(store, newSheet, sizeBefore, nextSelectingZone);
       },
     };
   }
