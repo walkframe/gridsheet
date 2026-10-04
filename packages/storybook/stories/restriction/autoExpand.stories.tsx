@@ -15,7 +15,7 @@ const DESCRIPTION = [
   '2. While dragging the autofill handle, ghost rows/columns appear past the edge so the drag can reach cells that do not exist yet.',
   '3. Growth is capped by `limits.maxRows` / `limits.maxCols` (here 12 rows × 8 columns).',
   '4. The added rows/columns and the write undo together in a single step.',
-  '5. The sheet is resizable (`sheetResize: both`) — drag its bottom-right corner to see the grown rows/columns.',
+  '5. The sheet is resizable (`sheetResize: both`) — drag its bottom-right corner to see the grown rows/columns; `matrixAlignment: both` keeps the grid centered.',
 ].join('\n\n');
 
 const MODES: AutoExpandType[] = ['none', 'vertical', 'horizontal', 'both'];
@@ -33,7 +33,12 @@ const AutoExpandComponent: React.FC = () => {
         ))}
       </div>
       <GridSheet
-        options={{ autoExpand: mode, limits: { maxRows: 12, maxCols: 8 }, sheetResize: 'both' }}
+        options={{
+          autoExpand: mode,
+          limits: { maxRows: 12, maxCols: 8 },
+          sheetResize: 'both',
+          matrixAlignment: 'both',
+        }}
         initialCells={buildInitialCells({
           matrices: {
             A1: [
