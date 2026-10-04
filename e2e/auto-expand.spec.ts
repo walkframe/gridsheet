@@ -72,18 +72,19 @@ test('autofill dragged past the last row fills the ghost rows', async ({ page })
   await page.mouse.move(hb!.x + hb!.width / 2, hb!.y + hb!.height / 2);
   await page.mouse.down();
   await page.mouse.move(hb!.x + hb!.width / 2, tb!.y + tb!.height - 4, { steps: 5 });
-  // Ghost rows appear past the last row while dragging (once it is scrolled into view).
-  await expect(page.locator('.gs-ghost-row').first()).toBeAttached();
-  // Past the bottom edge: the grid auto-scrolls into the ghost area.
-  await page.mouse.move(hb!.x + hb!.width / 2, tb!.y + tb!.height + 20, { steps: 3 });
-  await page.waitForTimeout(800);
+  // Ghost rows are drawn outside the grid, right below its last row, while dragging.
+  const ghost = page.locator(".gs-ghost-cell[data-y='8'][data-x='1']");
+  await expect(ghost).toBeVisible();
+  const gb = await ghost.boundingBox();
+  expect(gb!.y).toBeGreaterThanOrEqual(tb!.y + tb!.height - 2); // outside the sheet box
+  // Drag down onto the 3rd ghost row (row 8).
+  await page.mouse.move(gb!.x + gb!.width / 2, gb!.y + gb!.height / 2, { steps: 4 });
   await page.mouse.up();
 
   await expect(page.locator('.gs-ghost-cell')).toHaveCount(0);
-  // Rows were appended (5 → more) and the series continued into them.
-  expect(await text(page, 'A6')).toBe('6');
-  // Capped at maxRows (12).
-  await expect(page.locator("[data-address='A13']")).toHaveCount(0);
+  // Rows 6..8 were appended and the series continued into them.
+  expect(await text(page, 'A8')).toBe('8');
+  await expect(page.locator("[data-address='A9']")).toHaveCount(0);
 
   await ctrl(page, 'z');
   await expect(page.locator("[data-address='A6']")).toHaveCount(0);

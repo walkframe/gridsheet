@@ -48,24 +48,39 @@
   }
 }
 
-// autoExpand ghost rows/columns: the not-yet-existing cells past the last row/column, rendered
-// only while an autofill is dragged on an auto-expanding sheet so the drag can reach them.
-.gs-ghost-cell {
-  padding: 0;
-  box-sizing: border-box;
-  border: dashed 1px var(--gs-border, #e3e6ea);
-  background-color: var(--gs-surface, #ffffff);
-  opacity: 0.5;
-  cursor: crosshair;
-}
-.gs-ghost-th {
-  opacity: 0.5;
-}
-.gs-ghost-th-top {
-  top: 0;
-}
-.gs-ghost-th-left {
-  left: 0;
+// autoExpand ghost rows/columns: the not-yet-existing cells drawn OUTSIDE the grid (portaled to
+// <body>, positioned fixed past the last row/column) while an autofill is dragged on an
+// auto-expanding sheet, so the drag can reach them. Theme tokens are copied onto the layer.
+.gs-ghost-layer {
+  font-size: 13px;
+  .gs-ghost-panel {
+    position: fixed;
+    overflow: hidden;
+    z-index: 1000;
+    cursor: crosshair;
+  }
+  .gs-ghost-cell,
+  .gs-ghost-th {
+    position: absolute;
+    box-sizing: border-box;
+  }
+  .gs-ghost-cell {
+    border: dashed 1px var(--gs-border, #e3e6ea);
+    background-color: color-mix(in srgb, var(--gs-surface, #ffffff) 70%, transparent);
+    &.gs-ghost-target {
+      background-color: color-mix(in srgb, var(--gs-accent, #2563eb) 12%, var(--gs-surface, #ffffff));
+      border-color: color-mix(in srgb, var(--gs-accent, #2563eb) 45%, transparent);
+    }
+  }
+  .gs-ghost-th {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--gs-header-bg, #f6f7f9);
+    color: var(--gs-header-fg, #555);
+    border: dashed 1px var(--gs-border, #e3e6ea);
+    opacity: 0.75;
+  }
 }
 
 // When an axis overflows, the hugging inner border would scroll out of view, so move that

@@ -90,6 +90,15 @@ export const StoreObserver: FC<StoreObserverProps> = ({
         running = false;
         return;
       }
+      // Over the autoExpand ghost cells drawn outside the grid: the pointer is past the edge, but
+      // the ghost cell itself is the target (its own mouseenter sets it) — don't edge-scroll.
+      if (
+        s.autofillDraggingTo &&
+        (document.elementFromPoint(cx, cy) as HTMLElement | null)?.closest('.gs-ghost-layer')
+      ) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
       const r = el.getBoundingClientRect();
       const dy = cy > r.bottom - EDGE ? SPEED : cy < r.top + EDGE ? -SPEED : 0;
       const dx = cx > r.right - EDGE ? SPEED : cx < r.left + EDGE ? -SPEED : 0;
@@ -98,9 +107,8 @@ export const StoreObserver: FC<StoreObserverProps> = ({
         el.scrollLeft += dx;
         const px = Math.min(Math.max(cx, r.left + 1), r.right - 1);
         const py = Math.min(Math.max(cy, r.top + 1), r.bottom - 1);
-        // Ghost cells (autoExpand) past the last row/col carry data-y/x like real cells.
         const cell = (document.elementFromPoint(px, py) as HTMLElement | null)?.closest(
-          '.gs-cell, .gs-ghost-cell',
+          '.gs-cell',
         ) as HTMLElement | null;
         if (cell) {
           const y = Number(cell.dataset.y);

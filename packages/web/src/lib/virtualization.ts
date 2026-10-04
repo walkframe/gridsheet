@@ -131,11 +131,6 @@ export const virtualize = (sheet: Sheet, e: HTMLDivElement | null): Virtualizati
       break;
     }
   }
-  // Scrolled past the last column (into autoExpand ghost columns): keep the trailing columns
-  // rendered so the table — and the ghost cells appended to it — stay in place.
-  if (boundaryLeft === 0 && sheet.numCols > 0) {
-    boundaryLeft = Math.max(sheet.numCols - OVERSCAN_X, 1);
-  }
   // Rows: binary-search the boundaries instead of accumulating heights from row 1.
   // The old linear scan was O(last-visible-row-index), so scrolling near the bottom
   // of a tall sheet cost O(numRows) per scroll event (~38ms at 1M rows). getOffsetTop(y)
@@ -149,10 +144,7 @@ export const virtualize = (sheet: Sheet, e: HTMLDivElement | null): Virtualizati
   // First row whose bottom edge passes the viewport top / bottom (binarySearch returns
   // numRows + 1 when none does, i.e. scrolled past all content / content shorter than view).
   const topIdx = binarySearch(1, numRows, (y) => cumHeightThrough(y) > top, true);
-  // Scrolled past the last row (into autoExpand ghost rows): keep the trailing rows rendered so
-  // the table — and the ghost rows appended after them — stay in place.
-  boundaryTop =
-    topIdx > numRows ? (numRows > 0 ? Math.max(numRows - OVERSCAN_Y, 1) : 0) : Math.max(topIdx - OVERSCAN_Y, 1);
+  boundaryTop = topIdx > numRows ? 0 : Math.max(topIdx - OVERSCAN_Y, 1);
   // Remap only: the visible block is placed at physical offset adjTop = physTop - top +
   // before.height (see below). Near the top of a tall (capped) sheet there isn't enough
   // physical room above the scroll position for the full top overscan, so adjTop would go
