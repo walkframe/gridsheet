@@ -18,6 +18,8 @@ import {
   ThousandSeparatorPolicyMixin,
   PercentagePolicyMixin,
   defaultColMenuDescriptors,
+  defaultContextMenuDescriptors,
+  type AutoExpandType,
   updateSheet,
   type StoreHandle,
 } from '@gridsheet/preact-core';
@@ -211,6 +213,7 @@ type DataMessage = {
   readOnly?: boolean;
   evaluate?: boolean;
   eager?: boolean;
+  autoExpand?: AutoExpandType;
   dateFormats?: string[];
   parseNumber?: boolean;
   parseDate?: boolean;
@@ -224,6 +227,19 @@ type DataMessage = {
 // menu; it just omits RowMenu, so add it to also hide the row-header menu. Copy is not a
 // prevention-enforced op, so it keeps working. (ViewOnly does block column resize.)
 const READ_ONLY_PREVENTION = operations.ViewOnly | operations.RowMenu;
+
+// CSV/TSV has no notion of merged cells: a merge would be lost on save, and merging clears
+// every value but the anchor's — so the save would silently write those cells out blank.
+// Drop Merge/Unmerge (and the divider that introduces them) from the cell context menu,
+// and block the operation itself via prevention in case another entry point appears.
+const MERGE_MENU_IDS = new Set(['merge-cells', 'unmerge-cells']);
+const CONTEXT_MENU = defaultContextMenuDescriptors.filter((item, i, all) => {
+  if ('id' in item && item.id != null && MERGE_MENU_IDS.has(item.id)) {
+    return false;
+  }
+  const next = all[i + 1];
+  return !(item.type === 'divider' && next && 'id' in next && next.id != null && MERGE_MENU_IDS.has(next.id));
+});
 
 // Which value types the viewer coerces from text. CSV cells are TEXT; each parse is opt-in
 // (settings gridsheet.viewer.parse*), off by default except numbers, because coercing changes
@@ -487,6 +503,8 @@ type GridProps = {
   // Force eager evaluation of every formula cell (fires off-screen async cells too),
   // instead of the virtualized scroll-to-evaluate default. gridsheet.viewer.eager.
   eager: boolean;
+  // Grow the grid when a paste/autofill overflows it. gridsheet.viewer.autoExpand.
+  autoExpand: AutoExpandType;
   delimiter: 'CSV' | 'TSV';
   mode: 'inherit-light' | 'inherit-dark';
   readOnly: boolean;
@@ -521,6 +539,7 @@ const Grid = ({
   extraCols,
   evaluate,
   eager,
+  autoExpand,
   delimiter,
   mode,
   readOnly,
@@ -831,7 +850,7 @@ const Grid = ({
     // Every data cell defaults to the 'raw' policy so values are never coerced from text —
     // opening and saving a CSV round-trips exactly (see keepRawMixin). Column format policies
     // below override this per column; formulas still evaluate (formula handling is separate).
-    cells.default = { policy: 'raw' };
+    cells.default = { policy: 'raw', prevention: operations.Merge };
     // Assign each formatted column's policy via its column-default cell (colId, e.g. 'C').
     for (const [xStr, name] of Object.entries(columnFormats)) {
       if (name) {
@@ -917,7 +936,10 @@ const Grid = ({
         sheetHeight: '100%',
         matrixAlignment: 'both',
         colMenu,
+        contextMenu: CONTEXT_MENU,
         eager,
+        // Read-only blocks the write anyway; don't let a refused paste grow the grid.
+        autoExpand: readOnly ? 'none' : autoExpand,
       }}
     />
   );
@@ -1261,6 +1283,7 @@ const App = () => {
   const evaluate = data.evaluate ?? true;
   evaluateRef.current = evaluate; // keep the handler closure's view current
   const eager = data.eager ?? true;
+  const autoExpand = data.autoExpand ?? 'both';
   const dateFormats = data.dateFormats ?? EMPTY_STRING_ARRAY;
   const aiCustom = data.aiCustom ?? EMPTY_AI_CUSTOM;
   // Only number parsing defaults on (round-trip-safe); date/time/bool are opt-in because
@@ -1283,6 +1306,7 @@ const App = () => {
           extraCols={extraCols}
           evaluate={evaluate}
           eager={eager}
+          autoExpand={autoExpand}
           delimiter={data.delimiter}
           mode={mode}
           readOnly={ro}

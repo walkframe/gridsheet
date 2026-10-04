@@ -367,6 +367,7 @@ export class CsvEditorProvider implements vscode.CustomEditorProvider<CsvDocumen
       readOnly: viewerCfg().get<boolean>('readOnly', false),
       evaluate: viewerCfg().get<boolean>('saveEvaluated', true),
       eager: viewerCfg().get<boolean>('eager', true),
+      autoExpand: viewerCfg().get<string>('autoExpand', 'both'),
       dateFormats: viewerCfg().get<string[]>('dateFormats', []),
       parseNumber: viewerCfg().get<boolean>('parseNumber', true),
       parseDate: viewerCfg().get<boolean>('parseDate', false),
