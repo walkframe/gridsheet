@@ -2,7 +2,7 @@
 
 All notable changes to the **CSV Spreadsheet — GridSheet** extension.
 
-## Unreleased
+## 0.4.0 — 2026-10-05
 
 - **Auto-expand** (`gridsheet.viewer.autoExpand`, default `both`): a paste or an
   autofill that runs past the last row/column now adds the missing rows/columns
