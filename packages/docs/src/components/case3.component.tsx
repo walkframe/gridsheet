@@ -30,210 +30,78 @@ const COLORS = [
   '#F4A460',
 ];
 
-const myHeart: CellsByAddressType = {
-  C3: { style: { backgroundColor: 'red' } },
-  D3: { style: { backgroundColor: 'red' } },
-  O3: { style: { backgroundColor: 'red' } },
-  N3: { style: { backgroundColor: 'red' } },
+// Initial pixel art: one string per row, starting at A3.
+// 'R' = red outline, 'p' = pink fill, '.' = empty.
+const HEART = [
+  '..RR.........RR..',
+  '.RppR.......RppR.',
+  'RppppR.....RppppR',
+  'RpppppR...RpppppR',
+  'RppppppR.RppppppR',
+  'RpppppppRpppppppR',
+  '.RpppppppppppppR.',
+  '..RpppppppppppR..',
+  '...RpppppppppR...',
+  '....RpppppppR....',
+  '.....RpppppR.....',
+  '......RpppR......',
+  '.......RpR.......',
+  '........R........',
+];
+const PIXEL_COLORS: { [ch: string]: string } = { R: 'red', p: 'pink' };
 
-  B4: { style: { backgroundColor: 'red' } },
-  E4: { style: { backgroundColor: 'red' } },
-  M4: { style: { backgroundColor: 'red' } },
-  P4: { style: { backgroundColor: 'red' } },
+// address -> color, e.g. { C3: 'red', B4: 'red', C4: 'pink', ... }
+type ColorMap = { [address: string]: string };
 
-  A5: { style: { backgroundColor: 'red' } },
-  F5: { style: { backgroundColor: 'red' } },
-  L5: { style: { backgroundColor: 'red' } },
-  Q5: { style: { backgroundColor: 'red' } },
+const heartColors: ColorMap = {};
+HEART.forEach((line, i) => {
+  [...line].forEach((ch, j) => {
+    if (PIXEL_COLORS[ch]) {
+      heartColors[p2a({ y: i + 3, x: j + 1 })] = PIXEL_COLORS[ch];
+    }
+  });
+});
 
-  A6: { style: { backgroundColor: 'red' } },
-  G6: { style: { backgroundColor: 'red' } },
-  K6: { style: { backgroundColor: 'red' } },
-  Q6: { style: { backgroundColor: 'red' } },
+const toCells = (colors: ColorMap): CellsByAddressType =>
+  Object.fromEntries(
+    Object.entries(colors).map(([address, color]) => [address, { style: { backgroundColor: color } }]),
+  );
 
-  A7: { style: { backgroundColor: 'red' } },
-  H7: { style: { backgroundColor: 'red' } },
-  J7: { style: { backgroundColor: 'red' } },
-  Q7: { style: { backgroundColor: 'red' } },
+const GRID_SIZE = 50;
+const STORAGE_KEY = 'demo3';
 
-  A8: { style: { backgroundColor: 'red' } },
-  I8: { style: { backgroundColor: 'red' } },
-  Q8: { style: { backgroundColor: 'red' } },
+const initialCells = buildInitialCells({
+  cells: {
+    defaultRow: { height: 25 },
+    defaultCol: { width: 25 },
+    ...toCells(heartColors),
+  },
+  ensured: {
+    numRows: GRID_SIZE,
+    numCols: GRID_SIZE,
+  },
+});
 
-  B9: { style: { backgroundColor: 'red' } },
-  P9: { style: { backgroundColor: 'red' } },
-
-  C10: { style: { backgroundColor: 'red' } },
-  O10: { style: { backgroundColor: 'red' } },
-
-  D11: { style: { backgroundColor: 'red' } },
-  N11: { style: { backgroundColor: 'red' } },
-
-  E12: { style: { backgroundColor: 'red' } },
-  M12: { style: { backgroundColor: 'red' } },
-
-  F13: { style: { backgroundColor: 'red' } },
-  L13: { style: { backgroundColor: 'red' } },
-
-  G14: { style: { backgroundColor: 'red' } },
-  K14: { style: { backgroundColor: 'red' } },
-
-  H15: { style: { backgroundColor: 'red' } },
-  J15: { style: { backgroundColor: 'red' } },
-
-  I16: { style: { backgroundColor: 'red' } },
-
-  // B5 - B8
-  B5: { style: { backgroundColor: 'pink' } },
-  B6: { style: { backgroundColor: 'pink' } },
-  B7: { style: { backgroundColor: 'pink' } },
-  B8: { style: { backgroundColor: 'pink' } },
-
-  // C4 - C9
-  C4: { style: { backgroundColor: 'pink' } },
-  C5: { style: { backgroundColor: 'pink' } },
-  C6: { style: { backgroundColor: 'pink' } },
-  C7: { style: { backgroundColor: 'pink' } },
-  C8: { style: { backgroundColor: 'pink' } },
-  C9: { style: { backgroundColor: 'pink' } },
-
-  // D4 - D10
-  D4: { style: { backgroundColor: 'pink' } },
-  D5: { style: { backgroundColor: 'pink' } },
-  D6: { style: { backgroundColor: 'pink' } },
-  D7: { style: { backgroundColor: 'pink' } },
-  D8: { style: { backgroundColor: 'pink' } },
-  D9: { style: { backgroundColor: 'pink' } },
-  D10: { style: { backgroundColor: 'pink' } },
-
-  // E5 - E11
-  E5: { style: { backgroundColor: 'pink' } },
-  E6: { style: { backgroundColor: 'pink' } },
-  E7: { style: { backgroundColor: 'pink' } },
-  E8: { style: { backgroundColor: 'pink' } },
-  E9: { style: { backgroundColor: 'pink' } },
-  E10: { style: { backgroundColor: 'pink' } },
-  E11: { style: { backgroundColor: 'pink' } },
-
-  // F6 - F12
-  F6: { style: { backgroundColor: 'pink' } },
-  F7: { style: { backgroundColor: 'pink' } },
-  F8: { style: { backgroundColor: 'pink' } },
-  F9: { style: { backgroundColor: 'pink' } },
-  F10: { style: { backgroundColor: 'pink' } },
-  F11: { style: { backgroundColor: 'pink' } },
-  F12: { style: { backgroundColor: 'pink' } },
-
-  // G7 - G13
-  G7: { style: { backgroundColor: 'pink' } },
-  G8: { style: { backgroundColor: 'pink' } },
-  G9: { style: { backgroundColor: 'pink' } },
-  G10: { style: { backgroundColor: 'pink' } },
-  G11: { style: { backgroundColor: 'pink' } },
-  G12: { style: { backgroundColor: 'pink' } },
-  G13: { style: { backgroundColor: 'pink' } },
-
-  // H8 - H14
-  H8: { style: { backgroundColor: 'pink' } },
-  H9: { style: { backgroundColor: 'pink' } },
-  H10: { style: { backgroundColor: 'pink' } },
-  H11: { style: { backgroundColor: 'pink' } },
-  H12: { style: { backgroundColor: 'pink' } },
-  H13: { style: { backgroundColor: 'pink' } },
-  H14: { style: { backgroundColor: 'pink' } },
-
-  // I9 - I15
-  I9: { style: { backgroundColor: 'pink' } },
-  I10: { style: { backgroundColor: 'pink' } },
-  I11: { style: { backgroundColor: 'pink' } },
-  I12: { style: { backgroundColor: 'pink' } },
-  I13: { style: { backgroundColor: 'pink' } },
-  I14: { style: { backgroundColor: 'pink' } },
-  I15: { style: { backgroundColor: 'pink' } },
-
-  // J8 - J14
-  J8: { style: { backgroundColor: 'pink' } },
-  J9: { style: { backgroundColor: 'pink' } },
-  J10: { style: { backgroundColor: 'pink' } },
-  J11: { style: { backgroundColor: 'pink' } },
-  J12: { style: { backgroundColor: 'pink' } },
-  J13: { style: { backgroundColor: 'pink' } },
-  J14: { style: { backgroundColor: 'pink' } },
-
-  // K7 - K13
-  K7: { style: { backgroundColor: 'pink' } },
-  K8: { style: { backgroundColor: 'pink' } },
-  K9: { style: { backgroundColor: 'pink' } },
-  K10: { style: { backgroundColor: 'pink' } },
-  K11: { style: { backgroundColor: 'pink' } },
-  K12: { style: { backgroundColor: 'pink' } },
-  K13: { style: { backgroundColor: 'pink' } },
-
-  // L6 - L12
-  L6: { style: { backgroundColor: 'pink' } },
-  L7: { style: { backgroundColor: 'pink' } },
-  L8: { style: { backgroundColor: 'pink' } },
-  L9: { style: { backgroundColor: 'pink' } },
-  L10: { style: { backgroundColor: 'pink' } },
-  L11: { style: { backgroundColor: 'pink' } },
-  L12: { style: { backgroundColor: 'pink' } },
-
-  // M5 - M11
-  M5: { style: { backgroundColor: 'pink' } },
-  M6: { style: { backgroundColor: 'pink' } },
-  M7: { style: { backgroundColor: 'pink' } },
-  M8: { style: { backgroundColor: 'pink' } },
-  M9: { style: { backgroundColor: 'pink' } },
-  M10: { style: { backgroundColor: 'pink' } },
-  M11: { style: { backgroundColor: 'pink' } },
-
-  // N4 - N10
-  N4: { style: { backgroundColor: 'pink' } },
-  N5: { style: { backgroundColor: 'pink' } },
-  N6: { style: { backgroundColor: 'pink' } },
-  N7: { style: { backgroundColor: 'pink' } },
-  N8: { style: { backgroundColor: 'pink' } },
-  N9: { style: { backgroundColor: 'pink' } },
-  N10: { style: { backgroundColor: 'pink' } },
-
-  // O4 - O9
-  O4: { style: { backgroundColor: 'pink' } },
-  O5: { style: { backgroundColor: 'pink' } },
-  O6: { style: { backgroundColor: 'pink' } },
-  O7: { style: { backgroundColor: 'pink' } },
-  O8: { style: { backgroundColor: 'pink' } },
-  O9: { style: { backgroundColor: 'pink' } },
-
-  // P5 - P8
-  P5: { style: { backgroundColor: 'pink' } },
-  P6: { style: { backgroundColor: 'pink' } },
-  P7: { style: { backgroundColor: 'pink' } },
-  P8: { style: { backgroundColor: 'pink' } },
-};
-
-export default function DataManagement() {
+export default function PixelArt() {
   const inheritMode = useStarlightMode();
   const sheetRef = useSheetRef();
   const storeRef = useStoreRef();
   const [selectedColor, setSelectedColor] = React.useState('#FF0000');
 
-  // Load data from localStorage
-  const loadSavedData = React.useCallback(() => {
-    if (typeof window === 'undefined') {
+  // Repaint the whole canvas: cells in `colors` get that color, every other cell is cleared.
+  const paint = React.useCallback((colors: ColorMap, historicize = true) => {
+    if (!sheetRef.current) {
       return;
     }
-    try {
-      const savedData = localStorage.getItem('demo3');
-      if (savedData) {
-        const parsedData = JSON.parse(savedData);
-        if (parsedData.cells && sheetRef.current) {
-          const { sheet, apply } = sheetRef.current;
-          apply(sheet.update({ diff: parsedData.cells }));
-        }
+    const { sheet, apply } = sheetRef.current;
+    const diff: CellsByAddressType = {};
+    for (let y = 1; y <= GRID_SIZE; y++) {
+      for (let x = 1; x <= GRID_SIZE; x++) {
+        const address = p2a({ y, x });
+        diff[address] = { style: colors[address] ? { backgroundColor: colors[address] } : {} };
       }
-    } catch (error) {
-      console.error('Error loading saved data:', error);
     }
+    apply(sheet.update({ diff, historicize }));
   }, []);
 
   const saveData = React.useCallback(() => {
@@ -245,7 +113,7 @@ export default function DataManagement() {
         const { sheet } = sheetRef.current;
 
         // Extract only cells with colors
-        const coloredCells: { [key: string]: string } = {};
+        const coloredCells: ColorMap = {};
         for (let row = sheet.top; row <= sheet.bottom; row++) {
           for (let col = sheet.left; col <= sheet.right; col++) {
             const cell = sheet.getCell({ y: row, x: col });
@@ -259,7 +127,7 @@ export default function DataManagement() {
           cells: coloredCells,
           timestamp: new Date().toISOString(),
         };
-        localStorage.setItem('demo3', JSON.stringify(dataToSave));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
       }
     } catch (error) {
       console.error('Error saving data:', error);
@@ -270,63 +138,23 @@ export default function DataManagement() {
     onChange: saveData,
   });
 
-  // Reset data
-  const resetData = () => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-    if (confirm('Are you sure you want to reset all data? This cannot be undone.')) {
-      localStorage.removeItem('demo3');
-      if (typeof window !== 'undefined') {
-        window.location.reload();
-      }
-    }
-  };
-
-  // Get saved data
-  const getSavedData = () => {
-    if (typeof window === 'undefined') {
-      return myHeart;
-    }
+  // Restore a saved drawing once, after mount (the server render always shows the heart).
+  React.useEffect(() => {
     try {
-      const savedData = localStorage.getItem('demo3');
-      if (savedData) {
-        const parsedData = JSON.parse(savedData);
-        const savedCells = parsedData.cells || {};
-
-        // Convert saved color data to cell format
-        const cellData: { [key: string]: any } = {};
-        Object.keys(savedCells).forEach((address) => {
-          cellData[address] = {
-            style: { backgroundColor: savedCells[address] },
-          };
-        });
-
-        console.log('Loaded saved data:', savedCells);
-        return cellData;
+      const saved = localStorage.getItem(STORAGE_KEY);
+      const cells: ColorMap | undefined = saved ? JSON.parse(saved).cells : undefined;
+      if (cells) {
+        paint(cells, false);
       }
     } catch (error) {
-      console.error('Error getting saved data:', error);
+      console.error('Error loading saved data:', error);
     }
-    return myHeart;
+  }, [paint]);
+
+  // Reset to the initial heart in place (undoable with Ctrl/Cmd+Z); onChange re-saves it.
+  const resetData = () => {
+    paint(heartColors);
   };
-
-  // Load initial data
-  React.useEffect(() => {
-    loadSavedData();
-  }, []);
-
-  const initialCells = buildInitialCells({
-    cells: {
-      defaultRow: { height: 25 },
-      defaultCol: { width: 25 },
-      ...getSavedData(),
-    },
-    ensured: {
-      numRows: 50,
-      numCols: 50,
-    },
-  });
 
   // Function to fill selected cells
   const fillSelectedCells = () => {
@@ -449,11 +277,11 @@ export default function DataManagement() {
           matrixAlignment: 'both',
           sheetResize: 'both',
           showFormulaBar: false,
+          // Size the sheet itself (not a style on its root): a root-only width fought the
+          // sheet's own content-based width, so the box came out 500 or 1000px at random.
+          sheetWidth: 500,
+          sheetHeight: 500,
           mode: inheritMode,
-        }}
-        style={{
-          width: typeof window !== 'undefined' ? Math.min(500, window.innerWidth - 60) : 500,
-          height: typeof window !== 'undefined' ? Math.min(500, window.innerHeight - 200) : 500,
         }}
       />
     </div>

@@ -1,227 +1,167 @@
 ---
-title: "Case 4: Budget Management System with Policies"
+title: "Policies: Dropdowns, Validation, Checkboxes & Masking"
 ---
 
 import Case4 from '../../../components/case4.component';
 
-This demo showcases advanced Policy functionality for data validation, business rules, and real-time event monitoring.
+A budget sheet where every column's behavior comes from a **Policy**: dropdowns with keyword search, value validation and clamping, number formatting, checkboxes, and a masked column with a custom clipboard value. The Status options can be edited below the grid at runtime.
 
-It demonstrates a comprehensive budget management system with multiple policy types including department selection, status validation, budget constraints, and comprehensive event handling.
-
-The status options can be dynamically managed using a modern multi-select interface, and all spreadsheet operations are monitored through event handlers.
-
-<div class="not-content"><Case4 client:visible /></div>
+<div class="not-content">
+  <Case4 client:visible />
+</div>
 
 ## Implementation Guide
 
-<a href="https://github.com/walkframe/gridsheet/tree/master/packages/docs/src/components/case4.component.tsx" target="_blank" rel="noopener noreferrer" style={{display: 'inline-block', background: '#007bff', color: 'white', padding: '8px 16px', textDecoration: 'none', borderRadius: '4px', fontWeight: '500', margin: '10px 0'}}>📄 View Source Code</a>
+<a
+  href="https://github.com/walkframe/gridsheet/tree/master/packages/docs/src/components/case4.component.tsx"
+  target="_blank"
+  rel="noopener noreferrer"
+  style={{
+    display: 'inline-block',
+    background: '#007bff',
+    color: 'white',
+    padding: '8px 16px',
+    textDecoration: 'none',
+    borderRadius: '4px',
+    fontWeight: '500',
+    margin: '10px 0',
+  }}
+>
+  📄 View Source Code
+</a>
 
-### Dropdown Selection with `getSelectOptions`
+### Registering policies
 
-Implementing `getSelectOptions` on a `PolicyMixinType` enables a dropdown (autocomplete) UI for that cell. The returned array of `AutocompleteOption` objects drives the option list.
+A policy is a `Policy` built from one or more mixins (`PolicyMixinType`). Register policies by name on the book, then attach them to cells or whole columns with `policy: '<name>'`.
 
-Each option can carry a `keywords` array for fuzzy/multi-keyword matching, so searching "dev" or "Engineering" both resolve to the same department.
+```tsx
+const book = useSpellbook({
+  policies: {
+    department: new Policy({ mixins: [DepartmentPolicy] }),
+    status: new Policy({ mixins: [StatusPolicy] }),
+    budget: new Policy({ mixins: [BudgetPolicy, ThousandSeparatorPolicyMixin] }),
+    thousand_separator: new Policy({ mixins: [ThousandSeparatorPolicyMixin] }),
+    checkbox: new Policy({ mixins: [CheckboxPolicyMixin] }),
+    mask: new Policy({ mixins: [MaskPolicy] }),
+  },
+});
+
+// in buildInitialCells({ cells: { ... } })
+A: { label: 'Department', policy: 'department' },
+```
+
+Mixins are combined, so `budget` gets both the clamping below and thousands-separator display.
+
+### Dropdowns with `getSelectOptions`
+
+Returning `AutocompleteOption[]` from `getSelectOptions` turns the cell into a dropdown. `keywords` add search terms, so typing "dev" finds Engineering.
 
 ```tsx
 const DEPARTMENT_OPTIONS: AutocompleteOption[] = [
   { value: 'Engineering', label: '🔧 Engineering', keywords: ['Engineering', 'dev', 'development'] },
-  { value: 'Marketing',   label: '📢 Marketing',   keywords: ['Marketing', 'promotion'] },
+  { value: 'Marketing', label: '📢 Marketing', keywords: ['Marketing', 'promotion', 'advertising'] },
   // ...
 ];
 
 const DepartmentPolicy: PolicyMixinType = {
   getSelectOptions: () => DEPARTMENT_OPTIONS,
   select: ({ next }) => {
-    const valid = DEPARTMENT_OPTIONS.find((o) => o.value === next?.value);
-    return valid ? next : { ...next, value: 'Engineering' }; // fall back to default
+    if (next?.value == null) {
+      return next;
+    }
+    const valid = DEPARTMENT_OPTIONS.some((o) => o.value === next.value);
+    return valid ? next : { ...next, value: 'Engineering' };
   },
 };
 ```
 
-The `select` hook runs on every commit and lets you sanitize or reject a value before it is written to the cell.
+The dropdown only suggests; typing or pasting can still produce any value. `select` is what enforces the rule.
 
-### Input Validation with the `select` Hook
+### Validation with `select`
 
-The `select` hook on `PolicyMixinType` intercepts the value the user is about to write. Return a modified `next` object to correct out-of-range inputs automatically.
+`select` runs before a value is written (typing, paste, autofill). It receives the `current` and `next` cell and returns the cell to store. `BudgetPolicy` clamps amounts to 0–1,000,000:
 
 ```tsx
 const BudgetPolicy: PolicyMixinType = {
   select: ({ next }) => {
-    const value = Number(next?.value);
-    if (isNaN(value) || value < 0) return { ...next, value: 0 };
-    if (value > 1_000_000)          return { ...next, value: 1_000_000 };
+    if (next?.value == null) {
+      return next;
+    }
+    const value = Number(next.value);
+    if (isNaN(value) || value < 0) {
+      return { ...next, value: 0 };
+    }
+    if (value > 1_000_000) {
+      return { ...next, value: 1_000_000 };
+    }
     return next;
   },
 };
 ```
 
-Combining `BudgetPolicy` with `ThousandSeparatorPolicyMixin` in a single policy applies both range clamping and thousands-separator display.
+### Runtime-editable options
 
-### Dynamic Policy Options via `useRef`
-
-When a policy's options must update in real time (e.g., a tag list the user can edit), store the current options in a `ref` instead of closing over state. This avoids recreating the policy object on every render.
+The Status options live in React state. The policy is created once and reads the options through a ref, so adding or removing a status takes effect immediately without recreating the policy or remounting the grid. Unknown statuses are rejected by keeping the previous value.
 
 ```tsx
-const statusOptionsRef = React.useRef<[string, string][]>([]);
-
+const [statuses, setStatuses] = React.useState<string[]>(INITIAL_STATUSES);
+const statusesRef = React.useRef(statuses);
 React.useEffect(() => {
-  statusOptionsRef.current = tags.map((tag) => [tag.value, tag.label]);
-}, [tags]);
+  statusesRef.current = statuses;
+}, [statuses]);
 
-const StatusPolicy = React.useMemo(
-  () => ({
-    getSelectOptions: () =>
-      statusOptionsRef.current.map(([value, label]) => ({ value, label })),
-    select: ({ next }) => {
-      const valid = statusOptionsRef.current.map(([v]) => v).includes(next?.value);
-      return valid ? next : { ...next, value: 'Pending' };
-    },
-  }),
-  [tags], // policy object is recreated only when tags change
-);
+const StatusPolicy: PolicyMixinType = {
+  getSelectOptions: () => statusesRef.current.map((s) => ({ value: s })),
+  select: ({ current, next }) => {
+    if (next?.value == null || next.value === '') {
+      return next;
+    }
+    return statusesRef.current.includes(next.value) ? next : { ...next, value: current?.value };
+  },
+};
 ```
 
-Because `getSelectOptions` reads from the ref at call time, even an old policy instance always sees the latest options.
+Removing a status does not change cells that already hold it; it only stops new entries.
 
-### `CheckboxPolicyMixin` for Boolean Cells
+### Checkboxes
 
-The built-in `CheckboxPolicyMixin` renders boolean cell values as interactive checkboxes.
+`CheckboxPolicyMixin` renders `true` / `false` as a clickable checkbox. The Total row counts them with `=COUNTIF(G1:G5,true)`.
 
 ```tsx
-const book = useSpellbook({
-  policies: {
-    checkbox: new Policy({ mixins: [CheckboxPolicyMixin] }),
-  },
-});
-
-// In cells:
-F: { policy: 'checkbox', alignItems: 'center', justifyContent: 'center' }
+G: { label: 'Done', policy: 'checkbox', alignItems: 'center', justifyContent: 'center' },
 ```
 
-Cell values of `true` / `false` are toggled by clicking the rendered checkbox.
+### Masking with `renderString` and `serializeForClipboard`
 
-### Border Styling with `makeBorder`
-
-`makeBorder` generates individual CSS border properties (`borderTop`, `borderRight`, etc.) without touching the shorthand `border` property. This avoids accidentally overriding other border declarations.
+`renderString` controls how a string is drawn; `serializeForClipboard` controls what Ctrl/Cmd+C copies (by default, the raw value). Here both show only the last 4 characters:
 
 ```tsx
-import { makeBorder } from '@gridsheet/react-core';
+const mask = (value: unknown) => {
+  if (value == null || value === '') {
+    return '';
+  }
+  const str = String(value);
+  return str.length <= 4 ? str : `${'•'.repeat(str.length - 4)}${str.slice(-4)}`;
+};
 
-// Uniform border on all sides
-default: { style: { ...makeBorder({ all: '1px solid #000000' }) } }
-
-// Double border only on the bottom (used to separate the Total row)
-'A6:F6': { style: { ...makeBorder({ bottom: '4px double #000000' }) } }
+const MaskPolicy: PolicyMixinType = {
+  renderString: ({ value }) => mask(value),
+  serializeForClipboard: ({ point, sheet }) => mask(sheet.getSerializedValue({ point })),
+};
 ```
 
-The `all` shorthand sets all four sides at once, while named sides (`top`, `right`, `bottom`, `left`) let you style individual edges.
+:::caution
+For a focused comparison of display masking vs. clipboard output, see [Controlling What Gets Copied](/examples/case9). Masking is display-only. The full value is still stored in the sheet, shown in the cell editor and formula bar, and returned by formulas and data exports such as `toValueMatrix`. Do not use it to protect secrets; keep sensitive data out of the client.
+:::
 
-### Event Monitoring with `useSpellbook` Callbacks
+### Read-only cells, borders, and a fixed Total row
 
-`useSpellbook` accepts a rich set of event callbacks that are called after specific grid operations.
+- `prevention: operations.Write` makes the Remaining column (`=C1-D1`) and the Total row read-only.
+- `makeBorder` sets individual border sides (`borderBottom`, …) without overwriting the others; it draws the double line above the Total row.
+- `sortFixed` / `filterFixed` on the row header cell (`'07'` = row 7) keep the Total row in place when sorting and visible when filtering.
 
 ```tsx
-const book = useSpellbook({
-  onSave:       ({ sheet, points }) => log(`Saved at ${points.length} position(s)`),
-  onChange:     ({ sheet, points }) => log(`Changed at ${points.length} position(s)`),
-  onSelect:     ({ sheet, points }) => log(`Selected ${points.length} cell(s)`),
-  onRemoveRows: ({ sheet, ys })     => log(`Removed rows: ${ys.join(', ')}`),
-  onInsertRows: ({ sheet, y, numRows }) => log(`Inserted ${numRows} row(s) at ${y}`),
-  onKeyUp:      ({ e })             => log(`Key: ${e.key}`),
-  onInit:       ({ sheet })         => log(`Initialized: ${sheet.name}`),
-});
+'A6:G6': { style: { ...makeBorder({ bottom: `4px double ${structBorder}` }) } },
+'7': { style: { fontWeight: 'bold' }, prevention: operations.Write },
+'07': { sortFixed: true, filterFixed: true },
 ```
-
-These callbacks are ideal for audit logs, analytics, or syncing changes to an external backend.
-
-### Connecting `CreatableSelect` to a Dynamic Policy
-
-To let users add or remove status options at runtime, use `CreatableSelect` from `react-select/creatable` to manage a tag list in React state, then feed that state into the policy via a ref (see above).
-
-```tsx
-<CreatableSelect
-  options={tags}
-  value={tags}
-  onChange={handleSelectChange}
-  isMulti
-  isClearable
-  onCreateOption={(inputValue) => {
-    setTags((prev) => [...prev, { value: inputValue, label: `🆕 ${inputValue}` }]);
-  }}
-/>
-```
-
-Changes to `tags` propagate to `statusOptionsRef` via `useEffect`, so the policy's `getSelectOptions` immediately returns the updated list without remounting the grid.
-
-### Keeping Summary Rows Fixed with `sortFixed` and `filterFixed`
-
-Row-level options `sortFixed` and `filterFixed` prevent a specific row from being reordered during sort or hidden during filter operations. This is essential for summary rows like totals that must always remain visible.
-
-These flags are set on the row's **header cell** — the cell at column 0 for the target row. The address format is `'0<row>'` (e.g., `'07'` for row 7).
-
-```tsx
-buildInitialCells({
-  cells: {
-    // ... data cells ...
-    '07': { sortFixed: true, filterFixed: true },
-  },
-})
-```
-
-- **`sortFixed`**: The row stays in its original position when any column is sorted. Other rows move around it.
-- **`filterFixed`**: The row always remains visible regardless of active filter conditions.
-
-Rows with `filterFixed` show a **‹** prefix and rows with `sortFixed` show a **›** suffix in their row header, applied automatically via CSS.
-
-### 📊 Event Handling and Monitoring
-This budget management system includes comprehensive event handling to monitor all spreadsheet operations in real-time:
-
-#### 🔍 Real-time Event Monitoring
-- **Data Events**: Monitor when budget data is saved or changed
-- **Selection Events**: Track cell selection changes for user interaction analysis
-- **Structure Events**: Monitor row and column insertions/removals for audit trails
-- **Keyboard Events**: Track keyboard interactions for user experience analysis
-- **Initialization Events**: Monitor table initialization for system health
-
-#### 📈 Event Logging System
-The system includes a real-time event log that displays:
-- **Timestamp**: Precise timing of each event
-- **Event Type**: Clear identification of the operation type
-- **Affected Data**: Information about what data was modified
-- **User Actions**: Tracking of user interactions and changes
-
-#### 🎯 Event Handler Implementation
-```tsx
-const hub = useHub({
-  // Data monitoring events
-  onSave: ({ table, points }) => {
-    addEventLog(`Budget data saved at ${Array.isArray(points) ? points.length : 1} position(s)`);
-  },
-  onChange: ({ table, points }) => {
-    addEventLog(`Budget data changed at ${Array.isArray(points) ? points.length : 1} position(s)`);
-  },
-  
-  // Structure monitoring events
-  onRemoveRows: ({ table, ys }) => {
-    addEventLog(`Removed ${ys.length} row(s): ${ys.join(', ')}`);
-  },
-  onInsertRows: ({ table, y, numRows }) => {
-    addEventLog(`Inserted ${numRows} row(s) at position ${y}`);
-  },
-  
-  // User interaction events
-  onSelect: ({ table, points }) => {
-    addEventLog(`Selected ${Array.isArray(points) ? points.length : 1} cell(s)`);
-  },
-  onKeyUp: ({ e, points }) => {
-    addEventLog(`Key pressed: ${e.key}`);
-  },
-});
-```
-
-#### 🔄 Event-Driven Architecture Benefits
-- **Audit Trails**: Complete tracking of all budget modifications
-- **User Analytics**: Understanding of user interaction patterns
-- **Debugging**: Real-time monitoring for troubleshooting
-- **Compliance**: Meeting regulatory requirements for data tracking
-- **Performance Monitoring**: Tracking system performance and usage patterns

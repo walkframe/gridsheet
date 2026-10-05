@@ -1,0 +1,56 @@
+---
+title: "Growing the Sheet on Paste & Autofill"
+---
+
+import Case13 from '../../../components/case13.component';
+
+By default, a paste or an autofill that runs past the sheet's last row or column is **clipped** — the
+overflow is dropped. With the [`autoExpand`](/api-reference/props#autoexpand) option the sheet grows
+instead: the missing rows and/or columns are appended, and the growth undoes together with the write.
+
+Switch the mode and try the steps below the selector.
+
+<div class="not-content"><Case13 client:visible /></div>
+
+## Implementation Guide
+
+<a href="https://github.com/walkframe/gridsheet/tree/master/packages/docs/src/components/case13.component.tsx" target="_blank" rel="noopener noreferrer" style={{display: 'inline-block', background: '#007bff', color: 'white', padding: '8px 16px', textDecoration: 'none', borderRadius: '4px', fontWeight: '500', margin: '10px 0'}}>📄 View Source Code</a>
+
+### Enable it
+
+```tsx
+<GridSheet
+  initialCells={initialCells}
+  options={{
+    autoExpand: 'both',
+    limits: { maxRows: 200, maxCols: 26 },
+  }}
+/>
+```
+
+| Value | Overflowing paste / autofill |
+| --- | --- |
+| `'none'` (default) | Clipped at the last row/column. |
+| `'vertical'` | Appends rows; columns are still clipped. |
+| `'horizontal'` | Appends columns; rows are still clipped. |
+| `'both'` | Appends rows and columns as needed. |
+
+### What it covers
+
+- **Paste** — copied cells, cut cells, and text/HTML from the clipboard.
+- **Autofill** — drag the fill handle past the last row/column and hold: provisional rows/columns
+  appear one at a time, faster the further you pull. They are display-only until you release; then
+  the sheet grows to the row/column you reached and the fill is written. Rows you pulled back from
+  are simply discarded.
+- **Programmatic writes** through `sheet.copy()`, `sheet.move()` and `sheet.writeRawCellMatrix()`
+  follow the same setting.
+
+### Behavior details
+
+- **One undo step** — the appended rows/columns and the write are recorded together, so a single
+  undo reverts both.
+- **Layout** — new rows/columns copy the style, size and policy of the current last row/column,
+  just like inserting rows below the last one.
+- **Limits** — growth stops at `limits.maxRows` / `limits.maxCols`; anything beyond is still clipped.
+- **Visibility** — the sheet's viewport keeps its size, so after a paste or fill that grew it, the
+  grid scrolls the written range's far corner into view.

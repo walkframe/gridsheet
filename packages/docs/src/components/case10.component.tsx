@@ -1,7 +1,15 @@
 'use client';
 
 import * as React from 'react';
-import { GridSheet, buildInitialCells, Policy, makeBorder, toValueMatrix, operations, ThousandSeparatorPolicyMixin } from '@gridsheet/react-core';
+import {
+  GridSheet,
+  buildInitialCells,
+  Policy,
+  makeBorder,
+  toValueMatrix,
+  operations,
+  x2c,
+} from '@gridsheet/react-core';
 import type { PolicyMixinType, RenderProps, UserSheet } from '@gridsheet/react-core';
 import { useSpellbook } from '@gridsheet/react-core/spellbook';
 import { useStarlightMode } from './useStarlightMode';
@@ -70,61 +78,56 @@ const CategoryPolicyMixin: PolicyMixinType = {
   },
 };
 
-// Delete button policy mixin
-const DeleteButtonPolicyMixin: PolicyMixinType = {
-  renderNull({ value, point, apply, sheet }: RenderProps<null | undefined>) {
-    // Only show delete button for product rows (not header or summary)
-    const shouldShowButton = point.y >= 1 && point.y <= 21;
+// A row is a "product row" unless it is one of the summary rows, which are
+// marked `sortFixed` on their row header (A0-column cell, e.g. '022'). Deriving
+// it from the sheet keeps working after rows are inserted or removed.
+const isProductRow = (sheet: UserSheet, y: number) => y >= 1 && !sheet.getCell({ y, x: 0 })?.sortFixed;
 
-    // Get product name for tooltip
-    let productName = 'Unknown';
-    try {
-      const productCell = sheet.getCell({ y: point.y, x: 2 }, { resolution: 'RESOLVED' });
-      if (productCell?.value != null) {
-        productName = String(productCell.value);
-      }
-    } catch (error) {
-      // Fallback to unknown
+type DeleteHandler = (args: {
+  sheet: UserSheet;
+  y: number;
+  productName: string;
+  apply: (s: UserSheet) => void;
+}) => void;
+
+// Delete button policy mixin: renderNull draws a button into the empty column-A
+// cells and hands the click straight to a callback supplied by the component.
+const makeDeleteButtonMixin = (onDelete: DeleteHandler): PolicyMixinType => ({
+  renderNull({ point, apply, sheet }: RenderProps<null | undefined>) {
+    if (!apply || !isProductRow(sheet, point.y)) {
+      return null;
     }
-
+    const productName = String(sheet.getCell({ y: point.y, x: 2 })?.value ?? '');
     return (
       <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {shouldShowButton && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (apply) {
-                const deleteEvent = new CustomEvent('productDelete', {
-                  detail: { row: point.y, productName: productName },
-                });
-                document.dispatchEvent(deleteEvent);
-                apply(sheet.removeRows({ y: point.y, numRows: 1 }));
-              }
-            }}
-            style={{
-              backgroundColor: '#e74c3c',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              width: '20px',
-              height: '20px',
-              fontSize: '12px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: 0,
-            }}
-            title={`Delete ${productName} (row ${point.y})`}
-          >
-            ×
-          </button>
-        )}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete({ sheet, y: point.y, productName, apply });
+          }}
+          style={{
+            backgroundColor: '#e74c3c',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            width: '20px',
+            height: '20px',
+            fontSize: '12px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 0,
+          }}
+          title={`Delete ${productName || 'row'} (row ${point.y})`}
+        >
+          ×
+        </button>
       </div>
     );
   },
-};
+});
 
 // TSV conversion utility function
 const convertToTSV = (sheet: UserSheet, evaluates: boolean = true): string => {
@@ -162,12 +165,10 @@ const headerStyle = {
 
 export default function InventoryManagement() {
   const inheritMode = useStarlightMode();
-  const isDark = inheritMode === 'inherit-dark';
-  // Chrome labels + the activity-log panel live on reactive React nodes, so they
-  // track isDark live. The summary-row style goes through buildInitialCells,
-  // which bakes styles once at the initial (light) render — so its tint/border
-  // must be theme-INDEPENDENT semi-transparent rgba that reads over both.
-  const cardFg = isDark ? '#e4e6e9' : '#333';
+  // Chrome outside the grid uses Starlight's --sl-* vars so it follows the
+  // theme. The summary-row style goes through buildInitialCells, which bakes
+  // styles once at the initial (light) render — so its tint/border must be
+  // theme-INDEPENDENT semi-transparent rgba that reads over both.
   const summaryStyle = {
     backgroundColor: 'rgba(127, 127, 127, 0.12)',
     fontWeight: 'bold' as const,
@@ -175,7 +176,6 @@ export default function InventoryManagement() {
     ...makeBorder({ top: '3px double rgba(127, 127, 127, 0.55)' }),
   };
   const [activityLogs, setActivityLogs] = React.useState<string[]>([]);
-  const [pendingDeleteInfo, setPendingDeleteInfo] = React.useState<{ row: number; productName: string } | null>(null);
   const [tsv, setTsv] = React.useState<string>('');
 
   const addActivityLog = (message: string) => {
@@ -183,62 +183,41 @@ export default function InventoryManagement() {
     setActivityLogs((prev) => [`[${timestamp}] ${message}`, ...prev.slice(0, 19)]);
   };
 
-  // Listen for product delete events
-  React.useEffect(() => {
-    const handleProductDelete = (event: CustomEvent) => {
-      setPendingDeleteInfo(event.detail);
-    };
-
-    document.addEventListener('productDelete', handleProductDelete as EventListener);
-    return () => {
-      document.removeEventListener('productDelete', handleProductDelete as EventListener);
-    };
-  }, []);
+  // Called directly by the delete button: log the product name (still readable
+  // before removal), then commit the removal. onRemoveRows fires right after.
+  const handleDelete: DeleteHandler = ({ sheet, y, productName, apply }) => {
+    addActivityLog(`🗑️ Delete button: "${productName}" (row ${y})`);
+    apply(sheet.removeRows({ y, numRows: 1 }));
+  };
 
   const book = useSpellbook({
     policies: {
       stock: new Policy({ mixins: [StockPolicyMixin] }),
       category: new Policy({ mixins: [CategoryPolicyMixin] }),
-      delete: new Policy({ mixins: [DeleteButtonPolicyMixin] }),
-      currency: new Policy({ mixins: [CurrencyPolicyMixin, ThousandSeparatorPolicyMixin] }),
-    },
-    onSave: ({ sheet, points }) => {
-      const posInfo = Array.isArray(points)
-        ? points.map((p) => `(${p.pointing.y},${p.pointing.x})`).join(', ')
-        : `(${points?.pointing.y},${points?.pointing.x})`;
-      addActivityLog(`💾 Inventory data saved at ${Array.isArray(points) ? points.length : 1} position(s): ${posInfo}`);
+      delete: new Policy({ mixins: [makeDeleteButtonMixin(handleDelete)] }),
+      currency: new Policy({ mixins: [CurrencyPolicyMixin] }),
     },
     onChange: ({ sheet }: { sheet: UserSheet }) => {
       const addresses = sheet.getLastChangedAddresses();
       if (addresses.length > 0) {
-        addActivityLog(`✏️ Inventory edited. (onChange) Cells: ${addresses.join(', ')}`);
+        addActivityLog(`✏️ Cells changed: ${addresses.join(', ')} (onChange)`);
       }
       setTsv(convertToTSV(sheet));
     },
-    onRemoveRows: ({ sheet, ys }: { sheet: UserSheet; ys: number[] }) => {
-      ys.forEach((y) => {
-        if (pendingDeleteInfo) {
-          const productName = pendingDeleteInfo.productName;
-          setPendingDeleteInfo(null);
-          addActivityLog(`🗑️ Removed product: row ${y} (${productName})`);
-        } else {
-          addActivityLog(`🗑️ Removed product row ${y}`);
-        }
-      });
+    onRemoveRows: ({ ys }: { sheet: UserSheet; ys: number[] }) => {
+      addActivityLog(`🗑️ Removed row(s) ${ys.join(', ')} (onRemoveRows)`);
     },
-    onRemoveCols: ({ sheet, xs }: { sheet: UserSheet; xs: number[] }) => {
-      const colInfo = xs.map((x) => `col ${String.fromCharCode(65 + x)}`).join(', ');
-      addActivityLog(`🗑️ Removed ${xs.length} column(s) from inventory: ${colInfo}`);
+    onInsertRows: ({ y, numRows }: { sheet: UserSheet; y: number; numRows: number }) => {
+      addActivityLog(`➕ Inserted ${numRows} row(s) at row ${y} (onInsertRows)`);
     },
-    onInsertRows: ({ sheet, y, numRows }: { sheet: UserSheet; y: number; numRows: number }) => {
-      addActivityLog(`➕ Added ${numRows} new product(s) to inventory at row ${y}`);
+    onRemoveCols: ({ xs }: { sheet: UserSheet; xs: number[] }) => {
+      addActivityLog(`🗑️ Removed column(s) ${xs.map(x2c).join(', ')} (onRemoveCols)`);
     },
-    onInsertCols: ({ sheet, x, numCols }: { sheet: UserSheet; x: number; numCols: number }) => {
-      const colName = String.fromCharCode(65 + x);
-      addActivityLog(`➕ Added ${numCols} new column(s) to inventory at column ${colName}`);
+    onInsertCols: ({ x, numCols }: { sheet: UserSheet; x: number; numCols: number }) => {
+      addActivityLog(`➕ Inserted ${numCols} column(s) at ${x2c(x)} (onInsertCols)`);
     },
     onInit: ({ sheet }: { sheet: UserSheet }) => {
-      addActivityLog(`📦 Inventory management system initialized`);
+      addActivityLog('📦 Sheet initialized (onInit)');
       setTsv(convertToTSV(sheet));
     },
   });
@@ -274,12 +253,12 @@ export default function InventoryManagement() {
     },
     cells: {
       default: {
-        width: 120,
-        height: 32,
         style: {
           fontSize: '11px',
         },
       },
+      // Row height / column width can't go on `default`; use defaultRow / defaultCol.
+      defaultRow: { height: 32 },
       // Header row styling
       A0: { width: 40, style: headerStyle },
       B0: { width: 150, label: 'Product Name', style: headerStyle },
@@ -331,9 +310,9 @@ export default function InventoryManagement() {
           book={book}
           sheetName="inventory-management"
           initialCells={initialCells}
-          style={{ border: '1px solid #ccc' }}
           options={{
             matrixAlignment: 'both',
+            sheetWidth: '100%',
             sheetHeight: 350,
             showFormulaBar: true,
             mode: inheritMode,
@@ -341,39 +320,37 @@ export default function InventoryManagement() {
         />
       </div>
 
-      {/* Activity Logs */}
+      {/* Activity Log */}
       <div style={{ padding: '0 10px', marginTop: 12 }}>
-        <div style={{ fontSize: 12, color: cardFg, marginBottom: 4 }}>Activity Log:</div>
+        <div style={{ fontSize: 12, color: 'var(--sl-color-gray-2)', marginBottom: 4 }}>Activity Log:</div>
         <div
-          ref={(el) => {
-            if (el && activityLogs.length > 0) {
-              el.scrollTop = 0;
-            }
-          }}
           style={{
             maxHeight: 150,
             overflowY: 'auto',
-            border: `1px solid ${isDark ? '#30363d' : 'var(--nextra-border-color, #ccc)'}`,
+            border: '1px solid var(--sl-color-hairline)',
+            borderRadius: 4,
             padding: '10px',
-            backgroundColor: isDark ? '#161b22' : 'var(--nextra-bg-color, #f8f9fa)',
+            backgroundColor: 'var(--sl-color-bg-nav)',
+            color: 'var(--sl-color-white)',
             fontFamily: 'monospace',
             fontSize: '10px',
             lineHeight: '1.4',
           }}
         >
           {activityLogs.length === 0 ? (
-            <div style={{ color: 'var(--nextra-text-color, #333)', fontStyle: 'italic' }}>
-              No activity logged yet. Try adding/removing products or editing inventory data.
+            <div style={{ color: 'var(--sl-color-gray-3)', fontStyle: 'italic' }}>
+              No activity logged yet. Try editing a cell, deleting a product, or inserting rows via the context menu.
             </div>
           ) : (
             activityLogs.map((log, index) => (
               <div
                 key={index}
+                className="case10-log-entry"
                 style={{
                   marginBottom: '5px',
+                  paddingBottom: '3px',
                   wordBreak: 'break-all',
-                  color: 'var(--nextra-text-color, #333)',
-                  borderBottom: 'solid 1px #aaa',
+                  borderBottom: '1px solid var(--sl-color-hairline)',
                 }}
               >
                 {log}
@@ -383,9 +360,24 @@ export default function InventoryManagement() {
         </div>
       </div>
       {/* TSV Dump */}
-      <div style={{ marginTop: 16 }}>
-        <div style={{ fontSize: 12, color: cardFg, marginBottom: 4 }}>TSV Dump:</div>
-        <textarea style={{ width: '100%', height: 120, fontFamily: 'monospace', fontSize: 12 }} value={tsv} readOnly />
+      <div style={{ padding: '0 10px', marginTop: 16 }}>
+        <div style={{ fontSize: 12, color: 'var(--sl-color-gray-2)', marginBottom: 4 }}>
+          TSV Export (toValueMatrix):
+        </div>
+        <textarea
+          style={{
+            width: '100%',
+            height: 120,
+            fontFamily: 'monospace',
+            fontSize: 12,
+            color: 'var(--sl-color-white)',
+            backgroundColor: 'var(--sl-color-bg-nav)',
+            border: '1px solid var(--sl-color-hairline)',
+            borderRadius: 4,
+          }}
+          value={tsv}
+          readOnly
+        />
       </div>
     </div>
   );

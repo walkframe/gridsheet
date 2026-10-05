@@ -10,7 +10,8 @@ const initialCells = buildInitialCells({
     A1: Array.from({ length: 50 }, (_, y) => Array.from({ length: 12 }, (_, x) => `R${y + 1}C${x + 1}`)),
   },
   cells: {
-    default: { width: 90, height: 28 },
+    defaultCol: { width: 90 },
+    defaultRow: { height: 28 },
     ...Object.fromEntries(
       Array.from({ length: 12 }, (_, x) => [`${String.fromCharCode(65 + x)}0`, { label: `Col ${x + 1}` }]),
     ),

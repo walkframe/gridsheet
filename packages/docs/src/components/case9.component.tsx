@@ -1,193 +1,113 @@
-import React from 'react';
-import { GridSheet, Policy, buildInitialCells, BaseFunction, makeBorder } from '@gridsheet/react-core';
+'use client';
+
+import * as React from 'react';
+import { GridSheet, Policy, buildInitialCells } from '@gridsheet/react-core';
+import type { PolicyMixinType } from '@gridsheet/react-core';
 import { useSpellbook } from '@gridsheet/react-core/spellbook';
-import type { FunctionArgumentDefinition } from '@gridsheet/react-core';
 import { useStarlightMode } from './useStarlightMode';
 
-export default function Case9Component() {
+const str = (value: unknown) => (value == null ? '' : String(value));
+
+// a••••@acme.io — keep the first letter and the domain.
+const maskEmail = (value: unknown) => {
+  const [user, domain] = str(value).split('@');
+  return domain == null ? str(value) : `${user.slice(0, 1)}${'•'.repeat(Math.max(user.length - 1, 1))}@${domain}`;
+};
+// •••• 1234 — keep the last 4 digits.
+const maskCard = (value: unknown) => {
+  const digits = str(value).replace(/\D/g, '');
+  return digits ? `•••• ${digits.slice(-4)}` : '';
+};
+// 090-••••-5678 — keep the area code and the last 4 digits.
+const maskPhone = (value: unknown) => str(value).replace(/^(\d+)-\d+-(\d+)$/, (_, a, b) => `${a}-••••-${b}`);
+
+// Display AND clipboard masked: renderString controls what is shown,
+// serializeForClipboard controls what Ctrl/Cmd+C copies.
+const EmailPolicy: PolicyMixinType = {
+  renderString: ({ value }) => maskEmail(value),
+  serializeForClipboard: ({ point, sheet }) => maskEmail(sheet.getSerializedValue({ point })),
+};
+const CardPolicy: PolicyMixinType = {
+  renderString: ({ value }) => maskCard(value),
+  serializeForClipboard: ({ point, sheet }) => maskCard(sheet.getSerializedValue({ point })),
+};
+// Never copyable at all: the clipboard gets a placeholder instead.
+const SecretPolicy: PolicyMixinType = {
+  renderString: ({ value }) => (value ? '••••••••' : ''),
+  serializeForClipboard: () => '[redacted]',
+};
+// ⚠ Display-only mask: no serializeForClipboard, so copying falls back to the
+// default — the full raw value. This column shows the leak on purpose.
+const PhoneDisplayOnlyPolicy: PolicyMixinType = {
+  renderString: ({ value }) => maskPhone(value),
+};
+// The opposite direction: show a formatted amount, but copy the plain number
+// (the default) so it pastes cleanly into other spreadsheets.
+const AmountPolicy: PolicyMixinType = {
+  renderNumber: ({ value }) => `$${value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+};
+
+const policies = {
+  email: new Policy({ mixins: [EmailPolicy] }),
+  card: new Policy({ mixins: [CardPolicy] }),
+  secret: new Policy({ mixins: [SecretPolicy] }),
+  phone: new Policy({ mixins: [PhoneDisplayOnlyPolicy] }),
+  amount: new Policy({ mixins: [AmountPolicy] }),
+};
+
+const initialCells = buildInitialCells({
+  matrices: {
+    A1: [
+      ['Alice', 'alice@acme.io', '4111 1111 1111 1234', 'sk_live_9f8e7d6c', '090-1234-5678', 1234.5],
+      ['Bob', 'bob@acme.io', '5500 0000 0000 9876', 'sk_live_1a2b3c4d', '080-2345-6789', 980],
+      ['Carol', 'carol@acme.io', '3400 000000 05555', 'sk_live_5e6f7a8b', '070-3456-7890', 5200.25],
+    ],
+  },
+  cells: {
+    A: { label: 'Name', width: 60 },
+    B: { label: 'Email', width: 112, policy: 'email' },
+    C: { label: 'Card', width: 86, policy: 'card' },
+    D: { label: 'API key', width: 80, policy: 'secret' },
+    E: { label: '⚠ Phone', width: 118, policy: 'phone' },
+    F: { label: 'Amount', width: 84, policy: 'amount', justifyContent: 'right' },
+  },
+  ensured: { numRows: 3, numCols: 6 },
+});
+
+export default function ClipboardMasking() {
   const inheritMode = useStarlightMode();
-  const isDark = inheritMode === 'inherit-dark';
-  const SecureHashFunction = class extends BaseFunction {
-    example = 'SECURE_HASH("password123")';
-    helpText = ['Creates a secure hash of the input text'];
-    defs: FunctionArgumentDefinition[] = [{ name: 'text', description: 'Text to hash', acceptedTypes: ['string'] }];
-
-    protected main(text: string) {
-      let hash = 0;
-      for (let i = 0; i < text.length; i++) {
-        const char = text.charCodeAt(i);
-        hash = (hash << 5) - hash + char;
-        hash = hash & hash;
-      }
-      return Math.abs(hash).toString(16);
-    }
-  };
-
-  const ValidateEmailFunction = class extends BaseFunction {
-    example = 'VALIDATE_EMAIL("user@example.com")';
-    helpText = ['Validates email format'];
-    defs: FunctionArgumentDefinition[] = [
-      { name: 'email', description: 'Email to validate', acceptedTypes: ['string'] },
-    ];
-
-    protected main(email: string) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      return emailRegex.test(email) ? 'VALID' : 'INVALID';
-    }
-  };
-
-  const EncryptLevelFunction = class extends BaseFunction {
-    example = 'ENCRYPT_LEVEL("data", 3)';
-    helpText = ['Returns encryption level label'];
-    defs: FunctionArgumentDefinition[] = [
-      { name: 'value', description: 'Value to encrypt', acceptedTypes: ['string'] },
-      { name: 'level', description: 'Encryption level (1-5)', acceptedTypes: ['number'] },
-    ];
-
-    protected main(_value: string, level: number) {
-      const levels = ['LOW', 'MEDIUM', 'HIGH', 'VERY HIGH', 'MAXIMUM'];
-      const idx = Math.min(Math.max(Math.floor(level) - 1, 0), 4);
-      return levels[idx];
-    }
-  };
-
-  const securityPolicy = new Policy({
-    mixins: [
-      {
-        serializeForClipboard({ point, sheet }) {
-          const cellValue = sheet.getSerializedValue({ point }) ?? '';
-          return '*'.repeat(cellValue.length);
-        },
-        renderString({ value }: any) {
-          if (value == null || value === '') {
-            return '';
-          }
-          const str = String(value);
-          if (str.length <= 2) {
-            return str;
-          }
-          return `${str.substring(0, 2)}${'*'.repeat(str.length - 2)}`;
-        },
-      },
-    ],
-  });
-
-  const idPolicy = new Policy({
-    mixins: [
-      {
-        renderString({ value }: any) {
-          return String(value ?? '');
-        },
-      },
-    ],
-  });
-
-  const book = useSpellbook({
-    additionalFunctions: {
-      secure_hash: SecureHashFunction,
-      validate_email: ValidateEmailFunction,
-      encrypt_level: EncryptLevelFunction,
-    },
-    policies: {
-      security: securityPolicy,
-      id: idPolicy,
-    },
-  });
-
-  const headerStyle = {
-    backgroundColor: '#1a1a2e',
-    color: '#e0e0e0',
-    fontWeight: 'bold' as const,
-    fontSize: '11px',
-    letterSpacing: '0.5px',
-  };
+  const book = useSpellbook({ policies });
+  const [pasted, setPasted] = React.useState('');
 
   return (
-    <div
-      style={{
-        background: isDark ? '#0d1117' : 'white',
-        borderRadius: '12px',
-        padding: '20px',
-        boxShadow: isDark ? '0 10px 30px rgba(0,0,0,0.5)' : '0 10px 30px rgba(0,0,0,0.15)',
-        margin: '20px auto',
-        maxWidth: 'calc(100vw - 40px)',
-        minWidth: '320px',
-      }}
-    >
+    <div style={{ padding: '10px', fontSize: 13 }}>
+      <p style={{ margin: '0 0 8px' }}>
+        Select <code>A1:F3</code>, copy it (Ctrl/Cmd+C), and paste into the box below to see exactly what left the grid.
+      </p>
       <GridSheet
         book={book}
-        options={{
-          matrixAlignment: 'both',
-          showFormulaBar: false,
-          sheetWidth: 920,
-          sheetHeight: 300,
-          mode: inheritMode,
+        sheetName="clipboard-masking"
+        initialCells={initialCells}
+        options={{ sheetWidth: '100%', showFormulaBar: true, mode: inheritMode }}
+      />
+      <textarea
+        value={pasted}
+        onChange={(e) => setPasted(e.target.value)}
+        placeholder="Paste here…"
+        rows={4}
+        style={{
+          display: 'block',
+          width: '100%',
+          boxSizing: 'border-box',
+          marginTop: 10,
+          fontFamily: 'monospace',
+          fontSize: 12,
+          color: 'var(--sl-color-white)',
+          background: 'var(--sl-color-gray-6)',
+          border: '1px solid var(--sl-color-gray-5)',
+          borderRadius: 4,
+          padding: '6px 8px',
         }}
-        initialCells={buildInitialCells({
-          matrices: {
-            A1: [
-              ['001', 'john_doe', 'john@example.com', 'super_secret_123', '=SECURE_HASH(D1)', '=VALIDATE_EMAIL(C1)'],
-              ['002', 'jane_smith', 'jane@company.org', 'secure_pass_456', '=SECURE_HASH(D2)', '=VALIDATE_EMAIL(C2)'],
-              ['003', 'admin_user', 'admin@internal', 'admin_pw_2024', '=SECURE_HASH(D3)', '=VALIDATE_EMAIL(C3)'],
-              ['004', 'guest_user', 'guest@example.com', 'guest_pass', '=SECURE_HASH(D4)', '=VALIDATE_EMAIL(C4)'],
-              ['005', 'dev_ops', 'devops@company.org', 'infra_key_789', '=SECURE_HASH(D5)', '=VALIDATE_EMAIL(C5)'],
-            ],
-          },
-          cells: {
-            default: { style: { fontSize: '13px', ...makeBorder({ all: '1px solid #e1e5e9' }) } },
-            defaultRow: { height: 38 },
-
-            // Header
-            A0: { width: 55, label: 'ID', style: headerStyle },
-            B0: { width: 110, label: 'Username', style: headerStyle },
-            C0: { width: 160, label: 'Email', style: headerStyle },
-            D0: { width: 110, label: '🔐 Password', style: headerStyle },
-            E0: { width: 110, label: '🔑 Hash', style: headerStyle },
-            F0: { width: 80, label: 'Email OK', style: headerStyle },
-            G0: { width: 80, label: 'Access', style: headerStyle },
-
-            // Column policies & styles
-            A: {
-              policy: 'id',
-              alignItems: 'center',
-              style: { textAlign: 'center', fontWeight: '500' },
-            },
-            B: {
-              alignItems: 'center',
-              style: { fontWeight: '500' },
-            },
-            C: {
-              alignItems: 'center',
-              style: { color: 'var(--gs-accent)' },
-            },
-            D: {
-              policy: 'security',
-              alignItems: 'center',
-              style: { ...makeBorder({ all: '2px solid #e74c3c' }), fontWeight: '500' },
-            },
-            E: {
-              alignItems: 'center',
-              style: { ...makeBorder({ all: '2px solid #9b59b6' }), fontFamily: 'monospace', fontSize: '11px' },
-            },
-            F: {
-              alignItems: 'center',
-              style: { textAlign: 'center', fontWeight: '600' },
-            },
-            G: {
-              alignItems: 'center',
-              style: { textAlign: 'center', fontWeight: '600', fontSize: '12px' },
-            },
-
-            // Access level: matrices provides the numeric level (1-5),
-            // ENCRYPT_LEVEL renders it as a label
-            G1: { value: '=ENCRYPT_LEVEL(B1, 3)' },
-            G2: { value: '=ENCRYPT_LEVEL(B2, 5)' },
-            G3: { value: '=ENCRYPT_LEVEL(B3, 5)' },
-            G4: { value: '=ENCRYPT_LEVEL(B4, 1)' },
-            G5: { value: '=ENCRYPT_LEVEL(B5, 4)' },
-          },
-          ensured: { numRows: 6, numCols: 7 },
-        })}
       />
     </div>
   );

@@ -64,6 +64,9 @@ importers:
       '@gridsheet/react-dev':
         specifier: workspace:^
         version: link:../react-dev
+      '@gridsheet/xlsx':
+        specifier: workspace:^
+        version: link:../xlsx
       '@octokit/request':
         specifier: ^10.0.16
         version: 10.0.16

@@ -1,10 +1,13 @@
 ---
-title: "Case 9: Security & Data Protection"
+title: "Controlling What Gets Copied: Masking & Clipboard Output"
 ---
 
 import Case9 from '../../../components/case9.component';
 
-This example demonstrates advanced security features in GridSheet, including data masking, clipboard protection, and custom security functions for password management.
+What a cell **shows** and what it **copies** are two separate hooks on a policy:
+`renderString` / `renderNumber` decide the display, and `serializeForClipboard` decides what
+Ctrl/Cmd+C puts on the clipboard. Masking only the display is not enough — copying falls back to
+the raw value. This demo puts both side by side; copy the grid and paste it into the box to compare.
 
 <div class="not-content"><Case9 client:visible /></div>
 
@@ -12,114 +15,54 @@ This example demonstrates advanced security features in GridSheet, including dat
 
 <a href="https://github.com/walkframe/gridsheet/tree/master/packages/docs/src/components/case9.component.tsx" target="_blank" rel="noopener noreferrer" style={{display: 'inline-block', background: '#007bff', color: 'white', padding: '8px 16px', textDecoration: 'none', borderRadius: '4px', fontWeight: '500', margin: '10px 0'}}>📄 View Source Code</a>
 
-### Masking Display Values with `renderString`
+| Column | Shows | Copies | How |
+| --- | --- | --- | --- |
+| Email | `a••••@acme.io` | `a••••@acme.io` | `renderString` + `serializeForClipboard` |
+| Card | `•••• 1234` | `•••• 1234` | `renderString` + `serializeForClipboard` |
+| API key | `••••••••` | `[redacted]` | `serializeForClipboard` returns a placeholder |
+| ⚠ Phone | `090-••••-5678` | `090-1234-5678` | `renderString` only — **the full value leaks on copy** |
+| Amount | `$1,234.50` | `1234.5` | `renderNumber` only — the default copies the raw value |
 
-To show a partially masked value in the grid while keeping the raw value intact in the data model, override `renderString` in a `PolicyMixinType`.
-
-```tsx
-const securityPolicy = new Policy({
-  mixins: [
-    {
-      renderString({ value }: RenderProps<string>) {
-        const str = String(value);
-        if (str.length <= 2) return str;
-        // Show only first 2 characters; asterisks for the rest
-        return `${str.substring(0, 2)}${'*'.repeat(str.length - 2)}`;
-      },
-    },
-  ],
-});
-```
-
-The actual cell value remains unchanged — only the visual output is masked. This means formulas that reference the cell still receive the true value.
-
-### Clipboard Protection with `serializeForClipboard`
-
-`serializeForClipboard` is called when a cell is copied to the clipboard. Returning a replacement string here prevents the raw value from leaking via Ctrl+C.
+### Mask the display and the clipboard together
 
 ```tsx
-serializeForClipboard({ point, sheet }) {
-  const cellValue = sheet.getSerializedValue({ point }) ?? '';
-  // Replace every character with an asterisk
-  return '*'.repeat(cellValue.length);
-},
-```
+const maskCard = (value: unknown) => {
+  const digits = String(value ?? '').replace(/\D/g, '');
+  return digits ? `•••• ${digits.slice(-4)}` : '';
+};
 
-Combine this with `renderString` in the same mixin object to get both display masking and clipboard protection in a single policy.
-
-### Hiding the Formula Bar with `showFormulaBar: false`
-
-Even with display masking in place, the formula bar would expose the raw cell value when a masked cell is selected. Disable it entirely with the `showFormulaBar` option.
-
-```tsx
-<GridSheet
-  book={book}
-  options={{ showFormulaBar: false }}
-  initialCells={...}
-/>
-```
-
-### Custom Functions via `BaseFunction`
-
-Extend `BaseFunction` to add spreadsheet functions that operate on cell values. The `main` method receives the resolved argument values and returns the result.
-
-```tsx
-import { BaseFunction } from '@gridsheet/react-core';
-
-const SecureHashFunction = class extends BaseFunction {
-  example = 'SECURE_HASH("password123")';
-  helpText = ['Creates a hash of the input text'];
-  defs = [{ name: 'text', description: 'Text to hash', acceptedTypes: ['string'] }];
-
-  protected main(text: string) {
-    let hash = 0;
-    for (let i = 0; i < text.length; i++) {
-      const char = text.charCodeAt(i);
-      hash = (hash << 5) - hash + char;
-      hash = hash & hash; // 32-bit integer
-    }
-    return Math.abs(hash).toString(16);
-  }
+const CardPolicy: PolicyMixinType = {
+  // What the cell shows.
+  renderString: ({ value }) => maskCard(value),
+  // What Ctrl/Cmd+C copies. Without this, the raw value is copied.
+  serializeForClipboard: ({ point, sheet }) => maskCard(sheet.getSerializedValue({ point })),
 };
 ```
 
-Register it under a lowercase key in `additionalFunctions`. The formula name in the grid is that key uppercased: `=SECURE_HASH(C1)`.
+Register it with `useSpellbook({ policies: { card: new Policy({ mixins: [CardPolicy] }) } })` and
+assign it to a column with `C: { policy: 'card' }` in `buildInitialCells`.
+
+### Block copying entirely
+
+`serializeForClipboard` can return anything — here a fixed placeholder, so the value never reaches
+the clipboard:
 
 ```tsx
-const book = useSpellbook({
-  additionalFunctions: {
-    secure_hash:    SecureHashFunction,
-    validate_email: ValidateEmailFunction,
-    encrypt_level:  EncryptLevelFunction,
-  },
-  policies: { security: securityPolicy },
-});
+const SecretPolicy: PolicyMixinType = {
+  renderString: ({ value }) => (value ? '••••••••' : ''),
+  serializeForClipboard: () => '[redacted]',
+};
 ```
 
-### Preventing Numeric Auto-coercion with a Dedicated Policy
+### The default: copy the raw value
 
-Cell values that look like integers (e.g., `"001"`) can be silently coerced to numbers. To keep them as strings, apply a minimal policy whose `renderString` forces the value through `String()`.
+When a policy defines no `serializeForClipboard`, copying uses the cell's serialized raw value —
+not what is displayed. That is what you want for formatting (the **Amount** column copies `1234.5`,
+which pastes cleanly into other spreadsheets), and exactly what you don't want for a display-only
+mask (the **⚠ Phone** column).
 
-```tsx
-const idPolicy = new Policy({
-  mixins: [{
-    renderString({ value }: any) {
-      return String(value ?? '');
-    },
-  }],
-});
-```
+### Limits
 
-Assign it to the ID column: `A: { policy: 'id' }`.
-
-### Selective Policy Application
-
-Sensitive policies only need to be assigned to the columns that hold sensitive data. All other columns continue to use the default behavior.
-
-```tsx
-cells: {
-  C: { policy: 'security' },  // Password column — masked + clipboard protected
-  A: { policy: 'id' },        // ID column — string-forced only
-  // B and D use default policy
-}
-```
+This controls the grid's display and its clipboard output only. The real value is still in the
+sheet: it appears in the formula bar and the cell editor, and formulas, `getCell` and exports such
+as `toValueMatrix` return it. If a value must stay secret, don't send it to the browser.

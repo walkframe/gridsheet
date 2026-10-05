@@ -68,7 +68,7 @@ const CalendarCellPolicyMixin: PolicyMixinType = {
         style={{
           width: '100%',
           height: '100%',
-          padding: 8,
+          padding: 4,
           position: 'relative',
           display: 'flex',
           flexDirection: 'column',
@@ -79,10 +79,11 @@ const CalendarCellPolicyMixin: PolicyMixinType = {
           style={{
             fontWeight: 700,
             fontSize: 11,
-            marginBottom: 4,
+            lineHeight: '14px',
+            marginBottom: 3,
           }}
         >
-          {date}
+          {date.slice(5) /* MM-DD */}
         </div>
         <div
           style={{
@@ -126,12 +127,13 @@ const CalendarCellPolicyMixin: PolicyMixinType = {
               background: '#3498db',
               color: '#fff',
               borderRadius: 3,
-              padding: '2px 4px',
-              fontSize: 11,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              minHeight: 16,
+              padding: '1px 3px',
+              fontSize: 10,
+              lineHeight: '12px',
+              wordBreak: 'normal',
+              overflowWrap: 'break-word',
+              letterSpacing: 0,
+              flexShrink: 0,
             }}
           >
             {event.time && (
@@ -139,22 +141,12 @@ const CalendarCellPolicyMixin: PolicyMixinType = {
                 style={{
                   fontWeight: 'bold',
                   fontSize: 10,
-                  minWidth: 28,
                 }}
               >
                 {event.time}
               </span>
-            )}
-            <span
-              style={{
-                flex: 1,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {event.task}
-            </span>
+            )}{' '}
+            <span>{event.task}</span>
           </div>
         ))}
       </>
@@ -175,7 +167,7 @@ const CalendarCellPolicyMixin: PolicyMixinType = {
   },
 };
 
-// Generate 4 weeks of calendar data
+// Generate 5 weeks of calendar data
 const weeks: ValueType[][] = [];
 for (let w = 0; w < 5; w++) {
   const week: ValueType[] = [];
@@ -212,14 +204,7 @@ export default function CustomRendering() {
   });
 
   return (
-    <div
-      style={{
-        maxWidth: 'calc(100vw - 40px)',
-        minWidth: '320px',
-        margin: '0 auto',
-        padding: '20px',
-      }}
-    >
+    <div style={{ paddingBlock: '20px' }}>
       <GridSheet
         book={book}
         initialCells={buildInitialCells({
@@ -230,8 +215,8 @@ export default function CustomRendering() {
             default: {
               policy: 'calendar',
             },
-            defaultCol: { width: 100 },
-            defaultRow: { height: 80 },
+            defaultCol: { width: 80 },
+            defaultRow: { height: 108 },
             A0: { label: 'Mon' },
             B0: { label: 'Tue' },
             C0: { label: 'Wed' },
@@ -245,8 +230,8 @@ export default function CustomRendering() {
         })}
         options={{
           matrixAlignment: 'both',
-          sheetWidth: typeof window !== 'undefined' ? Math.min(900, window.innerWidth - 60) : 900,
-          sheetHeight: 450,
+          sheetWidth: '100%',
+          sheetHeight: 580,
           limits: { minCols: 7, maxCols: 7, minRows: 5, maxRows: 5 },
           mode: inheritMode,
         }}

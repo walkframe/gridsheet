@@ -1,5 +1,5 @@
 ---
-title: "Case 6: Calendar/Scheduler Interface"
+title: "Custom Cell Types: Calendar"
 ---
 
 import Case6 from '../../../components/case6.component';
@@ -32,6 +32,8 @@ renderCallback(rendered, { point }) {
   );
 },
 ```
+
+The date is derived from the cell's position (`point.y` / `point.x`), not stored in the cell, so sorting or inserting rows would shift events onto different dates.
 
 ### 📋 `renderArray` for Task List Only
 

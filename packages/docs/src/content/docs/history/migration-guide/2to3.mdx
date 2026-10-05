@@ -113,7 +113,7 @@ function MySheet() {
 }
 ```
 
-See [Case 2](../examples/case2.mdx) for a full working example.
+See the [GitHub Contributors example](../examples/case2.mdx) for a full working example.
 
 ### 3. Connector Split into SheetHandle and StoreHandle
 
@@ -550,7 +550,7 @@ v3 enhances the context menu system. You can now open menus on row headers and t
 
 - [ ] Search codebase for `cell.system` / `cell._sys` and replace with `sheet.getSystem(point)`
 - [ ] Replace `changedAt` with `changedTime` in any system metadata access
-- [ ] Remove `options.showAddress` and replace with a `renderCallback` policy if needed (see [Case 2](../examples/case2.mdx))
+- [ ] Remove `options.showAddress` and replace with a `renderCallback` policy if needed (see the [GitHub Contributors example](../examples/case2.mdx))
 - [ ] Replace `useConnector()` / `createConnector()` with `useSheetRef()` / `createSheetRef()` and `useStoreRef()` / `createStoreRef()`
 - [ ] Update connector prop usage: `connector={connector}` → `sheetRef={sheetRef} storeRef={storeRef}`
 - [ ] Replace `UserTable` references accessed via a connector with `UserSheet` via `sheetRef`

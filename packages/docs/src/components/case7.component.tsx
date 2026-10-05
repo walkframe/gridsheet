@@ -1,361 +1,161 @@
 'use client';
 
 import * as React from 'react';
-import { GridSheet, buildInitialCells, useSheetRef, Policy } from '@gridsheet/react-core';
-import type { PolicyMixinType } from '@gridsheet/react-core';
+import { GridSheet, buildInitialCells } from '@gridsheet/react-core';
+import type { SheetHandle } from '@gridsheet/react-core';
 import { useSpellbook } from '@gridsheet/react-core/spellbook';
-import { useStarlightMode } from './useStarlightMode';
+import { fromXlsx, toXlsx } from '@gridsheet/xlsx';
+import type { ParsedWorkbook } from '@gridsheet/xlsx';
 
-// Policy for Priority column
-const PriorityPolicy: PolicyMixinType = {};
+const SAMPLE_URL = '/examples/sample.xlsx';
 
-// Virtual user data
-const virtualUsers = [
-  { id: 'alice', name: 'Alice', color: '#3498db', avatar: '👩‍💼' },
-  { id: 'bob', name: 'Bob', color: '#e74c3c', avatar: '👨‍💻' },
-  { id: 'charlie', name: 'Charlie', color: '#27ae60', avatar: '👨‍🎨' },
-  { id: 'diana', name: 'Diana', color: '#f39c12', avatar: '👩‍🔬' },
-];
+type Refs = Record<string, { current: SheetHandle | null }>;
 
-export default function RealTimeCollaboration() {
-  const inheritMode = useStarlightMode();
-  const isDark = inheritMode === 'inherit-dark';
-  // Activity-feed sidebar chrome follows the theme (grid follows via mode).
-  const panelBg = isDark ? '#161b22' : 'white';
-  const panelBorder = isDark ? '#30363d' : '#e9ecef';
-  const panelFg = isDark ? '#e4e6e9' : '#2c3e50';
-  const itemBg = isDark ? '#21262d' : '#f8f9fa';
-  const itemFg = isDark ? '#c9d1d9' : '#666';
-  const itemMutedFg = isDark ? '#8b949e' : '#999';
-  const sheetRef = useSheetRef();
-  const userCursorsRef = React.useRef<Record<string, { row: number; col: number }>>({});
-  const [activityLog, setActivityLog] = React.useState<
-    Array<{
-      user: string;
-      action: string;
-      timestamp: string;
-      cell?: string;
-    }>
-  >([]);
-  const [userCursors, setUserCursors] = React.useState<Record<string, { row: number; col: number }>>({
-    alice: { row: 1, col: 1 },
-    bob: { row: 2, col: 3 },
-    charlie: { row: 4, col: 2 },
-    diana: { row: 3, col: 4 },
-  });
-  userCursorsRef.current = userCursors;
-
-  const policies = React.useMemo(
-    () => ({
-      default: new Policy({
-        mixins: [
-          {
-            renderCallback(rendered: any, { point }: { point: { y: number; x: number } }) {
-              const cursorsHere = Object.entries(userCursorsRef.current).filter(
-                ([, pos]) => pos.row === point.y && pos.col === point.x,
-              );
-              if (cursorsHere.length === 0) {
-                return rendered;
-              }
-              const users = cursorsHere.map(([id]) => virtualUsers.find((u) => u.id === id)).filter(Boolean);
-              return (
-                <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                  {rendered}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: 2,
-                      right: 2,
-                      display: 'flex',
-                      gap: '2px',
-                      pointerEvents: 'none',
-                    }}
-                  >
-                    {users.map((user) => (
-                      <span
-                        key={user!.id}
-                        title={user!.name}
-                        style={{
-                          fontSize: 14,
-                          lineHeight: 1,
-                          filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))',
-                          animation: 'pulse 2s infinite',
-                        }}
-                      >
-                        {user!.avatar}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              );
-            },
-          },
-        ],
-      }),
-      priority: new Policy({ mixins: [PriorityPolicy] }),
-    }),
-    [],
+// Every sheet of the workbook in one shared book, so cross-sheet formulas
+// (=SUM(Sales!D3:D5)) resolve. initialCells is initial-only, so a new import remounts
+// this component (see `key` below) for a fresh book.
+function Workbook({ workbook, refs }: { workbook: ParsedWorkbook; refs: React.MutableRefObject<Refs> }) {
+  const book = useSpellbook({});
+  return (
+    <div style={{ display: 'grid', gap: 14 }}>
+      {Object.entries(workbook).map(([name, data]) => {
+        const ref = (refs.current[name] ??= { current: null });
+        return (
+          <div key={name}>
+            <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 4 }}>{name}</div>
+            <GridSheet
+              book={book}
+              sheetName={name}
+              sheetRef={ref}
+              // `data` is { matrices, cells }: values/formulas, plus styles, sizes and merges.
+              initialCells={buildInitialCells({ ...data, ensured: { numRows: 8, numCols: 5 } })}
+              // Excel colors assume a white page (a fill without a text color, or the reverse), so
+              // an imported workbook stays light even on a dark site — like the file itself.
+              options={{ sheetHeight: 230, showFormulaBar: true, mode: 'light' }}
+            />
+          </div>
+        );
+      })}
+    </div>
   );
+}
 
-  const book = useSpellbook({ policies });
+const buttonStyle: React.CSSProperties = {
+  padding: '5px 12px',
+  border: '1px solid var(--sl-color-gray-5)',
+  borderRadius: 4,
+  background: 'var(--sl-color-gray-6)',
+  color: 'var(--sl-color-white)',
+  cursor: 'pointer',
+  fontSize: 13,
+};
 
-  // Add to activity log
-  const addActivity = React.useCallback((user: string, action: string, cell?: string) => {
-    setActivityLog((prev) => [
-      {
-        user,
-        action,
-        timestamp: new Date().toLocaleTimeString(),
-        cell,
-      },
-      ...prev.slice(0, 9),
-    ]); // Keep latest 10 items
+export default function ExcelImportExport() {
+  const refs = React.useRef<Refs>({});
+  const [workbook, setWorkbook] = React.useState<ParsedWorkbook | null>(null);
+  const [version, setVersion] = React.useState(0);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const load = (bytes: ArrayBuffer, label: string) => {
+    try {
+      refs.current = {};
+      setWorkbook(fromXlsx(new Uint8Array(bytes)));
+      setVersion((v) => v + 1);
+      setError(null);
+    } catch (e) {
+      setError(`Could not read ${label}: ${(e as Error).message}`);
+    }
+  };
+
+  const loadSample = async () => {
+    const res = await fetch(SAMPLE_URL);
+    load(await res.arrayBuffer(), 'the sample');
+  };
+
+  React.useEffect(() => {
+    loadSample();
   }, []);
 
-  // Simulate virtual user actions
-  React.useEffect(() => {
-    const actions = [
-      { action: 'edited cell', cell: undefined, weight: 8 }, // Increase edit weight
-      { action: 'moved cursor to', cell: undefined, weight: 1 },
-      { action: 'added comment', cell: undefined, weight: 0.5 },
-      { action: 'changed format', cell: undefined, weight: 0.5 },
-    ];
-
-    const simulateUserAction = () => {
-      // Add possibility of multiple users acting simultaneously
-      const numUsersToAct = Math.random() < 0.15 ? 2 : 1; // 15% chance of 2 users simultaneously (adjusted probability)
-
-      for (let i = 0; i < numUsersToAct; i++) {
-        const randomUser = virtualUsers[Math.floor(Math.random() * virtualUsers.length)];
-
-        // Determine action using weighted random selection
-        const totalWeight = actions.reduce((sum, action) => sum + action.weight, 0);
-        let random = Math.random() * totalWeight;
-        let selectedAction = actions[0];
-
-        for (const action of actions) {
-          random -= action.weight;
-          if (random <= 0) {
-            selectedAction = action;
-            break;
-          }
-        }
-
-        // Update cursor position randomly
-        const newRow = Math.floor(Math.random() * 5) + 1; // Rows 1-5
-        const newCol = Math.floor(Math.random() * 5) + 1; // Columns 1-5 (removed assignee column)
-
-        setUserCursors((prev) => ({
-          ...prev,
-          [randomUser.id]: { row: newRow, col: newCol },
-        }));
-
-        // If edit action, actually edit the cell after 1 second
-        if (selectedAction.action === 'edited cell' && sheetRef.current) {
-          setTimeout(() => {
-            if (sheetRef.current) {
-              const { sheet, apply } = sheetRef.current;
-              const cellAddress = `${String.fromCharCode(64 + newCol)}${newRow}`;
-
-              // Select appropriate data based on column
-              let newValue: string;
-              switch (newCol) {
-                case 1: // Project column
-                  newValue = [
-                    'Website Redesign',
-                    'Mobile App',
-                    'Database Migration',
-                    'API Integration',
-                    'UI/UX Design',
-                    'Frontend Refactor',
-                    'Backend API',
-                    'DevOps Setup',
-                    'Testing Suite',
-                    'Documentation',
-                  ][Math.floor(Math.random() * 10)];
-                  break;
-                case 2: // Status column
-                  newValue = [
-                    'In Progress',
-                    'Planning',
-                    'Completed',
-                    'Testing',
-                    'Review',
-                    'On Hold',
-                    'Blocked',
-                    'Ready for QA',
-                    'Deployed',
-                    'Archived',
-                  ][Math.floor(Math.random() * 10)];
-                  break;
-                case 3: // Due Date column
-                  const dates = [
-                    '2024-02-15',
-                    '2024-02-20',
-                    '2024-02-25',
-                    '2024-03-01',
-                    '2024-03-05',
-                    '2024-03-10',
-                    '2024-03-15',
-                    '2024-03-20',
-                    '2024-03-25',
-                    '2024-04-01',
-                  ];
-                  newValue = dates[Math.floor(Math.random() * dates.length)];
-                  break;
-                case 4: // Progress column
-                  const progress = ['10%', '25%', '50%', '75%', '90%', '100%', '15%', '35%', '60%', '80%'];
-                  newValue = progress[Math.floor(Math.random() * progress.length)];
-                  break;
-                case 5: // Priority column
-                  newValue = ['High', 'Medium', 'Low', 'Critical', 'Urgent', 'Normal'][Math.floor(Math.random() * 6)];
-                  break;
-                default:
-                  newValue = 'Updated';
-              }
-
-              // Update the cell
-              apply(
-                sheet.update({
-                  diff: { [cellAddress]: { value: newValue } },
-                }),
-              );
-
-              addActivity(randomUser.name, 'edited cell', cellAddress);
-            }
-          }, 1000);
-        } else {
-          addActivity(randomUser.name, selectedAction.action, selectedAction.cell);
-        }
-      }
-    };
-
-    const intervalId = setInterval(simulateUserAction, 1200); // Action every 1.2 seconds (adjusted frequency)
-    return () => clearInterval(intervalId);
-  }, [addActivity, sheetRef]);
-
-  // Get current user (simulate authentication)
-  const getCurrentUser = () => {
-    if (!sheetRef.current) {
-      return null;
+  const openFile = async (file: File | undefined) => {
+    if (!file) {
+      return;
     }
-    const { sheet } = sheetRef.current;
-    // Simulate getting current user from sheet context
-    return virtualUsers[0]; // For demo, always return Alice
+    if (!/\.xlsx$/i.test(file.name)) {
+      setError(`${file.name}: only .xlsx files are supported (not .xls / .csv).`);
+      return;
+    }
+    load(await file.arrayBuffer(), file.name);
+  };
+  const [dragging, setDragging] = React.useState(false);
+
+  // Read the live sheets (with your edits and merges) back out as one workbook.
+  const download = () => {
+    const sheets: Record<string, SheetHandle['sheet']> = {};
+    for (const [name, ref] of Object.entries(refs.current)) {
+      if (ref.current) {
+        sheets[name] = ref.current.sheet;
+      }
+    }
+    const blob = new Blob([toXlsx(sheets)], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'gridsheet.xlsx';
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
+    // Drop an .xlsx anywhere on the demo to open it.
     <div
       style={{
-        maxWidth: 'calc(100vw - 40px)',
-        minWidth: '320px',
-        margin: '0 auto',
-        padding: '20px',
+        padding: '10px',
+        fontSize: 13,
+        borderRadius: 6,
+        outline: dragging ? '2px dashed var(--sl-color-accent)' : 'none',
+      }}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragging(true);
+      }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDragging(false);
+        openFile(e.dataTransfer.files[0]);
       }}
     >
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 220px',
-          gap: '20px',
-        }}
-      >
-        {/* Main grid */}
-        <div>
-          <div>
-            <GridSheet
-              sheetRef={sheetRef}
-              book={book}
-              initialCells={buildInitialCells({
-                matrices: {
-                  A1: [
-                    ['Website Redesign', 'In Progress', '2024-02-15', '75%', 'High'],
-                    ['Mobile App', 'Planning', '2024-03-01', '25%', 'Medium'],
-                    ['Database Migration', 'Completed', '2024-01-30', '100%', 'Low'],
-                    ['API Integration', 'Testing', '2024-02-20', '90%', 'High'],
-                    ['UI/UX Design', 'Review', '2024-02-10', '60%', 'Medium'],
-                  ],
-                },
-                cells: {
-                  defaultCol: { width: 120 },
-                  defaultRow: { height: 40 },
-                  0: { height: 32, width: 30 }, // Header row height
-                  A: { width: 150, label: 'Project' },
-                  B: { width: 100, label: 'Status' },
-                  C: { width: 120, label: 'Due Date' },
-                  D: { width: 80, label: 'Progress' },
-                  E: { width: 100, label: 'Priority' },
-                  'A:E': { alignItems: 'center' },
-                  'E1:E5': {
-                    style: {
-                      textAlign: 'center',
-                      fontWeight: 'bold',
-                    },
-                    policy: 'priority',
-                  },
-                },
-              })}
-              options={{
-                matrixAlignment: 'both',
-                sheetHeight: 300,
-                mode: inheritMode,
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Sidebar */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '220px' }}>
-          {/* Activity feed */}
-          <div
-            style={{
-              backgroundColor: panelBg,
-              borderRadius: '8px',
-              padding: '16px',
-              border: `1px solid ${panelBorder}`,
-              flex: 1,
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+        <button type="button" style={buttonStyle} onClick={loadSample}>
+          Reload sample
+        </button>
+        <label
+          style={{ ...buttonStyle, background: 'var(--sl-color-accent)', color: '#fff', borderColor: 'transparent' }}
+        >
+          Open your Excel file (.xlsx)…
+          <input
+            type="file"
+            accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            onChange={(e) => {
+              openFile(e.target.files?.[0]);
+              e.target.value = '';
             }}
-          >
-            <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', color: panelFg }}>📝 Activity Feed</h3>
-            <div
-              style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '400px', overflowY: 'auto' }}
-            >
-              {activityLog.map((activity, index) => {
-                const user = virtualUsers.find((u) => u.name === activity.user);
-                return (
-                  <div
-                    key={index}
-                    style={{
-                      padding: '8px',
-                      borderRadius: '4px',
-                      backgroundColor: itemBg,
-                      borderLeft: `3px solid ${user?.color || '#666'}`,
-                      fontSize: '12px',
-                    }}
-                  >
-                    <div style={{ fontWeight: 'bold', color: user?.color }}>
-                      {user?.avatar} {activity.user}
-                    </div>
-                    <div style={{ color: itemFg }}>
-                      {activity.action}
-                      {activity.cell && ` ${activity.cell}`}
-                    </div>
-                    <div style={{ fontSize: '10px', color: itemMutedFg, marginTop: '2px' }}>{activity.timestamp}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+            style={{ display: 'none' }}
+          />
+        </label>
+        <button type="button" style={buttonStyle} onClick={download} disabled={!workbook}>
+          Download .xlsx
+        </button>
       </div>
-
-      <style>{`
-        @keyframes pulse {
-          0% { transform: scale(1); }
-          50% { transform: scale(1.1); }
-          100% { transform: scale(1); }
-        }
-      `}</style>
+      <p style={{ margin: '0 0 10px', opacity: 0.8 }}>
+        Open any <code>.xlsx</code> file (or drop one here) — the sample loads by default and its titles are merged
+        cells. Edit values or select a range and right-click → <em>Merge cells</em>, then download and open the result
+        in Excel or another spreadsheet app.
+      </p>
+      {error && <p style={{ color: '#e5534b' }}>{error}</p>}
+      {workbook && <Workbook key={version} workbook={workbook} refs={refs} />}
     </div>
   );
 }

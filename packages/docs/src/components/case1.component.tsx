@@ -4,7 +4,6 @@ import * as React from 'react';
 import { GridSheet, buildInitialCells, Policy, PercentagePolicyMixin, toValueMatrix } from '@gridsheet/react-core';
 import type { UserSheet } from '@gridsheet/react-core';
 import type { PolicyMixinType, RenderProps } from '@gridsheet/react-core';
-import { Debugger } from '@gridsheet/react-dev';
 import { useSpellbook } from '@gridsheet/react-core/spellbook';
 import { useStarlightMode } from './useStarlightMode';
 import {
@@ -89,12 +88,6 @@ const numStyle = {
   fontSize: '12px',
   color: 'var(--gs-fg)',
   fontFamily: 'ui-monospace, SFMono-Regular, monospace',
-};
-
-const metricLabelStyle = {
-  fontSize: '12px',
-  fontWeight: '500' as const,
-  color: '#475569',
 };
 
 const metricValueStyle = {
@@ -186,17 +179,17 @@ export default function SalesDashboard() {
               ],
             },
             cells: {
-              defaultCol: { width: 55 },
+              defaultCol: { width: 50 },
               defaultRow: { height: 50 },
               A0: { width: 90, label: 'Metric', style: headerStyle },
-              B0: { width: 140, label: 'Trend', style: headerStyle },
+              B0: { width: 115, label: 'Trend', style: headerStyle },
               C0: { label: 'Jan', style: headerStyle },
               D0: { label: 'Feb', style: headerStyle },
               E0: { label: 'Mar', style: headerStyle },
               F0: { label: 'Apr', style: headerStyle },
               G0: { label: 'May', style: headerStyle },
               H0: { label: 'Jun', style: headerStyle },
-              I0: { width: 65, label: 'Growth', style: headerStyle },
+              I0: { width: 60, label: 'Growth', style: headerStyle },
               A: { style: nameStyle },
               B: { policy: 'sparkline', style: { backgroundColor: sparklineBg } },
               'C:H': { style: numStyle, alignItems: 'center' },
@@ -219,7 +212,7 @@ export default function SalesDashboard() {
           options={{
             matrixAlignment: 'both',
             sheetHeight: 360,
-            sheetWidth: 720,
+            sheetWidth: '100%',
             sheetResize: 'both',
             mode: inheritMode,
           }}

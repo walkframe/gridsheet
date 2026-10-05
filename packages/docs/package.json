@@ -15,6 +15,7 @@
     "@gridsheet/functions": "workspace:^",
     "@gridsheet/react-core": "workspace:^",
     "@gridsheet/react-dev": "workspace:^",
+    "@gridsheet/xlsx": "workspace:^",
     "@octokit/request": "^10.0.16",
     "astro": "^7.2.10",
     "chart.js": "^4.5.1",

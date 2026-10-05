@@ -1,5 +1,5 @@
 ---
-title: "Case 8: Large Dataset Performance Demo"
+title: "Large Dataset: 500k Rows"
 ---
 
 import Case8 from '../../../components/case8.component';
@@ -62,13 +62,16 @@ options={{
 
 ### Applying Row Stripes with CSS
 
-GridSheet automatically adds `gs-row-odd` and `gs-row-even` classes to each `<tr>` element based on the row's position. You can use these classes to apply alternating row background colors without touching cell data:
+GridSheet automatically adds `gs-row-odd` and `gs-row-even` classes to each `<tr>` element based on the row's position. You can use these classes to apply alternating row background colors without touching cell data. Scope the selectors to a wrapper so they don't leak into other grids on the page:
 
 ```tsx
-<style>{`
-  .gs-row-odd .gs-cell  { background-color: #ffffff; }
-  .gs-row-even .gs-cell { background-color: #f0f4f8; }
-`}</style>
+<div className="case8-demo">
+  <GridSheet ... />
+  <style>{`
+    .case8-demo .gs-row-odd .gs-cell  { background-color: #ffffff; }
+    .case8-demo .gs-row-even .gs-cell { background-color: #f0f4f8; }
+  `}</style>
+</div>
 ```
 
 Because these are CSS rules (not inline styles), any `style.backgroundColor` set directly on a cell object will take priority and override the stripe color for that specific cell.

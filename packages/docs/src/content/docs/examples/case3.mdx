@@ -1,5 +1,5 @@
 ---
-title: "Case 3: Pixel Art Drawing Interface"
+title: "Imperative API: Pixel Art"
 ---
 
 import Case3 from '../../../components/case3.component';
@@ -48,7 +48,7 @@ for (let row = area.top; row <= area.bottom; row++) {
 
 ### Writing Style Changes Imperatively with `sheet.update`
 
-To apply changes programmatically (e.g., from a button click), build a `diff` object keyed by cell address and call `sheet.update({ diff })`. Pass the result to `sync` to commit it to the store.
+To apply changes programmatically (e.g., from a button click), build a `diff` object keyed by cell address and call `sheet.update({ diff })`. Pass the result to `apply` to commit it to the store.
 
 ```tsx
 const { sheet, apply } = sheetRef.current;
@@ -70,7 +70,7 @@ buildInitialCells({
   cells: {
     defaultRow: { height: 25 },
     defaultCol: { width: 25 },
-    ...getSavedData(),
+    ...toCells(heartColors),
   },
   ensured: {
     numRows: 50,
@@ -98,7 +98,21 @@ for (let row = sheet.top; row <= sheet.bottom; row++) {
 localStorage.setItem('demo3', JSON.stringify({ cells: coloredCells }));
 ```
 
-On load, reconstruct `CellsByAddressType` from the saved map and pass it into `buildInitialCells` as spread cells.
+On mount, the saved map is read once and painted onto the sheet with `sheet.update` + `apply` (`initialCells` is initial-only, so later changes go through the sheet API). The **Reset** button uses the same repaint to restore the heart in place — no page reload, and it can be undone with Ctrl/Cmd+Z.
+
+```tsx
+const paint = (colors: { [address: string]: string }) => {
+  const { sheet, apply } = sheetRef.current;
+  const diff: CellsByAddressType = {};
+  for (let y = 1; y <= 50; y++) {
+    for (let x = 1; x <= 50; x++) {
+      const address = p2a({ y, x });
+      diff[address] = { style: colors[address] ? { backgroundColor: colors[address] } : {} };
+    }
+  }
+  apply(sheet.update({ diff }));
+};
+```
 
 ### Auto-saving on Every Change with `onChange`
 
@@ -110,18 +124,31 @@ const book = useSpellbook({
 });
 ```
 
-### Initial Pixel Art as `CellsByAddressType`
+### Initial Pixel Art from ASCII Art
 
-The heart shape pre-drawn on first load is defined as a plain `CellsByAddressType` object, where each key is a cell address and the value sets a `backgroundColor`.
+The heart shown on first load is written as a compact ASCII-art array and converted into `CellsByAddressType`, where each key is a cell address and the value sets a `backgroundColor`.
 
 ```tsx
-const myHeart: CellsByAddressType = {
-  C3: { style: { backgroundColor: 'red' } },
-  D3: { style: { backgroundColor: 'red' } },
+const HEART = [
+  '..RR.........RR..',
+  '.RppR.......RppR.',
+  'RppppR.....RppppR',
   // ...
-  B5: { style: { backgroundColor: 'pink' } },
-  // ...
-};
+  '........R........',
+];
+const PIXEL_COLORS = { R: 'red', p: 'pink' };
+
+const heartColors = {};
+HEART.forEach((line, i) => {
+  [...line].forEach((ch, j) => {
+    if (PIXEL_COLORS[ch]) {
+      heartColors[p2a({ y: i + 3, x: j + 1 })] = PIXEL_COLORS[ch]; // starts at A3
+    }
+  });
+});
+
+const toCells = (colors) =>
+  Object.fromEntries(Object.entries(colors).map(([address, color]) => [address, { style: { backgroundColor: color } }]));
 ```
 
-This object is spread directly into the `cells` option of `buildInitialCells`, making it trivial to define any initial pixel art pattern.
+The resulting cells are spread directly into the `cells` option of `buildInitialCells`, making it trivial to define any initial pixel art pattern.

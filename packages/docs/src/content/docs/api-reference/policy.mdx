@@ -114,6 +114,34 @@ const currencyPolicy = new Policy({
 });
 ```
 
+### Reading React state from a policy
+
+A policy is usually created once (e.g. in `useMemo` with `[]` deps), so its methods would capture a
+stale copy of any React state they close over. Keep the latest value in a ref and read the ref at
+call time instead — the policy then always sees current state without being re-created:
+
+```tsx
+const [highlighted, setHighlighted] = React.useState<string[]>([]);
+const highlightedRef = React.useRef(highlighted);
+highlightedRef.current = highlighted; // updated on every render
+
+const policies = React.useMemo(
+  () => ({
+    highlight: new Policy({
+      mixins: [
+        {
+          renderCallback(rendered, { point }) {
+            const on = highlightedRef.current.includes(`${point.y}:${point.x}`);
+            return on ? <mark>{rendered}</mark> : rendered;
+          },
+        },
+      ],
+    }),
+  }),
+  [],
+);
+```
+
 ### Subclassing
 
 ```tsx

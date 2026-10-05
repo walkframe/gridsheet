@@ -103,6 +103,7 @@ export default function LargeDatasetDemo() {
   return (
     <div
       ref={outerRef}
+      className="case8-demo"
       style={{
         display: 'flex',
         justifyContent: 'center',
@@ -151,8 +152,8 @@ export default function LargeDatasetDemo() {
       </div>
       <style>{`
         @keyframes case8-spin { to { transform: rotate(360deg); } }
-        .gs-row-odd .gs-cell { background-color: ${isDark ? '#1b1e22' : '#ffffff'}; }
-        .gs-row-even .gs-cell { background-color: ${isDark ? '#22262b' : '#f0f4f8'}; }
+        .case8-demo .gs-row-odd .gs-cell { background-color: ${isDark ? '#1b1e22' : '#ffffff'}; }
+        .case8-demo .gs-row-even .gs-cell { background-color: ${isDark ? '#22262b' : '#f0f4f8'}; }
       `}</style>
     </div>
   );

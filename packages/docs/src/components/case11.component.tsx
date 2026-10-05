@@ -1,7 +1,15 @@
 'use client';
 
 import * as React from 'react';
-import { GridSheet, buildInitialCellsFromOrigin, BaseFunctionAsync, Policy, ensureString, makeBorder } from '@gridsheet/react-core';
+import {
+  GridSheet,
+  buildInitialCellsFromOrigin,
+  BaseFunction,
+  BaseFunctionAsync,
+  Policy,
+  ensureString,
+  makeBorder,
+} from '@gridsheet/react-core';
 import type { PolicyMixinType, RenderProps } from '@gridsheet/react-core';
 import { useSpellbook } from '@gridsheet/react-core/spellbook';
 import type { FunctionArgumentDefinition } from '@gridsheet/react-core';
@@ -10,14 +18,38 @@ import { useStarlightMode } from './useStarlightMode';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// ─── Sync formula: REPO_OWNER(owner/repo) ───
+// Pure string manipulation — no I/O, so a plain BaseFunction is enough.
+class RepoOwnerFunction extends BaseFunction {
+  example = 'REPO_OWNER("facebook/react")';
+  description = 'Returns the owner (user or organization) part of an "owner/repo" slug.';
+  defs: FunctionArgumentDefinition[] = [
+    {
+      name: 'repo',
+      description: 'Repository in "owner/repo" format, or a github.com URL.',
+      acceptedTypes: ['string'],
+    },
+  ];
+
+  main(repo: string) {
+    const slug = ensureString(repo)
+      .trim()
+      .replace(/^https?:\/\/github\.com\//, '');
+    const owner = slug.split('/')[0];
+    if (!owner) {
+      throw new Error(`Invalid repository: "${repo}"`);
+    }
+    return owner;
+  }
+}
+
 // ─── Async formula: GH_REPO(owner/repo) ───
 // Fetches repository data from GitHub API (no auth required for public repos).
-// Returns a 1×3 spill array: [[stars, forks, open_issues]]
-// This means one API call per repo fills Stars, Forks, and Issues columns at once.
+// Returns a 1×5 row [[stars, forks, issues, size, subscribers]] that spills across B–F,
+// so one API call per repo fills five columns at once.
 class GhRepoFunction extends BaseFunctionAsync {
   example = 'GH_REPO("facebook/react")';
-  description =
-    'Fetches public repository data from GitHub API. Spills [[stars, forks, issues, size, subscribers, watchers]].';
+  description = 'Fetches public repository data from GitHub API. Spills [[stars, forks, issues, size, subscribers]].';
   defs: FunctionArgumentDefinition[] = [
     {
       name: 'repo',
@@ -34,7 +66,6 @@ class GhRepoFunction extends BaseFunctionAsync {
   async main(repo: string) {
     const r = ensureString(repo).trim();
 
-    console.log('fetching Github repo API', { repo: r });
     // Artificial delay so the pending animation is visible in this example
     await sleep(1500);
     const resp = await fetch(`https://api.github.com/repos/${encodeURI(r)}`, {
@@ -90,6 +121,7 @@ export default function Case11() {
   const book = useSpellbook({
     additionalFunctions: {
       gh_repo: GhRepoFunction as any,
+      repo_owner: RepoOwnerFunction as any,
     },
     policies: {
       repo: repoPolicy,
@@ -98,7 +130,7 @@ export default function Case11() {
   });
 
   const summaryStyle = {
-    background: 'rgba(255,255,255,0.08)',
+    background: 'rgba(0,119,255,0.08)',
     fontWeight: 700 as const,
     ...makeBorder({ all: '2px solid rgba(128,128,128,0.3)' }),
   };
@@ -116,26 +148,32 @@ export default function Case11() {
             ['Total', '=SUM(B1:B3)', '=SUM(C1:C3)', '=SUM(D1:D3)', '=SUM(E1:E3)', '=SUM(F1:F3)'],
           ],
           cells: {
-            A: { label: 'Repository', width: 150 },
-            B: { label: '⭐ Stars', width: 90, policy: 'number' },
-            C: { label: '🍴 Forks', width: 90, policy: 'number' },
-            D: { label: '🐛 Issues', width: 90, policy: 'number' },
-            E: { label: '📦 Size (KB)', width: 90, policy: 'number' },
-            F: { label: '👁 Subscribers', width: 90, policy: 'number' },
+            A: { label: 'Repository', width: 128 },
+            B: { label: '⭐ Stars', width: 70, policy: 'number' },
+            C: { label: '🍴 Forks', width: 64, policy: 'number' },
+            D: { label: '🐛 Issues', width: 60, policy: 'number' },
+            E: { label: '📦 KB', width: 82, policy: 'number' },
+            F: { label: '👁 Subs', width: 60, policy: 'number' },
+            G: { label: 'Owner', width: 86 },
             A1: { policy: 'repo' },
             A2: { policy: 'repo' },
             A3: { policy: 'repo' },
+            G1: { value: '=REPO_OWNER(A1)' },
+            G2: { value: '=REPO_OWNER(A2)' },
+            G3: { value: '=REPO_OWNER(A3)' },
             A4: { style: summaryStyle },
             B4: { style: summaryStyle },
             C4: { style: summaryStyle },
             D4: { style: summaryStyle },
             E4: { style: summaryStyle },
             F4: { style: summaryStyle },
+            G4: { style: summaryStyle },
           },
-          ensured: { numRows: 4, numCols: 6 },
+          ensured: { numRows: 4, numCols: 7 },
         })}
         options={{
           matrixAlignment: 'both',
+          sheetWidth: '100%',
           mode: inheritMode,
         }}
       />
@@ -149,11 +187,10 @@ export default function Case11() {
         </div>
       </details>
       <p style={{ marginTop: '12px', fontSize: '13px', color: '#888' }}>
-        💡 Data is fetched live from the GitHub API with 1-minute caching. <code>GH_REPO(repo)</code> makes{' '}
-        <strong>one API call per row</strong> and spills <code>[[stars, forks, issues, size, subscribers]]</code> across
-        columns B–F automatically — 3 calls total instead of 18. Try editing a repository name in column A to fetch data
-        for a different repo. The bottom row uses <code>SUM</code> to total all columns — it stays pending until all
-        async cells resolve.
+        💡 <code>GH_REPO(repo)</code> (async) makes <strong>one API call per row</strong> and spills{' '}
+        <code>[[stars, forks, issues, size, subscribers]]</code> across B–F — 3 calls instead of 15. Results are cached
+        for 1 minute. <code>REPO_OWNER(repo)</code> (sync) in column G resolves instantly. Edit a repository name in
+        column A to refetch; the Total row stays pending until every async cell resolves.
       </p>
     </div>
   );
