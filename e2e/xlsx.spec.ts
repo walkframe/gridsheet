@@ -8,13 +8,19 @@ test('imports a complex styled xlsx and re-evaluates cross-sheet formulas', asyn
   const sales = page.getByTestId('sheet-Sales');
   const summary = page.getByTestId('sheet-Summary');
 
-  // Styled + merged Sales sheet: merged title's value survives (top-left), own formula re-evaluates.
+  // Styled + merged Sales sheet: merged title's value lives in its top-left, own formula re-evaluates.
   const title = sales.locator("[data-address='A1']");
   expect(await title.locator('.gs-cell-rendered').textContent()).toContain('Q3 Sales Report');
   expect(await sales.locator("[data-address='D3'] .gs-cell-rendered").textContent()).toContain('4.5');
 
-  // Imported cell styles render: dark fill on the cell, white bold text inside.
-  expect(await title.evaluate((el) => getComputedStyle(el as HTMLElement).backgroundColor)).toBe('rgb(32, 56, 100)');
+  // The title's A1:D1 merge is imported: A1 hosts a merged range.
+  await expect(title).toHaveClass(/gs-merged-host/);
+
+  // Imported cell styles render: dark fill (a merged host paints it on the stretched
+  // .gs-cell-inner, not the td), white bold text inside.
+  expect(
+    await title.locator('.gs-cell-inner').evaluate((el) => getComputedStyle(el as HTMLElement).backgroundColor),
+  ).toBe('rgb(32, 56, 100)');
   const titleText = title.locator('.gs-cell-rendered');
   expect(await titleText.evaluate((el) => getComputedStyle(el as HTMLElement).color)).toBe('rgb(255, 255, 255)');
   expect(await titleText.evaluate((el) => getComputedStyle(el as HTMLElement).fontWeight)).toBe('700');

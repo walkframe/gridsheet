@@ -147,6 +147,29 @@ const parseSheet = (
     }
   }
 
+  // Merged ranges: <mergeCells><mergeCell ref="A1:C2"/></mergeCells>. GridSheet keeps the span
+  // on the anchor (top-left) cell as merge: { rows, cols }; the covered cells stay empty.
+  for (const mc of children(child(root, 'mergeCells'), 'mergeCell')) {
+    const [from, to] = (mc.attrs['ref'] ?? '').split(':');
+    if (!from || !to) {
+      continue;
+    }
+    const a = parseRef(from);
+    const b = parseRef(to);
+    const top = Math.min(a.row, b.row);
+    const left = Math.min(a.col, b.col);
+    const rows = Math.abs(b.row - a.row) + 1;
+    const cols = Math.abs(b.col - a.col) + 1;
+    if (rows === 1 && cols === 1) {
+      continue;
+    }
+    const address = `${colName(left)}${top}`;
+    cells[address] = { ...cells[address], merge: { rows, cols } };
+    // Make sure the sheet is big enough to hold the whole merged range.
+    maxRow = Math.max(maxRow, top + rows - 1);
+    maxCol = Math.max(maxCol, left + cols - 1);
+  }
+
   const matrix: XlsxCellValue[][] = [];
   for (let y = 0; y < maxRow; y++) {
     matrix.push(new Array<XlsxCellValue>(maxCol).fill(null));
@@ -160,7 +183,8 @@ const parseSheet = (
 /**
  * Parse an xlsx workbook into a per-sheet map of `{ matrices }`, ready to feed
  * to `buildInitialCells(parsed[sheetName])`. Values arrive as string / number /
- * boolean; formulas arrive as their "=..." string (v0 does not read styles).
+ * boolean; formulas arrive as their "=..." string. Cell styles, column widths / row heights
+ * and merged ranges (as `merge: { rows, cols }` on the anchor cell) arrive in `cells`.
  */
 export const fromXlsx = (data: XlsxInput): ParsedWorkbook => {
   const files = readZip(toU8(data));

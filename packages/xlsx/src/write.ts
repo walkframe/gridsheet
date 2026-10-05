@@ -117,7 +117,21 @@ const buildSheetXml = (data: SheetData, intern: (s: string) => number, styles: S
       rows += `<row r="${y + 1}"${heightAttr}>${rowCells}</row>`;
     }
   }
-  return XML_DECL + `<worksheet xmlns="${MAIN_NS}">${colsXml}<sheetData>${rows}</sheetData></worksheet>`;
+  // Merged ranges live on their anchor cell as merge: { rows, cols }.
+  const merges: string[] = [];
+  for (let y = 0; y < cells.length; y++) {
+    for (let x = 0; x < cells[y].length; x++) {
+      const span = cells[y][x]?.merge;
+      if (span && (span.rows > 1 || span.cols > 1)) {
+        merges.push(`${colName(x + 1)}${y + 1}:${colName(x + span.cols)}${y + span.rows}`);
+      }
+    }
+  }
+  // OOXML element order: <mergeCells> must follow <sheetData>.
+  const mergesXml = merges.length
+    ? `<mergeCells count="${merges.length}">${merges.map((ref) => `<mergeCell ref="${ref}"/>`).join('')}</mergeCells>`
+    : '';
+  return XML_DECL + `<worksheet xmlns="${MAIN_NS}">${colsXml}<sheetData>${rows}</sheetData>${mergesXml}</worksheet>`;
 };
 
 const buildSharedStrings = (shared: string[]): string => {
@@ -180,8 +194,8 @@ const buildContentTypes = (count: number): string => {
  * Each input may be a live GridSheet sheet (read via `toCellMatrix` at RAW
  * resolution so formulas keep their "=..." text), a cell matrix, or a value
  * matrix. Values, formulas, cell styles (background / color / weight / italic /
- * underline / alignment), and — for a live sheet — column widths and row heights
- * are written; merged cells and number formats are not.
+ * underline / alignment), merged ranges, and — for a live sheet — column widths and row
+ * heights are written; number formats are not.
  */
 export const toXlsx = (sheets: Record<string, XlsxSheetInput>): Uint8Array => {
   const names = Object.keys(sheets);

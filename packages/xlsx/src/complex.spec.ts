@@ -2,10 +2,9 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fromXlsx } from './index';
 
-// A real workbook written by openpyxl (an independent OOXML writer) with features
-// v0 does NOT support: merged cells, cell styles (fonts/fills/borders/alignment),
-// number formats, frozen panes, column widths. The importer must ignore all of
-// that and still extract values + formulas without throwing.
+// A real workbook written by openpyxl (an independent OOXML writer) with merged cells,
+// cell styles, number formats, frozen panes and column widths. Unsupported parts (number
+// formats, frozen panes, borders) must be ignored while values + formulas still come through.
 const complex = () => readFileSync(join(__dirname, '__fixtures__', 'complex.xlsx'));
 
 describe('fromXlsx on a complex, styled workbook (graceful degradation)', () => {
@@ -18,6 +17,12 @@ describe('fromXlsx on a complex, styled workbook (graceful degradation)', () => 
     const sales = fromXlsx(complex()).Sales.matrices.A1;
     // A1:D1 is merged in the source; the value lives only in A1.
     expect(sales[0]).toEqual(['Q3 Sales Report', null, null, null]);
+  });
+
+  it('reads merged ranges onto their anchor cell', () => {
+    const parsed = fromXlsx(complex());
+    expect(parsed.Sales.cells.A1?.merge).toEqual({ rows: 1, cols: 4 }); // A1:D1
+    expect(parsed.Summary.cells.A1?.merge).toEqual({ rows: 1, cols: 2 }); // A1:B1
   });
 
   it('extracts values and formulas through the styling', () => {

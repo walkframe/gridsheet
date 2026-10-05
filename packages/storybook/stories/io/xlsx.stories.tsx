@@ -17,7 +17,7 @@ const DESCRIPTION = [
   '',
   '- **Load sample** fetches a shipped `sample.xlsx` — a styled, merged, multi-sheet workbook',
   "  whose `Summary` sheet has **cross-sheet formulas** (`=SUM(Sales!D3:D5)`, `=Sales!D6*'Meta Data'!B3`).",
-  '  Cell styles (background, text color, bold, alignment) import too; merges are dropped;',
+  '  Cell styles (background, text color, bold, alignment) and merged ranges import too;',
   '  the sheets share a `book` so cross-sheet references re-evaluate.',
   '- **Import file** reads a real `.xlsx` you pick.',
   '- **Download** writes every sheet back out with `toXlsx`.',
