@@ -13,7 +13,7 @@ const DESCRIPTION = [
   '## How it works',
   "1. `'none'` (default) clips the overflow; `'vertical'` appends rows; `'horizontal'` appends columns; `'both'` appends either.",
   '2. While dragging the autofill handle, ghost rows/columns appear past the edge so the drag can reach cells that do not exist yet.',
-  '3. Growth is capped by `limits.maxRows` / `limits.maxCols` (here 12 rows × 8 columns).',
+  '3. Growth is capped by `limits.maxRows` / `limits.maxCols` (here 1000 rows × 100 columns).',
   '4. The added rows/columns and the write undo together in a single step.',
   '5. The sheet is resizable (`sheetResize: both`) — drag its bottom-right corner to see the grown rows/columns; `matrixAlignment: both` keeps the grid centered.',
 ].join('\n\n');
@@ -35,7 +35,7 @@ const AutoExpandComponent: React.FC = () => {
       <GridSheet
         options={{
           autoExpand: mode,
-          limits: { maxRows: 12, maxCols: 8 },
+          limits: { maxRows: 1000, maxCols: 100 },
           sheetResize: 'both',
           matrixAlignment: 'both',
         }}

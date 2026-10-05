@@ -260,6 +260,8 @@ class SubmitAutofillAction<T extends PointType> extends CoreAction<T> {
   mutation = true;
   reduce(store: StoreType, payload: T): StoreWithCallback {
     try {
+      const before = store.sheetReactive.current;
+      const sizeBefore = { numRows: before?.numRows ?? 0, numCols: before?.numCols ?? 0 };
       const autofill = new Autofill(store, payload);
       const sheet = autofill.applied;
       const selectingZone = areaToZone(autofill.wholeArea);
@@ -279,7 +281,10 @@ class SubmitAutofillAction<T extends PointType> extends CoreAction<T> {
       // right after a fill. Restore focus after the re-render.
       return {
         ...result,
-        callback: (next: StoreType) => requestAnimationFrame(() => focus(next.editorRef.current)),
+        callback: (next: StoreType) => {
+          requestAnimationFrame(() => focus(next.editorRef.current));
+          revealGrowth(store, sheet, sizeBefore, selectingZone);
+        },
       };
     } catch (e) {
       // The fill may fail (e.g. a target beyond the sheet). Never leave
@@ -418,8 +423,8 @@ class CutAction<T extends ZoneType> extends CoreAction<T> {
 }
 export const cut = new CutAction().bind();
 
-// When an autoExpand paste grew the sheet, the new rows/cols land off-screen (the viewport
-// keeps its size), so the growth would be invisible. Scroll the pasted range's far corner
+// When an autoExpand paste/autofill grew the sheet, the new rows/cols land off-screen (the viewport
+// keeps its size), so the growth would be invisible. Scroll the written range's far corner
 // into view — after the re-render, so the enlarged scroll area exists.
 const revealGrowth = (store: StoreType, sheet: Sheet, before: { numRows: number; numCols: number }, zone: ZoneType) => {
   if (sheet.numRows <= before.numRows && sheet.numCols <= before.numCols) {
