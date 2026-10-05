@@ -30,6 +30,7 @@ The GridSheet component accepts the following props to configure its behavior an
 | `showFormulaBar` | `boolean` | `true` | Show the formula bar. |
 | `mode` | `'light' \| 'dark'` | `'light'` | Color mode. |
 | `eager` | `boolean` | `false` | Opt into eager resolution for this sheet (see below). |
+| `autoExpand` | `'none' \| 'vertical' \| 'horizontal' \| 'both'` | `'none'` | Grow the sheet when a paste or autofill runs past the last row/column (see below). |
 
 ### `eager`
 
@@ -54,6 +55,27 @@ const all = toValueMatrix(sheet);  // off-screen rows come back resolved too
 ```
 
 If you only need full resolution occasionally (e.g. right before saving) rather than continuously, skip the option and call [`sheet.resolveAll()`](/api-reference/sheet) followed by `await sheet.waitForPending()` on demand — that keeps interactive editing fully virtualized and pays the cost only when you ask for it.
+
+### `autoExpand`
+
+By default, a paste or an autofill that runs past the sheet's last row or column is clipped: the overflow is dropped. Set `autoExpand` to grow the sheet instead.
+
+| Value | Behavior |
+|-------|----------|
+| `'none'` | Clip the overflow (default). |
+| `'vertical'` | Append the missing rows. |
+| `'horizontal'` | Append the missing columns. |
+| `'both'` | Append rows and columns as needed. |
+
+```tsx
+<GridSheet initialCells={cells} options={{ autoExpand: 'both', limits: { maxRows: 1000 } }} />
+```
+
+- It applies to pasting (copied cells, cut cells, and text/HTML from the clipboard) and to dragging the autofill handle. While dragging, ghost rows/columns are shown past the edge so the drag can reach cells that don't exist yet.
+- New rows/columns copy the layout (style, size, policy) of the current last row/column, like inserting rows below the last one.
+- Growth is capped by `limits.maxRows` / `limits.maxCols`; anything beyond the limit is still clipped.
+- The appended rows/columns and the write are a single undo step.
+- Programmatic writes through `sheet.copy()`, `sheet.move()` and `sheet.writeRawCellMatrix()` follow the same setting.
 
 ## Initial Cells
 

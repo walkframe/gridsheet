@@ -41,11 +41,31 @@
   box-sizing: border-box;
   border-right: solid var(--gs-mx-br, 1px) var(--gs-border, #e3e6ea);
   border-bottom: solid var(--gs-mx-bb, 1px) var(--gs-border, #e3e6ea);
-  &>table {
+  & > table {
     table-layout: fixed;
     border-collapse: collapse;
     border-spacing: 0;
   }
+}
+
+// autoExpand ghost rows/columns: the not-yet-existing cells past the last row/column, rendered
+// only while an autofill is dragged on an auto-expanding sheet so the drag can reach them.
+.gs-ghost-cell {
+  padding: 0;
+  box-sizing: border-box;
+  border: dashed 1px var(--gs-border, #e3e6ea);
+  background-color: var(--gs-surface, #ffffff);
+  opacity: 0.5;
+  cursor: crosshair;
+}
+.gs-ghost-th {
+  opacity: 0.5;
+}
+.gs-ghost-th-top {
+  top: 0;
+}
+.gs-ghost-th-left {
+  left: 0;
 }
 
 // When an axis overflows, the hugging inner border would scroll out of view, so move that

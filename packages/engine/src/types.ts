@@ -273,7 +273,22 @@ export type HistorySortRowsType = {
   sortedRowMapping: { [beforeY: number]: number };
 };
 
+/**
+ * Several histories recorded as one undo/redo step (e.g. the rows/cols an auto-expanding
+ * paste appended + the paste itself). Undone in reverse order, redone in order.
+ */
+export type HistoryBatchType = {
+  operation: 'BATCH';
+  srcSheetId: number;
+  dstSheetId: number;
+  applyed: boolean;
+  undoReflection?: StorePatchType;
+  redoReflection?: StorePatchType;
+  histories: HistoryType[];
+};
+
 export type HistoryType =
+  | HistoryBatchType
   | HistoryUpdateType
   | HistoryMoveType
   | HistoryInsertRowsType
@@ -288,6 +303,13 @@ export type Virtualization = {
   adjuster: AreaType;
 };
 export type OperatorType = 'USER' | 'SYSTEM';
+
+/**
+ * Which way a paste / autofill may grow the sheet when it runs past the last row/column.
+ * 'none' (default) clips; 'vertical' appends rows; 'horizontal' appends columns; 'both' does both.
+ * Growth is capped by the sheet's maxRows / maxCols limits.
+ */
+export type AutoExpandType = 'none' | 'vertical' | 'horizontal' | 'both';
 
 export type OperationType = number;
 

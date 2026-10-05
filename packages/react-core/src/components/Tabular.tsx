@@ -1,4 +1,4 @@
-import { useEffect, useContext, useState, useCallback, useMemo } from 'react';
+import { useEffect, useLayoutEffect, useContext, useState, useCallback, useMemo, useRef } from 'react';
 
 import { Cell, type MergeRender } from './Cell';
 import { HeaderCellTop } from './HeaderCellTop';
@@ -6,14 +6,39 @@ import { HeaderCellLeft } from './HeaderCellLeft';
 import { CellStateOverlay } from './CellStateOverlay';
 
 import { Context } from '../store';
-import { choose, select, setContextMenuPosition } from '../store/actions';
+import { choose, select, setAutofillDraggingTo, setContextMenuPosition } from '../store/actions';
 
 import type { RefPaletteType, Virtualization } from '../types';
-import { virtualize, physicalScrollHeight } from '@gridsheet/web';
+import {
+  virtualize,
+  physicalScrollHeight,
+  getGhostCellSize,
+  SCROLL_CAP,
+  range,
+  x2c,
+  complementSelectingArea,
+  zoneToArea,
+  smartScroll,
+} from '@gridsheet/web';
 import { p2a, stripAddressAbsolute } from '@gridsheet/web';
 import { Lexer, stripSheetName } from '@gridsheet/web';
 import { ScrollHandle } from './ScrollHandle';
 import { preventSafariBounce } from '@gridsheet/web';
+
+// Like Handsontable's autoInsertRow: while a fill drag reaches the last (real or provisional)
+// row/column — or the pointer is held past the grid — add one provisional ghost row/column every
+// GHOST_INTERVAL_MS. Ghosts are display-only (no sheet change, no history); releasing the fill
+// grows the sheet up to the reached row/column in one undo step (see Autofill), and any unreached
+// ghosts simply disappear.
+const GHOST_INTERVAL_MS = 200;
+// The further past the edge the pointer is, the faster ghosts are added: the interval shrinks
+// by one step per GHOST_SPEEDUP_PX of distance, down to GHOST_MIN_INTERVAL_MS.
+const GHOST_SPEEDUP_PX = 24;
+const GHOST_MIN_INTERVAL_MS = 20;
+const ghostInterval = (distance: number) =>
+  Math.max(GHOST_MIN_INTERVAL_MS, GHOST_INTERVAL_MS / (1 + Math.max(0, distance) / GHOST_SPEEDUP_PX));
+
+const roomFor = (limit: number, current: number) => (limit === -1 ? Infinity : Math.max(0, limit - current));
 
 export const Tabular = () => {
   const [palette, setPalette] = useState<RefPaletteType>({});
@@ -32,10 +57,146 @@ export const Tabular = () => {
     leftHeaderSelecting,
     topHeaderSelecting,
     contextMenu,
+    autofillDraggingTo,
+    selectingZone,
   } = store;
   const sheet = sheetReactive.current;
 
   const [virtualized, setVirtualized] = useState<Virtualization | null>(null);
+
+  // autoExpand: provisional ghost rows/cols shown while dragging an autofill (see GHOST_INTERVAL_MS).
+  const [ghostCount, setGhostCount] = useState({ rows: 0, cols: 0 });
+  // Whether the pointer is past the grid content's bottom/right edge during the drag — dragging
+  // down from the last row never moves the target onto a new row, so this alone must start the
+  // growth. Measured from the content (not the scroll box), which may sit inside a larger box.
+  const [pastEdge, setPastEdge] = useState({ bottom: false, right: false });
+  // How far past the content's bottom/right edge the pointer is (px); read when scheduling growth.
+  const pastDistance = useRef({ bottom: 0, right: 0 });
+  // Last pointer position during the drag. The content edge moves as ghosts are added or the grid
+  // scrolls (with the pointer held still), so pastEdge is re-evaluated then too, not only on moves.
+  const pointerRef = useRef<{ x: number; y: number } | null>(null);
+  const evalPastEdge = useCallback(() => {
+    const el = tabularRef.current;
+    const inner = el?.querySelector<HTMLElement>(':scope > .gs-tabular-inner');
+    const p = pointerRef.current;
+    if (!el || !inner || !p) {
+      return;
+    }
+    const box = el.getBoundingClientRect();
+    const content = inner.getBoundingClientRect();
+    const dBottom = p.y - Math.min(content.bottom, box.bottom);
+    const dRight = p.x - Math.min(content.right, box.right);
+    pastDistance.current = { bottom: Math.max(0, dBottom), right: Math.max(0, dRight) };
+    // Only once scrolled to that edge — before that, edge auto-scroll walks the real rows/cols.
+    const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+    const atRight = el.scrollLeft + el.clientWidth >= el.scrollWidth - 1;
+    let bottom = dBottom > 0 && atBottom;
+    let right = dRight > 0 && atRight;
+    // Past both edges (a corner): follow the dominant direction only.
+    if (bottom && right) {
+      bottom = dBottom >= dRight;
+      right = !bottom;
+    }
+    const next = { bottom, right };
+    setPastEdge((prev) => (prev.bottom === next.bottom && prev.right === next.right ? prev : next));
+  }, []);
+  const autoExpanding = !!sheet && !!autofillDraggingTo && sheet.autoExpand !== 'none';
+
+  useEffect(() => {
+    if (!autoExpanding) {
+      setGhostCount((c) => (c.rows || c.cols ? { rows: 0, cols: 0 } : c));
+      setPastEdge((p) => (p.bottom || p.right ? { bottom: false, right: false } : p));
+      return;
+    }
+    const onMove = (e: MouseEvent) => {
+      pointerRef.current = { x: e.clientX, y: e.clientY };
+      evalPastEdge();
+    };
+    const el = tabularRef.current;
+    window.addEventListener('mousemove', onMove, true);
+    el?.addEventListener('scroll', evalPastEdge);
+    return () => {
+      window.removeEventListener('mousemove', onMove, true);
+      el?.removeEventListener('scroll', evalPastEdge);
+      pointerRef.current = null;
+    };
+  }, [autoExpanding]);
+  // Ghosts were added (the content grew). While growing past an edge, stay pinned to it (the new
+  // ghost would otherwise sit just out of view and "not scrolled to the edge" would stop growth),
+  // then re-check whether the pointer is still past the content.
+  useLayoutEffect(() => {
+    if (!autoExpanding) {
+      return;
+    }
+    const el = tabularRef.current;
+    if (el && pastEdge.bottom) {
+      el.scrollTop = el.scrollHeight;
+    }
+    if (el && pastEdge.right) {
+      el.scrollLeft = el.scrollWidth;
+    }
+    evalPastEdge();
+  }, [autoExpanding, ghostCount]);
+  // Keep the drag target in view as ghosts are added past the viewport, so the growth is visible.
+  useEffect(() => {
+    if (!autoExpanding || !sheet || !autofillDraggingTo) {
+      return;
+    }
+    if (autofillDraggingTo.y > sheet.numRows || autofillDraggingTo.x > sheet.numCols) {
+      smartScroll(sheet, tabularRef.current, autofillDraggingTo);
+    }
+  }, [autoExpanding, ghostCount, autofillDraggingTo]);
+
+  let growRows = false;
+  let growCols = false;
+  if (autoExpanding && sheet && autofillDraggingTo) {
+    const mode = sheet.autoExpand;
+    // Grow only while the pointer is past the grid content's edge (in the whitespace of a larger
+    // box, or outside it) — never while it's over a cell, real or ghost — and the target has
+    // reached the last (ghost) row/col. A capped (remapped) scroll height can't be extended
+    // linearly, so very tall sheets get no row ghosts.
+    growRows =
+      (mode === 'vertical' || mode === 'both') &&
+      pastEdge.bottom &&
+      sheet.totalHeight <= SCROLL_CAP &&
+      ghostCount.rows < roomFor(sheet.maxNumRows, sheet.numRows) &&
+      autofillDraggingTo.y >= sheet.numRows + ghostCount.rows;
+    growCols =
+      (mode === 'horizontal' || mode === 'both') &&
+      pastEdge.right &&
+      ghostCount.cols < roomFor(sheet.maxNumCols, sheet.numCols) &&
+      autofillDraggingTo.x >= sheet.numCols + ghostCount.cols;
+  }
+  // Past the content's edge there is no cell under the pointer to target, so keep the target on
+  // the last (ghost) row/column — the fill then follows the growth.
+  useEffect(() => {
+    if (!autoExpanding || !sheet || !autofillDraggingTo || (!pastEdge.bottom && !pastEdge.right)) {
+      return;
+    }
+    const src = complementSelectingArea(zoneToArea(selectingZone), choosing);
+    const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
+    const mode = sheet.autoExpand;
+    let next = autofillDraggingTo;
+    if (pastEdge.bottom && (mode === 'vertical' || mode === 'both')) {
+      next = { y: sheet.numRows + ghostCount.rows, x: clamp(autofillDraggingTo.x, src.left, src.right) };
+    } else if (pastEdge.right && (mode === 'horizontal' || mode === 'both')) {
+      next = { y: clamp(autofillDraggingTo.y, src.top, src.bottom), x: sheet.numCols + ghostCount.cols };
+    }
+    if (next.y !== autofillDraggingTo.y || next.x !== autofillDraggingTo.x) {
+      dispatch(setAutofillDraggingTo(next));
+    }
+  }, [autoExpanding, pastEdge, ghostCount, autofillDraggingTo]);
+
+  useEffect(() => {
+    if (!growRows && !growCols) {
+      return;
+    }
+    const t = window.setTimeout(
+      () => setGhostCount((c) => ({ rows: c.rows + (growRows ? 1 : 0), cols: c.cols + (growCols ? 1 : 0) })),
+      ghostInterval(growRows ? pastDistance.current.bottom : pastDistance.current.right),
+    );
+    return () => window.clearTimeout(t);
+  }, [growRows, growCols, ghostCount]);
 
   // Mark on .gs-main whether the grid overflows the viewport per axis, so the matrix outer
   // border hugs the content when it fits (border on the inner) and switches to a fixed
@@ -66,6 +227,21 @@ export const Tabular = () => {
     e.preventDefault();
     e.stopPropagation();
   }, []);
+
+  // Dragging an autofill onto a ghost cell targets that (not yet existing) cell.
+  const handleGhostMouseEnter = useCallback(
+    (e: React.MouseEvent<HTMLElement>) => {
+      if (!autofillDraggingTo) {
+        return;
+      }
+      const y = Number(e.currentTarget.dataset.y);
+      const x = Number(e.currentTarget.dataset.x);
+      if (y !== autofillDraggingTo.y || x !== autofillDraggingTo.x) {
+        dispatch(setAutofillDraggingTo({ y, x }));
+      }
+    },
+    [autofillDraggingTo],
+  );
 
   const handleScroll = useCallback(
     (e: React.UIEvent<HTMLDivElement>) => {
@@ -219,6 +395,21 @@ export const Tabular = () => {
     return null;
   }
 
+  const ghostSize = getGhostCellSize(sheet);
+  const ghostHeight = ghostCount.rows * ghostSize.height;
+  const ghostWidth = ghostCount.cols * ghostSize.width;
+  const scrollHeight = physicalScrollHeight(sheet);
+  const ghostXs = ghostCount.cols > 0 ? range(sheet.numCols + 1, sheet.numCols + ghostCount.cols) : [];
+  // Ghost rows follow the last row, so they only render once the rendered window reaches the
+  // bottom (offset-based, so trailing filtered — zero-height — rows don't hide them).
+  const lastRendered = virtualized?.ys?.[virtualized.ys.length - 1];
+  const lastRowRendered = lastRendered != null && sheet.getOffsetTop(lastRendered + 1) >= sheet.totalHeight;
+  const ghostYs =
+    ghostCount.rows > 0 && lastRowRendered ? range(sheet.numRows + 1, sheet.numRows + ghostCount.rows) : [];
+  const ghostCell = (y: number, x: number) => (
+    <td key={`ghost-${x}`} className="gs-ghost-cell" data-y={y} data-x={x} onMouseEnter={handleGhostMouseEnter} />
+  );
+
   return (
     <>
       <div
@@ -226,10 +417,8 @@ export const Tabular = () => {
         style={{
           // When a size is explicitly configured, keep that box so a smaller grid can be
           // centered within it (see .gs-tabular in tabular.less); otherwise shrink to fit.
-          width:
-            sheetWidth === -1 ? undefined : fixedWidth ? sheetWidth : Math.min(sheetWidth, sheet.totalWidth),
-          height:
-            sheetHeight === -1 ? undefined : fixedHeight ? sheetHeight : Math.min(sheetHeight, sheet.totalHeight),
+          width: sheetWidth === -1 ? undefined : fixedWidth ? sheetWidth : Math.min(sheetWidth, sheet.totalWidth),
+          height: sheetHeight === -1 ? undefined : fixedHeight ? sheetHeight : Math.min(sheetHeight, sheet.totalHeight),
         }}
         ref={tabularRef}
         onMouseMove={handleMouseMove}
@@ -238,10 +427,11 @@ export const Tabular = () => {
         <div
           className={'gs-tabular-inner'}
           style={{
-            width: sheet.totalWidth,
+            // Ghost rows/cols (autoExpand) widen the scrollable content only while dragging an autofill.
+            width: sheet.totalWidth + ghostWidth,
             // Physical scroll height is capped below the browser's ~2^24px precision limit;
             // virtualize() maps this back to the sheet's full virtual height (see SCROLL_CAP).
-            height: physicalScrollHeight(sheet),
+            height: scrollHeight + ghostHeight,
             overflow: 'clip',
           }}
         >
@@ -297,6 +487,15 @@ export const Tabular = () => {
                   className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-right"
                   style={{ width: virtualized?.adjuster?.right }}
                 ></th>
+                {ghostXs.map((x) => (
+                  <th
+                    key={`ghost-${x}`}
+                    className="gs-th gs-ghost-th gs-ghost-th-top"
+                    style={{ width: ghostSize.width, minWidth: ghostSize.width, maxWidth: ghostSize.width }}
+                  >
+                    <div className="gs-th-inner">{x2c(x)}</div>
+                  </th>
+                ))}
               </tr>
             </thead>
 
@@ -309,6 +508,9 @@ export const Tabular = () => {
                 <td className="gs-adjuster gs-adjuster-vertical"></td>
                 {virtualized?.xs?.map((x) => <td className="gs-adjuster gs-adjuster-vertical" key={x}></td>)}
                 <th className={`gs-adjuster gs-adjuster-horizontal gs-adjuster-vertical`}></th>
+                {ghostXs.map((x) => (
+                  <td className="gs-adjuster gs-adjuster-vertical" key={`ghost-${x}`}></td>
+                ))}
               </tr>
             </tbody>
 
@@ -320,9 +522,24 @@ export const Tabular = () => {
                     <td className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-left" />
                     {virtualized?.xs?.map((x) => <Cell key={x} y={y} x={x} merge={mergeRenders.get(`${y}:${x}`)} />)}
                     <td className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-right" />
+                    {ghostXs.map((x) => ghostCell(y, x))}
                   </tr>
                 );
               })}
+              {/* autoExpand ghost rows: shown past the last row only while an autofill is dragged. */}
+              {ghostYs.map((y) => (
+                <tr key={`ghost-${y}`} className="gs-row gs-ghost-row" style={{ height: ghostSize.height }}>
+                  <th className="gs-th gs-ghost-th gs-ghost-th-left">
+                    <div className="gs-th-inner" style={{ width: sheet.headerWidth }}>
+                      {y}
+                    </div>
+                  </th>
+                  <td className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-left" />
+                  {virtualized?.xs?.map((x) => ghostCell(y, x))}
+                  <td className="gs-adjuster gs-adjuster-horizontal gs-adjuster-horizontal-right" />
+                  {ghostXs.map((x) => ghostCell(y, x))}
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

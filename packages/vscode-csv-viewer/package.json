@@ -104,6 +104,23 @@
           "default": true,
           "markdownDescription": "Evaluate **every** formula cell on open, not just the ones scrolled into view. The grid is virtualized, so by default an off-screen async formula (`=CLAUDE()` / `=CODEX()` / custom AI functions) doesn't fire until you scroll to it. On (default) fires them all up front, so the whole file computes without scrolling — at the cost of running all AI calls immediately on open (⚠️ for large files with many AI cells this can trigger a burst of CLI calls). Off keeps the lazy, scroll-to-evaluate behavior. Sync formulas (`=A1+B1`) are unaffected — they always evaluate on read. (Applies to grids opened after the change.)"
         },
+        "gridsheet.viewer.autoExpand": {
+          "type": "string",
+          "enum": [
+            "both",
+            "vertical",
+            "horizontal",
+            "none"
+          ],
+          "enumDescriptions": [
+            "Add rows and columns as needed.",
+            "Add rows only.",
+            "Add columns only.",
+            "Never grow — the overflow is dropped."
+          ],
+          "default": "both",
+          "markdownDescription": "Grow the grid when a **paste** or an **autofill** runs past the last row/column: the missing rows/columns are added instead of the overflow being dropped. While dragging the autofill handle, ghost rows/columns appear past the edge. The added rows/columns and the write undo together in one step. Has no effect in read-only mode. (Applies to grids opened after the change.)"
+        },
         "gridsheet.viewer.dateFormats": {
           "type": "array",
           "items": {

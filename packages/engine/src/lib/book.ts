@@ -95,6 +95,8 @@ export class Registry {
   historyLimit: number = DEFAULT_HISTORY_LIMIT;
   lastHistory?: HistoryType;
   currentHistory?: HistoryType;
+  /** While non-null, pushed histories are collected here to be recorded as one BATCH. @internal */
+  _historyBatch: HistoryType[] | null = null;
   /** StrictMode guard: Map from action object (identity) to cached reducer result.
    * Using a Map instead of a single slot allows multiple batched dispatches to coexist. */
   _strictModeCache?: Map<unknown, unknown>;
