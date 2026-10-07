@@ -38,10 +38,10 @@
     "@gridsheet/preact-core": "workspace:*"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^5.0.3",
     "@gridsheet/functions": "workspace:*",
+    "@sveltejs/vite-plugin-svelte": "^5.0.3",
     "svelte": "^5.28.2",
-    "vite": "^6.3.5",
+    "vite": "^6.4.4",
     "vite-plugin-dts": "^4.5.3"
   },
   "keywords": [

@@ -5,7 +5,7 @@
   "packageManager": "pnpm@10.6.5",
   "devDependencies": {
     "@eslint/js": "^9.22.0",
-    "@playwright/test": "^1.51.1",
+    "@playwright/test": "^1.63.0",
     "@typescript-eslint/eslint-plugin": "^8.27.0",
     "@typescript-eslint/parser": "^8.27.0",
     "eslint": "^9.22.0",
@@ -79,5 +79,35 @@
     "react": "18.2.0",
     "@types/react": "18.2.0",
     "@types/react-dom": "18.2.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "brace-expansion@1": "^1.1.21",
+      "brace-expansion@2": "^2.1.7",
+      "minimatch@3": "^3.1.4",
+      "minimatch@5": "^5.1.8",
+      "minimatch@9": "^9.0.7",
+      "picomatch@2": "^2.3.2",
+      "picomatch@4": "^4.0.4",
+      "js-yaml@3": "^3.15.2",
+      "yaml@2": "^2.8.3",
+      "form-data@4": "^4.0.6",
+      "ws@8": "^8.21.0",
+      "lodash": "^4.18.0",
+      "glob@10": "^10.5.0",
+      "flatted@3": "^3.4.2",
+      "nanoid@3": "^3.3.18",
+      "browserslist": "^4.28.7",
+      "source-map-js": "^1.2.2",
+      "postcss@8": "^8.5.18",
+      "devalue@5": "^5.9.3",
+      "undici@8": "^8.10.2",
+      "dompurify@3": "^3.4.16",
+      "smol-toml@1": "^1.9.0",
+      "mdast-util-to-hast@13": "^13.2.1",
+      "sharp@0.35": "^0.35.5",
+      "@codemirror/state": "^6.7.6",
+      "@codemirror/view": "^6.43.14"
+    }
   }
 }
