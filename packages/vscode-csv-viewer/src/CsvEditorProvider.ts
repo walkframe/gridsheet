@@ -66,6 +66,50 @@ export class CsvEditorProvider implements vscode.CustomEditorProvider<CsvDocumen
   // file). `dirty` = manual edits, `evalDirty` = computed values not yet baked.
   private static unsavedState = new Map<string, { dirty: boolean; evalDirty: boolean }>();
 
+  // Files the user allowed to run AI functions in (gridsheet.ai.confirmBeforeRun), kept
+  // for the extension's lifetime. An in-flight prompt is shared so concurrent batches
+  // from one file ask only once; a denial isn't remembered, so a later AI evaluation
+  // (e.g. the user edits a cell) asks again.
+  private static aiAllowed = new Set<string>();
+  private static aiPrompts = new Map<string, Promise<boolean>>();
+
+  // Gate every AI batch: never in an untrusted (Restricted Mode) workspace, and — unless
+  // gridsheet.ai.confirmBeforeRun is off — only after the user OKs this file, so opening
+  // someone else's CSV can't spawn CLIs (spend usage, act on injected prompts) by itself.
+  private static async aiPermission(uri: vscode.Uri): Promise<string | null> {
+    if (!vscode.workspace.isTrusted) {
+      return 'AI functions are disabled in Restricted Mode. Trust this workspace to run them.';
+    }
+    if (!vscode.workspace.getConfiguration('gridsheet.ai').get<boolean>('confirmBeforeRun', true)) {
+      return null;
+    }
+    const key = uri.toString();
+    if (CsvEditorProvider.aiAllowed.has(key)) {
+      return null;
+    }
+    let prompt = CsvEditorProvider.aiPrompts.get(key);
+    if (!prompt) {
+      prompt = (async () => {
+        const allow = 'Run AI Functions';
+        const choice = await vscode.window.showWarningMessage(
+          `"${vscode.workspace.asRelativePath(uri)}" contains AI functions (=CLAUDE, =CODEX, custom commands). Run them? They use your AI CLI and account.`,
+          {
+            modal: true,
+            detail: 'Only allow this for files you trust. Disable the prompt with gridsheet.ai.confirmBeforeRun.',
+          },
+          allow,
+        );
+        if (choice === allow) {
+          CsvEditorProvider.aiAllowed.add(key);
+          return true;
+        }
+        return false;
+      })().finally(() => CsvEditorProvider.aiPrompts.delete(key));
+      CsvEditorProvider.aiPrompts.set(key, prompt);
+    }
+    return (await prompt) ? null : 'AI functions were not allowed for this file. Edit an AI cell to be asked again.';
+  }
+
   /**
    * Whether the grid showing `uri` has unsaved changes. Returns undefined when the
    * file isn't open in a grid.
@@ -333,6 +377,15 @@ export class CsvEditorProvider implements vscode.CustomEditorProvider<CsvDocumen
         const cwd =
           vscode.workspace.getWorkspaceFolder(document.uri)?.uri.fsPath ??
           vscode.Uri.joinPath(document.uri, '..').fsPath;
+        const denied = await CsvEditorProvider.aiPermission(document.uri);
+        if (denied) {
+          webview.postMessage({
+            type: 'aiBatchResult',
+            id,
+            results: tasks.map((t) => ({ index: t.index, ok: false, error: denied })),
+          });
+          return;
+        }
         try {
           const results = await resolveAiBatch(tasks, { cwd });
           webview.postMessage({ type: 'aiBatchResult', id, results });

@@ -129,6 +129,23 @@ turn on `claude.tools.read` (or relax `codex.sandbox`) so the CLI can
 read files under cwd + load CLAUDE.md/AGENTS.md — at the cost of going agentic
 (slower, more usage, typed output can weaken; tools can also drop `--output-schema`).
 
+## Trust model
+
+A CSV/TSV and its workspace can come from someone else, so neither may decide what
+runs:
+
+- **Settings that pick a binary, its flags, tools or cwd are `machine`-scoped**
+  (`custom`, `*.path`, `*.extraArgs`, `*.omitArgs`, `claude.permissionMode`,
+  `claude.tools.*`, `codex.sandbox`, `codex.ignoreUserConfig`, `workingDirectory`,
+  `confirmBeforeRun`) and listed in `capabilities.untrustedWorkspaces.restrictedConfigurations`.
+  A repo's `.vscode/settings.json` can't point `=X()` at its own script.
+- **Restricted Mode** (untrusted workspace): the host refuses every `aiBatch`.
+- **`confirmBeforeRun`** (default on): the host asks once per file before the first
+  AI batch runs, so eager evaluation on open can't spend usage or act on injected
+  prompts unasked. Allowed files are remembered until VS Code restarts; a denial isn't
+  remembered (editing an AI cell asks again). The gate lives in the host, not the
+  webview, so a compromised webview can't skip it.
+
 ## Billing risk to remember
 
 `claude -p` on subscription: the June 15 2026 split (separate monthly Agent SDK

@@ -31,18 +31,18 @@
     }
   },
   "peerDependencies": {
-    "preact": "^10.26.6"
+    "preact": "^10.26.10"
   },
   "devDependencies": {
+    "@gridsheet/functions": "workspace:*",
+    "@gridsheet/react-core": "workspace:*",
+    "@preact/preset-vite": "^2.10.1",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.8.2",
-    "vite": "^6.2.2",
-    "vite-plugin-dts": "^4.5.3",
-    "@preact/preset-vite": "^2.10.1",
-    "@gridsheet/functions": "workspace:*",
-    "@gridsheet/react-core": "workspace:*"
+    "vite": "^6.4.4",
+    "vite-plugin-dts": "^4.5.3"
   },
   "bugs": {
     "url": "https://github.com/walkframe/gridsheet/issues"

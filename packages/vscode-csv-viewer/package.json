@@ -2,7 +2,7 @@
   "name": "csv-gridsheet",
   "displayName": "CSV Spreadsheet — GridSheet",
   "description": "Open CSV/TSV files as an editable spreadsheet grid with formulas — powered by GridSheet.",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "publisher": "walkframe",
   "private": true,
   "license": "Apache-2.0",
@@ -152,7 +152,14 @@
         "gridsheet.ai.workingDirectory": {
           "type": "string",
           "default": "",
-          "markdownDescription": "Working directory for the AI CLIs. Empty = the edited file's workspace folder, which lets the CLI pick up project context (`CLAUDE.md` / `AGENTS.md`) and read repository files with relative paths — **only** when file reads are allowed (see `#gridsheet.ai.claude.tools.read#` / `#gridsheet.ai.codex.sandbox#`)."
+          "markdownDescription": "Working directory for the AI CLIs. Empty = the edited file's workspace folder, which lets the CLI pick up project context (`CLAUDE.md` / `AGENTS.md`) and read repository files with relative paths — **only** when file reads are allowed (see `#gridsheet.ai.claude.tools.read#` / `#gridsheet.ai.codex.sandbox#`).",
+          "scope": "machine"
+        },
+        "gridsheet.ai.confirmBeforeRun": {
+          "type": "boolean",
+          "default": true,
+          "scope": "machine",
+          "markdownDescription": "Ask before running AI functions (`=CLAUDE()`, `=CODEX()`, aliases and `#gridsheet.ai.custom#` commands) in a file. When ON (default), the first AI evaluation in each opened file shows a confirmation; allowing it applies to that file until VS Code restarts. This guards against a CSV/TSV from someone else spending your AI usage or acting on injected prompts the moment you open it. Turn OFF to evaluate AI cells without asking. Machine-scoped: a workspace cannot change it."
         },
         "gridsheet.ai.batchSize": {
           "type": "integer",
@@ -172,7 +179,14 @@
           "markdownDescription": "Give a built-in AI a function name of your own, keyed by **function name** → built-in. `\"AI\": \"claude\"` adds `=AI(prompt, context…)` backed by Claude (same arguments and schema-typed output as `=CLAUDE()`). Use a typed variant to get a guaranteed boolean/number under your name: `\"CHECK\": \"claude.bool\"`, `\"SCORE\": \"codex.number\"`. Names are case-insensitive; built-in `=CLAUDE`/`=CODEX` stay available. (Applies to grids opened after the change.)",
           "additionalProperties": {
             "type": "string",
-            "enum": ["claude", "codex", "claude.bool", "claude.number", "codex.bool", "codex.number"],
+            "enum": [
+              "claude",
+              "codex",
+              "claude.bool",
+              "claude.number",
+              "codex.bool",
+              "codex.number"
+            ],
             "markdownDescription": "The built-in to alias (optionally a typed `.bool`/`.number` variant)."
           }
         },
@@ -183,12 +197,14 @@
           "additionalProperties": {
             "type": "string",
             "markdownDescription": "Command to run, with its flags (e.g. `gemini -p`, `ollama run llama3`). The prompt is piped to stdin — do not put it here. Quotes are respected."
-          }
+          },
+          "scope": "machine"
         },
         "gridsheet.ai.claude.path": {
           "type": "string",
           "default": "claude",
-          "markdownDescription": "Path to the `claude` CLI used by `=CLAUDE()`. Reuses your existing `claude login` (Pro/Max subscription); no API key required. Leave as `claude` if it is on your PATH."
+          "markdownDescription": "Path to the `claude` CLI used by `=CLAUDE()`. Reuses your existing `claude login` (Pro/Max subscription); no API key required. Leave as `claude` if it is on your PATH.",
+          "scope": "machine"
         },
         "gridsheet.ai.claude.model": {
           "type": "string",
@@ -198,37 +214,44 @@
         "gridsheet.ai.claude.permissionMode": {
           "type": "string",
           "default": "dontAsk",
-          "markdownDescription": "`--permission-mode` for `claude -p`. `dontAsk` runs unattended and allows only read-only tools. Change if you enable more tools."
+          "markdownDescription": "`--permission-mode` for `claude -p`. `dontAsk` runs unattended and allows only read-only tools. Change if you enable more tools.",
+          "scope": "machine"
         },
         "gridsheet.ai.claude.tools.read": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "**Let `=CLAUDE()` read repository files** (the `Read` tool). This is the switch that decides whether a formula can see your files: OFF (default) sandboxes it to the prompt text only; turn it **ON** so prompts can pull in file contents and project context (`CLAUDE.md` / `AGENTS.md`), resolving relative paths under `#gridsheet.ai.workingDirectory#`. Note: enabling any tool makes each call agentic — slower, more usage, and typed `.BOOL` / `.NUMBER` output can weaken."
+          "markdownDescription": "**Let `=CLAUDE()` read repository files** (the `Read` tool). This is the switch that decides whether a formula can see your files: OFF (default) sandboxes it to the prompt text only; turn it **ON** so prompts can pull in file contents and project context (`CLAUDE.md` / `AGENTS.md`), resolving relative paths under `#gridsheet.ai.workingDirectory#`. Note: enabling any tool makes each call agentic — slower, more usage, and typed `.BOOL` / `.NUMBER` output can weaken.",
+          "scope": "machine"
         },
         "gridsheet.ai.claude.tools.webSearch": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Let `=CLAUDE()` search the web (the `WebSearch` tool). OFF by default. Enabling makes each call agentic (slower, more usage)."
+          "markdownDescription": "Let `=CLAUDE()` search the web (the `WebSearch` tool). OFF by default. Enabling makes each call agentic (slower, more usage).",
+          "scope": "machine"
         },
         "gridsheet.ai.claude.tools.webFetch": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Let `=CLAUDE()` fetch URLs (the `WebFetch` tool). OFF by default. Enabling makes each call agentic (slower, more usage)."
+          "markdownDescription": "Let `=CLAUDE()` fetch URLs (the `WebFetch` tool). OFF by default. Enabling makes each call agentic (slower, more usage).",
+          "scope": "machine"
         },
         "gridsheet.ai.claude.tools.bash": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "⚠️ Let `=CLAUDE()` run shell commands (the `Bash` tool). OFF by default. Enabling lets cell evaluation **execute arbitrary commands** in `#gridsheet.ai.workingDirectory#` — only turn on if you trust the prompts."
+          "markdownDescription": "⚠️ Let `=CLAUDE()` run shell commands (the `Bash` tool). OFF by default. Enabling lets cell evaluation **execute arbitrary commands** in `#gridsheet.ai.workingDirectory#` — only turn on if you trust the prompts.",
+          "scope": "machine"
         },
         "gridsheet.ai.claude.tools.edit": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "⚠️ Let `=CLAUDE()` modify files (the `Edit` tool). OFF by default. Enabling lets cell evaluation **change files on disk**."
+          "markdownDescription": "⚠️ Let `=CLAUDE()` modify files (the `Edit` tool). OFF by default. Enabling lets cell evaluation **change files on disk**.",
+          "scope": "machine"
         },
         "gridsheet.ai.claude.tools.write": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "⚠️ Let `=CLAUDE()` create files (the `Write` tool). OFF by default. Enabling lets cell evaluation **write new files to disk**."
+          "markdownDescription": "⚠️ Let `=CLAUDE()` create files (the `Write` tool). OFF by default. Enabling lets cell evaluation **write new files to disk**.",
+          "scope": "machine"
         },
         "gridsheet.ai.claude.extraArgs": {
           "type": "array",
@@ -236,7 +259,8 @@
             "type": "string"
           },
           "default": [],
-          "markdownDescription": "Extra flags **appended** to `claude -p` (e.g. `--add-dir`, `--append-system-prompt`, `--allowedTools`). To **remove** a flag we add by default, use `#gridsheet.ai.claude.omitArgs#`."
+          "markdownDescription": "Extra flags **appended** to `claude -p` (e.g. `--add-dir`, `--append-system-prompt`, `--allowedTools`). To **remove** a flag we add by default, use `#gridsheet.ai.claude.omitArgs#`.",
+          "scope": "machine"
         },
         "gridsheet.ai.claude.omitArgs": {
           "type": "array",
@@ -244,12 +268,14 @@
             "type": "string"
           },
           "default": [],
-          "markdownDescription": "Flags to **remove** from the auto-built `claude -p` command (each token is dropped together with its value) — the escape hatch for a CLI version that rejects a flag we pass. The command builds: `-p --no-session-persistence --output-format json --permission-mode <mode> [--disallowedTools …] --json-schema <schema> [--model …]`. Example: `[\"--json-schema\"]` disables typed output and falls back to prompt-only JSON. `-p` cannot be removed. To ADD flags, use `#gridsheet.ai.claude.extraArgs#`."
+          "markdownDescription": "Flags to **remove** from the auto-built `claude -p` command (each token is dropped together with its value) — the escape hatch for a CLI version that rejects a flag we pass. The command builds: `-p --no-session-persistence --output-format json --permission-mode <mode> [--disallowedTools …] --json-schema <schema> [--model …]`. Example: `[\"--json-schema\"]` disables typed output and falls back to prompt-only JSON. `-p` cannot be removed. To ADD flags, use `#gridsheet.ai.claude.extraArgs#`.",
+          "scope": "machine"
         },
         "gridsheet.ai.codex.path": {
           "type": "string",
           "default": "codex",
-          "markdownDescription": "Path to the `codex` CLI used by `=CODEX()`. Reuses your existing `codex login` (ChatGPT subscription); no API key required. Leave as `codex` if it is on your PATH."
+          "markdownDescription": "Path to the `codex` CLI used by `=CODEX()`. Reuses your existing `codex login` (ChatGPT subscription); no API key required. Leave as `codex` if it is on your PATH.",
+          "scope": "machine"
         },
         "gridsheet.ai.codex.model": {
           "type": "string",
@@ -264,12 +290,14 @@
             "danger-full-access"
           ],
           "default": "read-only",
-          "markdownDescription": "`--sandbox` for `codex exec`. `read-only` already lets it read repository files under the working directory; raise only if you need writes."
+          "markdownDescription": "`--sandbox` for `codex exec`. `read-only` already lets it read repository files under the working directory; raise only if you need writes.",
+          "scope": "machine"
         },
         "gridsheet.ai.codex.ignoreUserConfig": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Pass `--ignore-user-config` so your personal `~/.codex/config.toml` (custom models, MCP servers) doesn't leak into cell resolution. Turn OFF to use it — but note active MCP/tools can break the typed `--output-schema` output."
+          "markdownDescription": "Pass `--ignore-user-config` so your personal `~/.codex/config.toml` (custom models, MCP servers) doesn't leak into cell resolution. Turn OFF to use it — but note active MCP/tools can break the typed `--output-schema` output.",
+          "scope": "machine"
         },
         "gridsheet.ai.codex.extraArgs": {
           "type": "array",
@@ -277,7 +305,8 @@
             "type": "string"
           },
           "default": [],
-          "markdownDescription": "Extra flags **appended** to `codex exec` (e.g. `--add-dir`). To **remove** a flag we add by default, use `#gridsheet.ai.codex.omitArgs#`."
+          "markdownDescription": "Extra flags **appended** to `codex exec` (e.g. `--add-dir`). To **remove** a flag we add by default, use `#gridsheet.ai.codex.omitArgs#`.",
+          "scope": "machine"
         },
         "gridsheet.ai.codex.omitArgs": {
           "type": "array",
@@ -285,7 +314,8 @@
             "type": "string"
           },
           "default": [],
-          "markdownDescription": "Flags to **remove** from the auto-built `codex exec` command (each token is dropped together with its value) — the escape hatch for a CLI version that rejects a flag we pass. The command builds: `exec - --ephemeral --sandbox <mode> --skip-git-repo-check [--ignore-user-config] --output-schema <file> -o <file> [--model …]`. Example: `[\"--output-schema\"]` drops the strict typed schema and relies on the prompt instructions instead. `exec`/`-`/`-o` cannot be removed. To ADD flags, use `#gridsheet.ai.codex.extraArgs#`."
+          "markdownDescription": "Flags to **remove** from the auto-built `codex exec` command (each token is dropped together with its value) — the escape hatch for a CLI version that rejects a flag we pass. The command builds: `exec - --ephemeral --sandbox <mode> --skip-git-repo-check [--ignore-user-config] --output-schema <file> -o <file> [--model …]`. Example: `[\"--output-schema\"]` drops the strict typed schema and relies on the prompt instructions instead. `exec`/`-`/`-o` cannot be removed. To ADD flags, use `#gridsheet.ai.codex.extraArgs#`.",
+          "scope": "machine"
         }
       }
     }
@@ -302,6 +332,32 @@
     "cross-spawn": "^7.0.6",
     "dayjs": "^1.11.13",
     "esbuild": "^0.25.2",
-    "preact": "^10.26.6"
+    "preact": "^10.29.8"
+  },
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "AI functions (=CLAUDE, =CODEX, custom commands) are disabled in Restricted Mode.",
+      "restrictedConfigurations": [
+        "gridsheet.ai.workingDirectory",
+        "gridsheet.ai.custom",
+        "gridsheet.ai.claude.path",
+        "gridsheet.ai.claude.permissionMode",
+        "gridsheet.ai.claude.tools.read",
+        "gridsheet.ai.claude.tools.webSearch",
+        "gridsheet.ai.claude.tools.webFetch",
+        "gridsheet.ai.claude.tools.bash",
+        "gridsheet.ai.claude.tools.edit",
+        "gridsheet.ai.claude.tools.write",
+        "gridsheet.ai.claude.extraArgs",
+        "gridsheet.ai.claude.omitArgs",
+        "gridsheet.ai.codex.path",
+        "gridsheet.ai.codex.sandbox",
+        "gridsheet.ai.codex.ignoreUserConfig",
+        "gridsheet.ai.codex.extraArgs",
+        "gridsheet.ai.codex.omitArgs",
+        "gridsheet.ai.confirmBeforeRun"
+      ]
+    }
   }
 }

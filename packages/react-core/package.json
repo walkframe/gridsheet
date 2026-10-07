@@ -54,6 +54,7 @@
   "homepage": "https://gridsheet.walkframe.com/",
   "packageManager": "pnpm@10.6.5",
   "devDependencies": {
+    "@gridsheet/functions": "workspace:*",
     "@types/jest": "^29.4.0",
     "@types/react": "^16.9.24",
     "@types/react-dom": "^16.9.24",
@@ -68,9 +69,8 @@
     "ts-jest": "^29.0.5",
     "ts-node": "^10.9.1",
     "typescript": "^5.8.2",
-    "vite": "^6.2.2",
-    "vite-plugin-dts": "^4.5.3",
-    "@gridsheet/functions": "workspace:*"
+    "vite": "^6.4.4",
+    "vite-plugin-dts": "^4.5.3"
   },
   "dependencies": {
     "@gridsheet/web": "workspace:*"

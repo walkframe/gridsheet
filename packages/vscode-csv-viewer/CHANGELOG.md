@@ -2,6 +2,22 @@
 
 All notable changes to the **CSV Spreadsheet — GridSheet** extension.
 
+## 0.4.1 — 2026-10-08
+
+- **Security**: a workspace can no longer choose what AI functions execute. The
+  settings that pick a command, its flags, enabled tools or working directory
+  (`gridsheet.ai.custom`, `gridsheet.ai.{claude,codex}.path`, `*.extraArgs`,
+  `*.omitArgs`, `claude.permissionMode`, `claude.tools.*`, `codex.sandbox`,
+  `codex.ignoreUserConfig`, `ai.workingDirectory`) are now **machine-scoped** — set
+  them in your User settings; values in a repository's `.vscode/settings.json` are
+  ignored. Previously, opening a CSV in a malicious repository could run an
+  arbitrary command.
+- AI functions are disabled in **Restricted Mode** (untrusted workspaces).
+- New `gridsheet.ai.confirmBeforeRun` (default **on**): asks once per file before
+  AI functions run, so opening someone else's CSV doesn't spend your AI usage or act
+  on injected prompts by itself. Turn it off to evaluate without asking.
+- Update the bundled Preact (JSON VNode Injection advisory).
+
 ## 0.4.0 — 2026-10-05
 
 - **Auto-expand** (`gridsheet.viewer.autoExpand`, default `both`): a paste or an
