@@ -1,0 +1,66 @@
+// Touch support (gestures live in react-core's useTouchGestures).
+
+// No double-tap zoom on the grid — a double tap edits the cell. Pinch zoom still works.
+.gs-root1 {
+  touch-action: manipulation;
+}
+
+// Drags that start on these are handled by the grid, not the browser: extending the
+// selection from the cursor cell or a selected header, the autofill handle, and the
+// header resizers.
+.gs-cell.gs-choosing .gs-cell-inner-wrap,
+.gs-th.gs-th-selecting .gs-th-inner-wrap,
+.gs-cell .gs-autofill-drag,
+.gs-th .gs-resizer {
+  touch-action: none;
+}
+
+// A long press opens the grid's own menu, not the OS callout / text selection.
+.gs-cell,
+.gs-th {
+  -webkit-touch-callout: none;
+}
+
+@media (pointer: coarse) {
+  // iOS zooms the page into any input under 16px when it's focused. The highlight layers
+  // sit under their textarea and must keep the same metrics.
+  .gs-editor textarea,
+  .gs-editor .gs-editor-hl,
+  .gs-formula-bar textarea,
+  .gs-formula-bar .gs-editor-hl,
+  .gs-search-bar textarea,
+  .gs-search-bar .gs-search-input-ghost,
+  .gs-label-input,
+  .gs-filter-value-input {
+    font-size: 16px;
+  }
+
+  // Bigger hit areas without changing how the handles look.
+  .gs-cell .gs-autofill-drag::after {
+    content: '';
+    position: absolute;
+    inset: -12px;
+  }
+  .gs-th-top .gs-resizer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -8px;
+    right: -4px;
+  }
+  // Rows are short: grow less so the header middle stays a header (tap / long press).
+  .gs-th-left .gs-resizer::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -4px;
+    bottom: 0;
+  }
+
+  // Keyboard shortcut hints mean nothing without a keyboard.
+  .gs-menu-shortcut {
+    display: none;
+  }
+}
