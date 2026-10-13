@@ -144,11 +144,26 @@ export const useTouchGestures = (
         mode = 'range-pending';
       }
 
+      // Feedback while holding: the pressed cell / header tints up over the long-press time
+      // (CSS, after a short delay so a quick tap or swipe doesn't flash).
+      const pressed =
+        mode === 'pending' || mode === 'range-pending' || mode === 'header-pending'
+          ? target.closest<HTMLElement>('.gs-cell, .gs-th')
+          : null;
+      pressed?.classList.add('gs-pressing');
+      const release = () => pressed?.classList.remove('gs-pressing');
+
       const longPress =
         // A resizer is thin and near the header middle; holding it still is a long press too.
         mode === 'pending' || mode === 'range-pending' || mode === 'header-pending' || mode === 'resize-pending'
           ? window.setTimeout(() => {
               mode = 'done';
+              release();
+              try {
+                navigator.vibrate?.(10); // Android; iOS has no web haptics
+              } catch {
+                // vibrate can throw when blocked by permissions policy
+              }
               openMenu(target, start);
             }, LONG_PRESS_MS)
           : 0;
@@ -158,6 +173,7 @@ export const useTouchGestures = (
       let raf = 0;
       const cleanup = () => {
         window.clearTimeout(longPress);
+        release();
         cancelAnimationFrame(raf);
         target.removeEventListener('touchmove', onMove);
         target.removeEventListener('touchend', onEnd);
@@ -214,6 +230,7 @@ export const useTouchGestures = (
         const sh = s.sheetReactive.current;
         if (moved) {
           window.clearTimeout(longPress);
+          release();
         }
         if (!sh) {
           return;
@@ -420,7 +437,7 @@ export const useTouchGestures = (
           }
         }
         if (s.contextMenu.length > 0) {
-          d(setContextMenuPosition({ y: at.y, x: at.x }));
+          d(setContextMenuPosition(anchored(th, at)));
         }
         return;
       }
@@ -436,7 +453,14 @@ export const useTouchGestures = (
         d(choose(p));
         d(select({ startY: p.y, startX: p.x, endY: p.y, endX: p.x }));
       }
-      d(setContextMenuPosition({ y: at.y, x: at.x }));
+      d(setContextMenuPosition(anchored(target.closest('.gs-cell') ?? target, at)));
+    };
+
+    // Open next to the pressed element rather than at the finger, where the finger would
+    // cover the menu (see ContextMenu for the above / below choice).
+    const anchored = (anchor: Element, at: { x: number; y: number }) => {
+      const r = anchor.getBoundingClientRect();
+      return { y: r.bottom, x: Math.max(8, at.x - 40), anchorTop: r.top, anchorBottom: r.bottom };
     };
 
     const onContextMenu = (e: MouseEvent) => {

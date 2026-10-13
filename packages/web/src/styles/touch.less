@@ -21,6 +21,31 @@
   -webkit-touch-callout: none;
 }
 
+// Long-press feedback: the held cell / header tints up until the menu opens (500ms). The
+// delay keeps a tap or the start of a swipe from flashing.
+@keyframes gs-press {
+  from {
+    opacity: 0;
+  }
+}
+
+.gs-cell.gs-pressing .gs-cell-inner-wrap::before,
+.gs-th.gs-pressing .gs-th-inner-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-color: color-mix(in srgb, var(--gs-accent, #2563eb) 22%, transparent);
+  animation: gs-press 380ms ease-in 120ms both;
+}
+
+@keyframes gs-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
 @media (pointer: coarse) {
   // iOS zooms the page into any input under 16px when it's focused. The highlight layers
   // sit under their textarea and must keep the same metrics.
@@ -57,6 +82,36 @@
     right: 0;
     top: -4px;
     bottom: 0;
+  }
+
+  // Menus: no see-through until hover (there is none), finger-sized rows, a quick entrance
+  // instead of popping in. The animation leaves no transform behind, so the fixed-position
+  // submenu flyouts aren't re-anchored to it.
+  .gs-context-menu,
+  .gs-column-menu,
+  .gs-row-menu,
+  .gs-submenu-flyout {
+    opacity: 1;
+    animation: gs-menu-in 140ms ease-out;
+  }
+  .gs-menu-item {
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 0 16px;
+    align-items: center;
+
+    .gs-menu-name {
+      font-size: 15px;
+      letter-spacing: normal;
+    }
+
+    // Hover sticks after a tap on touch screens; show the press instead.
+    &.gs-enabled:hover {
+      background-color: transparent;
+    }
+    &.gs-enabled:active {
+      background-color: rgba(128, 128, 128, 0.18);
+    }
   }
 
   // Keyboard shortcut hints mean nothing without a keyboard.

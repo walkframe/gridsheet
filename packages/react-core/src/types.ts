@@ -171,7 +171,9 @@ export type StoreType = {
   matchingCells: string[];
   matchingCellIndex: number;
   editingOnEnter: boolean;
-  contextMenuPosition: PositionType;
+  // anchorTop / anchorBottom: the element the menu was opened from (a long-pressed cell).
+  // The menu goes below anchorBottom, or above anchorTop when it doesn't fit, never over it.
+  contextMenuPosition: PositionType & { anchorTop?: number; anchorBottom?: number };
   contextMenu: ContextMenuItemDescriptor[];
   rowMenu: RowMenuItemDescriptor[];
   colMenu: ColMenuItemDescriptor[];

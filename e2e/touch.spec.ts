@@ -169,6 +169,10 @@ test('long press on a cell opens the context menu', async ({ page }) => {
   await expect(page.locator('.gs-context-menu-modal')).toHaveCount(1);
   // The pressed cell became the target.
   await expect(page.locator('.gs-cell.gs-choosing')).toHaveAttribute('data-address', 'B3');
+  // The menu opens next to the pressed cell, not under the finger.
+  const cell = (await page.locator("[data-address='B3']").boundingBox())!;
+  const menu = (await page.locator('.gs-context-menu').boundingBox())!;
+  expect(menu.y >= cell.y + cell.height || menu.y + menu.height <= cell.y).toBe(true);
 });
 
 test('long press on a column header opens the column menu', async ({ page }) => {
