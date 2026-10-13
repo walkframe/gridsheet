@@ -66,6 +66,7 @@ export const ContextMenu = () => {
 
   return (
     <Fixed
+      themed
       className="gs-menu-modal gs-context-menu-modal"
       onClick={(e: MouseEvent) => {
         e.preventDefault();

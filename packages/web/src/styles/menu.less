@@ -9,7 +9,7 @@
 .gs-menu-container() {
   z-index: 12;
   position: fixed;
-  background-color: #ffffff;
+  background-color: var(--gs-editor-surface, #ffffff);
   padding: 5px 0;
   border-radius: 5px;
   box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px,
@@ -20,10 +20,23 @@
   &:hover {
     opacity: 1;
   }
+
+  // Form controls don't inherit the font / text color by default.
+  input,
+  select,
+  textarea,
+  button {
+    font-family: inherit;
+  }
+  input,
+  select,
+  textarea {
+    color: inherit;
+  }
 }
 
 .gs-menu-ul() {
-  color: #555555;
+  color: var(--gs-fg, #1f2328);
   margin: 0;
   padding: 0;
 }
@@ -34,7 +47,7 @@
 }
 
 .gs-menu-divider {
-  background-color: #aaaaaa;
+  background-color: var(--gs-border, #e3e6ea);
   padding: 0;
   margin: 5px 0;
   height: 1px;
@@ -94,7 +107,7 @@
     cursor: pointer;
 
     &:hover {
-      background-color: #eeeeee;
+      background-color: color-mix(in srgb, var(--gs-fg, #1f2328) 7%, transparent);
     }
   }
 
@@ -129,7 +142,7 @@
   .gs-menu-container();
   min-width: 200px;
   margin: 0;
-  color: #555555;
+  color: var(--gs-fg, #1f2328);
   opacity: 1;
   list-style-type: none;
 }
@@ -137,7 +150,7 @@
 .gs-menu-shortcut {
   font-size: 10px;
   line-height: 20px;
-  color: #999999;
+  color: var(--gs-muted-fg, #6b7280);
 
   &:before {
     content: "( ";
@@ -174,12 +187,12 @@
       border-radius: 3px;
       background-color: rgba(180, 180, 180, 0.1);
       cursor: pointer;
-      color: #555;
+      color: var(--gs-fg, #1f2328);
       font-weight: bold;
       letter-spacing: 0.5px;
 
       &:hover:not(:disabled) {
-        border-color: #555;
+        border-color: var(--gs-muted-fg, #6b7280);
       }
 
       &:disabled {
@@ -204,7 +217,7 @@
     font-size: 13px;
     padding: 4px 6px;
     border: none;
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid color-mix(in srgb, var(--gs-fg, #1f2328) 25%, transparent);
     border-radius: 0;
     outline: none;
     min-width: 0;
@@ -226,12 +239,12 @@
     border-radius: 3px;
     background-color: rgba(180, 180, 180, 0.1);
     cursor: pointer;
-    color: #555;
+    color: var(--gs-fg, #1f2328);
     font-weight: bold;
     letter-spacing: 0.5px;
 
     &:hover:not(:disabled) {
-      border-color: #555;
+      border-color: var(--gs-muted-fg, #6b7280);
     }
 
     &:disabled {
@@ -258,11 +271,11 @@
       border-radius: 3px;
       background-color: rgba(180, 180, 180, 0.1);
       cursor: pointer;
-      color: #555;
+      color: var(--gs-fg, #1f2328);
       letter-spacing: 1px;
 
       &:hover {
-        border-color: #555;
+        border-color: var(--gs-muted-fg, #6b7280);
       }
     }
   }
@@ -279,7 +292,7 @@
       font-size: 11px;
       font-weight: bold;
       letter-spacing: 0.5px;
-      color: #888;
+      color: var(--gs-muted-fg, #6b7280);
       cursor: pointer;
       user-select: none;
 
@@ -318,10 +331,10 @@
     font-size: 12px;
     padding: 4px 4px;
     border: none;
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid color-mix(in srgb, var(--gs-fg, #1f2328) 25%, transparent);
     border-radius: 0;
     outline: none;
-    background-color: #fff;
+    background-color: var(--gs-editor-surface, #fff);
     box-shadow: none;
     min-width: 40px;
     max-width: 80px;
@@ -339,7 +352,7 @@
     font-size: 13px;
     padding: 4px 6px;
     border: none;
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid color-mix(in srgb, var(--gs-fg, #1f2328) 25%, transparent);
     border-radius: 0;
     outline: none;
     min-width: 0;
@@ -361,7 +374,7 @@
     border-radius: 3px;
     background-color: transparent;
     cursor: pointer;
-    color: #999;
+    color: var(--gs-muted-fg, #6b7280);
     line-height: 1;
     flex-shrink: 0;
 
@@ -444,14 +457,14 @@
   .gs-waiting-message {
     font-size: 13px;
     font-weight: bold;
-    color: #555;
+    color: var(--gs-fg, #1f2328);
     letter-spacing: 0.5px;
   }
 
   .gs-waiting-spinner {
     width: 24px;
     height: 24px;
-    border: 3px solid #e0e0e0;
+    border: 3px solid var(--gs-border, #e0e0e0);
     border-top-color: var(--gs-accent, #2563eb);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;

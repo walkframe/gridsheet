@@ -47,6 +47,7 @@ export const ColumnMenu: FC = () => {
 
   return (
     <Fixed
+      themed
       className="gs-menu-modal gs-column-menu-modal"
       onClick={(e: MouseEvent) => {
         e.preventDefault();
