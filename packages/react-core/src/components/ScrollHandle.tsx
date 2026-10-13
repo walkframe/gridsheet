@@ -7,6 +7,7 @@ import { insertRef, isFocus } from '@gridsheet/web';
 import { focus } from '@gridsheet/web';
 import { areaToRange, zoneToArea } from '@gridsheet/web';
 import { isXSheetFocused } from '../store/helpers';
+import { isTouching } from '../lib/events';
 
 type Props = {
   className?: string;
@@ -174,7 +175,10 @@ export function ScrollHandle({ style, horizontal = 0, vertical = 0, className = 
     (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      if (isScrolling) {
+      // Only a real drag (button held) enters a handle. Chrome also fires boundary
+      // events at the last known cursor position when the handles appear mid touch-drag
+      // (buttons = 0), which would otherwise yank the selection to this edge.
+      if (isScrolling || !isTouching(e)) {
         return;
       }
       isScrolling = true;

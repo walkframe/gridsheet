@@ -27,6 +27,7 @@ export const RowMenu: FC = () => {
 
   return (
     <Fixed
+      themed
       className="gs-menu-modal gs-row-menu-modal"
       onClick={(e: MouseEvent) => {
         e.preventDefault();

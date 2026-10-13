@@ -5,7 +5,6 @@ import { getLabel } from '@gridsheet/web';
 import { between, zoneToArea } from '@gridsheet/web';
 import { Context } from '../store';
 import {
-  choose,
   drag,
   select,
   selectCols,
@@ -82,17 +81,6 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
 
       if (dragging) {
         return false;
-      }
-
-      // Single column selection only for touch events
-      if (e.type.startsWith('touch')) {
-        // Blur the input field to commit current value when selecting via touch
-        if (editingAnywhere && editorRef.current) {
-          editorRef.current.blur();
-        }
-        dispatch(choose({ y: 1, x }));
-        dispatch(select({ startY: 1, startX: x, endY: sheet.numRows, endX: x }));
-        return true;
       }
 
       dispatch(select({ startY: 1, startX: x, endY: -1, endX: x }));
@@ -254,7 +242,6 @@ export const HeaderCellTop: FC<Props> = memo(({ x }) => {
       <div
         className="gs-th-inner-wrap"
         onMouseDown={handleDragStart}
-        onTouchStart={handleDragStart}
         onMouseEnter={handleDragging}
         onMouseUp={handleDragEnd}
       >

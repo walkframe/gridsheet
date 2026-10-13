@@ -153,18 +153,6 @@ export const Cell: FC<Props> = memo(({ y: rowY, x: colX, merge }) => {
         return false;
       }
 
-      // Single cell selection only for touch events
-      if (e.type.startsWith('touch')) {
-        // Blur the input field to commit current value when selecting via touch
-        if (editingAnywhere && input) {
-          input.blur();
-        }
-        dispatch(choose({ y, x }));
-        dispatch(select({ startY: y, startX: x, endY: y, endX: x }));
-        return true;
-      }
-
-      // Normal drag operation for mouse events
       if (e.shiftKey) {
         dispatch(drag({ y, x }));
       } else {
@@ -417,7 +405,6 @@ export const Cell: FC<Props> = memo(({ y: rowY, x: colX, merge }) => {
         className={`gs-cell-inner-wrap`}
         style={mergeWrapStyle}
         onMouseDown={handleDragStart}
-        onTouchStart={handleDragStart}
         onMouseEnter={handleDragging}
         onMouseUp={handleDragEnd}
       >

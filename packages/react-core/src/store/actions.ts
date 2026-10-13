@@ -298,7 +298,7 @@ class SubmitAutofillAction<T extends PointType> extends CoreAction<T> {
 }
 export const submitAutofill = new SubmitAutofillAction().bind();
 
-class SetContextMenuPositionAction<T extends PositionType> extends CoreAction<T> {
+class SetContextMenuPositionAction<T extends StoreType['contextMenuPosition']> extends CoreAction<T> {
   reduce(store: StoreType, payload: T): StoreWithCallback {
     return {
       ...store,

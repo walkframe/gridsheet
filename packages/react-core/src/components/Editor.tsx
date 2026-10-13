@@ -786,6 +786,9 @@ export const Editor: FC<Props> = ({ mode }: Props) => {
           autoFocus={true}
           spellCheck={false}
           draggable={false}
+          // No soft keyboard for a plain tap on a touch device; a double tap starts editing
+          // and lifts this (see useTouchGestures). Desktop typing is unaffected.
+          inputMode={editing ? undefined : 'none'}
           ref={editorRef}
           rows={numLines}
           onFocus={handleFocus}

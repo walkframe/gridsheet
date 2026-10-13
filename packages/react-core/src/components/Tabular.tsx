@@ -23,6 +23,7 @@ import {
 import { p2a, stripAddressAbsolute } from '@gridsheet/web';
 import { Lexer, stripSheetName } from '@gridsheet/web';
 import { ScrollHandle } from './ScrollHandle';
+import { useTouchGestures } from './useTouchGestures';
 import { preventSafariBounce } from '@gridsheet/web';
 
 // Like Handsontable's autoInsertRow: while a fill drag reaches the last (real or provisional)
@@ -61,6 +62,8 @@ export const Tabular = () => {
     selectingZone,
   } = store;
   const sheet = sheetReactive.current;
+
+  useTouchGestures(tabularRef, store, dispatch, !!sheet?.registry.ready);
 
   const [virtualized, setVirtualized] = useState<Virtualization | null>(null);
 
