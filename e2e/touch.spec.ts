@@ -175,6 +175,21 @@ test('long press on a cell opens the context menu', async ({ page }) => {
   expect(menu.y >= cell.y + cell.height || menu.y + menu.height <= cell.y).toBe(true);
 });
 
+test('scrolling the menu never scrolls the page beneath', async ({ page }) => {
+  const cdp = await open(page, 'basic-large--sheet');
+  await page.evaluate(() => (document.body.style.paddingBottom = '1500px')); // a scrollable host page
+  await longPress(page, cdp, await center(page, "[data-address='B3']"));
+  const m = (await page.locator('.gs-context-menu').boundingBox())!;
+  const mid: Pt = [m.x + m.width / 2, m.y + m.height / 2];
+  // Past the menu's own end, then on the backdrop.
+  for (let i = 0; i < 3; i++) {
+    await swipe(page, cdp, mid, [mid[0], mid[1] - 200], 8);
+  }
+  await swipe(page, cdp, [30, 500], [30, 300], 8);
+  expect(await page.locator('.gs-context-menu').evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+  expect(await page.evaluate(() => scrollY)).toBe(0);
+});
+
 test('long press on a column header opens the column menu', async ({ page }) => {
   const cdp = await open(page, 'basic-large--sheet');
   await longPress(page, cdp, await center(page, ".gs-th-top[data-x='3'] .gs-th-inner"));

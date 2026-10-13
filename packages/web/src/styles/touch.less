@@ -46,6 +46,20 @@
   }
 }
 
+// Menu overlays: a swipe on them must not scroll the page / sheet beneath, and a scrolling
+// menu must not hand the scroll over to it at its ends.
+.gs-menu-modal {
+  touch-action: none;
+}
+.gs-context-menu,
+.gs-column-menu,
+.gs-row-menu,
+.gs-submenu-flyout,
+.gs-filter-conditions {
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+
 @media (pointer: coarse) {
   // iOS zooms the page into any input under 16px when it's focused. The highlight layers
   // sit under their textarea and must keep the same metrics.
