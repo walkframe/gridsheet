@@ -18,6 +18,7 @@ const MARGIN = 8;
 const placeAroundAnchor = (el: HTMLElement, anchorTop: number, anchorBottom: number) => {
   el.style.maxHeight = '';
   el.style.overflowY = '';
+  el.style.boxSizing = '';
   const height = el.getBoundingClientRect().height;
   const below = window.innerHeight - MARGIN - (anchorBottom + GAP);
   const above = anchorTop - GAP - MARGIN;
@@ -35,6 +36,9 @@ const placeAroundAnchor = (el: HTMLElement, anchorTop: number, anchorBottom: num
   }
   el.style.top = `${top}px`;
   if (maxHeight) {
+    // Include the padding / border, or the menu outgrows the room and the edge clamp
+    // pushes it back over the anchor.
+    el.style.boxSizing = 'border-box';
     el.style.maxHeight = `${maxHeight}px`;
     el.style.overflowY = 'auto';
   }
