@@ -39,6 +39,13 @@ const DOUBLE_TAP_MS = 350;
 // auto-scrolls; a finger can't go *past* the edge when the grid fills the screen.
 const EDGE_BAND = 24;
 const EDGE_SPEED = 12;
+// A native scroll whose first movement is this much more along one axis than the other is
+// locked to that axis (like native spreadsheet apps), so a vertical swipe doesn't drift
+// sideways. Anything more diagonal scrolls freely.
+const AXIS_LOCK_RATIO = 1.5;
+// The lock outlives the finger through the momentum scroll; it ends once scrolling has
+// been quiet this long.
+const AXIS_LOCK_IDLE_MS = 150;
 
 const INTERACTIVE = 'input, textarea, select, button, a, label, [contenteditable="true"], [contenteditable=""]';
 
@@ -105,7 +112,40 @@ export const useTouchGestures = (
     // contextmenu (Android) doesn't open a second menu on top of ours.
     let touchActiveUntil = 0;
 
+    // Axis lock for native touch scrolling. The browser has none, and touch-action can't be
+    // changed once a gesture has started. Writing scrollLeft / scrollTop to undo the drift
+    // would cancel iOS's momentum scroll, so the off axis is switched off with overflow
+    // instead, and switched back once scrolling has settled.
+    let axisLock: 'x' | 'y' | null = null;
+    let axisLockTimer = 0;
+    const lockAxis = (axis: 'x' | 'y') => {
+      axisLock = axis;
+      if (axis === 'y') {
+        el.style.overflowX = 'hidden';
+      } else {
+        el.style.overflowY = 'hidden';
+      }
+    };
+    const unlockAxis = () => {
+      window.clearTimeout(axisLockTimer);
+      if (axisLock) {
+        axisLock = null;
+        el.style.overflowX = '';
+        el.style.overflowY = '';
+      }
+    };
+    const unlockWhenIdle = () => {
+      window.clearTimeout(axisLockTimer);
+      axisLockTimer = window.setTimeout(unlockAxis, AXIS_LOCK_IDLE_MS);
+    };
+    const onScroll = () => {
+      if (axisLock && touchActiveUntil !== Infinity) {
+        unlockWhenIdle(); // momentum after the finger lifted
+      }
+    };
+
     const onTouchStart = (e: TouchEvent) => {
+      unlockAxis();
       const target = e.target as HTMLElement;
       if (e.touches.length !== 1 || !target?.closest || target.closest(INTERACTIVE)) {
         return;
@@ -179,6 +219,9 @@ export const useTouchGestures = (
         target.removeEventListener('touchend', onEnd);
         target.removeEventListener('touchcancel', onCancel);
         touchActiveUntil = performance.now() + 600;
+        if (axisLock) {
+          unlockWhenIdle();
+        }
       };
 
       // Extend the range / autofill to the cell under the finger (clamped into the cells).
@@ -239,6 +282,13 @@ export const useTouchGestures = (
           case 'pending':
             if (moved) {
               mode = 'done'; // native scroll
+              const dx = Math.abs(last.x - start.x);
+              const dy = Math.abs(last.y - start.y);
+              if (dy > dx * AXIS_LOCK_RATIO) {
+                lockAxis('y');
+              } else if (dx > dy * AXIS_LOCK_RATIO) {
+                lockAxis('x');
+              }
             }
             return;
           case 'range-pending': {
@@ -471,9 +521,12 @@ export const useTouchGestures = (
     };
 
     el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('scroll', onScroll, { passive: true });
     el.addEventListener('contextmenu', onContextMenu, true);
     return () => {
+      unlockAxis();
       el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('scroll', onScroll);
       el.removeEventListener('contextmenu', onContextMenu, true);
     };
   }, [tabularRef, ready]);

@@ -120,6 +120,40 @@ test.describe('with an iOS Safari user agent', () => {
   });
 });
 
+test('a mostly vertical swipe is locked to vertical scrolling', async ({ page }) => {
+  const cdp = await open(page, 'basic-large--sheet');
+  const tabular = page.locator('.gs-tabular');
+  const from = await center(page, "[data-address='C10']");
+  // Up, drifting left the way a thumb does.
+  const to: Pt = [from[0] - 30, from[1] - 250];
+  let lockedX = '';
+  await send(cdp, 'touchStart', [from]);
+  for (let i = 1; i <= 10; i++) {
+    await send(cdp, 'touchMove', [[from[0] + ((to[0] - from[0]) * i) / 10, from[1] + ((to[1] - from[1]) * i) / 10]]);
+    await page.waitForTimeout(16);
+    if (i === 5) {
+      // Chromium already rails touch scrolls to an axis, iOS Safari doesn't: check the lock itself.
+      lockedX = await tabular.evaluate((el) => getComputedStyle(el).overflowX);
+    }
+  }
+  await send(cdp, 'touchEnd', []);
+  await page.waitForTimeout(500);
+  expect(lockedX).toBe('hidden');
+  const after = await tabular.evaluate((el) => [el.scrollLeft, el.scrollTop, getComputedStyle(el).overflowX]);
+  expect(after[1]).toBeGreaterThan(100);
+  expect(after[0]).toBe(0);
+  expect(after[2]).toBe('auto'); // released once scrolling settled
+});
+
+test('a diagonal swipe still scrolls both ways', async ({ page }) => {
+  const cdp = await open(page, 'basic-large--sheet');
+  const from = await center(page, "[data-address='C10']");
+  await swipe(page, cdp, from, [from[0] - 150, from[1] - 150], 10);
+  const [left, top] = await page.locator('.gs-tabular').evaluate((el) => [el.scrollLeft, el.scrollTop]);
+  expect(top).toBeGreaterThan(50);
+  expect(left).toBeGreaterThan(50);
+});
+
 test('dragging from the cursor cell extends the selection', async ({ page }) => {
   const cdp = await open(page, 'basic-large--sheet');
   await tap(page, "[data-address='B2']");
