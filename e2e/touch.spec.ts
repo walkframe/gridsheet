@@ -103,6 +103,23 @@ test('swiping scrolls without moving the selection', async ({ page }) => {
   await expect(page.locator('.gs-cell.gs-choosing')).toHaveAttribute('data-address', 'A1');
 });
 
+test.describe('with an iOS Safari user agent', () => {
+  // Safari-only code paths (e.g. preventSafariBounce) switch on the UA.
+  test.use({
+    userAgent:
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+  });
+
+  test('a swipe that drifts toward an edge already reached still scrolls', async ({ page }) => {
+    const cdp = await open(page, 'basic-large--sheet');
+    const from = await center(page, "[data-address='B8']");
+    // Mostly up, slightly right: at the initial top-left the rightward drift points at the left edge.
+    await swipe(page, cdp, from, [from[0] + 10, from[1] - 250], 8);
+    const top = await page.locator('.gs-tabular').evaluate((el) => el.scrollTop);
+    expect(top).toBeGreaterThan(100);
+  });
+});
+
 test('dragging from the cursor cell extends the selection', async ({ page }) => {
   const cdp = await open(page, 'basic-large--sheet');
   await tap(page, "[data-address='B2']");
