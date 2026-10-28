@@ -17,7 +17,7 @@
     "@gridsheet/react-dev": "workspace:^",
     "@gridsheet/xlsx": "workspace:^",
     "@octokit/request": "^10.0.16",
-    "astro": "^7.2.10",
+    "astro": "^7.3.3",
     "chart.js": "^4.5.1",
     "mermaid": "^11.17.2",
     "react": "^18",
