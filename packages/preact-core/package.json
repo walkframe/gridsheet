@@ -38,7 +38,7 @@
     "@gridsheet/react-core": "workspace:*",
     "@preact/preset-vite": "^2.10.1",
     "@types/react": "^19.1.4",
-    "@types/react-dom": "^19.1.5",
+    "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.8.2",
     "vite": "^6.4.4",
