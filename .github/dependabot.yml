@@ -1,12 +1,42 @@
 version: 2
 updates:
   - package-ecosystem: "npm"
-    directory: "/"
+    # The root entry also covers every pnpm workspace package. The docs and
+    # storybook directories are listed so `ignore` also applies to security
+    # updates raised against their manifests.
+    directories:
+      - "/"
+      - "/packages/docs"
+      - "/packages/storybook"
     schedule:
       interval: "weekly"
-  - package-ecosystem: "npm"
-    directory: "/packages/docs"
-    open-pull-requests-limit: 0
-  - package-ecosystem: "npm"
-    directory: "/packages/storybook"
-    open-pull-requests-limit: 0
+    # Tools used only by the docs site and Storybook. These never ship to
+    # consumers. `ignore` matches direct and transitive dependencies, and also
+    # applies to security updates. Do not add anything the published packages
+    # use, such as vite or react.
+    ignore:
+      # docs
+      - dependency-name: "astro"
+      - dependency-name: "@astrojs/*"
+      - dependency-name: "mermaid"
+      - dependency-name: "dompurify" # via mermaid
+      - dependency-name: "katex" # via mermaid
+      # storybook
+      - dependency-name: "storybook"
+      - dependency-name: "@storybook/*"
+      - dependency-name: "@chromatic-com/*"
+      - dependency-name: "vitest"
+      - dependency-name: "@vitest/*"
+      - dependency-name: "tinypool" # via vitest
+      - dependency-name: "playwright"
+      - dependency-name: "vite-tsconfig-paths"
+      - dependency-name: "@uiw/react-codemirror"
+      - dependency-name: "@codemirror/*"
+      - dependency-name: "react-markdown"
+      - dependency-name: "prop-types"
+      - dependency-name: "tsc"
+      # docs and storybook demos
+      - dependency-name: "chart.js"
+      - dependency-name: "react-chartjs-2"
+      - dependency-name: "react-select"
+      - dependency-name: "@octokit/request"
