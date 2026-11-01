@@ -59,7 +59,7 @@
     "@types/react": "^16.9.24",
     "@types/react-dom": "^16.9.24",
     "@vitejs/plugin-react": "^4.3.4",
-    "dayjs": "^1.11.13",
+    "dayjs": "^1.11.23",
     "jest": "^29.4.3",
     "jest-environment-jsdom": "^29.4.3",
     "less": "^4.1.3",
