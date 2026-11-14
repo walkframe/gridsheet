@@ -330,7 +330,7 @@
     "@gridsheet/preact-core": "workspace:*",
     "@types/cross-spawn": "^6.0.6",
     "cross-spawn": "^7.0.6",
-    "dayjs": "^1.11.13",
+    "dayjs": "^1.11.23",
     "esbuild": "^0.25.2",
     "preact": "^10.29.8"
   },
