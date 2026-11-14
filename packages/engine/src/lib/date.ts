@@ -1,8 +1,4 @@
 import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc.js';
-import timezone from 'dayjs/plugin/timezone.js';
-dayjs.extend(timezone);
-dayjs.extend(utc);
 
 const NUMS = new Set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
 const NUMS_Z = new Set([...NUMS, 'Z', 'z']);
@@ -94,12 +90,13 @@ export function parseDate(value: string): Date | undefined {
       return;
     }
   }
-  let timeZone = 'UTC';
+  // Read the text as a wall-clock time in the runtime's time zone (or at the offset it states).
+  // `dayjs.tz(value, localZone)` applied the offset twice for non-ISO text ("Jan 1" became
+  // Dec 31 15:00 in Asia/Tokyo) and dropped an explicit offset ("...Z").
   try {
-    timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  } catch (e) {}
-  try {
-    const day = dayjs.tz(value, timeZone);
-    return day.toDate();
+    const day = dayjs(value);
+    // Text that only looks like a date ("a1") is invalid; depending on the dayjs version it
+    // either throws or returns an Invalid Date, so check both.
+    return day.isValid() ? day.toDate() : undefined;
   } catch (e) {}
 }
