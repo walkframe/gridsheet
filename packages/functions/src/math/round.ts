@@ -1,5 +1,6 @@
 import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/engine';
 import type { FunctionCategory } from '@gridsheet/engine';
+import { roundDecimal } from './decimal';
 
 const description = `Round a number to the specified number of decimal places according to standard rules.`;
 
@@ -22,7 +23,7 @@ export class RoundFunction extends BaseFunction {
   category: FunctionCategory = 'math';
 
   protected main(value: number, digit = 0) {
-    const multiplier = Math.pow(10, digit);
-    return Math.round(value * multiplier) / multiplier;
+    // Half rounds away from zero (Excel/Sheets), unlike Math.round which rounds half toward +Infinity.
+    return roundDecimal(value, digit, (n) => Math.sign(n) * Math.round(Math.abs(n)));
   }
 }
