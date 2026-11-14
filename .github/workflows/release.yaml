@@ -5,6 +5,13 @@ on:
       - master
       - fix/*
 
+# Run releases one at a time. Two runs publishing the same version raced each other
+# (one got E409 and its `|| true` hid it). A newer push waits for the running release
+# instead of cancelling it, so a publish is never interrupted halfway.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   id-token: write # Required for npm trusted publishing (OIDC)
   contents: read
@@ -27,24 +34,7 @@ jobs:
           NPM_RC=$(npm config get userconfig)
           sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
       - name: publish engine
-        run: |
-          pnpm install
-          pnpm --filter "@gridsheet/engine..." build
-          cd packages/engine
-          VERSION=$(node -p "require('./package.json').version")
-          TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
-          pnpm publish --access public --provenance $TAG --no-git-checks || true
-      - name: wait for engine on npm
-        run: |
-          VERSION=$(node -p "require('./packages/engine/package.json').version")
-          for i in $(seq 1 30); do
-            if npm view "@gridsheet/engine@$VERSION" version 2>/dev/null; then
-              echo "engine@$VERSION is available"
-              break
-            fi
-            echo "Waiting for engine@$VERSION... ($i/30)"
-            sleep 5
-          done
+        run: scripts/publish-package.sh engine --wait
 
   upload-web:
     needs: upload-engine
@@ -63,24 +53,7 @@ jobs:
           NPM_RC=$(npm config get userconfig)
           sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
       - name: publish web
-        run: |
-          pnpm install
-          pnpm --filter "@gridsheet/web..." build
-          cd packages/web
-          VERSION=$(node -p "require('./package.json').version")
-          TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
-          pnpm publish --access public --provenance $TAG --no-git-checks || true
-      - name: wait for web on npm
-        run: |
-          VERSION=$(node -p "require('./packages/web/package.json').version")
-          for i in $(seq 1 30); do
-            if npm view "@gridsheet/web@$VERSION" version 2>/dev/null; then
-              echo "web@$VERSION is available"
-              break
-            fi
-            echo "Waiting for web@$VERSION... ($i/30)"
-            sleep 5
-          done
+        run: scripts/publish-package.sh web --wait
 
   upload-functions:
     needs: upload-engine
@@ -99,13 +72,7 @@ jobs:
           NPM_RC=$(npm config get userconfig)
           sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
       - name: publish functions
-        run: |
-          pnpm install
-          pnpm --filter "@gridsheet/functions..." build
-          cd packages/functions
-          VERSION=$(node -p "require('./package.json').version")
-          TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
-          pnpm publish --access public --provenance $TAG --no-git-checks || true
+        run: scripts/publish-package.sh functions
 
   upload-xlsx:
     needs: upload-engine
@@ -124,13 +91,7 @@ jobs:
           NPM_RC=$(npm config get userconfig)
           sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
       - name: publish xlsx
-        run: |
-          pnpm install
-          pnpm --filter "@gridsheet/xlsx..." build
-          cd packages/xlsx
-          VERSION=$(node -p "require('./package.json').version")
-          TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
-          pnpm publish --access public --provenance $TAG --no-git-checks || true
+        run: scripts/publish-package.sh xlsx
 
   upload-react-core:
     needs: upload-web
@@ -149,13 +110,7 @@ jobs:
           NPM_RC=$(npm config get userconfig)
           sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
       - name: publish react-core
-        run: |
-          pnpm install
-          pnpm --filter "@gridsheet/react-core..." build
-          cd packages/react-core
-          VERSION=$(node -p "require('./package.json').version")
-          TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
-          pnpm publish --access public --provenance $TAG --no-git-checks || true
+        run: scripts/publish-package.sh react-core
 
   upload-preact-core:
     needs: upload-web
@@ -174,24 +129,7 @@ jobs:
           NPM_RC=$(npm config get userconfig)
           sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
       - name: publish preact-core
-        run: |
-          pnpm install
-          pnpm --filter "@gridsheet/preact-core..." build
-          cd packages/preact-core
-          VERSION=$(node -p "require('./package.json').version")
-          TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
-          pnpm publish --access public --provenance $TAG --no-git-checks || true
-      - name: wait for preact-core on npm
-        run: |
-          VERSION=$(node -p "require('./packages/preact-core/package.json').version")
-          for i in $(seq 1 30); do
-            if npm view "@gridsheet/preact-core@$VERSION" version 2>/dev/null; then
-              echo "preact-core@$VERSION is available"
-              break
-            fi
-            echo "Waiting for preact-core@$VERSION... ($i/30)"
-            sleep 5
-          done
+        run: scripts/publish-package.sh preact-core --wait
 
   upload-react-dev:
     needs: upload-web
@@ -210,13 +148,7 @@ jobs:
           NPM_RC=$(npm config get userconfig)
           sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
       - name: publish react-dev
-        run: |
-          pnpm install
-          pnpm --filter "@gridsheet/react-dev..." build
-          cd packages/react-dev
-          VERSION=$(node -p "require('./package.json').version")
-          TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
-          pnpm publish --access public --provenance $TAG --no-git-checks || true
+        run: scripts/publish-package.sh react-dev
 
   upload-vue-core:
     needs: upload-preact-core
@@ -235,13 +167,7 @@ jobs:
           NPM_RC=$(npm config get userconfig)
           sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
       - name: publish vue-core
-        run: |
-          pnpm install
-          pnpm --filter "@gridsheet/vue-core..." build
-          cd packages/vue-core
-          VERSION=$(node -p "require('./package.json').version")
-          TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
-          pnpm publish --access public --provenance $TAG --no-git-checks || true
+        run: scripts/publish-package.sh vue-core
 
   upload-svelte-core:
     needs: upload-preact-core
@@ -260,10 +186,4 @@ jobs:
           NPM_RC=$(npm config get userconfig)
           sed -i '/_authToken/d' "$NPM_RC" 2>/dev/null || true
       - name: publish svelte-core
-        run: |
-          pnpm install
-          pnpm --filter "@gridsheet/svelte-core..." build
-          cd packages/svelte-core
-          VERSION=$(node -p "require('./package.json').version")
-          TAG=$( [[ "$VERSION" == *-* ]] && echo "--tag next" || echo "" )
-          pnpm publish --access public --provenance $TAG --no-git-checks || true
+        run: scripts/publish-package.sh svelte-core

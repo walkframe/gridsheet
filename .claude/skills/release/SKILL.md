@@ -67,6 +67,11 @@ The extension is a private package versioned **independently** (currently on a `
 
 ## Notes
 
+- Every push to `master` runs the `release` workflow, not just the version bump (already-published
+  versions are skipped). Runs are serialized by `concurrency`, so a push that lands mid-release waits
+  instead of racing it. Each job runs `scripts/publish-package.sh`: an already-published version is
+  skipped, but any other publish failure turns the job red — check the run instead of assuming success.
+
 - Docs deploy separately on push to `master` (`deploy-docs.yml` → Cloudflare Pages); no action needed.
 - To remove bad tags locally, `pnpm delete-tags` (see `scripts/delete-tags.mjs`).
 - End the release commit / any PR body with the attribution lines this session requires.
