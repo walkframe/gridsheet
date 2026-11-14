@@ -11,6 +11,18 @@ are not listed here.
 This project adheres to [Semantic Versioning](https://semver.org/) and the format is based on
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [3.6.1] — 2026-11-15
+
+### Fixed
+
+- **Date input.** Text that only looks like a date (`a1`, `ab1`, `d1`, …) no longer turns into an
+  `Invalid Date` — it stays a string. Newer dayjs versions (e.g. 1.11.23, allowed by `^1.11.13`)
+  return an invalid date instead of throwing, and the result was not checked. (`@gridsheet/engine`)
+- **Dates were shifted by the time-zone offset.** Non-ISO dates such as `Jan 1 2026` or `30 Nov`
+  had the local offset applied twice (`30 Nov` became `2001-11-29 15:00:00` in Asia/Tokyo), and an
+  explicit `Z` offset was ignored. Typed dates are now read as local wall-clock time, or at the
+  offset they state. (`@gridsheet/engine`)
+
 ## [3.4.0] — 2026-08-21
 
 ### Added

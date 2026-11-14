@@ -18,11 +18,11 @@ test('time arithmetic and DD MMM [YYYY] input', async ({ page }) => {
   await b5.click();
   await page.keyboard.type('30 Nov');
   await page.keyboard.press('Enter');
-  expect(await b5.locator('.gs-cell-rendered').textContent()).toBe('2001-11-29 15:00:00');
+  expect(await b5.locator('.gs-cell-rendered').textContent()).toBe('2001-11-30');
 
   const c5 = page.locator("[data-address='C5']");
   await c5.click();
   await page.keyboard.type('30 Nov 2024');
   await page.keyboard.press('Enter');
-  expect(await c5.locator('.gs-cell-rendered').textContent()).toBe('2024-11-29 15:00:00');
+  expect(await c5.locator('.gs-cell-rendered').textContent()).toBe('2024-11-30');
 });
