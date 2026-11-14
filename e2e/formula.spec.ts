@@ -469,3 +469,43 @@ test('simple calculation', async ({ page }) => {
   expect(await page.locator('[data-address="B42"] .gs-cell-rendered').textContent()).toBe('5.5');
   expect(await page.locator('[data-address="B43"] .gs-cell-rendered').textContent()).toBe('23.43');
 });
+
+// https://github.com/walkframe/gridsheet/issues/163
+test('operator precedence and rounding', async ({ page }) => {
+  await go(page, 'formula-precedence--precedence');
+
+  // [address of result cell, rendered value]
+  const expected: [string, string][] = [
+    ['B1', '4'], // =10 + -2 * 3
+    ['B2', '14'], // =10 + -2 ^ 2
+    ['B3', '18'], // =2 * -3 ^ 2
+    ['B4', '4'], // =(10 + -2 * 3)
+    ['B5', '5'], // =SUM(1, -2 * 3, 10)
+    ['B6', '4'], // =-2 ^ 2
+    ['B7', '4'], // =0 + -2 ^ 2
+    ['B8', '-4'], // =0 - 2 ^ 2
+    ['B9', '-0.5'], // =-50%
+    ['B10', 'FALSE'], // =1 = 2 + 3 * 4 - 5
+    ['B11', '17'], // =1 + 2 * 3 ^ 2 - 4 / 2
+    ['B12', '5'], // =10 - 3 - 2
+    ['B13', '64'], // =2 ^ 3 ^ 2
+    ['B14', '1.01'], // =ROUND(1.005, 2)
+    ['B15', '35.86'], // =ROUND(35.855, 2)
+    ['B16', '-3'], // =ROUND(-2.5, 0)
+    ['B17', '0.29'], // =ROUNDDOWN(0.29, 2)
+  ];
+  for (const [address, value] of expected) {
+    const cell = page.locator(`[data-address="${address}"]`);
+    await cell.scrollIntoViewIfNeeded();
+    await expect(cell.locator('.gs-cell-rendered')).toHaveText(value);
+    // column D compares B with C (the expected value in the story)
+    const row = address.slice(1);
+    await expect(page.locator(`[data-address="D${row}"] .gs-cell-rendered`)).toHaveText('TRUE');
+  }
+
+  // typing a formula re-parses it with the same precedence
+  await page.locator('[data-address="B1"]').click();
+  await page.keyboard.type('=-3 ^ 2 + 1');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('[data-address="B1"] .gs-cell-rendered')).toHaveText('10');
+});

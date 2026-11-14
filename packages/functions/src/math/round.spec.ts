@@ -25,6 +25,23 @@ describe('round', () => {
       const f = new RoundFunction({ sheet, args: [new ValueEntity(1234.56), new ValueEntity(-2)] });
       expect(f.call()).toBe(1200);
     });
+
+    // https://github.com/walkframe/gridsheet/issues/163
+    it.each([
+      [1.005, 2, 1.01],
+      [35.855, 2, 35.86],
+      [1.045, 2, 1.05],
+      [2.5, 0, 3],
+      [-2.5, 0, -3],
+      [-1.005, 2, -1.01],
+      [-0.4, 0, 0],
+      [1e-7, 2, 0],
+      [1.55e21, -20, 1.6e21],
+      [15, -1, 20],
+    ])('ROUND(%p, %p) = %p (no float scaling error, half away from zero)', (value, digit, expected) => {
+      const f = new RoundFunction({ sheet, args: [new ValueEntity(value), new ValueEntity(digit)] });
+      expect(f.call()).toBe(expected);
+    });
   });
 
   describe('validation error', () => {

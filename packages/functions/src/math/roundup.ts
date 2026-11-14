@@ -1,5 +1,6 @@
 import { BaseFunction, type FunctionArgumentDefinition } from '@gridsheet/engine';
 import type { FunctionCategory } from '@gridsheet/engine';
+import { roundDecimal } from './decimal';
 
 const description = `Round up a number to the specified number of decimal places according to standard rules.`;
 
@@ -22,7 +23,6 @@ export class RoundupFunction extends BaseFunction {
   category: FunctionCategory = 'math';
 
   protected main(value: number, digit = 0) {
-    const multiplier = Math.pow(10, digit);
-    return Math.ceil(value * multiplier) / multiplier;
+    return roundDecimal(value, digit, Math.ceil);
   }
 }

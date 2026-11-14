@@ -286,6 +286,10 @@ export type Expression =
 
 const ZERO = new ValueEntity(0);
 
+// Excel precedence (high → low): negation(6) > %(5.5) > ^(5) > * / &(4) > + -(3) > comparisons(1-2)
+const UMINUS_PRECEDENCE = 6;
+const PERCENT_PRECEDENCE = 5.5;
+
 export type TokenType =
   | 'VALUE'
   | 'REF'
@@ -567,9 +571,19 @@ export class Lexer {
           this.tokens.push(new Token(INFIX_OPERATOR, '+', 3, this.at));
           continue;
         case '-': {
-          const prev1 = this.getToken(-1)?.type;
-          const prev2 = this.getToken(-2)?.type;
-          if (prev1 === INFIX_OPERATOR || (prev1 === 'SPACE' && prev2 === INFIX_OPERATOR)) {
+          // `-` is negation when no operand precedes it: at the start, after `(` or `,`,
+          // or after another operator. Otherwise it is binary subtraction.
+          let prev = this.getToken(-1)?.type;
+          if (prev === 'SPACE') {
+            prev = this.getToken(-2)?.type;
+          }
+          if (
+            prev == null ||
+            prev === 'OPEN' ||
+            prev === 'COMMA' ||
+            prev === INFIX_OPERATOR ||
+            prev === PREFIX_OPERATOR
+          ) {
             // TOKEN_UMINUS(6)
             this.tokens.push(new Token(PREFIX_OPERATOR, '-', 6, this.at));
           } else {
@@ -773,110 +787,171 @@ export class Parser {
     this.tokens = tokens;
   }
   public build() {
-    const { expr } = this.parse(false);
+    const expr = this.parseExpression(0);
+    const rest = this.next();
+    if (rest != null) {
+      if (rest.type === 'COMMA') {
+        throw new FormulaError('#ERROR!', 'Invalid comma');
+      }
+      if (rest.type === 'CLOSE') {
+        throw new FormulaError('#ERROR!', 'Unexpected end paren');
+      }
+      throw new FormulaError('#ERROR!', `Unexpected token: ${rest.stringify()}`);
+    }
     return expr;
   }
 
-  private parse(underFunction: boolean) {
-    const stack: Expression[] = [];
-    let lastOperator: undefined | FunctionEntity;
+  /** Returns the next non-space token without consuming it. */
+  private peek(): Token | undefined {
+    let i = this.index;
+    while (i < this.tokens.length && this.tokens[i].type === 'SPACE') {
+      i++;
+    }
+    return this.tokens[i];
+  }
 
-    const complement = (hasNext = false) => {
-      if (lastOperator) {
-        const outer = stack.pop();
-        lastOperator.args.push(outer!);
-      }
-      return { hasNext, expr: stack.shift() };
-    };
+  /** Consumes and returns the next non-space token. */
+  private next(): Token | undefined {
+    while (this.index < this.tokens.length && this.tokens[this.index].type === 'SPACE') {
+      this.index++;
+    }
+    return this.tokens[this.index++];
+  }
 
-    while (this.tokens.length > this.index) {
-      const token = this.tokens[this.index++];
-      if (token.type === 'SPACE') {
-        continue;
+  /**
+   * Precedence climbing: parses an expression whose binary operators all bind tighter than `minPrecedence`.
+   * Binary operators are left-associative (Excel evaluates `2^3^2` as `(2^3)^2`).
+   */
+  private parseExpression(minPrecedence: number): Expression | undefined {
+    let left = this.parsePrefix();
+
+    while (true) {
+      const token = this.peek();
+      if (token == null) {
+        break;
       }
-      if (token.type === 'COMMA') {
-        if (!underFunction) {
-          throw new FormulaError('#ERROR!', 'Invalid comma');
-        }
-        return complement(true);
-      } else if (
-        token.type === 'VALUE' ||
-        token.type === 'ID' ||
-        token.type === 'ID_RANGE' ||
-        token.type === 'REF' ||
-        token.type === 'RANGE' ||
-        token.type === 'UNREFERENCED' ||
-        token.type === 'INVALID_REF'
-      ) {
-        const expr = token.convert();
-        stack.push(expr!);
-      } else if (token.type === 'POSTFIX_OPERATOR' && token.entity === '%') {
-        const expr = stack.pop();
-        if (!expr) {
+      if (token.type === 'POSTFIX_OPERATOR' && token.entity === '%') {
+        if (left == null) {
           throw new FormulaError('#ERROR!', 'Missing expression before %');
         }
-        const divideBy100 = new FunctionEntity('divide', 4, [expr, new ValueEntity(100)]);
-        stack.push(divideBy100);
-      } else if (token.type === 'FUNCTION') {
-        this.index++;
+        if (PERCENT_PRECEDENCE <= minPrecedence) {
+          break;
+        }
+        this.next();
+        left = new FunctionEntity('divide', 4, [left, new ValueEntity(100)]);
+        continue;
+      }
+      if (token.type !== 'INFIX_OPERATOR' || token.precedence <= minPrecedence) {
+        break;
+      }
+      this.next();
+      if (left == null) {
+        throw new FormulaError('#ERROR!', 'Missing left expression');
+      }
+      const right = this.parseExpression(token.precedence);
+      if (right == null) {
+        throw new FormulaError('#ERROR!', 'Missing right expression');
+      }
+      const operator = token.convert() as FunctionEntity;
+      operator.args.push(left, right);
+      left = operator;
+    }
+    return left;
+  }
+
+  /**
+   * Parses an operand: a value/reference, a function call, a parenthesized expression,
+   * or a prefix operator applied to an operand. Returns undefined for an empty operand
+   * (end of input, or just before `,` / `)`), e.g. the arguments of `NOW()`.
+   */
+  private parsePrefix(): Expression | undefined {
+    const token = this.peek();
+    if (token == null || token.type === 'COMMA' || token.type === 'CLOSE') {
+      return undefined;
+    }
+    this.next();
+
+    switch (token.type) {
+      case 'VALUE':
+      case 'ID':
+      case 'ID_RANGE':
+      case 'REF':
+      case 'RANGE':
+      case 'UNREFERENCED':
+      case 'INVALID_REF':
+        return token.convert();
+
+      case 'FUNCTION': {
+        this.index++; // the lexer always emits OPEN right after FUNCTION
         this.depth++;
         const func = token.convert() as FunctionEntity;
-        stack.push(func);
-
         while (true) {
-          const { expr, hasNext } = this.parse(true);
-          if (expr) {
-            func.args.push(expr);
+          const arg = this.parseExpression(0);
+          if (arg != null) {
+            func.args.push(arg);
           }
-          if (!hasNext) {
+          const delimiter = this.next();
+          if (delimiter == null) {
+            break; // unclosed call; tolerated
+          }
+          if (delimiter.type === 'COMMA') {
+            continue;
+          }
+          if (delimiter.type === 'CLOSE') {
+            this.depth--;
             break;
           }
+          throw new FormulaError('#ERROR!', `Unexpected token: ${delimiter.stringify()}`);
         }
-      } else if (token.type === 'OPEN') {
-        this.depth++;
-        const { expr } = this.parse(false);
-        stack.push(expr!);
-      } else if (token.type === 'CLOSE') {
-        if (this.depth-- === 0) {
-          throw new FormulaError('#ERROR!', 'Unexpected end paren');
-        }
-        return complement();
-      } else if (token.type === 'INFIX_OPERATOR') {
-        const operator = token.convert() as FunctionEntity;
-        let left = stack.pop();
-        if (left == null) {
-          if (operator.name === 'minus' || operator.name === 'add') {
-            left = ZERO;
-          } else {
-            throw new FormulaError('#ERROR!', 'Missing left expression');
-          }
-        }
-
-        if (lastOperator == null) {
-          operator.args.push(left);
-          stack.unshift(operator);
-        } else if (operator.precedence > lastOperator.precedence) {
-          operator.args.push(left);
-          lastOperator.args.push(operator);
-          stack.unshift(lastOperator);
-        } else {
-          const outer = stack.shift();
-          operator.args.push(outer!);
-          lastOperator.args.push(left);
-          stack.unshift(operator);
-        }
-        lastOperator = operator;
-      } else if (token.type === 'PREFIX_OPERATOR') {
-        const operator = token.convert() as FunctionEntity;
-        if (lastOperator) {
-          lastOperator.args.push(operator);
-        } else {
-          stack.unshift(operator);
-        }
-        lastOperator = operator;
+        return func;
       }
+
+      case 'OPEN': {
+        this.depth++;
+        const expr = this.parseExpression(0);
+        const close = this.next();
+        if (close == null) {
+          return expr; // unclosed paren; tolerated
+        }
+        if (close.type === 'CLOSE') {
+          this.depth--;
+          return expr;
+        }
+        if (close.type === 'COMMA') {
+          throw new FormulaError('#ERROR!', 'Invalid comma');
+        }
+        throw new FormulaError('#ERROR!', `Unexpected token: ${close.stringify()}`);
+      }
+
+      case 'PREFIX_OPERATOR': {
+        // Negation binds tighter than every binary operator, including `^` (`-2^2` is 4).
+        const operand = this.parseExpression(token.precedence);
+        if (operand == null) {
+          throw new FormulaError('#ERROR!', 'Missing expression after -');
+        }
+        const operator = token.convert() as FunctionEntity;
+        operator.args.push(operand);
+        return operator;
+      }
+
+      case 'INFIX_OPERATOR': {
+        // A leading `+` (e.g. `=+A1`) is treated as `0 + operand`, binding like negation.
+        const operator = token.convert() as FunctionEntity;
+        if (operator.name !== 'add' && operator.name !== 'minus') {
+          throw new FormulaError('#ERROR!', 'Missing left expression');
+        }
+        const operand = this.parseExpression(UMINUS_PRECEDENCE);
+        if (operand == null) {
+          throw new FormulaError('#ERROR!', 'Missing right expression');
+        }
+        operator.args.push(ZERO, operand);
+        return operator;
+      }
+
+      case 'POSTFIX_OPERATOR':
+        throw new FormulaError('#ERROR!', 'Missing expression before %');
     }
-    return complement();
+    throw new FormulaError('#ERROR!', `Unexpected token: ${token.stringify()}`);
   }
 }
 

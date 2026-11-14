@@ -27,6 +27,18 @@ describe('rounddown', () => {
     });
   });
 
+  describe('floating point', () => {
+    it.each([
+      [0.29, 2, 0.29],
+      [4.35, 2, 4.35],
+      [1.005, 2, 1],
+      [8.7, 1, 8.7],
+    ])('(%p, %p) = %p', (value, digit, expected) => {
+      const f = new RounddownFunction({ sheet, args: [new ValueEntity(value), new ValueEntity(digit)] });
+      expect(f.call()).toBe(expected);
+    });
+  });
+
   describe('validation error', () => {
     it('missing argument', () => {
       const f = new RounddownFunction({ sheet, args: [] });
