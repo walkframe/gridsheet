@@ -2,6 +2,19 @@
 
 All notable changes to the **CSV Spreadsheet — GridSheet** extension.
 
+## 0.4.2 — 2026-11-15
+
+- **Formulas**: negation now binds as in Excel, and mixed operators keep their
+  precedence. `=10 + -2 * 3` is 4 (was 24), `=-2^2` is 4 (was -4), and
+  `=1 = 2 + 3 * 4 - 5` is FALSE (was 9). Malformed formulas such as `=1 +` show
+  `#ERROR!`.
+- **ROUND / ROUNDUP / ROUNDDOWN** no longer misround because of floating-point
+  error: `=ROUND(1.005, 2)` is 1.01 and `=ROUNDDOWN(0.29, 2)` is 0.29. ROUND rounds
+  half away from zero (`=ROUND(-2.5, 0)` is -3).
+- Text that only looks like a date (`a1`) is no longer turned into an invalid
+  date, and typed dates are no longer shifted by the local time zone.
+- Context menus follow the sheet's font and dark theme.
+
 ## 0.4.1 — 2026-10-08
 
 - **Security**: a workspace can no longer choose what AI functions execute. The
